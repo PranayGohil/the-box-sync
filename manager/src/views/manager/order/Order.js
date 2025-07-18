@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { Button, Row, Col, Card } from 'react-bootstrap';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
-import { Link, NavLink, useHistory } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { Steps } from 'intro.js-react';
 import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
-import Glide from 'components/carousel/Glide';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import 'intro.js/introjs.css';
 
-const DashboardsDefault = () => {
-  const history = useHistory();
-  const title = 'Dashboard';
-  const description = 'Default Dashboard';
+import DishBox from './components/DishBox';
+
+const Order = () => {
+  const title = 'Order';
+  const description = 'Order Page';
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
-    { to: 'dashboards', text: 'Dashboards' },
+    { to: 'order', text: 'Order' },
   ];
 
   const [tourEnabled, setTourEnabled] = useState(false);
@@ -47,14 +47,22 @@ const DashboardsDefault = () => {
     exitOnEsc: true,
   };
 
-  const tables = [{
-    area: 'A.C.',
-    table: [{ number: '1', maxPersons: '2' }, { number: '2', maxPersons: '2' }, { number: '3', maxPersons: '4' }, { number: '4', maxPersons: '4' }, { number: '5', maxPersons: '6' }],
+  const menu = [{
+    category: "Paneer",
+    meal_type: "veg",
+    dishes: [
+      { id: "a", dish_name: "Paneer Masala", dish_price: 200, is_special: false },
+      { id: "b", dish_name: "Cheese Paneer", dish_price: 220, is_special: true },
+    ]
   },
   {
-    area: 'Non A.C.',
-    table: [{ number: '1', maxPersons: '2' }, { number: '2', maxPersons: '2' }, { number: '3', maxPersons: '4' }, { number: '4', maxPersons: '4' }, { number: '5', maxPersons: '6' }],
-  }]
+    category: "Non-veg",
+    meal_type: "non-veg",
+    dishes: [
+      { id: "a", dish_name: "Chicken Masala", dish_price: 200, is_special: false },
+      { id: "b", dish_name: "Chicken Paneer", dish_price: 220, is_special: true },
+    ]
+  }];
   return (
     <>
       <HtmlHead title={title} description={description} />
@@ -90,16 +98,7 @@ const DashboardsDefault = () => {
                 setTourEnabled(true);
               }}
             >
-              <CsLineIcons icon="flag" /> <span>Delivery</span>
-            </Button>
-            <Button
-              variant="outline-primary"
-              className="btn-icon btn-icon-start btn-icon w-100 w-md-auto ms-1"
-              onClick={() => {
-                setTourEnabled(true);
-              }}
-            >
-              <CsLineIcons icon="flag" /> <span>Takeaway</span>
+              <CsLineIcons icon="flag" /> <span>Go To Dashboard</span>
             </Button>
           </Col>
           {/* Top Buttons End */}
@@ -109,49 +108,22 @@ const DashboardsDefault = () => {
 
       <Row>
         <Col xl="6">
-          {/* Stats Start */}
-          {tables.map((table, index) => (
-            <>
-              <h2 className="small-title">{table.area}</h2>
-              <Row className="gx-2">
-                <Col className="p-0">
-                  <Glide
-                    options={{
-                      gap: 0,
-                      rewind: false,
-                      bound: true,
-                      perView: 6,
-                      breakpoints: {
-                        400: { perView: 1 },
-                        600: { perView: 2 },
-                        1400: { perView: 3 },
-                        1600: { perView: 4 },
-                        1900: { perView: 5 },
-                        3840: { perView: 6 },
-                      },
-                    }}
-                  >
-                    {table.table.map((item, i) => (
-                      <Link to="/order" key={i}>
-                        <Glide.Item onClick={() => (history.push('/order'))}>
-                          <Card className="sh-20 hover-border-primary mb-5">
-                            <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
-                              <div className="d-flex sh-8 sw-8 bg-gradient-light fs-3 text-white mb-3 align-items-center justify-content-center rounded-xl">
-                                {item.number}
-                              </div>
-                              <p className="mb-0 lh-1">Maximum Person</p>
-                              <p className="cta-3 mb-0 text-primary">{item.maxPersons}</p>
-                            </Card.Body>
-                          </Card>
-                        </Glide.Item>
-                      </Link>
-                    ))}
-                  </Glide>
-                </Col>
+          {/* Square Start */}
+          <section className="scroll-section" id="square">
+            <h2 className="small-title">Menu</h2>
+            <div className="mb-5">
+              <Row className="g-2">
+                {menu.map((category) => (
+                  category.dishes.map((item, index) => (
+                    <Col xs="auto" key={index}>
+                      <DishBox dishName={item.dish_name} dishPrice={item.dish_price} />
+                    </Col>
+                  ))
+                ))}
               </Row>
-            </>
-          ))}
-          {/* Stats End */}
+            </div>
+          </section>
+          {/* Square End */}
         </Col>
 
         {/* Products Start */}
@@ -670,4 +642,4 @@ const DashboardsDefault = () => {
   );
 };
 
-export default DashboardsDefault;
+export default Order;

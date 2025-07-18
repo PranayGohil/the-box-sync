@@ -1,0 +1,1 @@
+onClick={() => (history.push('/o
