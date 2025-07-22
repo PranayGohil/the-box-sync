@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
 import { Badge, Col, Form, Row } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect, useRowState } from 'react-table';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -37,7 +39,7 @@ const dummyData = [
   { id: 20, name: 'Bolillo', sales: 333, stock: 24, category: 'Whole Wheat', tag: '' },
 ];
 
-const EditableRows = () => {
+const OrderHistory = () => {
   const title = 'Order History';
   const description = 'Separate rows with edit, delete and add.';
 
@@ -46,6 +48,18 @@ const EditableRows = () => {
     { to: 'operations/order-history', text: 'Opertations' },
     { to: 'operations/order-history', title: 'Order History' },
   ];
+
+  const [orders, setOrders] = useState([]);
+
+  // const fetchOrders = async () => {
+  //   try {
+  //     const res = await axios.get(`${process.env.REACT_APP_API}/order/getorderhistory`);
+  //     if(res)
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  //   setOrders(dummyData);
+  // };
 
   const columns = React.useMemo(() => {
     return [
@@ -154,4 +168,4 @@ const EditableRows = () => {
   );
 };
 
-export default EditableRows;
+export default OrderHistory;
