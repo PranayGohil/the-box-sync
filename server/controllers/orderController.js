@@ -30,7 +30,7 @@ const getOrderData = (req, res) => {
   console.log(req.params.id);
   try {
     Order.find({ _id: req.params.id })
-      .then((data) => res.json(data))
+      .then((data) => res.json({data, success: true}))
       .catch((err) => res.json(err));
   } catch (error) {
     console.log(error);
@@ -308,7 +308,7 @@ const orderController = async (req, res) => {
 //           table.order_id = null;
 //         }
 //       }
-      
+
 //       await tableDocument.save();
 
 //       return res.status(200).json({
@@ -365,7 +365,12 @@ const orderController = async (req, res) => {
 const orderHistory = async (req, res) => {
   try {
     const orderData = await Order.find({ restaurant_id: req.user });
-    res.json(orderData);
+    console.log(req.user);
+    if (!orderData) {
+      return res.json({ success: false, message: "Order not found" });
+    }
+    console.log(orderData);
+    res.json({ success: true, message: "Order found", data: orderData });
   } catch (error) {
     console.log(error);
   }

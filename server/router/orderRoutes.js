@@ -13,7 +13,7 @@ const orderRouter = express.Router();
 
 
 orderRouter
-  .route("/getorderdata/:id")
+  .route("/get/:id")
   .get(authMiddleware, getOrderData);
 orderRouter
   .route("/ordercontroller")
@@ -27,7 +27,7 @@ orderRouter
 
 
 orderRouter
-  .route("/getorderhistory")
+  .route("/get-orders")
   .get(authMiddleware, orderHistory);
 
 module.exports = orderRouter;

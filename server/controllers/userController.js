@@ -192,9 +192,10 @@ const getUserData = async (req, res) => {
         userdata.taxInfo = fetchuser.taxInfo;
         userdata.containerCharges = fetchuser.containerCharges;
       }
-
+      console.log(userdata);
       res.send(userdata);
     } else {
+      console.log("Null");
       res.send("Null");
     }
   } catch (error) {
