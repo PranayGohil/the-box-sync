@@ -2,9 +2,9 @@ const Table = require("../models/tableModel");
 
 const getTableData = (req, res) => {
   try {
-    Table.find({ hotel_id: req.user })
+    Table.find({ restaurant_id: req.user })
       .then((data) => {
-        res.json(data);
+        res.json({data, success: true});
       })
       .catch((err) => res.json(err));
   } catch (error) {
@@ -30,9 +30,9 @@ const getTableDataById = (req, res) => {
 
 const getDiningAreas = async (req, res) => {
   try {
-    const areas = await Table.find({ hotel_id: req.user }, "area"); // Fetch distinct areas
+    const areas = await Table.find({ restaurant_id: req.user }, "area"); // Fetch distinct areas
     const uniqueAreas = [...new Set(areas.map((item) => item.area))];
-    res.json(uniqueAreas);
+    res.json({data: uniqueAreas, success: true});
   } catch (error) {
     console.error("Error fetching dining areas:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -43,8 +43,9 @@ const checkTable = (req, res) => {
   try {
     console.log(req.query);
     const { area, table_no } = req.query;
-    Table.findOne({ area, "tables.table_no": table_no, hotel_id: req.user })
+    Table.findOne({ area, "tables.table_no": table_no, restaurant_id: req.user })
       .then((data) => {
+        console.log(data);
         if (data) {
           res.json({ exists: true });
         } else {
@@ -60,13 +61,13 @@ const checkTable = (req, res) => {
 const addTable = (req, res) => {
   try {
     console.log(req.body);
-    const tableData = { ...req.body, hotel_id: req.user };
+    const tableData = { ...req.body, restaurant_id: req.user };
     const area = req.body.area;
 
-    Table.findOne({ area: area, hotel_id: req.user }).then((data) => {
+    Table.findOne({ area: area, restaurant_id: req.user }).then((data) => {
       if (data) {
         Table.findOneAndUpdate(
-          { area: area, hotel_id: req.user },
+          { area: area, restaurant_id: req.user },
           {
             $push: { tables: req.body.tables },
           }
@@ -120,7 +121,7 @@ const deleteTable = async (req, res) => {
       if (result.modifiedCount === 0) {
         return res.status(404).json({ message: "Table not found" });
       }
-      const updatedArea = await Table.findOne({ area, hotel_id: req.user });
+      const updatedArea = await Table.findOne({ area, restaurant_id: req.user });
       if (updatedArea.tables.length === 0) {
         await Table.deleteOne({ area });
       }

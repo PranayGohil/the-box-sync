@@ -13,10 +13,10 @@ const adminAuth = require("../middlewares/adminAuth");
 
 const tableRouter = express.Router();
 
-tableRouter.route("/getdiningareas").get(authMiddleware, getDiningAreas);
+tableRouter.route("/get/dining-areas").get(authMiddleware, getDiningAreas);
 tableRouter.route("/checktable").get(authMiddleware, checkTable);
 tableRouter.route("/addtable").post(authMiddleware, adminAuth, addTable);
-tableRouter.route("/gettabledata").get(authMiddleware, getTableData);
+tableRouter.route("/get-user-tables").get(authMiddleware, getTableData);
 tableRouter.route("/gettabledata/:id").get(authMiddleware, getTableDataById);
 tableRouter.route("/updatetable").put(authMiddleware, updateTable);
 tableRouter

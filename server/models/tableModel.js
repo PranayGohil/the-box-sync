@@ -22,7 +22,7 @@ const addTable = new Schema({
       },
     },
   ],
-  hotel_id: {
+  restaurant_id: {
     type: String,
   },
 });
