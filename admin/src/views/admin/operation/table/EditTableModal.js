@@ -1,92 +1,63 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { Button, Form, Modal } from 'react-bootstrap';
 import { useFormik } from 'formik';
+import * as Yup from 'yup';
 
-const EditTableModal = ({ show, handleClose, data }) => {
-  const [previewImg, setPreviewImg] = useState(null);
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState(!!data?.quantity);
+const EditTableModal = ({ show, handleClose, data, onUpdateSuccess }) => {
 
   const formik = useFormik({
     initialValues: {
-      dish_name: data?.dish_name || '',
-      dish_price: data?.dish_price || '',
-      description: data?.description || '',
-      quantity: data?.quantity || '',
-      unit: data?.unit || '',
-      dish_img: data?.dish_img || null,
-      is_special: data?.is_special || false,
+      table_no: data?.table_no || '',
+      max_person: data?.max_person || '',
     },
+    validationSchema: Yup.object({
+      table_no: Yup.string().required('Table No is required'),
+      max_person: Yup.number().required('Max Person is required'),
+    }),
     enableReinitialize: true,
-    onSubmit: (values) => {
-      console.log('Updated dish:', values);
-      handleClose();
+    onSubmit: async (values) => {
+      try {
+        await axios.put(`${process.env.REACT_APP_API}/table/update`, {
+          _id: data?.id,
+          table_no: values.table_no,
+          max_person: values.max_person,
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        handleClose();
+        onUpdateSuccess();
+      } catch (err) {
+        console.error("Edit failed:", err);
+      }
     },
   });
 
   return (
     <Modal className="modal-right large" show={show} onHide={handleClose} backdrop="static">
       <Modal.Header closeButton>
-        <Modal.Title>Edit Dish</Modal.Title>
+        <Modal.Title>Edit Table</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form id="edit_dish_form" onSubmit={formik.handleSubmit}>
           <Form.Group className="mb-3">
-            <Form.Label>Dish Name</Form.Label>
-            <Form.Control type="text" name="dish_name" value={formik.values.dish_name} onChange={formik.handleChange} />
+            <Form.Label>Table No</Form.Label>
+            <Form.Control type="text" name="table_no" value={formik.values.table_no} onChange={formik.handleChange} />
+            <small className="text-danger ms-2 fw-bold">
+              {formik.errors.table_no}
+            </small>
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Dish Price</Form.Label>
-            <Form.Control type="text" name="dish_price" value={formik.values.dish_price} onChange={formik.handleChange} />
+            <Form.Label>Max Person</Form.Label>
+            <Form.Control type="text" name="max_person" value={formik.values.max_person} onChange={formik.handleChange} />
+           <small className="text-danger ms-2 fw-bold">
+              {formik.errors.max_person}
+            </small>
           </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Description</Form.Label>
-            <Form.Control as="textarea" name="description" value={formik.values.description} onChange={formik.handleChange} />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Dish Image</Form.Label>
-            <Form.Control
-              type="file"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                formik.setFieldValue('dish_img', file);
-                if (file) setPreviewImg(URL.createObjectURL(file));
-              }}
-            />
-            {previewImg && <img src={previewImg} alt="Preview" className="img-thumbnail mt-2" style={{ maxWidth: '100px' }} />}
-          </Form.Group>
-          <Form.Check
-            type="checkbox"
-            label="Advanced Options"
-            checked={showAdvancedOptions}
-            onChange={() => setShowAdvancedOptions(!showAdvancedOptions)}
-            className="mb-3"
-          />
-          {showAdvancedOptions && (
-            <>
-              <Form.Group className="mb-3">
-                <Form.Label>Quantity</Form.Label>
-                <Form.Control type="text" name="quantity" value={formik.values.quantity} onChange={formik.handleChange} />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Unit</Form.Label>
-                <Form.Select name="unit" value={formik.values.unit} onChange={formik.handleChange}>
-                  <option value="">Select Unit</option>
-                  <option value="kg">kg</option>
-                  <option value="g">g</option>
-                  <option value="litre">litre</option>
-                  <option value="ml">ml</option>
-                  <option value="piece">piece</option>
-                </Form.Select>
-              </Form.Group>
-            </>
-          )}
-          <Form.Check
-            type="checkbox"
-            label="Special Dish"
-            checked={formik.values.is_special}
-            onChange={(e) => formik.setFieldValue('is_special', e.target.checked)}
-            className="mb-3"
-          />
         </Form>
       </Modal.Body>
       <Modal.Footer>

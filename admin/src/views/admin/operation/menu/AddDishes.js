@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { Card, Col, Row, Button, Form, InputGroup } from 'react-bootstrap';
+import React from 'react';
+import { Card, Col, Row, Button, Form as BForm } from 'react-bootstrap';
+import { Formik, Form, FieldArray, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+import axios from 'axios';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
 
 const AddDishes = () => {
   const title = 'Add Dishes';
-  const description = 'Form to add dishes using the new theme with old fields (dummy data).';
+  const description = 'Form to add dishes using Formik and Yup';
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
@@ -13,24 +16,10 @@ const AddDishes = () => {
     { to: 'operations/add-dish', title: 'Add Dishes' },
   ];
 
-  // Dummy data state
-  const [mealType, setMealType] = useState('veg');
-  const [dishes, setDishes] = useState([
-    {
-      dish_name: 'Paneer Butter Masala',
-      dish_price: '250',
-      dish_img: null,
-      description: 'Rich and creamy cottage cheese curry',
-      quantity: '500',
-      unit: 'g',
-      showAdvancedOptions: false,
-    },
-  ]);
-
-  // Add dish
-  const addDish = () => {
-    setDishes([
-      ...dishes,
+  const initialValues = {
+    category: '',
+    mealType: 'veg',
+    dishes: [
       {
         dish_name: '',
         dish_price: '',
@@ -40,20 +29,45 @@ const AddDishes = () => {
         unit: '',
         showAdvancedOptions: false,
       },
-    ]);
+    ],
   };
 
-  // Remove dish
-  const removeDish = (index) => {
-    const updated = [...dishes];
-    updated.splice(index, 1);
-    setDishes(updated);
-  };
+  const validationSchema = Yup.object().shape({
+    category: Yup.string().required('Category is required'),
+    mealType: Yup.string().required('Meal type is required'),
+    dishes: Yup.array().of(
+      Yup.object().shape({
+        dish_name: Yup.string().required('Dish name is required'),
+        dish_price: Yup.number().typeError('Must be a number').required('Price is required'),
+        description: Yup.string(),
+        quantity: Yup.string(),
+        unit: Yup.string(),
+      })
+    ),
+  });
 
-  // Toggle advanced
-  const toggleAdvanced = (index) => {
-    const updated = dishes.map((dish, i) => (i === index ? { ...dish, showAdvancedOptions: !dish.showAdvancedOptions } : dish));
-    setDishes(updated);
+  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+    try {
+      const payload = {
+        category: values.category,
+        meal_type: values.mealType,
+        dishes: values.dishes,
+      };
+
+      const res = await axios.post(`${process.env.REACT_APP_API}/menu/add`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        }
+      }, payload); 
+      alert(res.data.message || 'Menu saved');
+      resetForm();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Something went wrong!');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -70,112 +84,158 @@ const AddDishes = () => {
 
           <section className="scroll-section" id="formRow">
             <Card body className="mb-5">
-              <Form>
-                {/* Category field */}
-                <Row className="mb-3">
-                  <Col md={4}>
-                    <Form.Group controlId="category">
-                      <Form.Label>Dish Category</Form.Label>
-                      <Form.Control type="text" placeholder="e.g., Main Course" defaultValue="Main Course" />
-                    </Form.Group>
-                  </Col>
-                  {/* Meal Type */}
-                  <Col md={8}>
-                    <Form.Label className="d-block">Meal Type</Form.Label>
-                    {['veg', 'egg', 'non-veg'].map((type) => (
-                      <Form.Check
-                        inline
-                        key={type}
-                        label={type}
-                        name="mealType"
-                        type="radio"
-                        id={`meal-${type}`}
-                        checked={mealType === type}
-                        onChange={() => setMealType(type)}
-                      />
-                    ))}
-                  </Col>
-                </Row>
-
-                {/* Dishes */}
-                {dishes.map((dish, index) => (
-                  <Card key={index} className="mb-4 p-3">
-                    <Row>
+              <Formik
+                initialValues={initialValues}
+                validationSchema={validationSchema}
+                onSubmit={handleSubmit}
+              >
+                {({ values, isSubmitting, handleChange, setFieldValue }) => (
+                  <Form>
+                    <Row className="mb-3">
                       <Col md={4}>
-                        <Form.Group controlId={`dish-name-${index}`}>
-                          <Form.Label>Dish Name</Form.Label>
-                          <Form.Control type="text" defaultValue={dish.dish_name} placeholder="Enter dish name" />
-                        </Form.Group>
-                      </Col>
-                      <Col md={4}>
-                        <Form.Group controlId={`dish-price-${index}`}>
-                          <Form.Label>Price</Form.Label>
-                          <Form.Control type="text" defaultValue={dish.dish_price} placeholder="e.g., 250" />
-                        </Form.Group>
-                      </Col>
-                      <Col md={4} className="d-flex align-items-end">
-                        <Button variant="outline-danger" onClick={() => removeDish(index)}>
-                          Remove
-                        </Button>
-                      </Col>
-                    </Row>
-
-                    <Row className="mt-2">
-                      <Col md={4}>
-                        <Form.Group controlId={`dish-img-${index}`}>
-                          <Form.Label>Image</Form.Label>
-                          <Form.Control type="file" accept="image/*" />
-                        </Form.Group>
+                        <BForm.Group>
+                          <BForm.Label>Dish Category</BForm.Label>
+                          <Field name="category" className="form-control" />
+                          <ErrorMessage name="category" component="div" className="text-danger" />
+                        </BForm.Group>
                       </Col>
                       <Col md={8}>
-                        <Form.Group controlId={`dish-desc-${index}`}>
-                          <Form.Label>Description</Form.Label>
-                          <Form.Control as="textarea" rows={2} defaultValue={dish.description} />
-                        </Form.Group>
+                        <BForm.Label className="d-block">Meal Type</BForm.Label>
+                        {['veg', 'egg', 'non-veg'].map((type) => (
+                          <BForm.Check
+                            inline
+                            key={type}
+                            label={type}
+                            name="mealType"
+                            type="radio"
+                            id={`meal-${type}`}
+                            checked={values.mealType === type}
+                            onChange={() => setFieldValue('mealType', type)}
+                          />
+                        ))}
                       </Col>
                     </Row>
 
-                    {/* Advanced Options */}
-                    <Form.Check
-                      type="checkbox"
-                      label="Advanced Options"
-                      checked={dish.showAdvancedOptions}
-                      onChange={() => toggleAdvanced(index)}
-                      className="mt-2"
-                    />
-                    {dish.showAdvancedOptions && (
-                      <Row className="mt-2">
-                        <Col md={6}>
-                          <Form.Group controlId={`dish-qty-${index}`}>
-                            <Form.Label>Quantity</Form.Label>
-                            <Form.Control type="text" defaultValue={dish.quantity} placeholder="e.g., 500" />
-                          </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                          <Form.Group controlId={`dish-unit-${index}`}>
-                            <Form.Label>Unit</Form.Label>
-                            <Form.Select defaultValue={dish.unit}>
-                              <option value="">Select unit</option>
-                              <option value="kg">kg</option>
-                              <option value="g">g</option>
-                              <option value="litre">litre</option>
-                              <option value="ml">ml</option>
-                              <option value="piece">piece</option>
-                            </Form.Select>
-                          </Form.Group>
-                        </Col>
-                      </Row>
-                    )}
-                  </Card>
-                ))}
+                    <FieldArray name="dishes">
+                      {({ push, remove }) => (
+                        <>
+                          {values.dishes.map((dish, index) => (
+                            <Card key={index} className="mb-4 p-3">
+                              <Row>
+                                <Col md={4}>
+                                  <BForm.Group>
+                                    <BForm.Label>Dish Name</BForm.Label>
+                                    <Field name={`dishes[${index}].dish_name`} className="form-control" />
+                                    <ErrorMessage name={`dishes[${index}].dish_name`} component="div" className="text-danger" />
+                                  </BForm.Group>
+                                </Col>
+                                <Col md={4}>
+                                  <BForm.Group>
+                                    <BForm.Label>Price</BForm.Label>
+                                    <Field name={`dishes[${index}].dish_price`} className="form-control" />
+                                    <ErrorMessage name={`dishes[${index}].dish_price`} component="div" className="text-danger" />
+                                  </BForm.Group>
+                                </Col>
+                                <Col md={4} className="d-flex align-items-end">
+                                  <Button variant="outline-danger" onClick={() => remove(index)}>
+                                    Remove
+                                  </Button>
+                                </Col>
+                              </Row>
 
-                <div className="d-flex gap-2 mt-3">
-                  <Button variant="primary" onClick={addDish}>
-                    + Add More Dishes
-                  </Button>
-                  <Button variant="success">Save Menu</Button>
-                </div>
-              </Form>
+                              <Row className="mt-2">
+                                <Col md={4}>
+                                  <BForm.Group>
+                                    <BForm.Label>Image</BForm.Label>
+                                    <input
+                                      type="file"
+                                      className="form-control"
+                                      onChange={(e) =>
+                                        setFieldValue(`dishes[${index}].dish_img`, e.currentTarget.files[0])
+                                      }
+                                    />
+                                  </BForm.Group>
+                                </Col>
+                                <Col md={8}>
+                                  <BForm.Group>
+                                    <BForm.Label>Description</BForm.Label>
+                                    <Field
+                                      as="textarea"
+                                      rows={2}
+                                      name={`dishes[${index}].description`}
+                                      className="form-control"
+                                    />
+                                  </BForm.Group>
+                                </Col>
+                              </Row>
+
+                              <BForm.Check
+                                type="checkbox"
+                                label="Advanced Options"
+                                checked={dish.showAdvancedOptions}
+                                onChange={() =>
+                                  setFieldValue(`dishes[${index}].showAdvancedOptions`, !dish.showAdvancedOptions)
+                                }
+                                className="mt-2"
+                              />
+
+                              {dish.showAdvancedOptions && (
+                                <Row className="mt-2">
+                                  <Col md={6}>
+                                    <BForm.Group>
+                                      <BForm.Label>Quantity</BForm.Label>
+                                      <Field name={`dishes[${index}].quantity`} className="form-control" />
+                                    </BForm.Group>
+                                  </Col>
+                                  <Col md={6}>
+                                    <BForm.Group>
+                                      <BForm.Label>Unit</BForm.Label>
+                                      <Field as="select" name={`dishes[${index}].unit`} className="form-select">
+                                        <option value="">Select unit</option>
+                                        <option value="kg">kg</option>
+                                        <option value="g">g</option>
+                                        <option value="litre">litre</option>
+                                        <option value="ml">ml</option>
+                                        <option value="piece">piece</option>
+                                      </Field>
+                                    </BForm.Group>
+                                  </Col>
+                                </Row>
+                              )}
+                            </Card>
+                          ))}
+
+                          <div className="d-flex gap-2 mt-3">
+                            <Button
+                              type="button"
+                              variant="primary"
+                              onClick={() =>
+                                push({
+                                  dish_name: '',
+                                  dish_price: '',
+                                  dish_img: null,
+                                  description: '',
+                                  quantity: '',
+                                  unit: '',
+                                  showAdvancedOptions: false,
+                                })
+                              }
+                            >
+                              + Add More Dishes
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </FieldArray>
+
+                    <div className="mt-4">
+                      <Button type="submit" variant="success" disabled={isSubmitting}>
+                        {isSubmitting ? 'Saving...' : 'Save Menu'}
+                      </Button>
+                    </div>
+                  </Form>
+                )}
+              </Formik>
             </Card>
           </section>
         </Col>

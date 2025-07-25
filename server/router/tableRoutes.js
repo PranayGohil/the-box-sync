@@ -18,9 +18,9 @@ tableRouter.route("/checktable").get(authMiddleware, checkTable);
 tableRouter.route("/addtable").post(authMiddleware, adminAuth, addTable);
 tableRouter.route("/get-user-tables").get(authMiddleware, getTableData);
 tableRouter.route("/gettabledata/:id").get(authMiddleware, getTableDataById);
-tableRouter.route("/updatetable").put(authMiddleware, updateTable);
+tableRouter.route("/update").put(authMiddleware, updateTable);
 tableRouter
-  .route("/deletetable/:id")
+  .route("/delete/:id")
   .delete(authMiddleware, adminAuth, deleteTable);
 
 module.exports = tableRouter;

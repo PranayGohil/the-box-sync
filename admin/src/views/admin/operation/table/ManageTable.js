@@ -35,12 +35,12 @@ const ManageTable = () => {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      const transformedOrders = res.data.data.map(({ _id, ...rest }) => ({
+      const transformedTables = res.data.data.map(({ _id, ...rest }) => ({
         ...rest,
         id: _id,
       }));
-      console.log(transformedOrders);
-      setTableData(transformedOrders);
+      console.log(transformedTables);
+      setTableData(transformedTables);
     } catch (error) {
       console.error('Error fetching table data:', error);
     }
@@ -48,63 +48,6 @@ const ManageTable = () => {
 
   useEffect(() => {
     fetchTableData();
-  }, []);
-
-  const columns = React.useMemo(() => {
-    return [
-      {
-        Header: 'Table Number',
-        accessor: 'table_no',
-        sortable: true,
-        headerClassName: 'text-muted text-small text-uppercase w-40',
-        Cell: ({ row }) => (
-          <span className="ms-3">
-            {row.original.table_no}
-          </span>
-        ),
-      },
-      {
-        Header: 'Max Person',
-        accessor: 'max_person',
-        sortable: true,
-        headerClassName: 'text-muted text-small text-uppercase w-20',
-        cellClassName: 'text-alternate',
-        Cell: ({ row }) => (
-          <span className="ms-3">
-            {row.original.max_person}
-          </span>
-        )
-      },
-      {
-        Header: 'Actions',
-        id: 'actions',
-        headerClassName: 'text-muted text-small text-uppercase w-20',
-        Cell: ({ row }) => (
-          <div className="d-flex gap-2">
-            <button
-              type="button"
-              className="btn btn-sm btn-icon btn-outline-primary"
-              onClick={() => {
-                setSelectedTable(row.original);
-                setEditTableModalShow(true);
-              }}
-            >
-              <CsLineIcons icon="edit" />
-            </button>
-            <button
-              type="button"
-              className="btn btn-sm btn-icon btn-outline-danger"
-              onClick={() => {
-                setTableToDelete(row.original);
-                setDeleteTableModalShow(true);
-              }}
-            >
-              <CsLineIcons icon="bin" />
-            </button>
-          </div>
-        ),
-      },
-    ];
   }, []);
 
   return (
@@ -123,13 +66,56 @@ const ManageTable = () => {
 
           <Row>
             {tableData.map((table) => {
-              const data = table.tables;
+              const transformedData = table.tables.map(({ _id, ...rest }) => ({
+                ...rest,
+                id: _id,
+              }));
+              const data = transformedData;
 
-              console.log(data);
+              const columns = [
+                {
+                  Header: 'Table Number',
+                  accessor: 'table_no',
+                  Cell: ({ row }) => <span className="ms-3">{row.original.table_no}</span>,
+                },
+                {
+                  Header: 'Max Person',
+                  accessor: 'max_person',
+                  Cell: ({ row }) => <span className="ms-3">{row.original.max_person}</span>,
+                },
+                {
+                  Header: 'Actions',
+                  id: 'actions',
+                  Cell: ({ row }) => (
+                    <div className="d-flex gap-2">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-icon btn-outline-primary"
+                        onClick={() => {
+                          setSelectedTable(row.original);
+                          setEditTableModalShow(true);
+                        }}
+                      >
+                        <CsLineIcons icon="edit" />
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-icon btn-outline-danger"
+                        onClick={() => {
+                          setTableToDelete({ ...row.original, area: table.area });
+                          setDeleteTableModalShow(true);
+                        }}
+                      >
+                        <CsLineIcons icon="bin" />
+                      </button>
+                    </div>
+                  ),
+                },
+              ];
+
               return (
                 <Col md={4} key={table.id}>
                   <section className="scroll-section" id="stripe">
-                    <h2 className="small-title">Stripe</h2>
                     <Card body className="mb-5">
                       <BoxedVariationsStripe columns={columns} data={data} area={table.area} />
                     </Card>
@@ -142,9 +128,23 @@ const ManageTable = () => {
         </Col>
       </Row>
       {/* Edit Modal */}
-      {selectedTable && <EditTableModal show={editTableModalShow} handleClose={() => setEditTableModalShow(false)} data={selectedTable} />}
+      {selectedTable && (
+        <EditTableModal
+          show={editTableModalShow}
+          handleClose={() => setEditTableModalShow(false)}
+          data={selectedTable}
+          onUpdateSuccess={fetchTableData}
+        />
+      )}
 
-      {tableToDelete && <DeleteTableModal show={deleteTableModalShow} handleClose={() => setDeleteTableModalShow(false)} data={tableToDelete} />}
+
+      {tableToDelete && <DeleteTableModal
+        show={deleteTableModalShow}
+        handleClose={() => setDeleteTableModalShow(false)}
+        data={tableToDelete}
+        onDeleteSuccess={fetchTableData}
+      />
+      }
     </>
   );
 };

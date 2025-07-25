@@ -1,11 +1,12 @@
-const Menu = require("../models/menuListModel");
+const Menu = require("../models/menuModel");
 
 const addMenu = async (req, res) => {
   try {
-    const hotel_id = req.user;
+    const restaurant_id = req.user;
     const { category, meal_type, dishes } = req.body;
 
     if (!category || !meal_type || !Array.isArray(dishes)) {
+      console.log("Missing required fields");
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -16,14 +17,14 @@ const addMenu = async (req, res) => {
     const menuData = {
       category,
       meal_type,
-      hotel_id,
+      restaurant_id,
     };
 
     // Check if menu already exists
     const existingMenu = await Menu.findOne({
       category,
       meal_type,
-      hotel_id,
+      restaurant_id,
     });
 
     if (existingMenu) {
@@ -52,32 +53,17 @@ const addMenu = async (req, res) => {
 
 const getMenuData = async (req, res) => {
   try {
-    const { mealType, category, searchText } = req.query;
-
-    const query = req.params.id
-      ? { hotel_id: req.params.id }
-      : { hotel_id: req.user };
-    console.log(req.params.id);
-
-    if (mealType) {
-      query.meal_type = mealType;
-    }
-
-    if (category) {
-      query.category = category;
-    }
-
-    if (searchText) {
-      query["dishes.dish_name"] = { $regex: searchText, $options: "i" };
-    }
-
+    const query = { restaurant_id: req.user }; 
+    console.log("Query : ", query);
     const menuData = await Menu.find(query);
-    res.json(menuData);
+    console.log("Menu Data : ", menuData);
+    res.json({ data: menuData });
   } catch (error) {
     console.error("Error fetching menu data:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 // const getMenuDataByResCode = async (req, res) => {
 //   try {
 
@@ -106,7 +92,7 @@ const getMenuData = async (req, res) => {
 const getMenuCategories = async (req, res) => {
   try {
     // Retrieve unique category names
-    const categories = await Menu.distinct("category", { hotel_id: req.user });
+    const categories = await Menu.distinct("category", { restaurant_id: req.user });
     res.json(categories);
   } catch (error) {
     console.error("Error fetching categories:", error);
@@ -191,7 +177,7 @@ const deleteMenu = async (req, res) => {
       const updatedMenu = await Menu.findOne({
         category,
         meal_type,
-        hotel_id: req.user,
+        restaurant_id: req.user,
       });
       console.log("Updated Menu : " + updatedMenu);
       if (updatedMenu.dishes.length === 0) {

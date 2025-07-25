@@ -89,7 +89,7 @@ const AddTable = () => {
           const response = await axios.get(
             `${process.env.REACT_APP_API}/table/checktable`,
             {
-              params: { area, tableNo },
+              params: { area, table_no: tableNo },
               headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
             }
           );

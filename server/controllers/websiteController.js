@@ -1,5 +1,5 @@
 const Website = require("../models/WebsiteModel");
-const Menu = require("../models/menuListModel");
+const Menu = require("../models/menuModel");
 const User = require("../models/userModel");
 
 // GET current settings
@@ -70,7 +70,7 @@ exports.getAllDishes = async (req, res) => {
     const websiteSettings = await Website.findOne({ restaurant_id: req.user });
     const featuredIds = websiteSettings?.featured_dish_ids || [];
 
-    const menus = await Menu.find({ hotel_id: req.user });
+    const menus = await Menu.find({ restaurant_id: req.user });
 
     const categorized = menus.map((menu) => {
       const dishesWithFlag = menu.dishes.map((dish) => ({
@@ -121,7 +121,7 @@ exports.getFeaturedDishesByCode = async (req, res) => {
     const websiteSettings = await Website.findOne({ restaurant_id: user._id });
     const featuredIds = websiteSettings?.featured_dish_ids || [];
 
-    const menus = await Menu.find({ hotel_id: user._id });
+    const menus = await Menu.find({ restaurant_id: user._id });
 
     const categorized = menus
       .map((menu) => {

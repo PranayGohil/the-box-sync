@@ -4,7 +4,7 @@ const getTableData = (req, res) => {
   try {
     Table.find({ restaurant_id: req.user })
       .then((data) => {
-        res.json({data, success: true});
+        res.json({ data, success: true });
       })
       .catch((err) => res.json(err));
   } catch (error) {
@@ -32,7 +32,7 @@ const getDiningAreas = async (req, res) => {
   try {
     const areas = await Table.find({ restaurant_id: req.user }, "area"); // Fetch distinct areas
     const uniqueAreas = [...new Set(areas.map((item) => item.area))];
-    res.json({data: uniqueAreas, success: true});
+    res.json({ data: uniqueAreas, success: true });
   } catch (error) {
     console.error("Error fetching dining areas:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -60,17 +60,26 @@ const checkTable = (req, res) => {
 
 const addTable = (req, res) => {
   try {
-    console.log(req.body);
-    const tableData = { ...req.body, restaurant_id: req.user };
-    const area = req.body.area;
+    const { area, tables } = req.body;
 
-    Table.findOne({ area: area, restaurant_id: req.user }).then((data) => {
+    // Convert frontend keys to match schema
+    const formattedTables = tables.map((t) => ({
+      table_no: t.tableNo,
+      max_person: parseInt(t.maxPerson),
+    }));
+
+    const tableData = {
+      area,
+      tables: formattedTables,
+      restaurant_id: req.user,
+    };
+
+    Table.findOne({ area, restaurant_id: req.user }).then((data) => {
       if (data) {
         Table.findOneAndUpdate(
-          { area: area, restaurant_id: req.user },
-          {
-            $push: { tables: req.body.tables },
-          }
+          { area, restaurant_id: req.user },
+          { $push: { tables: { $each: formattedTables } } },
+          { new: true }
         )
           .then((data) => res.json(data))
           .catch((err) => res.json(err));
@@ -82,8 +91,10 @@ const addTable = (req, res) => {
     });
   } catch (error) {
     console.log(error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 const updateTable = (req, res) => {
   try {

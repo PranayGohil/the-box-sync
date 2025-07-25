@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const addMenu = new Schema({
-  hotel_id: {
+  restaurant_id: {
     type: String,
   },
   category: {
@@ -46,5 +46,5 @@ const addMenu = new Schema({
   },
 });
 
-const Menu = mongoose.model("menulist", addMenu);
+const Menu = mongoose.model("menu", addMenu);
 module.exports = Menu;
