@@ -48,18 +48,21 @@ const AddDishes = () => {
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      const payload = {
-        category: values.category,
-        meal_type: values.mealType,
-        dishes: values.dishes,
-      };
-
-      const res = await axios.post(`${process.env.REACT_APP_API}/menu/add`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+      const res = await axios.post(
+        `${process.env.REACT_APP_API}/menu/add`,
+        {
+          category: values.category,
+          meal_type: values.mealType,
+          dishes: values.dishes,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
         }
-      }, payload); 
+      );
+
       alert(res.data.message || 'Menu saved');
       resetForm();
     } catch (error) {

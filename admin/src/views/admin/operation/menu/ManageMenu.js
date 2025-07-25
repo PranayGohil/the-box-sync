@@ -159,61 +159,56 @@ const ManageMenu = () => {
 
           <Row>
             {filteredMenuData.map((category) => {
-              const columns = useMemo(
-                () => [
-                  {
-                    Header: 'Dish Name',
-                    accessor: 'dish_name',
-                    sortable: true,
-                    headerClassName: 'text-muted text-small text-uppercase w-40',
-                    Cell: ({ row }) => (
-                      <>
-                        {row.original.dish_name}
-                        {row.original.is_special && <i className={`icon-20 ${starFillIcon.c} ms-2 text-warning`} />}
-                      </>
-                    ),
-                  },
-                  {
-                    Header: 'Price',
-                    accessor: 'dish_price',
-                    sortable: true,
-                    headerClassName: 'text-muted text-small text-uppercase w-20',
-                    cellClassName: 'text-alternate',
-                  },
-                  {
-                    Header: 'Actions',
-                    id: 'actions',
-                    headerClassName: 'text-muted text-small text-uppercase w-20',
-                    Cell: ({ row }) => (
-                      <div className="d-flex gap-2">
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-icon btn-outline-primary"
-                          onClick={() => {
-                            setSelectedDish(row.original);
-                            setEditMenuModalShow(true);
-                          }}
-                        >
-                          <CsLineIcons icon="edit" />
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-icon btn-outline-danger"
-                          onClick={() => {
-                            setDishToDelete(row.original);
-                            setDeleteDishModalShow(true);
-                          }}
-                        >
-                          <CsLineIcons icon="bin" />
-                        </button>
-                      </div>
-                    ),
-                  },
-                ],
-                []
-              );
+              const columns = [{
+                Header: 'Dish Name',
+                accessor: 'dish_name',
+                sortable: true,
+                headerClassName: 'text-muted text-small text-uppercase w-40',
+                Cell: ({ row }) => (
+                  <>
+                    {row.original.dish_name}
+                    {row.original.is_special && <i className={`icon-20 ${starFillIcon.c} ms-2 text-warning`} />}
+                  </>
+                ),
+              },
+              {
+                Header: 'Price',
+                accessor: 'dish_price',
+                sortable: true,
+                headerClassName: 'text-muted text-small text-uppercase w-20',
+                cellClassName: 'text-alternate',
+              },
+              {
+                Header: 'Actions',
+                id: 'actions',
+                headerClassName: 'text-muted text-small text-uppercase w-20',
+                Cell: ({ row }) => (
+                  <div className="d-flex gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-icon btn-outline-primary"
+                      onClick={() => {
+                        setSelectedDish(row.original);
+                        setEditMenuModalShow(true);
+                      }}
+                    >
+                      <CsLineIcons icon="edit" />
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-icon btn-outline-danger"
+                      onClick={() => {
+                        setDishToDelete(row.original);
+                        setDeleteDishModalShow(true);
+                      }}
+                    >
+                      <CsLineIcons icon="bin" />
+                    </button>
+                  </div>
+                ),
+              }];
 
-              const data = useMemo(() => category.dishes, [category.dishes]);
+              const data = category.dishes;
 
               return (
                 <Col md={6} lg={4} key={category.id}>

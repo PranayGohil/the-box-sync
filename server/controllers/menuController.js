@@ -6,11 +6,13 @@ const addMenu = async (req, res) => {
     const { category, meal_type, dishes } = req.body;
 
     if (!category || !meal_type || !Array.isArray(dishes)) {
+      if(!category) console.log("Missing category");
+      if(!meal_type) console.log("Missing meal_type");
+      if(!dishes) console.log("Missing dishes");
       console.log("Missing required fields");
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // Parse dishes if sent as JSON string
     const parsedDishes =
       typeof dishes === "string" ? JSON.parse(dishes) : dishes;
 
