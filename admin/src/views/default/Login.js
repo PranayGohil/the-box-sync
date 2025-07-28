@@ -1,22 +1,42 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
+import { NavLink, useHistory } from 'react-router-dom';
 import { Button, Form } from 'react-bootstrap';
+import axios from 'axios';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import LayoutFullpage from 'layout/LayoutFullpage';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
+import { AuthContext } from 'contexts/AuthContext';
 
 const Login = () => {
   const title = 'Login';
   const description = 'Login Page';
+  const history = useHistory();
+  
+  const { login } = useContext(AuthContext);
+
+  const [error, setError] = useState('');
 
   const validationSchema = Yup.object().shape({
     email: Yup.string().email().required('Email is required'),
     password: Yup.string().min(6, 'Must be at least 6 chars!').required('Password is required'),
   });
   const initialValues = { email: '', password: '' };
-  const onSubmit = (values) => console.log('submit form', values);
+
+  const onSubmit = async (values) => {
+    try {
+      const res = await axios.post(`${process.env.REACT_APP_API}/user/login`, values);
+      if(res.data.success) {
+        login(res.data.token, res.data.user);
+        history.push('/');
+      } else {
+        setError(res.data.message);
+      }
+    } catch (err) {
+      console.log(err.data.message);
+    }
+  };
 
   const formik = useFormik({ initialValues, validationSchema, onSubmit });
   const { handleSubmit, handleChange, values, touched, errors } = formik;
@@ -75,6 +95,9 @@ const Login = () => {
                 Forgot?
               </NavLink>
               {errors.password && touched.password && <div className="d-block invalid-tooltip">{errors.password}</div>}
+            </div>
+            <div className='mb-3 mx-2'>
+              {error && <div className="text-danger">{error}</div>}
             </div>
             <Button size="lg" type="submit">
               Login

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Row, Col, Card } from 'react-bootstrap';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink, useHistory } from 'react-router-dom';
 import { Steps } from 'intro.js-react';
 import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -10,6 +10,7 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import 'intro.js/introjs.css';
 
 const DashboardsDefault = () => {
+  const history = useHistory();
   const title = 'Dashboard';
   const description = 'Default Dashboard';
 
@@ -131,17 +132,19 @@ const DashboardsDefault = () => {
                     }}
                   >
                     {table.table.map((item, i) => (
-                      <Glide.Item key={i}>
-                        <Card className="sh-20 hover-border-primary mb-5">
-                          <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
-                            <div className="d-flex sh-8 sw-8 bg-gradient-light text-white mb-3 align-items-center justify-content-center rounded-xl">
-                              {item.number}
-                            </div>
-                            <p className="mb-0 lh-1">Maximum Person</p>
-                            <p className="cta-3 mb-0 text-primary">{item.maxPersons}</p>
-                          </Card.Body>
-                        </Card>
-                      </Glide.Item>
+                      <Link to="/order" key={i}>
+                        <Glide.Item onClick={() => (history.push('/order'))}>
+                          <Card className="sh-20 hover-border-primary mb-5">
+                            <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
+                              <div className="d-flex sh-8 sw-8 bg-gradient-light fs-3 text-white mb-3 align-items-center justify-content-center rounded-xl">
+                                {item.number}
+                              </div>
+                              <p className="mb-0 lh-1">Maximum Person</p>
+                              <p className="cta-3 mb-0 text-primary">{item.maxPersons}</p>
+                            </Card.Body>
+                          </Card>
+                        </Glide.Item>
+                      </Link>
                     ))}
                   </Glide>
                 </Col>

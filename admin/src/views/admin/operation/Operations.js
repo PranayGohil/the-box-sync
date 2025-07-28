@@ -8,6 +8,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { useWindowSize } from 'hooks/useWindowSize';
 import { Switch, Route, Redirect, NavLink } from 'react-router-dom';
 import OrderHistory from './order/OrderHistory';
+import OrderDetails from './order/OrderDetails';
 
 import ManageTable from './table/ManageTable';
 import AddTable from './table/AddTable';
@@ -129,6 +130,7 @@ const Operations = () => {
           <Switch>
             <Route exact path="/operations" render={() => <Redirect to="/operations/order-history" />} />
             <Route path="/operations/order-history" component={OrderHistory} />
+            <Route path="/operations/order-details/:id" component={OrderDetails} />
 
             <Route path="/operations/manage-table" component={ManageTable} />
             <Route path="/operations/add-table" component={AddTable} />

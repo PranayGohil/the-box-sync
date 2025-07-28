@@ -5,6 +5,7 @@ import { DEFAULT_PATHS } from 'config.js';
 
 const manager = {
   dashboard: lazy(() => import('views/manager/Dashboard')),
+  order: lazy(() => import('views/manager/order/Order')),
   operation: lazy(() => import('views/manager/operation/Operations')),
   staff: lazy(() => import('views/manager/staff/Staff')),
   orderhistory: lazy(() => import('views/manager/operation/order/OrderHistory')),
@@ -43,6 +44,11 @@ const routesAndMenuItems = {
       label: 'Staff',
       icon: 'list',
       component: manager.staff,
+    },
+    {
+      path: `${appRoot}/order`,
+      exact: true,
+      component: manager.order,
     },
     {
       path: `${appRoot}/dashboards`,

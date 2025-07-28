@@ -24,7 +24,7 @@ const routesAndMenuItems = {
       path: DEFAULT_PATHS.APP,
       exact: true,
       redirect: true,
-      to: `${appRoot}/dashboards/default`,
+      to: `${appRoot}/dashboard`,
     },
     {
       path: `${appRoot}/dashboard`,
