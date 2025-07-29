@@ -40,8 +40,12 @@ const ManageMenu = () => {
         },
       });
       console.log(res.data.data);
-      setMenuData(res.data.data);
-      setFilteredMenuData(res.data.data);
+      const transformedMenu = res.data.data.map(({ _id, ...rest }) => ({
+        ...rest,
+        id: _id,
+      }));
+      setMenuData(transformedMenu);
+      setFilteredMenuData(transformedMenu);
     } catch (error) {
       console.error('Error fetching menu data:', error);
     }
@@ -64,12 +68,12 @@ const ManageMenu = () => {
     }
 
     if (searchText) {
-      filtered = filtered.map((item) => ({
-        ...item,
-        dishes: item.dishes.filter((dish) =>
-          dish.dish_name.toLowerCase().includes(searchText.toLowerCase())
-        ),
-      })).filter((item) => item.dishes.length > 0);
+      filtered = filtered
+        .map((item) => ({
+          ...item,
+          dishes: item.dishes.filter((dish) => dish.dish_name.toLowerCase().includes(searchText.toLowerCase())),
+        }))
+        .filter((item) => item.dishes.length > 0);
     }
 
     setFilteredMenuData(filtered);
@@ -86,40 +90,6 @@ const ManageMenu = () => {
     applyFilters({ ...newFilters, searchText: searchTerm });
   };
 
-
-
-  // Dummy menu data
-  // const [menuData] = useState([
-  //   {
-  //     id: '1',
-  //     meal_type: 'egg',
-  //     category: 'Paneer',
-  //     dishes: [
-  //       { id: 'a', dish_name: 'Paneer Masala', dish_price: 200, is_special: false },
-  //       { id: 'b', dish_name: 'Cheese Paneer', dish_price: 220, is_special: true },
-  //     ],
-  //   },
-  //   {
-  //     id: '2',
-  //     meal_type: 'non-veg',
-  //     category: 'Chicken',
-  //     dishes: [
-  //       { id: 'c', dish_name: 'Butter Chicken', dish_price: 150, is_special: false },
-  //       { id: 'd', dish_name: 'Kadai Chicken', dish_price: 180, is_special: true },
-  //     ],
-  //   },
-  //   {
-  //     id: '3',
-  //     meal_type: 'veg',
-  //     category: 'Veg Sabji',
-  //     dishes: [
-  //       { id: 'e', dish_name: 'Aloo Sabji', dish_price: 70, is_special: true },
-  //       { id: 'f', dish_name: 'Bhindi Sabji', dish_price: 60, is_special: false },
-  //       { id: 'g', dish_name: 'Gobi ki Sabji', dish_price: 110, is_special: true },
-  //     ],
-  //   },
-  // ]);
-
   return (
     <>
       <HtmlHead title={title} description={description} />
@@ -132,11 +102,7 @@ const ManageMenu = () => {
           <Form className="mb-4">
             <Row>
               <Col md={4}>
-                <Form.Control
-                  type="text"
-                  placeholder="Search dishes..."
-                  onChange={(e) => handleSearch(e.target.value)}
-                />
+                <Form.Control type="text" placeholder="Search dishes..." onChange={(e) => handleSearch(e.target.value)} />
               </Col>
               <Col md={3}>
                 <Form.Select onChange={(e) => handleFilter('meal_type', e.target.value)}>
@@ -150,7 +116,9 @@ const ManageMenu = () => {
                 <Form.Select onChange={(e) => handleFilter('category', e.target.value)}>
                   <option value="">All Categories</option>
                   {Array.from(new Set(menuData.map((cat) => cat.category))).map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
                   ))}
                 </Form.Select>
               </Col>
@@ -159,54 +127,56 @@ const ManageMenu = () => {
 
           <Row>
             {filteredMenuData.map((category) => {
-              const columns = [{
-                Header: 'Dish Name',
-                accessor: 'dish_name',
-                sortable: true,
-                headerClassName: 'text-muted text-small text-uppercase w-40',
-                Cell: ({ row }) => (
-                  <>
-                    {row.original.dish_name}
-                    {row.original.is_special && <i className={`icon-20 ${starFillIcon.c} ms-2 text-warning`} />}
-                  </>
-                ),
-              },
-              {
-                Header: 'Price',
-                accessor: 'dish_price',
-                sortable: true,
-                headerClassName: 'text-muted text-small text-uppercase w-20',
-                cellClassName: 'text-alternate',
-              },
-              {
-                Header: 'Actions',
-                id: 'actions',
-                headerClassName: 'text-muted text-small text-uppercase w-20',
-                Cell: ({ row }) => (
-                  <div className="d-flex gap-2">
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-icon btn-outline-primary"
-                      onClick={() => {
-                        setSelectedDish(row.original);
-                        setEditMenuModalShow(true);
-                      }}
-                    >
-                      <CsLineIcons icon="edit" />
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-icon btn-outline-danger"
-                      onClick={() => {
-                        setDishToDelete(row.original);
-                        setDeleteDishModalShow(true);
-                      }}
-                    >
-                      <CsLineIcons icon="bin" />
-                    </button>
-                  </div>
-                ),
-              }];
+              const columns = [
+                {
+                  Header: 'Dish Name',
+                  accessor: 'dish_name',
+                  sortable: true,
+                  headerClassName: 'text-muted text-small text-uppercase w-40',
+                  Cell: ({ row }) => (
+                    <>
+                      {row.original.dish_name}
+                      {row.original.is_special && <i className={`icon-20 ${starFillIcon.c} ms-2 text-warning`} />}
+                    </>
+                  ),
+                },
+                {
+                  Header: 'Price',
+                  accessor: 'dish_price',
+                  sortable: true,
+                  headerClassName: 'text-muted text-small text-uppercase w-20',
+                  cellClassName: 'text-alternate',
+                },
+                {
+                  Header: 'Actions',
+                  id: 'actions',
+                  headerClassName: 'text-muted text-small text-uppercase w-20',
+                  Cell: ({ row }) => (
+                    <div className="d-flex gap-2">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-icon btn-outline-primary"
+                        onClick={() => {
+                          setSelectedDish(row.original);
+                          setEditMenuModalShow(true);
+                        }}
+                      >
+                        <CsLineIcons icon="edit" />
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-icon btn-outline-danger"
+                        onClick={() => {
+                          setDishToDelete(row.original);
+                          setDeleteDishModalShow(true);
+                        }}
+                      >
+                        <CsLineIcons icon="bin" />
+                      </button>
+                    </div>
+                  ),
+                },
+              ];
 
               const data = category.dishes;
 
@@ -216,16 +186,16 @@ const ManageMenu = () => {
                     <BoxedVariationsStripe columns={columns} data={data} category={category.category} />
                   </Card>
                 </Col>
-              )
+              );
             })}
           </Row>
         </Col>
       </Row>
 
       {/* Edit Modal */}
-      {selectedDish && <EditDishModal show={editMenuModalShow} handleClose={() => setEditMenuModalShow(false)} data={selectedDish} />}
+      {selectedDish && <EditDishModal show={editMenuModalShow} handleClose={() => setEditMenuModalShow(false)} data={selectedDish} fetchMenuData={fetchMenuData} />}
 
-      {dishToDelete && <DeleteDishModal show={deleteDishModalShow} handleClose={() => setDeleteDishModalShow(false)} data={dishToDelete} />}
+      {dishToDelete && <DeleteDishModal show={deleteDishModalShow} handleClose={() => setDeleteDishModalShow(false)} data={dishToDelete} fetchMenuData={fetchMenuData} />}
     </>
   );
 };

@@ -11,18 +11,25 @@ const {
   removeSpecialMenu,
   updateDishAvailability,
 } = require("../controllers/menuController");
+const upload = require("../middlewares/upload");
 
 const menuRouter = express.Router();
 
-menuRouter.route("/add").post(authMiddleware, addMenu);
+menuRouter
+  .route("/add")
+  .post(
+    authMiddleware,
+    upload.fields([{ name: "dish_img", maxCount: 10 }]),
+    addMenu
+  );
 menuRouter.route("/get").get(authMiddleware, getMenuData);
 menuRouter.route("/getmenu/:id").get(authMiddleware, getMenuData);
 menuRouter.route("/getmenudata/:id").get(getMenuDataById);
 menuRouter.route("/getmenucategories").get(authMiddleware, getMenuCategories);
-menuRouter.route("/updatemenu/:id").put(authMiddleware, updateMenu);
 menuRouter
-  .route("/deletemenu/:id")
-  .delete(authMiddleware, deleteMenu);
+  .route("/update")
+  .put(authMiddleware, upload.single("dish_img"), updateMenu);
+menuRouter.route("/delete/:id").delete(authMiddleware, deleteMenu);
 menuRouter.route("/setspecialdish/:id").put(authMiddleware, setSpecialMenu);
 menuRouter
   .route("/removespecialdish/:id")

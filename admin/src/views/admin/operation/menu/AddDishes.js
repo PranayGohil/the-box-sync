@@ -1,4 +1,5 @@
 import React from 'react';
+import { useHistory } from 'react-router-dom';
 import { Card, Col, Row, Button, Form as BForm } from 'react-bootstrap';
 import { Formik, Form, FieldArray, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -15,6 +16,8 @@ const AddDishes = () => {
     { to: 'operations', text: 'Operations' },
     { to: 'operations/add-dish', title: 'Add Dishes' },
   ];
+
+  const history = useHistory();
 
   const initialValues = {
     category: '',
@@ -48,23 +51,30 @@ const AddDishes = () => {
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      const res = await axios.post(
-        `${process.env.REACT_APP_API}/menu/add`,
-        {
-          category: values.category,
-          meal_type: values.mealType,
-          dishes: values.dishes,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
+      const formData = new FormData();
+      formData.append('category', values.category);
+      formData.append('meal_type', values.mealType);
+      const dishData = values.dishes.map((dish, i) => {
+        if (dish.dish_img) {
+          formData.append(`dish_img`, dish.dish_img); // same field for each
         }
-      );
+        return {
+          ...dish,
+          dish_img: '', // placeholder to be filled on server
+        };
+      });
+      formData.append('dishes', JSON.stringify(dishData));
+
+      const res = await axios.post(`${process.env.REACT_APP_API}/menu/add`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
 
       alert(res.data.message || 'Menu saved');
       resetForm();
+      history.push('/operations/manage-menu');
     } catch (error) {
       console.error('Error submitting form:', error);
       alert('Something went wrong!');
@@ -87,11 +97,7 @@ const AddDishes = () => {
 
           <section className="scroll-section" id="formRow">
             <Card body className="mb-5">
-              <Formik
-                initialValues={initialValues}
-                validationSchema={validationSchema}
-                onSubmit={handleSubmit}
-              >
+              <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
                 {({ values, isSubmitting, handleChange, setFieldValue }) => (
                   <Form>
                     <Row className="mb-3">
@@ -153,21 +159,14 @@ const AddDishes = () => {
                                     <input
                                       type="file"
                                       className="form-control"
-                                      onChange={(e) =>
-                                        setFieldValue(`dishes[${index}].dish_img`, e.currentTarget.files[0])
-                                      }
+                                      onChange={(e) => setFieldValue(`dishes[${index}].dish_img`, e.currentTarget.files[0])}
                                     />
                                   </BForm.Group>
                                 </Col>
                                 <Col md={8}>
                                   <BForm.Group>
                                     <BForm.Label>Description</BForm.Label>
-                                    <Field
-                                      as="textarea"
-                                      rows={2}
-                                      name={`dishes[${index}].description`}
-                                      className="form-control"
-                                    />
+                                    <Field as="textarea" rows={2} name={`dishes[${index}].description`} className="form-control" />
                                   </BForm.Group>
                                 </Col>
                               </Row>
@@ -176,9 +175,7 @@ const AddDishes = () => {
                                 type="checkbox"
                                 label="Advanced Options"
                                 checked={dish.showAdvancedOptions}
-                                onChange={() =>
-                                  setFieldValue(`dishes[${index}].showAdvancedOptions`, !dish.showAdvancedOptions)
-                                }
+                                onChange={() => setFieldValue(`dishes[${index}].showAdvancedOptions`, !dish.showAdvancedOptions)}
                                 className="mt-2"
                               />
 
@@ -243,6 +240,7 @@ const AddDishes = () => {
           </section>
         </Col>
       </Row>
+      Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me 
     </>
   );
 };
