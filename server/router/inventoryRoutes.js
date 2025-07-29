@@ -2,6 +2,7 @@ const express = require("express");
 const authMiddleware = require("../middlewares/auth-middlewares");
 const {
   getInventoryData,
+  getInventoryDataByStatus,
   getInventoryDataById,
   addInventory,
   updateInventory,
@@ -10,27 +11,31 @@ const {
   rejectInventoryRequest,
 } = require("../controllers/inventoryController");
 const adminAuth = require("../middlewares/adminAuth");
+const upload = require("../middlewares/upload");
 
 const inventoryRouter = express.Router();
 
 inventoryRouter
-  .route("/getinventorydata")
+  .route("/get-all")
   .get(authMiddleware, getInventoryData);
 inventoryRouter
-  .route("/getinventorydata/:id")
-  .get(authMiddleware, getInventoryDataById);
-inventoryRouter.route("/addinventory").post(authMiddleware, addInventory);
+  .route("/get-by-status/:status")
+  .get(authMiddleware, getInventoryDataByStatus);
 inventoryRouter
-  .route("/deleteinventory/:id")
+  .route("/get/:id")
+  .get(authMiddleware, getInventoryDataById);
+inventoryRouter.route("/add").post(authMiddleware, addInventory);
+inventoryRouter
+  .route("/delete/:id")
   .delete(authMiddleware, deleteInventory);
 inventoryRouter
-  .route("/updateinventory/:id")
+  .route("/update/:id")
   .put(authMiddleware, updateInventory);
 inventoryRouter
-  .route("/completeinventoryrequest")
-  .post(authMiddleware, adminAuth, completeInventoryRequest);
+  .route("/complete-request")
+  .post(authMiddleware, adminAuth, upload.array("bill_files"), completeInventoryRequest);
 inventoryRouter
-  .route("/rejectinventoryrequest/:id")
+  .route("/reject-request/:id")
   .post(authMiddleware, adminAuth, rejectInventoryRequest);
 
 module.exports = inventoryRouter;

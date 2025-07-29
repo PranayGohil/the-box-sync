@@ -12,6 +12,19 @@ const getInventoryData = (req, res) => {
   }
 };
 
+const getInventoryDataByStatus = (req, res) => {
+  try {
+    const status = req.params.status;
+    Inventory.find({ restaurant_id: req.user, status: status })
+      .then((data) => {
+        res.json({ data, success: true });
+      })
+      .catch((err) => res.json(err));
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 const getInventoryDataById = (req, res) => {
   try {
     const inventoryId = req.params.id;
@@ -79,34 +92,52 @@ const deleteInventory = (req, res) => {
 };
 
 const completeInventoryRequest = async (req, res) => {
-  const { _id, bill_images, items, remainingItems, ...updateData } = req.body;
-  console.log("Completed inventory request", req.body);
-
   try {
+    const {
+      _id,
+      bill_date,
+      bill_number,
+      vendor_name,
+      category,
+      total_amount,
+      paid_amount,
+      unpaid_amount,
+    } = req.body;
+
+    // ✅ Parse JSON arrays
+    const items = JSON.parse(req.body.items);
+    const remainingItems = JSON.parse(req.body.remainingItems);
+
+    // ✅ File names
+    const bill_files = req.files.map(file => "/inventory/bills/" + file.filename);
+
     const inventory = await Inventory.findById(_id);
     if (!inventory) {
       return res.status(404).json({ message: "Inventory not found" });
     }
 
     if (remainingItems.length === 0) {
-      // All items completed → delete inventory
       await Inventory.findByIdAndDelete(_id);
-      console.log("Inventory deleted because no remaining items");
     } else {
-      // Some items remaining → update inventory
       inventory.items = remainingItems;
-      console.log("Updating inventory with remaining items:", remainingItems);
       await inventory.save();
     }
 
-    // Always add completed items as a new completed record
+    // ✅ Create completed inventory
     const completedItems = {
-      ...updateData,
-      bill_images,
+      bill_date,
+      bill_number,
+      vendor_name,
+      category,
+      bill_files,
+      total_amount,
+      paid_amount,
+      unpaid_amount,
       items,
       status: "Completed",
+      restaurant_id: inventory.restaurant_id,
     };
-    console.log("Creating completed inventory record:", completedItems);
+
     await Inventory.create(completedItems);
 
     res.status(200).json({ message: "Inventory updated successfully" });
@@ -115,6 +146,7 @@ const completeInventoryRequest = async (req, res) => {
     res.status(500).json({ message: "Error updating inventory", error });
   }
 };
+
 
 const rejectInventoryRequest = async (req, res) => {
   const id = req.params.id;
@@ -135,6 +167,7 @@ const rejectInventoryRequest = async (req, res) => {
 
 module.exports = {
   getInventoryData,
+  getInventoryDataByStatus,
   getInventoryDataById,
   addInventory,
   updateInventory,

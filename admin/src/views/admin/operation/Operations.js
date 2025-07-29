@@ -142,7 +142,7 @@ const Operations = () => {
             <Route path="/operations/requested-inventory" component={RequestedInventory} />
             <Route path="/operations/inventory-history" component={InventoryHistory} />
             <Route path="/operations/add-inventory" component={AddInventory} />
-            <Route path="/operations/complete-inventory" component={CompleteInventory} />
+            <Route path="/operations/complete-inventory/:id" component={CompleteInventory} />
 
             <Route path="/operations/feedback" component={Feedback} />
             

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import { Badge, Button, Col, Form, Card, Row, Modal } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
 import Scrollspy from 'components/scrollspy/Scrollspy';
@@ -11,34 +12,6 @@ import ControlsPageSize from './components/ControlsPageSize';
 import Table from './components/Table';
 import TablePagination from './components/TablePagination';
 
-// Dummy data for requested inventory
-const dummyData = [
-  {
-    id: 1,
-    request_date: '2025-07-05T10:30:00Z',
-    formatted_date: 'July 5, 2025, 10:30 AM',
-    status: 'Requested',
-    items: [
-      { item_name: 'Flour', item_quantity: 5, unit: 'kg' },
-      { item_name: 'Sugar', item_quantity: 2, unit: 'kg' },
-    ],
-  },
-  {
-    id: 2,
-    request_date: '2025-07-04T14:15:00Z',
-    formatted_date: 'July 4, 2025, 2:15 PM',
-    status: 'Requested',
-    items: [{ item_name: 'Milk', item_quantity: 10, unit: 'litre' }],
-  },
-  {
-    id: 3,
-    request_date: '2025-07-03T09:45:00Z',
-    formatted_date: 'July 3, 2025, 9:45 AM',
-    status: 'Requested',
-    items: [{ item_name: 'Butter', item_quantity: 3, unit: 'kg' }],
-  },
-];
-
 const RequestedInventory = () => {
   const title = 'Requested Inventory';
   const description = 'Requested inventory with modern table UI and dummy data.';
@@ -49,13 +22,49 @@ const RequestedInventory = () => {
     { to: 'operations/requested-inventory', title: 'Requested Inventory' },
   ];
 
-  const [data, setData] = useState(dummyData);
+  const [data, setData] = useState([]);
 
-  const scrollspyItems = [
-    { id: 'title', text: 'Title' },
-    { id: 'verticallyCentered', text: 'Vertically Centered' },
-  ];
   const [rejectInventoryModal, setRejectInventoryModal] = useState(false);
+
+  const fetchRequestedInventory = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Requested`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      console.log(res.data);
+      if (res.data.success) {
+        const requestedInventory = res.data.data
+          .map((item) => ({
+            ...item,
+            request_date_obj: new Date(item.request_date),
+            formatted_date: new Date(item.request_date).toLocaleString("en-IN", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            }),
+          }));
+
+        requestedInventory.sort(
+          (a, b) => b.request_date_obj - a.request_date_obj
+        );
+
+        console.log(requestedInventory);
+        setData(requestedInventory);
+      }
+    } catch (error) {
+      console.error('Error fetching requested inventory:', error);
+    }
+  }
+
+  useEffect(() => {
+    fetchRequestedInventory();
+  }, [])
 
   // Define table columns
   const columns = React.useMemo(
@@ -64,6 +73,7 @@ const RequestedInventory = () => {
         Header: 'Requested Date',
         accessor: 'formatted_date',
         headerClassName: 'text-muted text-small text-uppercase',
+        Cell: ({ cell }) => <span> {cell.value} </span>,
       },
       {
         Header: 'Items',
@@ -87,7 +97,7 @@ const RequestedInventory = () => {
         Header: 'Actions',
         Cell: ({ row }) => (
           <>
-            <Link variant="link" size="sm" title="Complete" to="/operations/complete-inventory">
+            <Link variant="link" size="sm" title="Complete" to={`/operations/complete-inventory/${row.original._id}`}>  {/* eslint-disable-line no-underscore-dangle */}
               <CsLineIcons icon="check" />
             </Link>
             <Button variant="link" size="sm" title="Reject" onClick={() => setRejectInventoryModal(true)}>
@@ -155,7 +165,7 @@ const RequestedInventory = () => {
           <Button variant="secondary" onClick={() => setRejectInventoryModal(false)}>
             Close
           </Button>
-          <Button onClick={() => setRejectInventoryModal(false)}>Reject</Button>
+          <Button variant="danger" onClick={() => setRejectInventoryModal(false)}>Reject</Button>
         </Modal.Footer>
       </Modal>
     </>
