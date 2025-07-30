@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
+import axios from 'axios';
 import { Badge, Button, Col, Form, Row } from 'react-bootstrap';
-import { useTable, useGlobalFilter, useSortBy, usePagination } from 'react-table';
+import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -55,6 +57,7 @@ const dummyRejected = [
 ];
 
 const InventoryHistory = () => {
+  const history = useHistory();
   const title = 'Inventory History';
   const description = 'Completed and Rejected inventory with modern table UI and dummy data.';
 
@@ -63,6 +66,94 @@ const InventoryHistory = () => {
     { to: 'operations/inventory-history', text: 'Operations' },
     { to: 'operations/inventory-history', title: 'Inventory History' },
   ];
+
+  const [completedData, setCompletedData] = useState([]);
+  const [rejectedData, setRejectedData] = useState([]);
+
+  const fetchCompletedInventory = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Completed`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      console.log("Completed Inventory", res.data);
+      if (res.data.success) {
+        const comnpletedInventory = res.data.data
+          .map((item) => ({
+            ...item,
+            request_date_obj: new Date(item.request_date),
+            formatted_request_date: new Date(item.request_date).toLocaleString("en-IN", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }),
+            bill_date_obj: new Date(item.bill_date),
+            formatted_bill_date: new Date(item.bill_date).toLocaleString("en-IN", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          }));
+
+        comnpletedInventory.sort(
+          (a, b) => b.request_date_obj - a.request_date_obj
+        );
+
+        console.log(comnpletedInventory);
+        setCompletedData(comnpletedInventory);
+      }
+    } catch (error) {
+      console.error('Error fetching requested inventory:', error);
+    }
+  };
+
+  const fetchRejectedInventory = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Rejected`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      console.log("Rejected Inventory", res.data);
+      if (res.data.success) {
+        const rejectedInventory = res.data.data
+          .map((item) => ({
+            ...item,
+            request_date_obj: new Date(item.request_date),
+            formatted_request_date: new Date(item.request_date).toLocaleString("en-IN", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }),
+            bill_date_obj: new Date(item.bill_date),
+            formatted_bill_date: new Date(item.bill_date).toLocaleString("en-IN", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          }));
+
+        rejectedInventory.sort(
+          (a, b) => b.request_date_obj - a.request_date_obj
+        );
+
+        console.log(rejectedInventory);
+        setRejectedData(rejectedInventory);
+      }
+    } catch (error) {
+      console.error('Error fetching requested inventory:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCompletedInventory();
+    fetchRejectedInventory();
+  }, []);
 
   // Completed Table
   const completedColumns = React.useMemo(
@@ -87,7 +178,7 @@ const InventoryHistory = () => {
         Header: 'Actions',
         Cell: ({ row }) => (
           <>
-            <Button variant="link" size="sm" title="View">
+            <Button variant="link" size="sm" title="View" onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}> {/* eslint-disable-line no-underscore-dangle */}
               <CsLineIcons icon="eye" />
             </Button>
             <Button variant="link" size="sm" title="Edit">
@@ -125,7 +216,7 @@ const InventoryHistory = () => {
         Header: 'Actions',
         Cell: ({ row }) => (
           <>
-            <Button variant="link" size="sm" title="View">
+            <Button variant="link" size="sm" title="View" onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}> {/* eslint-disable-line no-underscore-dangle */}
               <CsLineIcons icon="eye" />
             </Button>
             <Button variant="link" size="sm" title="Delete">
@@ -138,17 +229,15 @@ const InventoryHistory = () => {
     []
   );
 
-  const [completedData] = useState(dummyCompleted);
-  const [rejectedData] = useState(dummyRejected);
-
   const completedTable = useTable(
     { columns: completedColumns, data: completedData, initialState: { pageIndex: 0 } },
     useGlobalFilter,
     useSortBy,
-    usePagination
+    usePagination,
+    useRowSelect,
   );
 
-  const rejectedTable = useTable({ columns: rejectedColumns, data: rejectedData, initialState: { pageIndex: 0 } }, useGlobalFilter, useSortBy, usePagination);
+  const rejectedTable = useTable({ columns: rejectedColumns, data: rejectedData, initialState: { pageIndex: 0 } }, useGlobalFilter, useSortBy, usePagination, useRowSelect,);
 
   return (
     <>

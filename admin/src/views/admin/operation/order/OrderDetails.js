@@ -1,5 +1,3 @@
-// Converted OrderDetails.js to New Theme with Dummy Data Option
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
