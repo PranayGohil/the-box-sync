@@ -67,7 +67,7 @@ const InventoryDetails = () => {
                 </Card.Body>
             </Card>
 
-            {inventory.bill_number || inventory.category || inventory.vendor_name || inventory.paid_amount || inventory.total_amount || inventory.unpaid_amount && (
+            {(inventory.bill_number || inventory.category || inventory.vendor_name || inventory.paid_amount || inventory.total_amount || inventory.unpaid_amount) && (
                 <Card className="mb-4">
                     <Card.Header><h5>Purchase Details</h5></Card.Header>
                     <Card.Body>
@@ -157,7 +157,7 @@ const InventoryDetails = () => {
                     <Button variant="secondary" onClick={() => history.push('/operations/inventory-history')}>
                         Back to Inventory
                     </Button>{' '}
-                    <Button variant="dark" onClick={() => history.push(`/inventory/update/${id}`)}>
+                    <Button variant="dark" onClick={() => history.push(`/operations/edit-inventory/${id}`)}>
                         Edit Inventory
                     </Button>
                 </Col>

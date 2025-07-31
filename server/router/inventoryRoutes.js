@@ -24,13 +24,13 @@ inventoryRouter
 inventoryRouter
   .route("/get/:id")
   .get(authMiddleware, getInventoryDataById);
-inventoryRouter.route("/add").post(authMiddleware, addInventory);
+inventoryRouter.route("/add").post(authMiddleware, upload.array("bill_files"), addInventory);
 inventoryRouter
   .route("/delete/:id")
   .delete(authMiddleware, deleteInventory);
 inventoryRouter
   .route("/update/:id")
-  .put(authMiddleware, updateInventory);
+  .put(authMiddleware, upload.array("bill_files"), updateInventory);
 inventoryRouter
   .route("/complete-request")
   .post(authMiddleware, adminAuth, upload.array("bill_files"), completeInventoryRequest);

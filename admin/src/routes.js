@@ -7,6 +7,7 @@ const admin = {
   dashboard: lazy(() => import('views/admin/Dashboard')),
   operation: lazy(() => import('views/admin/operation/Operations')),
   staff: lazy(() => import('views/admin/staff/Staff')),
+  settings: lazy(() => import('views/admin/settings/Settings')),
   orderhistory: lazy(() => import('views/admin/operation/order/OrderHistory')),
 };
 const dashboards = {
@@ -45,15 +46,10 @@ const routesAndMenuItems = {
       component: admin.staff,
     },
     {
-      path: `${appRoot}/dashboards`,
-      component: admin.dashboard,
-      label: 'menu.dashboards',
-      icon: 'home',
-      subs: [
-        { path: '/default', label: 'menu.default', component: dashboards.default },
-        { path: '/visual', label: 'menu.visual', component: dashboards.visual },
-        { path: '/analytic', label: 'menu.analytic', component: dashboards.analytic },
-      ],
+      path: `${appRoot}/settings`,
+      label: 'Settings',
+      icon: 'gear',
+      component: admin.settings,
     },
   ],
   sidebarItems: [

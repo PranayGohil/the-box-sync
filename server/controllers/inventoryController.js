@@ -40,30 +40,44 @@ const getInventoryDataById = (req, res) => {
 
 const addInventory = (req, res) => {
   try {
-    console.log(req.body);
-    const inventoryData = { ...req.body, restaurant_id: req.user };
+    const fileNames = req.files.map(file => file.filename); // or originalname if needed
+
+    const inventoryData = {
+      ...req.body,
+      restaurant_id: req.user, // from verifyToken middleware
+      bill_files: "/inventory/bills/" + fileNames,
+      items: JSON.parse(req.body.items), // convert string back to array
+    };
+
     Inventory.create(inventoryData)
       .then((data) => res.json(data))
-      .catch((err) => res.json(err));
+      .catch((err) => res.status(500).json(err));
   } catch (error) {
     console.log(error);
+    res.status(500).json({ error: 'Server error' });
   }
 };
+
 
 const updateInventory = async (req, res) => {
   const { id } = req.params;
   const updatedData = req.body;
 
   try {
-    // Find the inventory item by ID and update it with the new data
-    const updatedInventory = await Inventory.findByIdAndUpdate(
-      id,
-      updatedData,
-      {
-        new: true, // Return the updated document
-        runValidators: true, // Run schema validators for updated fields
-      }
-    );
+    // ✅ Parse items from string to array (only if it's a string)
+    if (typeof updatedData.items === 'string') {
+      updatedData.items = JSON.parse(updatedData.items);
+    }
+
+    // ✅ Optionally handle new file uploads
+    if (req.files && req.files.length > 0) {
+      updatedData.bill_files =  "/inventory/bills/" + req.files.map(file => file.filename); // Normalize paths
+    }
+
+    const updatedInventory = await Inventory.findByIdAndUpdate(id, updatedData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!updatedInventory) {
       return res.status(404).json({ message: "Inventory item not found" });
@@ -78,6 +92,7 @@ const updateInventory = async (req, res) => {
     res.status(500).json({ message: "Failed to update inventory", error });
   }
 };
+
 
 const deleteInventory = (req, res) => {
   try {
