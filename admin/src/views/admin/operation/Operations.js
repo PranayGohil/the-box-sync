@@ -19,8 +19,10 @@ import QRforMenu from './menu/QRforMenu';
 
 import RequestedInventory from './inventory/RequestedInventory';
 import AddInventory from './inventory/AddInventory';
+import EditInventory from './inventory/EditInventory';
 import InventoryHistory from './inventory/InventoryHistory';
 import CompleteInventory from './inventory/CompleteInventory';
+import InventoryDetails from './inventory/InventoryDetails';
 
 import Feedback from './feedback/Feedback';
 
@@ -142,7 +144,9 @@ const Operations = () => {
             <Route path="/operations/requested-inventory" component={RequestedInventory} />
             <Route path="/operations/inventory-history" component={InventoryHistory} />
             <Route path="/operations/add-inventory" component={AddInventory} />
+            <Route path="/operations/edit-inventory/:id" component={EditInventory} />
             <Route path="/operations/complete-inventory/:id" component={CompleteInventory} />
+            <Route path="/operations/inventory-details/:id" component={InventoryDetails} />
 
             <Route path="/operations/feedback" component={Feedback} />
             

@@ -1,2 +1,8 @@
 Remove underscore dangle : 
     // eslint-disable-line no-underscore-dangle
+
+Remove camelcase dangle
+     // eslint-disable-line camelcase
+
+Avoid no-restricted-syntax
+    // eslint-disable-line no-restricted-syntax

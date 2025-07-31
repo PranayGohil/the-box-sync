@@ -110,6 +110,23 @@ const RequestedInventory = () => {
     []
   );
 
+  const rejectInventory = (id) => {
+    axios
+      .post(
+        `${process.env.REACT_APP_API}/inventory/reject-request/${id}`,
+        null,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      )
+      .then((res) => {
+        console.log("Inventory rejected:", res.data);
+        setRejectInventoryModal(false);
+        fetchRequestedInventory();
+      })
+      .catch((err) => {
+        console.error("Error rejecting inventory:", err);
+      });
+  };
+
   const tableInstance = useTable({ columns, data, initialState: { pageIndex: 0 } }, useGlobalFilter, useSortBy, usePagination, useRowSelect);
 
   return (
@@ -165,7 +182,7 @@ const RequestedInventory = () => {
           <Button variant="secondary" onClick={() => setRejectInventoryModal(false)}>
             Close
           </Button>
-          <Button variant="danger" onClick={() => setRejectInventoryModal(false)}>Reject</Button>
+          <Button variant="danger" onClick={() => rejectInventory(tableInstance.selectedFlatRows[0].original._id)}>Reject</Button> {/* eslint-disable-line no-underscore-dangle */}
         </Modal.Footer>
       </Modal>
     </>
