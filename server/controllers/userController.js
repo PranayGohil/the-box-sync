@@ -121,12 +121,12 @@ const login = async (req, res) => {
     const userExists = await User.findOne({ email });
 
     if (!userExists) {
-      return res.json({success: false, message: "Invalid Credentials" });
+      return res.json({ success: false, message: "Invalid Credentials" });
     }
 
     const matchPass = await bcrypt.compare(password, userExists.password);
     if (!matchPass) {
-      return res.json({success: false, message: "Invalid Credentials" });
+      return res.json({ success: false, message: "Invalid Credentials" });
     }
 
     const token = await userExists.generateAuthToken("Admin");
@@ -142,7 +142,7 @@ const login = async (req, res) => {
     });
   } catch (error) {
     console.error(error.message);
-    res.json({success: false, message: "Internal server error" });
+    res.json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -365,7 +365,12 @@ const updateUser = async (req, res) => {
       return res.status(404).json({ error: "User not found." });
     }
 
-    // Update only the fields provided in the request
+    // ✅ Save uploaded logo path if available
+    if (req.file && req.file.fieldname === 'logo') {
+      updates.logo = `/branding/logo/${req.file.filename}`;
+    }
+
+    // ✅ Update fields
     Object.keys(updates).forEach((key) => {
       if (user[key] !== undefined) {
         user[key] = updates[key];
@@ -380,12 +385,19 @@ const updateUser = async (req, res) => {
   }
 };
 
+
 const updateTax = async (req, res) => {
-  const { taxInfo } = req.body;
-  const userId = req.user; // Assuming authentication middleware sets req.user
+  const { gst_no, taxInfo } = req.body;
+  const userId = req.user;
 
   try {
-    await User.findByIdAndUpdate(userId, { taxInfo });
+    await User.findByIdAndUpdate(userId, {
+      gst_no,
+      taxInfo: {
+        cgst: taxInfo?.cgst ?? 0,
+        sgst: taxInfo?.sgst ?? 0,
+      },
+    });
     res.status(200).send("Tax information updated successfully!");
   } catch (error) {
     console.error("Error updating tax info:", error);

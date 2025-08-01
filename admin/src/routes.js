@@ -42,7 +42,7 @@ const routesAndMenuItems = {
     {
       path: `${appRoot}/staff`,
       label: 'Staff',
-      icon: 'list',
+      icon: 'user',
       component: admin.staff,
     },
     {
