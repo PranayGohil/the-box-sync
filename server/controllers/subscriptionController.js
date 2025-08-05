@@ -94,17 +94,19 @@ const getUserSubscriptionInfoById = async (req, res) => {
 
 const buySubscriptionPlan = async (req, res) => {
   try {
-    console.log(req.body);
-    const { planId } = req.body;
+    const planId = req.params.id;
     const userId = req.user;
+    console.log('User ID:', req.user);
 
     if (!userId) {
+      console.log("User ID not found in request");
       return res.status(404).json({ message: "User not found" });
     }
 
     // Fetch plan details
     const planDetails = await SubscriptionPlan.findById(planId);
     if (!planDetails) {
+      console.log("Plan not found");
       return res.status(404).json({ message: "Plan not found" });
     }
 
