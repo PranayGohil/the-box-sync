@@ -111,7 +111,6 @@ userSchema.methods.generateAuthToken = async function (role) {
       process.env.JWT_SECRETKEY,
       { expiresIn: "30d" }
     );
-
     return token;
   } catch (error) {}
 };

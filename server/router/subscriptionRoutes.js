@@ -22,13 +22,13 @@ subscriptionRouter
   .route("/addsubscriptionplan")
   .post(authMiddleware, addSubscriptionPlan);
 subscriptionRouter
-  .route("/getsubscriptionplans")
+  .route("/get-plans")
   .get(authMiddleware, getSubscriptionPlans);
 
 subscriptionRouter.route("/getaddonplans").get(getAddonPlans);
 
 subscriptionRouter
-  .route("/getusersubscriptioninfo")
+  .route("/get")
   .get(authMiddleware, getUserSubscriptionInfo);
 
 subscriptionRouter
@@ -36,7 +36,7 @@ subscriptionRouter
   .get(authMiddleware, getUserSubscriptionInfoById);
 
 subscriptionRouter
-  .route("/buysubscriptionplan")
+  .route("/buy/:id")
   .post(authMiddleware, buySubscriptionPlan);
 
 subscriptionRouter
@@ -52,7 +52,7 @@ subscriptionRouter
   .post(authMiddleware, expandSubscriptions);
 
 subscriptionRouter
-  .route("/renewsubscription")
+  .route("/renew")
   .post(authMiddleware, renewSubscription);
 
 subscriptionRouter

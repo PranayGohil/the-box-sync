@@ -28,6 +28,7 @@ const Subscription = () => {
 
   const [subscriptionPlans, setSubscriptionPlans] = useState([]);
   const [userSubscription, setUserSubscription] = useState([]);
+  const [availablePlans, setAvailablePlans] = useState([]);
   const [existingQueries, setExistingQueries] = useState({});
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [inquirySubName, setInquirySubName] = useState(null);
@@ -35,8 +36,8 @@ const Subscription = () => {
   const fetchData = async () => {
     try {
       const [plansRes, userRes] = await Promise.all([
-        axios.get(`${process.env.REACT_APP_API}/subscription/getsubscriptionplans`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
-        axios.get(`${process.env.REACT_APP_API}/subscription/getusersubscriptioninfo`, {
+        axios.get(`${process.env.REACT_APP_API}/subscription/get-plans`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
+        axios.get(`${process.env.REACT_APP_API}/subscription/get`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }),
       ]);
@@ -55,6 +56,10 @@ const Subscription = () => {
       });
 
       setUserSubscription(enriched);
+
+      const purchasedPlanIds = new Set(userRes.data.map((sub) => sub.plan_id));
+      const available = plansRes.data.filter((plan) => !purchasedPlanIds.has(plan._id)); // eslint-disable-line no-underscore-dangle 
+      setAvailablePlans(available);
 
       const blocked = enriched.filter((s) => s.status === 'blocked');
       const queries = {};
@@ -86,7 +91,7 @@ const Subscription = () => {
   const handleRenew = async (subscriptionId) => {
     try {
       await axios.post(
-        `${process.env.REACT_APP_API}/subscription/renewsubscription`,
+        `${process.env.REACT_APP_API}/subscription/renew`,
         { subscriptionId },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -99,6 +104,22 @@ const Subscription = () => {
   const handleRaiseInquiry = (planName) => {
     setInquirySubName(planName);
     setShowInquiryModal(true);
+  };
+
+  const handleBuyPlan = async (planId) => {
+    console.log(localStorage.getItem('token'));
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API}/subscription/buy/${planId}`,
+        null,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }
+      );
+      fetchData(); 
+    } catch (err) {
+      console.error('Error purchasing plan:', err);
+    }
   };
 
   const columns = React.useMemo(
@@ -257,6 +278,38 @@ const Subscription = () => {
           </Row>
         </Col>
       </Row>
+      {availablePlans.length > 0 && (
+        <Row className="mt-5">
+          <h2>Available Add-on Plans</h2>
+          {availablePlans.map((plan) => (
+            <Col key={plan._id} sm="12" md="6" lg="4" className="mb-4"> {/* eslint-disable-line no-underscore-dangle */}
+              <div className="card shadow">
+                <div className="card-body">
+                  <h5 className="card-title">{plan.plan_name}</h5>
+                  <h6 className="card-subtitle mb-2 text-muted">₹{plan.plan_price}</h6>
+                  <p className="card-text">
+                    Duration: {plan.plan_duration} month(s)<br />
+                    {plan.features?.length > 0 && (
+                      <>
+                        <strong>Features:</strong>
+                        <ul>
+                          {plan.features.map((feature, i) => (
+                            <li key={i}>{feature}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </p>
+                  <Button variant="primary" onClick={() => handleBuyPlan(plan._id)}>  {/* eslint-disable-line no-underscore-dangle */}
+                    Buy Plan
+                  </Button>
+                </div>
+              </div>
+            </Col>
+          ))}
+        </Row>
+      )}
+
 
       {/* <RaiseInquiryModal
         show={showInquiryModal}
