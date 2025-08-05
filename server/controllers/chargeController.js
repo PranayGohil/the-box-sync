@@ -32,26 +32,31 @@ const getContainerCharges = async (req, res) => {
     const user = await User.findById(req.user);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    res.json(user.containerCharges);
+    res.json({ success: true, user }); // ✅ wrap in an object with `user`
   } catch (error) {
     res.status(500).json({ error: "Server error" });
   }
 };
 
 const updateContainerCharge = async (req, res) => {
+  console.log("Update Container Charge Request Body: ", req.body);
   const userId = req.user;
-  const { name, size, price } = req.body.updatedCharge;
-  const chargeIndex = req.body.index;
-  console.log(chargeIndex);
+  const { containerCharges } = req.body;
 
   try {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    user.containerCharges[chargeIndex] = { name, size, price };
+    user.containerCharges = containerCharges;
     await user.save();
-    res.json({ message: "Container charge updated successfully!", user });
+
+    res.json({
+      success: true,
+      message: "Container charges updated successfully!",
+      user,
+    });
   } catch (error) {
+    console.error("Error updating container charges:", error);
     res.status(500).json({ error: "Server error" });
   }
 };

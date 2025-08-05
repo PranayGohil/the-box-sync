@@ -240,7 +240,6 @@ const AddDishes = () => {
           </section>
         </Col>
       </Row>
-      Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me Remove me 
     </>
   );
 };
