@@ -24,6 +24,7 @@ const superAdminRouter = require("./router/superAdminRoutes");
 const attendanceRouter = require("./router/attendanceRoutes");
 const websiteRouter = require("./router/websiteRoutes");
 const customerQueryRouter = require("./router/customerQueryRoutes");
+const PanelRouter = require("./router/panelUserRoutes");
 
 const PORT = process.env.PORT;
 const ORIGINS = process.env.ORIGINS ? process.env.ORIGINS.split(",") : [];
@@ -61,6 +62,7 @@ app.use("/api/inquiry", inquiryRouter);
 app.use("/api/attendance", attendanceRouter);
 app.use("/api/website", websiteRouter);
 app.use("/api/customerquery", customerQueryRouter);
+app.use("/api/panel-user", PanelRouter);
 app.use("/api/superadmin", superAdminRouter);
 
 connectDB().then(() => {

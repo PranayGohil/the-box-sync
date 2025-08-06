@@ -13,6 +13,7 @@ import Address from './account/Address';
 import Gst from './tax-charges/Gst';
 import Container from './tax-charges/Container';
 import Subscription from './subscription/Subscription';
+import ManageWebsite from './manage-website/ManageWebsite';
 
 const NavContent = () => {
   return (
@@ -71,6 +72,26 @@ const NavContent = () => {
                     </Nav.Link>
                 </div> */}
       </div>
+      <div className="mb-2">
+        <Nav.Link as={NavLink} to="/settings/manage-website" className="px-0">
+          <CsLineIcons icon="notification" className="me-2 sw-3" size="17" />
+          <span className="align-middle">Manage Website</span>
+        </Nav.Link>
+        {/* <div>
+                    <Nav.Link as={NavLink} to="/operations/requested-inventory" className="px-0 pt-1">
+                        <i className="me-2 sw-3 d-inline-block" />
+                        <span className="align-middle">Requested Inventory</span>
+                    </Nav.Link>
+                    <Nav.Link as={NavLink} to="/operations/inventory-history" className="px-0 pt-1">
+                        <i className="me-2 sw-3 d-inline-block" />
+                        <span className="align-middle">Inventory History</span>
+                    </Nav.Link>
+                    <Nav.Link as={NavLink} to="/operations/add-inventory" className="px-0 pt-1">
+                        <i className="me-2 sw-3 d-inline-block" />
+                        <span className="align-middle">Add Inventory</span>
+                    </Nav.Link>
+                </div> */}
+      </div>
     </Nav>
   );
 };
@@ -100,6 +121,7 @@ const Settings = () => {
             <Route path="/settings/gst" render={() => <Gst />} />
             <Route path="/settings/container-charge" render={() => <Container />} />
             <Route path="/settings/subscription" render={() => <Subscription />} />
+            <Route path="/settings/manage-website" render={() => <ManageWebsite />} />
           </Switch>
         </Col>
       </Row>

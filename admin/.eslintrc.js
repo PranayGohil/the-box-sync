@@ -86,6 +86,7 @@ module.exports = {
     'no-param-reassign': 0,
     'import/no-unresolved': 0,
     'no-unused-vars': 'warn',
+    'no-underscore-dangle': 'off',
   },
   globals: {
     window: true,

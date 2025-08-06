@@ -40,10 +40,7 @@ const Table = ({ tableInstance, className = 'react-table boxed' }) => {
                     onClick={() => {
                       if (cell.column.id === 'name') {
                         toggleAllPageRowsSelected(false);
-                        row.toggleRowSelected();
                         setIsOpenAddEditModal(true);
-                      } else {
-                        row.toggleRowSelected();
                       }
                     }}
                   >
