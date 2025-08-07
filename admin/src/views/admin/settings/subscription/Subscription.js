@@ -12,7 +12,11 @@ import ControlsPageSize from './components/ControlsPageSize';
 import Table from './components/Table';
 import TablePagination from './components/TablePagination';
 
+import ModalEditPanel from './ModalEditPanel';
+import DeletePanelModal from './DeletePanelModal';
+
 // import RaiseInquiryModal from "./RaiseInquiryModal";
+const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel'];
 
 const Subscription = () => {
   const history = useHistory();
@@ -32,6 +36,15 @@ const Subscription = () => {
   const [existingQueries, setExistingQueries] = useState({});
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [inquirySubName, setInquirySubName] = useState(null);
+
+  const [showPanelModal, setShowPanelModal] = useState(false);
+  const [currentPanelData, setCurrentPanelData] = useState(null);
+  const [currentPlanName, setCurrentPlanName] = useState('');
+
+  const [showDeletePanelModal, setShowDeletePanelModal] = useState(false);
+  const [deletePlanName, setDeletePlanName] = useState('');
+
+  const [panelAccounts, setPanelAccounts] = useState({});
 
   const fetchData = async () => {
     try {
@@ -57,8 +70,23 @@ const Subscription = () => {
 
       setUserSubscription(enriched);
 
+      const panelResults = await Promise.all(
+        enriched
+          .filter((sub) => PANEL_PLANS.includes(sub.plan_name))
+          .map((sub) =>
+            axios
+              .get(`${process.env.REACT_APP_API}/panel-user/${sub.plan_name}`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+              })
+              .then((res) => ({ [sub.plan_name]: res.data.exists }))
+          )
+      );
+
+      const accountStatus = Object.assign({}, ...panelResults);
+      setPanelAccounts(accountStatus);
+
       const purchasedPlanIds = new Set(userRes.data.map((sub) => sub.plan_id));
-      const available = plansRes.data.filter((plan) => !purchasedPlanIds.has(plan._id)); // eslint-disable-line no-underscore-dangle 
+      const available = plansRes.data.filter((plan) => !purchasedPlanIds.has(plan._id)); // eslint-disable-line no-underscore-dangle
       setAvailablePlans(available);
 
       const blocked = enriched.filter((s) => s.status === 'blocked');
@@ -109,16 +137,71 @@ const Subscription = () => {
   const handleBuyPlan = async (planId) => {
     console.log(localStorage.getItem('token'));
     try {
-      await axios.post(
-        `${process.env.REACT_APP_API}/subscription/buy/${planId}`,
-        null,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
-      );
-      fetchData(); 
+      await axios.post(`${process.env.REACT_APP_API}/subscription/buy/${planId}`, null, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      fetchData();
     } catch (err) {
       console.error('Error purchasing plan:', err);
+    }
+  };
+
+  const handleEditPanel = async (planName) => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API}/panel-user/${planName}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+
+      setCurrentPlanName(planName);
+      setCurrentPanelData(res.data.data || { username: '', password: '' });
+      setShowPanelModal(true);
+    } catch (err) {
+      console.error('Error fetching panel user for edit:', err);
+    }
+  };
+
+  const handleAddPanel = (planName) => {
+    setCurrentPlanName(planName);
+    setCurrentPanelData({ username: '', password: '' }); // empty for new
+    setShowPanelModal(true);
+  };
+
+  const handleSavePanel = async (formValues) => {
+    try {
+      await axios.post(`${process.env.REACT_APP_API}/panel-user/${currentPlanName}`, formValues, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      setShowPanelModal(false);
+      fetchData();
+    } catch (err) {
+      console.error('Error saving panel user:', err);
+    }
+  };
+
+  const openDeletePanelModal = (planName) => {
+    setDeletePlanName(planName);
+    setShowDeletePanelModal(true);
+  };
+
+  const handleRedirect = (planName) => {
+    if (planName === 'Staff Management') {
+      history.push('/staff');
+    } else if (planName === 'Feedback') {
+      history.push('/operations/feedback');
+    } else if (planName === 'Scan For Menu') {
+      history.push('/operations/qr-for-menu');
+    } else if (planName === 'Online Order Reconciliation') {
+      history.push('/online-order-reconcilation');
+    } else if (planName === 'Reservation Manager') {
+      history.push('/reservation-management');
+    } else if (planName === 'Dynamic Reports') {
+      history.push('/dynamic-report');
+    } else if (planName === 'Payroll By The Box') {
+      history.push('/staff');
+    } else if (planName === 'Restaurant Website') {
+      history.push('/settings/manage-website');
+    } else {
+      alert("Invalid Plan")
     }
   };
 
@@ -159,79 +242,59 @@ const Subscription = () => {
           const isInactive = original.status === 'inactive';
           const isBlocked = original.status === 'blocked';
 
-          return (
-            <div className="d-flex gap-2">
-              {isActive && (
-                <Button
-                  variant="outline-primary"
-                  size="sm"
-                  onClick={() => {
-                    switch (original.plan_name) {
-                      case 'Manager':
-                        history.push('/manager');
-                        break;
-                      case 'QSR':
-                        history.push('/qsr');
-                        break;
-                      case 'Captain Panel':
-                        history.push('/captain');
-                        break;
-                      case 'Payroll By The Box':
-                        history.push('/payroll');
-                        break;
-                      case 'Scan For Menu':
-                        history.push('/manage-menu');
-                        break;
-                      case 'Restaurant Website':
-                        history.push('/manage-restaurant-website');
-                        break;
-                      case 'Reservation Manager':
-                        history.push('/manage-reservation-manager');
-                        break;
-                      case 'Online Order Reconciliation':
-                        history.push('/manage-online-order-reconciliation');
-                        break;
-                      case 'Feedback':
-                        history.push('/manage-feedback');
-                        break;
-                      case 'Staff Management':
-                        history.push('/manage-staff');
-                        break;
-                      case 'Dynamic Reports':
-                        history.push('/dynamic-reports');
-                        break;
-                      default:
-                        break;
-                    }
-                  }}
-                >
-                  <CsLineIcons icon="eye" />
-                </Button>
-              )}
+          let actionButtons = null;
 
-              {isInactive && (
-                <Button
-                  variant="outline-success"
-                  size="sm"
-                  title="Renew"
-                  onClick={() => handleRenew(original._id)} // eslint-disable-line no-underscore-dangle
-                >
-                  <CsLineIcons icon="reload" />
+          if (isActive && PANEL_PLANS.includes(original.plan_name)) {
+            // Panel plans logic
+            actionButtons = panelAccounts[original.plan_name] ? (
+              <>
+                <Button variant="outline-primary" size="sm" onClick={() => handleEditPanel(original.plan_name)} style={{ height: 'auto' }}>
+                  <CsLineIcons icon="edit" />
                 </Button>
-              )}
+                <Button variant="outline-danger" size="sm" onClick={() => openDeletePanelModal(original.plan_name)} style={{ height: 'auto' }}>
+                  <CsLineIcons icon="bin" />
+                </Button>
+              </>
+            ) : (
+              <Button variant="outline-success" size="sm" onClick={() => handleAddPanel(original.plan_name)} style={{ height: 'auto' }}>
+                <CsLineIcons icon="plus" />
+              </Button>
+            );
+          } else if (isActive) {
+            actionButtons = (
+              <Button variant="outline-primary" size="sm" onClick={() => handleRedirect(original.plan_name)} style={{ height: 'auto' }}>
+                <CsLineIcons icon="eye" />
+              </Button>
+            );
+          } else if (isInactive) {
+            actionButtons = (
+              <Button variant="outline-success" size="sm" title="Renew" onClick={() => handleRenew(original._id)} style={{ height: 'auto' }}>
+                <CsLineIcons icon="refresh-horizontal" />
+              </Button>
+            );
+          } else if (isBlocked) {
+            if (isBlockedWithQuery) {
+              actionButtons = (
+                <Button variant="outline-warning" size="sm" title="Already Inquiry Raised" style={{ height: 'auto' }}>
+                  <CsLineIcons icon="hourglass" />
+                </Button>
+              );
+            } else {
+              actionButtons = (
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  title="Raise Inquiry"
+                  onClick={() => handleRaiseInquiry(original.plan_name)}
+                  style={{ height: 'auto' }}
+                >
+                  <CsLineIcons icon="send" />
+                </Button>
+              );
+            }
+          }
 
-              {isBlocked &&
-                (isBlockedWithQuery ? (
-                  <Button variant="outline-warning" size="sm" title="Already Raised">
-                    <CsLineIcons icon="sand-clock" />
-                  </Button>
-                ) : (
-                  <Button variant="outline-danger" size="sm" title="Raise Inquiry" onClick={() => handleRaiseInquiry(original.plan_name)}>
-                    <CsLineIcons icon="send" />
-                  </Button>
-                ))}
-            </div>
-          );
+          return <div className="d-flex gap-2">{actionButtons}</div>;
         },
       },
     ],
@@ -282,13 +345,16 @@ const Subscription = () => {
         <Row className="mt-5">
           <h2>Available Add-on Plans</h2>
           {availablePlans.map((plan) => (
-            <Col key={plan._id} sm="12" md="6" lg="4" className="mb-4"> {/* eslint-disable-line no-underscore-dangle */}
+            <Col key={plan._id} sm="12" md="6" lg="4" className="mb-4">
+              {' '}
+              {/* eslint-disable-line no-underscore-dangle */}
               <div className="card shadow">
                 <div className="card-body">
                   <h5 className="card-title">{plan.plan_name}</h5>
                   <h6 className="card-subtitle mb-2 text-muted">₹{plan.plan_price}</h6>
                   <p className="card-text">
-                    Duration: {plan.plan_duration} month(s)<br />
+                    Duration: {plan.plan_duration} month(s)
+                    <br />
                     {plan.features?.length > 0 && (
                       <>
                         <strong>Features:</strong>
@@ -300,7 +366,9 @@ const Subscription = () => {
                       </>
                     )}
                   </p>
-                  <Button variant="primary" onClick={() => handleBuyPlan(plan._id)}>  {/* eslint-disable-line no-underscore-dangle */}
+                  <Button variant="primary" onClick={() => handleBuyPlan(plan._id)}>
+                    {' '}
+                    {/* eslint-disable-line no-underscore-dangle */}
                     Buy Plan
                   </Button>
                 </div>
@@ -310,6 +378,19 @@ const Subscription = () => {
         </Row>
       )}
 
+      {showPanelModal && (
+        <ModalEditPanel
+          show={showPanelModal}
+          handleClose={() => setShowPanelModal(false)}
+          data={currentPanelData}
+          planName={currentPlanName}
+          onSave={handleSavePanel}
+        />
+      )}
+
+      {showDeletePanelModal && (
+        <DeletePanelModal show={showDeletePanelModal} handleClose={() => setShowDeletePanelModal(false)} planName={deletePlanName} fetchData={fetchData} />
+      )}
 
       {/* <RaiseInquiryModal
         show={showInquiryModal}
