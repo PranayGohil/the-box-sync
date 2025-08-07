@@ -13,7 +13,7 @@ const DeletePanelModal = ({ show, handleClose, planName, fetchData }) => {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      await fetchData();
+      fetchData();
       handleClose();
     } catch (err) {
       console.error('Error deleting panel:', err);
