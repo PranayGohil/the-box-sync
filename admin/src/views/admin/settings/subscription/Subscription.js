@@ -14,6 +14,7 @@ import TablePagination from './components/TablePagination';
 
 import ModalEditPanel from './ModalEditPanel';
 import DeletePanelModal from './DeletePanelModal';
+import RaiseInquiryModal from './RaiseInquiryModal';
 
 // import RaiseInquiryModal from "./RaiseInquiryModal";
 const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel'];
@@ -46,8 +47,12 @@ const Subscription = () => {
 
   const [panelAccounts, setPanelAccounts] = useState({});
 
+  const [inactiveAddOns, setInactiveAddOns] = useState([]);
+
+
   const fetchData = async () => {
     try {
+      console.log("fetchData");
       const [plansRes, userRes] = await Promise.all([
         axios.get(`${process.env.REACT_APP_API}/subscription/get-plans`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
         axios.get(`${process.env.REACT_APP_API}/subscription/get`, {
@@ -85,9 +90,28 @@ const Subscription = () => {
       const accountStatus = Object.assign({}, ...panelResults);
       setPanelAccounts(accountStatus);
 
+      const inactivePlans = enriched.filter((sub) => sub.status === 'inactive');
+
       const purchasedPlanIds = new Set(userRes.data.map((sub) => sub.plan_id));
-      const available = plansRes.data.filter((plan) => !purchasedPlanIds.has(plan._id)); // eslint-disable-line no-underscore-dangle
+      const available = plansRes.data.filter((plan) => !purchasedPlanIds.has(plan._id));
       setAvailablePlans(available);
+
+      setInactiveAddOns(
+        inactivePlans
+          .filter((sub) => {
+            const plan = plansRes.data.find((p) => p._id === sub.plan_id);
+            return plan?.is_addon;
+          })
+          .map((sub) => {
+            const plan = plansRes.data.find((p) => p._id === sub.plan_id);
+            return {
+              ...sub,
+              plan_price: plan?.plan_price || 0,
+              plan_duration: plan?.plan_duration || 0,
+            };
+          })
+      );
+
 
       const blocked = enriched.filter((s) => s.status === 'blocked');
       const queries = {};
@@ -129,11 +153,6 @@ const Subscription = () => {
     }
   };
 
-  const handleRaiseInquiry = (planName) => {
-    setInquirySubName(planName);
-    setShowInquiryModal(true);
-  };
-
   const handleBuyPlan = async (planId) => {
     console.log(localStorage.getItem('token'));
     try {
@@ -167,6 +186,7 @@ const Subscription = () => {
   };
 
   const handleSavePanel = async (formValues) => {
+    console.log("Save Panel");
     try {
       await axios.post(`${process.env.REACT_APP_API}/panel-user/${currentPlanName}`, formValues, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -176,6 +196,11 @@ const Subscription = () => {
     } catch (err) {
       console.error('Error saving panel user:', err);
     }
+  };
+
+  const handleRaiseInquiry = (planName) => {
+    setInquirySubName(planName);
+    setShowInquiryModal(true);
   };
 
   const openDeletePanelModal = (planName) => {
@@ -341,6 +366,34 @@ const Subscription = () => {
           </Row>
         </Col>
       </Row>
+      {inactiveAddOns.length > 0 && (
+        <Row className="mt-5">
+          <h2>Inactive Add-on Plans</h2>
+          {inactiveAddOns.map((sub) => (
+            <Col key={sub._id} sm="12" md="6" lg="4" className="mb-4">
+              <div className="card shadow">
+                <div className="card-body">
+                  <h5 className="card-title">{sub.plan_name}</h5>
+                  <h6 className="card-subtitle mb-2 text-muted">Previously Active</h6>
+                  <p className="card-text">
+                    Duration: {sub.plan_duration} month(s)<br />
+                    Price: ₹{sub.plan_price}<br />
+                    Expired on: {sub.formatted_end}
+                  </p>
+
+                  <Button
+                    variant="success"
+                    onClick={() => handleRenew(sub._id)}
+                  >
+                    Renew Plan
+                  </Button>
+                </div>
+              </div>
+            </Col>
+          ))}
+        </Row>
+      )}
+
       {availablePlans.length > 0 && (
         <Row className="mt-5">
           <h2>Available Add-on Plans</h2>
@@ -392,12 +445,14 @@ const Subscription = () => {
         <DeletePanelModal show={showDeletePanelModal} handleClose={() => setShowDeletePanelModal(false)} planName={deletePlanName} fetchData={fetchData} />
       )}
 
-      {/* <RaiseInquiryModal
-        show={showInquiryModal}
-        handleClose={() => setShowInquiryModal(false)}
-        subscriptionName={inquirySubName}
-        fetchData={fetchData}
-      /> */}
+      {showInquiryModal && (
+        <RaiseInquiryModal
+          show={showInquiryModal}
+          handleClose={() => setShowInquiryModal(false)}
+          subscriptionName={inquirySubName}
+          fetchData={fetchData}
+        />
+      )}
     </>
   );
 };
