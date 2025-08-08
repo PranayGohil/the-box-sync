@@ -56,7 +56,7 @@ const addStaff = new Schema({
     type: String,
   },
   face_encoding: {
-    type: [Number], // An array of numbers representing the face encoding vector
+    type: [Number], 
     default: [],
   },
   face_embeddings: {

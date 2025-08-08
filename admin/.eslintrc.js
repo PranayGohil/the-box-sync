@@ -87,6 +87,8 @@ module.exports = {
     'import/no-unresolved': 0,
     'no-unused-vars': 'warn',
     'no-underscore-dangle': 'off',
+    'camelcase': 'off',
+    'no-restricted-syntax': 'off',
   },
   globals: {
     window: true,
