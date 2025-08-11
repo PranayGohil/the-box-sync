@@ -37,91 +37,90 @@ const getStaffDataById = (req, res) => {
 
 const addStaff = (req, res) => {
   try {
-    console.log(req.body);
-    const staffData = { ...req.body, restaurant_id: req.user };
+    const staffData = {
+      ...req.body,
+      restaurant_id: req.user,
+    };
+
+    // If files are uploaded, store their paths
+    if (req.files.photo) {
+      staffData.photo = `/staff/profile/${req.files.photo[0].filename}`;
+    }
+    if (req.files.front_image) {
+      staffData.front_image = `/staff/id_cards/${req.files.front_image[0].filename}`;
+    }
+    if (req.files.back_image) {
+      staffData.back_image = `/staff/id_cards/${req.files.back_image[0].filename}`;
+    }
+
     Staff.create(staffData)
       .then((data) => res.json(data))
-      .catch((err) => res.json(err));
+      .catch((err) => res.status(500).json({ error: err.message }));
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
   }
 };
 
+
 const updateStaff = async (req, res) => {
   try {
-    const staffId = req.params.id;
-    const updatedData = req.body;
+    const { id } = req.params;
 
-    // Find existing staff by ID
-    const existingStaff = await Staff.findById(staffId);
+    // Find the current staff data before updating
+    const existingStaff = await Staff.findById(id);
     if (!existingStaff) {
-      return res.status(404).json({ message: "Staff not found" });
+      return res.status(404).json({ error: "Staff member not found" });
     }
 
-    // Handle profile photo update
-    if (updatedData.photo !== null) {
-      if (existingStaff.photo) {
-        const oldPhotoPath = path.join(
-          __dirname,
-          `../uploads/staff/profile/${existingStaff.photo}`
-        );
-        if (fs.existsSync(oldPhotoPath)) {
-          fs.unlinkSync(oldPhotoPath);
-        }
+    const staffData = {
+      ...req.body,
+      restaurant_id: req.user,
+    };
+
+    // Helper to remove old file
+    const removeFile = (filePath) => {
+      if (filePath) {
+        const fullPath = path.join(__dirname, "..", "public", filePath);
+        fs.unlink(fullPath, (err) => {
+          if (err) {
+            console.error(`Error deleting file: ${fullPath}`, err);
+          }
+        });
       }
-    } else {
-      updatedData.photo = existingStaff.photo;
+    };
+
+    // If new files are uploaded, delete old ones and set new paths
+    if (req.files?.photo?.[0]) {
+      removeFile("../uploads" + existingStaff.photo); // delete old
+      staffData.photo = `/staff/profile/${req.files.photo[0].filename}`;
+    }
+    if (req.files?.front_image?.[0]) {
+      removeFile("../uploads" + existingStaff.front_image);
+      staffData.front_image = `/staff/id_cards/${req.files.front_image[0].filename}`;
+    }
+    if (req.files?.back_image?.[0]) {
+      removeFile("../uploads" + existingStaff.back_image);
+      staffData.back_image = `/staff/id_cards/${req.files.back_image[0].filename}`;
     }
 
-    // Handle front image update
-    if (updatedData.front_image !== null) {
-      if (existingStaff.front_image) {
-        const oldFrontPath = path.join(
-          __dirname,
-          `../uploads/staff/id_cards/${existingStaff.front_image}`
-        );
-        if (fs.existsSync(oldFrontPath)) {
-          fs.unlinkSync(oldFrontPath);
-        }
-      }
-    } else {
-      updatedData.front_image = existingStaff.front_image;
-    }
-
-    // Handle back image update
-    if (updatedData.back_image !== null) {
-      if (existingStaff.back_image) {
-        const oldBackPath = path.join(
-          __dirname,
-          `../uploads/staff/id_cards/${existingStaff.back_image}`
-        );
-        if (fs.existsSync(oldBackPath)) {
-          fs.unlinkSync(oldBackPath);
-        }
-      }
-    } else {
-      updatedData.back_image = existingStaff.back_image;
-    }
-
-    // Face Encoding: If not provided, keep existing one
-    if (!updatedData.face_encoding) {
-      updatedData.face_encoding = existingStaff.face_encoding || [];
-    }
-
-    // Update the staff document
-    const updatedStaff = await Staff.findByIdAndUpdate(staffId, updatedData, {
-      new: true,
-    });
+    // Update the staff member
+    const updatedStaff = await Staff.findByIdAndUpdate(
+      id,
+      { $set: staffData },
+      { new: true, runValidators: true }
+    );
 
     res.json({
       message: "Staff updated successfully",
       staff: updatedStaff,
     });
   } catch (error) {
-    console.error("Update staff error:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Error updating staff:", error);
+    res.status(500).json({ error: "Server error" });
   }
 };
+
 
 const deleteStaff = async (req, res) => {
   try {
@@ -276,7 +275,7 @@ const getAllFaceEncodings = async (req, res) => {
         face_encoding: {
           $exists: true,
           $ne: null,
-          $not: { $size: 0 }, 
+          $not: { $size: 0 },
         },
       },
       "_id f_name l_name email position face_encoding attandance"

@@ -13,23 +13,43 @@ const {
   getAllFaceEncodings,
 } = require("../controllers/staffController");
 const adminAuth = require("../middlewares/adminAuth");
+const upload = require("../middlewares/upload");
 
 const staffRouter = express.Router();
 
-staffRouter.route("/getstaffpositions").get(authMiddleware, getStaffPositions);
-staffRouter.route("/staffdata").get(authMiddleware, getStaffData);
-staffRouter.route("/staffdata/:id").get(authMiddleware, getStaffDataById);
-staffRouter.route("/addstaff").post(authMiddleware, adminAuth, addStaff);
+staffRouter.route("/get-all").get(authMiddleware, getStaffData);
+staffRouter.route("/get/:id").get(authMiddleware, getStaffDataById);
+staffRouter.route("/get-positions").get(authMiddleware, getStaffPositions);
+staffRouter.route("/add").post(
+  authMiddleware,
+  adminAuth,
+  upload.fields([
+    { name: "photo", maxCount: 1 },
+    { name: "front_image", maxCount: 1 },
+    { name: "back_image", maxCount: 1 }
+  ]),
+  addStaff
+);
+
 staffRouter
-  .route("/updatestaff/:id")
-  .put(authMiddleware, adminAuth, updateStaff);
+  .route("/edit/:id")
+  .put(
+    authMiddleware,
+    adminAuth,
+    upload.fields([
+      { name: "photo", maxCount: 1 },
+      { name: "front_image", maxCount: 1 },
+      { name: "back_image", maxCount: 1 }
+    ]),
+    updateStaff);
+    
 staffRouter
-  .route("/deletestaff/:id")
+  .route("/delete/:id")
   .delete(authMiddleware, adminAuth, deleteStaff);
 
-staffRouter.post("/checkin", checkIn);
-staffRouter.post("/checkout", checkOut);
-staffRouter.post("/markabsent", markAbsent);
+staffRouter.post("/check-in", checkIn);
+staffRouter.post("/check-out", checkOut);
+staffRouter.post("/mark-absent", markAbsent);
 staffRouter.get("/face-data", authMiddleware, getAllFaceEncodings);
 
 module.exports = staffRouter;

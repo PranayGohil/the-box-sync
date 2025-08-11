@@ -6,6 +6,8 @@ import Glide from 'components/carousel/Glide';
 
 import ViewStaff from './ViewStaff';
 import AddStaff from './AddStaff';
+import EditStaff from './EditStaff';
+import StaffProfile from './StaffProfile';
 
 const Staff = () => {
   return (
@@ -14,6 +16,8 @@ const Staff = () => {
         <Route exact path="/staff" render={() => <Redirect to="/staff/view" />} />
         <Route exact path="/staff/view" render={() => <ViewStaff /> } />
         <Route exact path="/staff/add" render={() => <AddStaff />} />
+        <Route exact path="/staff/edit/:id" render={() => <EditStaff />} />
+        <Route exact path="/staff/profile/:id" render={() => <StaffProfile />} />
       </Switch>
     </>
   );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useHistory } from 'react-router-dom';
+import { useParams, useHistory } from 'react-router-dom';
 import { Row, Col, Card, Button, Form } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -8,17 +8,17 @@ import * as Yup from "yup";
 import axios from "axios";
 import { Country, State, City } from "country-state-city";
 
-const AddStaff = () => {
-    const title = 'Add Staff';
-    const description = 'Add a new staff member.';
+const EditStaff = () => {
+    const title = 'Edit Staff';
+    const description = 'Edit staff details.';
     const breadcrumbs = [
         { to: '', text: 'Home' },
-        { to: 'staff', text: 'Staff Management' },
-        { to: 'staff/add-staff', title: 'Add Staff' },
+        { to: '/staff', text: 'Staff Management' },
+        { to: '/staff/view', title: 'Edit Staff' },
     ];
-
+    const { id } = useParams();
     const history = useHistory();
-
+    const [loading, setLoading] = useState(false);
     const [fileUploadError, setFileUploadError] = useState(null);
     const [photoPreview, setPhotoPreview] = useState(null);
     const [frontImagePreview, setFrontImagePreview] = useState(null);
@@ -28,7 +28,7 @@ const AddStaff = () => {
     const [cities, setCities] = useState([]);
     const [positions, setPositions] = useState([]);
 
-    const addStaff = Yup.object({
+    const editStaff = Yup.object({
         staff_id: Yup.string()
             .required("Staff ID is required")
             .matches(/^[A-Za-z0-9]+$/, "Staff ID must be alphanumeric"),
@@ -45,9 +45,6 @@ const AddStaff = () => {
             .required("Joining date is required")
             .min(Yup.ref("birth_date"), "Joining date must be after birth date"),
         address: Yup.string().required("Address is required"),
-        country: Yup.string().required("Country is required"),
-        state: Yup.string().required("State is required"),
-        city: Yup.string().required("City is required"),
         phone_no: Yup.string()
             .required("Phone number is required")
             .matches(/^[0-9]{10}$/, "Phone number must be 10 digits"),
@@ -58,63 +55,62 @@ const AddStaff = () => {
             .required("Salary is required")
             .positive("Salary must be a positive number"),
         position: Yup.string().required("Position is required"),
+
         photo: Yup.mixed()
-            .required("Photo is required")
+            .notRequired()
             .test(
-                "fileSize",
-                "File size is too large",
-                (value) => !value || (value && value.size <= 2 * 1024 * 1024)
-            )
-            .test(
-                "fileType",
-                "Unsupported file format",
-                (value) =>
-                    !value ||
-                    (value &&
+                "fileCheck",
+                "File must be a valid image (jpeg, png, jpg, webp) and smaller than 2MB",
+                (value) => {
+                    console.log("Value : ", value);
+                    if (!value) return true; // Skip validation if no file is selected
+                    return (
                         ["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(
                             value.type
-                        ))
+                        ) && value.size <= 2 * 1024 * 1024
+                    );
+                }
             ),
+
+        // Updated validation for images to not be required
+
         document_type: Yup.string()
             .required("Document type is required")
             .oneOf(
                 ["National Identity Card", "Pan Card", "Voter Card"],
                 "Invalid document type"
             ),
+
         id_number: Yup.string().required("ID number is required"),
+
         front_image: Yup.mixed()
-            .required("Front ID image is required")
+            .notRequired()
             .test(
-                "fileSize",
-                "File size is too large",
-                (value) => !value || (value && value.size <= 2 * 1024 * 1024)
-            )
-            .test(
-                "fileType",
-                "Unsupported file format",
-                (value) =>
-                    !value ||
-                    (value &&
+                "fileCheck",
+                "File must be a valid image (jpeg, png, jpg, webp) and smaller than 2MB",
+                (value) => {
+                    if (!value) return true; // Skip validation if no file is selected
+                    return (
                         ["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(
                             value.type
-                        ))
+                        ) && value.size <= 2 * 1024 * 1024
+                    );
+                }
             ),
+
         back_image: Yup.mixed()
-            .required("Back ID image is required")
+            .notRequired()
             .test(
-                "fileSize",
-                "File size is too large",
-                (value) => !value || (value && value.size <= 2 * 1024 * 1024)
-            )
-            .test(
-                "fileType",
-                "Unsupported file format",
-                (value) =>
-                    !value ||
-                    (value &&
+                "fileCheck",
+                "File must be a valid image (jpeg, png, jpg, webp) and smaller than 2MB",
+                (value) => {
+                    if (!value) return true; // Skip validation if no file is selected
+                    return (
                         ["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(
                             value.type
-                        ))
+                        ) && value.size <= 2 * 1024 * 1024
+                    );
+                }
             ),
     });
 
@@ -139,25 +135,23 @@ const AddStaff = () => {
             front_image: "",
             back_image: "",
         },
-        validationSchema: addStaff,
+        validationSchema: editStaff,
+        enableReinitialize: true,
         onSubmit: async (values, { setSubmitting }) => {
             try {
                 const formData = new FormData();
-
-                // Append all text fields
                 Object.keys(values).forEach((key) => {
-                    if (key !== "photo" && key !== "front_image" && key !== "back_image") {
+                    if (!["photo", "front_image", "back_image"].includes(key)) {
                         formData.append(key, values[key]);
                     }
                 });
 
-                // Append files
-                if (values.photo) formData.append("photo", values.photo);
-                if (values.front_image) formData.append("front_image", values.front_image);
-                if (values.back_image) formData.append("back_image", values.back_image);
+                if (values.photo instanceof File) formData.append("photo", values.photo);
+                if (values.front_image instanceof File) formData.append("front_image", values.front_image);
+                if (values.back_image instanceof File) formData.append("back_image", values.back_image);
 
-                const addResponse = await axios.post(
-                    `${process.env.REACT_APP_API}/staff/add`,
+                await axios.put(
+                    `${process.env.REACT_APP_API}/staff/edit/${id}`,
                     formData,
                     {
                         headers: {
@@ -167,13 +161,12 @@ const AddStaff = () => {
                     }
                 );
 
-                console.log("Staff added successfully:", addResponse.data);
-                alert("Staff added successfully!");
+                alert("Staff updated successfully!");
                 history.push("/staff/view");
             } catch (err) {
-                console.error("Error during staff submission:", err);
-                setFileUploadError("Staff submission failed. Please try again.");
-                alert("Add staff failed.");
+                console.error("Error updating staff:", err);
+                setFileUploadError("Update failed. Please try again.");
+                alert("Update failed.");
             } finally {
                 setSubmitting(false);
             }
@@ -184,19 +177,59 @@ const AddStaff = () => {
 
     useEffect(() => {
         setCountries(Country.getAllCountries());
+
         const fetchPositions = async () => {
             try {
-                const response = await axios.get(
-                    `${process.env.REACT_APP_API}/staff/get-positions`,
-                    { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-                );
-                setPositions(response.data);
+                const res = await axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
+                    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                });
+                setPositions(res.data);
             } catch (error) {
                 console.error("Error fetching positions:", error);
             }
         };
+
+        const fetchStaffData = async () => {
+            try {
+                const res = await axios.get(`${process.env.REACT_APP_API}/staff/get/${id}`, {
+                    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                });
+
+                const staff = res.data;
+                setFieldValue("staff_id", staff.staff_id);
+                setFieldValue("f_name", staff.f_name);
+                setFieldValue("l_name", staff.l_name);
+                setFieldValue("birth_date", staff.birth_date);
+                setFieldValue("joining_date", staff.joining_date);
+                setFieldValue("address", staff.address);
+                setFieldValue("country", staff.country);
+                setFieldValue("state", staff.state);
+                setFieldValue("city", staff.city);
+                setFieldValue("phone_no", staff.phone_no);
+                setFieldValue("email", staff.email);
+                setFieldValue("salary", staff.salary);
+                setFieldValue("position", staff.position);
+                setFieldValue("document_type", staff.document_type);
+                setFieldValue("id_number", staff.id_number);
+                
+                // Load state & city dropdowns
+                setStates(State.getStatesOfCountry(staff.country));
+                setCities(City.getCitiesOfState(staff.country, staff.state));
+                
+                setPhotoPreview(`${process.env.REACT_APP_UPLOAD_DIR}/${staff.photo}`)
+                setFrontImagePreview(`${process.env.REACT_APP_UPLOAD_DIR}/${staff.front_image}`)
+                setBackImagePreview(`${process.env.REACT_APP_UPLOAD_DIR}/${staff.back_image}`)
+
+                setLoading(false);
+            } catch (error) {
+                console.error("Error fetching staff data:", error);
+                setLoading(false);
+            }
+        };
+
         fetchPositions();
-    }, []);
+        fetchStaffData();
+    }, [id, setFieldValue]);
 
     const handleCountryChange = (event) => {
         const countryIsoCode = event.target.value;
@@ -229,7 +262,7 @@ const AddStaff = () => {
                     <div className="page-title-container">
                         <Row className="align-items-center">
                             <Col>
-                                <h1 className="mb-0 pb-0 display-4">Add Staff</h1>
+                                <h1 className="mb-0 pb-0 display-4">Edit Staff</h1>
                                 <BreadcrumbList items={breadcrumbs} />
                             </Col>
                             <Col xs="auto">
@@ -626,7 +659,7 @@ const AddStaff = () => {
 
                         <div className="d-flex justify-content-start">
                             <Button variant="success" type="submit" className="mx-2 px-4">
-                                Add Staff
+                                Submit Changes
                             </Button>
                         </div>
                     </Form>
@@ -636,4 +669,4 @@ const AddStaff = () => {
     );
 };
 
-export default AddStaff;
+export default EditStaff;
