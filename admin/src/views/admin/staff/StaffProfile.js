@@ -96,6 +96,7 @@ const StaffProfile = () => {
                                             src={`${process.env.REACT_APP_UPLOAD_DIR}${staff.photo}` || '/img/profile/default.png'}
                                             className="img-fluid rounded-xl"
                                             alt="profile"
+                                            style={{ aspectRatio: '1/1', objectFit: 'cover'}}
                                         />
                                     </div>
                                     <div className="h5 mb-0">{staff.f_name} {staff.l_name}</div>

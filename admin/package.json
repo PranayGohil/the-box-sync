@@ -25,7 +25,7 @@
     "clamp-js": "^0.7.0",
     "classnames": "^2.3.1",
     "country-state-city": "^3.2.1",
-    "date-fns": "^2.22.1",
+    "date-fns": "^2.30.0",
     "formik": "^2.2.9",
     "fuse.js": "^6.4.6",
     "intro.js": "^4.2.2",
