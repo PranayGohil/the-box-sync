@@ -5,7 +5,7 @@ import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import Glide from 'components/carousel/Glide';
 
-const ViewStaff = ({ setSection }) => {
+const ViewStaff = () => {
   const history = useHistory();
   const [staff, setStaff] = useState([]);
 
