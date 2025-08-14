@@ -72,11 +72,11 @@ const Dashboard = () => {
               <Dropdown.Toggle className="small-title p-0 align-top h-auto me-2" variant="link">
                 Today's
               </Dropdown.Toggle>
-              <Dropdown.Menu>
+              {/* <Dropdown.Menu>
                 <Dropdown.Item>Weekly</Dropdown.Item>
                 <Dropdown.Item>Monthly</Dropdown.Item>
                 <Dropdown.Item>Yearly</Dropdown.Item>
-              </Dropdown.Menu>
+              </Dropdown.Menu> */}
             </Dropdown>
             <h2 className="small-title">Stats</h2>
           </div>
@@ -179,7 +179,7 @@ const Dashboard = () => {
           {/* Stats End */}
 
           {/* Sales Start */}
-          <h2 className="small-title">Sales</h2>
+          <h2 className="small-title">Last Week Revenue</h2>
           <Card className="mb-5 sh-40">
             <Card.Body>
               <ChartHorizontal weeklyRevenue={weeklyRevenue} />
@@ -190,7 +190,7 @@ const Dashboard = () => {
 
         <Col lg="6" className="mb-5">
           <div className="d-flex justify-content-between">
-            <h2 className="small-title">Stocks</h2>
+            <h2 className="small-title">Top Selling Dishes</h2>
             <Button variant="background-alternate" size="xs" className="btn-icon btn-icon-end p-0 text-small">
               <span className="align-bottom">View More</span> <CsLineIcons icon="chevron-right" className="align-middle" size="12" />
             </Button>
@@ -200,20 +200,20 @@ const Dashboard = () => {
               <Card className="mb-2 sh-10 sh-md-8" key={idx}>
                 <Card.Body className="pt-0 pb-0 h-100">
                   <Row className="g-0 h-100 align-content-center">
-                    <Col md="5" className="d-flex align-items-center mb-2 mb-md-0">
+                    <Col md="6" className="d-flex align-items-center mb-2 mb-md-0">
                       <NavLink to="/pages/portfolio/detail" className="body-link text-truncate">
                         {dish.dishName}
                       </NavLink>
                     </Col>
-                    <Col md="2" className="d-flex align-items-center text-muted text-medium mb-1 mb-md-0">
+                    <Col md="4" className="d-flex align-items-center text-muted text-medium mb-1 mb-md-0">
                       <Badge bg="outline-tertiary" className="me-1">
                         {dish.category}
                       </Badge>
                     </Col>
-                    <Col md="3" className="d-flex align-items-center text-medium text-danger justify-content-center">
+                    {/* <Col md="3" className="d-flex align-items-center text-medium text-danger justify-content-center">
                       <CsLineIcons icon="arrow-bottom" className="me-1" size="14" />
                       <span className="text-medium">-18.4%</span>
-                    </Col>
+                    </Col> */}
                     <Col md="2" className="d-flex align-items-center justify-content-end text-muted text-medium">
                       <span>{dish.totalSold}</span>
                     </Col>

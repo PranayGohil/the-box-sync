@@ -84,7 +84,7 @@ const ChartHorizontal = ({ weeklyRevenue }) => {
         datasets: [
             {
                 label: 'Revenue',
-                icon: 'money', // pick an icon
+                icon: 'money', 
                 borderColor: themeValues.primary,
                 backgroundColor: `rgba(${themeValues.primaryrgb},0.1)`,
                 data: revenueData,
@@ -124,8 +124,8 @@ const ChartHorizontal = ({ weeklyRevenue }) => {
                 maintainAspectRatio: false,
                 scales: {
                     y: {
-                        min: 300,
-                        max: 800,
+                        min: weeklyRevenue.min,
+                        max: weeklyRevenue.max,
                         grid: {
                             display: true,
                             lineWidth: 1,

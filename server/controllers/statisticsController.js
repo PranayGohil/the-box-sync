@@ -25,11 +25,18 @@ const getDashboardData = async (req, res) => {
 
         // Last 7 days revenue
         const today = new Date();
-        const sevenDaysAgo = new Date();
+        today.setHours(23, 59, 59, 999);
+
+        const sevenDaysAgo = new Date(today);
         sevenDaysAgo.setDate(today.getDate() - 6);
 
-        const LastWeekTotalRevenue = await Order.aggregate([
-            { $match: { restaurant_id: restaurantId, order_date: { $gte: sevenDaysAgo, $lte: today } } },
+        const LastWeekTotalRevenueRaw = await Order.aggregate([
+            {
+                $match: {
+                    restaurant_id: restaurantId,
+                    order_date: { $gte: sevenDaysAgo, $lte: today }
+                }
+            },
             {
                 $group: {
                     _id: {
@@ -42,6 +49,29 @@ const getDashboardData = async (req, res) => {
             },
             { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } }
         ]);
+
+        // Build full 7-day list
+        let LastWeekTotalRevenue = [];
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(sevenDaysAgo);
+            date.setDate(sevenDaysAgo.getDate() + i);
+
+            const found = LastWeekTotalRevenueRaw.find(item =>
+                item._id.day === date.getDate() &&
+                item._id.month === (date.getMonth() + 1) &&
+                item._id.year === date.getFullYear()
+            );
+            console.log("Found : ", found, " Date : ", date);
+
+            LastWeekTotalRevenue.push({
+                _id: {
+                    day: date.getDate(),
+                    month: date.getMonth() + 1,
+                    year: date.getFullYear()
+                },
+                totalRevenue: found ? found.totalRevenue : 0
+            });
+        }
 
         // Most selling dishes with category & special flag
         const MostSellingDishes = await Order.aggregate([
