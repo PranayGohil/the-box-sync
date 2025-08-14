@@ -1,20 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Row, Col, Card, Dropdown, Badge } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
-import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
+import axios from 'axios';
+import { format } from "date-fns";
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
-import ChartCustomHorizontalTooltip from 'views/interface/plugins/chart/ChartCustomHorizontalTooltip';
-import ChartLargeLineSales from 'views/interface/plugins/chart/ChartLargeLineSales';
-import ChartLargeLineStock from 'views/interface/plugins/chart/ChartLargeLineStock';
-import ChartBubble from 'views/interface/plugins/chart/ChartBubble';
-import ChartSmallDoughnutChart1 from 'views/interface/plugins/chart/ChartSmallDoughnutChart1';
-import ChartSmallDoughnutChart2 from 'views/interface/plugins/chart/ChartSmallDoughnutChart2';
-import ChartSmallDoughnutChart3 from 'views/interface/plugins/chart/ChartSmallDoughnutChart3';
-import ChartSmallDoughnutChart4 from 'views/interface/plugins/chart/ChartSmallDoughnutChart4';
-import ChartSmallDoughnutChart5 from 'views/interface/plugins/chart/ChartSmallDoughnutChart5';
-import ChartSmallDoughnutChart6 from 'views/interface/plugins/chart/ChartSmallDoughnutChart6';
+import ChartHorizontal from './ChartHorizontal';
 
 const Dashboard = () => {
   const title = 'Analytic Dashboard';
@@ -24,6 +16,37 @@ const Dashboard = () => {
     { to: '', text: 'Home' },
     { to: 'dashboards', text: 'Dashboards' },
   ];
+
+  const [todayOrders, setTodayOrders] = useState({});
+  const [weeklyRevenue, setWeeklyRevenue] = useState([]);
+  const [topDishes, setTopDishes] = useState([]);
+
+  const fetchDahboardData = async () => {
+    const response = await axios.get(`${process.env.REACT_APP_API}/statistics/dashboard`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    console.log(response.data);
+    setTodayOrders(response.data.TodayTotalOrderTypeWiseOrders);
+    setTopDishes(response.data.MostSellingDishes);
+
+    const rawRevenue = response.data.LastWeekTotalRevenue || [];
+
+    const labels = rawRevenue.map(item => {
+      // Construct a real date object
+      const dateObj = new Date(item._id.year, item._id.month - 1, item._id.day);
+      return format(dateObj, "EEE"); // "Mon", "Tue", ...
+    });
+
+    const values = rawRevenue.map(item => item.totalRevenue);
+
+    setWeeklyRevenue({ labels, values });
+  };
+
+  useEffect(() => {
+    fetchDahboardData();
+  }, []);
 
   return (
     <>
@@ -49,11 +72,11 @@ const Dashboard = () => {
               <Dropdown.Toggle className="small-title p-0 align-top h-auto me-2" variant="link">
                 Today's
               </Dropdown.Toggle>
-              <Dropdown.Menu>
+              {/* <Dropdown.Menu>
                 <Dropdown.Item>Weekly</Dropdown.Item>
                 <Dropdown.Item>Monthly</Dropdown.Item>
                 <Dropdown.Item>Yearly</Dropdown.Item>
-              </Dropdown.Menu>
+              </Dropdown.Menu> */}
             </Dropdown>
             <h2 className="small-title">Stats</h2>
           </div>
@@ -71,10 +94,10 @@ const Dashboard = () => {
                       <Col>
                         <Row className="gx-2 d-flex align-content-center">
                           <Col xs="12" className="col-12 d-flex">
-                            <div className="d-flex align-items-center lh-1-25">Shipped Orders</div>
+                            <div className="d-flex align-items-center lh-1-25">Total Orders</div>
                           </Col>
                           <Col xl="auto" className="col-12">
-                            <div className="cta-2 text-primary">22</div>
+                            <div className="cta-2 text-primary"> {Object.values(todayOrders).reduce((a, b) => a + b, 0)} </div>
                           </Col>
                         </Row>
                       </Col>
@@ -94,10 +117,10 @@ const Dashboard = () => {
                       <Col>
                         <Row className="gx-2 d-flex align-content-center">
                           <Col xs="12" className="col-12 d-flex">
-                            <div className="d-flex align-items-center lh-1-25">Delivered Orders</div>
+                            <div className="d-flex align-items-center lh-1-25">Dine-In</div>
                           </Col>
                           <Col xl="auto" className="col-12">
-                            <div className="cta-2 text-primary">35</div>
+                            <div className="cta-2 text-primary"> {todayOrders["Dine In"] || 0} </div>
                           </Col>
                         </Row>
                       </Col>
@@ -117,10 +140,10 @@ const Dashboard = () => {
                       <Col>
                         <Row className="gx-2 d-flex align-content-center">
                           <Col xs="12" className="col-12 d-flex">
-                            <div className="d-flex align-items-center lh-1-25">Pending Orders</div>
+                            <div className="d-flex align-items-center lh-1-25">Takeaway</div>
                           </Col>
                           <Col xl="auto" className="col-12">
-                            <div className="cta-2 text-primary">22</div>
+                            <div className="cta-2 text-primary"> {todayOrders.Takeaway || 0} </div>
                           </Col>
                         </Row>
                       </Col>
@@ -140,10 +163,10 @@ const Dashboard = () => {
                       <Col>
                         <Row className="gx-2 d-flex align-content-center">
                           <Col xs="12" className="col-12 d-flex">
-                            <div className="d-flex align-items-center lh-1-25">Unconfirmed Orders</div>
+                            <div className="d-flex align-items-center lh-1-25">Delivery</div>
                           </Col>
                           <Col xl="auto" className="col-12">
-                            <div className="cta-2 text-primary">3</div>
+                            <div className="cta-2 text-primary"> {todayOrders.Delivery || 0} </div>
                           </Col>
                         </Row>
                       </Col>
@@ -156,10 +179,10 @@ const Dashboard = () => {
           {/* Stats End */}
 
           {/* Sales Start */}
-          <h2 className="small-title">Sales</h2>
+          <h2 className="small-title">Last Week Revenue</h2>
           <Card className="mb-5 sh-40">
             <Card.Body>
-              <ChartCustomHorizontalTooltip />
+              <ChartHorizontal weeklyRevenue={weeklyRevenue} />
             </Card.Body>
           </Card>
           {/* Sales End */}
@@ -167,526 +190,39 @@ const Dashboard = () => {
 
         <Col lg="6" className="mb-5">
           <div className="d-flex justify-content-between">
-            <h2 className="small-title">Stocks</h2>
+            <h2 className="small-title">Top Selling Dishes</h2>
             <Button variant="background-alternate" size="xs" className="btn-icon btn-icon-end p-0 text-small">
               <span className="align-bottom">View More</span> <CsLineIcons icon="chevron-right" className="align-middle" size="12" />
             </Button>
           </div>
           <div className="mb-n2">
-            <Card className="mb-2 sh-10 sh-md-8">
-              <Card.Body className="pt-0 pb-0 h-100">
-                <Row className="g-0 h-100 align-content-center">
-                  <Col md="5" className="d-flex align-items-center mb-2 mb-md-0">
-                    <NavLink to="/pages/portfolio/detail" className="body-link text-truncate">
-                      Barmbrack
-                    </NavLink>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center text-muted text-medium mb-1 mb-md-0">
-                    <Badge bg="outline-tertiary" className="me-1">
-                      STOCK
-                    </Badge>
-                  </Col>
-                  <Col md="3" className="d-flex align-items-center text-medium text-danger justify-content-center">
-                    <CsLineIcons icon="arrow-bottom" className="me-1" size="14" />
-                    <span className="text-medium">-18.4%</span>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center justify-content-end text-muted text-medium">
-                    <span>$ 3.25</span>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-            <Card className="mb-2 sh-10 sh-md-8">
-              <Card.Body className="pt-0 pb-0 h-100">
-                <Row className="g-0 h-100 align-content-center">
-                  <Col md="5" className="d-flex align-items-center mb-2 mb-md-0">
-                    <NavLink to="/pages/portfolio/detail" className="body-link text-truncate">
-                      Cheesymite Scroll
-                    </NavLink>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center text-muted text-medium mb-1 mb-md-0">
-                    <Badge bg="outline-tertiary" className="me-1">
-                      STOCK
-                    </Badge>
-                  </Col>
-                  <Col md="3" className="d-flex align-items-center text-medium text-danger justify-content-center">
-                    <CsLineIcons icon="arrow-bottom" className="me-1" size="14" />
-                    <span className="text-medium">-13.4%</span>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center justify-content-end text-muted text-medium">
-                    <span>$ 4.50</span>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-            <Card className="mb-2 sh-10 sh-md-8">
-              <Card.Body className="pt-0 pb-0 h-100">
-                <Row className="g-0 h-100 align-content-center">
-                  <Col md="5" className="d-flex align-items-center mb-2 mb-md-0">
-                    <NavLink to="/pages/portfolio/detail" className="body-link text-truncate">
-                      Cholermüs
-                    </NavLink>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center text-muted text-medium mb-1 mb-md-0">
-                    <Badge bg="outline-primary" className="me-1">
-                      SALE
-                    </Badge>
-                  </Col>
-                  <Col md="3" className="d-flex align-items-center text-medium text-success justify-content-center">
-                    <CsLineIcons icon="arrow-top" className="me-1" size="14" />
-                    <span className="text-medium">+9.7%</span>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center justify-content-end text-muted text-medium">
-                    <span>$ 1.75</span>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-            <Card className="mb-2 sh-10 sh-md-8">
-              <Card.Body className="pt-0 pb-0 h-100">
-                <Row className="g-0 h-100 align-content-center">
-                  <Col md="5" className="d-flex align-items-center mb-2 mb-md-0">
-                    <NavLink to="/pages/portfolio/detail" className="body-link text-truncate">
-                      Ruisreikäleipä
-                    </NavLink>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center text-muted text-medium mb-1 mb-md-0">
-                    <Badge bg="outline-primary" className="me-1">
-                      SALE
-                    </Badge>
-                  </Col>
-                  <Col md="3" className="d-flex align-items-center text-medium text-success justify-content-center">
-                    <CsLineIcons icon="arrow-bottom" className="me-1" size="14" />
-                    <span className="text-medium">+5.3%</span>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center justify-content-end text-muted text-medium">
-                    <span>$ 3.00</span>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-            <Card className="mb-2 sh-10 sh-md-8">
-              <Card.Body className="pt-0 pb-0 h-100">
-                <Row className="g-0 h-100 align-content-center">
-                  <Col md="5" className="d-flex align-items-center mb-2 mb-md-0">
-                    <NavLink to="/pages/portfolio/detail" className="body-link text-truncate">
-                      Bagel
-                    </NavLink>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center text-muted text-medium mb-1 mb-md-0">
-                    <Badge bg="outline-tertiary" className="me-1">
-                      STOCK
-                    </Badge>
-                  </Col>
-                  <Col md="3" className="d-flex align-items-center text-medium text-danger justify-content-center">
-                    <CsLineIcons icon="arrow-bottom" className="me-1" size="14" />
-                    <span className="text-medium">-2.3%</span>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center justify-content-end text-muted text-medium">
-                    <span>$ 4.25</span>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-            <Card className="mb-2 sh-10 sh-md-8">
-              <Card.Body className="pt-0 pb-0 h-100">
-                <Row className="g-0 h-100 align-content-center">
-                  <Col md="5" className="d-flex align-items-center mb-2 mb-md-0">
-                    <NavLink to="/pages/portfolio/detail" className="body-link text-truncate">
-                      Buccellato di Lucca
-                    </NavLink>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center text-muted text-medium mb-1 mb-md-0">
-                    <Badge bg="outline-secondary" className="me-1">
-                      TREND
-                    </Badge>
-                  </Col>
-                  <Col md="3" className="d-flex align-items-center text-medium text-danger justify-content-center">
-                    <CsLineIcons icon="arrow-bottom" className="me-1" size="14" />
-                    <span className="text-medium">-5.3%</span>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center justify-content-end text-muted text-medium">
-                    <span>$ 3.75</span>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-            <Card className="mb-2 sh-10 sh-md-8">
-              <Card.Body className="pt-0 pb-0 h-100">
-                <Row className="g-0 h-100 align-content-center">
-                  <Col md="5" className="d-flex align-items-center mb-2 mb-md-0">
-                    <NavLink to="/pages/portfolio/detail" className="body-link text-truncate">
-                      Chapati
-                    </NavLink>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center text-muted text-medium mb-1 mb-md-0">
-                    <Badge bg="outline-primary" className="me-1">
-                      SALE
-                    </Badge>
-                  </Col>
-                  <Col md="3" className="d-flex align-items-center text-medium text-success justify-content-center">
-                    <CsLineIcons icon="arrow-bottom" className="me-1" size="14" />
-                    <span className="text-medium">+7.1%</span>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center justify-content-end text-muted text-medium">
-                    <span>$ 1.85</span>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-            <Card className="mb-2 sh-10 sh-md-8">
-              <Card.Body className="pt-0 pb-0 h-100">
-                <Row className="g-0 h-100 align-content-center">
-                  <Col md="5" className="d-flex align-items-center mb-2 mb-md-0">
-                    <NavLink to="/pages/portfolio/detail" className="body-link text-truncate">
-                      Pullman Loaf
-                    </NavLink>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center text-muted text-medium mb-1 mb-md-0">
-                    <Badge bg="outline-primary" className="me-1">
-                      TREND
-                    </Badge>
-                  </Col>
-                  <Col md="3" className="d-flex align-items-center text-medium text-success justify-content-center">
-                    <CsLineIcons icon="arrow-bottom" className="me-1" size="14" />
-                    <span className="text-medium">+2.3%</span>
-                  </Col>
-                  <Col md="2" className="d-flex align-items-center justify-content-end text-muted text-medium">
-                    <span>$ 2.25</span>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
+            {topDishes.map((dish, idx) => (
+              <Card className="mb-2 sh-10 sh-md-8" key={idx}>
+                <Card.Body className="pt-0 pb-0 h-100">
+                  <Row className="g-0 h-100 align-content-center">
+                    <Col md="6" className="d-flex align-items-center mb-2 mb-md-0">
+                      <NavLink to="/pages/portfolio/detail" className="body-link text-truncate">
+                        {dish.dishName}
+                      </NavLink>
+                    </Col>
+                    <Col md="4" className="d-flex align-items-center text-muted text-medium mb-1 mb-md-0">
+                      <Badge bg="outline-tertiary" className="me-1">
+                        {dish.category}
+                      </Badge>
+                    </Col>
+                    {/* <Col md="3" className="d-flex align-items-center text-medium text-danger justify-content-center">
+                      <CsLineIcons icon="arrow-bottom" className="me-1" size="14" />
+                      <span className="text-medium">-18.4%</span>
+                    </Col> */}
+                    <Col md="2" className="d-flex align-items-center justify-content-end text-muted text-medium">
+                      <span>{dish.totalSold}</span>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            ))}
           </div>
         </Col>
-      </Row>
-
-      <Row>
-        {/* Logs Start */}
-        <Col xl="6" className="mb-5">
-          <h2 className="small-title">Logs</h2>
-          <Card className="sh-40 h-xl-100-card">
-            <Card.Body className="mb-n2 scroll-out h-100">
-              <OverlayScrollbarsComponent options={{ scrollbars: { autoHide: 'leave' }, overflowBehavior: { x: 'hidden', y: 'scroll' } }} className="h-100">
-                <Row className="g-0 mb-2">
-                  <Col xs="auto">
-                    <div className="sw-3 d-inline-block d-flex justify-content-start align-items-center h-100">
-                      <div className="sh-3">
-                        <CsLineIcons icon="circle" className="text-primary align-top" />
-                      </div>
-                    </div>
-                  </Col>
-                  <Col>
-                    <div className="d-flex flex-column pt-0 pb-0 ps-3 pe-4 h-100 justify-content-center">
-                      <div className="d-flex flex-column">
-                        <div className="text-alternate mt-n1 lh-1-25">New user registiration</div>
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs="auto">
-                    <div className="d-inline-block d-flex justify-content-end align-items-center h-100">
-                      <div className="text-muted ms-2 mt-n1 lh-1-25">18 Dec</div>
-                    </div>
-                  </Col>
-                </Row>
-                <Row className="g-0 mb-2">
-                  <Col xs="auto">
-                    <div className="sw-3 d-inline-block d-flex justify-content-start align-items-center h-100">
-                      <div className="sh-3">
-                        <CsLineIcons icon="square" className="text-secondary align-top" />
-                      </div>
-                    </div>
-                  </Col>
-                  <Col>
-                    <div className="d-flex flex-column pt-0 pb-0 ps-3 pe-4 h-100 justify-content-center">
-                      <div className="d-flex flex-column">
-                        <div className="text-alternate mt-n1 lh-1-25">Product out of stock: Breadstick</div>
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs="auto">
-                    <div className="d-inline-block d-flex justify-content-end align-items-center h-100">
-                      <div className="text-muted ms-2 mt-n1 lh-1-25">15 Dec</div>
-                    </div>
-                  </Col>
-                </Row>
-                <Row className="g-0 mb-2">
-                  <Col xs="auto">
-                    <div className="sw-3 d-inline-block d-flex justify-content-start align-items-center h-100">
-                      <div className="sh-3">
-                        <CsLineIcons icon="triangle" className="text-tertiary align-top" />
-                      </div>
-                    </div>
-                  </Col>
-                  <Col>
-                    <div className="d-flex flex-column pt-0 pb-0 ps-3 pe-4 h-100 justify-content-center">
-                      <div className="d-flex flex-column">
-                        <div className="text-alternate mt-n1 lh-1-25">Category page returned an error</div>
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs="auto">
-                    <div className="d-inline-block d-flex justify-content-end align-items-center h-100">
-                      <div className="text-muted ms-2 mt-n1 lh-1-25">14 Dec</div>
-                    </div>
-                  </Col>
-                </Row>
-                <Row className="g-0 mb-2">
-                  <Col xs="auto">
-                    <div className="sw-3 d-inline-block d-flex justify-content-start align-items-center h-100">
-                      <div className="sh-3">
-                        <CsLineIcons icon="hexagon" className="text-quaternary align-top" />
-                      </div>
-                    </div>
-                  </Col>
-                  <Col>
-                    <div className="d-flex flex-column pt-0 pb-0 ps-3 pe-4 h-100 justify-content-center">
-                      <div className="d-flex flex-column">
-                        <div className="text-alternate mt-n1 lh-1-25">14 products added</div>
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs="auto">
-                    <div className="d-inline-block d-flex justify-content-end align-items-center h-100">
-                      <div className="text-muted ms-2 mt-n1 lh-1-25">14 Dec</div>
-                    </div>
-                  </Col>
-                </Row>
-                <Row className="g-0 mb-2">
-                  <Col xs="auto">
-                    <div className="sw-3 d-inline-block d-flex justify-content-start align-items-center h-100">
-                      <div className="sh-3">
-                        <CsLineIcons icon="hexagon" className="text-quaternary align-top" />
-                      </div>
-                    </div>
-                  </Col>
-                  <Col>
-                    <div className="d-flex flex-column pt-0 pb-0 ps-3 pe-4 h-100 justify-content-center">
-                      <div className="d-flex flex-column">
-                        <div className="text-alternate mt-n1 lh-1-25">New sale: Soda Bread</div>
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs="auto">
-                    <div className="d-inline-block d-flex justify-content-end align-items-center h-100">
-                      <div className="text-muted ms-2 mt-n1 lh-1-25">14 Dec</div>
-                    </div>
-                  </Col>
-                </Row>
-                <Row className="g-0 mb-2">
-                  <Col xs="auto">
-                    <div className="sw-3 d-inline-block d-flex justify-content-start align-items-center h-100">
-                      <div className="sh-3">
-                        <CsLineIcons icon="square" className="text-secondary align-top" />
-                      </div>
-                    </div>
-                  </Col>
-                  <Col>
-                    <div className="d-flex flex-column pt-0 pb-0 ps-3 pe-4 h-100 justify-content-center">
-                      <div className="d-flex flex-column">
-                        <div className="text-alternate mt-n1 lh-1-25">Product out of stock: Breadstick</div>
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs="auto">
-                    <div className="d-inline-block d-flex justify-content-end align-items-center h-100">
-                      <div className="text-muted ms-2 mt-n1 lh-1-25">15 Dec</div>
-                    </div>
-                  </Col>
-                </Row>
-                <Row className="g-0 mb-2">
-                  <Col xs="auto">
-                    <div className="sw-3 d-inline-block d-flex justify-content-start align-items-center h-100">
-                      <div className="sh-3">
-                        <CsLineIcons icon="triangle" className="text-tertiary align-top" />
-                      </div>
-                    </div>
-                  </Col>
-                  <Col>
-                    <div className="d-flex flex-column pt-0 pb-0 ps-3 pe-4 h-100 justify-content-center">
-                      <div className="d-flex flex-column">
-                        <div className="text-alternate mt-n1 lh-1-25">Product page returned an error</div>
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs="auto">
-                    <div className="d-inline-block d-flex justify-content-end align-items-center h-100">
-                      <div className="text-muted ms-2 mt-n1 lh-1-25">14 Dec</div>
-                    </div>
-                  </Col>
-                </Row>
-                <Row className="g-0 mb-2">
-                  <Col xs="auto">
-                    <div className="sw-3 d-inline-block d-flex justify-content-start align-items-center h-100">
-                      <div className="sh-3">
-                        <CsLineIcons icon="hexagon" className="text-quaternary align-top" />
-                      </div>
-                    </div>
-                  </Col>
-                  <Col>
-                    <div className="d-flex flex-column pt-0 pb-0 ps-3 pe-4 h-100 justify-content-center">
-                      <div className="d-flex flex-column">
-                        <div className="text-alternate mt-n1 lh-1-25">New sale: Steirer Brot</div>
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs="auto">
-                    <div className="d-inline-block d-flex justify-content-end align-items-center h-100">
-                      <div className="text-muted ms-2 mt-n1 lh-1-25">13 Dec</div>
-                    </div>
-                  </Col>
-                </Row>
-                <Row className="g-0 mb-2">
-                  <Col xs="auto">
-                    <div className="sw-3 d-inline-block d-flex justify-content-start align-items-center h-100">
-                      <div className="sh-3">
-                        <CsLineIcons icon="hexagon" className="text-quaternary align-top" />
-                      </div>
-                    </div>
-                  </Col>
-                  <Col>
-                    <div className="d-flex flex-column pt-0 pb-0 ps-3 pe-4 h-100 justify-content-center">
-                      <div className="d-flex flex-column">
-                        <div className="text-alternate mt-n1 lh-1-25">Recived a support ticket</div>
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs="auto">
-                    <div className="d-inline-block d-flex justify-content-end align-items-center h-100">
-                      <div className="text-muted ms-2 mt-n1 lh-1-25">13 Dec</div>
-                    </div>
-                  </Col>
-                </Row>
-                <Row className="g-0 mb-2">
-                  <Col xs="auto">
-                    <div className="sw-3 d-inline-block d-flex justify-content-start align-items-center h-100">
-                      <div className="sh-3">
-                        <CsLineIcons icon="hexagon" className="text-quaternary align-top" />
-                      </div>
-                    </div>
-                  </Col>
-                  <Col>
-                    <div className="d-flex flex-column pt-0 pb-0 ps-3 pe-4 h-100 justify-content-center">
-                      <div className="d-flex flex-column">
-                        <div className="text-alternate mt-n1 lh-1-25">Recived a support ticket</div>
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs="auto">
-                    <div className="d-inline-block d-flex justify-content-end align-items-center h-100">
-                      <div className="text-muted ms-2 mt-n1 lh-1-25">13 Dec</div>
-                    </div>
-                  </Col>
-                </Row>
-                <Row className="g-0 mb-2">
-                  <Col xs="auto">
-                    <div className="sw-3 d-inline-block d-flex justify-content-start align-items-center h-100">
-                      <div className="sh-3">
-                        <CsLineIcons icon="hexagon" className="text-quaternary align-top" />
-                      </div>
-                    </div>
-                  </Col>
-                  <Col>
-                    <div className="d-flex flex-column pt-0 pb-0 ps-3 pe-4 h-100 justify-content-center">
-                      <div className="d-flex flex-column">
-                        <div className="text-alternate mt-n1 lh-1-25">Recived a comment</div>
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs="auto">
-                    <div className="d-inline-block d-flex justify-content-end align-items-center h-100">
-                      <div className="text-muted ms-2 mt-n1 lh-1-25">13 Dec</div>
-                    </div>
-                  </Col>
-                </Row>
-              </OverlayScrollbarsComponent>
-            </Card.Body>
-          </Card>
-        </Col>
-        {/* Logs End */}
-
-        {/* Progress Start */}
-        <Col xl="6" className="mb-5">
-          <h2 className="small-title">Progress</h2>
-          <Row className="g-2">
-            <Col md="6">
-              <Card className="sh-13">
-                <Card.Body className="py-0 d-flex align-items-center">
-                  <ChartSmallDoughnutChart1 />
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md="6">
-              <Card className="sh-13">
-                <Card.Body className="py-0 d-flex align-items-center">
-                  <ChartSmallDoughnutChart2 />
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md="6">
-              <Card className="sh-13">
-                <Card.Body className="py-0 d-flex align-items-center">
-                  <ChartSmallDoughnutChart3 />
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md="6">
-              <Card className="sh-13">
-                <Card.Body className="py-0 d-flex align-items-center">
-                  <ChartSmallDoughnutChart4 />
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md="6">
-              <Card className="sh-13">
-                <Card.Body className="py-0 d-flex align-items-center">
-                  <ChartSmallDoughnutChart5 />
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md="6">
-              <Card className="sh-13">
-                <Card.Body className="py-0 d-flex align-items-center">
-                  <ChartSmallDoughnutChart6 />
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </Col>
-        {/* Progress End */}
-      </Row>
-
-      <Row className="gy-5">
-        {/* Consumptions Start */}
-        <Col xl="6">
-          <h2 className="small-title">Consumptions</h2>
-          <Card className="sh-50 h-xl-100-card">
-            <Card.Body className="h-100">
-              <ChartBubble />
-            </Card.Body>
-          </Card>
-        </Col>
-        {/* Consumptions End */}
-
-        {/* Sales & Stocks Charts Start */}
-        <Col xl="6">
-          <h2 className="small-title">Sales & Stocks</h2>
-          <Card className="mb-2 h-auto sh-xl-24" id="introFirst">
-            <Card.Body>
-              <Row className="g-0 h-100">
-                <ChartLargeLineSales />
-              </Row>
-            </Card.Body>
-          </Card>
-          <Card className="mb-5 h-auto sh-xl-24">
-            <Card.Body>
-              <Row className="g-0 h-100">
-                <ChartLargeLineStock />
-              </Row>
-            </Card.Body>
-          </Card>
-        </Col>
-        {/* Sales & Stocks Charts End */}
       </Row>
     </>
   );

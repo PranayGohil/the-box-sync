@@ -1,7 +1,7 @@
 // OrderHistory.js
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { Badge, Col, Form, Row, Button } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table'; // Removed useRowState
@@ -23,6 +23,8 @@ const OrderHistory = () => {
     { to: 'operations/order-history', text: 'Operations' },
     { to: 'operations/order-history', title: 'Order History' },
   ];
+
+  const history = useHistory();
 
   const [error, setError] = useState(null);
   const [data, setData] = React.useState([]);
@@ -58,7 +60,6 @@ const OrderHistory = () => {
 
   const handlePrint = async (orderId) => {
     try {
-      console.log(orderId);
       const orderResponse = await axios.get(
         `${process.env.REACT_APP_API}/order/get/${orderId}`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
@@ -68,9 +69,8 @@ const OrderHistory = () => {
         `${process.env.REACT_APP_API}/user/get`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-      console.log("User Response: ", userResponse.data);
 
-      const order = orderResponse.data[0];
+      const order = orderResponse.data.data[0];
       const userData = userResponse.data;
 
       const printDiv = document.createElement("div");
@@ -89,7 +89,7 @@ const OrderHistory = () => {
         }</p>
           </div>
           <hr style="border: 0.5px dashed #ccc;" />
-          <p><strong>Name:</strong> ${order.customer_name || "(M: 1234567890)"
+          <p><strong>Name:</strong> ${order?.customer_name || "(M: 1234567890)"
         }</p>
           <hr style="border: 0.5px dashed #ccc;" />
           <table style="font-size: 12px; margin-bottom: 10px;">
@@ -103,7 +103,7 @@ const OrderHistory = () => {
                 </td>
             </tr>
             <tr>
-            <td colspan="2"><strong>Bill No:</strong> ${order.id}</td>
+            <td colspan="2"><strong>Bill No:</strong> ${order._id}</td>
             
             </tr>
           </table>
@@ -233,10 +233,10 @@ const OrderHistory = () => {
       headerClassName: 'text-muted text-small text-uppercase w-10 text-center',
       Cell: ({ row }) => (
         <div className="d-flex justify-content-center">
-          <Link variant="link" size="sm" title="View" to={`/operations/order-details/${row.original.id}`}>
+          <Button variant="link" size="sm" title="View" className='px-1' onClick={() => history.push(`/operations/order-details/${row.original.id}`)}>
             <CsLineIcons icon="eye" />
-          </Link>
-          <Button variant="link" size="sm" title="Print" onClick={() => handlePrint(row.original.id)}>
+          </Button>
+          <Button variant="link" size="sm" title="Print" className='px-1' onClick={() => handlePrint(row.original.id)}>
             <CsLineIcons icon="print" />
           </Button>
         </div>
