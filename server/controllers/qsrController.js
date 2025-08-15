@@ -1,4 +1,4 @@
-const QSR = require("../models/qsrModel");
+const QSR = require("../models/QSRModel");
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 

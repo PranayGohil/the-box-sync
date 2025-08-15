@@ -1,5 +1,5 @@
 const Manager = require("../models/managerModel");
-const QSR = require("../models/qsrModel");
+const QSR = require("../models/QSRModel");
 const Captain = require("../models/captainModel");
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");

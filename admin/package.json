@@ -73,7 +73,7 @@
     "start-js": "react-scripts start --dev",
     "start-css": "sass --style=compressed --watch src/sass/styles.scss:public/css/styles.css",
     "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider concurrently \"npm run start-js\" \"npm run start-css\"",
-    "build-js": "react-scripts build --prod",
+    "build-js": "NODE_OPTIONS=--openssl-legacy-provider react-scripts build --prod",
     "build-css": "sass --style=compressed --no-source-map src/sass/styles.scss:public/css/styles.css",
     "build": "concurrently \"npm run build-css\" \"npm run build-js\"",
     "test": "react-scripts test",

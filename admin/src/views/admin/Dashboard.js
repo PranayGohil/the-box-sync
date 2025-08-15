@@ -6,15 +6,15 @@ import { format } from "date-fns";
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
-import ChartHorizontal from './ChartHorizontal';
+import ChartHorizontal from './ChartBar';
 
 const Dashboard = () => {
-  const title = 'Analytic Dashboard';
+  const title = 'Dashboard';
   const description = 'Analytic Dashboard';
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
-    { to: 'dashboards', text: 'Dashboards' },
+    { to: 'dashboard', text: 'Dashboard' },
   ];
 
   const [todayOrders, setTodayOrders] = useState({});

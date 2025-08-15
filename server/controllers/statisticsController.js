@@ -1,5 +1,6 @@
 const Order = require("../models/orderModel");
 const Menu = require("../models/menuModel");
+const mongoose = require("mongoose");
 
 const getDashboardData = async (req, res) => {
     try {
@@ -142,5 +143,89 @@ const getDashboardData = async (req, res) => {
     }
 };
 
+const getCategoryWiseOrders = async (req, res) => {
+    try {
+        const restaurantId = req.user._id; // or req.params.id
+        const pipeline = [
+            { $match: { restaurant_id: restaurantId } },
+            { $unwind: "$order_items" },
+            // Lookup to get category from Menu
+            {
+                $lookup: {
+                    from: "menus",
+                    localField: "order_items.dish_name",
+                    foreignField: "dishes.dish_name",
+                    as: "menu_info"
+                }
+            },
+            { $unwind: "$menu_info" },
+            { $group: { _id: "$menu_info.category", totalOrders: { $sum: "$order_items.quantity" } } },
+            { $project: { category: "$_id", totalOrders: 1, _id: 0 } }
+        ];
 
-module.exports = { getDashboardData };
+        const result = await Order.aggregate(pipeline);
+        res.json(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Server Error" });
+    }
+};
+
+const getOrderTypeWiseOrders = async (req, res) => {
+    try {
+        const restaurantId = req.user._id;
+
+        const result = await Order.aggregate([
+            { $match: { restaurant_id: restaurantId } },
+            { $group: { _id: "$order_type", totalOrders: { $sum: 1 } } },
+            { $project: { orderType: "$_id", totalOrders: 1, _id: 0 } }
+        ]);
+
+        res.json(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Server Error" });
+    }
+};
+
+const getRevenueSummary = async (req, res) => {
+    try {
+        const { duration } = req.query; // 'week' | 'month' | 'year'
+        const restaurantId = req.user._id;
+
+        let startDate;
+        const now = new Date();
+        if (duration === 'week') {
+            startDate = new Date(now);
+            startDate.setDate(now.getDate() - 6); // last 7 days
+        } else if (duration === 'month') {
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        } else if (duration === 'year') {
+            startDate = new Date(now.getFullYear(), 0, 1);
+        } else {
+            return res.status(400).json({ error: "Invalid duration" });
+        }
+
+        const result = await Order.aggregate([
+            { $match: { restaurant_id: restaurantId, order_date: { $gte: startDate, $lte: now } } },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$order_date" },
+                        month: { $month: "$order_date" },
+                        day: { $dayOfMonth: "$order_date" }
+                    },
+                    totalRevenue: { $sum: "$total_amount" }
+                }
+            },
+            { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } }
+        ]);
+
+        res.json(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Server Error" });
+    }
+};
+
+module.exports = { getDashboardData, getCategoryWiseOrders, getOrderTypeWiseOrders, getRevenueSummary };
