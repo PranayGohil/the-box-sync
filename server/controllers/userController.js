@@ -16,7 +16,7 @@ const emailCheck = async (req, res) => {
 };
 
 const register = async (req, res) => {
-  console.log(req.body);
+  console.log("Bodyyyyyyy", req.body);
   try {
     const { country, state, name, email } = req.body;
 
@@ -57,7 +57,11 @@ const register = async (req, res) => {
     )}${countryPrefix}`;
 
     // Create the new user with the generated restaurant code
-    const userdata = { ...req.body, restaurant_code: restaurantCode };
+    const userdata = {
+      ...req.body,
+      logo: req.file ? "/branding/logo/" + req.file.filename : null,
+      restaurant_code: restaurantCode,
+    };
 
     const newUser = new User(userdata);
     await newUser.save();
@@ -102,13 +106,18 @@ const register = async (req, res) => {
       </p>
       `;
 
-    await sendEmail({
-      to: email,
-      subject: "Successful Registration Confirmation for Your TheBox Account",
-      html: regEmail,
-    });
+    // await sendEmail({
+    //   to: email,
+    //   subject: "Successful Registration Confirmation for Your TheBox Account",
+    //   html: regEmail,
+    // });
 
-    res.json({ message: "Registered", restaurant_code: restaurantCode });
+    res.json({
+      message: "Registered",
+      restaurant_code: restaurantCode,
+      token,
+      user: { _id: newUser._id, email: newUser.email },
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -145,7 +154,6 @@ const login = async (req, res) => {
     res.json({ success: false, message: "Internal server error" });
   }
 };
-
 
 const logout = async (req, res) => {
   try {
@@ -366,7 +374,7 @@ const updateUser = async (req, res) => {
     }
 
     // ✅ Save uploaded logo path if available
-    if (req.file && req.file.fieldname === 'logo') {
+    if (req.file && req.file.fieldname === "logo") {
       updates.logo = `/branding/logo/${req.file.filename}`;
     }
 
@@ -384,7 +392,6 @@ const updateUser = async (req, res) => {
     res.status(500).json({ error: "Internal server error." });
   }
 };
-
 
 const updateTax = async (req, res) => {
   const { gst_no, taxInfo } = req.body;

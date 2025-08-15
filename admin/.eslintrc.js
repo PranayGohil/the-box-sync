@@ -89,6 +89,9 @@ module.exports = {
     'no-underscore-dangle': 'off',
     'camelcase': 'off',
     'no-restricted-syntax': 'off',
+    'no-underscore-dangle': 'off',
+    'no-nested-ternary': 'off',
+    'jsx-a11y/no-onchange': 'off',
   },
   globals: {
     window: true,

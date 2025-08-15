@@ -20,8 +20,8 @@ const upload = require("../middlewares/upload");
 
 const userRouter = express.Router();
 
-userRouter.route("/emailcheck").post(emailCheck);
-userRouter.route("/register").post(register);
+userRouter.route("/check-email").post(emailCheck);
+userRouter.route("/register").post(upload.single('logo'), register);
 userRouter.route("/login").post(login);
 userRouter.route("/logout").get(logout);
 userRouter.route("/sendadminotp").post(authMiddleware, sendAdminOtp);

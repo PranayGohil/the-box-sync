@@ -40,41 +40,55 @@ const ChartDoughnut = ({ orderCategoryWise }) => {
   const CenterTextPlugin = React.useMemo(() => {
     const { font, body, alternate } = themeValues;
     return {
-      afterDatasetsUpdate(chart) { },
-      beforeDraw(chart, args, options) {
+      afterDatasetsUpdate(chart) {},
+      beforeDraw(chart) {
         const {
           ctx,
           chartArea: { width, height },
           _metasets,
         } = chart;
+
+        if (!_metasets?.length) return; // no dataset → skip
+
         ctx.restore();
 
         const { total } = _metasets[0];
-        let activeLabel = chart.data.labels[0];
-        let activeValue = chart.data.datasets[0].data[0];
-        let dataset = chart.data.datasets[0];
-        let activePercentage = parseFloat(((activeValue / total) * 100).toFixed(1));
-        activePercentage = chart.legend.legendItems[0].hidden ? 0 : activePercentage;
-        const activeElements = chart.getActiveElements();
-        if (activeElements && activeElements.length > 0) {
-          const { datasetIndex, index } = activeElements[0];
-          activeLabel = chart.data.labels[index];
-          activeValue = chart.data.datasets[datasetIndex].data[index];
-          dataset = chart.data.datasets[datasetIndex];
-          activePercentage = parseFloat(((activeValue / total) * 100).toFixed(1));
-          activePercentage = chart.legend.legendItems[index].hidden ? 0 : activePercentage;
+        let activeLabel = chart.data.labels[0] || '';
+        let activeValue = chart.data.datasets[0]?.data[0] || 0;
+        let activePercentage = total ? parseFloat(((activeValue / total) * 100).toFixed(1)) : 0;
+
+        // Get legend items safely
+        let legendItems = [];
+        if (chart?.options?.plugins?.legend?.labels?.generateLabels) {
+          legendItems = chart.options.plugins.legend.labels.generateLabels(chart);
         }
-        ctx.font = `28px ${font}`;
+        if (legendItems.length > 0 && legendItems[0]?.hidden) {
+          activePercentage = 0;
+        }
+
+        // If hovering on a slice, update label/percentage
+        const activeElements = chart.getActiveElements();
+        if (activeElements?.length > 0) {
+          const { datasetIndex, index } = activeElements[0];
+          activeLabel = chart.data.labels[index] || '';
+          activeValue = chart.data.datasets[datasetIndex]?.data[index] || 0;
+          activePercentage = total ? parseFloat(((activeValue / total) * 100).toFixed(1)) : 0;
+          if (legendItems[index]?.hidden) activePercentage = 0;
+        }
+
+        // Draw text in center
+        ctx.font = `28px ${themeValues.font}`;
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = body;
+        ctx.fillStyle = themeValues.body;
         const text = `${activePercentage}%`;
         const textX = Math.round((width - ctx.measureText(text).width) / 2);
         const textY = height / 2;
         ctx.fillText(text, textX, textY);
-        ctx.fillStyle = alternate;
-        ctx.font = `12px ${font}`;
+
+        ctx.fillStyle = themeValues.alternate;
+        ctx.font = `12px ${themeValues.font}`;
         ctx.textBaseline = 'top';
-        const text2 = activeLabel.toLocaleUpperCase();
+        const text2 = activeLabel.toUpperCase();
         const text2X = Math.round((width - ctx.measureText(text2).width) / 2);
         const text2Y = height / 2 - 30;
         ctx.fillText(text2, text2X, text2Y);
@@ -95,10 +109,18 @@ const ChartDoughnut = ({ orderCategoryWise }) => {
 
   const data = React.useMemo(() => {
     return {
-      labels: orderCategoryWise.map((item) => item.orderType),
-      datasets: orderCategoryWise.map((item) => item.totalOrders),
+      labels: orderCategoryWise.map((item) => item.category),
+      datasets: [
+        {
+          label: '',
+          borderColor: [themeValues.tertiary, themeValues.secondary, themeValues.primary],
+          backgroundColor: [`rgba(${themeValues.tertiaryrgb},0.1)`, `rgba(${themeValues.secondaryrgb},0.1)`, `rgba(${themeValues.primaryrgb},0.1)`],
+          borderWidth: 2,
+          data: orderCategoryWise.map((item) => item.totalOrders),
+        },
+      ],
     };
-  }, [themeValues]);
+  }, [themeValues, orderCategoryWise]);
   const config = React.useMemo(() => {
     return {
       type: 'doughnut',
@@ -109,7 +131,7 @@ const ChartDoughnut = ({ orderCategoryWise }) => {
           datalabels: false,
           tooltip: ChartTooltip,
           legend: {
-            position: 'bottom',
+            position: 'right',
             labels: LegendLabels,
           },
           streaming: false,

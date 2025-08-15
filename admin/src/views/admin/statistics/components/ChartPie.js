@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import { Chart, registerables } from 'chart.js';
 import { useSelector } from 'react-redux';
 
-const ChartPie = () => {
+const ChartPie = ({ orderTypeWise }) => {
   const { themeValues } = useSelector((state) => state.settings);
   const chartContainer = useRef(null);
 
@@ -39,18 +39,18 @@ const ChartPie = () => {
 
   const data = React.useMemo(() => {
     return {
-      labels: ['Breads', 'Pastry', 'Patty'],
+      labels: orderTypeWise.map((item) => item.orderType),
       datasets: [
         {
           label: '',
           borderColor: [themeValues.primary, themeValues.secondary, themeValues.tertiary],
           backgroundColor: [`rgba(${themeValues.primaryrgb},0.1)`, `rgba(${themeValues.secondaryrgb},0.1)`, `rgba(${themeValues.tertiaryrgb},0.1)`],
           borderWidth: 2,
-          data: [15, 25, 20],
+          data: orderTypeWise.map((item) => item.totalOrders),
         },
       ],
     };
-  }, [themeValues]);
+  }, [themeValues, orderTypeWise]);
   const config = React.useMemo(() => {
     return {
       type: 'pie',
@@ -65,7 +65,7 @@ const ChartPie = () => {
           datalabels: false,
           tooltip: ChartTooltip,
           legend: {
-            position: 'bottom',
+            position: 'right',
             labels: LegendLabels,
           },
           streaming: false,

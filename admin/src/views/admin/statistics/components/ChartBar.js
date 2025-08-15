@@ -5,13 +5,13 @@ import { useSelector } from 'react-redux';
 import ReactDOM from 'react-dom';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-const ChartHorizontal = ({ weeklyRevenue }) => {
+const ChartHorizontal = ({ revenueSummary }) => {
     const { themeValues } = useSelector((state) => state.settings);
     const chartContainer = useRef(null);
     const tooltipRef = useRef(null);
 
-    const labels = weeklyRevenue.labels || [];
-    const revenueData = weeklyRevenue.values || [];
+    const labels = revenueSummary.labels || [];
+    const revenueData = revenueSummary.values || [];
 
 
     const ExternalTooltip = React.useCallback(({ chart, tooltip }) => {
@@ -124,8 +124,8 @@ const ChartHorizontal = ({ weeklyRevenue }) => {
                 maintainAspectRatio: false,
                 scales: {
                     y: {
-                        min: weeklyRevenue.min,
-                        max: weeklyRevenue.max,
+                        min: revenueSummary.min,
+                        max: revenueSummary.max,
                         grid: {
                             display: true,
                             lineWidth: 1,
