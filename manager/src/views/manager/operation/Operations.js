@@ -8,6 +8,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { useWindowSize } from 'hooks/useWindowSize';
 import { Switch, Route, Redirect, NavLink } from 'react-router-dom';
 import OrderHistory from './order/OrderHistory';
+import OrderDetails from './order/OrderDetails';
 
 import ManageTable from './table/ManageTable';
 import AddTable from './table/AddTable';
@@ -18,8 +19,10 @@ import QRforMenu from './menu/QRforMenu';
 
 import RequestedInventory from './inventory/RequestedInventory';
 import AddInventory from './inventory/AddInventory';
+import EditInventory from './inventory/EditInventory';
 import InventoryHistory from './inventory/InventoryHistory';
 import CompleteInventory from './inventory/CompleteInventory';
+import InventoryDetails from './inventory/InventoryDetails';
 
 import Feedback from './feedback/Feedback';
 
@@ -129,6 +132,7 @@ const Operations = () => {
           <Switch>
             <Route exact path="/operations" render={() => <Redirect to="/operations/order-history" />} />
             <Route path="/operations/order-history" component={OrderHistory} />
+            <Route path="/operations/order-details/:id" component={OrderDetails} />
 
             <Route path="/operations/manage-table" component={ManageTable} />
             <Route path="/operations/add-table" component={AddTable} />
@@ -140,7 +144,9 @@ const Operations = () => {
             <Route path="/operations/requested-inventory" component={RequestedInventory} />
             <Route path="/operations/inventory-history" component={InventoryHistory} />
             <Route path="/operations/add-inventory" component={AddInventory} />
-            <Route path="/operations/complete-inventory" component={CompleteInventory} />
+            <Route path="/operations/edit-inventory/:id" component={EditInventory} />
+            <Route path="/operations/complete-inventory/:id" component={CompleteInventory} />
+            <Route path="/operations/inventory-details/:id" component={InventoryDetails} />
 
             <Route path="/operations/feedback" component={Feedback} />
             

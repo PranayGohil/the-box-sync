@@ -1,1 +1,0 @@
-onClick={() => (history.push('/o

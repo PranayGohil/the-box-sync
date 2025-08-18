@@ -2,7 +2,8 @@ import classNames from 'classnames';
 import React from 'react';
 
 const Table = ({ tableInstance, className = 'react-table boxed' }) => {
-  const { getTableProps, headerGroups, page, getTableBodyProps, prepareRow, toggleAllPageRowsSelected, setIsOpenAddEditModal } = tableInstance;
+  const { getTableProps, headerGroups, page, getTableBodyProps, prepareRow } = tableInstance;
+
   return (
     <>
       <table className={className} {...getTableProps()}>
@@ -37,15 +38,6 @@ const Table = ({ tableInstance, className = 'react-table boxed' }) => {
                   <td
                     key={`td.${cellIndex}`}
                     {...cell.getCellProps()}
-                    onClick={() => {
-                      if (cell.column.id === 'name') {
-                        toggleAllPageRowsSelected(false);
-                        row.toggleRowSelected();
-                        setIsOpenAddEditModal(true);
-                      } else {
-                        row.toggleRowSelected();
-                      }
-                    }}
                   >
                     {cell.render('Cell')}
                   </td>

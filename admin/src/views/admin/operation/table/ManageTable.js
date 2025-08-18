@@ -114,7 +114,7 @@ const ManageTable = () => {
               ];
 
               return (
-                <Col md={4} key={table.id}>
+                <Col md={6} key={table.id}>
                   <section className="scroll-section" id="stripe">
                     <Card body className="mb-5">
                       <BoxedVariationsStripe columns={columns} data={data} area={table.area} />

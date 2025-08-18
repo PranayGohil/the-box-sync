@@ -1,107 +1,262 @@
-import React, { useState } from 'react';
-import { Badge, Col, Form, Row } from 'react-bootstrap';
-import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect, useRowState } from 'react-table';
+// OrderHistory.js
+
+import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
+import axios from 'axios';
+import { Badge, Col, Form, Row, Button } from 'react-bootstrap';
+import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table'; // Removed useRowState
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
-import ButtonsCheckAll from './components/ButtonsCheckAll';
-import ButtonsAddNew from './components/ButtonsAddNew';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
+
 import ControlsPageSize from './components/ControlsPageSize';
-import ControlsAdd from './components/ControlsAdd';
-import ControlsEdit from './components/ControlsEdit';
-import ControlsDelete from './components/ControlsDelete';
 import ControlsSearch from './components/ControlsSearch';
-import ModalAddEdit from './components/ModalAddEdit';
 import Table from './components/Table';
 import TablePagination from './components/TablePagination';
 
-const dummyData = [
-  { id: 1, name: 'Basler Brot', sales: 213, stock: 15, category: 'Sourdough', tag: 'New' },
-  { id: 2, name: 'Bauernbrot', sales: 633, stock: 97, category: 'Multigrain', tag: 'Done' },
-  { id: 3, name: 'Kommissbrot', sales: 2321, stock: 154, category: 'Whole Wheat', tag: '' },
-  { id: 4, name: 'Lye Roll', sales: 973, stock: 39, category: 'Sourdough', tag: '' },
-  { id: 5, name: 'Panettone', sales: 563, stock: 72, category: 'Sourdough', tag: 'Done' },
-  { id: 6, name: 'Saffron Bun', sales: 98, stock: 7, category: 'Whole Wheat', tag: '' },
-  { id: 7, name: 'Ruisreikäleipä', sales: 459, stock: 90, category: 'Whole Wheat', tag: '' },
-  { id: 8, name: 'Rúgbrauð', sales: 802, stock: 234, category: 'Whole Wheat', tag: '' },
-  { id: 9, name: 'Yeast Karavai', sales: 345, stock: 22, category: 'Multigrain', tag: '' },
-  { id: 10, name: 'Brioche', sales: 334, stock: 45, category: 'Sourdough', tag: '' },
-  { id: 11, name: 'Pullman Loaf', sales: 456, stock: 23, category: 'Multigrain', tag: '' },
-  { id: 12, name: 'Soda Bread', sales: 1152, stock: 84, category: 'Whole Wheat', tag: '' },
-  { id: 13, name: 'Barmbrack', sales: 854, stock: 13, category: 'Sourdough', tag: '' },
-  { id: 14, name: 'Buccellato di Lucca', sales: 1298, stock: 212, category: 'Multigrain', tag: '' },
-  { id: 15, name: 'Toast Bread', sales: 2156, stock: 732, category: 'Multigrain', tag: '' },
-  { id: 16, name: 'Cheesymite Scroll', sales: 452, stock: 24, category: 'Sourdough', tag: '' },
-  { id: 17, name: 'Baguette', sales: 456, stock: 33, category: 'Sourdough', tag: '' },
-  { id: 18, name: 'Guernsey Gâche', sales: 1958, stock: 221, category: 'Multigrain', tag: '' },
-  { id: 19, name: 'Bazlama', sales: 858, stock: 34, category: 'Whole Wheat', tag: '' },
-  { id: 20, name: 'Bolillo', sales: 333, stock: 24, category: 'Whole Wheat', tag: '' },
-];
-
-const EditableRows = () => {
+const OrderHistory = () => {
   const title = 'Order History';
   const description = 'Separate rows with edit, delete and add.';
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
-    { to: 'operations/order-history', text: 'Opertations' },
+    { to: 'operations/order-history', text: 'Operations' },
     { to: 'operations/order-history', title: 'Order History' },
   ];
 
-  const columns = React.useMemo(() => {
-    return [
-      {
-        Header: 'Name',
-        accessor: 'name',
-        sortable: true,
-        headerClassName: 'text-muted text-small text-uppercase w-30',
-        Cell: ({ cell }) => {
-          return (
-            <a
-              className="list-item-heading body"
-              href="#!"
-              onClick={(e) => {
-                e.preventDefault();
-              }}
-            >
-              {cell.value}
-            </a>
-          );
+  const history = useHistory();
+
+  const [error, setError] = useState(null);
+  const [data, setData] = React.useState([]);
+
+  const fetchOrders = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API}/order/get-orders`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-      },
-      { Header: 'Sales', accessor: 'sales', sortable: true, headerClassName: 'text-muted text-small text-uppercase w-10' },
-      { Header: 'Stock', accessor: 'stock', sortable: true, headerClassName: 'text-muted text-small text-uppercase w-10' },
-      { Header: 'Category', accessor: 'category', sortable: true, headerClassName: 'text-muted text-small text-uppercase w-20' },
-      {
-        Header: 'Tag',
-        accessor: 'tag',
-        sortable: true,
-        headerClassName: 'text-muted text-small text-uppercase w-10',
-        Cell: ({ cell }) => {
-          return <Badge bg="outline-primary">{cell.value}</Badge>;
-        },
-      },
-      {
-        Header: '',
-        id: 'action',
-        headerClassName: 'empty w-10',
-        Cell: ({ row }) => {
-          const { checked, onChange } = row.getToggleRowSelectedProps();
-          return <Form.Check className="form-check float-end mt-1" type="checkbox" checked={checked} onChange={onChange} />;
-        },
-      },
-    ];
+      });
+      if (res.data.success) {
+        const transformedOrders = res.data.data.map(({ _id, ...rest }) => ({
+          ...rest,
+          id: _id,
+        }));
+        console.log("Fetched Orders:", transformedOrders);
+        setData(transformedOrders);
+      } else {
+        console.log(res.data.message);
+        setError(res.data.message);
+      }
+    } catch (err) {
+      console.log(err);
+      setError(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
   }, []);
 
-  const [data, setData] = React.useState(dummyData);
-  const [isOpenAddEditModal, setIsOpenAddEditModal] = useState(false);
+  const handlePrint = async (orderId) => {
+    try {
+      const orderResponse = await axios.get(
+        `${process.env.REACT_APP_API}/order/get/${orderId}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+
+      const userResponse = await axios.get(
+        `${process.env.REACT_APP_API}/user/get`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+
+      const order = orderResponse.data.data[0];
+      const userData = userResponse.data;
+
+      const printDiv = document.createElement("div");
+      printDiv.id = "printable-invoice";
+      printDiv.style.display = "none";
+      document.body.appendChild(printDiv);
+
+      printDiv.innerHTML = `
+        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; border: 1px solid #ccc; padding: 10px;">
+          <div style="text-align: center; margin-bottom: 10px;">
+            <h3 style="margin: 10px;">${userData.name}</h3>
+            <p style="margin: 0; font-size: 12px;">${userData.address}</p>
+            <p style="margin: 0; font-size: 12px;">${userData.city}, ${userData.state
+        } ${userData.pincode}</p>
+            <p style="margin: 10px; font-size: 12px;"><strong>Phone: </strong> ${userData.mobile
+        }</p>
+          </div>
+          <hr style="border: 0.5px dashed #ccc;" />
+          <p><strong>Name:</strong> ${order?.customer_name || "(M: 1234567890)"
+        }</p>
+          <hr style="border: 0.5px dashed #ccc;" />
+          <table style="font-size: 12px; margin-bottom: 10px;">
+            <tr>
+            <td style="width: 50%; height: 30px;">
+              <strong>Date:</strong> ${new Date(
+          order.order_date
+        ).toLocaleString()}</td>
+                <td style="text-align: right;"><strong>${order.order_type
+        }</strong>
+                </td>
+            </tr>
+            <tr>
+            <td colspan="2"><strong>Bill No:</strong> ${order._id}</td>
+            
+            </tr>
+          </table>
+          <hr style="border: 0.5px dashed #ccc;" />
+          <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
+            <thead>
+              <tr>
+                <th style="text-align: left; border-bottom: 1px dashed #ccc">Item</th>
+                <th style="text-align: center; border-bottom: 1px dashed #ccc">Qty</th>
+                <th style="text-align: center; border-bottom: 1px dashed #ccc">Price</th>
+                <th style="text-align: right; border-bottom: 1px dashed #ccc">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order.order_items
+          .map(
+            (item) => `
+                  <tr>
+                    <td>${item.dish_name}</td>
+                    <td style="text-align: center;">${item.quantity}</td>
+                    <td style="text-align: center;">${item.dish_price}</td>
+                    <td style="text-align: right;">₹ ${item.dish_price * item.quantity
+              }</td>
+                  </tr>
+                `
+          )
+          .join("")}
+              <tr>
+                <td colspan="3" style="text-align: right; border-top: 1px dashed #ccc"><strong>Sub Total: </strong></td>
+                <td style="text-align: right; border-top: 1px dashed #ccc">₹ ${order.sub_total
+        }</td>
+              </tr>
+              <tr>
+                <td colspan="3" style="text-align: right;"><strong>CGST (${order.cgst_amount || 0
+        } %):</strong></td>
+                <td style="text-align: right;">₹ ${((order.cgst_amount || 0) * order.bill_amount) / 100
+        }</td>
+              </tr>
+              <tr>
+                <td colspan="3" style="text-align: right;"><strong>SGST (${order.sgst_amount || 0
+        } %):</strong></td>
+                <td style="text-align: right;">₹ ${((order.sgst_amount || 0) * order.bill_amount) / 100
+        }</td>
+              </tr>
+              <tr>
+                <td colspan="3" style="text-align: right;"><strong>Total: </strong></td>
+                <td style="text-align: right;">₹ ${order.total_amount}</td>
+              </tr>
+              <tr>
+                <td colspan="3" style="text-align: right;"><strong>Discount: </strong></td>
+                <td style="text-align: right;">- ₹ ${order.discount_amount || 0
+        }</td>
+              </tr>
+              <tr>
+                <td colspan="3" style="text-align: right; border-top: 1px dashed #ccc"><strong>Paid Amount: </strong></td>
+                <td style="text-align: right; border-top: 1px dashed #ccc">₹ ${order.bill_amount
+        }</td>
+              </tr>
+            </tbody>
+          </table>
+          <hr style="border: 0.5px dashed #ccc;" />
+          <div style="text-align: center; font-size: 12px;">
+            <p style="margin: 10px; font-size: 12px;"><strong>FSSAI Lic No:</strong> 11224333001459</p>
+            <p style="margin: 10px; font-size: 12px;"><strong>GST No:</strong> ${userData.gst_no
+        }</p>
+            <p style="margin: 10px; font-size: 12px;"><strong>Thanks, Visit Again</strong></p>
+          </div>
+        </div>
+      `;
+
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(printDiv.innerHTML);
+      printWindow.document.close();
+      printWindow.print();
+      printWindow.close();
+
+      document.body.removeChild(printDiv);
+    } catch (err) {
+      console.error("Error fetching order or user data:", err);
+    }
+  };
+
+  const columns = React.useMemo(() => [
+    {
+      Header: 'Order Date',
+      accessor: 'order_date',
+      id: 'order_date_only',
+      headerClassName: 'text-muted text-small text-uppercase w-15',
+      Cell: ({ value }) => new Date(value).toLocaleDateString(),
+    },
+    {
+      Header: 'Order Time',
+      accessor: 'order_date',
+      id: 'order_time_only',
+      headerClassName: 'text-muted text-small text-uppercase w-15',
+      Cell: ({ value }) => new Date(value).toLocaleTimeString(),
+    },
+    {
+      Header: 'Customer Name',
+      accessor: 'customer_name',
+      headerClassName: 'text-muted text-small text-uppercase w-15',
+    },
+    {
+      Header: 'Table No',
+      accessor: 'table_no',
+      headerClassName: 'text-muted text-small text-uppercase w-10',
+    },
+    {
+      Header: 'Table Area',
+      accessor: 'table_area',
+      headerClassName: 'text-muted text-small text-uppercase w-10',
+    },
+    {
+      Header: 'Order Type',
+      accessor: 'order_type',
+      headerClassName: 'text-muted text-small text-uppercase w-10',
+    },
+    {
+      Header: 'Total Amount',
+      accessor: 'total_amount',
+      headerClassName: 'text-muted text-small text-uppercase w-15',
+      Cell: ({ value }) => `₹ ${value.toFixed(2)}`,
+    },
+    {
+      Header: 'Action',
+      id: 'action',
+      headerClassName: 'text-muted text-small text-uppercase w-10 text-center',
+      Cell: ({ row }) => (
+        <div className="d-flex justify-content-center">
+          <Button variant="link" size="sm" title="View" className='px-1' onClick={() => history.push(`/operations/order-details/${row.original.id}`)}>
+            <CsLineIcons icon="eye" />
+          </Button>
+          <Button variant="link" size="sm" title="Print" className='px-1' onClick={() => handlePrint(row.original.id)}>
+            <CsLineIcons icon="print" />
+          </Button>
+        </div>
+      ),
+    },
+  ], []);
 
   const tableInstance = useTable(
-    { columns, data, setData, isOpenAddEditModal, setIsOpenAddEditModal, initialState: { pageIndex: 0 } },
+    {
+      columns,
+      data,
+      initialState: {
+        pageIndex: 0,
+        pageSize: 10,
+      },
+    },
     useGlobalFilter,
     useSortBy,
     usePagination,
-    useRowSelect,
-    useRowState
+    useRowSelect
   );
 
   return (
@@ -116,9 +271,6 @@ const EditableRows = () => {
                 <h1 className="mb-0 pb-0 display-4">{title}</h1>
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
-              <Col xs="12" md="5" className="d-flex align-items-start justify-content-end">
-                <ButtonsAddNew tableInstance={tableInstance} /> <ButtonsCheckAll tableInstance={tableInstance} />
-              </Col>
             </Row>
           </div>
 
@@ -130,9 +282,6 @@ const EditableRows = () => {
                 </div>
               </Col>
               <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
-                <div className="d-inline-block me-0 me-sm-3 float-start float-md-none">
-                  <ControlsAdd tableInstance={tableInstance} /> <ControlsEdit tableInstance={tableInstance} /> <ControlsDelete tableInstance={tableInstance} />
-                </div>
                 <div className="d-inline-block">
                   <ControlsPageSize tableInstance={tableInstance} />
                 </div>
@@ -147,11 +296,12 @@ const EditableRows = () => {
               </Col>
             </Row>
           </div>
-          <ModalAddEdit tableInstance={tableInstance} />
+          {/* If ModalAddEdit is not directly tied to individual row state or general table editing, it might not need tableInstance passed or could be removed. */}
+          {/* <ModalAddEdit tableInstance={tableInstance} /> */}
         </Col>
       </Row>
     </>
   );
 };
 
-export default EditableRows;
+export default OrderHistory;

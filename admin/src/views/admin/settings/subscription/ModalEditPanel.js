@@ -66,7 +66,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
         } else {
           if (showPasswordFields) {
             await axios.post(
-              `${process.env.REACT_APP_API}/panel-user/${planName}/change-password`,
+              `${process.env.REACT_APP_API}/panel-user/change-password/${planName}`,
               {
                 adminPassword: formValues.adminPassword,
                 newPassword: formValues.newPassword,
@@ -78,7 +78,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
           }
 
           await axios.post(
-            `${process.env.REACT_APP_API}/panel-user/${planName}/update-username`,
+            `${process.env.REACT_APP_API}/panel-user/${planName}`,
             {
               username: formValues.username,
             },

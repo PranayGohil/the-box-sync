@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { Badge, Button, Col, Form, Row } from 'react-bootstrap';
-import { useTable, useGlobalFilter, useSortBy, usePagination } from 'react-table';
+import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
+import axios from 'axios';
+import { Badge, Button, Col, Form, Row, Modal, Spinner } from 'react-bootstrap';
+import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -9,52 +11,8 @@ import ControlsPageSize from './components/ControlsPageSize';
 import Table from './components/Table';
 import TablePagination from './components/TablePagination';
 
-// Dummy data
-const dummyCompleted = [
-  {
-    id: 1,
-    request_date: '2025-07-01T10:00:00Z',
-    formatted_request_date: 'July 1, 2025',
-    bill_date: '2025-07-02T11:00:00Z',
-    formatted_bill_date: 'July 2, 2025',
-    bill_number: 'INV-001',
-    vendor_name: 'Vendor A',
-    total_amount: 1000,
-    unpaid_amount: 200,
-    items: [{ item_name: 'Flour', item_quantity: 5, unit: 'kg' }],
-  },
-  {
-    id: 2,
-    request_date: '2025-06-28T09:00:00Z',
-    formatted_request_date: 'June 28, 2025',
-    bill_date: '2025-06-29T10:00:00Z',
-    formatted_bill_date: 'June 29, 2025',
-    bill_number: 'INV-002',
-    vendor_name: 'Vendor B',
-    total_amount: 2000,
-    unpaid_amount: 0,
-    items: [{ item_name: 'Sugar', item_quantity: 10, unit: 'kg' }],
-  },
-];
-
-const dummyRejected = [
-  {
-    id: 3,
-    request_date: '2025-06-25T08:00:00Z',
-    formatted_request_date: 'June 25, 2025',
-    status: 'Rejected',
-    items: [{ item_name: 'Milk', item_quantity: 20, unit: 'litre' }],
-  },
-  {
-    id: 4,
-    request_date: '2025-06-24T14:00:00Z',
-    formatted_request_date: 'June 24, 2025',
-    status: 'Rejected',
-    items: [{ item_name: 'Butter', item_quantity: 5, unit: 'kg' }],
-  },
-];
-
 const InventoryHistory = () => {
+  const history = useHistory();
   const title = 'Inventory History';
   const description = 'Completed and Rejected inventory with modern table UI and dummy data.';
 
@@ -63,6 +21,108 @@ const InventoryHistory = () => {
     { to: 'operations/inventory-history', text: 'Operations' },
     { to: 'operations/inventory-history', title: 'Inventory History' },
   ];
+
+  const [completedData, setCompletedData] = useState([]);
+  const [rejectedData, setRejectedData] = useState([]);
+
+  const [show, setShow] = useState(false);
+  const [data, setData] = useState(null); // For the selected inventory record
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleShow = (rowData) => {
+    setData(rowData);
+    setShow(true);
+  };
+
+  const handleClose = () => {
+    setShow(false);
+    setData(null);
+  };
+
+  const fetchCompletedInventory = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Completed`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      console.log("Completed Inventory", res.data);
+      if (res.data.success) {
+        const comnpletedInventory = res.data.data
+          .map((item) => ({
+            ...item,
+            request_date_obj: new Date(item.request_date),
+            formatted_request_date: new Date(item.request_date).toLocaleString("en-IN", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }),
+            bill_date_obj: new Date(item.bill_date),
+            formatted_bill_date: new Date(item.bill_date).toLocaleString("en-IN", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          }));
+
+        comnpletedInventory.sort(
+          (a, b) => b.request_date_obj - a.request_date_obj
+        );
+
+        console.log(comnpletedInventory);
+        setCompletedData(comnpletedInventory);
+      }
+    } catch (error) {
+      console.error('Error fetching requested inventory:', error);
+    }
+  };
+
+  const fetchRejectedInventory = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Rejected`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      console.log("Rejected Inventory", res.data);
+      if (res.data.success) {
+        const rejectedInventory = res.data.data
+          .map((item) => ({
+            ...item,
+            request_date_obj: new Date(item.request_date),
+            formatted_request_date: new Date(item.request_date).toLocaleString("en-IN", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }),
+            bill_date_obj: new Date(item.bill_date),
+            formatted_bill_date: new Date(item.bill_date).toLocaleString("en-IN", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          }));
+
+        rejectedInventory.sort(
+          (a, b) => b.request_date_obj - a.request_date_obj
+        );
+
+        console.log(rejectedInventory);
+        setRejectedData(rejectedInventory);
+      }
+    } catch (error) {
+      console.error('Error fetching requested inventory:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCompletedInventory();
+    fetchRejectedInventory();
+  }, []);
 
   // Completed Table
   const completedColumns = React.useMemo(
@@ -86,17 +146,23 @@ const InventoryHistory = () => {
       {
         Header: 'Actions',
         Cell: ({ row }) => (
-          <>
-            <Button variant="link" size="sm" title="View">
+          <div className="d-flex justify-content-center">
+            <Button variant="link" size="sm" title="View" onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}> {/* eslint-disable-line no-underscore-dangle */}
               <CsLineIcons icon="eye" />
             </Button>
-            <Button variant="link" size="sm" title="Edit">
+            <Button variant="link" size="sm" title="Edit" onClick={() => history.push(`/operations/edit-inventory/${row.original._id}`)}> {/* eslint-disable-line no-underscore-dangle */}
               <CsLineIcons icon="edit" />
             </Button>
-            <Button variant="link" size="sm" title="Delete">
+            <Button
+              variant="link"
+              size="sm"
+              title="Delete"
+              onClick={() => handleShow(row.original)}
+            >
               <CsLineIcons icon="bin" />
             </Button>
-          </>
+
+          </div>
         ),
       },
     ],
@@ -125,12 +191,18 @@ const InventoryHistory = () => {
         Header: 'Actions',
         Cell: ({ row }) => (
           <>
-            <Button variant="link" size="sm" title="View">
+            <Button variant="link" size="sm" title="View" onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}> {/* eslint-disable-line no-underscore-dangle */}
               <CsLineIcons icon="eye" />
             </Button>
-            <Button variant="link" size="sm" title="Delete">
+            <Button
+              variant="link"
+              size="sm"
+              title="Delete"
+              onClick={() => handleShow(row.original)}
+            >
               <CsLineIcons icon="bin" />
             </Button>
+
           </>
         ),
       },
@@ -138,17 +210,43 @@ const InventoryHistory = () => {
     []
   );
 
-  const [completedData] = useState(dummyCompleted);
-  const [rejectedData] = useState(dummyRejected);
+  const handleDelete = async () => {
+    if (!data?._id) return; // eslint-disable-line no-underscore-dangle
+    setIsDeleting(true);
+
+    try {
+      const res = await axios.delete(`${process.env.REACT_APP_API}/inventory/delete/${data._id}`, { // eslint-disable-line no-underscore-dangle
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (res.status === 200 || res.data.success) {
+        // Remove from local state UI
+        setCompletedData((prev) => prev.filter((item) => item._id !== data._id)); // eslint-disable-line no-underscore-dangle
+        setRejectedData((prev) => prev.filter((item) => item._id !== data._id)); // eslint-disable-line no-underscore-dangle
+
+        handleClose();
+      } else {
+        console.error('Delete failed:', res.data);
+      }
+    } catch (error) {
+      console.error('Error deleting inventory:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
 
   const completedTable = useTable(
     { columns: completedColumns, data: completedData, initialState: { pageIndex: 0 } },
     useGlobalFilter,
     useSortBy,
-    usePagination
+    usePagination,
+    useRowSelect,
   );
 
-  const rejectedTable = useTable({ columns: rejectedColumns, data: rejectedData, initialState: { pageIndex: 0 } }, useGlobalFilter, useSortBy, usePagination);
+  const rejectedTable = useTable({ columns: rejectedColumns, data: rejectedData, initialState: { pageIndex: 0 } }, useGlobalFilter, useSortBy, usePagination, useRowSelect,);
 
   return (
     <>
@@ -195,6 +293,27 @@ const InventoryHistory = () => {
           <TablePagination tableInstance={rejectedTable} />
         </Col>
       </Row>
+
+      {/* Delete Inventory Modal */}
+      <Modal className="modal-close-out" show={show} onHide={handleClose} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete Inventory</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Are you sure you want to delete this inventory?</p>
+          <p>
+            <strong>{data?.bill_number}</strong>
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose} disabled={isDeleting}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDelete} disabled={isDeleting}>
+            {isDeleting ? <Spinner animation="border" size="sm" /> : 'Delete'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 };
