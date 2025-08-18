@@ -48,7 +48,7 @@ const managerLogin = async (req, res) => {
       httpOnly: true,
     });
 
-    res.status(200).json({ message: "Logged In", token });
+    res.status(200).json({ message: "Logged In", token, user });
   } catch (error) {
     console.log(error);
   }

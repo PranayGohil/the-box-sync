@@ -5,6 +5,7 @@ const {
   getInventoryDataByStatus,
   getInventoryDataById,
   addInventory,
+  addInventoryRequest,
   updateInventory,
   deleteInventory,
   completeInventoryRequest,
@@ -25,6 +26,9 @@ inventoryRouter
   .route("/get/:id")
   .get(authMiddleware, getInventoryDataById);
 inventoryRouter.route("/add").post(authMiddleware, upload.array("bill_files"), addInventory);
+inventoryRouter
+  .route("/add-request")
+  .post(authMiddleware, addInventoryRequest);
 inventoryRouter
   .route("/delete/:id")
   .delete(authMiddleware, deleteInventory);

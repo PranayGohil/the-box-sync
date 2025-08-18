@@ -14,7 +14,7 @@ const adminAuth = require("../middlewares/adminAuth");
 const managerRouter = express.Router();
 
 managerRouter.route("/addmanager").post(authMiddleware, adminAuth, addManager);
-managerRouter.route("/manager-login").post(managerLogin);
+managerRouter.route("/login").post(managerLogin);
 managerRouter.route("/getmanagerdata").get(authMiddleware, getManagerData);
 managerRouter.route("/getmanagerdata/:id").get(getManagerDataById);
 managerRouter

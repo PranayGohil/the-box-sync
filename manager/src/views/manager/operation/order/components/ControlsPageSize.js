@@ -7,12 +7,14 @@ const ControlsPageSize = ({ tableInstance }) => {
     gotoPage,
     state: { pageSize },
   } = tableInstance;
+
   const options = [5, 10, 20];
 
   const onSelectPageSize = (size) => {
     setPageSize(size);
-    gotoPage(0);
+    gotoPage(0); 
   };
+
   return (
     <OverlayTrigger placement="top" delay={{ show: 1000, hide: 0 }} overlay={<Tooltip>Item Count</Tooltip>}>
       {({ ref, ...triggerHandler }) => (
@@ -34,7 +36,7 @@ const ControlsPageSize = ({ tableInstance }) => {
             }}
           >
             {options.map((pSize) => (
-              <Dropdown.Item key={`pageSize.${pSize}`} active={pSize === pageSize} onSelect={() => onSelectPageSize(pSize)}>
+              <Dropdown.Item key={`pageSize.${pSize}`} active={pSize === pageSize} onClick={() => onSelectPageSize(pSize)}>
                 {pSize} Items
               </Dropdown.Item>
             ))}

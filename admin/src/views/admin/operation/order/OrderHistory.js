@@ -198,7 +198,7 @@ const OrderHistory = () => {
       Header: 'Order Time',
       accessor: 'order_date',
       id: 'order_time_only',
-      headerClassName: 'text-muted text-small text-uppercase w-10',
+      headerClassName: 'text-muted text-small text-uppercase w-15',
       Cell: ({ value }) => new Date(value).toLocaleTimeString(),
     },
     {
@@ -224,7 +224,7 @@ const OrderHistory = () => {
     {
       Header: 'Total Amount',
       accessor: 'total_amount',
-      headerClassName: 'text-muted text-small text-uppercase w-10',
+      headerClassName: 'text-muted text-small text-uppercase w-15',
       Cell: ({ value }) => `₹ ${value.toFixed(2)}`,
     },
     {

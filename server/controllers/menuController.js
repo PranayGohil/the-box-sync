@@ -133,6 +133,7 @@ const updateMenu = async (req, res) => {
       quantity,
       unit,
       is_special,
+      is_available,
     } = req.body;
     console.log("Update Menu Data:", req.body);
 
@@ -143,6 +144,7 @@ const updateMenu = async (req, res) => {
       "dishes.$.quantity": quantity,
       "dishes.$.unit": unit,
       "dishes.$.is_special": is_special === "true",
+      "dishes.$.is_available": is_available === "true",
     };
 
     if (req.file) {

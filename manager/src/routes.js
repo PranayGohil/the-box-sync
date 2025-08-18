@@ -5,9 +5,10 @@ import { DEFAULT_PATHS } from 'config.js';
 
 const manager = {
   dashboard: lazy(() => import('views/manager/Dashboard')),
-  order: lazy(() => import('views/manager/order/Order')),
   operation: lazy(() => import('views/manager/operation/Operations')),
   staff: lazy(() => import('views/manager/staff/Staff')),
+  settings: lazy(() => import('views/manager/settings/Settings')),
+  Statistics: lazy(() => import('views/manager/statistics/Statistics')),
   orderhistory: lazy(() => import('views/manager/operation/order/OrderHistory')),
 };
 const dashboards = {
