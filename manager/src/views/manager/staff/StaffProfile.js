@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, NavLink, useHistory } from 'react-router-dom';
-import { Button, Row, Col, Card, Nav, Tab, Spinner } from 'react-bootstrap';
+import { useParams, NavLink } from 'react-router-dom';
+import { Row, Col, Card, Nav, Tab, Spinner } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -8,17 +8,12 @@ import useCustomLayout from 'hooks/useCustomLayout';
 import { LAYOUT } from 'constants.js';
 import axios from 'axios';
 
-import DeleteStaffModal from './DeleteStaffModal';
-
 const StaffProfile = () => {
     const { id } = useParams();
-    const history = useHistory();
 
     const [staff, setStaff] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [staffToDelete, setStaffToDelete] = useState(null);
 
     const title = 'Staff Profile';
     const description = 'Staff Profile Details';
@@ -69,17 +64,6 @@ const StaffProfile = () => {
                         <h1 className="mb-0 pb-0 display-4">{staff.f_name} {staff.l_name}</h1>
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
-                    <Col md="5" className="d-flex align-items-start justify-content-end">
-                        <Button variant="outline-primary" className="btn-icon btn-icon-start btn-icon w-100 w-md-auto ms-1" as={NavLink} to={`/staff/edit/${id}`}>
-                            <CsLineIcons icon="edit-square" /> <span>Edit</span>
-                        </Button>
-                        <Button variant="outline-danger" className="btn-icon btn-icon-start btn-icon w-100 w-md-auto ms-3" onClick={() => {
-                            setShowDeleteModal(true);
-                            setStaffToDelete(staff);
-                        }}>
-                            <CsLineIcons icon="bin" /> <span>Delete</span>
-                        </Button>
-                    </Col>
                 </Row>
             </div>
 
@@ -96,7 +80,7 @@ const StaffProfile = () => {
                                             src={`${process.env.REACT_APP_UPLOAD_DIR}${staff.photo}` || '/img/profile/default.png'}
                                             className="img-fluid rounded-xl"
                                             alt="profile"
-                                            style={{ aspectRatio: '1/1', objectFit: 'cover'}}
+                                            style={{ aspectRatio: '1/1', objectFit: 'cover' }}
                                         />
                                     </div>
                                     <div className="h5 mb-0">{staff.f_name} {staff.l_name}</div>
@@ -189,19 +173,6 @@ const StaffProfile = () => {
                     </Col>
                 </Tab.Container>
             </Row>
-
-            {showDeleteModal &&
-                <DeleteStaffModal
-                    show={showDeleteModal}
-                    handleClose={() => {
-                        setShowDeleteModal(false);
-                        setStaffToDelete(null);
-                        history.push('/staff/view');
-                    }}
-                    data={staffToDelete}
-                />
-            }
-
         </>
     );
 };

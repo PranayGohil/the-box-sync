@@ -2,14 +2,13 @@
 import { lazy } from 'react';
 import { USER_ROLE } from 'constants.js';
 import { DEFAULT_PATHS } from 'config.js';
-import Statistics from 'views/admin/statistics/Statistics';
 
 const admin = {
   dashboard: lazy(() => import('views/admin/Dashboard')),
   operation: lazy(() => import('views/admin/operation/Operations')),
   staff: lazy(() => import('views/admin/staff/Staff')),
   settings: lazy(() => import('views/admin/settings/Settings')),
-  Statistics: lazy(() => import('views/admin/statistics/Statistics')),
+  statistics: lazy(() => import('views/admin/statistics/Statistics')),
   orderhistory: lazy(() => import('views/admin/operation/order/OrderHistory')),
 };
 const dashboards = {
@@ -57,7 +56,7 @@ const routesAndMenuItems = {
       path: `${appRoot}/statistics`,
       label: 'Statistics',
       icon: 'chart-4',
-      component: Statistics,
+      component: admin.statistics,
     }
   ],
   sidebarItems: [

@@ -54,9 +54,6 @@ const ViewStaff = () => {
           <h1 className="display-5 fw-bold">Manage Staff</h1>
         </Col>
         <Col className="text-end">
-          <Button variant="outline-primary" onClick={() => history.push('/staff/add')} className="me-2">
-            <CsLineIcons icon="plus" className="me-2" /> Add Staff
-          </Button>
           <Button variant="outline-primary" onClick={() => history.push('/staff/attendance')}>
             Manage Attendance
           </Button>
