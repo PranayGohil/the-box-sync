@@ -88,11 +88,11 @@ const Dashboard = () => {
                       <Glide.Item>
                         <Card className="sh-20 hover-border-primary mb-5">
                           <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
-                            <div className="d-flex sh-5 sw-5 bg-gradient-light mb-3 align-items-center justify-content-center rounded-xl">
-                              <CsLineIcons icon="user" className="text-white" />
+                            <div className="d-flex sh-7 sw-7 bg-gradient-light mb-3 align-items-center justify-content-center rounded-xl">
+                              <h2 className="mb-0 lh-1 text-white">{item.table_no}</h2>
                             </div>
-                            <p className="mb-0 lh-1">Tables</p>
-                            <p className="cta-3 mb-0 text-primary">{item.table_no}</p>
+                            <p className="mb-0 lh-1">Max Person</p>
+                            <p className="cta-3 mb-0 text-primary">{item.max_person}</p>
                           </Card.Body>
                         </Card>
                       </Glide.Item>

@@ -87,7 +87,7 @@ const AddTable = () => {
 
         try {
           const response = await axios.get(
-            `${process.env.REACT_APP_API}/table/checktable`,
+            `${process.env.REACT_APP_API}/table/check-table`,
             {
               params: { area, table_no: tableNo },
               headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -126,7 +126,7 @@ const AddTable = () => {
 
       try {
         const response = await axios.post(
-          `${process.env.REACT_APP_API}/table/addtable`,
+          `${process.env.REACT_APP_API}/table/add`,
           values,
           { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
         );
