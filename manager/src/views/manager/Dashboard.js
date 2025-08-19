@@ -3,6 +3,7 @@ import { Button, Row, Col, Card, Dropdown, Badge } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 import axios from 'axios';
 import { format } from "date-fns";
+import Glide from 'components/carousel/Glide';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -17,10 +18,18 @@ const Dashboard = () => {
     { to: 'dashboard', text: 'Dashboard' },
   ];
 
-  const [todayOrders, setTodayOrders] = useState({});
-  const [weeklyRevenue, setWeeklyRevenue] = useState([]);
+  const [tables, setTables] = useState([]);
   const [topDishes, setTopDishes] = useState([]);
 
+  const fetchTables = async () => {
+    const response = await axios.get(`${process.env.REACT_APP_API}/table/get-all`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    console.log(response.data);
+    setTables(response.data.data);
+  }
   const fetchDahboardData = async () => {
     const response = await axios.get(`${process.env.REACT_APP_API}/statistics/dashboard`, {
       headers: {
@@ -28,23 +37,11 @@ const Dashboard = () => {
       },
     });
     console.log(response.data);
-    setTodayOrders(response.data.TodayTotalOrderTypeWiseOrders);
     setTopDishes(response.data.MostSellingDishes);
-
-    const rawRevenue = response.data.LastWeekTotalRevenue || [];
-
-    const labels = rawRevenue.map(item => {
-      // Construct a real date object
-      const dateObj = new Date(item._id.year, item._id.month - 1, item._id.day);
-      return format(dateObj, "EEE"); // "Mon", "Tue", ...
-    });
-
-    const values = rawRevenue.map(item => item.totalRevenue);
-
-    setWeeklyRevenue({ labels, values });
   };
 
   useEffect(() => {
+    fetchTables();
     fetchDahboardData();
   }, []);
 
@@ -66,126 +63,56 @@ const Dashboard = () => {
 
       <Row>
         <Col lg="6">
-          {/* Stats Start */}
-          <div className="d-flex">
-            <Dropdown>
-              <Dropdown.Toggle className="small-title p-0 align-top h-auto me-2" variant="link">
-                Today's
-              </Dropdown.Toggle>
-              {/* <Dropdown.Menu>
-                <Dropdown.Item>Weekly</Dropdown.Item>
-                <Dropdown.Item>Monthly</Dropdown.Item>
-                <Dropdown.Item>Yearly</Dropdown.Item>
-              </Dropdown.Menu> */}
-            </Dropdown>
-            <h2 className="small-title">Stats</h2>
-          </div>
-          <div className="mb-5">
-            <Row className="g-2">
-              <Col sm="6">
-                <Card className="sh-11 hover-scale-up cursor-pointer">
-                  <Card.Body className="h-100 py-3 align-items-center">
-                    <Row className="g-0 h-100 align-items-center">
-                      <Col xs="auto" className="pe-3">
-                        <div className="bg-gradient-light sh-5 sw-5 rounded-xl d-flex justify-content-center align-items-center">
-                          <CsLineIcons icon="navigate-diagonal" className="text-white" />
-                        </div>
-                      </Col>
-                      <Col>
-                        <Row className="gx-2 d-flex align-content-center">
-                          <Col xs="12" className="col-12 d-flex">
-                            <div className="d-flex align-items-center lh-1-25">Total Orders</div>
-                          </Col>
-                          <Col xl="auto" className="col-12">
-                            <div className="cta-2 text-primary"> {Object.values(todayOrders).reduce((a, b) => a + b, 0)} </div>
-                          </Col>
-                        </Row>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col sm="6">
-                <Card className="sh-11 hover-scale-up cursor-pointer">
-                  <Card.Body className="h-100 py-3 align-items-center">
-                    <Row className="g-0 h-100 align-items-center">
-                      <Col xs="auto" className="pe-3">
-                        <div className="bg-gradient-light sh-5 sw-5 rounded-xl d-flex justify-content-center align-items-center">
-                          <CsLineIcons icon="check" className="text-white" />
-                        </div>
-                      </Col>
-                      <Col>
-                        <Row className="gx-2 d-flex align-content-center">
-                          <Col xs="12" className="col-12 d-flex">
-                            <div className="d-flex align-items-center lh-1-25">Dine-In</div>
-                          </Col>
-                          <Col xl="auto" className="col-12">
-                            <div className="cta-2 text-primary"> {todayOrders["Dine In"] || 0} </div>
-                          </Col>
-                        </Row>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col sm="6">
-                <Card className="sh-11 hover-scale-up cursor-pointer">
-                  <Card.Body className="h-100 py-3 align-items-center">
-                    <Row className="g-0 h-100 align-items-center">
-                      <Col xs="auto" className="pe-3">
-                        <div className="bg-gradient-light sh-5 sw-5 rounded-xl d-flex justify-content-center align-items-center">
-                          <CsLineIcons icon="alarm" className="text-white" />
-                        </div>
-                      </Col>
-                      <Col>
-                        <Row className="gx-2 d-flex align-content-center">
-                          <Col xs="12" className="col-12 d-flex">
-                            <div className="d-flex align-items-center lh-1-25">Takeaway</div>
-                          </Col>
-                          <Col xl="auto" className="col-12">
-                            <div className="cta-2 text-primary"> {todayOrders.Takeaway || 0} </div>
-                          </Col>
-                        </Row>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col sm="6">
-                <Card className="sh-11 hover-scale-up cursor-pointer">
-                  <Card.Body className="h-100 py-3 align-items-center">
-                    <Row className="g-0 h-100 align-items-center">
-                      <Col xs="auto" className="pe-3">
-                        <div className="bg-gradient-light sh-5 sw-5 rounded-xl d-flex justify-content-center align-items-center">
-                          <CsLineIcons icon="sync-horizontal" className="text-white" />
-                        </div>
-                      </Col>
-                      <Col>
-                        <Row className="gx-2 d-flex align-content-center">
-                          <Col xs="12" className="col-12 d-flex">
-                            <div className="d-flex align-items-center lh-1-25">Delivery</div>
-                          </Col>
-                          <Col xl="auto" className="col-12">
-                            <div className="cta-2 text-primary"> {todayOrders.Delivery || 0} </div>
-                          </Col>
-                        </Row>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
+          {/* {tables.map((table) => ( */}
+            <Row className="gx-2">
+              <h2 className="small-title">table.area</h2>
+              <Col className="p-0">
+                <Glide
+                  options={{
+                    gap: 0,
+                    rewind: false,
+                    bound: true,
+                    perView: 6,
+                    breakpoints: {
+                      400: { perView: 1 },
+                      600: { perView: 2 },
+                      1400: { perView: 3 },
+                      1600: { perView: 4 },
+                      1900: { perView: 5 },
+                      3840: { perView: 6 },
+                    },
+                  }}
+                >
+                  {/* {table.tables.map((item, idx) => ( */}
+                    <div>
+                      <Glide.Item>
+                        <Card className="sh-20 hover-border-primary mb-5">
+                          <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
+                            <div className="d-flex sh-5 sw-5 bg-gradient-light mb-3 align-items-center justify-content-center rounded-xl">
+                              <CsLineIcons icon="user" className="text-white" />
+                            </div>
+                            <p className="mb-0 lh-1">Tables</p>
+                            <p className="cta-3 mb-0 text-primary">item.table_noooooooooooooooooooooooooooooooooooo</p>
+                          </Card.Body>
+                        </Card>
+                      </Glide.Item>
+                    </div>
+                  {/* ))} */}
+                      <Glide.Item>
+                        <Card className="sh-20 hover-border-primary mb-5">
+                          <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
+                            <div className="d-flex sh-5 sw-5 bg-gradient-light mb-3 align-items-center justify-content-center rounded-xl">
+                              <CsLineIcons icon="user" className="text-white" />
+                            </div>
+                            <p className="mb-0 lh-1">Tables</p>
+                            <p className="cta-3 mb-0 text-primary">item.table_n</p>
+                          </Card.Body>
+                        </Card>
+                      </Glide.Item>
+                </Glide>
               </Col>
             </Row>
-          </div>
-          {/* Stats End */}
-
-          {/* Sales Start */}
-          <h2 className="small-title">Last Week Revenue</h2>
-          <Card className="mb-5 sh-40">
-            <Card.Body>
-              <ChartHorizontal weeklyRevenue={weeklyRevenue} />
-            </Card.Body>
-          </Card>
-          {/* Sales End */}
+          // ))}
         </Col>
 
         <Col lg="6" className="mb-5">

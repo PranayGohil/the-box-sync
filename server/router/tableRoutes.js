@@ -15,9 +15,9 @@ const tableRouter = express.Router();
 
 tableRouter.route("/get/dining-areas").get(authMiddleware, getDiningAreas);
 tableRouter.route("/checktable").get(authMiddleware, checkTable);
-tableRouter.route("/addtable").post(authMiddleware, adminAuth, addTable);
-tableRouter.route("/get-user-tables").get(authMiddleware, getTableData);
-tableRouter.route("/gettabledata/:id").get(authMiddleware, getTableDataById);
+tableRouter.route("/add").post(authMiddleware, adminAuth, addTable);
+tableRouter.route("/get-all").get(authMiddleware, getTableData);
+tableRouter.route("/get/:id").get(authMiddleware, getTableDataById);
 tableRouter.route("/update").put(authMiddleware, updateTable);
 tableRouter
   .route("/delete/:id")
