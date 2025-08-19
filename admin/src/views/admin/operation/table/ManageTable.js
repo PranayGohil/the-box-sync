@@ -29,7 +29,7 @@ const ManageTable = () => {
 
   const fetchTableData = async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API}/table/get-user-tables`, {
+      const res = await axios.get(`${process.env.REACT_APP_API}/table/get-all`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
