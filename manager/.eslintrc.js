@@ -92,7 +92,6 @@ module.exports = {
     'no-underscore-dangle': 'off',
     'no-nested-ternary': 'off',
     'jsx-a11y/no-onchange': 'off',
-    'react/jsx-no-comment-textnodes': 'off',
   },
   globals: {
     window: true,

@@ -63,9 +63,9 @@ const Dashboard = () => {
 
       <Row>
         <Col lg="6">
-          {/* {tables.map((table) => ( */}
-            <Row className="gx-2">
-              <h2 className="small-title">table.area</h2>
+          {tables.map((table) => (
+            <div className="gx-2" key={table._id}>
+              <h2 className="small-title">{table.area}</h2>
               <Col className="p-0">
                 <Glide
                   options={{
@@ -83,8 +83,8 @@ const Dashboard = () => {
                     },
                   }}
                 >
-                  {/* {table.tables.map((item, idx) => ( */}
-                    <div>
+                  {table.tables.map((item, idx) => (
+                    <div key={idx}>
                       <Glide.Item>
                         <Card className="sh-20 hover-border-primary mb-5">
                           <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
@@ -92,27 +92,16 @@ const Dashboard = () => {
                               <CsLineIcons icon="user" className="text-white" />
                             </div>
                             <p className="mb-0 lh-1">Tables</p>
-                            <p className="cta-3 mb-0 text-primary">item.table_noooooooooooooooooooooooooooooooooooo</p>
+                            <p className="cta-3 mb-0 text-primary">{item.table_no}</p>
                           </Card.Body>
                         </Card>
                       </Glide.Item>
                     </div>
-                  {/* ))} */}
-                      <Glide.Item>
-                        <Card className="sh-20 hover-border-primary mb-5">
-                          <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
-                            <div className="d-flex sh-5 sw-5 bg-gradient-light mb-3 align-items-center justify-content-center rounded-xl">
-                              <CsLineIcons icon="user" className="text-white" />
-                            </div>
-                            <p className="mb-0 lh-1">Tables</p>
-                            <p className="cta-3 mb-0 text-primary">item.table_n</p>
-                          </Card.Body>
-                        </Card>
-                      </Glide.Item>
+                  ))}
                 </Glide>
               </Col>
-            </Row>
-          // ))}
+            </div>
+          ))}
         </Col>
 
         <Col lg="6" className="mb-5">
