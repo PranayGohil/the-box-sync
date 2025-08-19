@@ -147,10 +147,10 @@ const InventoryHistory = () => {
         Header: 'Actions',
         Cell: ({ row }) => (
           <div className="d-flex justify-content-center">
-            <Button variant="link" size="sm" title="View" onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}> {/* eslint-disable-line no-underscore-dangle */}
+            <Button variant="link" size="sm" title="View" onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}> 
               <CsLineIcons icon="eye" />
             </Button>
-            <Button variant="link" size="sm" title="Edit" onClick={() => history.push(`/operations/edit-inventory/${row.original._id}`)}> {/* eslint-disable-line no-underscore-dangle */}
+            <Button variant="link" size="sm" title="Edit" onClick={() => history.push(`/operations/edit-inventory/${row.original._id}`)}> 
               <CsLineIcons icon="edit" />
             </Button>
             <Button

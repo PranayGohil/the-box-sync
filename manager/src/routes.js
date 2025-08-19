@@ -7,9 +7,9 @@ const manager = {
   dashboard: lazy(() => import('views/manager/Dashboard')),
   operation: lazy(() => import('views/manager/operation/Operations')),
   staff: lazy(() => import('views/manager/staff/Staff')),
-  settings: lazy(() => import('views/manager/settings/Settings')),
-  Statistics: lazy(() => import('views/manager/statistics/Statistics')),
+  statistics: lazy(() => import('views/manager/statistics/Statistics')),
   orderhistory: lazy(() => import('views/manager/operation/order/OrderHistory')),
+
 };
 const dashboards = {
   index: lazy(() => import('views/dashboards/Dashboards')),
@@ -26,7 +26,7 @@ const routesAndMenuItems = {
       path: DEFAULT_PATHS.APP,
       exact: true,
       redirect: true,
-      to: `${appRoot}/dashboards/default`,
+      to: `${appRoot}/dashboard`,
     },
     {
       path: `${appRoot}/dashboard`,
@@ -52,15 +52,10 @@ const routesAndMenuItems = {
       component: manager.order,
     },
     {
-      path: `${appRoot}/dashboards`,
-      component: manager.dashboard,
-      label: 'menu.dashboards',
-      icon: 'home',
-      subs: [
-        { path: '/default', label: 'menu.default', component: dashboards.default },
-        { path: '/visual', label: 'menu.visual', component: dashboards.visual },
-        { path: '/analytic', label: 'menu.analytic', component: dashboards.analytic },
-      ],
+      path: `${appRoot}/statistics`,
+      label: 'Statistics',
+      icon: 'chart-4',
+      component: manager.statistics,
     },
   ],
   sidebarItems: [
