@@ -25,7 +25,7 @@ menuRouter
 menuRouter.route("/get").get(authMiddleware, getMenuData);
 menuRouter.route("/getmenu/:id").get(authMiddleware, getMenuData);
 menuRouter.route("/getmenudata/:id").get(getMenuDataById);
-menuRouter.route("/getmenucategories").get(authMiddleware, getMenuCategories);
+menuRouter.route("/get-categories").get(authMiddleware, getMenuCategories);
 menuRouter
   .route("/update")
   .put(authMiddleware, upload.single("dish_img"), updateMenu);

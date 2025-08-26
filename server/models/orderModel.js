@@ -34,7 +34,7 @@ const orderSchema = new Schema({
     },
   ],
   order_status: {
-    type: String, // Save, KOT, KOT and Print, Bill Print, Settle and Save and if is Delivery than KOT and Bill Print
+    type: String, 
   },
   customer_id: {
     type: String,
@@ -49,7 +49,7 @@ const orderSchema = new Schema({
     type: String,
   },
   waiter: {
-    type: String, // by default it will be null
+    type: String, 
   },
   bill_amount: {
     type: Number,

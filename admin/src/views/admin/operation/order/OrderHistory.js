@@ -70,7 +70,7 @@ const OrderHistory = () => {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
 
-      const order = orderResponse.data.data[0];
+      const order = orderResponse.data.data;
       const userData = userResponse.data;
 
       const printDiv = document.createElement("div");

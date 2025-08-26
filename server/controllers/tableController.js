@@ -1,6 +1,6 @@
 const Table = require("../models/tableModel");
 
-const getTableData = (req, res) => {
+const getTables = (req, res) => {
   try {
     Table.find({ restaurant_id: req.user })
       .then((data) => {
@@ -145,7 +145,7 @@ const deleteTable = async (req, res) => {
 };
 
 module.exports = {
-  getTableData,
+  getTables,
   getTableDataById,
   getDiningAreas,
   checkTable,

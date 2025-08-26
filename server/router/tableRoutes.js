@@ -1,7 +1,7 @@
 const express = require("express");
 const authMiddleware = require("../middlewares/auth-middlewares");
 const {
-  getTableData,
+  getTables,
   getTableDataById,
   getDiningAreas,
   checkTable,
@@ -15,7 +15,7 @@ const tableRouter = express.Router();
 tableRouter.route("/get/dining-areas").get(authMiddleware, getDiningAreas);
 tableRouter.route("/check-table").get(authMiddleware, checkTable);
 tableRouter.route("/add").post(authMiddleware, addTable);
-tableRouter.route("/get-all").get(authMiddleware, getTableData);
+tableRouter.route("/get-all").get(authMiddleware, getTables);
 tableRouter.route("/get/:id").get(authMiddleware, getTableDataById);
 tableRouter.route("/update").put(authMiddleware, updateTable);
 tableRouter

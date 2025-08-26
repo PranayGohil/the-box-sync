@@ -22,6 +22,12 @@ export const AuthProvider = ({ children }) => {
                 },
             })
                 .then((res) => {
+                    if(res.data === "Null") {
+                        console.log("Null Token Expired");
+                        localStorage.removeItem("token");
+                        setCurrentUser(null);
+                        setIsLogin(false);
+                    }
                     setCurrentUser(res.data.user);
                     setIsLogin(true);
                 })

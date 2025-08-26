@@ -1,0 +1,53 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run Admin",
+            "type": "shell",
+            "command": "npm start",
+            "options": {
+                "cwd": "${workspaceFolder}/admin"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Manager",
+            "type": "shell",
+            "command": "npm start",
+            "options": {
+                "cwd": "${workspaceFolder}/manager"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Server",
+            "type": "shell",
+            "command": "npm start",
+            "options": {
+                "cwd": "${workspaceFolder}/server"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Theme",
+            "type": "shell",
+            "command": "npm start",
+            "options": {
+                "cwd": "${workspaceFolder}/theme"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Everything",
+            "type": "shell",
+            "command": "echo Starting all services...",
+            "dependsOn": [
+                "Run Admin",
+                "Run Manager",
+                "Run Server",
+                "Run Theme"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

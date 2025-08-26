@@ -8,9 +8,14 @@ const manager = {
   operation: lazy(() => import('views/manager/operation/Operations')),
   staff: lazy(() => import('views/manager/staff/Staff')),
   statistics: lazy(() => import('views/manager/statistics/Statistics')),
-  orderhistory: lazy(() => import('views/manager/operation/order/OrderHistory')),
-
+  kot: lazy(() => import('views/manager/kot/ViewKots')),
 };
+
+const order = {
+  dinein: lazy(() => import('views/manager/order/DineInOrder')),
+  takeaway: lazy(() => import('views/manager/order/TakeawayOrder')),
+  delivery: lazy(() => import('views/manager/order/DeliveryOrder')),
+}
 const dashboards = {
   index: lazy(() => import('views/dashboards/Dashboards')),
   default: lazy(() => import('views/dashboards/DashboardsDefault')),
@@ -43,19 +48,28 @@ const routesAndMenuItems = {
     {
       path: `${appRoot}/staff`,
       label: 'Staff',
-      icon: 'list',
+      icon: 'user',
       component: manager.staff,
-    },
-    {
-      path: `${appRoot}/order`,
-      exact: true,
-      component: manager.order,
     },
     {
       path: `${appRoot}/statistics`,
       label: 'Statistics',
       icon: 'chart-4',
       component: manager.statistics,
+    },
+    {
+      path: `${appRoot}/kot`,
+      label: 'KOT',
+      icon: 'cook-hat',
+      component: manager.kot,
+    },
+    {
+      path: `${appRoot}/order`,
+      subs: [
+        { path: '/dine-in', label: 'Dine In', component: order.dinein },
+        { path: '/takeaway', label: 'Take Away', component: order.takeaway },
+        { path: '/delivery', label: 'Delivery', component: order.delivery },
+      ]
     },
   ],
   sidebarItems: [
