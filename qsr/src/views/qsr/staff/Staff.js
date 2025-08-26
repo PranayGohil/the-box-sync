@@ -1,0 +1,18 @@
+import React from 'react';
+import { Switch, Route, Redirect } from 'react-router-dom';
+import ViewStaff from './ViewStaff';
+import StaffProfile from './StaffProfile';
+
+const Staff = () => {
+  return (
+    <>
+      <Switch>
+        <Route exact path="/staff" render={() => <Redirect to="/staff/view" />} />
+        <Route exact path="/staff/view" render={() => <ViewStaff />} />
+        <Route exact path="/staff/profile/:id" render={() => <StaffProfile />} />
+      </Switch>
+    </>
+  );
+};
+
+export default Staff;

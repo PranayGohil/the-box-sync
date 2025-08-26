@@ -7,7 +7,6 @@ const manager = {
   dashboard: lazy(() => import('views/manager/Dashboard')),
   operation: lazy(() => import('views/manager/operation/Operations')),
   staff: lazy(() => import('views/manager/staff/Staff')),
-  statistics: lazy(() => import('views/manager/statistics/Statistics')),
   kot: lazy(() => import('views/manager/kot/ViewKots')),
 };
 
@@ -50,13 +49,7 @@ const routesAndMenuItems = {
       label: 'Staff',
       icon: 'user',
       component: manager.staff,
-    },
-    {
-      path: `${appRoot}/statistics`,
-      label: 'Statistics',
-      icon: 'chart-4',
-      component: manager.statistics,
-    },
+    },  
     {
       path: `${appRoot}/kot`,
       label: 'KOT',
