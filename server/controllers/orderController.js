@@ -82,12 +82,33 @@ const getOrderData = async (req, res) => {
 
 const getActiveOrders = async (req, res) => {
   try {
-    // Active Dine In Tables
-    const activeDineInTables = await Order.find({
-      order_type: "Dine In",
-      order_status: { $in: ["KOT", "Save"] },
-      restaurant_id: req.user,
-    });
+    const { source } = req.body;
+    console.log("Source : ", source);
+
+    if(!source) return res.status(400).json({ message: "Source not provided" });
+
+    let activeDineInTables = [];
+    if(source === "Manager") {
+      // Active Dine In Tables
+      activeDineInTables = await Order.find({
+        order_type: "Dine In",
+        order_status: { $in: ["KOT", "Save"] },
+        restaurant_id: req.user,
+      });
+    }
+
+    if(source === "QSR") {
+      // Active Dine In Tables
+      activeDineInTables = await Order.find({
+        order_type: "QSR Dine In",
+        $or: [
+          { order_status: { $ne: "Paid" } },
+          { "order_items.status": "Preparing" },
+        ],
+        restaurant_id: req.user,
+        order_source: source,
+      });
+    }
 
     // Active Takeaways & Deliveries
     const activeTakeawaysAndDeliveries = await Order.find({
@@ -97,6 +118,7 @@ const getActiveOrders = async (req, res) => {
         { "order_items.status": "Preparing" },
       ],
       restaurant_id: req.user,
+      order_source: source,
     });
 
     res.json({
@@ -540,7 +562,7 @@ const takeawayController = async (req, res) => {
 
     // ✅ 5. Handle new order creation
     // Generate token for new takeaway orders
-    const token = await generateToken(req.user);
+    const token = await generateToken(req.user, orderInfo.order_source);
     orderInfo.token = token;
 
     const newOrder = new Order(orderInfo);

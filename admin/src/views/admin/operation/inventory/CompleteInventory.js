@@ -17,24 +17,34 @@ const defaultValues = {
   unpaid_amount: 0,
   bill_files: [],
   items: [],
-};
+};  
 
 const completeInventory = Yup.object().shape({
   bill_date: Yup.date().required("Bill date is required"),
   bill_number: Yup.string().required("Bill number is required"),
   vendor_name: Yup.string().required("Vendor name is required"),
   category: Yup.string().required("Category is required"),
-  bill_files: Yup.mixed().test("fileRequired", "Bill files are required", function (value) {
+  bill_files: Yup.mixed().test("fileRequired", "Bill files are required", (value) => {
     return value && value.length > 0;
   }),
   total_amount: Yup.number().required("Total amount is required").positive("Must be positive"),
   paid_amount: Yup.number().required("Paid amount is required").positive("Must be positive"),
+  
+  // ✅ CORRECTED ITEMS SCHEMA
   items: Yup.array()
     .of(
       Yup.object().shape({
         item_name: Yup.string().required("Item name is required"),
-        item_quantity: Yup.number().required("Required").positive("Must be positive"),
-        unit: Yup.string().required("Required"),
+        item_quantity: Yup.number().when("completed", {
+          is: true,
+          then: (schema) => schema.required("Required").positive("Must be positive"),
+          otherwise: (schema) => schema.notRequired(),
+        }),
+        unit: Yup.string().when("completed", {
+          is: true,
+          then: (schema) => schema.required("Required"),
+          otherwise: (schema) => schema.notRequired(),
+        }),
         completed: Yup.boolean(),
         item_price: Yup.number()
           .nullable()
@@ -43,7 +53,7 @@ const completeInventory = Yup.object().shape({
           )
           .when("completed", {
             is: true,
-            then: (schema) => schema.required("Required"),
+            then: (schema) => schema.required("Required").positive("Must be positive"),
             otherwise: (schema) => schema.notRequired(),
           }),
       })
@@ -62,6 +72,8 @@ const CompleteInventory = () => {
   const [initialValues, setInitialValues] = useState(null);
   const [filePreviews, setFilePreviews] = useState([]);
 
+  // In CompleteInventory.js
+
   useEffect(() => {
     const fetchInventory = async () => {
       try {
@@ -69,8 +81,15 @@ const CompleteInventory = () => {
           withCredentials: true,
         });
 
+        // ✅ Map over items to ensure 'unit' has a default value
+        const itemsWithDefaults = data.items.map(item => ({
+          ...item,
+          unit: item.unit || '', // If item.unit is missing or null, default to ''
+        }));
+
         setInitialValues({
           ...data,
+          items: itemsWithDefaults, // Use the processed items
           bill_files: [],
           unpaid_amount: data.total_amount - data.paid_amount,
         });
@@ -94,21 +113,6 @@ const CompleteInventory = () => {
       })
       .filter(Boolean);
     setFilePreviews(previews);
-  };
-
-  const uploadFiles = async (files) => {
-    const formData = new FormData();
-    Array.from(files).forEach((file) => formData.append("bill_files", file));
-
-    const res = await axios.post(
-      `${process.env.REACT_APP_API}/upload/uploadbillfiles`,
-      formData,
-      {
-        withCredentials: true,
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
-    return res.data.fileNames;
   };
 
   if (!initialValues) return <div>Loading...</div>;
@@ -271,36 +275,70 @@ const CompleteInventory = () => {
                 </Card>
 
                 <Card body className="mb-4">
+                  {/* // In CompleteInventory.js, inside the second Card */}
+
                   <h5 className="mb-3">Item Details</h5>
                   {values.items.map((item, index) => (
-                    <Row key={index} className="mb-3">
-                      <Col md={1} className="d-flex align-items-start justify-content-center py-4">
-                        <input
+                    <Row key={index} className="mb-3 align-items-start">
+                      {/* Checkbox */}
+                      <Col md={1} className="d-flex align-items-center justify-content-center pt-4">
+                        <Field
                           type="checkbox"
-                          checked={item.completed || false}
-                          onChange={(e) =>
-                            setFieldValue(`items[${index}].completed`, e.target.checked)
-                          }
+                          name={`items[${index}].completed`}
+                          className="form-check-input"
                         />
                       </Col>
+
+                      {/* Item Name */}
                       <Col md={3}>
                         <label>Item Name</label>
-                        <Field name={`items[${index}].item_name`} readOnly className="form-control" />
+                        <Field
+                          name={`items[${index}].item_name`}
+                          readOnly
+                          className="form-control"
+                        />
                       </Col>
+
+                      {/* ✅ Quantity Input */}
                       <Col md={2}>
                         <label>Quantity</label>
-                        <Field name={`items[${index}].item_quantity`} readOnly className="form-control" />
+                        <Field
+                          type="number"
+                          name={`items[${index}].item_quantity`}
+                          className="form-control"
+                          disabled={!item.completed} // Disable if not checked
+                        />
+                        <ErrorMessage name={`items[${index}].item_quantity`} component="div" className="text-danger" />
                       </Col>
+
+                      {/* ✅ Unit Select Dropdown */}
                       <Col md={2}>
                         <label>Unit</label>
-                        <Field name={`items[${index}].unit`} readOnly className="form-control" />
+                        <Field
+                          as="select"
+                          name={`items[${index}].unit`}
+                          className="form-control"
+                          disabled={!item.completed}
+                          value={item.unit}
+                        >
+                          <option value="">Select</option>
+                          <option value="kg">kg</option>
+                          <option value="g">g</option>
+                          <option value="litre">litre</option>
+                          <option value="ml">ml</option>
+                          <option value="piece">piece</option>
+                        </Field>
+                        <ErrorMessage name={`items[${index}].unit`} component="div" className="text-danger" />
                       </Col>
+
+                      {/* Price Input */}
                       <Col md={3}>
                         <label>Price</label>
                         <Field
                           type="number"
                           name={`items[${index}].item_price`}
                           className="form-control"
+                          disabled={!item.completed} // Disable if not checked
                         />
                         <ErrorMessage name={`items[${index}].item_price`} component="div" className="text-danger" />
                       </Col>
@@ -317,8 +355,8 @@ const CompleteInventory = () => {
               </Form>
             )}
           </Formik>
-        </Col>
-      </Row>
+        </Col >
+      </Row >
     </>
   );
 };

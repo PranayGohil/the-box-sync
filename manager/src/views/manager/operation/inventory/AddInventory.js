@@ -164,13 +164,12 @@ function AddInventory() {
                           }
                           isInvalid={itemTouched.unit && itemErrors.unit}
                         >
-                          <option value="">Select Unit</option>
-                          <option value="Kilogram">Kilogram (kg)</option>
-                          <option value="Grams">Grams (g)</option>
-                          <option value="Liter">Liter (L)</option>
-                          <option value="ml">Millilitre (ml)</option>
-                          <option value="nos">Nos</option>
-                          <option value="Pieces">Pieces</option>
+                          <option value="">Select</option>
+                          <option value="kg">kg</option>
+                          <option value="g">g</option>
+                          <option value="litre">litre</option>
+                          <option value="ml">ml</option>
+                          <option value="piece">piece</option>
                         </Form.Select>
                         <Form.Control.Feedback type="invalid">
                           {itemErrors.unit}

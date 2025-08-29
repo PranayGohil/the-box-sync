@@ -36,7 +36,9 @@ const Dashboard = () => {
 
   const fetchActiveOrders = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API}/order/get-active`, {
+      const response = await axios.post(`${process.env.REACT_APP_API}/order/get-active`, {
+        source: 'Manager',
+      }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       console.log(response.data.data);

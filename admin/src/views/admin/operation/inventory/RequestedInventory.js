@@ -72,22 +72,21 @@ const RequestedInventory = () => {
       {
         Header: 'Requested Date',
         accessor: 'formatted_date',
-        headerClassName: 'text-muted text-small text-uppercase',
         Cell: ({ cell }) => <span> {cell.value} </span>,
       },
-      {
-        Header: 'Items',
-        accessor: 'items',
-        Cell: ({ cell }) => (
-          <>
-            {cell.value.map((item, i) => (
-              <div key={i}>
-                {item.item_name} - {item.item_quantity} {item.unit}
-              </div>
-            ))}
-          </>
-        ),
-      },
+      // {
+      //   Header: 'Items',
+      //   accessor: 'items',
+      //   Cell: ({ cell }) => (
+      //     <>
+      //       {cell.value.map((item, i) => (
+      //         <div key={i}>
+      //           {item.item_name} - {item.item_quantity} {item.unit}
+      //         </div>
+      //       ))}
+      //     </>
+      //   ),
+      // },
       {
         Header: 'Status',
         accessor: 'status',
@@ -98,7 +97,7 @@ const RequestedInventory = () => {
         Cell: ({ row }) => (
           <>
             <Link variant="link" size="sm" title="Complete" to={`/operations/complete-inventory/${row.original._id}`}>  {/* eslint-disable-line no-underscore-dangle */}
-              <CsLineIcons icon="check" />
+              <CsLineIcons icon="eye" />
             </Link>
             <Button variant="link" size="sm" title="Reject" onClick={() => setRejectInventoryModal(true)}>
               <CsLineIcons icon="close" />

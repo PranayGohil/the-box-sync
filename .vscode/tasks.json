@@ -20,6 +20,15 @@
             "problemMatcher": []
         },
         {
+            "label": "Run QSR",
+            "type": "shell",
+            "command": "npm start",
+            "options": {
+                "cwd": "${workspaceFolder}/qsr"
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "Run Server",
             "type": "shell",
             "command": "npm start",
@@ -44,6 +53,7 @@
             "dependsOn": [
                 "Run Admin",
                 "Run Manager",
+                "Run QSR",
                 "Run Server",
                 "Run Theme"
             ],
