@@ -96,21 +96,6 @@ const CompleteInventory = () => {
     setFilePreviews(previews);
   };
 
-  const uploadFiles = async (files) => {
-    const formData = new FormData();
-    Array.from(files).forEach((file) => formData.append("bill_files", file));
-
-    const res = await axios.post(
-      `${process.env.REACT_APP_API}/upload/uploadbillfiles`,
-      formData,
-      {
-        withCredentials: true,
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
-    return res.data.fileNames;
-  };
-
   if (!initialValues) return <div>Loading...</div>;
 
   return (
@@ -289,11 +274,11 @@ const CompleteInventory = () => {
                       </Col>
                       <Col md={2}>
                         <label>Quantity</label>
-                        <Field name={`items[${index}].item_quantity`} readOnly className="form-control" />
+                        <Field name={`items[${index}].item_quantity`} className="form-control" />
                       </Col>
                       <Col md={2}>
                         <label>Unit</label>
-                        <Field name={`items[${index}].unit`} readOnly className="form-control" />
+                        <Field name={`items[${index}].unit`} className="form-control" />
                       </Col>
                       <Col md={3}>
                         <label>Price</label>

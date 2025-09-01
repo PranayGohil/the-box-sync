@@ -17,7 +17,7 @@ const orderRouter = express.Router();
 
 orderRouter.route("/get/:id").get(authMiddleware, getOrderData);
 
-orderRouter.route("/get-active").get(authMiddleware, getActiveOrders);
+orderRouter.route("/get-active").post(authMiddleware, getActiveOrders);
 
 orderRouter.route("/ordercontroller").post(authMiddleware, orderController);
 

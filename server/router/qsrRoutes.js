@@ -13,17 +13,10 @@ const adminAuth = require("../middlewares/adminAuth");
 
 const qsrRouter = express.Router();
 
-qsrRouter.route("/addqsr").post(authMiddleware, adminAuth, addQSR);
 
-qsrRouter.route("/getqsrdata").get(authMiddleware, getQSRData);
-qsrRouter.route("/getqsrdata/:id").get(getQSRDataById);
+qsrRouter.route("/get").get(authMiddleware, getQSRData);
+qsrRouter.route("/get/:id").get(getQSRDataById);
 
-qsrRouter.route("/updateqsr/:id").put(authMiddleware, adminAuth, updateQSR);
-qsrRouter.route("/deleteqsr").post(authMiddleware, adminAuth, deleteQSR);
-qsrRouter
-  .route("/changeqsrpassword")
-  .post(authMiddleware, adminAuth, changeQSRPassword);
-
-qsrRouter.route("/qsr-login").post(qsrLogin);
+qsrRouter.route("/login").post(qsrLogin);
 
 module.exports = qsrRouter;

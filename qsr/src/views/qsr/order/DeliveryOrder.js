@@ -234,7 +234,7 @@ const DeliveryOrder = () => {
         discount_amount: parseFloat(paymentData.discountAmount),
         total_amount: parseFloat(paymentData.total),
         payment_type: paymentData.paymentType,
-        order_source: 'Manager',
+        order_source: 'QSR',
       };
 
       const payload = {

@@ -6,7 +6,6 @@ import { DEFAULT_PATHS } from 'config.js';
 const qsr = {
   dashboard: lazy(() => import('views/qsr/Dashboard')),
   operation: lazy(() => import('views/qsr/operation/Operations')),
-  staff: lazy(() => import('views/qsr/staff/Staff')),
   kot: lazy(() => import('views/qsr/kot/ViewKots')),
 };
 
@@ -43,13 +42,7 @@ const routesAndMenuItems = {
       label: 'Operations',
       icon: 'list',
       component: qsr.operation,
-    },
-    {
-      path: `${appRoot}/staff`,
-      label: 'Staff',
-      icon: 'user',
-      component: qsr.staff,
-    },  
+    }, 
     {
       path: `${appRoot}/kot`,
       label: 'KOT',

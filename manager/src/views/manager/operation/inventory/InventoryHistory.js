@@ -133,16 +133,16 @@ const InventoryHistory = () => {
       { Header: 'Vendor Name', accessor: 'vendor_name' },
       { Header: 'Total Amount', accessor: 'total_amount' },
       { Header: 'Unpaid Amount', accessor: 'unpaid_amount' },
-      {
-        Header: 'Items',
-        accessor: 'items',
-        Cell: ({ cell }) =>
-          cell.value.map((item, i) => (
-            <div key={i}>
-              {item.item_name} - {item.item_quantity} {item.unit}
-            </div>
-          )),
-      },
+      // {
+      //   Header: 'Items',
+      //   accessor: 'items',
+      //   Cell: ({ cell }) =>
+      //     cell.value.map((item, i) => (
+      //       <div key={i}>
+      //         {item.item_name} - {item.item_quantity} {item.unit}
+      //       </div>
+      //     )),
+      // },
       {
         Header: 'Actions',
         Cell: ({ row }) => (
@@ -172,16 +172,16 @@ const InventoryHistory = () => {
   const rejectedColumns = React.useMemo(
     () => [
       { Header: 'Requested Date', accessor: 'formatted_request_date' },
-      {
-        Header: 'Items',
-        accessor: 'items',
-        Cell: ({ cell }) =>
-          cell.value.map((item, i) => (
-            <div key={i}>
-              {item.item_name} - {item.item_quantity} {item.unit}
-            </div>
-          )),
-      },
+      // {
+      //   Header: 'Items',
+      //   accessor: 'items',
+      //   Cell: ({ cell }) =>
+      //     cell.value.map((item, i) => (
+      //       <div key={i}>
+      //         {item.item_name} - {item.item_quantity} {item.unit}
+      //       </div>
+      //     )),
+      // },
       {
         Header: 'Status',
         accessor: 'status',
