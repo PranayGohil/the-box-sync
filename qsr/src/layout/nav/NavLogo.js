@@ -5,13 +5,10 @@ import { DEFAULT_PATHS } from 'config.js';
 const NavLogo = () => {
   return (
     <div className="logo position-relative">
-      <Link to={DEFAULT_PATHS.APP}>
-        {/*
-          Logo can be added directly
-          <img src="/img/logo/logo-white.svg" alt="logo" />
-          Or added via css to provide different ones for different color themes
-         */}
-        <div className="img" />
+      <Link to={DEFAULT_PATHS.APP} className="d-flex align-items-center">
+        {/* <div className="img" /> */}
+        <h1 className="fw-bold text-white pb-0 mb-0"> THE BOX </h1>
+        <span className="fw-bold text-white pb-0 mb-0 ms-1"> - QSR</span>
       </Link>
     </div>
   );

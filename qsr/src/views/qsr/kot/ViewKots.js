@@ -108,21 +108,11 @@ const ViewKots = () => {
                         <h5 className="mb-1">{data.order_type}</h5>
                         <div className="text-muted small">{data.customer_name || 'Guest'}</div>
                       </div>
-                      {data.order_type === 'Takeaway' && (
+                      {data.order_type === 'Takeaway' || data.order_type === 'Dine In' && (
                         <div className="text-end">
                           <h5 className="mb-1">Token</h5>
                           <div className="d-flex justify-content-end">
                             <div className="fw-bold bg-primary rounded-pill py-2 px-3 text-center text-white">{data.token}</div>
-                          </div>
-                        </div>
-                      )}
-                      {data.order_type === 'Dine In' && (
-                        <div className="text-end">
-                          <h5 className="mb-1">
-                            Area: <span className="fw-bold">{data.table_area}</span>
-                          </h5>
-                          <div className="d-flex justify-content-end">
-                            <div className="fw-bold bg-primary rounded-pill py-2 px-3 text-center text-white">{data.table_no}</div>
                           </div>
                         </div>
                       )}

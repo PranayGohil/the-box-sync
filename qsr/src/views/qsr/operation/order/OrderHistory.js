@@ -42,8 +42,10 @@ const OrderHistory = () => {
           ...rest,
           id: _id,
         }));
-        console.log("Fetched Orders:", transformedOrders);
-        setData(transformedOrders);
+        const filteredOrders = transformedOrders.filter((order) => order.order_source === 'QSR');
+        const sortOrders = filteredOrders.sort((a, b) => new Date(b.order_date) - new Date(a.order_date)); 
+        console.log("Fetched Orders:", sortOrders);
+        setData(filteredOrders);
       } else {
         console.log(res.data.message);
         setError(res.data.message);
@@ -205,21 +207,17 @@ const OrderHistory = () => {
       Header: 'Customer Name',
       accessor: 'customer_name',
       headerClassName: 'text-muted text-small text-uppercase w-15',
+      Cell: ({ value }) => value || '-',
     },
     {
-      Header: 'Table No',
-      accessor: 'table_no',
-      headerClassName: 'text-muted text-small text-uppercase w-10',
-    },
-    {
-      Header: 'Table Area',
-      accessor: 'table_area',
+      Header: 'Token',
+      accessor: 'token',
       headerClassName: 'text-muted text-small text-uppercase w-10',
     },
     {
       Header: 'Order Type',
       accessor: 'order_type',
-      headerClassName: 'text-muted text-small text-uppercase w-10',
+      headerClassName: 'text-muted text-small text-uppercase w-15',
     },
     {
       Header: 'Total Amount',

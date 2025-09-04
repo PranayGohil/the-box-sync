@@ -19,6 +19,7 @@ const Profile = () => {
     const [error, setError] = useState('');
 
     const [profile, setProfile] = useState({
+        restaurant_code: '',
         name: '',
         logo: '',
         email: '',
@@ -36,14 +37,17 @@ const Profile = () => {
                         Authorization: `Bearer ${localStorage.getItem('token')}`,
                     },
                 });
+                console.log(res.data);
                 const data = res.data.user || res.data;
                 setProfile({
+                    restaurant_code: data.restaurant_code || '',
                     name: data.name || '',
                     logo: data.logo || '',
                     email: data.email || '',
                     mobile: data.mobile || '',
                 });
                 setIntialProfile({
+                    restaurant_code: data.restaurant_code || '',
                     name: data.name || '',
                     logo: data.logo || '',
                     email: data.email || '',
@@ -169,6 +173,16 @@ const Profile = () => {
                                 {/* Profile Fields */}
                                 <Row className="mb-4">
                                     <Col md="6">
+                                        <Form.Label>Restaurant Code</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            name="restaurant_code"
+                                            value={intialProfile.restaurant_code}
+                                            disabled
+                                        />
+                                    </Col>
+
+                                    <Col md="6">
                                         <Form.Label>Restaurant Name</Form.Label>
                                         <Form.Control
                                             type="text"
@@ -189,9 +203,7 @@ const Profile = () => {
                                             disabled={!editMode}
                                         />
                                     </Col>
-                                </Row>
 
-                                <Row className="mb-4">
                                     <Col md="6">
                                         <Form.Label>Phone</Form.Label>
                                         <Form.Control

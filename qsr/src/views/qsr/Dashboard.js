@@ -26,12 +26,16 @@ const Dashboard = () => {
 
   const fetchActiveOrders = async () => {
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API}/order/get-active`, {
-        source: 'QSR',
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
-      console.log(response.data.data);
+      const response = await axios.post(
+        `${process.env.REACT_APP_API}/order/get-active`,
+        {
+          source: 'QSR',
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }
+      );
+      console.log(response.data);
 
       setActiveDineInOrders(response.data.activeDineInTables);
       setActiveTakeawaysAndDeliveries(response.data.activeTakeawaysAndDeliveries);
@@ -58,7 +62,6 @@ const Dashboard = () => {
     fetchActiveOrders();
     fetchSpecialDishes();
   }, []);
-
 
   const handleOrderClick = (order) => {
     const orderType = order.order_type.toLowerCase().replace(' ', '-');
@@ -92,9 +95,9 @@ const Dashboard = () => {
 
       <Row>
         <Col lg="6">
-          <div className='d-flex justify-content-between align-items-center mb-2'>
+          <div className="d-flex justify-content-between align-items-center mb-2">
             <h2 className="small-title mb-0 mx-3">Active Dine In</h2>
-            <div className='d-flex gap-2 mx-2'>
+            <div className="d-flex gap-2 mx-2">
               <Button variant="outline-primary" onClick={() => createNewOrder('dine-in')}>
                 + New Dine In
               </Button>
@@ -105,7 +108,7 @@ const Dashboard = () => {
             {activeDineInOrders.length === 0 ? (
               <Card className="text-center p-4">
                 <Card.Body>
-                  <p className="text-muted mb-0">No active takeaway or delivery orders</p>
+                  <p className="text-muted mb-0">No active dine in orders</p>
                 </Card.Body>
               </Card>
             ) : (
@@ -118,9 +121,7 @@ const Dashboard = () => {
                           {order.order_type}
                           {order.token && <span className="text-muted"> #{order.token}</span>}
                         </h5>
-                        <p className="mb-0 text-muted">
-                          {order.order_type === 'Takeaway' ? `Token: ${order.token}` : `Customer: ${order.customer_name || 'N/A'}`}
-                        </p>
+                        <p className="mb-0 text-muted">Token: {order.token}</p>
                       </div>
                       <Badge bg={order.order_status === 'Paid' ? 'success' : 'warning'} className="text-white">
                         {order.order_status}
@@ -143,10 +144,10 @@ const Dashboard = () => {
 
         {/* Active Orders Section */}
         <Col lg="6">
-          <div className='d-flex justify-content-between align-items-center mb-2'>
+          <div className="d-flex justify-content-between align-items-center mb-2">
             <h2 className="small-title mb-0 mx-3">Active Takeaways & Deliveries</h2>
 
-            <div className='d-flex gap-2 mx-2'>
+            <div className="d-flex gap-2 mx-2">
               <Button variant="outline-primary" onClick={() => createNewOrder('takeaway')}>
                 + New Takeaway
               </Button>
