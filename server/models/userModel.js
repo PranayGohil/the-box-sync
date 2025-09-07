@@ -80,6 +80,7 @@ const userSchema = new Schema({
       customer_phone: { type: String },
       rating: { type: Number },
       feedback: { type: String },
+      date: { type: Date, default: Date.now },
     },
   ],
   purchasedPlan: {
