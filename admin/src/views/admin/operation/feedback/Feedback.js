@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { Badge, Col, Form, Row, Button, Modal, Spinner } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
@@ -9,7 +10,8 @@ import ControlsPageSize from './components/ControlsPageSize';
 import ControlsSearch from './components/ControlsSearch';
 import Table from './components/Table';
 import TablePagination from './components/TablePagination';
-import QrOrUrl from './QrOrUrl';
+
+import DeleteFeedbackModal from './DeleteFeedbackModal';
 
 const Feedback = () => {
   const title = 'Feedback Management';
@@ -20,12 +22,15 @@ const Feedback = () => {
     { to: 'feedback-management', text: 'Feedback' },
   ];
 
+  const history = useHistory();
+
   const [loading, setLoading] = useState(false);
-  const [section, setSection] = useState('see');
   const [feedbacks, setFeedbacks] = useState([]);
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [replyMessage, setReplyMessage] = useState('');
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const fetchFeedbacks = async () => {
     setLoading(true);
@@ -48,22 +53,6 @@ const Feedback = () => {
   useEffect(() => {
     fetchFeedbacks();
   }, []);
-
-  // Delete feedback
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this feedback?')) {
-      setLoading(true);
-      try {
-        await axios.delete(`${process.env.REACT_APP_API}/feedback/delete/${id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
-        setFeedbacks(feedbacks.filter((feedback) => feedback._id !== id));
-      } catch (error) {
-        console.error('Error deleting feedback:', error);
-      }
-      setLoading(false);
-    }
-  };
 
   // Open reply modal
   const handleReply = (feedback) => {
@@ -139,7 +128,11 @@ const Feedback = () => {
             <Button variant="outline-primary" size="sm" className="btn-icon btn-icon-only me-1" onClick={() => handleReply(row.original)} title="Reply">
               <CsLineIcons icon="message" />
             </Button>
-            <Button variant="outline-danger" size="sm" className="btn-icon btn-icon-only" onClick={() => handleDelete(row.original._id)} title="Delete">
+            <Button variant="outline-danger" size="sm" className="btn-icon btn-icon-only" onClick={() => {
+              setSelectedFeedback(row.original);
+              setShowDeleteModal(true);
+            }}
+              title="Delete">
               <CsLineIcons icon="bin" />
             </Button>
           </div>
@@ -177,59 +170,40 @@ const Feedback = () => {
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
               <Col xs="12" md="5" className="d-flex align-items-start justify-content-end">
-                <Button variant={section === 'see' ? 'outline-primary' : 'primary'} className="me-2" onClick={() => setSection('see')}>
-                  <CsLineIcons icon="list" className="me-2" /> View Feedbacks
-                </Button>
-                <Button variant={section === 'qr' ? 'outline-primary' : 'primary'} onClick={() => setSection('qr')}>
+                <Button variant='primary' onClick={() => history.push('/operations/qr-for-feedback')}>
                   <CsLineIcons icon="qr-code" className="me-2" /> Feedback QR
                 </Button>
               </Col>
             </Row>
           </div>
 
-          {section === 'see' && (
-            <div className="mt-3">
-              <Row className="mb-3">
-                <Col sm="12" md="5" lg="3" xxl="2">
-                  <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
-                    <ControlsSearch tableInstance={tableInstance} />
-                  </div>
-                </Col>
-                <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
-                  <div className="d-inline-block">
-                    <ControlsPageSize tableInstance={tableInstance} />
-                  </div>
-                </Col>
-              </Row>
-              <Row>
-                <Col xs="12">
-                  <Table className="react-table rows" tableInstance={tableInstance} />
-                </Col>
-                <Col xs="12">
-                  <TablePagination tableInstance={tableInstance} />
-                </Col>
-              </Row>
-            </div>
-          )}
-
-          {section === 'qr' && (
-            <div className="mt-3">
-              <div className="card">
-                <div className="card-body">
-                  <h5 className="card-title">Feedback QR Code</h5>
-                  <p className="card-text">Display the QR code for customers to provide feedback.</p>
-                  <div className="d-flex justify-content-center">
-                    <QrOrUrl />
-                  </div>
+          <div className="mt-3">
+            <Row className="mb-3">
+              <Col sm="12" md="5" lg="3" xxl="2">
+                <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
+                  <ControlsSearch tableInstance={tableInstance} />
                 </div>
-              </div>
-            </div>
-          )}
+              </Col>
+              <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
+                <div className="d-inline-block">
+                  <ControlsPageSize tableInstance={tableInstance} />
+                </div>
+              </Col>
+            </Row>
+            <Row>
+              <Col xs="12">
+                <Table className="react-table rows" tableInstance={tableInstance} />
+              </Col>
+              <Col xs="12">
+                <TablePagination tableInstance={tableInstance} />
+              </Col>
+            </Row>
+          </div>
         </Col>
       </Row>
 
       {/* Reply Modal */}
-      <Modal className="modal-right" show={showReplyModal} onHide={() => setShowReplyModal(false)} backdrop="static">
+      <Modal className="modal-right large" show={showReplyModal} onHide={() => setShowReplyModal(false)} backdrop="static" >
         <Modal.Header closeButton>
           <Modal.Title>Reply to Feedback</Modal.Title>
         </Modal.Header>
@@ -262,6 +236,12 @@ const Feedback = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Delete Modal */}
+      <DeleteFeedbackModal show={showDeleteModal} handleClose={() => {
+        setShowDeleteModal(false);
+        setSelectedFeedback(null);
+      }} data={selectedFeedback} fetchFeedbacks={fetchFeedbacks} />
     </>
   );
 };

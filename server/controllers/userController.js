@@ -106,11 +106,11 @@ const register = async (req, res) => {
       </p>
       `;
 
-    // await sendEmail({
-    //   to: email,
-    //   subject: "Successful Registration Confirmation for Your TheBox Account",
-    //   html: regEmail,
-    // });
+    await sendEmail({
+      to: email,
+      subject: "Successful Registration Confirmation for Your TheBox Account",
+      html: regEmail,
+    });
 
     res.json({
       message: "Registered",
@@ -186,6 +186,7 @@ const getUserData = async (req, res) => {
         userdata.taxInfo = fetchuser.taxInfo;
         userdata.containerCharges = fetchuser.containerCharges;
         userdata.purchasedPlan = fetchuser.purchasedPlan;
+        userdata.feedbackToken = fetchuser.feedbackToken;
       } else {
         userdata.restaurant_code = fetchuser.restaurant_code;
         userdata.name = fetchuser.name;
@@ -346,7 +347,7 @@ const resetAdminPassword = async (req, res) => {
     // Send confirmation email
     await sendEmail({
       to: email,
-      subject: "Password Reset Confirmation for Your TheBox Account",
+      subject: "Password Reset Successful for Your TheBox Account",
       html: passwordResetMail,
     });
 

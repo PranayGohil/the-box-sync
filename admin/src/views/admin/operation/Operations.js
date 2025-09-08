@@ -25,6 +25,7 @@ import CompleteInventory from './inventory/CompleteInventory';
 import InventoryDetails from './inventory/InventoryDetails';
 
 import Feedback from './feedback/Feedback';
+import QRforFeedback from './feedback/QRforFeedback';
 
 const NavContent = () => {
   return (
@@ -106,6 +107,16 @@ const NavContent = () => {
           <CsLineIcons icon="tablet" className="me-2 sw-3" size="17" />
           <span className="align-middle">Feedback</span>
         </Nav.Link>
+        <div>
+          <Nav.Link as={NavLink} to="/operations/feedback" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">View Feedbacks</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/qr-for-feedback" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Feedback QR</span>
+          </Nav.Link>
+        </div>
       </div>
     </Nav>
   );
@@ -149,6 +160,7 @@ const Operations = () => {
             <Route path="/operations/inventory-details/:id" component={InventoryDetails} />
 
             <Route path="/operations/feedback" component={Feedback} />
+            <Route path="/operations/qr-for-feedback" component={QRforFeedback} /> 
             
           </Switch>
         </Col>

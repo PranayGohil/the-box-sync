@@ -1,5 +1,6 @@
 const User = require("../models/userModel");
 const crypto = require("crypto");
+const { sendEmail } = require("../utils/emailService");
 
 const addFeedback = async (req, res) => {
   try {

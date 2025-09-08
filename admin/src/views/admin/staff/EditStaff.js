@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import { useParams, useHistory } from 'react-router-dom';
-import { Row, Col, Card, Button, Form } from 'react-bootstrap';
+import { Row, Col, Card, Button, Form, Modal, Alert } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
 import { Country, State, City } from "country-state-city";
+import * as faceapi from "face-api.js";
+import Webcam from "react-webcam";
+import { AuthContext } from 'contexts/AuthContext';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const EditStaff = () => {
     const title = 'Edit Staff';
@@ -27,6 +31,17 @@ const EditStaff = () => {
     const [states, setStates] = useState([]);
     const [cities, setCities] = useState([]);
     const [positions, setPositions] = useState([]);
+
+    // Face capture states
+    const [showFaceModal, setShowFaceModal] = useState(false);
+    const webcamRef = useRef(null);
+    const [faceDescriptor, setFaceDescriptor] = useState(null);
+    const [faceBox, setFaceBox] = useState(null);
+    const [isDetecting, setIsDetecting] = useState(false);
+    const [isCapturing, setIsCapturing] = useState(false);
+    const [captureStatus, setCaptureStatus] = useState("none");
+    const [captureErrorMessage, setCaptureErrorMessage] = useState("");
+    const { userSubscriptions, activePlans } = useContext(AuthContext);
 
     const editStaff = Yup.object({
         staff_id: Yup.string()
@@ -62,8 +77,7 @@ const EditStaff = () => {
                 "fileCheck",
                 "File must be a valid image (jpeg, png, jpg, webp) and smaller than 2MB",
                 (value) => {
-                    console.log("Value : ", value);
-                    if (!value) return true; // Skip validation if no file is selected
+                    if (!value) return true;
                     return (
                         ["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(
                             value.type
@@ -71,8 +85,6 @@ const EditStaff = () => {
                     );
                 }
             ),
-
-        // Updated validation for images to not be required
 
         document_type: Yup.string()
             .required("Document type is required")
@@ -89,7 +101,7 @@ const EditStaff = () => {
                 "fileCheck",
                 "File must be a valid image (jpeg, png, jpg, webp) and smaller than 2MB",
                 (value) => {
-                    if (!value) return true; // Skip validation if no file is selected
+                    if (!value) return true;
                     return (
                         ["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(
                             value.type
@@ -104,7 +116,7 @@ const EditStaff = () => {
                 "fileCheck",
                 "File must be a valid image (jpeg, png, jpg, webp) and smaller than 2MB",
                 (value) => {
-                    if (!value) return true; // Skip validation if no file is selected
+                    if (!value) return true;
                     return (
                         ["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(
                             value.type
@@ -113,6 +125,102 @@ const EditStaff = () => {
                 }
             ),
     });
+
+    const loadModels = async () => {
+        await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
+        await faceapi.nets.faceRecognitionNet.loadFromUri("/models");
+        await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
+    };
+
+    useEffect(() => {
+        loadModels().then(() => {
+            console.log("Face detection models loaded");
+        });
+    }, []);
+
+    useEffect(() => {
+        if (userSubscriptions.length > 0) {
+            const hasStaffPlan = userSubscriptions.some(
+                (subscription) =>
+                    subscription.plan_name === "Staff Management" &&
+                    activePlans.includes("Staff Management")
+            );
+
+            if (!hasStaffPlan) {
+                alert("You need to buy or renew to Staff Management plan to access this page.");
+                history.push("/subscription");
+            }
+        }
+    }, [activePlans, userSubscriptions, history]);
+
+    useEffect(() => {
+        let interval;
+        const detectFace = async () => {
+            if (
+                webcamRef.current &&
+                webcamRef.current.video.readyState === 4 &&
+                faceapi.nets.tinyFaceDetector.params
+            ) {
+                const video = webcamRef.current.video;
+                const detection = await faceapi
+                    .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                    .withFaceLandmarks()
+                    .withFaceDescriptor();
+
+                const canvas = document.getElementById("faceCanvas");
+                const dims = faceapi.matchDimensions(canvas, video, true);
+                const ctx = canvas.getContext("2d");
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (detection) {
+                    const resized = faceapi.resizeResults(detection, dims);
+                    faceapi.draw.drawDetections(canvas, resized);
+                    setFaceBox(resized.detection.box);
+                } else {
+                    setFaceBox(null);
+                }
+            }
+        };
+
+        if (showFaceModal) {
+            setIsDetecting(true);
+            interval = setInterval(detectFace, 300);
+        }
+
+        return () => {
+            setIsDetecting(false);
+            clearInterval(interval);
+            const clearCanvas = document.getElementById("faceCanvas");
+            if (clearCanvas) {
+                const ctx = clearCanvas.getContext("2d");
+                ctx.clearRect(0, 0, clearCanvas.width, clearCanvas.height);
+            }
+        };
+    }, [showFaceModal]);
+
+    const handleFaceCapture = async () => {
+        try {
+            const screenshot = webcamRef.current.getScreenshot();
+            const img = await faceapi.fetchImage(screenshot);
+            const detection = await faceapi
+                .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
+                .withFaceLandmarks()
+                .withFaceDescriptor();
+
+            if (detection) {
+                const descriptorArray = Array.from(detection.descriptor);
+                setFaceDescriptor(descriptorArray);
+                setCaptureStatus("success");
+                setCaptureErrorMessage("");
+            } else {
+                setCaptureStatus("error");
+                setCaptureErrorMessage("No face detected. Please try again.");
+            }
+        } catch (err) {
+            setCaptureStatus("error");
+            setCaptureErrorMessage("Error capturing face. Try again.");
+        }
+    };
 
     const formik = useFormik({
         initialValues: {
@@ -149,6 +257,11 @@ const EditStaff = () => {
                 if (values.photo instanceof File) formData.append("photo", values.photo);
                 if (values.front_image instanceof File) formData.append("front_image", values.front_image);
                 if (values.back_image instanceof File) formData.append("back_image", values.back_image);
+
+                // Add face descriptor if captured
+                if (faceDescriptor) {
+                    formData.append("face_encoding", JSON.stringify(faceDescriptor));
+                }
 
                 await axios.put(
                     `${process.env.REACT_APP_API}/staff/edit/${id}`,
@@ -211,11 +324,17 @@ const EditStaff = () => {
                 setFieldValue("position", staff.position);
                 setFieldValue("document_type", staff.document_type);
                 setFieldValue("id_number", staff.id_number);
-                
+
+                // Set face descriptor if exists
+                if (staff.face_encoding && staff.face_encoding.length > 0) {
+                    setFaceDescriptor(staff.face_encoding);
+                    setCaptureStatus("success");
+                }
+
                 // Load state & city dropdowns
                 setStates(State.getStatesOfCountry(staff.country));
                 setCities(City.getCitiesOfState(staff.country, staff.state));
-                
+
                 setPhotoPreview(`${process.env.REACT_APP_UPLOAD_DIR}/${staff.photo}`)
                 setFrontImagePreview(`${process.env.REACT_APP_UPLOAD_DIR}/${staff.front_image}`)
                 setBackImagePreview(`${process.env.REACT_APP_UPLOAD_DIR}/${staff.back_image}`)
@@ -270,6 +389,7 @@ const EditStaff = () => {
                                     variant="outline-primary"
                                     onClick={() => history.push("/staff/view")}
                                 >
+                                    <CsLineIcons icon="eye" className="me-2" />
                                     View Staff
                                 </Button>
                             </Col>
@@ -277,9 +397,9 @@ const EditStaff = () => {
                     </div>
 
                     {fileUploadError && (
-                        <div className="alert alert-danger" role="alert">
+                        <Alert variant="danger" className="mb-4">
                             {fileUploadError}
-                        </div>
+                        </Alert>
                     )}
 
                     <Form onSubmit={handleSubmit}>
@@ -657,14 +777,137 @@ const EditStaff = () => {
                             </Row>
                         </Card>
 
+                        {/* Face Capture Card */}
+                        <Card body className="mb-4">
+                            <h5 className="mb-3">Face Capture</h5>
+
+                            {captureStatus === "success" ? (
+                                <Alert variant="success" className="mb-3">
+                                    <CsLineIcons icon="check" className="me-2" />
+                                    Face captured successfully. You can now update the staff record.
+                                </Alert>
+                            ) : captureStatus === "error" ? (
+                                <Alert variant="danger" className="mb-3">
+                                    <CsLineIcons icon="warning" className="me-2" />
+                                    {captureErrorMessage}
+                                </Alert>
+                            ) : faceDescriptor && faceDescriptor.length > 0 ? (
+                                <Alert variant="info" className="mb-3">
+                                    <CsLineIcons icon="info" className="me-2" />
+                                    Face data is already captured. You can recapture if needed.
+                                </Alert>
+                            ) : (
+                                <Alert variant="warning" className="mb-3">
+                                    <CsLineIcons icon="warning" className="me-2" />
+                                    Face data not captured yet. Please capture to proceed.
+                                </Alert>
+                            )}
+
+                            <Button
+                                variant={faceDescriptor && faceDescriptor.length > 0 ? "outline-warning" : "primary"}
+                                onClick={() => setShowFaceModal(true)}
+                                className="me-2"
+                            >
+                                <CsLineIcons icon="camera" className="me-2" />
+                                {faceDescriptor && faceDescriptor.length > 0 ? "Recapture Face" : "Capture Face"}
+                            </Button>
+                        </Card>
+
                         <div className="d-flex justify-content-start">
                             <Button variant="success" type="submit" className="mx-2 px-4">
+                                <CsLineIcons icon="check" className="me-2" />
                                 Submit Changes
                             </Button>
                         </div>
                     </Form>
                 </Col>
             </Row>
+
+            {/* Face Capture Modal */}
+            <Modal
+                show={showFaceModal}
+                onHide={() => setShowFaceModal(false)}
+                centered
+                size="lg"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Face Capture</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="d-flex flex-column align-items-center">
+                    <div
+                        style={{
+                            position: "relative",
+                            width: "100%",
+                            maxWidth: "640px",
+                            aspectRatio: "4 / 3",
+                            margin: "0 auto",
+                            background: "#000",
+                        }}
+                    >
+                        <Webcam
+                            ref={webcamRef}
+                            audio={false}
+                            screenshotFormat="image/jpeg"
+                            videoConstraints={{
+                                facingMode: "user",
+                            }}
+                            style={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                zIndex: 1,
+                                borderRadius: "8px",
+                            }}
+                        />
+
+                        <canvas
+                            id="faceCanvas"
+                            width={640}
+                            height={480}
+                            style={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                width: "100%",
+                                height: "100%",
+                                zIndex: 2,
+                                pointerEvents: "none",
+                            }}
+                        />
+                    </div>
+
+                    <Button
+                        variant="primary"
+                        className="mt-4"
+                        disabled={!faceBox || isCapturing}
+                        onClick={async () => {
+                            setIsCapturing(true);
+                            await handleFaceCapture();
+                            setIsCapturing(false);
+                            setShowFaceModal(false);
+                        }}
+                    >
+                        {isCapturing ? (
+                            <>
+                                <span
+                                    className="spinner-border spinner-border-sm me-2"
+                                    role="status"
+                                    aria-hidden="true"
+                                />
+                                Capturing...
+                            </>
+                        ) : (
+                            <>
+                                <CsLineIcons icon="camera" className="me-2" />
+                                Capture Face
+                            </>
+                        )}
+                    </Button>
+                </Modal.Body>
+            </Modal>
         </>
     );
 };
