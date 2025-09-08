@@ -11,14 +11,14 @@ const adminAuth = require("../middlewares/adminAuth");
 
 const feedbackRouter = express.Router();
 
-feedbackRouter.route("/addfeedback").post(authMiddleware, addFeedback);
-feedbackRouter.route("/getfeedbacks").get(authMiddleware, getFeedbacks);
+feedbackRouter.route("/add").post(authMiddleware, addFeedback);
+feedbackRouter.route("/get").get(authMiddleware, getFeedbacks);
 feedbackRouter
-  .route("/deletefeedback/:id")
+  .route("/delete/:id")
   .delete(authMiddleware, deleteFeedback);
-feedbackRouter.route("/replyfeedback/:id").post(authMiddleware, replyFeedback);
+feedbackRouter.route("/reply/:id").post(authMiddleware, replyFeedback);
 feedbackRouter
-  .route("/generate-feedback-token")
+  .route("/generate-token")
   .post(authMiddleware, adminAuth, generateFeedbackToken);
 
 module.exports = feedbackRouter;

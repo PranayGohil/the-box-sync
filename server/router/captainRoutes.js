@@ -24,6 +24,6 @@ captainRouter
   .route("/changecaptainpassword")
   .post(authMiddleware, adminAuth, changeCaptainPassword);
 
-captainRouter.route("/captain-login").post(captainLogin);
+captainRouter.route("/login").post(captainLogin);
 
 module.exports = captainRouter;

@@ -324,8 +324,9 @@ const DineInOrder = () => {
 
                                 <Badge
                                   variant="outline"
-                                  className={`text-white mb-2 ${category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
-                                    }`}
+                                  className={`text-white mb-2 ${
+                                    category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
+                                  }`}
                                 >
                                   {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
                                 </Badge>
@@ -471,9 +472,8 @@ const DineInOrder = () => {
                     <Button variant="primary" onClick={() => history.push('/dashboard')}>
                       Go to Dashboard
                     </Button>
-                  ) : (orderStatus === 'KOT') && (
-                    /* Show Payment button only if no items are 'Preparing' */
-                    !orderItems.some((item) => item.status === 'Preparing') && (
+                  ) : (
+                    orderStatus === 'KOT' && (
                       <Button variant="success" onClick={() => setShowPaymentModal(true)}>
                         Process Payment
                       </Button>

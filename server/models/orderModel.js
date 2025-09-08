@@ -82,7 +82,7 @@ const orderSchema = new Schema({
   order_source: {
     type: String, // 'Manager' or 'QSR'
     required: true,
-    enum: ["Manager", "QSR"], 
+    enum: ["Manager", "QSR", "Captain"], 
   },
 });
 

@@ -85,10 +85,11 @@ const getActiveOrders = async (req, res) => {
     const { source } = req.body;
     console.log("Source : ", source);
 
-    if(!source) return res.status(400).json({ message: "Source not provided" });
+    if (!source)
+      return res.status(400).json({ message: "Source not provided" });
 
     let activeDineInTables = [];
-    if(source === "Manager") {
+    if (source === "Manager") {
       // Active Dine In Tables
       activeDineInTables = await Order.find({
         order_type: "Dine In",
@@ -97,10 +98,10 @@ const getActiveOrders = async (req, res) => {
       });
     }
 
-    if(source === "QSR") {
+    if (source === "QSR") {
       // Active Dine In Tables
       activeDineInTables = await Order.find({
-        order_type: "QSR Dine In",
+        order_type: "Dine In",
         $or: [
           { order_status: { $ne: "Paid" } },
           { "order_items.status": "Preparing" },
@@ -332,11 +333,12 @@ const dineInController = async (req, res) => {
     const orderId = orderInfo.order_id;
     orderInfo.restaurant_id = req.user;
 
-    if (!tableId) {
-      return res
-        .status(400)
-        .json({ message: "Table ID is required for Dine In orders" });
-    }
+    // if (!tableId) {
+    //   console.error("Table ID is required for Dine In orders");
+    //   return res
+    //     .status(400)
+    //     .json({ message: "Table ID is required for Dine In orders" });
+    // }
 
     let savedOrder;
     let savedCustomer;
@@ -398,6 +400,7 @@ const dineInController = async (req, res) => {
           new: true,
         });
         if (!savedOrder) {
+          console.error("Order not found for cancellation");
           return res.status(404).json({ message: "Order not found" });
         }
       }
@@ -419,6 +422,7 @@ const dineInController = async (req, res) => {
       });
 
       if (!savedOrder) {
+        console.error("Order not found for update");
         return res.status(404).json({ message: "Order not found" });
       }
 
@@ -439,6 +443,9 @@ const dineInController = async (req, res) => {
     }
 
     // ✅ 5. Handle new order creation
+    const token = await generateToken(req.user, orderInfo.order_source);
+    orderInfo.token = token;
+
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();
 

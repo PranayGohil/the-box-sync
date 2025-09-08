@@ -28,7 +28,8 @@ export const AuthProvider = ({ children }) => {
                         setCurrentUser(null);
                         setIsLogin(false);
                     }
-                    setCurrentUser(res.data.user);
+                    console.log(res.data);
+                    setCurrentUser(res.data);
                     setIsLogin(true);
                 })
                 .catch(() => {

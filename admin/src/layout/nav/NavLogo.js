@@ -6,14 +6,8 @@ const NavLogo = () => {
   return (
     <div className="logo position-relative">
       <Link to={DEFAULT_PATHS.APP}>
-        {/*
-          Logo can be added directly
-          <img src="/img/logo/logo-white.svg" alt="logo" />
-          Or added via css to provide different ones for different color themes
-         */}
-        <h1> 
-          TheBox
-        </h1>
+        {/* <div className="img" /> */}
+        <h1 className='fw-bold text-white pb-0 mb-0'> THE BOX </h1>
       </Link>
     </div>
   );

@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
             setCurrentUser(null);
             setIsLogin(false);
           }
-          setCurrentUser(res.data.user);
+          setCurrentUser(res.data);
           setIsLogin(true);
         })
         .catch(() => {
