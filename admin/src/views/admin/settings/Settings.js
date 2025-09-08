@@ -14,13 +14,14 @@ import Gst from './tax-charges/Gst';
 import Container from './tax-charges/Container';
 import Subscription from './subscription/Subscription';
 import ManageWebsite from './manage-website/ManageWebsite';
+import ForgotPassword from './forgot-password/ForgotPassword';
 
 const NavContent = () => {
   return (
     <Nav className="flex-column">
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/settings/profile" className="px-0">
-          <CsLineIcons icon="activity" className="me-2 sw-3" size="17" />
+          <CsLineIcons icon="user" className="me-2 sw-3" size="17" />
           <span className="align-middle">Account</span>
         </Nav.Link>
         <div>
@@ -37,7 +38,7 @@ const NavContent = () => {
 
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/settings/gst" className="px-0">
-          <CsLineIcons icon="shield" className="me-2 sw-3" size="17" />
+          <CsLineIcons icon="dollar" className="me-2 sw-3" size="17" />
           <span className="align-middle">Tax & Charges</span>
         </Nav.Link>
         <div>
@@ -54,7 +55,7 @@ const NavContent = () => {
 
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/settings/subscription" className="px-0">
-          <CsLineIcons icon="notification" className="me-2 sw-3" size="17" />
+          <CsLineIcons icon="star" className="me-2 sw-3" size="17" />
           <span className="align-middle">Subscription</span>
         </Nav.Link>
         {/* <div>
@@ -74,7 +75,7 @@ const NavContent = () => {
       </div>
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/settings/manage-website" className="px-0">
-          <CsLineIcons icon="notification" className="me-2 sw-3" size="17" />
+          <CsLineIcons icon="web-page" className="me-2 sw-3" size="17" />
           <span className="align-middle">Manage Website</span>
         </Nav.Link>
         {/* <div>
@@ -91,6 +92,12 @@ const NavContent = () => {
                         <span className="align-middle">Add Inventory</span>
                     </Nav.Link>
                 </div> */}
+      </div>
+      <div className="mb-2">
+        <Nav.Link as={NavLink} to="/settings/forgot-password" className="px-0">
+          <CsLineIcons icon="key" className="me-2 sw-3" size="17" />
+          <span className="align-middle">Forgot Password</span>
+        </Nav.Link>
       </div>
     </Nav>
   );
@@ -122,6 +129,7 @@ const Settings = () => {
             <Route path="/settings/container-charge" render={() => <Container />} />
             <Route path="/settings/subscription" render={() => <Subscription />} />
             <Route path="/settings/manage-website" render={() => <ManageWebsite />} />
+            <Route path="/settings/forgot-password" render={() => <ForgotPassword />} />
           </Switch>
         </Col>
       </Row>

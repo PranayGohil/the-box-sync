@@ -1,23 +1,44 @@
-const nodemailer = require("nodemailer");
+// emailService.js
+const nodemailer = require('nodemailer');
+
+const {
+  SMTP_HOST,
+  SMTP_PORT,
+  SMTP_USER,
+  SMTP_PASS,
+  EMAIL_FROM
+} = process.env;
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp.ethereal.email',
-  port: 587,
+  host: SMTP_HOST,
+  port: Number(SMTP_PORT) || 465,
+  secure: Number(SMTP_PORT) === 465, // true for 465 (SSL), false for 587 (STARTTLS)
   auth: {
-    user: 'jermaine48@ethereal.email',
-    pass: '1czdm4yScrB9wm9eM5'
-  }
+    user: SMTP_USER,
+    pass: SMTP_PASS,
+  },
+  // Optional pooling if you send bursts:
+  // pool: true,
+  // maxConnections: 5,
+  // maxMessages: 100,
 });
 
-async function sendEmail({ to, subject, html }) {
+async function sendEmail({ to, subject, html, text, replyTo }) {
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: EMAIL_FROM || SMTP_USER, // must be your Hostinger mailbox/domain
     to,
     subject,
-    html
+    text: text || undefined,       // include text for better deliverability
+    html,
+    replyTo
   };
 
-  await transporter.sendMail(mailOptions);
+  return transporter.sendMail(mailOptions);
 }
 
-module.exports = { sendEmail };
+// Optional: quick health check you can call at startup
+async function verifyTransporter() {
+  return transporter.verify();
+}
+
+module.exports = { sendEmail, verifyTransporter };

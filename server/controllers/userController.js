@@ -267,7 +267,7 @@ const sendAdminOtp = async (req, res) => {
       subject: "OTP Verification for Password Reset from TheBox",
       html: adminOtpMail,
     });
-
+    console.log("OTP sent to your email.", otp);
     res.json({ message: "OTP sent to your email." });
   } catch (err) {
     console.error(err);

@@ -24,12 +24,12 @@ userRouter.route("/check-email").post(emailCheck);
 userRouter.route("/register").post(upload.single('logo'), register);
 userRouter.route("/login").post(login);
 userRouter.route("/logout").get(logout);
-userRouter.route("/sendadminotp").post(authMiddleware, sendAdminOtp);
+userRouter.route("/send-otp").post(authMiddleware, sendAdminOtp);
 userRouter
-.route("/verifyadminotp")
+.route("/verify-otp")
 .post(authMiddleware, verifyAdminOtp);
 userRouter
-.route("/resetadminpassword")
+.route("/reset-password")
 .post(authMiddleware, resetAdminPassword);
 userRouter.route("/get").get(authMiddleware, getUserData);
 userRouter.route("/get/:code").get(authMiddleware, getUserDataByCode);
