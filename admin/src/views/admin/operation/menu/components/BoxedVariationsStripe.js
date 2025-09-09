@@ -35,7 +35,7 @@ const BoxedVariationsStripe = ({ columns, data, category }) => {
       <Row>
         <Col sm="12" md="12" lg="12" xxl="12" className="mb-1">
           {getMealIcon(category.meal_type)}
-          {category && <h5 className="mb-2">{category}</h5>}
+          {category && <h5 className="mb-2">{category.category}</h5>}
         </Col>
         <Col sm="12" md="5" lg="3" xxl="2" className="mb-1">
           <div className="d-inline-block float-md-start me-1 search-input-container border border-separator bg-foreground search-sm" style={{ width: '100px' }}>

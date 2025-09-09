@@ -138,20 +138,22 @@ const EditStaff = () => {
         });
     }, []);
 
-    useEffect(() => {
-        if (userSubscriptions.length > 0) {
-            const hasStaffPlan = userSubscriptions.some(
-                (subscription) =>
-                    subscription.plan_name === "Staff Management" &&
-                    activePlans.includes("Staff Management")
-            );
+    // useEffect(() => {
+    //     if (userSubscriptions.length > 0) {
+    //         const hasStaffPlan = userSubscriptions.some(
+    //             (subscription) =>
+    //                 subscription.plan_name === "Staff Management" &&
+    //                 activePlans.includes("Staff Management")
+    //         );
 
-            if (!hasStaffPlan) {
-                alert("You need to buy or renew to Staff Management plan to access this page.");
-                history.push("/subscription");
-            }
-        }
-    }, [activePlans, userSubscriptions, history]);
+    //         if (!hasStaffPlan) {
+    //             alert("You need to buy or renew to Staff Management plan to access this page.");
+    //             history.push("/subscription");
+    //         }
+    //     }
+    // }, [activePlans, userSubscriptions, history]);
+
+    // Replace your existing useEffect for face detection with this:
 
     useEffect(() => {
         let interval;
@@ -161,22 +163,33 @@ const EditStaff = () => {
                 webcamRef.current.video.readyState === 4 &&
                 faceapi.nets.tinyFaceDetector.params
             ) {
-                const video = webcamRef.current.video;
-                const detection = await faceapi
-                    .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
-                    .withFaceLandmarks()
-                    .withFaceDescriptor();
-
+                const { video } = webcamRef.current;
                 const canvas = document.getElementById("faceCanvas");
-                const dims = faceapi.matchDimensions(canvas, video, true);
-                const ctx = canvas.getContext("2d");
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                if (detection) {
-                    const resized = faceapi.resizeResults(detection, dims);
-                    faceapi.draw.drawDetections(canvas, resized);
-                    setFaceBox(resized.detection.box);
-                } else {
+                // Check if canvas exists before proceeding
+                if (!canvas) {
+                    return;
+                }
+
+                try {
+                    const detection = await faceapi
+                        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                        .withFaceLandmarks()
+                        .withFaceDescriptor();
+
+                    const dims = faceapi.matchDimensions(canvas, video, true);
+                    const ctx = canvas.getContext("2d");
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    if (detection) {
+                        const resized = faceapi.resizeResults(detection, dims);
+                        faceapi.draw.drawDetections(canvas, resized);
+                        setFaceBox(resized.detection.box);
+                    } else {
+                        setFaceBox(null);
+                    }
+                } catch (error) {
+                    console.error("Face detection error:", error);
                     setFaceBox(null);
                 }
             }
@@ -184,24 +197,33 @@ const EditStaff = () => {
 
         if (showFaceModal) {
             setIsDetecting(true);
-            interval = setInterval(detectFace, 300);
+            // Add a small delay to ensure the canvas is rendered
+            setTimeout(() => {
+                interval = setInterval(detectFace, 300);
+            }, 100);
         }
 
         return () => {
             setIsDetecting(false);
-            clearInterval(interval);
-            const clearCanvas = document.getElementById("faceCanvas");
-            if (clearCanvas) {
-                const ctx = clearCanvas.getContext("2d");
-                ctx.clearRect(0, 0, clearCanvas.width, clearCanvas.height);
+            if (interval) {
+                clearInterval(interval);
+            }
+            // Clear canvas safely
+            const canvas = document.getElementById("faceCanvas");
+            if (canvas) {
+                const ctx = canvas.getContext("2d");
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
         };
     }, [showFaceModal]);
 
+    // Also update your handleFaceCapture function:
     const handleFaceCapture = async () => {
         try {
+            setIsCapturing(true);
             const screenshot = webcamRef.current.getScreenshot();
             const img = await faceapi.fetchImage(screenshot);
+
             const detection = await faceapi
                 .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
                 .withFaceLandmarks()
@@ -209,6 +231,7 @@ const EditStaff = () => {
 
             if (detection) {
                 const descriptorArray = Array.from(detection.descriptor);
+                console.log("Description Array", descriptorArray);
                 setFaceDescriptor(descriptorArray);
                 setCaptureStatus("success");
                 setCaptureErrorMessage("");
@@ -217,8 +240,11 @@ const EditStaff = () => {
                 setCaptureErrorMessage("No face detected. Please try again.");
             }
         } catch (err) {
+            console.error("Face capture error:", err);
             setCaptureStatus("error");
             setCaptureErrorMessage("Error capturing face. Try again.");
+        } finally {
+            setIsCapturing(false);
         }
     };
 
@@ -884,10 +910,12 @@ const EditStaff = () => {
                         className="mt-4"
                         disabled={!faceBox || isCapturing}
                         onClick={async () => {
-                            setIsCapturing(true);
                             await handleFaceCapture();
-                            setIsCapturing(false);
-                            setShowFaceModal(false);
+                            if (captureStatus === "success") {
+                                setTimeout(() => {
+                                    setShowFaceModal(false);
+                                }, 1000); 
+                            }
                         }}
                     >
                         {isCapturing ? (

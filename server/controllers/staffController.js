@@ -104,6 +104,16 @@ const updateStaff = async (req, res) => {
       staffData.back_image = `/staff/id_cards/${req.files.back_image[0].filename}`;
     }
 
+    // Parse face_encoding if it exists
+    if (staffData.face_encoding) {
+      try {
+        staffData.face_encoding = JSON.parse(staffData.face_encoding);
+      } catch (error) {
+        console.error("Error parsing face_encoding:", error);
+        return res.status(400).json({ error: "Invalid face encoding data" });
+      }
+    }
+
     // Update the staff member
     const updatedStaff = await Staff.findByIdAndUpdate(
       id,

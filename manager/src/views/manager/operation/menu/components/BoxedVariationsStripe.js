@@ -12,7 +12,8 @@ import ControlsPageSize from './ControlsPageSize';
 
 const BoxedVariationsStripe = ({ columns, data, category }) => {
 
-  const eggIcon = bootstrapIcons.find((icon) => icon.c === 'bi-egg');
+  const alarmIcon = bootstrapIcons.find(i => i.c === 'bi-alarm');
+
 
   const tableInstance = useTable(
     { columns, data, initialState: { pageIndex: 0, sortBy: [{ id: 'name', desc: true }] } },
@@ -27,7 +28,7 @@ const BoxedVariationsStripe = ({ columns, data, category }) => {
   const getMealIcon = (mealType) => {
     if (mealType === 'veg') return <CsLineIcons icon="leaf" width="20" height="20" className="me-2 text-success" />;
     if (mealType === 'non-veg') return <CsLineIcons icon="bone" width="20" height="20" className="me-2 text-danger" />;
-    return <i className={`bi ${eggIcon.c}`} />;
+    return <i className="bi-alarm text-danger fs-4" />;
   };
 
   return (
@@ -35,7 +36,7 @@ const BoxedVariationsStripe = ({ columns, data, category }) => {
       <Row>
         <Col sm="12" md="12" lg="12" xxl="12" className="mb-1">
           {getMealIcon(category.meal_type)}
-          {category && <h5 className="mb-2">{category}</h5>}
+          {category && <h5 className="mb-2">{category.category}</h5>}
         </Col>
         <Col sm="12" md="5" lg="3" xxl="2" className="mb-1">
           <div className="d-inline-block float-md-start me-1 search-input-container border border-separator bg-foreground search-sm" style={{ width: '100px' }}>

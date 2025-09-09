@@ -6,3 +6,9 @@ Remove camelcase dangle
 
 Avoid no-restricted-syntax
     // eslint-disable-line no-restricted-syntax
+
+
+Use of CsInterfaceIcons
+    -> import csInterfaceIcons from 'views/interface/content/icons/data/cs-interface-icons-tags';
+    -> const userIcon = csInterfaceIcons.find((icon) => icon.c === 'cs-user');
+    -> <i className={`${userIcon.c}`} />
