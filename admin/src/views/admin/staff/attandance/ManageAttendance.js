@@ -101,7 +101,7 @@ export default function ManageAttendance() {
     const handleAbsent = async (staffId) => {
         try {
             await axios.post(
-                `${process.env.REACT_APP_API}/staff/markabsent`,
+                `${process.env.REACT_APP_API}/staff/mark-absent`,
                 {
                     staff_id: staffId,
                     date: getTodayDate(),
@@ -269,7 +269,7 @@ export default function ManageAttendance() {
                                 variant="outline-dark"
                                 size="sm"
                                 className="btn-icon btn-icon-only"
-                                onClick={() => history.push(`/staff/attendance/${row.original._id}`)}
+                                onClick={() => history.push(`/staff/attendance/view/${row.original._id}`)}
                                 title="View Attendance History"
                             >
                                 <CsLineIcons icon="eye" />

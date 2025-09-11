@@ -24,6 +24,6 @@ attendanceRouter
   .route("/changeattendancepassword")
   .post(authMiddleware, adminAuth, changeAttendancePassword);
 
-attendanceRouter.route("/attendance-login").post(attendanceLogin);
+attendanceRouter.route("/login").post(attendanceLogin);
 
 module.exports = attendanceRouter;

@@ -43,7 +43,8 @@ const OrderHistory = () => {
           id: _id,
         }));
         console.log("Fetched Orders:", transformedOrders);
-        setData(transformedOrders);
+        const sortedOrders = transformedOrders.sort((a, b) => new Date(b.order_date) - new Date(a.order_date));
+        setData(sortedOrders);
       } else {
         console.log(res.data.message);
         setError(res.data.message);

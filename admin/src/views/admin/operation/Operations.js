@@ -26,6 +26,7 @@ import InventoryDetails from './inventory/InventoryDetails';
 
 import Feedback from './feedback/Feedback';
 import QRforFeedback from './feedback/QRforFeedback';
+import AddFeedback from './feedback/AddFeedback';
 
 const NavContent = () => {
   return (
@@ -116,6 +117,10 @@ const NavContent = () => {
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Feedback QR</span>
           </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/add-feedback" className="px-0 pt-1"> 
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Add Feedback</span>
+          </Nav.Link>
         </div>
       </div>
     </Nav>
@@ -161,6 +166,7 @@ const Operations = () => {
 
             <Route path="/operations/feedback" component={Feedback} />
             <Route path="/operations/qr-for-feedback" component={QRforFeedback} /> 
+            <Route path="/operations/add-feedback" component={AddFeedback} />
             
           </Switch>
         </Col>

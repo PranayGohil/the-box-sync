@@ -42,8 +42,9 @@ const OrderHistory = () => {
           ...rest,
           id: _id,
         }));
-        console.log("Fetched Orders:", transformedOrders);
-        setData(transformedOrders);
+        console.log('Fetched Orders:', transformedOrders);
+        const sortedOrders = transformedOrders.sort((a, b) => new Date(b.order_date) - new Date(a.order_date));
+        setData(sortedOrders);
       } else {
         console.log(res.data.message);
         setError(res.data.message);
@@ -60,22 +61,18 @@ const OrderHistory = () => {
 
   const handlePrint = async (orderId) => {
     try {
-      const orderResponse = await axios.get(
-        `${process.env.REACT_APP_API}/order/get/${orderId}`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
+      const orderResponse = await axios.get(`${process.env.REACT_APP_API}/order/get/${orderId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
 
-      const userResponse = await axios.get(
-        `${process.env.REACT_APP_API}/user/get`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
+      const userResponse = await axios.get(`${process.env.REACT_APP_API}/user/get`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
       const order = orderResponse.data.data;
       const userData = userResponse.data;
 
-      const printDiv = document.createElement("div");
-      printDiv.id = "printable-invoice";
-      printDiv.style.display = "none";
+      const printDiv = document.createElement('div');
+      printDiv.id = 'printable-invoice';
+      printDiv.style.display = 'none';
       document.body.appendChild(printDiv);
 
       printDiv.innerHTML = `
@@ -83,23 +80,17 @@ const OrderHistory = () => {
           <div style="text-align: center; margin-bottom: 10px;">
             <h3 style="margin: 10px;">${userData.name}</h3>
             <p style="margin: 0; font-size: 12px;">${userData.address}</p>
-            <p style="margin: 0; font-size: 12px;">${userData.city}, ${userData.state
-        } ${userData.pincode}</p>
-            <p style="margin: 10px; font-size: 12px;"><strong>Phone: </strong> ${userData.mobile
-        }</p>
+            <p style="margin: 0; font-size: 12px;">${userData.city}, ${userData.state} ${userData.pincode}</p>
+            <p style="margin: 10px; font-size: 12px;"><strong>Phone: </strong> ${userData.mobile}</p>
           </div>
           <hr style="border: 0.5px dashed #ccc;" />
-          <p><strong>Name:</strong> ${order?.customer_name || "(M: 1234567890)"
-        }</p>
+          <p><strong>Name:</strong> ${order?.customer_name || '(M: 1234567890)'}</p>
           <hr style="border: 0.5px dashed #ccc;" />
           <table style="font-size: 12px; margin-bottom: 10px;">
             <tr>
             <td style="width: 50%; height: 30px;">
-              <strong>Date:</strong> ${new Date(
-          order.order_date
-        ).toLocaleString()}</td>
-                <td style="text-align: right;"><strong>${order.order_type
-        }</strong>
+              <strong>Date:</strong> ${new Date(order.order_date).toLocaleString()}</td>
+                <td style="text-align: right;"><strong>${order.order_type}</strong>
                 </td>
             </tr>
             <tr>
@@ -119,34 +110,28 @@ const OrderHistory = () => {
             </thead>
             <tbody>
               ${order.order_items
-          .map(
-            (item) => `
+                .map(
+                  (item) => `
                   <tr>
                     <td>${item.dish_name}</td>
                     <td style="text-align: center;">${item.quantity}</td>
                     <td style="text-align: center;">${item.dish_price}</td>
-                    <td style="text-align: right;">₹ ${item.dish_price * item.quantity
-              }</td>
+                    <td style="text-align: right;">₹ ${item.dish_price * item.quantity}</td>
                   </tr>
                 `
-          )
-          .join("")}
+                )
+                .join('')}
               <tr>
                 <td colspan="3" style="text-align: right; border-top: 1px dashed #ccc"><strong>Sub Total: </strong></td>
-                <td style="text-align: right; border-top: 1px dashed #ccc">₹ ${order.sub_total
-        }</td>
+                <td style="text-align: right; border-top: 1px dashed #ccc">₹ ${order.sub_total}</td>
               </tr>
               <tr>
-                <td colspan="3" style="text-align: right;"><strong>CGST (${order.cgst_amount || 0
-        } %):</strong></td>
-                <td style="text-align: right;">₹ ${((order.cgst_amount || 0) * order.bill_amount) / 100
-        }</td>
+                <td colspan="3" style="text-align: right;"><strong>CGST (${order.cgst_amount || 0} %):</strong></td>
+                <td style="text-align: right;">₹ ${((order.cgst_amount || 0) * order.bill_amount) / 100}</td>
               </tr>
               <tr>
-                <td colspan="3" style="text-align: right;"><strong>SGST (${order.sgst_amount || 0
-        } %):</strong></td>
-                <td style="text-align: right;">₹ ${((order.sgst_amount || 0) * order.bill_amount) / 100
-        }</td>
+                <td colspan="3" style="text-align: right;"><strong>SGST (${order.sgst_amount || 0} %):</strong></td>
+                <td style="text-align: right;">₹ ${((order.sgst_amount || 0) * order.bill_amount) / 100}</td>
               </tr>
               <tr>
                 <td colspan="3" style="text-align: right;"><strong>Total: </strong></td>
@@ -154,27 +139,24 @@ const OrderHistory = () => {
               </tr>
               <tr>
                 <td colspan="3" style="text-align: right;"><strong>Discount: </strong></td>
-                <td style="text-align: right;">- ₹ ${order.discount_amount || 0
-        }</td>
+                <td style="text-align: right;">- ₹ ${order.discount_amount || 0}</td>
               </tr>
               <tr>
                 <td colspan="3" style="text-align: right; border-top: 1px dashed #ccc"><strong>Paid Amount: </strong></td>
-                <td style="text-align: right; border-top: 1px dashed #ccc">₹ ${order.bill_amount
-        }</td>
+                <td style="text-align: right; border-top: 1px dashed #ccc">₹ ${order.bill_amount}</td>
               </tr>
             </tbody>
           </table>
           <hr style="border: 0.5px dashed #ccc;" />
           <div style="text-align: center; font-size: 12px;">
             <p style="margin: 10px; font-size: 12px;"><strong>FSSAI Lic No:</strong> 11224333001459</p>
-            <p style="margin: 10px; font-size: 12px;"><strong>GST No:</strong> ${userData.gst_no
-        }</p>
+            <p style="margin: 10px; font-size: 12px;"><strong>GST No:</strong> ${userData.gst_no}</p>
             <p style="margin: 10px; font-size: 12px;"><strong>Thanks, Visit Again</strong></p>
           </div>
         </div>
       `;
 
-      const printWindow = window.open("", "_blank");
+      const printWindow = window.open('', '_blank');
       printWindow.document.write(printDiv.innerHTML);
       printWindow.document.close();
       printWindow.print();
@@ -182,67 +164,70 @@ const OrderHistory = () => {
 
       document.body.removeChild(printDiv);
     } catch (err) {
-      console.error("Error fetching order or user data:", err);
+      console.error('Error fetching order or user data:', err);
     }
   };
 
-  const columns = React.useMemo(() => [
-    {
-      Header: 'Order Date',
-      accessor: 'order_date',
-      id: 'order_date_only',
-      headerClassName: 'text-muted text-small text-uppercase w-15',
-      Cell: ({ value }) => new Date(value).toLocaleDateString(),
-    },
-    {
-      Header: 'Order Time',
-      accessor: 'order_date',
-      id: 'order_time_only',
-      headerClassName: 'text-muted text-small text-uppercase w-15',
-      Cell: ({ value }) => new Date(value).toLocaleTimeString(),
-    },
-    {
-      Header: 'Customer Name',
-      accessor: 'customer_name',
-      headerClassName: 'text-muted text-small text-uppercase w-15',
-    },
-    {
-      Header: 'Table No',
-      accessor: 'table_no',
-      headerClassName: 'text-muted text-small text-uppercase w-10',
-    },
-    {
-      Header: 'Table Area',
-      accessor: 'table_area',
-      headerClassName: 'text-muted text-small text-uppercase w-10',
-    },
-    {
-      Header: 'Order Type',
-      accessor: 'order_type',
-      headerClassName: 'text-muted text-small text-uppercase w-10',
-    },
-    {
-      Header: 'Total Amount',
-      accessor: 'total_amount',
-      headerClassName: 'text-muted text-small text-uppercase w-15',
-      Cell: ({ value }) => `₹ ${value.toFixed(2)}`,
-    },
-    {
-      Header: 'Action',
-      id: 'action',
-      headerClassName: 'text-muted text-small text-uppercase w-10 text-center',
-      Cell: ({ row }) => (
-        <div className="d-flex justify-content-center">
-          <Button variant="link" size="sm" title="View" className='px-1' onClick={() => history.push(`/operations/order-details/${row.original.id}`)}>
-            <CsLineIcons icon="eye" />
-          </Button>
-          <Button variant="link" size="sm" title="Print" className='px-1' onClick={() => handlePrint(row.original.id)}>
-            <CsLineIcons icon="print" />
-          </Button>
-        </div>
-      ),
-    },
-  ], []);
+  const columns = React.useMemo(
+    () => [
+      {
+        Header: 'Order Date',
+        accessor: 'order_date',
+        id: 'order_date_only',
+        headerClassName: 'text-muted text-small text-uppercase w-15',
+        Cell: ({ value }) => new Date(value).toLocaleDateString(),
+      },
+      {
+        Header: 'Order Time',
+        accessor: 'order_date',
+        id: 'order_time_only',
+        headerClassName: 'text-muted text-small text-uppercase w-15',
+        Cell: ({ value }) => new Date(value).toLocaleTimeString(),
+      },
+      {
+        Header: 'Customer Name',
+        accessor: 'customer_name',
+        headerClassName: 'text-muted text-small text-uppercase w-15',
+      },
+      {
+        Header: 'Table No',
+        accessor: 'table_no',
+        headerClassName: 'text-muted text-small text-uppercase w-10',
+      },
+      {
+        Header: 'Table Area',
+        accessor: 'table_area',
+        headerClassName: 'text-muted text-small text-uppercase w-10',
+      },
+      {
+        Header: 'Order Type',
+        accessor: 'order_type',
+        headerClassName: 'text-muted text-small text-uppercase w-10',
+      },
+      {
+        Header: 'Total Amount',
+        accessor: 'total_amount',
+        headerClassName: 'text-muted text-small text-uppercase w-15',
+        Cell: ({ value }) => `₹ ${value.toFixed(2)}`,
+      },
+      {
+        Header: 'Action',
+        id: 'action',
+        headerClassName: 'text-muted text-small text-uppercase w-10 text-center',
+        Cell: ({ row }) => (
+          <div className="d-flex justify-content-center">
+            <Button variant="link" size="sm" title="View" className="px-1" onClick={() => history.push(`/operations/order-details/${row.original.id}`)}>
+              <CsLineIcons icon="eye" />
+            </Button>
+            <Button variant="link" size="sm" title="Print" className="px-1" onClick={() => handlePrint(row.original.id)}>
+              <CsLineIcons icon="print" />
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    []
+  );
 
   const tableInstance = useTable(
     {

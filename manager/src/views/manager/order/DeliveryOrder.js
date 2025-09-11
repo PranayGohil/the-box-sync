@@ -343,24 +343,26 @@ const DeliveryOrder = () => {
                           <Col xs="6" sm="4" md="3" key={dish._id}>
                             <Card className="sh-20 hover-border-primary mb-5" onClick={() => addItemToOrder(dish)}>
                               <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
-                                <div>
-                                  <p className="cta-4 mb-2 lh-1">{dish.dish_name}</p>
-                                  <p className="mb-2">₹{dish.dish_price}</p>
-
-                                  <Badge
-                                    variant="outline"
-                                    className={`text-white mb-2 ${category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
-                                      }`}
-                                  >
-                                    {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
-                                  </Badge>
-                                </div>
+                                <p className="cta-4 mb-2 lh-1">{dish.dish_name}</p>
+                                <p className="mb-2">₹{dish.dish_price}</p>
                                 <div className="d-flex sh-3 sw-3 bg-gradient-light align-items-center justify-content-center rounded-xl">
                                   <h2 className="mb-0 lh-1 text-white">
                                     <CsLineIcons icon="plus" />
                                   </h2>
                                 </div>
                               </Card.Body>
+                              <Badge
+                                variant="outline"
+                                className={`text-white mb-2 ${
+                                  category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
+                                }`}
+                                style={{ position: 'absolute', top: '5px', right: '5px' }}
+                              >
+                                {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
+                              </Badge>
+                              {dish.is_special && (
+                                <i className="bi bi-stars text-warning" style={{ fontSize: '20px', position: 'absolute', top: '0px', left: '2px' }} />
+                              )}
                             </Card>
                           </Col>
                         ))}
@@ -541,7 +543,8 @@ const DeliveryOrder = () => {
                     <Button variant="primary" onClick={() => history.push('/dashboard')}>
                       Go to Dashboard
                     </Button>
-                  ) : (orderStatus === 'KOT') && (
+                  ) : (
+                    orderStatus === 'KOT' &&
                     /* Show Payment button only if no items are 'Preparing' */
                     !orderItems.some((item) => item.status === 'Preparing') && (
                       <Button variant="success" onClick={() => setShowPaymentModal(true)}>

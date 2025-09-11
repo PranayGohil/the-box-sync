@@ -287,8 +287,9 @@ const getAllFaceEncodings = async (req, res) => {
           $ne: null,
           $not: { $size: 0 },
         },
+        restaurant_id: req.user,
       },
-      "_id f_name l_name email position face_encoding attandance"
+      "_id staff_id f_name l_name email position face_encoding attandance"
     );
 
     res.json(staff);

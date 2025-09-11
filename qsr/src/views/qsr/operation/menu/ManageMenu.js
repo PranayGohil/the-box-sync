@@ -184,7 +184,7 @@ const ManageMenu = () => {
               return (
                 <Col md={6} lg={6} key={category.id}>
                   <Card body className="mb-4">
-                    <BoxedVariationsStripe columns={columns} data={data} category={category.category} />
+                    <BoxedVariationsStripe columns={columns} data={data} category={category} />
                   </Card>
                 </Col>
               );

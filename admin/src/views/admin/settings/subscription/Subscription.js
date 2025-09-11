@@ -17,7 +17,7 @@ import DeletePanelModal from './DeletePanelModal';
 import RaiseInquiryModal from './RaiseInquiryModal';
 
 // import RaiseInquiryModal from "./RaiseInquiryModal";
-const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel'];
+const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'Payroll By The Box'];
 
 const Subscription = () => {
   const history = useHistory();
@@ -49,10 +49,9 @@ const Subscription = () => {
 
   const [inactiveAddOns, setInactiveAddOns] = useState([]);
 
-
   const fetchData = async () => {
     try {
-      console.log("fetchData");
+      console.log('fetchData');
       const [plansRes, userRes] = await Promise.all([
         axios.get(`${process.env.REACT_APP_API}/subscription/get-plans`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
         axios.get(`${process.env.REACT_APP_API}/subscription/get`, {
@@ -111,7 +110,6 @@ const Subscription = () => {
             };
           })
       );
-
 
       const blocked = enriched.filter((s) => s.status === 'blocked');
       const queries = {};
@@ -186,7 +184,7 @@ const Subscription = () => {
   };
 
   const handleSavePanel = async (formValues) => {
-    console.log("Save Panel");
+    console.log('Save Panel');
     try {
       await axios.post(`${process.env.REACT_APP_API}/panel-user/${currentPlanName}`, formValues, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -226,7 +224,7 @@ const Subscription = () => {
     } else if (planName === 'Restaurant Website') {
       history.push('/settings/manage-website');
     } else {
-      alert("Invalid Plan")
+      alert('Invalid Plan');
     }
   };
 
@@ -279,11 +277,23 @@ const Subscription = () => {
                 <Button variant="outline-danger" size="sm" onClick={() => openDeletePanelModal(original.plan_name)} style={{ height: 'auto' }}>
                   <CsLineIcons icon="bin" />
                 </Button>
+                {original.plan_name === 'Payroll By The Box' && (
+                  <Button variant="outline-primary" size="sm" onClick={() => handleRedirect(original.plan_name)} style={{ height: 'auto' }}>
+                    <CsLineIcons icon="eye" />
+                  </Button>
+                )}
               </>
             ) : (
-              <Button variant="outline-success" size="sm" onClick={() => handleAddPanel(original.plan_name)} style={{ height: 'auto' }}>
-                <CsLineIcons icon="plus" />
-              </Button>
+              <>
+                <Button variant="outline-success" size="sm" onClick={() => handleAddPanel(original.plan_name)} style={{ height: 'auto' }}>
+                  <CsLineIcons icon="plus" />
+                </Button>
+                {original.plan_name === 'Payroll By The Box' && (
+                  <Button variant="outline-primary" size="sm" onClick={() => handleRedirect(original.plan_name)} style={{ height: 'auto' }}>
+                    <CsLineIcons icon="eye" />
+                  </Button>
+                )}
+              </>
             );
           } else if (isActive) {
             actionButtons = (
@@ -376,15 +386,14 @@ const Subscription = () => {
                   <h5 className="card-title">{sub.plan_name}</h5>
                   <h6 className="card-subtitle mb-2 text-muted">Previously Active</h6>
                   <p className="card-text">
-                    Duration: {sub.plan_duration} month(s)<br />
-                    Price: ₹{sub.plan_price}<br />
+                    Duration: {sub.plan_duration} month(s)
+                    <br />
+                    Price: ₹{sub.plan_price}
+                    <br />
                     Expired on: {sub.formatted_end}
                   </p>
 
-                  <Button
-                    variant="success"
-                    onClick={() => handleRenew(sub._id)}
-                  >
+                  <Button variant="success" onClick={() => handleRenew(sub._id)}>
                     Renew Plan
                   </Button>
                 </div>
@@ -446,12 +455,7 @@ const Subscription = () => {
       )}
 
       {showInquiryModal && (
-        <RaiseInquiryModal
-          show={showInquiryModal}
-          handleClose={() => setShowInquiryModal(false)}
-          subscriptionName={inquirySubName}
-          fetchData={fetchData}
-        />
+        <RaiseInquiryModal show={showInquiryModal} handleClose={() => setShowInquiryModal(false)} subscriptionName={inquirySubName} fetchData={fetchData} />
       )}
     </>
   );

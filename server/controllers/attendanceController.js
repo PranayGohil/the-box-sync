@@ -119,13 +119,13 @@ const attendanceLogin = async (req, res) => {
     });
 
     if (!attendance) {
-      return res.json({ message: "Invalid Username" });
+      return res.json({ message: "Invalid Credentials" });
     }
 
     const isMatch = await bcrypt.compare(password, attendance.password);
 
     if (!isMatch) {
-      return res.json({ message: "Invalid Password" });
+      return res.json({ message: "Invalid Credentials" });
     }
 
     token = await user.generateAuthToken("Attendance");

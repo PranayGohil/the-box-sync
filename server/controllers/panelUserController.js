@@ -1,6 +1,7 @@
 const Manager = require("../models/managerModel");
 const QSR = require("../models/QSRModel");
 const Captain = require("../models/captainModel");
+const Attendance = require("../models/attendanceModel");
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 
@@ -8,6 +9,7 @@ const panelModels = {
   Manager: Manager,
   QSR: QSR,
   "Captain Panel": Captain,
+  "Payroll By The Box": Attendance,
 };
 
 const getModel = (planName) => {

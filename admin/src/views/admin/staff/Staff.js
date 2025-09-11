@@ -9,6 +9,7 @@ import AddStaff from './AddStaff';
 import EditStaff from './EditStaff';
 import StaffProfile from './StaffProfile';
 import ManageAttendance from './attandance/ManageAttendance';
+import ViewAttendance from './attandance/ViewAttendance';
 
 const Staff = () => {
   return (
@@ -20,6 +21,7 @@ const Staff = () => {
         <Route exact path="/staff/edit/:id" render={() => <EditStaff />} />
         <Route exact path="/staff/profile/:id" render={() => <StaffProfile />} />
         <Route exact path="/staff/attendance" render={() => <ManageAttendance />} />
+        <Route exact path="/staff/attendance/view/:id" render={() => <ViewAttendance />} />
 
       </Switch>
     </>
