@@ -20,7 +20,7 @@ const Login = () => {
   const fetchUserData = async () => {
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API}/user/userdata`,
+        `${process.env.REACT_APP_API}/user/get`,
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
       if (response.data !== "Null") {

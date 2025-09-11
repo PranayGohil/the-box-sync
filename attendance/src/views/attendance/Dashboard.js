@@ -47,7 +47,7 @@ export default function Dashboard() {
   // Load user data
   const fetchUserData = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API}/user/userdata`, {
+      const response = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       if (response.data === 'Null') history.push('/login');
