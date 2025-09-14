@@ -36,11 +36,15 @@ const Dashboard = () => {
 
   const fetchActiveOrders = async () => {
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API}/order/get-active`, {
-        source: 'Manager',
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      const response = await axios.post(
+        `${process.env.REACT_APP_API}/order/get-active`,
+        {
+          source: 'Manager',
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }
+      );
       console.log(response.data.data);
 
       setActiveDineInOrders(response.data.activeDineInTables);
@@ -123,20 +127,7 @@ const Dashboard = () => {
             <div className="gx-2" key={tableArea._id}>
               <h3 className="mb-3 text-primary">{tableArea.area}</h3>
               <Col className="p-0">
-                <Glide
-                  options={{
-                    gap: 15,
-                    rewind: false,
-                    bound: true,
-                    perView: 4,
-                    breakpoints: {
-                      400: { perView: 1 },
-                      600: { perView: 2 },
-                      1200: { perView: 3 },
-                      1600: { perView: 4 },
-                    },
-                  }}
-                >
+                <Row className="g-3 mb-5">
                   {tableArea.tables
                     .sort((a, b) => a.table_no - b.table_no)
                     .map((table) => {
@@ -156,8 +147,12 @@ const Dashboard = () => {
                       }
 
                       return (
-                        <Glide.Item key={table._id}>
-                          <Card className={`sh-20 hover-border-primary mb-5 ${bgClass}`} onClick={() => handleTableClick(table._id, activeOrder?._id)}>
+                        <Col key={table._id} xs="6" sm="6" md="4" lg="3" >
+                          <Card
+                            key={table._id}
+                            className={`sh-20 hover-border-primary mb-5 ${bgClass}`}
+                            onClick={() => handleTableClick(table._id, activeOrder?._id)}
+                          >
                             <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
                               <div className="d-flex sh-7 sw-7 bg-gradient-light mb-3 align-items-center justify-content-center rounded-xl">
                                 <h2 className="mb-0 lh-1 text-white">{table.table_no}</h2>
@@ -173,10 +168,10 @@ const Dashboard = () => {
                               </div>
                             </Card.Body>
                           </Card>
-                        </Glide.Item>
+                        </Col>
                       );
                     })}
-                </Glide>
+                </Row>
               </Col>
             </div>
           ))}

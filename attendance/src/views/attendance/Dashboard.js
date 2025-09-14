@@ -228,12 +228,6 @@ export default function Dashboard() {
                        <div className="mb-3">
                         <strong>Name:</strong> {detectedStaff.f_name} {detectedStaff.l_name}
                       </div>
-                      <div className="mb-3">
-                        <strong>Position:</strong> {detectedStaff.position}
-                      </div>
-                      <div className="mb-3">
-                        <strong>Email:</strong> {detectedStaff.email}
-                      </div>
                       <div className="mb-2">
                         <strong>Status:</strong>
                         <Badge bg={isCheckedInToday(detectedStaff.attandance) ? 'warning' : 'secondary'} className="ms-2">

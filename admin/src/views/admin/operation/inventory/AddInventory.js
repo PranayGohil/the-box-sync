@@ -13,22 +13,14 @@ const validationSchema = Yup.object().shape({
   vendor_name: Yup.string().required('Vendor name is required'),
   category: Yup.string().required('Category is required'),
   bill_files: Yup.mixed().required('Bill files are required'),
-  total_amount: Yup.number()
-    .required('Total amount is required')
-    .positive('Total amount must be positive'),
-  paid_amount: Yup.number()
-    .required('Paid amount is required')
-    .positive('Paid amount must be positive'),
+  total_amount: Yup.number().required('Total amount is required').positive('Total amount must be positive'),
+  paid_amount: Yup.number().required('Paid amount is required').positive('Paid amount must be positive'),
   items: Yup.array().of(
     Yup.object().shape({
       item_name: Yup.string().required('Item name is required'),
-      item_quantity: Yup.number()
-        .required('Quantity is required')
-        .positive('Quantity must be positive'),
+      item_quantity: Yup.number().required('Quantity is required').positive('Quantity must be positive'),
       unit: Yup.string().required('Unit is required'),
-      item_price: Yup.number()
-        .required('Price is required')
-        .positive('Price must be positive'),
+      item_price: Yup.number().required('Price is required').positive('Price must be positive'),
     })
   ),
 });
@@ -93,14 +85,7 @@ const AddInventory = () => {
     },
   });
 
-  const {
-    values,
-    handleChange,
-    handleSubmit,
-    setFieldValue,
-    errors,
-    touched,
-  } = formik;
+  const { values, handleChange, handleSubmit, setFieldValue, errors, touched } = formik;
 
   useEffect(() => {
     const unpaid = values.total_amount - values.paid_amount;
@@ -116,10 +101,7 @@ const AddInventory = () => {
   };
 
   const addItem = () => {
-    setFieldValue('items', [
-      ...values.items,
-      { item_name: '', item_quantity: 1, unit: '', item_price: 0 },
-    ]);
+    setFieldValue('items', [...values.items, { item_name: '', item_quantity: 1, unit: '', item_price: 0 }]);
   };
 
   const removeItem = (index) => {
@@ -160,7 +142,7 @@ const AddInventory = () => {
             <Card body className="mb-4">
               <h5 className="mb-3">Purchase Details</h5>
               <Row>
-                <Col md={4}>
+                <Col md={6}>
                   <Form.Group>
                     <Form.Label>Bill Date</Form.Label>
                     <Form.Control
@@ -170,12 +152,10 @@ const AddInventory = () => {
                       onChange={handleChange}
                       isInvalid={touched.bill_date && errors.bill_date}
                     />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.bill_date}
-                    </Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">{errors.bill_date}</Form.Control.Feedback>
                   </Form.Group>
                 </Col>
-                <Col md={4}>
+                <Col md={6}>
                   <Form.Group>
                     <Form.Label>Bill Number</Form.Label>
                     <Form.Control
@@ -185,12 +165,13 @@ const AddInventory = () => {
                       onChange={handleChange}
                       isInvalid={touched.bill_number && errors.bill_number}
                     />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.bill_number}
-                    </Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">{errors.bill_number}</Form.Control.Feedback>
                   </Form.Group>
                 </Col>
-                <Col md={4}>
+              </Row>
+
+              <Row className="mt-3">
+                <Col md={6}>
                   <Form.Group>
                     <Form.Label>Vendor Name</Form.Label>
                     <Form.Control
@@ -200,29 +181,19 @@ const AddInventory = () => {
                       onChange={handleChange}
                       isInvalid={touched.vendor_name && errors.vendor_name}
                     />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.vendor_name}
-                    </Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">{errors.vendor_name}</Form.Control.Feedback>
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label>Category</Form.Label>
+                    <Form.Control type="text" name="category" value={values.category} onChange={handleChange} isInvalid={touched.category && errors.category} />
+                    <Form.Control.Feedback type="invalid">{errors.category}</Form.Control.Feedback>
                   </Form.Group>
                 </Col>
               </Row>
 
               <Row className="mt-3">
-                <Col md={4}>
-                  <Form.Group>
-                    <Form.Label>Category</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="category"
-                      value={values.category}
-                      onChange={handleChange}
-                      isInvalid={touched.category && errors.category}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.category}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
                 <Col md={4}>
                   <Form.Group>
                     <Form.Label>Total Amount</Form.Label>
@@ -233,9 +204,7 @@ const AddInventory = () => {
                       onChange={handleChange}
                       isInvalid={touched.total_amount && errors.total_amount}
                     />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.total_amount}
-                    </Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">{errors.total_amount}</Form.Control.Feedback>
                   </Form.Group>
                 </Col>
                 <Col md={4}>
@@ -248,21 +217,18 @@ const AddInventory = () => {
                       onChange={handleChange}
                       isInvalid={touched.paid_amount && errors.paid_amount}
                     />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.paid_amount}
-                    </Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">{errors.paid_amount}</Form.Control.Feedback>
                   </Form.Group>
                 </Col>
-              </Row>
-
-              <Row className="mt-3">
                 <Col md={4}>
                   <Form.Group>
                     <Form.Label>Unpaid Amount</Form.Label>
                     <Form.Control type="number" value={values.unpaid_amount} readOnly />
                   </Form.Group>
                 </Col>
-                <Col md={8}>
+              </Row>
+              <Row className="mt-3">
+                <Col md={6}>
                   <Form.Group>
                     <Form.Label>Bill Files</Form.Label>
                     <Form.Control
@@ -272,9 +238,7 @@ const AddInventory = () => {
                       onChange={handleFileChange}
                       isInvalid={touched.bill_files && errors.bill_files}
                     />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.bill_files}
-                    </Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">{errors.bill_files}</Form.Control.Feedback>
                   </Form.Group>
                   <div className="d-flex flex-wrap mt-2">
                     {filePreviews.map((file, i) => (
@@ -308,9 +272,7 @@ const AddInventory = () => {
                           onChange={(e) => handleItemChange(index, 'item_name', e.target.value)}
                           isInvalid={itemTouched.item_name && itemErrors.item_name}
                         />
-                        <Form.Control.Feedback type="invalid">
-                          {itemErrors.item_name}
-                        </Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">{itemErrors.item_name}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                     <Col md={2}>
@@ -322,9 +284,7 @@ const AddInventory = () => {
                           onChange={(e) => handleItemChange(index, 'item_quantity', e.target.value)}
                           isInvalid={itemTouched.item_quantity && itemErrors.item_quantity}
                         />
-                        <Form.Control.Feedback type="invalid">
-                          {itemErrors.item_quantity}
-                        </Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">{itemErrors.item_quantity}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                     <Col md={2}>
@@ -341,9 +301,7 @@ const AddInventory = () => {
                           <option value="ml">ml</option>
                           <option value="piece">piece</option>
                         </Form.Select>
-                        <Form.Control.Feedback type="invalid">
-                          {itemErrors.unit}
-                        </Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">{itemErrors.unit}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                     <Col md={3}>
@@ -355,9 +313,7 @@ const AddInventory = () => {
                           onChange={(e) => handleItemChange(index, 'item_price', e.target.value)}
                           isInvalid={itemTouched.item_price && itemErrors.item_price}
                         />
-                        <Form.Control.Feedback type="invalid">
-                          {itemErrors.item_price}
-                        </Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">{itemErrors.item_price}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                     <Col md={2} className="d-flex align-items-center">

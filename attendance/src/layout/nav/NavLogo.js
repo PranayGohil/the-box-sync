@@ -8,7 +8,7 @@ const NavLogo = () => {
      <Link to={DEFAULT_PATHS.APP} className="d-flex align-items-center">
         {/* <div className="img" /> */}
         <h1 className="fw-bold text-white pb-0 mb-0"> THE BOX </h1>
-        <span className="fw-bold text-white pb-0 mb-0 ms-1"> - Captain</span>
+        <span className="fw-bold text-white pb-0 mb-0 ms-1"> - Attendance</span>
       </Link>
     </div>
   );
