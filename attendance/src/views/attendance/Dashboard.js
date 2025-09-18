@@ -3,7 +3,7 @@ import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import * as faceapi from 'face-api.js';
 import Webcam from 'react-webcam';
-import { Row, Col, Card, Button, Modal, Alert, Badge } from 'react-bootstrap';
+import { Row, Col, Card, Button, Modal, Alert, Badge, Image } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -186,14 +186,14 @@ export default function Dashboard() {
 
       <Row>
         <Col>
-          <div className="page-title-container">
+          {/* <div className="page-title-container">
             <Row className="align-items-center">
               <Col>
                 <h1 className="mb-0 pb-0 display-4">{title}</h1>
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
             </Row>
-          </div>
+          </div> */}
 
           {error && (
             <Alert variant="danger" className="mb-4">
@@ -203,10 +203,22 @@ export default function Dashboard() {
           )}
 
           <Card className="mb-5">
-            <Card.Header>
+            <Card.Header className='text-center'>
               <Card.Title className="mb-0">Face Recognition Attendance</Card.Title>
             </Card.Header>
             <Card.Body className="text-center">
+              <div className="mb-4 justify-content-center text-center">
+                <div>
+                  <Image
+                    src={userData.logo ? `${process.env.REACT_APP_UPLOAD_DIR}${userData.logo}` : '/images/logo.png'}
+                    roundedCircle
+                    style={{ width: '150px', height: '150px', objectFit: 'cover' }}
+                    className="mb-3"
+                  />
+                  <h2 className="mb-3">{userData.name}</h2>
+                </div>
+
+              </div>
               <CsLineIcons icon="camera" size={48} className="text-primary mb-3" />
               <h5 className="mb-4">Facial Recognition System</h5>
 
@@ -225,7 +237,7 @@ export default function Dashboard() {
                       <div className="mb-3">
                         <strong>Staff ID:</strong> {detectedStaff.staff_id}
                       </div>
-                       <div className="mb-3">
+                      <div className="mb-3">
                         <strong>Name:</strong> {detectedStaff.f_name} {detectedStaff.l_name}
                       </div>
                       <div className="mb-2">
@@ -253,7 +265,7 @@ export default function Dashboard() {
                 </Card>
               )}
             </Card.Body>
-            <Card.Footer className="bg-transparent">
+            <Card.Footer className="bg-transparent text-center">
               <small className="text-muted">
                 <CsLineIcons icon="info" className="me-1" />
                 Ensure good lighting and face the camera directly for best results

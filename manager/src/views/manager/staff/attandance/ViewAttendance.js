@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useHistory } from "react-router-dom";
 import axios from "axios";
-import { Row, Col, Card, Button, Alert, Spinner } from "react-bootstrap";
+import { Row, Col, Card, Button, Alert, Spinner, Form } from "react-bootstrap";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun } from "docx";
 
 const ViewAttendance = () => {
   const { id } = useParams(); // staff_id from URL
@@ -14,11 +20,20 @@ const ViewAttendance = () => {
 
   const main_title = 'View Attendance';
   const description = 'View staff attendance history and calendar';
-  
+
   const [staffData, setStaffData] = useState(null);
   const [attendanceEvents, setAttendanceEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  const filteredAttendance = staffData?.attandance?.filter(att => {
+    if (!startDate || !endDate) return true;
+    const date = new Date(att.date);
+    return date >= new Date(startDate) && date <= new Date(endDate);
+  }) || [];
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
@@ -32,7 +47,7 @@ const ViewAttendance = () => {
       setError(null);
       const response = await axios.get(
         `${process.env.REACT_APP_API}/staff/get/${id}`,
-        { 
+        {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         }
       );
@@ -44,9 +59,8 @@ const ViewAttendance = () => {
         let title = "";
 
         if (att.status === "present") {
-          title = `Present\nIn: ${att.in_time || "N/A"}\nOut: ${
-            att.out_time || "N/A"
-          }`;
+          title = `Present\nIn: ${att.in_time || "N/A"}\nOut: ${att.out_time || "N/A"
+            }`;
         } else if (att.status === "absent") {
           title = "Absent";
         }
@@ -68,6 +82,87 @@ const ViewAttendance = () => {
       setLoading(false);
     }
   };
+
+  const handleExport = (type) => {
+    if (filteredAttendance.length === 0) {
+      alert("No attendance records found for selected dates.");
+      return;
+    }
+
+    if (type === "pdf") {
+      // eslint-disable-next-line new-cap
+      const doc = new jsPDF();
+      doc.text(`${staffData.f_name} ${staffData.l_name} - Attendance Report`, 14, 10);
+
+      // Use autoTable function directly
+      autoTable(doc, {
+        head: [["Date", "Status", "Check-In", "Check-Out"]],
+        body: filteredAttendance.map(att => [
+          att.date,
+          att.status,
+          att.in_time || "-",
+          att.out_time || "-"
+        ]),
+      });
+      doc.save("attendance_report.pdf");
+    }
+
+    if (type === "excel") {
+      const worksheet = XLSX.utils.json_to_sheet(
+        filteredAttendance.map(att => ({
+          Date: att.date,
+          Status: att.status,
+          "Check-In": att.in_time || "-",
+          "Check-Out": att.out_time || "-"
+        }))
+      );
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
+      const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+      saveAs(new Blob([excelBuffer], { type: "application/octet-stream" }), "attendance_report.xlsx");
+    }
+
+    if (type === "word") {
+      const rows = [
+        new TableRow({
+          children: ["Date", "Status", "Check-In", "Check-Out"].map(
+            heading =>
+              new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: heading, bold: true })] })],
+              })
+          ),
+        }),
+        ...filteredAttendance.map(
+          att =>
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph(att.date)] }),
+                new TableCell({ children: [new Paragraph(att.status)] }),
+                new TableCell({ children: [new Paragraph(att.in_time || "-")] }),
+                new TableCell({ children: [new Paragraph(att.out_time || "-")] }),
+              ],
+            })
+        ),
+      ];
+
+      const doc = new Document({
+        sections: [
+          {
+            properties: {},
+            children: [
+              new Paragraph({ text: `${staffData.f_name} ${staffData.l_name} - Attendance Report`, bold: true }),
+              new Table({ rows }),
+            ],
+          },
+        ],
+      });
+
+      Packer.toBlob(doc).then((blob) => {
+        saveAs(blob, "attendance_report.docx");
+      });
+    }
+  };
+
 
   useEffect(() => {
     fetchAttendance();
@@ -96,7 +191,7 @@ const ViewAttendance = () => {
   return (
     <>
       <HtmlHead title={main_title} description={description} />
-      
+
       <Row>
         <Col>
           <div className="page-title-container">
@@ -151,9 +246,10 @@ const ViewAttendance = () => {
           )}
 
           <Card className="mb-5">
-            <Card.Header>
-              <Card.Title className="mb-0">Attendance Calendar</Card.Title>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <Card.Title className="mb-0">Attendance Summary</Card.Title>
             </Card.Header>
+
             <Card.Body>
               <div className="calendar-container">
                 <FullCalendar
@@ -205,8 +301,31 @@ const ViewAttendance = () => {
 
           {staffData?.attandance && staffData.attandance.length > 0 && (
             <Card>
-              <Card.Header>
+              <Card.Header className="d-flex justify-content-between align-items-center">
                 <Card.Title className="mb-0">Attendance Summary</Card.Title>
+                <div className="d-flex align-items-center">
+                  <Form.Control
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="me-2"
+                  />
+                  <Form.Control
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="me-2"
+                  />
+                  <Button variant="primary" onClick={() => handleExport("pdf")} className="me-2">
+                    PDF
+                  </Button>
+                  <Button variant="success" onClick={() => handleExport("excel")} className="me-2">
+                    Excel
+                  </Button>
+                  <Button variant="info" onClick={() => handleExport("word")}>
+                    Word
+                  </Button>
+                </div>
               </Card.Header>
               <Card.Body>
                 <div className="table-responsive">
@@ -220,7 +339,7 @@ const ViewAttendance = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {staffData.attandance.map((att, index) => (
+                      {filteredAttendance.map((att, index) => (
                         <tr key={index}>
                           <td>{att.date}</td>
                           <td>
@@ -233,6 +352,7 @@ const ViewAttendance = () => {
                         </tr>
                       ))}
                     </tbody>
+
                   </table>
                 </div>
               </Card.Body>

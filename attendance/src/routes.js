@@ -29,8 +29,8 @@ const routesAndMenuItems = {
     },
     {
       path: `${appRoot}/dashboard`,
-      label: 'Dashboard',
-      icon: 'home',
+      // label: 'Dashboard',
+      // icon: 'home',
       component: manager.dashboard,
     },
     {
