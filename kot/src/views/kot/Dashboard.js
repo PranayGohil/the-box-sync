@@ -1,170 +1,198 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory, Switch, Route, Redirect } from 'react-router-dom';
-import { Button, Row, Col, Card, Badge } from 'react-bootstrap';
-import axios from 'axios';
+import { Row, Col, Card, Button, Form } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
-import Glide from 'components/carousel/Glide';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import axios from 'axios';
 
-import DineInOrder from './order/DineInOrder';
-
-const Dashboard = () => {
-  const title = 'Dashboard';
-  const description = 'Restaurant Management Dashboard';
-  const history = useHistory();
+const ViewKots = () => {
+  const title = 'Manage KOTs';
+  const description = 'View and manage all KOT orders with dish status updates';
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
-    { to: 'dashboard', text: 'Dashboard' },
+    { to: 'operations', text: 'Operations' },
+    { to: 'operations/view-kots', title: 'Manage KOTs' },
   ];
 
-  const [tables, setTables] = useState([]);
-  const [activeDineInOrders, setActiveDineInOrders] = useState([]);
-  const [specialDishes, setSpecialDishes] = useState([]);
+  const [kotData, setKotData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const fetchTables = async () => {
+  const fetchOrderData = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API}/table/get-all`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setTables(response.data.data);
+      const response = await axios.get(`${process.env.REACT_APP_API}/kot/showkots`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      // const managerKots = response.data.filter((order) => order.order_source === 'Manager' || order.order_source === 'Captain');
+      // console.log(managerKots);
+      setKotData(response.data);
     } catch (error) {
-      console.error('Error fetching tables:', error);
-    }
-  };
-
-  const fetchActiveOrders = async () => {
-    try {
-      const response = await axios.post(`${process.env.REACT_APP_API}/order/get-active`, {
-        source: 'Manager',
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
-      console.log(response.data.data);
-
-      setActiveDineInOrders(response.data.activeDineInTables);
-    } catch (error) {
-      console.error('Error fetching active orders:', error);
-    }
-  };
-
-  const fetchSpecialDishes = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API}/menu/get`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      const specialDishesRes = response.data.data
-        .flatMap((category) => category.dishes)
-        .filter((dish) => dish.is_special)
-        .slice(0, 6);
-
-      setSpecialDishes(specialDishesRes);
-    } catch (error) {
-      console.error('Error fetching special dishes:', error);
+      console.log('Error fetching order data:', error);
     }
   };
 
   useEffect(() => {
-    fetchTables();
-    fetchActiveOrders();
-    fetchSpecialDishes();
+    fetchOrderData();
   }, []);
 
-  const handleTableClick = async (tableId, orderId) => {
+  const updateDishStatus = async (orderId, dishId) => {
     try {
-      if (orderId) {
-        history.push(`/order/dine-in?tableId=${tableId}&orderId=${orderId}&mode=edit`);
-      } else {
-        history.push(`/order/dine-in?tableId=${tableId}&mode=new`);
-      }
+      await axios.put(
+        `${process.env.REACT_APP_API}/kot/updatedishstatus`,
+        { orderId, dishId, status: 'Completed' },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      fetchOrderData();
     } catch (error) {
-      console.error('Error fetching table details:', error);
+      console.log('Error updating dish status:', error);
     }
   };
 
+  const updateAllDishStatus = async (orderId) => {
+    try {
+      await axios.put(
+        `${process.env.REACT_APP_API}/kot/updatealldishstatus`,
+        { orderId, status: 'Completed' },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      fetchOrderData();
+    } catch (error) {
+      console.log('Error updating all dish statuses:', error);
+    }
+  };
+
+  // Search filter
+  const filteredKOTs = kotData.filter(
+    (kot) =>
+      kot.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      kot.order_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      kot.token?.toString().includes(searchTerm)
+  );
 
   return (
     <>
       <HtmlHead title={title} description={description} />
-
       <Row>
-        <Col lg="12">
-          {tables.map((tableArea) => (
-            <div className="gx-2" key={tableArea._id}>
-              <h3 className="mb-3 text-primary">{tableArea.area}</h3>
-              <Col className="p-0">
-                <Row className="g-3 mb-5">
-                  {tableArea.tables
-                    .sort((a, b) => a.table_no - b.table_no)
-                    .map((table) => {
-                      const activeOrder = activeDineInOrders.find((order) => order.table_no === table.table_no && order.table_area === tableArea.area);
+        <Col>
+          <div className="page-title-container mb-4">
+            <h1 className="mb-0 pb-0 display-4">{title}</h1>
+            <BreadcrumbList items={breadcrumbs} />
+          </div>
 
-                      let bgClass = '';
-                      let statusColor = 'secondary';
-
-                      if (activeOrder) {
-                        if (activeOrder.order_status === 'Save') {
-                          bgClass = 'border-success';
-                          statusColor = 'success';
-                        } else if (activeOrder.order_status === 'KOT') {
-                          bgClass = 'border-warning';
-                          statusColor = 'warning';
-                        }
-                      }
-
-                      return (
-                        <Col key={table._id} xs="6" sm="6" md="3" lg="2" >
-                          <Card className={`sh-20 hover-border-primary mb-5 ${bgClass}`} onClick={() => handleTableClick(table._id, activeOrder?._id)}>
-                            <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
-                              <div className="d-flex sh-7 sw-7 bg-gradient-light mb-3 align-items-center justify-content-center rounded-xl">
-                                <h2 className="mb-0 lh-1 text-white">{table.table_no}</h2>
-                              </div>
-                              <div>
-                                <p className="mb-0 lh-1">Max Person</p>
-                                <p className="cta-3 mb-0 text-primary">{table.max_person}</p>
-                                {activeOrder && (
-                                  <Badge bg={statusColor} className="text-white">
-                                    {activeOrder.order_status}
-                                  </Badge>
-                                )}
-                              </div>
-                            </Card.Body>
-                          </Card>
-                        </Col>
-                      );
-                    })}
-                </Row>
+          <Form className="mb-4">
+            <Row className="align-items-center justify-content-between">
+              <Col md={4}>
+                <Form.Control
+                  type="text"
+                  placeholder="Search by customer, type, or token..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </Col>
-            </div>
-          ))}
+              <Col md={4} className="d-flex align-items-center justify-content-end">
+                <div>Pending Dishes to Complete : </div>
+                <div className="mx-2 fs-3 fw-bold">
+                  {filteredKOTs.reduce((total, kot) => total + kot.order_items.filter((item) => item.status === 'Preparing').length, 0)}
+                </div>
+              </Col>
+            </Row>
+          </Form>
+
+          <Row>
+            {filteredKOTs.map((data) => {
+              const allDishesCompleted = data.order_items.every((dish) => dish.status === 'Completed');
+
+              return (
+                <Col md={4} lg={4} key={data._id}>
+                  <Card body className="mb-4 shadow-sm">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <div>
+                        <h5 className="mb-1">{data.order_type}</h5>
+                        <div className="text-muted small">{data.customer_name || 'Guest'}</div>
+                      </div>
+                      {data.order_type === 'Takeaway' && (
+                        <div className="text-end">
+                          <h5 className="mb-1">Token</h5>
+                          <div className="d-flex justify-content-end">
+                            <div className="fw-bold bg-primary rounded-pill py-2 px-3 text-center text-white">{data.token}</div>
+                          </div>
+                        </div>
+                      )}
+                      {data.order_type === 'Dine In' && (
+                        <div className="text-end">
+                          <h5 className="mb-1">
+                            Area: <span className="fw-bold">{data.table_area}</span>
+                          </h5>
+                          <div className="d-flex justify-content-end">
+                            <div className="fw-bold bg-primary rounded-pill py-2 px-3 text-center text-white">{data.table_no}</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="table-responsive mb-3">
+                      <table className="table table-sm table-striped">
+                        <thead>
+                          <tr>
+                            <th>Dish</th>
+                            <th>Qty</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.order_items.map((dish) =>
+                            dish.special_notes !== 'Parcel Charge' ? (
+                              <tr key={dish._id}>
+                                <td>{dish.dish_name}</td>
+                                <td>{dish.quantity}</td>
+                                <td>
+                                  {dish.status === 'Preparing' ? (
+                                    <Button
+                                      size="sm"
+                                      className="btn btn-sm btn-icon"
+                                      variant="outline-success"
+                                      onClick={() => updateDishStatus(data._id, dish._id)}
+                                      title="Mark as Completed"
+                                    >
+                                      <CsLineIcons icon="check" />
+                                    </Button>
+                                  ) : (
+                                    <span className="text-success fw-bold">
+                                      <CsLineIcons icon="check-circle" /> Done
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            ) : null
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {data.comment && (
+                      <div className="mb-3">
+                        <strong>Notes: </strong>
+                        <span>{data.comment}</span>
+                      </div>
+                    )}
+
+                    {!allDishesCompleted && (
+                      <div className="text-end">
+                        <Button variant="primary" className="btn btn-sm btn-icon" size="sm" onClick={() => updateAllDishStatus(data._id)}>
+                          <CsLineIcons icon="check-square" /> Mark All Completed
+                        </Button>
+                      </div>
+                    )}
+                    <div>
+                      order source: <strong>{data.order_source}</strong>
+                    </div>
+                  </Card>
+                </Col>
+              );
+            })}
+          </Row>
         </Col>
       </Row>
-
-      {/* Special Dishes Section */}
-      <div className="mt-5">
-        <h2 className="small-title mb-4">Today's Special</h2>
-        <Row className="g-2">
-          {specialDishes.map((dish) => (
-            <Col md="3" sm="6" lg="2" key={dish._id}>
-              <Card className="bg-gradient-light text-white">
-                <Card.Body className="p-3">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                      <h6 className="mb-0">{dish.dish_name}</h6>
-                      <small className="opacity-75">₹{dish.dish_price}</small>
-                    </div>
-                    <Badge bg="warning" className="text-dark">
-                      Special
-                    </Badge>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </div>
-
-      <Switch>
-        <Route exact path="/order/dine-in" render={() => <DineInOrder />} />
-      </Switch>
     </>
   );
 };
 
-export default Dashboard;
+export default ViewKots;

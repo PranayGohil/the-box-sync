@@ -96,7 +96,7 @@ const buySubscriptionPlan = async (req, res) => {
   try {
     const planId = req.params.id;
     const userId = req.user;
-    console.log('User ID:', req.user);
+    console.log("User ID:", req.user);
 
     if (!userId) {
       console.log("User ID not found in request");
@@ -174,7 +174,10 @@ const unblockSubscription = async (req, res) => {
 
     let newStatus = "inactive";
 
-    if (!subscription.end_date || new Date(subscription.end_date) > new Date()) {
+    if (
+      !subscription.end_date ||
+      new Date(subscription.end_date) > new Date()
+    ) {
       newStatus = "active";
     }
 
@@ -190,7 +193,6 @@ const unblockSubscription = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 const expandSubscriptions = async (req, res) => {
   try {
@@ -260,12 +262,14 @@ const buyCompletePlan = async (req, res) => {
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found." });
     }
 
     // Define plans for each tier
     const planMapping = {
-      Core: ["Manager"],
+      Core: ["Manager", "KOT Panel"],
       Growth: [
         "Manager",
         "QSR",
@@ -276,6 +280,7 @@ const buyCompletePlan = async (req, res) => {
         "Restaurant Website",
         "Online Order Reconciliation",
         "Reservation Manager",
+        "KOT Panel",
       ],
       Scale: [
         "Manager",
@@ -289,6 +294,7 @@ const buyCompletePlan = async (req, res) => {
         "Reservation Manager",
         "Payroll By The Box",
         "Dynamic Reports",
+        "KOT Panel",
       ],
     };
 

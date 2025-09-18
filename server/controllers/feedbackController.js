@@ -13,6 +13,8 @@ const addFeedback = async (req, res) => {
       feedback,
     } = req.body;
 
+    console.log("Received feedback data:", req.body);
+
     // Validate required fields
     if (!feedbackToken || !customer_name || !rating || !feedback) {
       return res.json({ success: false, message: "Missing required fields." });

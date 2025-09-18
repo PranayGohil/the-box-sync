@@ -17,7 +17,7 @@ import DeletePanelModal from './DeletePanelModal';
 import RaiseInquiryModal from './RaiseInquiryModal';
 
 // import RaiseInquiryModal from "./RaiseInquiryModal";
-const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'Payroll By The Box'];
+const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'Payroll By The Box', 'KOT Panel'];
 
 const Subscription = () => {
   const history = useHistory();

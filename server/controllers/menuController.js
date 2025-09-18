@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const Menu = require("../models/menuModel");
+const User = require("../models/userModel");
 
 const addMenu = async (req, res) => {
   try {
@@ -71,30 +72,24 @@ const getMenuData = async (req, res) => {
   }
 };
 
-// const getMenuDataByResCode = async (req, res) => {
-//   try {
+const getMenuDataByResCode = async (req, res) => {
+  try {
+    const restaurant_code = req.params.res_code;
+    const restaurant = await User.findOne({ restaurant_code });
+    if (!restaurant) {
+      return res.status(404).json({ error: "Restaurant not found" });
+    }
+    const restaurant_id = restaurant._id;
+    console.log("Restaurant ID : ", restaurant_id);
 
-//     const query = ;
-
-//     if (mealType) {
-//       query.meal_type = mealType;
-//     }
-
-//     if (category) {
-//       query.category = category;
-//     }
-
-//     if (searchText) {
-//       query["dishes.dish_name"] = { $regex: searchText, $options: "i" };
-//     }
-
-//     const menuData = await Menu.find(query);
-//     res.json(menuData);
-//   } catch (error) {
-//     console.error("Error fetching menu data:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// };
+    const menuData = await Menu.find({ restaurant_id });
+    console.log("Menu Data : ", menuData);
+    res.json(menuData);
+  } catch (error) {
+    console.error("Error fetching menu data:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 const getMenuCategories = async (req, res) => {
   try {
@@ -302,6 +297,7 @@ module.exports = {
   addMenu,
   getMenuData,
   getMenuDataById,
+  getMenuDataByResCode,
   getMenuCategories,
   updateMenu,
   deleteMenu,

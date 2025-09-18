@@ -5,6 +5,7 @@ const {
   getMenuData,
   getMenuCategories,
   getMenuDataById,
+  getMenuDataByResCode,
   updateMenu,
   deleteMenu,
   setSpecialMenu,
@@ -23,8 +24,9 @@ menuRouter
     addMenu
   );
 menuRouter.route("/get").get(authMiddleware, getMenuData);
-menuRouter.route("/getmenu/:id").get(authMiddleware, getMenuData);
+menuRouter.route("/get/:id").get(authMiddleware, getMenuData);
 menuRouter.route("/getmenudata/:id").get(getMenuDataById);
+menuRouter.route("/get/rescode/:res_code").get(getMenuDataByResCode);
 menuRouter.route("/get-categories").get(authMiddleware, getMenuCategories);
 menuRouter
   .route("/update")

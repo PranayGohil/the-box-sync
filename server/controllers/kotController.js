@@ -1,4 +1,7 @@
 const Order = require("../models/orderModel");
+const Kot = require("../models/kotModel");
+const User = require("../models/userModel");
+const bcrypt = require("bcryptjs");
 
 const showKOTs = async (req, res) => {
   try {
@@ -65,8 +68,51 @@ const updateAllDishStatus = async (req, res) => {
   }
 };
 
+const kotLogin = async (req, res) => {
+  try {
+    console.log(req.body);
+    const { restaurant_code, username, password } = req.body;
+
+    const user = await User.findOne({ restaurant_code });
+
+    if (!user) {
+      console.log("User not found");
+      return res.json({ message: "Invalid restaurant code" });
+    }
+    console.log("kot : " + user);
+
+    const kot = await Kot.findOne({
+      username: username,
+      restaurant_id: user._id,
+    });
+
+   
+
+    if (!kot) {
+      return res.json({ message: "Invalid Username" });
+    }
+
+    const isMatch = await bcrypt.compare(password, kot.password);
+
+    if (!isMatch) {
+      return res.json({ message: "Invalid Password" });
+    }
+
+    token = await user.generateAuthToken("Kot");
+    res.cookie("jwttoken", token, {
+      expires: new Date(Date.now() + 25892000000),
+      httpOnly: true,
+    });
+
+    res.status(200).json({ message: "Logged In", token });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 module.exports = {
   showKOTs,
   updateDishStatus,
   updateAllDishStatus,
+  kotLogin
 };
