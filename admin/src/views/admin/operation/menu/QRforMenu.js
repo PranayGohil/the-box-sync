@@ -46,7 +46,7 @@ const QRforMenu = ({ setSection }) => {
     newWindow.close();
   };
 
-  const menuLink = `${process.env.REACT_APP_MENU_URL}/${restaurant_code}`;
+  const menuLink = `${process.env.REACT_APP_HOME_URL}/${restaurant_code}`;
 
   // if (!activePlans.includes('Scan For Menu')) {
   //   return (
