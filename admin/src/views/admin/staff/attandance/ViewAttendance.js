@@ -11,7 +11,7 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun } from "docx";
 
 const ViewAttendance = () => {
@@ -93,7 +93,9 @@ const ViewAttendance = () => {
       // eslint-disable-next-line new-cap
       const doc = new jsPDF();
       doc.text(`${staffData.f_name} ${staffData.l_name} - Attendance Report`, 14, 10);
-      doc.autoTable({
+
+      // Use autoTable function directly
+      autoTable(doc, {
         head: [["Date", "Status", "Check-In", "Check-Out"]],
         body: filteredAttendance.map(att => [
           att.date,
