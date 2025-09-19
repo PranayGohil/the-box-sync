@@ -180,7 +180,7 @@ const Dashboard = () => {
         {/* Active Orders Section */}
         <Col lg="6">
           <h2 className="small-title mb-4">Active Takeaways & Deliveries</h2>
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
             {activeTakeawaysAndDeliveries.length === 0 ? (
               <Card className="text-center p-4">
                 <Card.Body>

@@ -104,7 +104,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
             {activeDineInOrders.length === 0 ? (
               <Card className="text-center p-4">
                 <Card.Body>
@@ -156,7 +156,7 @@ const Dashboard = () => {
               </Button>
             </div>
           </div>
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
             {activeTakeawaysAndDeliveries.length === 0 ? (
               <Card className="text-center p-4">
                 <Card.Body>
