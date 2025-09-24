@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Row, Col, Nav } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { LAYOUT } from 'constants.js';
@@ -8,6 +8,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { useWindowSize } from 'hooks/useWindowSize';
 import { Switch, Route, Redirect, NavLink } from 'react-router-dom';
 
+import { AuthContext } from 'contexts/AuthContext';
 import Profile from './account/Profile';
 import Address from './account/Address';
 import Gst from './tax-charges/Gst';
@@ -110,6 +111,8 @@ const Settings = () => {
   const { themeValues } = useSelector((state) => state.settings);
   const lgBreakpoint = parseInt(themeValues.lg.replace('px', ''), 10);
 
+  const { activePlans } = useContext(AuthContext);
+
   return (
     <>
       <Row>
@@ -123,13 +126,20 @@ const Settings = () => {
         <Col>
           <Switch>
             <Route exact path="/settings" render={() => <Redirect to="/settings/profile" />} />
-            <Route path="/settings/profile" render={() => <Profile />} />
-            <Route path="/settings/address" render={() => <Address />} />
-            <Route path="/settings/gst" render={() => <Gst />} />
-            <Route path="/settings/container-charge" render={() => <Container />} />
-            <Route path="/settings/subscription" render={() => <Subscription />} />
-            <Route path="/settings/manage-website" render={() => <ManageWebsite />} />
-            <Route path="/settings/forgot-password" render={() => <ForgotPassword />} />
+            <Route exact path="/settings/profile" render={() => <Profile />} />
+            <Route exact path="/settings/address" render={() => <Address />} />
+            <Route exact path="/settings/gst" render={() => <Gst />} />
+            <Route exact path="/settings/container-charge" render={() => <Container />} />
+            <Route exact path="/settings/subscription" render={() => <Subscription />} />
+            <Route exact path="/settings/manage-website"
+              render={() => <>
+                {
+                  activePlans.includes("Restaurant Website") ?
+                    <ManageWebsite /> :
+                    <div className="text-center">You need to buy or renew to Restaurant Website plan to access this page.</div>
+                }</>}
+            />
+            <Route exact path="/settings/forgot-password" render={() => <ForgotPassword />} />
           </Switch>
         </Col>
       </Row>

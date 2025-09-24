@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useContext } from 'react';
 import { Row, Col, Nav } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { LAYOUT } from 'constants.js';
@@ -7,6 +7,8 @@ import useCustomLayout from 'hooks/useCustomLayout';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useWindowSize } from 'hooks/useWindowSize';
 import { Switch, Route, Redirect, NavLink } from 'react-router-dom';
+
+import { AuthContext } from 'contexts/AuthContext';
 import OrderHistory from './order/OrderHistory';
 import OrderDetails from './order/OrderDetails';
 
@@ -117,10 +119,6 @@ const NavContent = () => {
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Feedback QR</span>
           </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/add-feedback" className="px-0 pt-1"> 
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Add Feedback</span>
-          </Nav.Link>
         </div>
       </div>
     </Nav>
@@ -133,6 +131,8 @@ const Operations = () => {
 
   const { themeValues } = useSelector((state) => state.settings);
   const lgBreakpoint = parseInt(themeValues.lg.replace('px', ''), 10);
+
+  const { activePlans } = useContext(AuthContext);
 
   return (
     <>
@@ -147,27 +147,46 @@ const Operations = () => {
         <Col>
           <Switch>
             <Route exact path="/operations" render={() => <Redirect to="/operations/order-history" />} />
-            <Route path="/operations/order-history" component={OrderHistory} />
-            <Route path="/operations/order-details/:id" component={OrderDetails} />
+            <Route exact path="/operations/order-history" render={() => <OrderHistory />}
+            />
+            <Route exact path="/operations/order-details/:id" render={() => <OrderDetails />} />
 
-            <Route path="/operations/manage-table" component={ManageTable} />
-            <Route path="/operations/add-table" component={AddTable} />
+            <Route exact path="/operations/manage-table" render={() => <ManageTable />} />
+            <Route exact path="/operations/add-table" render={() => <AddTable />} />
 
-            <Route path="/operations/manage-menu" component={ManageMenu} />
-            <Route path="/operations/add-dishes" component={AddDishes} />
-            <Route path="/operations/qr-for-menu" component={QRforMenu} />
+            <Route exact path="/operations/manage-menu" render={() => <ManageMenu />} />
+            <Route exact path="/operations/add-dishes" render={() => <AddDishes />} />
+            <Route exact path="/operations/qr-for-menu" render={() => <>
+                {
+                  activePlans.includes("Scan For Menu") ?
+                    <QRforMenu /> :
+                    <div className="text-center">You need to buy or renew to Scan For Menu plan to access this page.</div>
+                }</>} />
 
-            <Route path="/operations/requested-inventory" component={RequestedInventory} />
-            <Route path="/operations/inventory-history" component={InventoryHistory} />
-            <Route path="/operations/add-inventory" component={AddInventory} />
-            <Route path="/operations/edit-inventory/:id" component={EditInventory} />
-            <Route path="/operations/complete-inventory/:id" component={CompleteInventory} />
-            <Route path="/operations/inventory-details/:id" component={InventoryDetails} />
+            <Route exact path="/operations/requested-inventory" render={() => <RequestedInventory />} />
+            <Route exact path="/operations/inventory-history" render={() => <InventoryHistory />} />
+            <Route exact path="/operations/add-inventory" render={() => <AddInventory />} />
+            <Route exact path="/operations/edit-inventory/:id" render={() => <EditInventory />} />
+            <Route exact path="/operations/complete-inventory/:id" render={() => <CompleteInventory />} />
+            <Route exact path="/operations/inventory-details/:id" render={() => <InventoryDetails />} />
 
-            <Route path="/operations/feedback" component={Feedback} />
-            <Route path="/operations/qr-for-feedback" component={QRforFeedback} /> 
-            <Route path="/operations/add-feedback" component={AddFeedback} />
-            
+            <Route exact path="/operations/feedback"
+              render={() => <>
+                {
+                  activePlans.includes("Feedback") ?
+                    <Feedback /> :
+                    <div className="text-center">You need to buy or renew to Feedback plan to access this page.</div>
+                }</>}
+            />
+            <Route exact path="/operations/qr-for-feedback" 
+            render={() => <>
+              {
+                activePlans.includes("Feedback") ?
+                  <QRforFeedback /> :
+                  <div className="text-center">You need to buy or renew to Feedback plan to access this page.</div>
+              }</>} />
+            {/* <Route exact path="/operations/add-feedback" component={AddFeedback} /> */}
+
           </Switch>
         </Col>
       </Row>
