@@ -482,7 +482,7 @@ const RegisterNew = () => {
                   </Button>
                   <Button
                     variant="outline-primary"
-                    className="btn-icon btn-icon-end"
+                    className={`btn-icon btn-icon-end`}
                     onClick={() => onClickNext(next, steps, step)}
                   >
                     <span>{steps.indexOf(step) === steps.length - 2 ? 'Submit' : 'Next'}</span> 

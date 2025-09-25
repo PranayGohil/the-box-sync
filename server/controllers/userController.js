@@ -106,11 +106,11 @@ const register = async (req, res) => {
       </p>
       `;
 
-    await sendEmail({
-      to: email,
-      subject: "Successful Registration Confirmation for Your TheBox Account",
-      html: regEmail,
-    });
+    // await sendEmail({
+    //   to: email,
+    //   subject: "Successful Registration Confirmation for Your TheBox Account",
+    //   html: regEmail,
+    // });
 
     res.json({
       message: "Registered",
