@@ -50,7 +50,7 @@ const Login = () => {
   const onSubmit = async (values, { setSubmitting }) => {
     try {
       const res = await axios.post(
-        `${process.env.REACT_APP_API}/manager/login`,
+        `${process.env.REACT_APP_API}/hotel-manager/login`,
         values,
         { withCredentials: true }
       );
