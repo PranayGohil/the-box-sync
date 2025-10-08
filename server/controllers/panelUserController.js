@@ -19,6 +19,7 @@ const panelModels = {
 
 const getModel = (planName) => {
   const model = panelModels[planName];
+  console.log("Model fetched for " + planName + ": " + model);
   if (!model) throw new Error(`No model found for ${planName}`);
   return model;
 };
@@ -125,6 +126,40 @@ exports.deletePanelUser = async (req, res) => {
     res.status(200).json({ message: "Panel user deleted successfully" });
   } catch (err) {
     console.error("Error in deletePanelUser:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.panelLogin = async (req, res) => {
+  try {
+    const { planName } = req.params;
+    const { restaurant_code, username, password } = req.body;
+
+    const user = await User.findOne({ restaurant_code });
+
+    if (!user) {
+      console.log("User not found");
+      return res.json({ message: "Invalid restaurant code" });
+    }
+    
+    const Model = getModel(planName);
+    const panelUser = await Model.findOne({ username, restaurant_id: user._id });
+    console.log("Model : " + planName);
+
+    if (!panelUser) {
+      console.log("Panel user not found");
+      return res.json({ message: "Invalid Username" });
+    }
+
+    const isMatch = await bcrypt.compare(password, panelUser.password);
+    if (!isMatch) {
+      return res.json({ message: "Invalid Password" });
+    }
+    token = await user.generateAuthToken(planName);
+
+    res.status(200).json({ message: "Logged In", token, user });
+  } catch (err) {
+    console.error("Error in panelLogin:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };

@@ -50,9 +50,8 @@ const Login = () => {
   const onSubmit = async (values, { setSubmitting }) => {
     try {
       const res = await axios.post(
-        `${process.env.REACT_APP_API}/hotel-manager/login`,
+        `${process.env.REACT_APP_API}/panel-user/login/Hotel Manager`,
         values,
-        { withCredentials: true }
       );
       if (res.data.message === "Logged In") {
         login(res.data.token, res.data.user);

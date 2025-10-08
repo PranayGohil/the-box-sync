@@ -5,6 +5,7 @@ const {
   createOrUpdatePanelUser,
   deletePanelUser,
   changePanelPassword,
+  panelLogin,
 } = require("../controllers/panelUserController");
 const PanelRouter = express.Router();
 
@@ -17,5 +18,6 @@ PanelRouter.post(
   authMiddleware,
   changePanelPassword
 );
+PanelRouter.post("/login/:planName", panelLogin);
 
 module.exports = PanelRouter;
