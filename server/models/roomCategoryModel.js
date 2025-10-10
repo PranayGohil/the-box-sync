@@ -1,12 +1,18 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const addCategory = new Schema({
+const addRoomCategory = new Schema({
   user_id: {
     type: String,
   },
-  category_img: {
-    type: String,
-  },
+  room_imgs: [{
+    image: {
+      type: String
+    },
+    is_thumbnail: {
+      type: Boolean,
+      default: false
+    }
+  }],
   category: {
     type: String,
   },
@@ -49,5 +55,5 @@ const addCategory = new Schema({
   ],
 });
 
-const RoomCategory = mongoose.model("room_category", addCategory);
+const RoomCategory = mongoose.model("room_category", addRoomCategory);
 module.exports = RoomCategory;

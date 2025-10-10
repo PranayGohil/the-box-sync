@@ -21,6 +21,9 @@ const storage = multer.diskStorage({
       case "bill_files":
         uploadPath = path.join(uploadPath, "inventory/bills");
         break;
+      case "room_imgs":
+        uploadPath = path.join(uploadPath, "room/categories");
+        break;
       default:
         if (file.fieldname.includes("dish_img")) {
           uploadPath = path.join(uploadPath, "menu/dishes");

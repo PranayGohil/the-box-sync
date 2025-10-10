@@ -19,6 +19,10 @@ import ManageMenu from './menu/ManageMenu';
 import AddDishes from './menu/AddDishes';
 import QRforMenu from './menu/QRforMenu';
 
+import AddRoom from './room/AddRoom';
+import AddRoomCategory from './room/AddRoomCategory';
+import ManageRooms from './room/ManageRooms';
+
 import RequestedInventory from './inventory/RequestedInventory';
 import AddInventory from './inventory/AddInventory';
 import EditInventory from './inventory/EditInventory';
@@ -80,6 +84,27 @@ const NavContent = () => {
           <Nav.Link as={NavLink} to="/operations/qr-for-menu" className="px-0 pt-1">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">QR for Menu</span>
+          </Nav.Link>
+        </div>
+      </div>
+
+      <div className="mb-2">
+        <Nav.Link as={NavLink} to="/operations/manage-rooms" className="px-0">
+          <CsLineIcons icon="shield" className="me-2 sw-3" size="17" />
+          <span className="align-middle">Rooms</span>
+        </Nav.Link>
+        <div>
+          <Nav.Link as={NavLink} to="/operations/manage-rooms" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Manage Rooms</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/add-room" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Add Room</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/add-room-category" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Add Room Category</span>
           </Nav.Link>
         </div>
       </div>
@@ -157,11 +182,17 @@ const Operations = () => {
             <Route exact path="/operations/manage-menu" render={() => <ManageMenu />} />
             <Route exact path="/operations/add-dishes" render={() => <AddDishes />} />
             <Route exact path="/operations/qr-for-menu" render={() => <>
-                {
-                  activePlans.includes("Scan For Menu") ?
-                    <QRforMenu /> :
-                    <div className="text-center">You need to buy or renew to Scan For Menu plan to access this page.</div>
-                }</>} />
+              {
+                activePlans.includes("Scan For Menu") ?
+                  <QRforMenu /> :
+                  <div className="text-center">You need to buy or renew to Scan For Menu plan to access this page.</div>
+              }
+            </>
+            } />
+
+            <Route exact path="/operations/manage-rooms" render={() => <ManageRooms />} />
+            <Route exact path="/operations/add-room" render={() => <AddRoom />} />
+            <Route exact path="/operations/add-room-category" render={() => <AddRoomCategory />} />
 
             <Route exact path="/operations/requested-inventory" render={() => <RequestedInventory />} />
             <Route exact path="/operations/inventory-history" render={() => <InventoryHistory />} />
@@ -178,13 +209,13 @@ const Operations = () => {
                     <div className="text-center">You need to buy or renew to Feedback plan to access this page.</div>
                 }</>}
             />
-            <Route exact path="/operations/qr-for-feedback" 
-            render={() => <>
-              {
-                activePlans.includes("Feedback") ?
-                  <QRforFeedback /> :
-                  <div className="text-center">You need to buy or renew to Feedback plan to access this page.</div>
-              }</>} />
+            <Route exact path="/operations/qr-for-feedback"
+              render={() => <>
+                {
+                  activePlans.includes("Feedback") ?
+                    <QRforFeedback /> :
+                    <div className="text-center">You need to buy or renew to Feedback plan to access this page.</div>
+                }</>} />
             {/* <Route exact path="/operations/add-feedback" component={AddFeedback} /> */}
 
           </Switch>
