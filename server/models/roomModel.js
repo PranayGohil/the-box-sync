@@ -29,9 +29,9 @@ const addRoom = new Schema({
             default: false
         }
     }],
-    room_price: {
-        type: Number,
-    },
+    // room_price: {
+    //     type: Number,
+    // },
     room_status: {
         type: String,
         default: "Available",

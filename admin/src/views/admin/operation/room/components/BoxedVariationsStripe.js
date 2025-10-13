@@ -19,17 +19,8 @@ const BoxedVariationsStripe = ({ columns, data, category }) => {
   return (
     <>
       <Row>
-        <Col sm="12" md="12" lg="12" xxl="12" className="mb-2 d-flex align-items-center justify-content-between">
-          {category && <h5 className="mb-0">{category.category}</h5>}
-          <Badge
-            variant="outline"
-            className={`text-white mb-2 ${category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'}`}
-          >
-            {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
-          </Badge>
-        </Col>
         <Col sm="12" md="5" lg="3" xxl="2" className="mb-1">
-          <div className="d-inline-block float-md-start me-1 search-input-container border border-separator bg-foreground search-sm" style={{ width: '100px' }}>
+          <div className="d-inline-block float-md-start me-1 search-input-container border border-separator bg-foreground search-sm" style={{ width: '200px' }}>
             <ControlsSearch tableInstance={tableInstance} />
           </div>
         </Col>

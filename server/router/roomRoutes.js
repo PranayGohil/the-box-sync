@@ -24,13 +24,13 @@ const roomRouter = express.Router();
 roomRouter.route("/category/add").post(authMiddleware, upload.array('room_imgs', 10), addRoomCategory);
 roomRouter.route("/category/get").get(authMiddleware, getRoomCategories);
 roomRouter.route("/category/get/:id").get(authMiddleware, getRoomCategoryById);
-roomRouter.route("/category/update").put(authMiddleware, upload.array('room_imgs', 10), updateRoomCategory);
+roomRouter.route("/category/update/:id").put(authMiddleware, upload.array('room_imgs', 10), updateRoomCategory);
 roomRouter.route("/category/delete/:id").delete(authMiddleware, deleteRoomCategory);
 
 roomRouter.route("/add").post(authMiddleware, upload.array('room_imgs', 10), addRoom);
 roomRouter.route("/get").get(authMiddleware, getRooms);
 roomRouter.route("/get/:id").get(authMiddleware, getRoomById);
-roomRouter.route("/update").put(authMiddleware, upload.array('room_imgs', 10), updateRoom);
+roomRouter.route("/update/:id").put(authMiddleware, upload.array('room_imgs', 10), updateRoom);
 roomRouter.route("/delete/:id").delete(authMiddleware, deleteRoom);
 roomRouter.route("/update-status").put(authMiddleware, updateRoomStatus);
 roomRouter.route("/get-available-rooms").get(authMiddleware, getAvailableRooms);

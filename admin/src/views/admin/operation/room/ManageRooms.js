@@ -156,13 +156,6 @@ const ManageRooms = () => {
                   headerClassName: 'text-muted text-small text-uppercase w-15',
                 },
                 {
-                  Header: 'Price',
-                  accessor: 'room_price',
-                  sortable: true,
-                  headerClassName: 'text-muted text-small text-uppercase w-15',
-                  cellClassName: 'text-alternate',
-                },
-                {
                   Header: 'Status',
                   accessor: 'room_status',
                   sortable: true,

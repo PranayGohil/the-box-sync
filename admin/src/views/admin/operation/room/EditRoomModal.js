@@ -53,7 +53,7 @@ const EditRoomModal = ({ show, handleClose, data, fetchRoomData }) => {
         onSubmit: async (values) => {
             try {
                 const formData = new FormData();
-                formData.append('_id', data._id);
+                
                 formData.append('room_name', values.room_name);
                 formData.append('room_no', values.room_no);
                 formData.append('category', values.category);
@@ -78,7 +78,7 @@ const EditRoomModal = ({ show, handleClose, data, fetchRoomData }) => {
 
                 formData.append('thumbnail_index', thumbnailIndex);
 
-                await axios.put(`${process.env.REACT_APP_API}/room/update`, formData, {
+                await axios.put(`${process.env.REACT_APP_API}/room/update/${data._id}`, formData, {
                     withCredentials: true,
                     headers: {
                         'Content-Type': 'multipart/form-data',

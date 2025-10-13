@@ -5,215 +5,213 @@ const Room = require('../models/roomModel');
 
 // Add Room Category
 exports.addRoomCategory = async (req, res) => {
-    try {
-        const { category, amenities, subcategory, thumbnailIndex } = req.body;
-        const user_id = req.user.id;
+  try {
+    const { category, amenities, subcategory, thumbnailIndex } = req.body;
+    const user_id = req.user;
 
-        const room_imgs = (req.files || []).map((file, i) => ({
-            image: file.filename,
-            is_thumbnail: parseInt(thumbnailIndex) === i,
-        }));
+    const room_imgs = (req.files || []).map((file, i) => ({
+      image: "/room/categories/" + file.filename,
+      is_thumbnail: parseInt(thumbnailIndex) === i,
+    }));
 
-        const newCategory = new RoomCategory({
-            user_id,
-            category,
-            amenities: JSON.parse(amenities),
-            subcategory: JSON.parse(subcategory),
-            room_imgs,
-        });
+    const newCategory = new RoomCategory({
+      user_id,
+      category,
+      amenities: JSON.parse(amenities),
+      subcategory: JSON.parse(subcategory),
+      room_imgs,
+    });
 
-        await newCategory.save();
+    await newCategory.save();
 
-        res.status(201).json({
-            success: true,
-            message: 'Room category added successfully',
-            data: newCategory,
-        });
-    } catch (error) {
-        console.error('Error adding room category:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error adding room category',
-            error: error.message,
-        });
-    }
+    res.status(201).json({
+      success: true,
+      message: 'Room category added successfully',
+      data: newCategory,
+    });
+  } catch (error) {
+    console.error('Error adding room category:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error adding room category',
+      error: error.message,
+    });
+  }
 };
 
 // Get All Room Categories with Rooms
 exports.getRoomCategories = async (req, res) => {
-    try {
-        const user_id = req.user.id;
-
-        const categories = await RoomCategory.find({ user_id });
-
-        // Populate rooms for each category
-        const Room = require('../models/Room');
-        const categoriesWithRooms = await Promise.all(
-            categories.map(async (category) => {
-                const rooms = await Room.find({
-                    category: category._id,
-                    user_id
-                });
-
-                return {
-                    ...category.toObject(),
-                    rooms,
-                };
-            })
-        );
-
-        res.status(200).json({
-            success: true,
-            data: categoriesWithRooms,
+  try {
+    const user_id = req.user;
+    console.log("User ID : ", req.user);
+    const categories = await RoomCategory.find({ user_id });
+    // Populate rooms for each category
+    const categoriesWithRooms = await Promise.all(
+      categories.map(async (category) => {
+        const rooms = await Room.find({
+          category: category._id,
+          user_id
         });
-    } catch (error) {
-        console.error('Error fetching room categories:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching room categories',
-            error: error.message,
-        });
-    }
+
+        return {
+          ...category.toObject(),
+          rooms,
+        };
+      })
+    );
+    console.log("Categories : ", categoriesWithRooms);
+    res.status(200).json({
+      success: true,
+      data: categoriesWithRooms,
+    });
+  } catch (error) {
+    console.error('Error fetching room categories:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching room categories',
+      error: error.message,
+    });
+  }
 };
 
 // Get Single Room Category
 exports.getRoomCategoryById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const user_id = req.user.id;
+  try {
+    const { id } = req.params;
+    const user_id = req.user;
 
-        const category = await RoomCategory.findOne({ _id: id, user_id });
+    const category = await RoomCategory.findOne({ _id: id, user_id });
 
-        if (!category) {
-            return res.status(404).json({
-                success: false,
-                message: 'Room category not found',
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            data: category,
-        });
-    } catch (error) {
-        console.error('Error fetching room category:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching room category',
-            error: error.message,
-        });
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: 'Room category not found',
+      });
     }
+
+    res.status(200).json({
+      success: true,
+      data: category,
+    });
+  } catch (error) {
+    console.error('Error fetching room category:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching room category',
+      error: error.message,
+    });
+  }
 };
 
 // Update Room Category
 exports.updateRoomCategory = async (req, res) => {
-    try {
-        const { _id, category, amenities, subcategory, thumbnailIndex } = req.body;
-        const user_id = req.user.id;
+  try {
+    const { category, amenities, subcategory, thumbnailIndex } = req.body;
+    const { id } = req.params;
+    const user_id = req.user;
 
-        const categoryDoc = await RoomCategory.findOne({ _id, user_id });
-        if (!categoryDoc) return res.status(404).json({ success: false, message: 'Room category not found' });
+    const categoryDoc = await RoomCategory.findOne({ _id: id, user_id });
+    if (!categoryDoc) return res.status(404).json({ success: false, message: 'Room category not found' });
 
-        // Preserve existing images
-        let room_imgs = categoryDoc.room_imgs || [];
+    // Preserve existing images
+    let room_imgs = categoryDoc.room_imgs || [];
 
-        // Add new uploads
-        if (req.files && req.files.length > 0) {
-            const newImgs = req.files.map((file, i) => ({
-                image: file.filename,
-                is_thumbnail: false,
-            }));
-            room_imgs = [...room_imgs, ...newImgs];
-        }
-
-        // Update thumbnail
-        if (thumbnailIndex !== undefined) {
-            room_imgs = room_imgs.map((img, i) => ({
-                ...img,
-                is_thumbnail: parseInt(thumbnailIndex) === i,
-            }));
-        }
-
-        const updatedCategory = await RoomCategory.findByIdAndUpdate(
-            _id,
-            {
-                category,
-                amenities: JSON.parse(amenities),
-                subcategory: JSON.parse(subcategory),
-                room_imgs,
-            },
-            { new: true }
-        );
-
-        res.status(200).json({
-            success: true,
-            message: 'Room category updated successfully',
-            data: updatedCategory,
-        });
-    } catch (error) {
-        console.error('Error updating room category:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error updating room category',
-            error: error.message,
-        });
+    // Add new uploads
+    if (req.files && req.files.length > 0) {
+      const newImgs = req.files.map((file, i) => ({
+        image: "/room/categories/" + file.filename,
+        is_thumbnail: false,
+      }));
+      room_imgs = [...room_imgs, ...newImgs];
     }
+
+    // Update thumbnail
+    if (thumbnailIndex !== undefined) {
+      room_imgs = room_imgs.map((img, i) => ({
+        ...img,
+        is_thumbnail: parseInt(thumbnailIndex) === i,
+      }));
+    }
+
+    const updatedCategory = await RoomCategory.findByIdAndUpdate(
+      { _id: id },
+      {
+        category,
+        amenities: JSON.parse(amenities),
+        subcategory: JSON.parse(subcategory),
+        room_imgs,
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Room category updated successfully',
+      data: updatedCategory,
+    });
+  } catch (error) {
+    console.error('Error updating room category:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating room category',
+      error: error.message,
+    });
+  }
 };
 
 // Delete Room Category
 exports.deleteRoomCategory = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const user_id = req.user.id;
+  try {
+    const { id } = req.params;
+    const user_id = req.user;
 
-        const category = await RoomCategory.findOne({ _id: id, user_id });
+    const category = await RoomCategory.findOne({ _id: id, user_id });
 
-        if (!category) {
-            return res.status(404).json({
-                success: false,
-                message: 'Room category not found',
-            });
-        }
-
-        // Delete associated rooms
-        const Room = require('../models/Room');
-        const rooms = await Room.find({ category: id, user_id });
-
-        // Delete room images
-        rooms.forEach((room) => {
-            if (room.room_img) {
-                const roomImagePath = path.join(__dirname, '../uploads', room.room_img);
-                if (fs.existsSync(roomImagePath)) {
-                    fs.unlinkSync(roomImagePath);
-                }
-            }
-        });
-
-        // Delete all rooms in this category
-        await Room.deleteMany({ category: id, user_id });
-
-        // Delete category image
-        if (category.category_img) {
-            const categoryImagePath = path.join(__dirname, '../uploads', category.category_img);
-            if (fs.existsSync(categoryImagePath)) {
-                fs.unlinkSync(categoryImagePath);
-            }
-        }
-
-        await RoomCategory.findByIdAndDelete(id);
-
-        res.status(200).json({
-            success: true,
-            message: 'Room category and associated rooms deleted successfully',
-        });
-    } catch (error) {
-        console.error('Error deleting room category:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error deleting room category',
-            error: error.message,
-        });
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: 'Room category not found',
+      });
     }
+
+    // Delete associated rooms
+    const rooms = await Room.find({ category: id, user_id });
+
+    // Delete room images
+    rooms.forEach((room) => {
+      if (room.room_img) {
+        const roomImagePath = path.join(__dirname, '../uploads', room.room_img);
+        if (fs.existsSync(roomImagePath)) {
+          fs.unlinkSync(roomImagePath);
+        }
+      }
+    });
+
+    // Delete all rooms in this category
+    await Room.deleteMany({ category: id, user_id });
+
+    // Delete category image
+    if (category.category_img) {
+      const categoryImagePath = path.join(__dirname, '../uploads', category.category_img);
+      if (fs.existsSync(categoryImagePath)) {
+        fs.unlinkSync(categoryImagePath);
+      }
+    }
+
+    await RoomCategory.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Room category and associated rooms deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting room category:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting room category',
+      error: error.message,
+    });
+  }
 };
 
 // **************************************************************
@@ -221,7 +219,7 @@ exports.deleteRoomCategory = async (req, res) => {
 exports.addRoom = async (req, res) => {
   try {
     const { category, rooms, room_indices } = req.body;
-    const user_id = req.user.id;
+    const user_id = req.user;
 
     // Check if category exists
     const categoryExists = await RoomCategory.findOne({ _id: category, user_id });
@@ -252,7 +250,7 @@ exports.addRoom = async (req, res) => {
       const thumbnailIdx = parseInt(room.thumbnail_index) || 0;
 
       const room_imgs = roomImageFiles.map((filename, imgIndex) => ({
-        image: filename,
+        image: "/room/categories/" + filename,
         is_thumbnail: imgIndex === thumbnailIdx,
       }));
 
@@ -289,7 +287,7 @@ exports.addRoom = async (req, res) => {
 // Get All Rooms with optional filters
 exports.getRooms = async (req, res) => {
   try {
-    const user_id = req.user.id;
+    const user_id = req.user;
     const { category, status, search } = req.query;
 
     const query = { user_id };
@@ -334,7 +332,7 @@ exports.getRooms = async (req, res) => {
 exports.getRoomById = async (req, res) => {
   try {
     const { id } = req.params;
-    const user_id = req.user.id;
+    const user_id = req.user;
 
     const room = await Room.findOne({ _id: id, user_id })
       .populate('category', 'category category_imgs amenities subcategory');
@@ -364,7 +362,6 @@ exports.getRoomById = async (req, res) => {
 exports.updateRoom = async (req, res) => {
   try {
     const {
-      _id,
       room_name,
       room_no,
       category,
@@ -375,12 +372,15 @@ exports.updateRoom = async (req, res) => {
       existing_images,
       thumbnail_index,
     } = req.body;
-    const user_id = req.user.id;
+
+    const { id } = req.params;
+    const user_id = req.user;
 
     // Check if room exists
-    const existingRoom = await Room.findOne({ _id, user_id });
+    const existingRoom = await Room.findOne({ _id : id, user_id });
 
     if (!existingRoom) {
+      console.log('Room not found');
       return res.status(404).json({
         success: false,
         message: 'Room not found',
@@ -392,10 +392,11 @@ exports.updateRoom = async (req, res) => {
       const roomNoExists = await Room.findOne({
         room_no,
         user_id,
-        _id: { $ne: _id },
+        _id: { $ne: id },
       });
 
       if (roomNoExists) {
+        console.log('Room number already exists');
         return res.status(400).json({
           success: false,
           message: 'Room number already exists',
@@ -407,6 +408,7 @@ exports.updateRoom = async (req, res) => {
     if (category) {
       const categoryExists = await RoomCategory.findOne({ _id: category, user_id });
       if (!categoryExists) {
+        console.log('Room category not found');
         return res.status(404).json({
           success: false,
           message: 'Room category not found',
@@ -423,7 +425,7 @@ exports.updateRoom = async (req, res) => {
     if (existingRoom.room_imgs && existingRoom.room_imgs.length > 0) {
       existingRoom.room_imgs.forEach((img) => {
         if (!existingImageNames.includes(img.image)) {
-          const imagePath = path.join(__dirname, '../uploads', img.image);
+          const imagePath = path.join(__dirname, '../uploads/room/categories', img.image);
           if (fs.existsSync(imagePath)) {
             fs.unlinkSync(imagePath);
           }
@@ -433,7 +435,7 @@ exports.updateRoom = async (req, res) => {
 
     // Prepare new images array
     const newUploadedImages = files.map((file) => ({
-      image: file.filename,
+      image: "/room/categories/" + file.filename,
       is_thumbnail: false,
     }));
 
@@ -457,7 +459,7 @@ exports.updateRoom = async (req, res) => {
       room_imgs,
     };
 
-    const updatedRoom = await Room.findByIdAndUpdate(_id, updateData, {
+    const updatedRoom = await Room.findByIdAndUpdate({ _id: id }, updateData, {
       new: true,
       runValidators: true,
     }).populate('category', 'category category_imgs');
@@ -481,7 +483,7 @@ exports.updateRoom = async (req, res) => {
 exports.deleteRoom = async (req, res) => {
   try {
     const { id } = req.params;
-    const user_id = req.user.id;
+    const user_id = req.user;
 
     const room = await Room.findOne({ _id: id, user_id });
 
@@ -523,7 +525,7 @@ exports.updateRoomStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { room_status } = req.body;
-    const user_id = req.user.id;
+    const user_id = req.user;
 
     // Validate status
     const validStatuses = ['Available', 'Occupied', 'Maintenance'];
@@ -564,7 +566,7 @@ exports.updateRoomStatus = async (req, res) => {
 // Get Available Rooms
 exports.getAvailableRooms = async (req, res) => {
   try {
-    const user_id = req.user.id;
+    const user_id = req.user;
     const { category } = req.query;
 
     const query = {
@@ -599,7 +601,7 @@ exports.getAvailableRooms = async (req, res) => {
 exports.getRoomsByCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
-    const user_id = req.user.id;
+    const user_id = req.user;
 
     // Check if category exists
     const category = await RoomCategory.findOne({ _id: categoryId, user_id });
@@ -633,7 +635,7 @@ exports.getRoomsByCategory = async (req, res) => {
 // Get Room Statistics
 exports.getRoomStats = async (req, res) => {
   try {
-    const user_id = req.user.id;
+    const user_id = req.user;
 
     const totalRooms = await Room.countDocuments({ user_id });
     const availableRooms = await Room.countDocuments({ user_id, room_status: 'Available' });
@@ -699,7 +701,7 @@ exports.getRoomStats = async (req, res) => {
 exports.bulkUpdateRoomStatus = async (req, res) => {
   try {
     const { roomIds, room_status } = req.body;
-    const user_id = req.user.id;
+    const user_id = req.user;
 
     if (!Array.isArray(roomIds) || roomIds.length === 0) {
       return res.status(400).json({

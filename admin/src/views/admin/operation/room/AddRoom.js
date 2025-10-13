@@ -47,7 +47,7 @@ const AddRoom = () => {
                 room_no: '',
                 room_details: '',
                 max_person: '',
-                room_price: '',
+                // room_price: '',
                 room_status: 'Available',
             },
         ],
@@ -61,7 +61,7 @@ const AddRoom = () => {
                 room_no: Yup.string().required('Room number is required'),
                 room_details: Yup.string(),
                 max_person: Yup.number().typeError('Must be a number').required('Max person is required'),
-                room_price: Yup.number().typeError('Must be a number').required('Room price is required'),
+                // room_price: Yup.number().typeError('Must be a number').required('Room price is required'),
                 room_status: Yup.string().required('Room status is required'),
             })
         ),
@@ -126,7 +126,7 @@ const AddRoom = () => {
                     room_no: room.room_no,
                     room_details: room.room_details,
                     max_person: room.max_person,
-                    room_price: room.room_price,
+                    // room_price: room.room_price,
                     room_status: room.room_status,
                     image_count: images.length,
                     thumbnail_index: thumbnailIndex >= 0 ? thumbnailIndex : 0,
@@ -259,7 +259,7 @@ const AddRoom = () => {
                                                                         <ErrorMessage name={`rooms[${index}].max_person`} component="div" className="text-danger" />
                                                                     </BForm.Group>
                                                                 </Col>
-                                                                <Col md={4}>
+                                                                {/* <Col md={4}>
                                                                     <BForm.Group>
                                                                         <BForm.Label>Room Price</BForm.Label>
                                                                         <Field
@@ -270,7 +270,7 @@ const AddRoom = () => {
                                                                         />
                                                                         <ErrorMessage name={`rooms[${index}].room_price`} component="div" className="text-danger" />
                                                                     </BForm.Group>
-                                                                </Col>
+                                                                </Col> */}
                                                                 <Col md={4}>
                                                                     <BForm.Group>
                                                                         <BForm.Label>Room Status</BForm.Label>
@@ -377,7 +377,7 @@ const AddRoom = () => {
                                                                     room_no: '',
                                                                     room_details: '',
                                                                     max_person: '',
-                                                                    room_price: '',
+                                                                    // room_price: '',
                                                                     room_status: 'Available',
                                                                 })
                                                             }

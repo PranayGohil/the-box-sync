@@ -1,57 +1,125 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
+import { Modal, Button, Form, Row, Col, Badge } from 'react-bootstrap';
 import { useFormik, FieldArray, FormikProvider } from 'formik';
 import axios from 'axios';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
-  const [previewImgs, setPreviewImgs] = useState([]);
-  const [thumbnailIndex, setThumbnailIndex] = useState(null);
+  const [roomImages, setRoomImages] = useState([]);
+  const [thumbnailIndex, setThumbnailIndex] = useState(0);
+  const [newImages, setNewImages] = useState([]);
 
   useEffect(() => {
-    if (data?.room_imgs?.length > 0) {
-      const previews = data.room_imgs.map(
-        (img) => `${process.env.REACT_APP_UPLOAD_DIR}${img.image}`
-      );
-      setPreviewImgs(previews);
-      const thumbIndex = data.room_imgs.findIndex((i) => i.is_thumbnail);
-      setThumbnailIndex(thumbIndex);
+    if (data?.room_imgs) {
+      const existingImages = data.room_imgs.map((img) => ({
+        image: img.image,
+        is_thumbnail: img.is_thumbnail,
+        preview: `${process.env.REACT_APP_UPLOAD_DIR}${img.image}`,
+        isExisting: true,
+      }));
+      setRoomImages(existingImages);
+      const thumbIndex = existingImages.findIndex((img) => img.is_thumbnail);
+      setThumbnailIndex(thumbIndex >= 0 ? thumbIndex : 0);
     }
+    console.log('Edit Category Data:', data);
   }, [data]);
 
   const formik = useFormik({
     initialValues: {
-      category: data?.category || "",
-      room_imgs: [],
-      amenities: data?.amenities || [],
-      subcategory: data?.subcategory || [],
+      category: data?.category || '',
+      amenities: data?.amenities || [{ title: '', amenities: [''] }],
+      subcategory: data?.subcategory || [{
+        subcategory_name: '',
+        base_price: '',
+        max_price: '',
+        current_price: '',
+        description: '',
+        is_refundable: false,
+        is_available: true,
+      }],
     },
     enableReinitialize: true,
     onSubmit: async (values) => {
-      const formData = new FormData();
-      formData.append("_id", data._id);
-      formData.append("category", values.category);
-      formData.append("amenities", JSON.stringify(values.amenities));
-      formData.append("subcategory", JSON.stringify(values.subcategory));
-      formData.append("thumbnailIndex", thumbnailIndex);
+      try {
+        const formData = new FormData();
+        formData.append('category', values.category);
+        formData.append('amenities', JSON.stringify(values.amenities));
+        formData.append('subcategory', JSON.stringify(values.subcategory));
 
-      values.room_imgs.forEach((file) => formData.append("room_imgs", file));
+        // Send existing images data
+        const existingImages = roomImages
+          .filter((img) => img.isExisting)
+          .map((img) => ({
+            image: img.image,
+            is_thumbnail: img.is_thumbnail,
+          }));
+        formData.append('existing_images', JSON.stringify(existingImages));
 
-      await axios.put(`${process.env.REACT_APP_API}/room/category/update`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+        // Append new images
+        newImages.forEach((img) => {
+          formData.append('room_imgs', img.file);
+        });
 
-      fetchRoomData();
-      handleClose();
+        formData.append('thumbnail_index', thumbnailIndex);
+
+        await axios.put(`${process.env.REACT_APP_API}/room/category/update/${data.id}`, formData, {
+          withCredentials: true,
+          headers: { 
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+
+        fetchRoomData();
+        handleClose();
+      } catch (err) {
+        console.error('Error updating category:', err);
+        alert('Error updating category');
+      }
     },
   });
 
-  const handleImageChange = (e) => {
+  const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    formik.setFieldValue("room_imgs", files);
-    setPreviewImgs([...previewImgs, ...files.map((f) => URL.createObjectURL(f))]);
+    const uploadedImages = files.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+      is_thumbnail: false,
+      isExisting: false,
+    }));
+    setRoomImages([...roomImages, ...uploadedImages]);
+    setNewImages([...newImages, ...uploadedImages]);
+  };
+
+  const removeImage = (index) => {
+    const updatedImages = roomImages.filter((_, i) => i !== index);
+
+    // Update new images array if it's a new image
+    if (!roomImages[index].isExisting) {
+      const newImagesUpdated = newImages.filter((img) => img.preview !== roomImages[index].preview);
+      setNewImages(newImagesUpdated);
+    }
+
+    // Update thumbnail index
+    if (thumbnailIndex === index) {
+      setThumbnailIndex(0);
+      if (updatedImages.length > 0) {
+        updatedImages[0].is_thumbnail = true;
+      }
+    } else if (thumbnailIndex > index) {
+      setThumbnailIndex(thumbnailIndex - 1);
+    }
+
+    setRoomImages(updatedImages);
+  };
+
+  const setAsThumbnail = (index) => {
+    const updatedImages = roomImages.map((img, i) => ({
+      ...img,
+      is_thumbnail: i === index,
+    }));
+    setRoomImages(updatedImages);
+    setThumbnailIndex(index);
   };
 
   return (
@@ -62,53 +130,82 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
       <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
         <FormikProvider value={formik}>
           <Form id="edit_category_form" onSubmit={formik.handleSubmit}>
-            <Form.Group className="mt-3">
-              <Form.Label>Category Images</Form.Label>
-              <Form.Control type="file" multiple onChange={handleImageChange} />
+            <Form.Group className="mb-3">
+              <Form.Label>Category Name</Form.Label>
+              <Form.Control 
+                type="text" 
+                name="category" 
+                value={formik.values.category} 
+                onChange={formik.handleChange} 
+              />
             </Form.Group>
-            <div className="d-flex flex-wrap mt-3">
-              {previewImgs.map((src, index) => (
-                <div key={index} className="position-relative me-2 mb-2 text-center">
-                  <img
-                    src={src}
-                    alt="preview"
-                    style={{
-                      width: 100,
-                      height: 100,
-                      objectFit: "cover",
-                      border: thumbnailIndex === index ? "3px solid green" : "1px solid #ccc",
-                      borderRadius: 6,
-                      cursor: "pointer",
-                    }}
-                    onClick={() => setThumbnailIndex(index)}
-                  />
-                  <div className="small">
-                    {thumbnailIndex === index ? "Thumbnail" : "Set as Thumbnail"}
-                  </div>
-                </div>
-              ))}
-            </div>
 
             <Form.Group className="mb-3">
-              <Form.Label>Category Image</Form.Label>
-              <Form.Control
-                type="file"
-                name="category_img"
-                onChange={(e) => {
-                  const file = e.currentTarget.files[0];
-                  formik.setFieldValue('category_img', file);
-                  if (file) setPreviewImgs(URL.createObjectURL(file));
-                }}
-              />
-              {setPreviewImgs && (
-                <img
-                  src={previewImgs}
-                  alt="Preview"
-                  className="img-thumbnail mt-2"
-                  style={{ maxWidth: '150px' }}
-                />
-              )}
+              <Form.Label>Category Images</Form.Label>
+              <Form.Control type="file" multiple accept="image/*" onChange={handleImageUpload} />
+              <Form.Text className="text-muted">
+                You can add multiple images. Click on an image to set it as thumbnail.
+              </Form.Text>
             </Form.Group>
+
+            {roomImages.length > 0 && (
+              <Row className="mb-4">
+                <Col md={12}>
+                  <div className="d-flex flex-wrap gap-3">
+                    {roomImages.map((img, index) => (
+                      <div
+                        key={index}
+                        className="position-relative"
+                        style={{
+                          width: '150px',
+                          height: '150px',
+                          border: img.is_thumbnail ? '3px solid #0d6efd' : '1px solid #dee2e6',
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => setAsThumbnail(index)}
+                      >
+                        <img
+                          src={img.preview}
+                          alt={`Preview ${index}`}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                        {img.is_thumbnail && (
+                          <Badge
+                            bg="primary"
+                            className="position-absolute top-0 start-0 m-2"
+                            style={{ fontSize: '10px' }}
+                          >
+                            Thumbnail
+                          </Badge>
+                        )}
+                        {img.isExisting && (
+                          <Badge
+                            bg="success"
+                            className="position-absolute bottom-0 start-0 m-2"
+                            style={{ fontSize: '10px' }}
+                          >
+                            Existing
+                          </Badge>
+                        )}
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-danger position-absolute top-0 end-0 m-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeImage(index);
+                          }}
+                          style={{ padding: '2px 6px', fontSize: '12px' }}
+                        >
+                          <CsLineIcons icon="close" size="12" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </Col>
+              </Row>
+            )}
 
             <h5 className="mt-4">Amenities</h5>
             <FieldArray name="amenities">
@@ -128,8 +225,8 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                           </Form.Group>
                         </Col>
                         <Col md={2} className="d-flex align-items-end">
-                          <Button
-                            variant="outline-danger"
+                          <Button 
+                            variant="outline-danger" 
                             size="sm"
                             onClick={() => remove(index)}
                           >
@@ -147,17 +244,17 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                                     type="text"
                                     placeholder="Amenity item"
                                     value={amenity}
-                                    onChange={(e) =>
+                                    onChange={(e) => 
                                       formik.setFieldValue(
-                                        `amenities[${index}].amenities[${amenityIndex}]`,
+                                        `amenities[${index}].amenities[${amenityIndex}]`, 
                                         e.target.value
                                       )
                                     }
                                   />
                                 </Col>
                                 <Col md={2}>
-                                  <Button
-                                    variant="outline-danger"
+                                  <Button 
+                                    variant="outline-danger" 
                                     size="sm"
                                     onClick={() => removeAmenity(amenityIndex)}
                                   >
@@ -166,9 +263,9 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                                 </Col>
                               </Row>
                             ))}
-                            <Button
-                              variant="outline-primary"
-                              size="sm"
+                            <Button 
+                              variant="outline-primary" 
+                              size="sm" 
                               className="mt-2"
                               onClick={() => pushAmenity('')}
                             >
@@ -179,8 +276,8 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                       </FieldArray>
                     </div>
                   ))}
-                  <Button
-                    variant="primary"
+                  <Button 
+                    variant="primary" 
                     onClick={() => push({ title: '', amenities: [''] })}
                   >
                     + Add Amenity Group
@@ -202,15 +299,15 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                             <Form.Control
                               type="text"
                               value={subcat.subcategory_name}
-                              onChange={(e) =>
+                              onChange={(e) => 
                                 formik.setFieldValue(`subcategory[${index}].subcategory_name`, e.target.value)
                               }
                             />
                           </Form.Group>
                         </Col>
                         <Col md={6} className="d-flex align-items-end">
-                          <Button
-                            variant="outline-danger"
+                          <Button 
+                            variant="outline-danger" 
                             onClick={() => remove(index)}
                           >
                             Remove Subcategory
@@ -224,7 +321,7 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                             <Form.Control
                               type="number"
                               value={subcat.base_price}
-                              onChange={(e) =>
+                              onChange={(e) => 
                                 formik.setFieldValue(`subcategory[${index}].base_price`, e.target.value)
                               }
                             />
@@ -236,7 +333,7 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                             <Form.Control
                               type="number"
                               value={subcat.max_price}
-                              onChange={(e) =>
+                              onChange={(e) => 
                                 formik.setFieldValue(`subcategory[${index}].max_price`, e.target.value)
                               }
                             />
@@ -248,7 +345,7 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                             <Form.Control
                               type="number"
                               value={subcat.current_price}
-                              onChange={(e) =>
+                              onChange={(e) => 
                                 formik.setFieldValue(`subcategory[${index}].current_price`, e.target.value)
                               }
                             />
@@ -261,7 +358,7 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                           as="textarea"
                           rows={2}
                           value={subcat.description}
-                          onChange={(e) =>
+                          onChange={(e) => 
                             formik.setFieldValue(`subcategory[${index}].description`, e.target.value)
                           }
                         />
@@ -270,7 +367,7 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                         type="checkbox"
                         label="Refundable"
                         checked={subcat.is_refundable}
-                        onChange={(e) =>
+                        onChange={(e) => 
                           formik.setFieldValue(`subcategory[${index}].is_refundable`, e.target.checked)
                         }
                         className="mb-2"
@@ -279,14 +376,14 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                         type="checkbox"
                         label="Available"
                         checked={subcat.is_available}
-                        onChange={(e) =>
+                        onChange={(e) => 
                           formik.setFieldValue(`subcategory[${index}].is_available`, e.target.checked)
                         }
                       />
                     </div>
                   ))}
-                  <Button
-                    variant="primary"
+                  <Button 
+                    variant="primary" 
                     onClick={() => push({
                       subcategory_name: '',
                       base_price: '',

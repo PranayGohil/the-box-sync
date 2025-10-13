@@ -16,7 +16,6 @@ const emailCheck = async (req, res) => {
 };
 
 const register = async (req, res) => {
-  console.log("Bodyyyyyyy", req.body);
   try {
     const { country, state, name, email } = req.body;
 
@@ -201,7 +200,6 @@ const getUserData = async (req, res) => {
         userdata.taxInfo = fetchuser.taxInfo;
         userdata.containerCharges = fetchuser.containerCharges;
       }
-      console.log(userdata);
       res.send(userdata);
     } else {
       console.log("Null");
