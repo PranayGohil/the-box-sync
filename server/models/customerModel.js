@@ -13,6 +13,9 @@ const customerSchema = new Schema({
     address: {
         type: String,
     },
+    id_proof: {
+        type: String
+    },
     date_of_birth: {
         type: Date,
     },
@@ -22,7 +25,7 @@ const customerSchema = new Schema({
     tag: {
         type: Array,
     },
-    restaurant_id: {
+    user_id: {
         type: String,
     },
 });

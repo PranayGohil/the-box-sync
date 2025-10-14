@@ -63,7 +63,7 @@ const addStaff = new Schema({
     type: [Number],
     default: [],
   },
-  restaurant_id: {
+  user_id: {
     type: String,
   },
   attandance: [

@@ -76,7 +76,7 @@ const orderSchema = new Schema({
     type: Date,
     default: Date.now,
   },
-  restaurant_id: {
+  user_id: {
     type: String,
   },
   order_source: {

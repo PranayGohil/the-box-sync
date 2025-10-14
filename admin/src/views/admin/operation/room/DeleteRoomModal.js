@@ -17,7 +17,7 @@ const DeleteRoomModal = ({ show, handleClose, data, fetchRoomData }) => {
       await fetchRoomData(); 
       handleClose();
     } catch (err) {
-      console.error('Error deleting dish:', err);
+      console.error('Error deleting room:', err);
     } finally {
       setIsDeleting(false);
     }
@@ -26,12 +26,12 @@ const DeleteRoomModal = ({ show, handleClose, data, fetchRoomData }) => {
   return (
     <Modal className="modal-close-out" show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
-        <Modal.Title>Delete Dish</Modal.Title>
+        <Modal.Title>Delete Room</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <p>Are you sure you want to delete this dish?</p>
+        <p>Are you sure you want to delete this room?</p>
         <p>
-          <strong>{data?.dish_name}</strong>
+          <strong>{data?.room_name}</strong>
         </p>
       </Modal.Body>
       <Modal.Footer>

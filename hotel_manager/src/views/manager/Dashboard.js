@@ -1,257 +1,225 @@
-import React, { useState, useEffect } from 'react';
-import { useHistory, Switch, Route, Redirect } from 'react-router-dom';
-import { Button, Row, Col, Card, Badge } from 'react-bootstrap';
-import axios from 'axios';
-import HtmlHead from 'components/html-head/HtmlHead';
-import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
-import Glide from 'components/carousel/Glide';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { Form, Button, Row, Col, Card, Table } from "react-bootstrap";
 
-import DineInOrder from './order/DineInOrder';
-import TakeawayOrder from './order/TakeawayOrder';
-import DeliveryOrder from './order/DeliveryOrder';
+const HotelBookingDashboard = () => {
+  const [customers, setCustomers] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSubCategory, setSelectedSubCategory] = useState("");
 
-const Dashboard = () => {
-  const title = 'Dashboard';
-  const description = 'Restaurant Management Dashboard';
-  const history = useHistory();
+  const [formData, setFormData] = useState({
+    customer_id: "",
+    category_id: "",
+    subcategory_name: "",
+    room_id: "",
+    check_in: "",
+    check_out: "",
+    num_guests: "",
+    total_price: "",
+  });
 
-  const breadcrumbs = [
-    { to: '', text: 'Home' },
-    { to: 'dashboard', text: 'Dashboard' },
-  ];
 
-  const [tables, setTables] = useState([]);
-  const [activeDineInOrders, setActiveDineInOrders] = useState([]);
-  const [activeTakeawaysAndDeliveries, setActiveTakeawaysAndDeliveries] = useState([]);
-  const [specialDishes, setSpecialDishes] = useState([]);
-
-  const fetchTables = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API}/table/get-all`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setTables(response.data.data);
-    } catch (error) {
-      console.error('Error fetching tables:', error);
-    }
-  };
-
-  const fetchActiveOrders = async () => {
-    try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API}/order/get-active`,
-        {
-          source: 'Manager',
-        },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
-      );
-      console.log(response.data.data);
-
-      setActiveDineInOrders(response.data.activeDineInTables);
-      setActiveTakeawaysAndDeliveries(response.data.activeTakeawaysAndDeliveries);
-    } catch (error) {
-      console.error('Error fetching active orders:', error);
-    }
-  };
-
-  const fetchSpecialDishes = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API}/menu/get`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      const specialDishesRes = response.data.data
-        .flatMap((category) => category.dishes)
-        .filter((dish) => dish.is_special)
-        .slice(0, 6);
-
-      setSpecialDishes(specialDishesRes);
-    } catch (error) {
-      console.error('Error fetching special dishes:', error);
-    }
+  const fetchInitialData = async () => {
+    const cust = await axios.get(`${process.env.REACT_APP_API}/customer/get-all`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    const cat = await axios.get(`${process.env.REACT_APP_API}/room/category/get`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    const book = await axios.get(`${process.env.REACT_APP_API}/hotel-booking/get-all`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    setCustomers(cust.data);
+    setCategories(cat.data);
+    setBookings(book.data);
+    console.log("Customers:", cust.data);
+    console.log("Categories:", cat);
+    console.log("Bookings:", book.data);
   };
 
   useEffect(() => {
-    fetchTables();
-    fetchActiveOrders();
-    fetchSpecialDishes();
+    fetchInitialData();
   }, []);
 
-  const handleTableClick = async (tableId, orderId) => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API}/table/get/${tableId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
-      const tableInfo = response.data;
-      if (orderId) {
-        history.push(`/order/dine-in?tableId=${tableId}&orderId=${orderId}&mode=edit`);
-      } else {
-        history.push(`/order/dine-in?tableId=${tableId}&mode=new`);
-      }
-    } catch (error) {
-      console.error('Error fetching table details:', error);
-    }
+  const handleCategoryChange = (e) => {
+    const catId = e.target.value;
+    setSelectedCategory(catId);
+    const selected = categories.find((c) => c._id === catId);
+    setSubcategories(selected?.subcategory || []);
+    setFormData({ ...formData, category_id: catId });
   };
 
-  const handleOrderClick = (order) => {
-    const orderType = order.order_type.toLowerCase().replace(' ', '-');
-    history.push(`/order/${orderType}?orderId=${order._id}&mode=edit`);
+  const handleSubCategoryChange = async (e) => {
+    const sub = e.target.value;
+    setSelectedSubCategory(sub);
+    setFormData({ ...formData, subcategory_name: sub });
+    const roomRes = await axios.get(`/api/rooms/by-category/${selectedCategory}`);
+    const available = roomRes.data.filter((r) => r.room_status === "Available");
+    setRooms(available);
   };
 
-  const createNewOrder = (orderType) => {
-    history.push(`/order/${orderType}?mode=new`);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await axios.post("/api/bookings/create", formData);
+    alert("Booking Created!");
+    fetchInitialData();
   };
 
   return (
-    <>
-      <HtmlHead title={title} description={description} />
+    <div className="container py-4">
+      <h2 className="mb-4">Hotel Room Booking</h2>
 
-      <div className="page-title-container">
-        <Row>
-          <Col md="7">
-            <h1 className="mb-0 pb-0 display-4">{title}</h1>
-            <BreadcrumbList items={breadcrumbs} />
-          </Col>
-          <Col md="5" className="d-flex align-items-start justify-content-end gap-2">
-            <Button variant="outline-primary" onClick={() => createNewOrder('takeaway')}>
-              + New Takeaway
-            </Button>
-            <Button variant="outline-primary" onClick={() => createNewOrder('delivery')}>
-              + New Delivery
-            </Button>
-          </Col>
-        </Row>
-      </div>
-
-      <Row>
-        <Col lg="6">
-          <h2 className="small-title mb-4">Dine-In Tables</h2>
-          {tables.map((tableArea) => (
-            <div className="gx-2" key={tableArea._id}>
-              <h3 className="mb-3 text-primary">{tableArea.area}</h3>
-              <Col className="p-0">
-                <Row className="g-3 mb-5">
-                  {tableArea.tables
-                    .sort((a, b) => a.table_no - b.table_no)
-                    .map((table) => {
-                      const activeOrder = activeDineInOrders.find((order) => order.table_no === table.table_no && order.table_area === tableArea.area);
-
-                      let bgClass = '';
-                      let statusColor = 'secondary';
-
-                      if (activeOrder) {
-                        if (activeOrder.order_status === 'Save') {
-                          bgClass = 'border-success';
-                          statusColor = 'success';
-                        } else if (activeOrder.order_status === 'KOT') {
-                          bgClass = 'border-warning';
-                          statusColor = 'warning';
-                        }
-                      }
-
-                      return (
-                        <Col key={table._id} xs="6" sm="6" md="4" lg="3" >
-                          <Card
-                            key={table._id}
-                            className={`sh-20 hover-border-primary mb-5 ${bgClass}`}
-                            onClick={() => handleTableClick(table._id, activeOrder?._id)}
-                          >
-                            <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
-                              <div className="d-flex sh-7 sw-7 bg-gradient-light mb-3 align-items-center justify-content-center rounded-xl">
-                                <h2 className="mb-0 lh-1 text-white">{table.table_no}</h2>
-                              </div>
-                              <div>
-                                <p className="mb-0 lh-1">Max Person</p>
-                                <p className="cta-3 mb-0 text-primary">{table.max_person}</p>
-                                {activeOrder && (
-                                  <Badge bg={statusColor} className="text-white">
-                                    {activeOrder.order_status}
-                                  </Badge>
-                                )}
-                              </div>
-                            </Card.Body>
-                          </Card>
-                        </Col>
-                      );
-                    })}
-                </Row>
-              </Col>
-            </div>
-          ))}
-        </Col>
-
-        {/* Active Orders Section */}
-        <Col lg="6">
-          <h2 className="small-title mb-4">Active Takeaways & Deliveries</h2>
-          <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
-            {activeTakeawaysAndDeliveries.length === 0 ? (
-              <Card className="text-center p-4">
-                <Card.Body>
-                  <p className="text-muted mb-0">No active takeaway or delivery orders</p>
-                </Card.Body>
-              </Card>
-            ) : (
-              activeTakeawaysAndDeliveries.map((order) => (
-                <Card key={order._id} className="mb-3 hover-border-primary cursor-pointer" onClick={() => handleOrderClick(order)}>
-                  <Card.Body>
-                    <div className="d-flex justify-content-between align-items-start mb-2">
-                      <div>
-                        <h5 className="mb-1">
-                          {order.order_type}
-                          {order.token && <span className="text-muted"> #{order.token}</span>}
-                        </h5>
-                        <p className="mb-0 text-muted">
-                          {order.order_type === 'Takeaway' ? `Token: ${order.token}` : `Customer: ${order.customer_name || 'N/A'}`}
-                        </p>
-                      </div>
-                      <Badge bg={order.order_status === 'Paid' ? 'success' : 'warning'} className="text-white">
-                        {order.order_status}
-                      </Badge>
-                    </div>
-                    <div className="d-flex flex-wrap gap-1">
-                      {order.order_items.slice(0, 3).map((item, i) => (
-                        <small key={i} className="badge bg-light text-dark">
-                          {item.dish_name} x{item.quantity}
-                        </small>
-                      ))}
-                      {order.order_items.length > 3 && <small className="badge bg-secondary">+{order.order_items.length - 3} more</small>}
-                    </div>
-                  </Card.Body>
-                </Card>
-              ))
-            )}
-          </div>
-        </Col>
-      </Row>
-
-      {/* Special Dishes Section */}
-      <div className="mt-5">
-        <h2 className="small-title mb-4">Today's Special</h2>
-        <Row className="g-2">
-          {specialDishes.map((dish) => (
-            <Col md="3" sm="6" lg="2" key={dish._id}>
-              <Card className="bg-gradient-light text-white">
-                <Card.Body className="p-3">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                      <h6 className="mb-0">{dish.dish_name}</h6>
-                      <small className="opacity-75">₹{dish.dish_price}</small>
-                    </div>
-                    <Badge bg="warning" className="text-dark">
-                      Special
-                    </Badge>
-                  </div>
-                </Card.Body>
-              </Card>
+      <Card className="p-3 mb-4">
+        <Form onSubmit={handleSubmit}>
+          <Row>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Customer</Form.Label>
+                <Form.Select
+                  value={formData.customer_id}
+                  onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
+                >
+                  <option value="">Select</option>
+                  {customers.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name} ({c.phone})
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
             </Col>
-          ))}
-        </Row>
-      </div>
 
-      <Switch>
-        <Route exact path="/order/dine-in" render={() => <DineInOrder />} />
-        <Route exact path="/order/takeaway" render={() => <TakeawayOrder />} />
-        <Route exact path="/order/delivery" render={() => <DeliveryOrder />} />
-      </Switch>
-    </>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Category</Form.Label>
+                <Form.Select onChange={handleCategoryChange}>
+                  <option value="">Select</option>
+                  {categories?.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.category}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Sub Category</Form.Label>
+                <Form.Select onChange={handleSubCategoryChange}>
+                  <option value="">Select</option>
+                  {subcategories.map((sub) => (
+                    <option key={sub.subcategory_name} value={sub.subcategory_name}>
+                      {sub.subcategory_name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Room</Form.Label>
+                <Form.Select
+                  value={formData.room_id}
+                  onChange={(e) => setFormData({ ...formData, room_id: e.target.value })}
+                >
+                  <option value="">Select Room</option>
+                  {rooms.map((r) => (
+                    <option key={r._id} value={r._id}>
+                      {r.room_no} - {r.room_name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Check In</Form.Label>
+                <Form.Control
+                  type="date"
+                  onChange={(e) => setFormData({ ...formData, check_in: e.target.value })}
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Check Out</Form.Label>
+                <Form.Control
+                  type="date"
+                  onChange={(e) => setFormData({ ...formData, check_out: e.target.value })}
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Guests</Form.Label>
+                <Form.Control
+                  type="number"
+                  onChange={(e) => setFormData({ ...formData, num_guests: e.target.value })}
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Total Price</Form.Label>
+                <Form.Control
+                  type="number"
+                  onChange={(e) => setFormData({ ...formData, total_price: e.target.value })}
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={12} className="mt-3">
+              <Button type="submit" variant="primary">
+                Create Booking
+              </Button>
+            </Col>
+          </Row>
+        </Form>
+      </Card>
+
+      <h4>All Bookings</h4>
+      <Table striped bordered>
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Room</th>
+            <th>Category</th>
+            <th>Check-In</th>
+            <th>Check-Out</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {bookings.map((b) => (
+            <tr key={b._id}>
+              <td>{b.customer_id?.name}</td>
+              <td>{b.room_id?.room_no}</td>
+              <td>{b.category_id?.category}</td>
+              <td>{new Date(b.check_in).toLocaleDateString()}</td>
+              <td>{new Date(b.check_out).toLocaleDateString()}</td>
+              <td>{b.status}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    </div>
   );
 };
 
-export default Dashboard;
+export default HotelBookingDashboard;

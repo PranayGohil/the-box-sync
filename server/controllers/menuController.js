@@ -5,7 +5,7 @@ const User = require("../models/userModel");
 
 const addMenu = async (req, res) => {
   try {
-    const restaurant_id = req.user;
+    const user_id = req.user;
     const { category, meal_type, dishes } = req.body;
 
     if (!category || !meal_type || !Array.isArray(JSON.parse(dishes))) {
@@ -27,14 +27,14 @@ const addMenu = async (req, res) => {
     const menuData = {
       category,
       meal_type,
-      restaurant_id,
+      user_id,
     };
 
     // Check if menu already exists
     const existingMenu = await Menu.findOne({
       category,
       meal_type,
-      restaurant_id,
+      user_id,
     });
 
     if (existingMenu) {
@@ -61,7 +61,7 @@ const addMenu = async (req, res) => {
 
 const getMenuData = async (req, res) => {
   try {
-    const query = { restaurant_id: req.user };
+    const query = { user_id: req.user };
     console.log("Query : ", query);
     const menuData = await Menu.find(query);
     console.log("Menu Data : ", menuData);
@@ -79,10 +79,10 @@ const getMenuDataByResCode = async (req, res) => {
     if (!restaurant) {
       return res.status(404).json({ error: "Restaurant not found" });
     }
-    const restaurant_id = restaurant._id;
-    console.log("Restaurant ID : ", restaurant_id);
+    const user_id = restaurant._id;
+    console.log("Restaurant ID : ", user_id);
 
-    const menuData = await Menu.find({ restaurant_id });
+    const menuData = await Menu.find({ user_id });
     console.log("Menu Data : ", menuData);
     res.json(menuData);
   } catch (error) {
@@ -95,7 +95,7 @@ const getMenuCategories = async (req, res) => {
   try {
     // Retrieve unique category names
     const categories = await Menu.distinct("category", {
-      restaurant_id: req.user,
+      user_id: req.user,
     });
     res.json(categories);
   } catch (error) {
@@ -211,11 +211,11 @@ const deleteMenu = async (req, res) => {
     const updatedMenu = await Menu.findOne({
       category,
       meal_type,
-      restaurant_id: req.user,
+      user_id: req.user,
     });
 
     if (updatedMenu && updatedMenu.dishes.length === 0) {
-      await Menu.deleteOne({ category, meal_type, restaurant_id: req.user });
+      await Menu.deleteOne({ category, meal_type, user_id: req.user });
     }
 
     res.json({ message: "Dish deleted successfully" });

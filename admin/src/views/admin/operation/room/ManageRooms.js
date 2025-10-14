@@ -24,12 +24,12 @@ const ManageRooms = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [deleteRoomModalShow, setDeleteRoomModalShow] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState(null);
-  
+
   const [editCategoryModalShow, setEditCategoryModalShow] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [deleteCategoryModalShow, setDeleteCategoryModalShow] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
-  
+
   const [roomData, setRoomData] = useState([]);
   const [filteredRoomData, setFilteredRoomData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,7 +70,7 @@ const ManageRooms = () => {
       filtered = filtered
         .map((item) => ({
           ...item,
-          rooms: item.rooms.filter((room) => 
+          rooms: item.rooms.filter((room) =>
             room.room_name.toLowerCase().includes(searchText.toLowerCase()) ||
             room.room_no.toLowerCase().includes(searchText.toLowerCase())
           ),
@@ -113,10 +113,10 @@ const ManageRooms = () => {
           <Form className="mb-4">
             <Row>
               <Col md={4}>
-                <Form.Control 
-                  type="text" 
-                  placeholder="Search rooms..." 
-                  onChange={(e) => handleSearch(e.target.value)} 
+                <Form.Control
+                  type="text"
+                  placeholder="Search rooms..."
+                  onChange={(e) => handleSearch(e.target.value)}
                 />
               </Col>
               <Col md={3}>
@@ -161,10 +161,9 @@ const ManageRooms = () => {
                   sortable: true,
                   headerClassName: 'text-muted text-small text-uppercase w-15',
                   Cell: ({ row }) => (
-                    <span className={`badge bg-${
-                      row.original.room_status === 'Available' ? 'success' : 
+                    <span className={`badge bg-${row.original.room_status === 'Available' ? 'success' :
                       row.original.room_status === 'Occupied' ? 'danger' : 'warning'
-                    }`}>
+                      }`}>
                       {row.original.room_status}
                     </span>
                   ),
@@ -240,38 +239,50 @@ const ManageRooms = () => {
       </Row>
 
       {selectedRoom && (
-        <EditRoomModal 
-          show={editRoomModalShow} 
-          handleClose={() => setEditRoomModalShow(false)} 
-          data={selectedRoom} 
-          fetchRoomData={fetchRoomData} 
+        <EditRoomModal
+          show={editRoomModalShow}
+          handleClose={() => {
+            setEditRoomModalShow(false);
+            setSelectedRoom(null);
+          }}
+          data={selectedRoom}
+          fetchRoomData={fetchRoomData}
         />
       )}
 
       {roomToDelete && (
-        <DeleteRoomModal 
-          show={deleteRoomModalShow} 
-          handleClose={() => setDeleteRoomModalShow(false)} 
-          data={roomToDelete} 
-          fetchRoomData={fetchRoomData} 
+        <DeleteRoomModal
+          show={deleteRoomModalShow}
+          handleClose={() => {
+            setDeleteRoomModalShow(false);
+            setRoomToDelete(null);
+          }}
+          data={roomToDelete}
+          fetchRoomData={fetchRoomData}
         />
       )}
 
       {selectedCategory && (
-        <EditRoomCategoryModal 
-          show={editCategoryModalShow} 
-          handleClose={() => setEditCategoryModalShow(false)} 
-          data={selectedCategory} 
-          fetchRoomData={fetchRoomData} 
+        <EditRoomCategoryModal
+          show={editCategoryModalShow}
+          handleClose={() => {
+            setEditCategoryModalShow(false);
+            setSelectedCategory(null);
+          }}
+          data={selectedCategory}
+          fetchRoomData={fetchRoomData}
         />
       )}
 
       {categoryToDelete && (
-        <DeleteCategoryModal 
-          show={deleteCategoryModalShow} 
-          handleClose={() => setDeleteCategoryModalShow(false)} 
-          data={categoryToDelete} 
-          fetchRoomData={fetchRoomData} 
+        <DeleteCategoryModal
+          show={deleteCategoryModalShow}
+          handleClose={() => {
+            setDeleteCategoryModalShow(false);
+            setCategoryToDelete(null);
+          }}
+          data={categoryToDelete}
+          fetchRoomData={fetchRoomData}
         />
       )}
     </>

@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const addMenu = new Schema({
-  restaurant_id: {
+  user_id: {
     type: String,
   },
   category: {

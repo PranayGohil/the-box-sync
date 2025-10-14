@@ -50,7 +50,7 @@ const addinventory = new Schema({
   status: {
     type: String,
   },
-  restaurant_id: {
+  user_id: {
     type: String,
   },
 });

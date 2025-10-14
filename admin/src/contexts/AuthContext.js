@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
 
     const fetchUserSubscriptions = async () => {
         try {
-            setActivePlans(['Manager', 'Dynamic Reports', 'QSR', 'Captain Panel', 'KOT Panel'])
+            setActivePlans(['Manager', 'Dynamic Reports', 'QSR', 'Captain Panel', 'KOT Panel', 'Hotel Manager'])
             // Completed : Staff Management, Payroll By The Box, Feedback, Scan For Menu, Restaurant Website
 
             // const response = await axios.get(

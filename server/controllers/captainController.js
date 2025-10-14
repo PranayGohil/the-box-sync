@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 
 const addCaptain = (req, res) => {
   try {
-    const captainData = { ...req.body, restaurant_id: req.user };
+    const captainData = { ...req.body, user_id: req.user };
     console.log(captainData);
     Captain.create(captainData)
       .then((data) => res.json(data))
@@ -16,7 +16,7 @@ const addCaptain = (req, res) => {
 
 const getCaptainData = (req, res) => {
   try {
-    Captain.find({ restaurant_id: req.user })
+    Captain.find({ user_id: req.user })
       .then((data) => res.json(data))
       .catch((err) => res.json(err));
   } catch (error) {
@@ -36,7 +36,7 @@ const getCaptainDataById = (req, res) => {
 
 const updateCaptain = (req, res) => {
   try {
-    const captainData = { ...req.body, restaurant_id: req.user };
+    const captainData = { ...req.body, user_id: req.user };
     console.log(captainData);
     Captain.findByIdAndUpdate(req.params.id, captainData, { new: true })
       .then((data) => res.json(data))
@@ -116,7 +116,7 @@ const captainLogin = async (req, res) => {
 
     const captain = await Captain.findOne({
       username: username,
-      restaurant_id: user._id,
+      user_id: user._id,
     });
 
    

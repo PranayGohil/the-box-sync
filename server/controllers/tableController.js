@@ -2,7 +2,7 @@ const Table = require("../models/tableModel");
 
 const getTables = (req, res) => {
   try {
-    Table.find({ restaurant_id: req.user })
+    Table.find({ user_id: req.user })
       .then((data) => {
         res.json({ data, success: true });
       })
@@ -30,7 +30,7 @@ const getTableDataById = (req, res) => {
 
 const getDiningAreas = async (req, res) => {
   try {
-    const areas = await Table.find({ restaurant_id: req.user }, "area"); // Fetch distinct areas
+    const areas = await Table.find({ user_id: req.user }, "area"); // Fetch distinct areas
     const uniqueAreas = [...new Set(areas.map((item) => item.area))];
     res.json({ data: uniqueAreas, success: true });
   } catch (error) {
@@ -43,7 +43,7 @@ const checkTable = (req, res) => {
   try {
     console.log(req.query);
     const { area, table_no } = req.query;
-    Table.findOne({ area, "tables.table_no": table_no, restaurant_id: req.user })
+    Table.findOne({ area, "tables.table_no": table_no, user_id: req.user })
       .then((data) => {
         console.log(data);
         if (data) {
@@ -71,13 +71,13 @@ const addTable = (req, res) => {
     const tableData = {
       area,
       tables: formattedTables,
-      restaurant_id: req.user,
+      user_id: req.user,
     };
 
-    Table.findOne({ area, restaurant_id: req.user }).then((data) => {
+    Table.findOne({ area, user_id: req.user }).then((data) => {
       if (data) {
         Table.findOneAndUpdate(
-          { area, restaurant_id: req.user },
+          { area, user_id: req.user },
           { $push: { tables: { $each: formattedTables } } },
           { new: true }
         )
@@ -132,7 +132,7 @@ const deleteTable = async (req, res) => {
       if (result.modifiedCount === 0) {
         return res.status(404).json({ message: "Table not found" });
       }
-      const updatedArea = await Table.findOne({ area, restaurant_id: req.user });
+      const updatedArea = await Table.findOne({ area, user_id: req.user });
       if (updatedArea.tables.length === 0) {
         await Table.deleteOne({ area });
       }

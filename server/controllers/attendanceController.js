@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 
 const addAttendance = (req, res) => {
   try {
-    const attendanceData = { ...req.body, restaurant_id: req.user };
+    const attendanceData = { ...req.body, user_id: req.user };
     console.log(attendanceData);
     Attendance.create(attendanceData)
       .then((data) => res.json(data))
@@ -16,7 +16,7 @@ const addAttendance = (req, res) => {
 
 const getAttendanceData = (req, res) => {
   try {
-    Attendance.find({ restaurant_id: req.user })
+    Attendance.find({ user_id: req.user })
       .then((data) => res.json(data))
       .catch((err) => res.json(err));
   } catch (error) {
@@ -36,7 +36,7 @@ const getAttendanceDataById = (req, res) => {
 
 const updateAttendance = (req, res) => {
   try {
-    const attendanceData = { ...req.body, restaurant_id: req.user };
+    const attendanceData = { ...req.body, user_id: req.user };
     console.log(attendanceData);
     Attendance.findByIdAndUpdate(req.params.id, attendanceData, { new: true })
       .then((data) => res.json(data))
@@ -115,7 +115,7 @@ const attendanceLogin = async (req, res) => {
     console.log("user : " + user);
     const attendance = await Attendance.findOne({
       username,
-      restaurant_id: user._id,
+      user_id: user._id,
     });
 
     if (!attendance) {

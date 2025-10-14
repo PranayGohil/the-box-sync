@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 const bcrypt = require("bcryptjs");
 
 const qsrSchema = new Schema({
-  restaurant_id: {
+  user_id: {
     type: String,
   },
   username: {

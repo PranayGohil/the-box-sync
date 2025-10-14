@@ -64,7 +64,7 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
 
         await axios.put(`${process.env.REACT_APP_API}/room/category/update/${data.id}`, formData, {
           withCredentials: true,
-          headers: { 
+          headers: {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
@@ -132,11 +132,11 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
           <Form id="edit_category_form" onSubmit={formik.handleSubmit}>
             <Form.Group className="mb-3">
               <Form.Label>Category Name</Form.Label>
-              <Form.Control 
-                type="text" 
-                name="category" 
-                value={formik.values.category} 
-                onChange={formik.handleChange} 
+              <Form.Control
+                type="text"
+                name="category"
+                value={formik.values.category}
+                onChange={formik.handleChange}
               />
             </Form.Group>
 
@@ -225,8 +225,8 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                           </Form.Group>
                         </Col>
                         <Col md={2} className="d-flex align-items-end">
-                          <Button 
-                            variant="outline-danger" 
+                          <Button
+                            variant="outline-danger"
                             size="sm"
                             onClick={() => remove(index)}
                           >
@@ -244,17 +244,17 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                                     type="text"
                                     placeholder="Amenity item"
                                     value={amenity}
-                                    onChange={(e) => 
+                                    onChange={(e) =>
                                       formik.setFieldValue(
-                                        `amenities[${index}].amenities[${amenityIndex}]`, 
+                                        `amenities[${index}].amenities[${amenityIndex}]`,
                                         e.target.value
                                       )
                                     }
                                   />
                                 </Col>
                                 <Col md={2}>
-                                  <Button 
-                                    variant="outline-danger" 
+                                  <Button
+                                    variant="outline-danger"
                                     size="sm"
                                     onClick={() => removeAmenity(amenityIndex)}
                                   >
@@ -263,9 +263,9 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                                 </Col>
                               </Row>
                             ))}
-                            <Button 
-                              variant="outline-primary" 
-                              size="sm" 
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
                               className="mt-2"
                               onClick={() => pushAmenity('')}
                             >
@@ -276,8 +276,8 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                       </FieldArray>
                     </div>
                   ))}
-                  <Button 
-                    variant="primary" 
+                  <Button
+                    variant="primary"
                     onClick={() => push({ title: '', amenities: [''] })}
                   >
                     + Add Amenity Group
@@ -299,15 +299,15 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                             <Form.Control
                               type="text"
                               value={subcat.subcategory_name}
-                              onChange={(e) => 
+                              onChange={(e) =>
                                 formik.setFieldValue(`subcategory[${index}].subcategory_name`, e.target.value)
                               }
                             />
                           </Form.Group>
                         </Col>
                         <Col md={6} className="d-flex align-items-end">
-                          <Button 
-                            variant="outline-danger" 
+                          <Button
+                            variant="outline-danger"
                             onClick={() => remove(index)}
                           >
                             Remove Subcategory
@@ -321,7 +321,7 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                             <Form.Control
                               type="number"
                               value={subcat.base_price}
-                              onChange={(e) => 
+                              onChange={(e) =>
                                 formik.setFieldValue(`subcategory[${index}].base_price`, e.target.value)
                               }
                             />
@@ -333,7 +333,7 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                             <Form.Control
                               type="number"
                               value={subcat.max_price}
-                              onChange={(e) => 
+                              onChange={(e) =>
                                 formik.setFieldValue(`subcategory[${index}].max_price`, e.target.value)
                               }
                             />
@@ -345,7 +345,7 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                             <Form.Control
                               type="number"
                               value={subcat.current_price}
-                              onChange={(e) => 
+                              onChange={(e) =>
                                 formik.setFieldValue(`subcategory[${index}].current_price`, e.target.value)
                               }
                             />
@@ -358,7 +358,7 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                           as="textarea"
                           rows={2}
                           value={subcat.description}
-                          onChange={(e) => 
+                          onChange={(e) =>
                             formik.setFieldValue(`subcategory[${index}].description`, e.target.value)
                           }
                         />
@@ -367,7 +367,7 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                         type="checkbox"
                         label="Refundable"
                         checked={subcat.is_refundable}
-                        onChange={(e) => 
+                        onChange={(e) =>
                           formik.setFieldValue(`subcategory[${index}].is_refundable`, e.target.checked)
                         }
                         className="mb-2"
@@ -376,14 +376,14 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
                         type="checkbox"
                         label="Available"
                         checked={subcat.is_available}
-                        onChange={(e) => 
+                        onChange={(e) =>
                           formik.setFieldValue(`subcategory[${index}].is_available`, e.target.checked)
                         }
                       />
                     </div>
                   ))}
-                  <Button 
-                    variant="primary" 
+                  <Button
+                    variant="primary"
                     onClick={() => push({
                       subcategory_name: '',
                       base_price: '',

@@ -14,7 +14,7 @@ const getDashboardData = async (req, res) => {
 
         // Today's orders grouped by type
         const todayOrdersArray = await Order.aggregate([
-            { $match: { restaurant_id: restaurantId, order_date: { $gte: startOfDay, $lte: endOfDay } } },
+            { $match: { user_id: restaurantId, order_date: { $gte: startOfDay, $lte: endOfDay } } },
             { $group: { _id: "$order_type", total: { $sum: 1 } } }
         ]);
 
@@ -34,7 +34,7 @@ const getDashboardData = async (req, res) => {
         const LastWeekTotalRevenueRaw = await Order.aggregate([
             {
                 $match: {
-                    restaurant_id: restaurantId,
+                    user_id: restaurantId,
                     order_date: { $gte: sevenDaysAgo, $lte: today }
                 }
             },
@@ -76,7 +76,7 @@ const getDashboardData = async (req, res) => {
 
         // Most selling dishes with category & special flag
         const MostSellingDishes = await Order.aggregate([
-            { $match: { restaurant_id: restaurantId } },
+            { $match: { user_id: restaurantId } },
             { $unwind: "$order_items" },
 
             // normalize the order dish name
@@ -93,7 +93,7 @@ const getDashboardData = async (req, res) => {
                     from: "menus", // matches mongoose.model("menu") => "menus"
                     let: { n: "$normalizedDishName" },
                     pipeline: [
-                        { $match: { restaurant_id: restaurantId } }, // same restaurant
+                        { $match: { user_id: restaurantId } }, // same restaurant
                         { $unwind: "$dishes" },
                         {
                             $addFields: {
@@ -147,7 +147,7 @@ const getCategoryWiseOrders = async (req, res) => {
     try {
         const restaurantId = req.user._id; // or req.params.id
         const pipeline = [
-            { $match: { restaurant_id: restaurantId } },
+            { $match: { user_id: restaurantId } },
             { $unwind: "$order_items" },
             // Lookup to get category from Menu
             {
@@ -176,7 +176,7 @@ const getOrderTypeWiseOrders = async (req, res) => {
         const restaurantId = req.user._id;
 
         const result = await Order.aggregate([
-            { $match: { restaurant_id: restaurantId } },
+            { $match: { user_id: restaurantId } },
             { $group: { _id: "$order_type", totalOrders: { $sum: 1 } } },
             { $project: { orderType: "$_id", totalOrders: 1, _id: 0 } }
         ]);
@@ -207,7 +207,7 @@ const getRevenueSummary = async (req, res) => {
         }
 
         const result = await Order.aggregate([
-            { $match: { restaurant_id: restaurantId, order_date: { $gte: startDate, $lte: now } } },
+            { $match: { user_id: restaurantId, order_date: { $gte: startDate, $lte: now } } },
             {
                 $group: {
                     _id: {

@@ -30,7 +30,7 @@ exports.getPanelUser = async (req, res) => {
     const userId = req.user._id;
 
     const Model = getModel(planName);
-    const account = await Model.findOne({ restaurant_id: userId });
+    const account = await Model.findOne({ user_id: userId });
 
     res.status(200).json({ exists: !!account, data: account });
   } catch (err) {
@@ -57,7 +57,7 @@ exports.createOrUpdatePanelUser = async (req, res) => {
     }
 
     const Model = getModel(planName);
-    let account = await Model.findOne({ restaurant_id: userId });
+    let account = await Model.findOne({ user_id: userId });
 
     if (account) {
       // Update
@@ -65,7 +65,7 @@ exports.createOrUpdatePanelUser = async (req, res) => {
       if (password) account.password = password; // will hash in pre-save
     } else {
       // Create
-      account = new Model({ restaurant_id: userId, username, password });
+      account = new Model({ user_id: userId, username, password });
     }
 
     await account.save();
@@ -95,7 +95,7 @@ exports.changePanelPassword = async (req, res) => {
 
     // Get correct panel model
     const Model = getModel(planName);
-    const panelUser = await Model.findOne({ restaurant_id: userId });
+    const panelUser = await Model.findOne({ user_id: userId });
     if (!panelUser) {
       return res.status(404).json({ message: "Panel account not found" });
     }
@@ -117,7 +117,7 @@ exports.deletePanelUser = async (req, res) => {
     const userId = req.user._id;
 
     const Model = getModel(planName);
-    const deleted = await Model.findOneAndDelete({ restaurant_id: userId });
+    const deleted = await Model.findOneAndDelete({ user_id: userId });
 
     if (!deleted) {
       return res.status(404).json({ message: "Account not found" });
@@ -143,7 +143,7 @@ exports.panelLogin = async (req, res) => {
     }
     
     const Model = getModel(planName);
-    const panelUser = await Model.findOne({ username, restaurant_id: user._id });
+    const panelUser = await Model.findOne({ username, user_id: user._id });
     console.log("Model : " + planName);
 
     if (!panelUser) {

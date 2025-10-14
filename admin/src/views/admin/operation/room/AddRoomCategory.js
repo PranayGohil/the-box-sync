@@ -103,7 +103,7 @@ const AddRoomCategory = () => {
 
       // Append images
       categoryImages.forEach((img, index) => {
-        formData.append('category_imgs', img.file);
+        formData.append('room_imgs', img.file);
       });
       formData.append('thumbnail_index', thumbnailIndex);
 

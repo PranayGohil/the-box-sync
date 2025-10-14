@@ -22,7 +22,7 @@ const addTable = new Schema({
       },
     },
   ],
-  restaurant_id: {
+  user_id: {
     type: String,
   },
 });

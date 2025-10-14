@@ -6,22 +6,27 @@ const Room = require('../models/roomModel');
 // Add Room Category
 exports.addRoomCategory = async (req, res) => {
   try {
-    const { category, amenities, subcategory, thumbnailIndex } = req.body;
+    const { category, amenities, subcategory, thumbnail_index } = req.body;
     const user_id = req.user;
 
-    const room_imgs = (req.files || []).map((file, i) => ({
+    const files = req.files || [];
+    const thumbIndex = parseInt(thumbnail_index) || 0;
+
+    // Create room_imgs array with thumbnail flag
+    const room_imgs = files.map((file, index) => ({
       image: "/room/categories/" + file.filename,
-      is_thumbnail: parseInt(thumbnailIndex) === i,
+      is_thumbnail: index === thumbIndex,
     }));
 
-    const newCategory = new RoomCategory({
+    const categoryData = {
       user_id,
       category,
+      room_imgs,
       amenities: JSON.parse(amenities),
       subcategory: JSON.parse(subcategory),
-      room_imgs,
-    });
+    };
 
+    const newCategory = new RoomCategory(categoryData);
     await newCategory.save();
 
     res.status(201).json({
@@ -43,7 +48,6 @@ exports.addRoomCategory = async (req, res) => {
 exports.getRoomCategories = async (req, res) => {
   try {
     const user_id = req.user;
-    console.log("User ID : ", req.user);
     const categories = await RoomCategory.find({ user_id });
     // Populate rooms for each category
     const categoriesWithRooms = await Promise.all(
@@ -59,7 +63,6 @@ exports.getRoomCategories = async (req, res) => {
         };
       })
     );
-    console.log("Categories : ", categoriesWithRooms);
     res.status(200).json({
       success: true,
       data: categoriesWithRooms,
@@ -106,41 +109,62 @@ exports.getRoomCategoryById = async (req, res) => {
 // Update Room Category
 exports.updateRoomCategory = async (req, res) => {
   try {
-    const { category, amenities, subcategory, thumbnailIndex } = req.body;
+    const { category, amenities, subcategory, existing_images, thumbnail_index } = req.body;
     const { id } = req.params;
     const user_id = req.user;
 
-    const categoryDoc = await RoomCategory.findOne({ _id: id, user_id });
-    if (!categoryDoc) return res.status(404).json({ success: false, message: 'Room category not found' });
+    const existingCategory = await RoomCategory.findOne({ _id: id, user_id });
 
-    // Preserve existing images
-    let room_imgs = categoryDoc.room_imgs || [];
-
-    // Add new uploads
-    if (req.files && req.files.length > 0) {
-      const newImgs = req.files.map((file, i) => ({
-        image: "/room/categories/" + file.filename,
-        is_thumbnail: false,
-      }));
-      room_imgs = [...room_imgs, ...newImgs];
+    if (!existingCategory) {
+      console.error('Room category not found');
+      return res.status(404).json({
+        success: false,
+        message: 'Room category not found',
+      });
     }
 
-    // Update thumbnail
-    if (thumbnailIndex !== undefined) {
-      room_imgs = room_imgs.map((img, i) => ({
-        ...img,
-        is_thumbnail: parseInt(thumbnailIndex) === i,
-      }));
+    const files = req.files || [];
+    const parsedExistingImages = JSON.parse(existing_images || '[]');
+    const thumbIndex = parseInt(thumbnail_index) || 0;
+
+    // Delete removed images from file system
+    const existingImageNames = parsedExistingImages.map(img => img.image);
+    if (existingCategory.room_imgs && existingCategory.room_imgs.length > 0) {
+      existingCategory.room_imgs.forEach((img) => {
+        if (!existingImageNames.includes(img.image)) {
+          const imagePath = path.join(__dirname, '../uploads', img.image);
+          if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath);
+          }
+        }
+      });
     }
+
+    // Prepare new images array
+    const newUploadedImages = files.map((file) => ({
+      image: "/room/categories/" + file.filename,
+      is_thumbnail: false,
+    }));
+
+    // Combine existing and new images
+    const allImages = [...parsedExistingImages, ...newUploadedImages];
+
+    // Set thumbnail based on index
+    const room_imgs = allImages.map((img, index) => ({
+      ...img,
+      is_thumbnail: index === thumbIndex,
+    }));
+
+    const updateData = {
+      category,
+      room_imgs,
+      amenities: JSON.parse(amenities),
+      subcategory: JSON.parse(subcategory),
+    };
 
     const updatedCategory = await RoomCategory.findByIdAndUpdate(
-      { _id: id },
-      {
-        category,
-        amenities: JSON.parse(amenities),
-        subcategory: JSON.parse(subcategory),
-        room_imgs,
-      },
+      id,
+      updateData,
       { new: true }
     );
 
@@ -179,8 +203,8 @@ exports.deleteRoomCategory = async (req, res) => {
 
     // Delete room images
     rooms.forEach((room) => {
-      if (room.room_img) {
-        const roomImagePath = path.join(__dirname, '../uploads', room.room_img);
+      if (room.room_imgs) {
+        const roomImagePath = path.join(__dirname, '../uploads', room.room_imgs);
         if (fs.existsSync(roomImagePath)) {
           fs.unlinkSync(roomImagePath);
         }
@@ -377,7 +401,7 @@ exports.updateRoom = async (req, res) => {
     const user_id = req.user;
 
     // Check if room exists
-    const existingRoom = await Room.findOne({ _id : id, user_id });
+    const existingRoom = await Room.findOne({ _id: id, user_id });
 
     if (!existingRoom) {
       console.log('Room not found');

@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs");
 const addManager = (req, res) => {
   try {
     console.log("Hello" + req.body);
-    const managerData = { ...req.body, restaurant_id: req.user };
+    const managerData = { ...req.body, user_id: req.user };
     console.log(managerData);
     Manager.create(managerData)
       .then((data) => res.json(data))
@@ -29,7 +29,7 @@ const managerLogin = async (req, res) => {
     console.log("user : " + user);
     const manager = await Manager.findOne({
       username,
-      restaurant_id: user._id,
+      user_id: user._id,
     });
 
     if (!manager) {
@@ -58,7 +58,7 @@ const getManagerData = async (req, res) => {
   try {
     if (req.user != null) {
       const manager = req.user;
-      const managerdata = await Manager.find({ restaurant_id: manager._id });
+      const managerdata = await Manager.find({ user_id: manager._id });
       res.send(managerdata);
     } else {
       res.send("Null");

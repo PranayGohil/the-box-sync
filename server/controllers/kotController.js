@@ -7,7 +7,7 @@ const showKOTs = async (req, res) => {
   try {
     const orderData = await Order.find({
       $and: [
-        { restaurant_id: req.user },
+        { user_id: req.user },
         {
           $or: [
             { order_status: "KOT" },
@@ -83,7 +83,7 @@ const kotLogin = async (req, res) => {
 
     const kot = await Kot.findOne({
       username: username,
-      restaurant_id: user._id,
+      user_id: user._id,
     });
 
    

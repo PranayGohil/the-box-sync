@@ -27,6 +27,8 @@ const customerQueryRouter = require("./router/customerQueryRoutes");
 const PanelRouter = require("./router/panelUserRoutes");
 const statisticsRouter = require("./router/statisticsRoutes.js");
 const roomRouter = require("./router/roomRoutes.js");
+const hotelBookingRouter = require("./router/hotelBookingRoutes.js");
+const customerRouter = require("./router/customerRoutes.js");
 
 const PORT = process.env.PORT;
 const ORIGINS = process.env.ORIGINS ? process.env.ORIGINS.split(",") : [];
@@ -68,6 +70,8 @@ app.use("/api/panel-user", PanelRouter);
 app.use("/api/superadmin", superAdminRouter);
 app.use("/api/statistics", statisticsRouter);
 app.use("/api/room", roomRouter);
+app.use("/api/hotel-booking", hotelBookingRouter);
+app.use("/api/customer", customerRouter);
 
 connectDB().then(() => {
   app.listen(PORT, () => {

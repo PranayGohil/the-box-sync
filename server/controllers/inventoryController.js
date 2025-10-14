@@ -2,7 +2,7 @@ const Inventory = require("../models/inventoryModel");
 
 const getInventoryData = (req, res) => {
   try {
-    Inventory.find({ restaurant_id: req.user })
+    Inventory.find({ user_id: req.user })
       .then((data) => {
         res.json(data);
       })
@@ -15,7 +15,7 @@ const getInventoryData = (req, res) => {
 const getInventoryDataByStatus = (req, res) => {
   try {
     const status = req.params.status;
-    Inventory.find({ restaurant_id: req.user, status: status })
+    Inventory.find({ user_id: req.user, status: status })
       .then((data) => {
         res.json({ data, success: true });
       })
@@ -44,7 +44,7 @@ const addInventory = (req, res) => {
 
     const inventoryData = {
       ...req.body,
-      restaurant_id: req.user, // from verifyToken middleware
+      user_id: req.user, // from verifyToken middleware
       bill_files: "/inventory/bills/" + fileNames,
       items: JSON.parse(req.body.items), // convert string back to array
     };
@@ -74,7 +74,7 @@ const addInventoryRequest = async (req, res) => {
 
     const inventoryData = {
       ...rest,
-      restaurant_id: req.user, // assuming req.user contains restaurant id
+      user_id: req.user, // assuming req.user contains restaurant id
       items,
     };
 
@@ -191,7 +191,7 @@ const completeInventoryRequest = async (req, res) => {
       unpaid_amount,
       items,
       status: "Completed",
-      restaurant_id: inventory.restaurant_id,
+      user_id: inventory.user_id,
     };
 
     await Inventory.create(completedItems);

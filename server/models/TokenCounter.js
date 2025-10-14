@@ -10,7 +10,7 @@ const tokenCounterSchema = new Schema({
     type: Number,
     default: 0,
   },
-  restaurant_id: {
+  user_id: {
     type: String,
   },
   source: {

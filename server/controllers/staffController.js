@@ -4,7 +4,7 @@ const path = require("path");
 
 const getStaffPositions = (req, res) => {
   try {
-    Staff.distinct("position", { restaurant_id: req.user }).then((data) =>
+    Staff.distinct("position", { user_id: req.user }).then((data) =>
       res.json(data)
     );
   } catch (error) {
@@ -14,7 +14,7 @@ const getStaffPositions = (req, res) => {
 
 const getStaffData = (req, res) => {
   try {
-    Staff.find({ restaurant_id: req.user })
+    Staff.find({ user_id: req.user })
       .then((data) => {
         res.json(data);
       })
@@ -39,7 +39,7 @@ const addStaff = (req, res) => {
   try {
     const staffData = {
       ...req.body,
-      restaurant_id: req.user,
+      user_id: req.user,
     };
 
     // If files are uploaded, store their paths
@@ -75,7 +75,7 @@ const updateStaff = async (req, res) => {
 
     const staffData = {
       ...req.body,
-      restaurant_id: req.user,
+      user_id: req.user,
     };
 
     // Helper to remove old file
@@ -287,7 +287,7 @@ const getAllFaceEncodings = async (req, res) => {
           $ne: null,
           $not: { $size: 0 },
         },
-        restaurant_id: req.user,
+        user_id: req.user,
       },
       "_id staff_id f_name l_name email position face_encoding attandance"
     );

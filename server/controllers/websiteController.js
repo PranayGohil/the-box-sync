@@ -6,7 +6,7 @@ const User = require("../models/userModel");
 exports.getWebsiteSettings = async (req, res) => {
   try {
     const settings = await Website.findOne({
-      restaurant_id: req.user,
+      user_id: req.user,
     });
     res.json(settings);
   } catch (err) {
@@ -43,7 +43,7 @@ exports.updateWebsiteSettings = async (req, res) => {
     }
 
     const updated = await Website.findOneAndUpdate(
-      { restaurant_id: req.user },
+      { user_id: req.user },
       {
         restaurant_name,
         restaurant_address,
@@ -67,10 +67,10 @@ exports.updateWebsiteSettings = async (req, res) => {
 // GET all dishes for the restaurant
 exports.getAllDishes = async (req, res) => {
   try {
-    const websiteSettings = await Website.findOne({ restaurant_id: req.user });
+    const websiteSettings = await Website.findOne({ user_id: req.user });
     const featuredIds = websiteSettings?.featured_dish_ids || [];
 
-    const menus = await Menu.find({ restaurant_id: req.user });
+    const menus = await Menu.find({ user_id: req.user });
 
     const categorized = menus.map((menu) => {
       const dishesWithFlag = menu.dishes.map((dish) => ({
@@ -100,7 +100,7 @@ exports.getWebsiteSettingsByCode = async (req, res) => {
     const user = await User.findOne({ restaurant_code: code });
     if (!user) return res.status(404).json({ error: "Invalid restaurant code" });
 
-    const settings = await Website.findOne({ restaurant_id: user._id });
+    const settings = await Website.findOne({ user_id: user._id });
     if (!settings)
       return res.status(404).json({ error: "No settings found for this restaurant" });
 
@@ -118,10 +118,10 @@ exports.getFeaturedDishesByCode = async (req, res) => {
     const user = await User.findOne({ restaurant_code: code });
     if (!user) return res.status(404).json({ error: "Invalid restaurant code" });
 
-    const websiteSettings = await Website.findOne({ restaurant_id: user._id });
+    const websiteSettings = await Website.findOne({ user_id: user._id });
     const featuredIds = websiteSettings?.featured_dish_ids || [];
 
-    const menus = await Menu.find({ restaurant_id: user._id });
+    const menus = await Menu.find({ user_id: user._id });
 
     const categorized = menus
       .map((menu) => {

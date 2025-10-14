@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 
 const addQSR = (req, res) => {
   try {
-    const qsrData = { ...req.body, restaurant_id: req.user };
+    const qsrData = { ...req.body, user_id: req.user };
     console.log(qsrData);
     QSR.create(qsrData)
       .then((data) => res.json(data))
@@ -16,7 +16,7 @@ const addQSR = (req, res) => {
 
 const getQSRData = (req, res) => {
   try {
-    QSR.find({ restaurant_id: req.user })
+    QSR.find({ user_id: req.user })
       .then((data) => res.json(data))
       .catch((err) => res.json(err));
   } catch (error) {
@@ -36,7 +36,7 @@ const getQSRDataById = (req, res) => {
 
 const updateQSR = (req, res) => {
   try {
-    const qsrData = { ...req.body, restaurant_id: req.user };
+    const qsrData = { ...req.body, user_id: req.user };
     console.log(qsrData);
     QSR.findByIdAndUpdate(req.params.id, qsrData, { new: true })
       .then((data) => res.json(data))
@@ -115,7 +115,7 @@ const qsrLogin = async (req, res) => {
     console.log("user : " + user);
     const qsr = await QSR.findOne({
       username,
-      restaurant_id: user._id,
+      user_id: user._id,
     });
 
     if (!qsr) {

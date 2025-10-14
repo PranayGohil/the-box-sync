@@ -35,6 +35,7 @@ import QRforFeedback from './feedback/QRforFeedback';
 import AddFeedback from './feedback/AddFeedback';
 
 const NavContent = () => {
+  const { activePlans } = useContext(AuthContext);
   return (
     <Nav className="flex-column">
       <div className="mb-2">
@@ -88,26 +89,28 @@ const NavContent = () => {
         </div>
       </div>
 
-      <div className="mb-2">
-        <Nav.Link as={NavLink} to="/operations/manage-rooms" className="px-0">
-          <CsLineIcons icon="shield" className="me-2 sw-3" size="17" />
-          <span className="align-middle">Rooms</span>
-        </Nav.Link>
-        <div>
-          <Nav.Link as={NavLink} to="/operations/manage-rooms" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Manage Rooms</span>
+      {activePlans.includes('Hotel Manager') && (
+        <div className="mb-2">
+          <Nav.Link as={NavLink} to="/operations/manage-rooms" className="px-0">
+            <CsLineIcons icon="shield" className="me-2 sw-3" size="17" />
+            <span className="align-middle">Rooms</span>
           </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/add-room" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Add Room</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/add-room-category" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Add Room Category</span>
-          </Nav.Link>
+          <div>
+            <Nav.Link as={NavLink} to="/operations/manage-rooms" className="px-0 pt-1">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Manage Rooms</span>
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/operations/add-room" className="px-0 pt-1">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Add Room</span>
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/operations/add-room-category" className="px-0 pt-1">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Add Room Category</span>
+            </Nav.Link>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/requested-inventory" className="px-0">
@@ -190,9 +193,30 @@ const Operations = () => {
             </>
             } />
 
-            <Route exact path="/operations/manage-rooms" render={() => <ManageRooms />} />
-            <Route exact path="/operations/add-room" render={() => <AddRoom />} />
-            <Route exact path="/operations/add-room-category" render={() => <AddRoomCategory />} />
+            <Route exact path="/operations/manage-rooms"
+              render={() => <>
+                {
+                  activePlans.includes("Hotel Manager") ?
+                    <ManageRooms /> :
+                    <div className="text-center">You need to buy or renew to Hotel Manager plan to access this page.</div>
+                }</>}
+            />
+            <Route exact path="/operations/add-room"
+              render={() => <>
+                {
+                  activePlans.includes("Hotel Manager") ?
+                    <AddRoom /> :
+                    <div className="text-center">You need to buy or renew to Hotel Manager plan to access this page.</div>
+                }</>}
+            />
+            <Route exact path="/operations/add-room-category"
+              render={() => <>
+                {
+                  activePlans.includes("Hotel Manager") ?
+                    <AddRoomCategory /> :
+                    <div className="text-center">You need to buy or renew to Hotel Manager plan to access this page.</div>
+                }</>}
+            />
 
             <Route exact path="/operations/requested-inventory" render={() => <RequestedInventory />} />
             <Route exact path="/operations/inventory-history" render={() => <InventoryHistory />} />

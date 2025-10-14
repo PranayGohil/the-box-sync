@@ -23,7 +23,7 @@ cron.schedule("0 0 * * *", async () => {
 
 const addCustomer = (req, res) => {
   try {
-    const customerData = { ...req.body, restaurant_id: req.user };
+    const customerData = { ...req.body, user_id: req.user };
     Customer.create(customerData)
       .then((data) => res.json(data))
       .catch((err) => res.json(err));
@@ -94,7 +94,7 @@ const getActiveOrders = async (req, res) => {
       activeDineInTables = await Order.find({
         order_type: "Dine In",
         order_status: { $in: ["KOT", "Save"] },
-        restaurant_id: req.user,
+        user_id: req.user,
       });
     }
 
@@ -106,7 +106,7 @@ const getActiveOrders = async (req, res) => {
           { order_status: { $ne: "Paid" } },
           { "order_items.status": "Preparing" },
         ],
-        restaurant_id: req.user,
+        user_id: req.user,
         order_source: source,
       });
     }
@@ -118,7 +118,7 @@ const getActiveOrders = async (req, res) => {
         { order_status: { $ne: "Paid" } },
         { "order_items.status": "Preparing" },
       ],
-      restaurant_id: req.user,
+      user_id: req.user,
       order_source: source,
     });
 
@@ -132,7 +132,7 @@ const getActiveOrders = async (req, res) => {
   }
 };
 
-const generateToken = async (restaurant_id, source) => {
+const generateToken = async (user_id, source) => {
   const today = new Date();
   const dateOnly = new Date(
     today.getFullYear(),
@@ -142,7 +142,7 @@ const generateToken = async (restaurant_id, source) => {
 
   let tokenCounter = await TokenCounter.findOne({
     date: dateOnly,
-    restaurant_id,
+    user_id,
     source,
   });
 
@@ -150,7 +150,7 @@ const generateToken = async (restaurant_id, source) => {
     tokenCounter = new TokenCounter({
       date: dateOnly,
       lastToken: 0,
-      restaurant_id: restaurant_id,
+      user_id: user_id,
       source: source,
     });
   }
@@ -225,7 +225,7 @@ const orderController = async (req, res) => {
 
     let { orderInfo, table_id: tableId, customerInfo } = req.body;
     const orderId = orderInfo.order_id;
-    orderInfo.restaurant_id = req.user;
+    orderInfo.user_id = req.user;
 
     let savedOrder;
 
@@ -331,7 +331,7 @@ const dineInController = async (req, res) => {
 
     let { orderInfo, table_id: tableId, customerInfo } = req.body;
     const orderId = orderInfo.order_id;
-    orderInfo.restaurant_id = req.user;
+    orderInfo.user_id = req.user;
 
     // if (!tableId) {
     //   console.error("Table ID is required for Dine In orders");
@@ -477,7 +477,7 @@ const takeawayController = async (req, res) => {
 
     let { orderInfo, customerInfo } = req.body;
     const orderId = orderInfo.order_id;
-    orderInfo.restaurant_id = req.user;
+    orderInfo.user_id = req.user;
 
     let savedOrder;
     let savedCustomer;
@@ -597,7 +597,7 @@ const deliveryController = async (req, res) => {
 
     let { orderInfo, customerInfo } = req.body;
     const orderId = orderInfo.order_id;
-    orderInfo.restaurant_id = req.user;
+    orderInfo.user_id = req.user;
 
     // ✅ Validate required fields for delivery
     if (
@@ -721,7 +721,7 @@ const deliveryController = async (req, res) => {
 
 const orderHistory = async (req, res) => {
   try {
-    const orderData = await Order.find({ restaurant_id: req.user });
+    const orderData = await Order.find({ user_id: req.user });
     console.log(req.user);
     if (!orderData) {
       return res.json({ success: false, message: "Order not found" });

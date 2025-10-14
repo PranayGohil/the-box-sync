@@ -247,7 +247,7 @@ const AddRoom = () => {
                                                             </Row>
 
                                                             <Row className="mt-2">
-                                                                <Col md={4}>
+                                                                <Col md={6}>
                                                                     <BForm.Group>
                                                                         <BForm.Label>Max Person</BForm.Label>
                                                                         <Field
@@ -271,7 +271,7 @@ const AddRoom = () => {
                                                                         <ErrorMessage name={`rooms[${index}].room_price`} component="div" className="text-danger" />
                                                                     </BForm.Group>
                                                                 </Col> */}
-                                                                <Col md={4}>
+                                                                <Col md={6}>
                                                                     <BForm.Group>
                                                                         <BForm.Label>Room Status</BForm.Label>
                                                                         <Field as="select" name={`rooms[${index}].room_status`} className="form-select">
