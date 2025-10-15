@@ -14,24 +14,24 @@ export const AuthProvider = ({ children }) => {
 
     const fetchUserSubscriptions = async () => {
         try {
-            setActivePlans(['Manager', 'Dynamic Reports', 'QSR', 'Captain Panel', 'KOT Panel', 'Hotel Manager'])
+            // setActivePlans(['Manager', 'Dynamic Reports', 'QSR', 'Captain Panel', 'KOT Panel', 'Hotel Manager'])
             // Completed : Staff Management, Payroll By The Box, Feedback, Scan For Menu, Restaurant Website
 
-            // const response = await axios.get(
-            //     `${process.env.REACT_APP_API}/subscription/get`,
-            //     {
-            //         headers: {
-            //             Authorization: `Bearer ${localStorage.getItem("token")}`,
-            //         },
-            //     }
-            // );
-            // if (response.data.length > 0) {
-            //     const fetchActivePlans = response.data.filter(
-            //         (plan) => plan.status === "active"
-            //     );
-            //     setActivePlans(fetchActivePlans.map((plan) => plan.plan_name));
-            //     console.log(fetchActivePlans.map((plan) => plan.plan_name));
-            // }
+            const response = await axios.get(
+                `${process.env.REACT_APP_API}/subscription/get`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                }
+            );
+            if (response.data.length > 0) {
+                const fetchActivePlans = response.data.filter(
+                    (plan) => plan.status === "active"
+                );
+                setActivePlans(fetchActivePlans.map((plan) => plan.plan_name));
+                console.log(fetchActivePlans.map((plan) => plan.plan_name));
+            }
         } catch (error) {
             console.error("Error fetching subscription plans:", error);
         }

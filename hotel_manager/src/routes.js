@@ -15,6 +15,12 @@ const order = {
   takeaway: lazy(() => import('views/manager/order/TakeawayOrder')),
   delivery: lazy(() => import('views/manager/order/DeliveryOrder')),
 }
+
+const booking = {
+  create: lazy(() => import('views/manager/booking/CreateBooking')),
+  managecustomer: lazy(() => import('views/manager/booking/ManageCustomers')),
+}
+
 const dashboards = {
   index: lazy(() => import('views/dashboards/Dashboards')),
   default: lazy(() => import('views/dashboards/DashboardsDefault')),
@@ -62,6 +68,13 @@ const routesAndMenuItems = {
         { path: '/dine-in', label: 'Dine In', component: order.dinein },
         { path: '/takeaway', label: 'Take Away', component: order.takeaway },
         { path: '/delivery', label: 'Delivery', component: order.delivery },
+      ]
+    },
+    {
+      path: `${appRoot}/booking`,
+      subs: [
+        { path: '/create-booking', label: 'Create', component: booking.create },
+        { path: '/manage-customer', label: 'Manage Customer', component: booking.managecustomer },
       ]
     },
   ],
