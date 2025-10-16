@@ -25,7 +25,8 @@ export default function ManageAttendance() {
     const [showActionModal, setShowActionModal] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState(null);
     const [actionType, setActionType] = useState('');
-
+    const [errorMessage, setErrorMessage] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
 
     const fetchStaff = async () => {
         try {
@@ -39,6 +40,7 @@ export default function ManageAttendance() {
             setStaffList(response.data);
         } catch (error) {
             console.error("Error fetching staff:", error);
+            setErrorMessage("Failed to fetch staff data");
         } finally {
             setIsLoading(false);
         }
@@ -47,6 +49,17 @@ export default function ManageAttendance() {
     useEffect(() => {
         fetchStaff();
     }, []);
+
+    useEffect(() => {
+        if (errorMessage || successMessage) {
+            const timer = setTimeout(() => {
+                setErrorMessage('');
+                setSuccessMessage('');
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+        return () => {};
+    }, [errorMessage, successMessage]);
 
     const getTodayDate = () => {
         const today = new Date();
@@ -62,7 +75,7 @@ export default function ManageAttendance() {
 
     const handleCheckIn = async (staffId) => {
         try {
-            await axios.post(
+            const response = await axios.post(
                 `${process.env.REACT_APP_API}/staff/check-in`,
                 {
                     staff_id: staffId,
@@ -73,15 +86,17 @@ export default function ManageAttendance() {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 }
             );
+            setSuccessMessage(response.data.message || "Check-in successful");
             fetchStaff();
         } catch (error) {
             console.error("Error during Check-In:", error);
+            setErrorMessage(error.response?.data?.message || "Error during check-in");
         }
     };
 
     const handleCheckOut = async (staffId) => {
         try {
-            await axios.post(
+            const response = await axios.post(
                 `${process.env.REACT_APP_API}/staff/check-out`,
                 {
                     staff_id: staffId,
@@ -92,15 +107,17 @@ export default function ManageAttendance() {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 }
             );
+            setSuccessMessage(response.data.message || "Check-out successful");
             fetchStaff();
         } catch (error) {
             console.error("Error during Check-Out:", error);
+            setErrorMessage(error.response?.data?.message || "Error during check-out");
         }
     };
 
     const handleAbsent = async (staffId) => {
         try {
-            await axios.post(
+            const response = await axios.post(
                 `${process.env.REACT_APP_API}/staff/mark-absent`,
                 {
                     staff_id: staffId,
@@ -110,9 +127,11 @@ export default function ManageAttendance() {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 }
             );
+            setSuccessMessage(response.data.message || "Marked absent successfully");
             fetchStaff();
         } catch (error) {
             console.error("Error marking Absent:", error);
+            setErrorMessage(error.response?.data?.message || "Error marking absent");
         }
     };
 
@@ -138,6 +157,16 @@ export default function ManageAttendance() {
         return `${day}-${month}-${year}`;
     };
 
+    // Helper function to check if staff has ongoing attendance
+    const hasOngoingAttendance = (staff) => {
+        return staff.attandance?.some(att => att.in_time && !att.out_time);
+    };
+
+    // Helper function to get ongoing attendance details
+    const getOngoingAttendance = (staff) => {
+        return staff.attandance?.find(att => att.in_time && !att.out_time);
+    };
+
     const columns = React.useMemo(
         () => [
             {
@@ -161,6 +190,7 @@ export default function ManageAttendance() {
                 headerClassName: 'text-muted text-small text-uppercase w-15',
                 Cell: ({ row }) => {
                     const today = getTodayDate();
+                    const ongoingAttendance = getOngoingAttendance(row.original);
                     const todayAttendance = row.original.attandance?.find(
                         (a) => a.date === today
                     );
@@ -169,12 +199,17 @@ export default function ManageAttendance() {
                     let statusVariant = "warning";
                     let statusIcon = "clock";
 
-                    if (todayAttendance) {
-                        if (todayAttendance.in_time && !todayAttendance.out_time) {
-                            status = "Checked In";
-                            statusVariant = "success";
-                            statusIcon = "log-in";
-                        } else if (todayAttendance.out_time) {
+                    if (ongoingAttendance) {
+                        status = "Checked In";
+                        statusVariant = "success";
+                        statusIcon = "log-in";
+
+                        // Show different badge if checked in on a previous date
+                        if (ongoingAttendance.date !== today) {
+                            status = `Checked In (${formatDateDisplay(ongoingAttendance.date)})`;
+                        }
+                    } else if (todayAttendance) {
+                        if (todayAttendance.out_time) {
                             status = "Completed";
                             statusVariant = "primary";
                             statusIcon = "check";
@@ -198,10 +233,22 @@ export default function ManageAttendance() {
                 id: 'in_time',
                 headerClassName: 'text-muted text-small text-uppercase w-15',
                 Cell: ({ row }) => {
+                    const ongoingAttendance = getOngoingAttendance(row.original);
                     const today = getTodayDate();
                     const todayAttendance = row.original.attandance?.find(
                         (a) => a.date === today
                     );
+
+                    if (ongoingAttendance) {
+                        return (
+                            <div>
+                                <div>{ongoingAttendance.in_time}</div>
+                                {ongoingAttendance.date !== today && (
+                                    <small className="text-muted">({formatDateDisplay(ongoingAttendance.date)})</small>
+                                )}
+                            </div>
+                        );
+                    }
                     return todayAttendance?.in_time || '-';
                 },
             },
@@ -223,13 +270,31 @@ export default function ManageAttendance() {
                 headerClassName: 'text-muted text-small text-uppercase w-10 text-center',
                 Cell: ({ row }) => {
                     const today = getTodayDate();
+                    const ongoingAttendance = getOngoingAttendance(row.original);
                     const todayAttendance = row.original.attandance?.find(
                         (a) => a.date === today
                     );
 
                     return (
                         <div className="d-flex justify-content-center">
-                            {!todayAttendance ? (
+                            {ongoingAttendance ? (
+                                // Staff is checked in (possibly from a previous day)
+                                <Button
+                                    variant="outline-secondary"
+                                    size="sm"
+                                    className="btn-icon btn-icon-only me-1"
+                                    onClick={() => handleAction(row.original, 'checkout')}
+                                    title="Check-Out"
+                                >
+                                    <CsLineIcons icon="logout" />
+                                </Button>
+                            ) : todayAttendance ? (
+                                // Today's attendance exists and is completed or absent
+                                <Badge bg="secondary" className="mx-2 d-flex align-items-center">
+                                    <CsLineIcons icon="check" />
+                                </Badge>
+                            ) : (
+                                // No attendance for today
                                 <>
                                     <Button
                                         variant="outline-primary"
@@ -250,20 +315,6 @@ export default function ManageAttendance() {
                                         <i className="bi-person-x-fill" />
                                     </Button>
                                 </>
-                            ) : todayAttendance.in_time && !todayAttendance.out_time ? (
-                                <Button
-                                    variant="outline-secondary"
-                                    size="sm"
-                                    className="btn-icon btn-icon-only me-1"
-                                    onClick={() => handleAction(row.original, 'checkout')}
-                                    title="Check-Out"
-                                >
-                                    <CsLineIcons icon="logout" />
-                                </Button>
-                            ) : (
-                                <Badge bg="secondary" className="mx-2 d-flex align-items-center">
-                                    <CsLineIcons icon="check" />
-                                </Badge>
                             )}
                             <Button
                                 variant="outline-dark"
@@ -322,6 +373,20 @@ export default function ManageAttendance() {
                         </Row>
                     </div>
 
+                    {errorMessage && (
+                        <Alert variant="danger" dismissible onClose={() => setErrorMessage('')}>
+                            <CsLineIcons icon="warning-hexagon" className="me-2" />
+                            {errorMessage}
+                        </Alert>
+                    )}
+
+                    {successMessage && (
+                        <Alert variant="success" dismissible onClose={() => setSuccessMessage('')}>
+                            <CsLineIcons icon="check-circle" className="me-2" />
+                            {successMessage}
+                        </Alert>
+                    )}
+
                     <Card className="mb-5">
                         <Card.Header>
                             <Card.Title className="mb-0">
@@ -369,7 +434,7 @@ export default function ManageAttendance() {
                         <Card.Footer className="bg-transparent">
                             <small className="text-muted">
                                 <CsLineIcons icon="clock" className="me-1" />
-                                All times are in IST (Asia/Kolkata) timezone
+                                All times are in IST (Asia/Kolkata) timezone. Night shifts spanning multiple days are supported.
                             </small>
                         </Card.Footer>
                     </Card>
@@ -397,7 +462,22 @@ export default function ManageAttendance() {
                                 <p className="text-muted">Check-in time: {getCurrentTime()}</p>
                             )}
                             {actionType === 'checkout' && (
-                                <p className="text-muted">Check-out time: {getCurrentTime()}</p>
+                                <>
+                                    <p className="text-muted">Check-out time: {getCurrentTime()}</p>
+                                    {(() => {
+                                        const ongoing = getOngoingAttendance(selectedStaff);
+                                        if (ongoing && ongoing.date !== getTodayDate()) {
+                                            return (
+                                                <Alert variant="info" className="mb-0">
+                                                    <small>
+                                                        This will complete the shift started on {formatDateDisplay(ongoing.date)} at {ongoing.in_time}
+                                                    </small>
+                                                </Alert>
+                                            );
+                                        }
+                                        return null;
+                                    })()}
+                                </>
                             )}
                         </div>
                     )}
