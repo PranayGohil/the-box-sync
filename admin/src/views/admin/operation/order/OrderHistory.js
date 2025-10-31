@@ -61,102 +61,145 @@ const OrderHistory = () => {
 
   const handlePrint = async (orderId) => {
     try {
-      const orderResponse = await axios.get(`${process.env.REACT_APP_API}/order/get/${orderId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      const orderResponse = await axios.get(
+        `${process.env.REACT_APP_API}/order/get/${orderId}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
 
-      const userResponse = await axios.get(`${process.env.REACT_APP_API}/user/get`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const userResponse = await axios.get(
+        `${process.env.REACT_APP_API}/user/get`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
 
       const order = orderResponse.data.data;
       const userData = userResponse.data;
 
-      const printDiv = document.createElement('div');
-      printDiv.id = 'printable-invoice';
-      printDiv.style.display = 'none';
+      const printDiv = document.createElement("div");
+      printDiv.id = "printable-invoice";
+      printDiv.style.display = "none";
       document.body.appendChild(printDiv);
 
       printDiv.innerHTML = `
-        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; border: 1px solid #ccc; padding: 10px;">
-          <div style="text-align: center; margin-bottom: 10px;">
-            <h3 style="margin: 10px;">${userData.name}</h3>
-            <p style="margin: 0; font-size: 12px;">${userData.address}</p>
-            <p style="margin: 0; font-size: 12px;">${userData.city}, ${userData.state} ${userData.pincode}</p>
-            <p style="margin: 10px; font-size: 12px;"><strong>Phone: </strong> ${userData.mobile}</p>
-          </div>
-          <hr style="border: 0.5px dashed #ccc;" />
-          <p><strong>Name:</strong> ${order?.customer_name || '(M: 1234567890)'}</p>
-          <hr style="border: 0.5px dashed #ccc;" />
-          <table style="font-size: 12px; margin-bottom: 10px;">
-            <tr>
-            <td style="width: 50%; height: 30px;">
-              <strong>Date:</strong> ${new Date(order.order_date).toLocaleString()}</td>
-                <td style="text-align: right;"><strong>${order.order_type}</strong>
-                </td>
-            </tr>
-            <tr>
-            <td colspan="2"><strong>Bill No:</strong> ${order._id}</td>
-            
-            </tr>
-          </table>
-          <hr style="border: 0.5px dashed #ccc;" />
-          <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
-            <thead>
-              <tr>
-                <th style="text-align: left; border-bottom: 1px dashed #ccc">Item</th>
-                <th style="text-align: center; border-bottom: 1px dashed #ccc">Qty</th>
-                <th style="text-align: center; border-bottom: 1px dashed #ccc">Price</th>
-                <th style="text-align: right; border-bottom: 1px dashed #ccc">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${order.order_items
-                .map(
-                  (item) => `
-                  <tr>
-                    <td>${item.dish_name}</td>
-                    <td style="text-align: center;">${item.quantity}</td>
-                    <td style="text-align: center;">${item.dish_price}</td>
-                    <td style="text-align: right;">₹ ${item.dish_price * item.quantity}</td>
-                  </tr>
-                `
-                )
-                .join('')}
-              <tr>
-                <td colspan="3" style="text-align: right; border-top: 1px dashed #ccc"><strong>Sub Total: </strong></td>
-                <td style="text-align: right; border-top: 1px dashed #ccc">₹ ${order.sub_total}</td>
-              </tr>
-              <tr>
-                <td colspan="3" style="text-align: right;"><strong>CGST (${order.cgst_amount || 0} %):</strong></td>
-                <td style="text-align: right;">₹ ${((order.cgst_amount || 0) * order.bill_amount) / 100}</td>
-              </tr>
-              <tr>
-                <td colspan="3" style="text-align: right;"><strong>SGST (${order.sgst_amount || 0} %):</strong></td>
-                <td style="text-align: right;">₹ ${((order.sgst_amount || 0) * order.bill_amount) / 100}</td>
-              </tr>
-              <tr>
-                <td colspan="3" style="text-align: right;"><strong>Total: </strong></td>
-                <td style="text-align: right;">₹ ${order.total_amount}</td>
-              </tr>
-              <tr>
-                <td colspan="3" style="text-align: right;"><strong>Discount: </strong></td>
-                <td style="text-align: right;">- ₹ ${order.discount_amount || 0}</td>
-              </tr>
-              <tr>
-                <td colspan="3" style="text-align: right; border-top: 1px dashed #ccc"><strong>Paid Amount: </strong></td>
-                <td style="text-align: right; border-top: 1px dashed #ccc">₹ ${order.bill_amount}</td>
-              </tr>
-            </tbody>
-          </table>
-          <hr style="border: 0.5px dashed #ccc;" />
-          <div style="text-align: center; font-size: 12px;">
-            <p style="margin: 10px; font-size: 12px;"><strong>FSSAI Lic No:</strong> 11224333001459</p>
-            <p style="margin: 10px; font-size: 12px;"><strong>GST No:</strong> ${userData.gst_no}</p>
-            <p style="margin: 10px; font-size: 12px;"><strong>Thanks, Visit Again</strong></p>
-          </div>
-        </div>
-      `;
+         <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; border: 1px solid #ccc; padding: 10px;">
+           <div style="text-align: center; margin-bottom: 10px;">
+             <h3 style="margin: 10px;">${userData.name}</h3>
+             <p style="margin: 0; font-size: 12px;">${userData.address}</p>
+             <p style="margin: 0; font-size: 12px;">
+               ${userData.city}, ${userData.state} - ${userData.pincode}
+             </p>
+             <p style="margin: 10px; font-size: 12px;"><strong>Phone: </strong> ${userData.mobile
+        }</p>
+         <p style="margin: 10px; font-size: 12px;"><strong>FSSAI Lic No:</strong> 11224333001459</p>
+             <p style="margin: 10px; font-size: 12px;"><strong>GST No:</strong> 
+             ${userData.gst_no}
+             </p>
+           </div>
+           <hr style="border: 0.5px dashed #ccc;" />
+           <p>
+         </p>
+           <table style="font-size: 12px; margin-bottom: 10px;">
+             <tr>
+             <td style="width: 50%; height: 30px;">
+               <strong> Name: </strong> ${order?.customer_name || "(M: 1234567890)"} 
+                 </td>
+                 </tr><tr>
+             <td style="width: 50%; height: 30px;">
+               <strong>Date:</strong> ${new Date(
+          order.order_date
+        ).toLocaleString()}</td>
+                 <td style="text-align: right;"><strong>${order.order_type
+        }</strong>
+                 </td>
+             </tr>
+             <tr>
+             <td colspan="2"><strong>Bill No:</strong> ${order._id}</td>
+             
+             </tr>
+           </table>
+           <hr style="border: 0.5px dashed #ccc;" />
+           <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
+             <thead>
+               <tr>
+                 <th style="text-align: left; border-bottom: 1px dashed #ccc">Item</th>
+                 <th style="text-align: center; border-bottom: 1px dashed #ccc">Qty</th>
+                 <th style="text-align: center; border-bottom: 1px dashed #ccc">Price</th>
+                 <th style="text-align: right; border-bottom: 1px dashed #ccc">Amount</th>
+               </tr>
+             </thead>
+             <tbody>
+               ${order.order_items
+          .map(
+            (item) => `
+                   <tr>
+                     <td>${item.dish_name}</td>
+                     <td style="text-align: center;">${item.quantity}</td>
+                     <td style="text-align: center;">${item.dish_price}</td>
+                     <td style="text-align: right;">₹ ${item.dish_price * item.quantity
+              }</td>
+                   </tr>
+                 `
+          )
+          .join("")}
+               <tr>
+                 <td colspan="3" style="text-align: right; border-top: 1px dashed #ccc"><strong>Sub Total: </strong></td>
+                 <td style="text-align: right; border-top: 1px dashed #ccc">₹ ${order.sub_total
+        }</td>
+               </tr>
+               ${order.cgst_amount > 0 ?
+          `<tr>
+                   <td colspan="3" style="text-align: right;"><strong>CGST (${order.cgst_percent || 0} %):</strong>
+                   </td>
+                   <td style="text-align: right;">₹ ${order.cgst_amount || 0}</td> 
+                 </tr>` : ""
+        }
+               ${order.sgst_amount > 0 ?
+          `<tr>
+                 <td colspan="3" style="text-align: right;"><strong>SGST (${order.sgst_percent || 0
+          } %):</strong></td>
+                 <td style="text-align: right;">₹ ${order.sgst_amount || 0}</td>
+               </tr>`  : ""
+        }
+         ${order.vat_amount > 0 ?
+          `<tr>
+                   <td colspan="3" style="text-align: right;"><strong>VAT (${order.vat_percent || 0} %):</strong>
+                   </td>
+                   <td style="text-align: right;">₹ ${order.vat_amount || 0}</td>
+                 </tr>`  : ""
+        }
+             ${order.discount_amount > 0 ?
+          `<tr>
+                 <td colspan="3" style="text-align: right;"><strong>Discount: </strong></td>
+                 <td style="text-align: right;">- ₹ ${order.discount_amount || 0
+          }</td>
+               </tr>`  : ""
+        }
+               <tr>
+                 <td colspan="3" style="text-align: right;"><strong>Total: </strong></td>
+                 <td style="text-align: right;">₹ ${order.total_amount}</td>
+               </tr>
+               <tr>
+                 <td colspan="3" style="text-align: right; border-top: 1px dashed #ccc"><strong>Paid Amount: </strong></td>
+                 <td style="text-align: right; border-top: 1px dashed #ccc">
+                   ₹ ${order.paid_amount || order.bill_amount || 0}
+                 </td>
+               </tr>
+               ${order.waveoff_amount !== null && order.waveoff_amount !== undefined && order.waveoff_amount !== 0 ?
+          `<tr>
+                 <td colspan="3" style="text-align: right;"><strong>Waveoff Amount: </strong></td>
+                 <td style="text-align: right;"> ₹ ${order.waveoff_amount || 0
+          }</td>
+                 
+               </tr>`  : ""}
+               
+             </tbody>
+           </table>
+           <div style="text-align: center; font-size: 12px;">
+             <p style="margin: 10px; font-size: 12px;"><strong>Thanks, Visit Again</strong></p>
+           </div>
+         </div>
+       `;
 
-      const printWindow = window.open('', '_blank');
+      const printWindow = window.open("", "_blank");
       printWindow.document.write(printDiv.innerHTML);
       printWindow.document.close();
       printWindow.print();
@@ -164,10 +207,10 @@ const OrderHistory = () => {
 
       document.body.removeChild(printDiv);
     } catch (err) {
-      console.error('Error fetching order or user data:', err);
+      console.error("Error fetching order or user data:", err);
     }
   };
-
+  
   const columns = React.useMemo(
     () => [
       {

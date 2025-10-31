@@ -57,16 +57,34 @@ const orderSchema = new Schema({
   sub_total: {
     type: Number,
   },
+  cgst_percent: {
+    type: Number,
+  },
+  sgst_percent: {
+    type: Number,
+  },
+  vat_percent: {
+    type: Number,
+  },
   cgst_amount: {
     type: Number,
   },
   sgst_amount: {
     type: Number,
   },
+  vat_amount: {
+    type: Number,
+  },
   discount_amount: {
     type: Number,
   },
+  waveoff_amount: {
+    type: Number,
+  },
   total_amount: {
+    type: Number,
+  },
+  paid_amount: {
     type: Number,
   },
   payment_type: {
@@ -80,7 +98,7 @@ const orderSchema = new Schema({
     type: String,
   },
   order_source: {
-    type: String, // 'Manager' or 'QSR'
+    type: String, 
     required: true,
     enum: ["Manager", "QSR", "Captain"], 
   },

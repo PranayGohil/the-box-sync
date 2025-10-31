@@ -49,15 +49,22 @@ const TakeawayOrder = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentData, setPaymentData] = useState({
     subTotal: 0,
+    cgstPercent: 0,
+    sgstPercent: 0,
+    vatPercent: 0,
     cgstAmount: 0,
     sgstAmount: 0,
+    vatAmount: 0,
+    discountType: 'amount', // 'amount' or 'percentage'
+    discountValue: 0,
     discountAmount: 0,
     total: 0,
     paidAmount: 0,
+    waveoffAmount: 0,
     paymentType: 'Cash',
   });
 
-  const [taxRates, setTaxRates] = useState({ cgst: 0, sgst: 0 });
+  const [taxRates, setTaxRates] = useState({ cgst: 0, sgst: 0, vat: 0 });
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchOrderDetails = async () => {
@@ -106,9 +113,16 @@ const TakeawayOrder = () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API}/user/get`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       const taxInfo = response.data.taxInfo || {};
+      setPaymentData((prevData) => ({
+        ...prevData,
+        cgstPercent: taxInfo.cgst || 0,
+        sgstPercent: taxInfo.sgst || 0,
+        vatPercent: taxInfo.vat || 0
+      }));
       setTaxRates({
         cgst: taxInfo.cgst || 0,
         sgst: taxInfo.sgst || 0,
+        vat: taxInfo.vat || 0
       });
       setContainerCharges(response.data.containerCharges || []);
     } catch (error) {
@@ -131,15 +145,32 @@ const TakeawayOrder = () => {
     // Calculate tax amounts based on subtotal
     const cgstAmount = (subTotal * taxRates.cgst) / 100;
     const sgstAmount = (subTotal * taxRates.sgst) / 100;
-    const totalTax = cgstAmount + sgstAmount;
+    const vatAmount = (subTotal * paymentData.vatPercent) / 100;
+    const totalTax = cgstAmount + sgstAmount + vatAmount;
 
-    setPaymentData((prev) => ({
-      ...prev,
-      subTotal: subTotal.toFixed(2),
-      cgstAmount: cgstAmount.toFixed(2),
-      sgstAmount: sgstAmount.toFixed(2),
-      total: (subTotal + totalTax - prev.discountAmount).toFixed(2),
-    }));
+    setPaymentData((prev) => {
+      // Calculate discount amount based on type
+      let discountAmount = 0;
+      if (prev.discountType === 'percentage') {
+        discountAmount = (subTotal * prev.discountValue) / 100;
+      } else {
+        discountAmount = prev.discountValue;
+      }
+
+      const total = subTotal + totalTax - discountAmount;
+      const waveoffAmount = prev.paidAmount > 0 ? total - prev.paidAmount : 0;
+
+      return {
+        ...prev,
+        subTotal: subTotal.toFixed(2),
+        cgstAmount: cgstAmount.toFixed(2),
+        sgstAmount: sgstAmount.toFixed(2),
+        vatAmount: vatAmount.toFixed(2),
+        discountAmount: discountAmount.toFixed(2),
+        total: total.toFixed(2),
+        waveoffAmount: waveoffAmount.toFixed(2),
+      };
+    });
   }, [orderItems, taxRates]);
 
   // Filter menu data
@@ -188,6 +219,100 @@ const TakeawayOrder = () => {
     setOrderItems((prevItems) => prevItems.filter((_, index) => index !== itemIndex));
   };
 
+  // Handle discount type change
+  const handleDiscountTypeChange = (type) => {
+    setPaymentData((prev) => {
+      const subTotal = parseFloat(prev.subTotal);
+      const cgstAmount = parseFloat(prev.cgstAmount);
+      const sgstAmount = parseFloat(prev.sgstAmount);
+      const vatAmount = parseFloat(prev.vatAmount);
+      let discountAmount = 0;
+      let discountValue = 0;
+
+      // Convert existing discount to new type
+      if (type === 'percentage') {
+        // Convert amount to percentage
+        discountValue = prev.discountAmount > 0 ? ((prev.discountAmount / subTotal) * 100).toFixed(2) : 0;
+        discountAmount = prev.discountAmount;
+      } else {
+        // Keep amount as is
+        discountValue = prev.discountAmount;
+        discountAmount = prev.discountAmount;
+      }
+
+      const total = subTotal + cgstAmount + sgstAmount + vatAmount - discountAmount;
+      const waveoffAmount = prev.paidAmount > 0 ? total - prev.paidAmount : 0;
+
+      return {
+        ...prev,
+        discountType: type,
+        discountValue: parseFloat(discountValue),
+        discountAmount: parseFloat(discountAmount).toFixed(2),
+        total: total.toFixed(2),
+        waveoffAmount: waveoffAmount.toFixed(2),
+      };
+    });
+  };
+
+  // Handle discount value change
+  const handleDiscountValueChange = (value) => {
+    const discountValue = parseFloat(value) || 0;
+    const subTotal = parseFloat(paymentData.subTotal);
+    const cgstAmount = parseFloat(paymentData.cgstAmount);
+    const sgstAmount = parseFloat(paymentData.sgstAmount);
+    const vatAmount = parseFloat(paymentData.vatAmount);
+
+    let discountAmount = 0;
+    if (paymentData.discountType === 'percentage') {
+      // Limit percentage to 100%
+      const limitedValue = Math.min(discountValue, 100);
+      discountAmount = (subTotal * limitedValue) / 100;
+
+      setPaymentData((prev) => {
+        const total = subTotal + cgstAmount + sgstAmount + vatAmount - discountAmount;
+        const waveoffAmount = prev.paidAmount > 0 ? total - prev.paidAmount : 0;
+
+        return {
+          ...prev,
+          discountValue: limitedValue,
+          discountAmount: discountAmount.toFixed(2),
+          total: total.toFixed(2),
+          waveoffAmount: waveoffAmount.toFixed(2),
+        };
+      });
+    } else {
+      // Limit amount to subtotal
+      const limitedValue = Math.min(discountValue, subTotal);
+      discountAmount = limitedValue;
+
+      setPaymentData((prev) => {
+        const total = subTotal + cgstAmount + sgstAmount + vatAmount - discountAmount;
+        const waveoffAmount = prev.paidAmount > 0 ? total - prev.paidAmount : 0;
+
+        return {
+          ...prev,
+          discountValue: limitedValue,
+          discountAmount: discountAmount.toFixed(2),
+          total: total.toFixed(2),
+          waveoffAmount: waveoffAmount.toFixed(2),
+        };
+      });
+    }
+  };
+
+  // Handle paid amount change
+  const handlePaidAmountChange = (value) => {
+    const paidAmount = parseFloat(value) || 0;
+    const total = parseFloat(paymentData.total);
+    const waveoffAmount = total - paidAmount;
+
+    setPaymentData((prev) => ({
+      ...prev,
+      paidAmount,
+      waveoffAmount: waveoffAmount.toFixed(2),
+    }));
+  };
+
   // Order actions
   const handleSaveOrder = async (status = 'Save') => {
     if (orderItems.length === 0) {
@@ -210,12 +335,19 @@ const TakeawayOrder = () => {
         customer_name: customerInfo.name,
         total_persons: customerInfo.total_persons,
         comment: customerInfo.comment,
+        waiter: customerInfo.waiter,
         bill_amount: parseFloat(paymentData.total),
         sub_total: parseFloat(paymentData.subTotal),
+        cgst_percent: parseFloat(paymentData.cgstPercent),
+        sgst_percent: parseFloat(paymentData.sgstPercent),
+        vat_percent: parseFloat(paymentData.vatPercent),
         cgst_amount: parseFloat(paymentData.cgstAmount),
         sgst_amount: parseFloat(paymentData.sgstAmount),
+        vat_amount: parseFloat(paymentData.vatAmount),
         discount_amount: parseFloat(paymentData.discountAmount),
+        waveoff_amount: parseFloat(paymentData.waveoffAmount),
         total_amount: parseFloat(paymentData.total),
+        paid_amount: parseFloat(paymentData.paidAmount),
         payment_type: paymentData.paymentType,
         order_source: 'Manager',
       };
@@ -335,9 +467,8 @@ const TakeawayOrder = () => {
                               </Card.Body>
                               <Badge
                                 variant="outline"
-                                className={`text-white mb-2 ${
-                                  category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
-                                }`}
+                                className={`text-white mb-2 ${category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
+                                  }`}
                                 style={{ position: 'absolute', top: '5px', right: '5px' }}
                               >
                                 {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
@@ -530,7 +661,7 @@ const TakeawayOrder = () => {
       </Row>
 
       {/* Payment Modal */}
-      <Modal show={showPaymentModal} onHide={() => setShowPaymentModal(false)} centered>
+      <Modal show={showPaymentModal} onHide={() => setShowPaymentModal(false)} centered size="lg">
         <Modal.Header closeButton>
           <Modal.Title>Process Payment</Modal.Title>
         </Modal.Header>
@@ -545,40 +676,54 @@ const TakeawayOrder = () => {
           </Row>
 
           <Row className="mb-3">
-            <Col md="6">
+            <Col md="4">
               <Form.Group>
-                <Form.Label>CGST ({taxRates.cgst}%)</Form.Label>
+                <Form.Label>CGST ({paymentData.cgstPercent}%)</Form.Label>
                 <Form.Control type="number" value={paymentData.cgstAmount} readOnly />
               </Form.Group>
             </Col>
-            <Col md="6">
+            <Col md="4">
               <Form.Group>
-                <Form.Label>SGST ({taxRates.sgst}%)</Form.Label>
+                <Form.Label>SGST ({paymentData.sgstPercent}%)</Form.Label>
                 <Form.Control type="number" value={paymentData.sgstAmount} readOnly />
+              </Form.Group>
+            </Col>
+            <Col md="4">
+              <Form.Group>
+                <Form.Label>VAT ({paymentData.vatPercent}%)</Form.Label>
+                <Form.Control type="number" value={paymentData.vatAmount} readOnly />
               </Form.Group>
             </Col>
           </Row>
 
+          {/* Discount Section */}
           <Row className="mb-3">
-            <Col>
+            <Col md="4">
               <Form.Group>
-                <Form.Label>Discount Amount</Form.Label>
+                <Form.Label>Discount Type</Form.Label>
+                <Form.Select value={paymentData.discountType} onChange={(e) => handleDiscountTypeChange(e.target.value)}>
+                  <option value="amount">Amount (₹)</option>
+                  <option value="percentage">Percentage (%)</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md="4">
+              <Form.Group>
+                <Form.Label>Discount {paymentData.discountType === 'percentage' ? 'Percentage' : 'Amount'}</Form.Label>
                 <Form.Control
                   type="number"
-                  value={paymentData.discountAmount}
-                  onChange={(e) => {
-                    const discount = parseFloat(e.target.value) || 0;
-                    const subTotal = parseFloat(paymentData.subTotal);
-                    const cgstAmount = parseFloat(paymentData.cgstAmount);
-                    const sgstAmount = parseFloat(paymentData.sgstAmount);
-
-                    setPaymentData((prev) => ({
-                      ...prev,
-                      discountAmount: discount,
-                      total: (subTotal + cgstAmount + sgstAmount - discount).toFixed(2),
-                    }));
-                  }}
+                  value={paymentData.discountValue}
+                  onChange={(e) => handleDiscountValueChange(e.target.value)}
+                  placeholder={paymentData.discountType === 'percentage' ? 'Enter %' : 'Enter amount'}
+                  min="0"
+                  max={paymentData.discountType === 'percentage' ? '100' : paymentData.subTotal}
                 />
+              </Form.Group>
+            </Col>
+            <Col md="4">
+              <Form.Group>
+                <Form.Label>Discount Amount</Form.Label>
+                <Form.Control type="number" value={paymentData.discountAmount} readOnly />
               </Form.Group>
             </Col>
           </Row>
@@ -589,7 +734,50 @@ const TakeawayOrder = () => {
                 <Form.Label>
                   <strong>Total Amount (Including Taxes)</strong>
                 </Form.Label>
-                <Form.Control type="number" value={paymentData.total} readOnly style={{ fontWeight: 'bold' }} />
+                <Form.Control type="number" value={paymentData.total} readOnly style={{ fontWeight: 'bold', fontSize: '1.1rem' }} />
+              </Form.Group>
+            </Col>
+          </Row>
+
+          {/* Paid Amount Section */}
+          <Row className="mb-3">
+            <Col md="6">
+              <Form.Group>
+                <Form.Label>
+                  <strong>Paid Amount</strong>
+                </Form.Label>
+                <Form.Control
+                  type="number"
+                  value={paymentData.paidAmount}
+                  onChange={(e) => handlePaidAmountChange(e.target.value)}
+                  placeholder="Enter paid amount"
+                  min="0"
+                  style={{ fontWeight: 'bold' }}
+                />
+              </Form.Group>
+            </Col>
+            <Col md="6">
+              <Form.Group>
+                <Form.Label>
+                  <strong>Wave-off Amount</strong>
+                </Form.Label>
+                <Form.Control
+                  type="number"
+                  value={paymentData.waveoffAmount}
+                  readOnly
+                  style={{
+                    fontWeight: 'bold',
+                    backgroundColor: parseFloat(paymentData.waveoffAmount) !== 0 ? '#fff3cd' : '#f8f9fa',
+                    color: parseFloat(paymentData.waveoffAmount) > 0 ? '#856404' : parseFloat(paymentData.waveoffAmount) < 0 ? '#721c24' : '#000'
+                  }}
+                />
+                {parseFloat(paymentData.waveoffAmount) !== 0 && (
+                  <Form.Text className={parseFloat(paymentData.waveoffAmount) > 0 ? 'text-warning' : 'text-danger'}>
+                    {parseFloat(paymentData.waveoffAmount) > 0
+                      ? `Customer paid ₹${Math.abs(parseFloat(paymentData.waveoffAmount)).toFixed(2)} less`
+                      : `Customer paid ₹${Math.abs(parseFloat(paymentData.waveoffAmount)).toFixed(2)} extra`}
+                  </Form.Text>
+                )}
               </Form.Group>
             </Col>
           </Row>

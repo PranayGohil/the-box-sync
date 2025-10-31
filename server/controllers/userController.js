@@ -190,6 +190,7 @@ const getUserData = async (req, res) => {
         userdata.restaurant_code = fetchuser.restaurant_code;
         userdata.name = fetchuser.name;
         userdata.logo = fetchuser.logo;
+        userdata.gst_no = fetchuser.gst_no;
         userdata.email = fetchuser.email;
         userdata.mobile = fetchuser.mobile;
         userdata.address = fetchuser.address;
@@ -199,6 +200,7 @@ const getUserData = async (req, res) => {
         userdata.pincode = fetchuser.pincode;
         userdata.taxInfo = fetchuser.taxInfo;
         userdata.containerCharges = fetchuser.containerCharges;
+        userdata.feedbackToken = fetchuser.feedbackToken;
       }
       res.send(userdata);
     } else {
@@ -402,6 +404,7 @@ const updateTax = async (req, res) => {
       taxInfo: {
         cgst: taxInfo?.cgst ?? 0,
         sgst: taxInfo?.sgst ?? 0,
+        vat: taxInfo?.vat ?? 0,
       },
     });
     res.status(200).send("Tax information updated successfully!");

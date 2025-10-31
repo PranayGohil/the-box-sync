@@ -22,6 +22,7 @@ const Gst = () => {
         gst_no: '',
         cgst: 0,
         sgst: 0,
+        vat: 0,
     });
 
     const [intialProfile, setIntialProfile] = useState({ ...profile });
@@ -41,12 +42,14 @@ const Gst = () => {
                     gst_no: data.gst_no || '',
                     cgst: data.taxInfo?.cgst || 0,
                     sgst: data.taxInfo?.sgst || 0,
+                    vat: data.taxInfo?.vat || 0,
                 });
 
                 setIntialProfile({
                     gst_no: data.gst_no || '',
                     cgst: data.taxInfo?.cgst || 0,
                     sgst: data.taxInfo?.sgst || 0,
+                    vat: data.taxInfo?.vat || 0,
                 });
             } catch (err) {
                 console.error('Failed to load tax info', err);
@@ -64,7 +67,7 @@ const Gst = () => {
 
         setIntialProfile((prev) => ({
             ...prev,
-            [name]: name === 'cgst' || name === 'sgst' ? parseFloat(value) : value,
+            [name]: name === 'cgst' || name === 'sgst' || name === 'vat' ? parseFloat(value) : value,
         }));
     };
 
@@ -83,6 +86,7 @@ const Gst = () => {
                     taxInfo: {
                         cgst: intialProfile.cgst,
                         sgst: intialProfile.sgst,
+                        vat: intialProfile.vat,
                     },
                 },
                 {
@@ -162,6 +166,19 @@ const Gst = () => {
                                             type="number"
                                             name="sgst"
                                             value={intialProfile.sgst}
+                                            onChange={handleChange}
+                                            disabled={!editMode}
+                                            min="0"
+                                            max="100"
+                                            step="0.01"
+                                        />
+                                    </Col>
+                                    <Col md="4">
+                                        <Form.Label>VAT (%)</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            name="vat"
+                                            value={intialProfile.vat}
                                             onChange={handleChange}
                                             disabled={!editMode}
                                             min="0"

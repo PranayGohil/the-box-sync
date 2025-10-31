@@ -5,7 +5,7 @@ const { createInquiry, getAllInquiries, updateInquiryStatus } = require("../cont
 const inquiryRouter = express.Router();
 
 inquiryRouter.route("/create").post(createInquiry);
-inquiryRouter.route("/getall").get(authMiddleware, getAllInquiries);
-inquiryRouter.route("/updatestatus/:id").put(authMiddleware, updateInquiryStatus);
+inquiryRouter.route("/get-all").get(authMiddleware, getAllInquiries);
+inquiryRouter.route("/update-status/:id").put(authMiddleware, updateInquiryStatus);
 
 module.exports = inquiryRouter;

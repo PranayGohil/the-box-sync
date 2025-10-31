@@ -49,24 +49,45 @@ const ViewAttendance = () => {
     { to: `attendance/view/${id}`, text: 'View Attendance' },
   ];
 
-  // Calculate working hours
+  // Calculate working hours with support for overnight shifts
   const calculateWorkingHours = (inTime, outTime) => {
     if (!inTime || !outTime) return null;
-    
+
     const [inHour, inMin] = inTime.split(':').map(Number);
     const [outHour, outMin] = outTime.split(':').map(Number);
-    
+
     let totalMinutes = (outHour * 60 + outMin) - (inHour * 60 + inMin);
-    
-    // Handle overnight shifts
+
+    // Handle overnight shifts (negative duration means next day checkout)
     if (totalMinutes < 0) {
-      totalMinutes += 24 * 60;
+      totalMinutes += 24 * 60; // Add 24 hours
     }
-    
+
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
-    
+
     return { hours, minutes, total: totalMinutes / 60 };
+  };
+
+  // Check if shift is overnight (likely spans two days)
+  const isOvernightShift = (inTime, outTime) => {
+    if (!inTime || !outTime) return false;
+
+    const [inHour] = inTime.split(':').map(Number);
+    const [outHour] = outTime.split(':').map(Number);
+
+    // If check-in is after 6 PM (18:00) and check-out is before noon (12:00), it's likely overnight
+    return inHour >= 18 && outHour < 12;
+  };
+
+  // Get the actual checkout date for overnight shifts
+  const getCheckoutDisplayDate = (checkInDate, inTime, outTime) => {
+    if (!isOvernightShift(inTime, outTime)) return null;
+
+    // Add one day to check-in date for display
+    const date = new Date(checkInDate);
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().split('T')[0];
   };
 
   // Format date for display
@@ -110,10 +131,10 @@ const ViewAttendance = () => {
       const present = staffData.attandance.filter(a => a.status === 'present').length;
       const absent = staffData.attandance.filter(a => a.status === 'absent').length;
       const total = staffData.attandance.length;
-      
+
       let totalHours = 0;
       let validShifts = 0;
-      
+
       staffData.attandance.forEach(att => {
         if (att.in_time && att.out_time) {
           const hours = calculateWorkingHours(att.in_time, att.out_time);
@@ -156,9 +177,11 @@ const ViewAttendance = () => {
 
         if (att.status === "present") {
           const hours = calculateWorkingHours(att.in_time, att.out_time);
+          const overnight = isOvernightShift(att.in_time, att.out_time);
+
           if (att.in_time && att.out_time && hours) {
-            title = `✓ ${hours.hours}h ${hours.minutes}m`;
-            backgroundColor = "#28a745";
+            title = `${overnight ? '🌙 ' : ''}${hours.hours}h ${hours.minutes}m`;
+            backgroundColor = overnight ? "#6f42c1" : "#28a745";
           } else if (att.in_time && !att.out_time) {
             title = "⏳ In Progress";
             backgroundColor = "#ffc107";
@@ -207,18 +230,23 @@ const ViewAttendance = () => {
 
     const exportData = filteredAttendance.map(att => {
       const hours = calculateWorkingHours(att.in_time, att.out_time);
+      const overnight = isOvernightShift(att.in_time, att.out_time);
+      const checkoutDate = overnight ? getCheckoutDisplayDate(att.date, att.in_time, att.out_time) : null;
+
       return {
         date: formatDateDisplay(att.date),
         status: att.status.toUpperCase(),
         in_time: att.in_time || "-",
         out_time: att.out_time || "-",
-        working_hours: hours ? `${hours.hours}h ${hours.minutes}m` : "-"
+        checkout_date: checkoutDate ? formatDateDisplay(checkoutDate) : "-",
+        working_hours: hours ? `${hours.hours}h ${hours.minutes}m` : "-",
+        shift_type: overnight ? "Night Shift" : "Regular"
       };
     });
 
     if (type === "pdf") {
       const doc = new jsPDF();
-      
+
       // Add header
       doc.setFontSize(18);
       doc.text(`Attendance Report`, 14, 15);
@@ -227,22 +255,24 @@ const ViewAttendance = () => {
       doc.text(`Position: ${staffData.position}`, 14, 28);
       doc.setFontSize(9);
       doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 34);
-      
+
       // Add statistics
       doc.text(`Total Days: ${stats.totalDays} | Present: ${stats.totalPresent} | Absent: ${stats.totalAbsent} | Rate: ${stats.attendanceRate}%`, 14, 40);
 
       // Add table
       autoTable(doc, {
-        head: [["Date", "Status", "Check-In", "Check-Out", "Hours Worked"]],
+        head: [["Check-In Date", "Status", "In Time", "Out Time", "Out Date", "Hours", "Type"]],
         body: exportData.map(att => [
           att.date,
           att.status,
           att.in_time,
           att.out_time,
-          att.working_hours
+          att.checkout_date,
+          att.working_hours,
+          att.shift_type
         ]),
         startY: 45,
-        styles: { fontSize: 9 },
+        styles: { fontSize: 8 },
         headStyles: { fillColor: [41, 128, 185] }
       });
 
@@ -252,11 +282,13 @@ const ViewAttendance = () => {
     if (type === "excel") {
       const worksheet = XLSX.utils.json_to_sheet(
         exportData.map(att => ({
-          Date: att.date,
-          Status: att.status,
-          "Check-In": att.in_time,
-          "Check-Out": att.out_time,
-          "Working Hours": att.working_hours
+          "Check-In Date": att.date,
+          "Status": att.status,
+          "Check-In Time": att.in_time,
+          "Check-Out Time": att.out_time,
+          "Check-Out Date": att.checkout_date,
+          "Working Hours": att.working_hours,
+          "Shift Type": att.shift_type
         }))
       );
 
@@ -275,11 +307,13 @@ const ViewAttendance = () => {
 
       XLSX.utils.sheet_add_aoa(worksheet, summary, { origin: "A1" });
       XLSX.utils.sheet_add_json(worksheet, exportData.map(att => ({
-        Date: att.date,
-        Status: att.status,
-        "Check-In": att.in_time,
-        "Check-Out": att.out_time,
-        "Working Hours": att.working_hours
+        "Check-In Date": att.date,
+        "Status": att.status,
+        "Check-In Time": att.in_time,
+        "Check-Out Time": att.out_time,
+        "Check-Out Date": att.checkout_date,
+        "Working Hours": att.working_hours,
+        "Shift Type": att.shift_type
       })), { origin: -1, skipHeader: false });
 
       const workbook = XLSX.utils.book_new();
@@ -294,7 +328,7 @@ const ViewAttendance = () => {
     if (type === "word") {
       const rows = [
         new TableRow({
-          children: ["Date", "Status", "Check-In", "Check-Out", "Hours Worked"].map(
+          children: ["Check-In Date", "Status", "In Time", "Out Time", "Out Date", "Hours", "Type"].map(
             heading =>
               new TableCell({
                 children: [
@@ -303,7 +337,7 @@ const ViewAttendance = () => {
                     alignment: AlignmentType.CENTER
                   })
                 ],
-                width: { size: 20, type: WidthType.PERCENTAGE }
+                width: { size: 14, type: WidthType.PERCENTAGE }
               })
           ),
         }),
@@ -315,7 +349,9 @@ const ViewAttendance = () => {
                 new TableCell({ children: [new Paragraph(att.status)] }),
                 new TableCell({ children: [new Paragraph(att.in_time)] }),
                 new TableCell({ children: [new Paragraph(att.out_time)] }),
+                new TableCell({ children: [new Paragraph(att.checkout_date)] }),
                 new TableCell({ children: [new Paragraph(att.working_hours)] }),
+                new TableCell({ children: [new Paragraph(att.shift_type)] }),
               ],
             })
         ),
@@ -527,7 +563,11 @@ const ViewAttendance = () => {
               <div className="d-flex align-items-center flex-wrap gap-3">
                 <div className="d-flex align-items-center">
                   <div className="bg-success rounded me-2" style={{ width: '15px', height: '15px' }} />
-                  <small>Present</small>
+                  <small>Day Shift</small>
+                </div>
+                <div className="d-flex align-items-center">
+                  <div className="rounded me-2" style={{ width: '15px', height: '15px', backgroundColor: '#6f42c1' }} />
+                  <small>Night Shift</small>
                 </div>
                 <div className="d-flex align-items-center">
                   <div className="bg-danger rounded me-2" style={{ width: '15px', height: '15px' }} />
@@ -539,7 +579,7 @@ const ViewAttendance = () => {
                 </div>
                 <small className="text-muted ms-auto">
                   <CsLineIcons icon="info-hexagon" className="me-1" />
-                  Click on any event to view details
+                  Click on any event to view details. 🌙 = Night shift
                 </small>
               </div>
             </Card.Footer>
@@ -650,17 +690,22 @@ const ViewAttendance = () => {
                       <table className="table table-hover">
                         <thead className="table-light">
                           <tr>
-                            <th>Date</th>
+                            <th>Check-In Date</th>
                             <th>Status</th>
                             <th>Check-In Time</th>
                             <th>Check-Out Time</th>
+                            <th>Check-Out Date</th>
                             <th>Working Hours</th>
+                            <th>Shift Type</th>
                             <th className="text-center">Actions</th>
                           </tr>
                         </thead>
                         <tbody>
                           {filteredAttendance.sort((a, b) => new Date(b.date) - new Date(a.date)).map((att, index) => {
                             const hours = calculateWorkingHours(att.in_time, att.out_time);
+                            const overnight = isOvernightShift(att.in_time, att.out_time);
+                            const checkoutDate = overnight ? getCheckoutDisplayDate(att.date, att.in_time, att.out_time) : null;
+
                             return (
                               <tr key={index}>
                                 <td>
@@ -703,11 +748,37 @@ const ViewAttendance = () => {
                                   )}
                                 </td>
                                 <td>
+                                  {checkoutDate ? (
+                                    <div>
+                                      <Badge bg="purple" className="d-inline-flex align-items-center">
+                                        🌙 {formatDateDisplay(checkoutDate)}
+                                      </Badge>
+                                    </div>
+                                  ) : (
+                                    <span className="text-muted">Same Day</span>
+                                  )}
+                                </td>
+                                <td>
                                   {hours ? (
                                     <div>
                                       <CsLineIcons icon="clock" className="me-1 text-primary" size={14} />
                                       <span className="fw-medium">{hours.hours}h {hours.minutes}m</span>
                                     </div>
+                                  ) : (
+                                    <span className="text-muted">-</span>
+                                  )}
+                                </td>
+                                <td>
+                                  {att.in_time && att.out_time ? (
+                                    overnight ? (
+                                      <Badge bg="purple" className="d-inline-flex align-items-center">
+                                        🌙 Night Shift
+                                      </Badge>
+                                    ) : (
+                                      <Badge bg="primary" className="d-inline-flex align-items-center">
+                                        ☀️ Day Shift
+                                      </Badge>
+                                    )
                                   ) : (
                                     <span className="text-muted">-</span>
                                   )}
@@ -736,7 +807,7 @@ const ViewAttendance = () => {
               <Card.Footer className="bg-transparent">
                 <small className="text-muted">
                   <CsLineIcons icon="info-hexagon" className="me-1" />
-                  Average working hours: {stats.avgHoursWorked} hours per day
+                  Average working hours: {stats.avgHoursWorked} hours per day | Night shifts (🌙) span across two calendar dates
                 </small>
               </Card.Footer>
             </Card>
@@ -745,7 +816,7 @@ const ViewAttendance = () => {
       </Row>
 
       {/* Attendance Detail Modal */}
-      <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} centered>
+      <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} centered size="lg">
         <Modal.Header closeButton>
           <Modal.Title>
             <CsLineIcons icon="calendar" className="me-2" />
@@ -757,7 +828,7 @@ const ViewAttendance = () => {
             <div>
               <Row className="mb-3">
                 <Col xs={6}>
-                  <div className="text-muted small">Date</div>
+                  <div className="text-muted small">Check-In Date</div>
                   <div className="fw-bold">{formatDateDisplay(selectedAttendance.date)}</div>
                   <div className="text-muted small">{new Date(selectedAttendance.date).toLocaleDateString('en-US', { weekday: 'long' })}</div>
                 </Col>
@@ -780,46 +851,98 @@ const ViewAttendance = () => {
               <hr />
 
               {selectedAttendance.status === 'present' && (
-                <Row>
-                  <Col xs={12} className="mb-3">
-                    <div className="d-flex align-items-center p-3 bg-light rounded">
-                      <CsLineIcons icon="login" className="text-success me-3" size={24} />
-                      <div className="flex-grow-1">
-                        <div className="text-muted small">Check-In Time</div>
-                        <div className="fw-bold fs-5">{selectedAttendance.in_time || 'Not recorded'}</div>
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs={12} className="mb-3">
-                    <div className="d-flex align-items-center p-3 bg-light rounded">
-                      <CsLineIcons icon="logout" className="text-danger me-3" size={24} />
-                      <div className="flex-grow-1">
-                        <div className="text-muted small">Check-Out Time</div>
-                        {selectedAttendance.out_time ? (
-                          <div className="fw-bold fs-5">{selectedAttendance.out_time}</div>
-                        ) : (
-                          <Badge bg="warning" text="dark">In Progress</Badge>
-                        )}
-                      </div>
-                    </div>
-                  </Col>
-                  {selectedAttendance.in_time && selectedAttendance.out_time && (
-                    <Col xs={12}>
-                      <div className="d-flex align-items-center p-3 bg-primary bg-opacity-10 rounded">
-                        <CsLineIcons icon="clock" className="text-primary me-3" size={24} />
+                <>
+                  <Row>
+                    <Col xs={12} className="mb-3">
+                      <div className="d-flex align-items-center p-3 bg-light rounded">
+                        <CsLineIcons icon="login" className="text-success me-3" size={24} />
                         <div className="flex-grow-1">
-                          <div className="text-muted small">Total Working Hours</div>
-                          <div className="fw-bold fs-5 text-primary">
-                            {(() => {
-                              const hours = calculateWorkingHours(selectedAttendance.in_time, selectedAttendance.out_time);
-                              return hours ? `${hours.hours} hours ${hours.minutes} minutes` : 'N/A';
-                            })()}
-                          </div>
+                          <div className="text-muted small">Check-In Time</div>
+                          <div className="fw-bold fs-5">{selectedAttendance.in_time || 'Not recorded'}</div>
+                          <small className="text-muted">
+                            {formatDateDisplay(selectedAttendance.date)}
+                          </small>
                         </div>
                       </div>
                     </Col>
+                    <Col xs={12} className="mb-3">
+                      <div className="d-flex align-items-center p-3 bg-light rounded">
+                        <CsLineIcons icon="logout" className="text-danger me-3" size={24} />
+                        <div className="flex-grow-1">
+                          <div className="text-muted small">Check-Out Time</div>
+                          {selectedAttendance.out_time ? (
+                            <>
+                              <div className="fw-bold fs-5">{selectedAttendance.out_time}</div>
+                              {(() => {
+                                const overnight = isOvernightShift(selectedAttendance.in_time, selectedAttendance.out_time);
+                                const checkoutDate = overnight ? getCheckoutDisplayDate(selectedAttendance.date, selectedAttendance.in_time, selectedAttendance.out_time) : null;
+                                return checkoutDate ? (
+                                  <Badge bg="purple" className="mt-1">
+                                    🌙 {formatDateDisplay(checkoutDate)} (Next Day)
+                                  </Badge>
+                                ) : (
+                                  <small className="text-muted">Same Day</small>
+                                );
+                              })()}
+                            </>
+                          ) : (
+                            <Badge bg="warning" text="dark">In Progress</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </Col>
+                    {selectedAttendance.in_time && selectedAttendance.out_time && (
+                      <>
+                        <Col xs={12} className="mb-3">
+                          <div className="d-flex align-items-center p-3 bg-primary bg-opacity-10 rounded">
+                            <CsLineIcons icon="clock" className="text-primary me-3" size={24} />
+                            <div className="flex-grow-1">
+                              <div className="text-muted small">Total Working Hours</div>
+                              <div className="fw-bold fs-5 text-primary">
+                                {(() => {
+                                  const hours = calculateWorkingHours(selectedAttendance.in_time, selectedAttendance.out_time);
+                                  return hours ? `${hours.hours} hours ${hours.minutes} minutes` : 'N/A';
+                                })()}
+                              </div>
+                            </div>
+                          </div>
+                        </Col>
+                        <Col xs={12}>
+                          <div className="d-flex align-items-center p-3 bg-info bg-opacity-10 rounded">
+                            <div className="flex-grow-1">
+                              <div className="text-muted small">Shift Type</div>
+                              {isOvernightShift(selectedAttendance.in_time, selectedAttendance.out_time) ? (
+                                <Badge bg="purple" className="px-3 py-2">
+                                  🌙 Night Shift (Overnight)
+                                </Badge>
+                              ) : (
+                                <Badge bg="primary" className="px-3 py-2">
+                                  ☀️ Day Shift (Regular)
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </Col>
+                      </>
+                    )}
+                  </Row>
+
+                  {isOvernightShift(selectedAttendance.in_time, selectedAttendance.out_time) && (
+                    <Alert variant="info" className="mt-3 mb-0">
+                      <div className="d-flex align-items-start">
+                        <CsLineIcons icon="info-hexagon" className="me-2 mt-1" />
+                        <div>
+                          <strong>Night Shift Details:</strong>
+                          <div className="small mt-1">
+                            This is an overnight shift. The staff checked in on {formatDateDisplay(selectedAttendance.date)} and
+                            checked out on {formatDateDisplay(getCheckoutDisplayDate(selectedAttendance.date, selectedAttendance.in_time, selectedAttendance.out_time))}.
+                            The shift duration automatically accounts for the date change.
+                          </div>
+                        </div>
+                      </div>
+                    </Alert>
                   )}
-                </Row>
+                </>
               )}
 
               {selectedAttendance.status === 'absent' && (
