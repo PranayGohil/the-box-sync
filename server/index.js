@@ -31,18 +31,19 @@ const hotelBookingRouter = require("./router/hotelBookingRoutes.js");
 const customerRouter = require("./router/customerRoutes.js");
 
 const PORT = process.env.PORT;
-const ORIGINS = process.env.ORIGINS ? process.env.ORIGINS.split(",") : [];
+// const ORIGINS = process.env.ORIGINS ? process.env.ORIGINS.split(",") : [];
 
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: ORIGINS,
-    credentials: true,
-  })
-);
+app.use(cors());
+// app.use(
+//   cors({
+//     origin: ORIGINS,
+//     credentials: true,
+//   })
+// );
 
 // Serve static files from the 'uploads' directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
