@@ -17,13 +17,17 @@ const Login = () => {
       const res = await axios.post(
         `${import.meta.env.VITE_APP_API_URL}/api/superadmin/login`,
         { username, password },
-        { headers: {
+        {
+          headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
-          } }
+          }
+        }
       );
 
       if (res.status === 200) {
-        navigate("/"); // Redirect after successful login
+        console.log(res.data);
+        localStorage.setItem("token", res.data.token);
+        navigate("/"); 
       }
     } catch (error) {
       setErrorMsg("Invalid username or password");

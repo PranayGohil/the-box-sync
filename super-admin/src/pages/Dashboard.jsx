@@ -11,12 +11,13 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${
-          import.meta.env.VITE_APP_API_URL
+        `${import.meta.env.VITE_APP_API_URL
         }/api/subscription/get-all-subs`,
-        { headers: {
+        {
+          headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
-          } }
+          }
+        }
       );
       if (response.data === "Null") {
         navigate("/login");

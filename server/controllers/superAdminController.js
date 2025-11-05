@@ -13,14 +13,10 @@ const superAdminLogin = async (req, res) => {
         process.env.JWT_SECRETKEY,
         { expiresIn: "30d" }
       );
-      // Optional: set a session or cookie
-      res.cookie("jwttoken", token, {
-        httpOnly: true,
-        sameSite: "strict",
-        maxAge: 86400000,
-      });
+      console.log(token)
+      
 
-      return res.status(200).json({ message: "Login successful" });
+      return res.status(200).json({ message: "Login successful", token });
     }
 
     return res.status(401).json({ message: "Invalid credentials" });
