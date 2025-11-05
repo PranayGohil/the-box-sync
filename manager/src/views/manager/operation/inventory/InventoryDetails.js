@@ -27,7 +27,9 @@ const InventoryDetails = () => {
                 setLoading(true);
                 const res = await axios.get(
                     `${process.env.REACT_APP_API}/inventory/get/${id}`,
-                    { withCredentials: true }
+                    { headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          } }
                 );
                 setInventory(res.data);
             } catch (err) {

@@ -15,7 +15,9 @@ export const AuthContextProvider = ({ children }) => {
     try {
       const response = await axios.get(
         `${process.env.REACT_APP_ADMIN_API}/user/userdata`,
-        { withCredentials: true }
+        { headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          } }
       );
       if (response.data === "Null") {
         navigate("/login");
@@ -32,7 +34,9 @@ export const AuthContextProvider = ({ children }) => {
     try {
       const response = await axios.get(
         `${process.env.REACT_APP_ADMIN_API}/subscription/getusersubscriptioninfo`,
-        { withCredentials: true }
+        { headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          } }
       );
       if (response.data.length > 0) {
         setUserSubscriptions(response.data);

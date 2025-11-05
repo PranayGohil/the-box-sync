@@ -17,7 +17,9 @@ const Login = () => {
       const res = await axios.post(
         `${import.meta.env.VITE_APP_API_URL}/api/superadmin/login`,
         { username, password },
-        { withCredentials: true }
+        { headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          } }
       );
 
       if (res.status === 200) {

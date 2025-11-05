@@ -11,7 +11,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
     if (data?.dish_img) {
       setPreviewImg(`${process.env.REACT_APP_UPLOAD_DIR}${data.dish_img}`);
     }
-    if(data?.quantity){
+    if (data?.quantity) {
       setShowAdvancedOptions(true);
     } else {
       setShowAdvancedOptions(false);
@@ -48,8 +48,10 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
         }
 
         await axios.put(`${process.env.REACT_APP_API}/menu/update`, formData, {
-          withCredentials: true,
-          headers: { 'Content-Type': 'multipart/form-data' },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'multipart/form-data',
+          },
         });
 
         fetchMenuData();

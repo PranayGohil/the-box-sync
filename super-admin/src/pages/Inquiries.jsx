@@ -10,7 +10,9 @@ const Inquiries = () => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_APP_API_URL}/api/inquiry/get-all`,
-        { withCredentials: true }
+        { headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          } }
       );
       if (response.data === "Null") {
         navigate("/login");
@@ -28,7 +30,9 @@ const Inquiries = () => {
       const response = await axios.put(
         `${import.meta.env.VITE_APP_API_URL}/api/inquiry/update-status/${id}`,
         { status: newStatus },
-        { withCredentials: true }
+        { headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          } }
       );
       if (response.data === "Null") {
         navigate("/login");

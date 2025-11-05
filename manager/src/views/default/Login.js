@@ -52,7 +52,9 @@ const Login = () => {
       const res = await axios.post(
         `${process.env.REACT_APP_API}/manager/login`,
         values,
-        { withCredentials: true }
+        { headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          } }
       );
       if (res.data.message === "Logged In") {
         login(res.data.token, res.data.user);

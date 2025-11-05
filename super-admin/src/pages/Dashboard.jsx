@@ -14,7 +14,9 @@ const Dashboard = () => {
         `${
           import.meta.env.VITE_APP_API_URL
         }/api/subscription/get-all-subs`,
-        { withCredentials: true }
+        { headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          } }
       );
       if (response.data === "Null") {
         navigate("/login");

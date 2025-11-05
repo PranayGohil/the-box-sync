@@ -43,7 +43,9 @@ const ManageWebsite = () => {
       try {
         const payload = { ...values, featured_dish_ids: JSON.stringify(values.featured_dish_ids) };
         await axios.post(`${process.env.REACT_APP_API}/website/settings`, payload, {
-          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
         });
         alert('Website settings updated successfully.');
       } catch (err) {

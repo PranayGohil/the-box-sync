@@ -55,9 +55,9 @@ const AddFeedback = () => {
         { ...feedbackData, feedbackToken: token },
         {
           headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'application/json',
           },
-          withCredentials: true,
         }
       );
 

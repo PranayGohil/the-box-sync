@@ -34,7 +34,9 @@ const UserDetails = () => {
         `${
           import.meta.env.VITE_APP_API_URL
         }/api/subscription/get/${id}`,
-        { withCredentials: true }
+        { headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          } }
       );
 
       if (response.data === "Null") {
@@ -50,7 +52,9 @@ const UserDetails = () => {
         `${
           import.meta.env.VITE_APP_API_URL
         }/api/customerquery/query-user-id/${id}`,
-        { withCredentials: true }
+        { headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          } }
       );
       setQueries(queriesRes.data);
       console.log("Aueries : ", queriesRes.data);
@@ -78,7 +82,9 @@ const UserDetails = () => {
       const response = await axios.post(
         `${import.meta.env.VITE_APP_API_URL}/api/subscription/block`,
         { subscriptionIds: selectedSubs },
-        { withCredentials: true }
+        { headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          } }
       );
       if (response.data === "Null") {
         navigate("/login");
@@ -96,7 +102,9 @@ const UserDetails = () => {
       const response = await axios.post(
         `${import.meta.env.VITE_APP_API_URL}/api/subscription/unblock`,
         { subscriptionId: selectedSub4unblock },
-        { withCredentials: true }
+        { headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          } }
       );
       if (response.data === "Null") {
         navigate("/login");
@@ -118,7 +126,9 @@ const UserDetails = () => {
           subscriptionIds: selectedSubs,
           newEndDate: newEndDate?.toISOString().split("T")[0], // format: YYYY-MM-DD
         },
-        { withCredentials: true }
+        { headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          } }
       );
       if (response.data === "Null") {
         navigate("/login");
@@ -158,7 +168,9 @@ const UserDetails = () => {
       await axios.post(
         `${import.meta.env.VITE_APP_API_URL}/api/customerquery/complete-query`,
         { queryId },
-        { withCredentials: true }
+        { headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          } }
       );
       alert("Marked as completed.");
       fetchUserData(); // refresh queries

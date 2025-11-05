@@ -66,7 +66,9 @@ const CompleteInventory = () => {
     const fetchInventory = async () => {
       try {
         const { data } = await axios.get(`${process.env.REACT_APP_API}/inventory/get/${id}`, {
-          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
         });
 
         setInitialValues({

@@ -9,7 +9,6 @@ const DeleteDishModal = ({ show, handleClose, data, fetchMenuData }) => {
     try {
       setIsDeleting(true);
       await axios.delete(`${process.env.REACT_APP_API}/menu/delete/${data._id}`, { // eslint-disable-line no-underscore-dangle
-        withCredentials: true,
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },

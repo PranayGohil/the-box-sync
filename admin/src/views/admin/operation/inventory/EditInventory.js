@@ -71,7 +71,6 @@ const EditInventory = () => {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
-          withCredentials: true,
         });
 
         alert('Inventory updated successfully!');
@@ -89,7 +88,9 @@ const EditInventory = () => {
     const fetchInventory = async () => {
       try {
         const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get/${id}`, {
-          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
         });
 
         const { data } = res;

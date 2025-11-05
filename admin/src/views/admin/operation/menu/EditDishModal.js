@@ -46,8 +46,10 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
         }
 
         await axios.put(`${process.env.REACT_APP_API}/menu/update`, formData, {
-          withCredentials: true,
-          headers: { 'Content-Type': 'multipart/form-data' },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'multipart/form-data',
+          },
         });
 
         fetchMenuData();

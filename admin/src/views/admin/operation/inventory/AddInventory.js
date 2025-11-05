@@ -71,7 +71,6 @@ const AddInventory = () => {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
-          withCredentials: true,
         });
 
         alert('Inventory added successfully!');
