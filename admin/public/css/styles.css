@@ -14449,11 +14449,12 @@ html[data-navcolor='dark'] .nav-container .menu-container .menu a:hover {
 }
 
 .logo-default {
-  width: 100px;
-  min-height: 35px;
+  width: 300px;
+  min-height: 50px;
   object-position: left;
   object-fit: cover;
   background-repeat: no-repeat;
+  background-size: contain;
 }
 
 html[data-color='light-blue'] .logo .img,
@@ -14467,111 +14468,111 @@ html[data-color='dark-red'] .logo .img,
 html[data-color='dark-pink'] .logo .img,
 html[data-color='dark-purple'] .logo .img {
   /* background-image: url(../img/logo/logo-light.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-light.png);
 }
 
 html[data-color='light-blue'] .logo-default {
   /* background-image: url(../img/logo/logo-blue-light.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-light.png);
 }
 
 html[data-color='light-green'] .logo-default {
   /* background-image: url(../img/logo/logo-green-light.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-light.png);
 }
 
 html[data-color='light-red'] .logo-default {
   /* background-image: url(../img/logo/logo-red-light.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-light.png);
 }
 
 html[data-color='light-pink'] .logo-default {
   /* background-image: url(../img/logo/logo-pink-light.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-light.png);
 }
 
 html[data-color='light-purple'] .logo-default {
   /* background-image: url(../img/logo/logo-purple-light.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-light.png);
 }
 
 html[data-color='dark-blue'] .logo-default {
   /* background-image: url(../img/logo/logo-blue-dark.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-dark.png);
 }
 
 html[data-color='dark-green'] .logo-default {
   /* background-image: url(../img/logo/logo-green-dark.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-dark.png);
 }
 
 html[data-color='dark-red'] .logo-default {
   /* background-image: url(../img/logo/logo-red-dark.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-dark.png);
 }
 
 html[data-color='dark-pink'] .logo-default {
   /* background-image: url(../img/logo/logo-pink-dark.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-dark.png);
 }
 
 html[data-color='dark-purple'] .logo-default {
   /* background-image: url(../img/logo/logo-purple-dark.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-dark.png);
 }
 
 html[data-color='light-blue'][data-navcolor='light'] .logo .img,
 html[data-color='dark-blue'][data-navcolor='light'] .logo .img {
   /* background-image: url(../img/logo/logo-blue-light.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-light.png);
 }
 
 html[data-color='light-green'][data-navcolor='light'] .logo .img,
 html[data-color='dark-green'][data-navcolor='light'] .logo .img {
   /* background-image: url(../img/logo/logo-green-light.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-light.png);
 }
 
 html[data-color='light-red'][data-navcolor='light'] .logo .img,
 html[data-color='dark-red'][data-navcolor='light'] .logo .img {
   /* background-image: url(../img/logo/logo-red-light.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-light.png);
 }
 
 html[data-color='light-pink'][data-navcolor='light'] .logo .img,
 html[data-color='dark-pink'][data-navcolor='light'] .logo .img {
   /* background-image: url(../img/logo/logo-pink-light.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-light.png);
 }
 
 html[data-color='light-purple'][data-navcolor='light'] .logo .img,
 html[data-color='dark-purple'][data-navcolor='light'] .logo .img {
   /* background-image: url(../img/logo/logo-purple-light.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-light.png);
 }
 
 html[data-color='light-blue'][data-navcolor='dark'] .logo .img,
 html[data-color='dark-blue'][data-navcolor='dark'] .logo .img {
   /* background-image: url(../img/logo/logo-blue-dark.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-dark.png);
 }
 
 html[data-color='light-green'][data-navcolor='dark'] .logo .img,
 html[data-color='dark-green'][data-navcolor='dark'] .logo .img {
   /* background-image: url(../img/logo/logo-green-dark.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-dark.png);
 }
 
 html[data-color='light-red'][data-navcolor='dark'] .logo .img,
 html[data-color='dark-red'][data-navcolor='dark'] .logo .img {
   /* background-image: url(../img/logo/logo-red-dark.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-dark.png);
 }
 
 html[data-color='light-pink'][data-navcolor='dark'] .logo .img,
 html[data-color='dark-pink'][data-navcolor='dark'] .logo .img {
   /* background-image: url(../img/logo/logo-pink-dark.svg); */
-  background-image: url(../img/logo/logo-light.svg);
+  background-image: url(../img/logo/logo-dark.png);
 }
 
 html[data-color='light-purple'][data-navcolor='dark'] .logo .img,

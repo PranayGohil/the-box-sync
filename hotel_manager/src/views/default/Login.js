@@ -55,7 +55,7 @@ const Login = () => {
       );
       if (res.data.message === "Logged In") {
         login(res.data.token, res.data.user);
-        history.push("/dashboard");
+        window.location.href = '/dashboard';
       } else {
         setWrongMsg(res.data.message);
       }

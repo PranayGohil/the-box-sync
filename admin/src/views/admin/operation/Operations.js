@@ -3,6 +3,7 @@ import { Row, Col, Nav } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { LAYOUT } from 'constants.js';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import bootstrapIcons from 'bootstrap-icons/bootstrap-icons-tags';
 import useCustomLayout from 'hooks/useCustomLayout';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useWindowSize } from 'hooks/useWindowSize';
@@ -40,7 +41,7 @@ const NavContent = () => {
     <Nav className="flex-column">
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/order-history" className="px-0">
-          <CsLineIcons icon="activity" className="me-2 sw-3" size="17" />
+          <CsLineIcons icon="handbag" className="me-2 sw-3" size="17" />
           <span className="align-middle">Order</span>
         </Nav.Link>
         <div>
@@ -53,7 +54,8 @@ const NavContent = () => {
 
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/manage-table" className="px-0">
-          <CsLineIcons icon="credit-card" className="me-2 sw-3" size="17" />
+          <CsLineIcons icon="square" className="me-2 sw-3" size="17" />
+          {/* <i className="bi-calendar me-2 ms-1 sw-3" size="17" /> */}
           <span className="align-middle">Table</span>
         </Nav.Link>
         <div>
@@ -70,7 +72,7 @@ const NavContent = () => {
 
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/manage-menu" className="px-0">
-          <CsLineIcons icon="shield" className="me-2 sw-3" size="17" />
+          <CsLineIcons icon="list" className="me-2 sw-3" size="17" />
           <span className="align-middle">Menu</span>
         </Nav.Link>
         <div>
@@ -92,7 +94,7 @@ const NavContent = () => {
       {activePlans.includes('Hotel Manager') && (
         <div className="mb-2">
           <Nav.Link as={NavLink} to="/operations/manage-rooms" className="px-0">
-            <CsLineIcons icon="shield" className="me-2 sw-3" size="17" />
+            <i className="bi-door-open me-2 ms-1 sw-3" size="17" />
             <span className="align-middle">Rooms</span>
           </Nav.Link>
           <div>
@@ -114,7 +116,7 @@ const NavContent = () => {
 
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/requested-inventory" className="px-0">
-          <CsLineIcons icon="notification" className="me-2 sw-3" size="17" />
+          <CsLineIcons icon="boxes" className="me-2 sw-3" size="17" />
           <span className="align-middle">Inventory</span>
         </Nav.Link>
         <div>
@@ -135,7 +137,7 @@ const NavContent = () => {
 
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/feedback" className="px-0">
-          <CsLineIcons icon="tablet" className="me-2 sw-3" size="17" />
+          <i className="bi-chat-text me-2 ms-1 sw-3" size="17" />
           <span className="align-middle">Feedback</span>
         </Nav.Link>
         <div>

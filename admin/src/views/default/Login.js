@@ -29,7 +29,7 @@ const Login = () => {
       const res = await axios.post(`${process.env.REACT_APP_API}/user/login`, values);
       if(res.data.success) {
         login(res.data.token, res.data.user);
-        history.push('/');
+        window.location.href = '/';
       } else {
         setError(res.data.message);
       }
