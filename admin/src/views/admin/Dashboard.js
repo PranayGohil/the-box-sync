@@ -203,7 +203,7 @@ const Dashboard = () => {
                     <Row className="g-0 h-100 align-items-center">
                       <Col xs="auto" className="pe-3">
                         <div className="bg-gradient-light sh-5 sw-5 rounded-xl d-flex justify-content-center align-items-center">
-                          <CsLineIcons icon="navigate-diagonal" className="text-white" />
+                          <CsLineIcons icon="file-chart" className="text-white" />
                         </div>
                       </Col>
                       <Col>
@@ -233,7 +233,7 @@ const Dashboard = () => {
                     <Row className="g-0 h-100 align-items-center">
                       <Col xs="auto" className="pe-3">
                         <div className="bg-gradient-light sh-5 sw-5 rounded-xl d-flex justify-content-center align-items-center">
-                          <CsLineIcons icon="check" className="text-white" />
+                          <CsLineIcons icon="shop" className="text-white" />
                         </div>
                       </Col>
                       <Col>
@@ -269,7 +269,7 @@ const Dashboard = () => {
                     <Row className="g-0 h-100 align-items-center">
                       <Col xs="auto" className="pe-3">
                         <div className="bg-gradient-light sh-5 sw-5 rounded-xl d-flex justify-content-center align-items-center">
-                          <CsLineIcons icon="alarm" className="text-white" />
+                          <CsLineIcons icon="handbag" className="text-white" />
                         </div>
                       </Col>
                       <Col>
@@ -305,7 +305,7 @@ const Dashboard = () => {
                     <Row className="g-0 h-100 align-items-center">
                       <Col xs="auto" className="pe-3">
                         <div className="bg-gradient-light sh-5 sw-5 rounded-xl d-flex justify-content-center align-items-center">
-                          <CsLineIcons icon="sync-horizontal" className="text-white" />
+                          <CsLineIcons icon="cart" className="text-white" />
                         </div>
                       </Col>
                       <Col>

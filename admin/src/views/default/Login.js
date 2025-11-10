@@ -44,21 +44,20 @@ const Login = () => {
   const leftSide = (
     <div className="min-h-100 d-flex align-items-center">
       <div className="w-100 w-lg-75 w-xxl-50">
-        <div>
+        {/* <div>
           <div className="mb-5">
             <h1 className="display-3 text-white">Multiple Niches</h1>
             <h1 className="display-3 text-white">Ready for Your Project</h1>
           </div>
           <p className="h6 text-white lh-1-5 mb-5">
-            Dynamically target high-payoff intellectual capital for customized technologies. Objectively integrate emerging core competencies before
-            process-centric communities...
+            Dynamically target high-payoff intellectual capital for customized technologies. Objectively integrate emerging core competencies before process-centric communities...
           </p>
           <div className="mb-5">
             <Button size="lg" variant="outline-white" href="/">
               Learn More
             </Button>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
@@ -91,7 +90,7 @@ const Login = () => {
             <div className="mb-3 filled form-group tooltip-end-top">
               <CsLineIcons icon="lock-off" />
               <Form.Control type="password" name="password" onChange={handleChange} value={values.password} placeholder="Password" />
-              <NavLink className="text-small position-absolute t-3 e-3" to="/forgot-password">
+              <NavLink className="text-small position-absolute t-3 e-3" to="/settings/forgot-password">
                 Forgot?
               </NavLink>
               {errors.password && touched.password && <div className="d-block invalid-tooltip">{errors.password}</div>}

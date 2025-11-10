@@ -8,7 +8,7 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import ChartDoughnut from './components/ChartDoughnut';
 import ChartPie from './components/ChartPie';
-import ChartHorizontalBar from './components/ChartHorizontalBar';
+import ChartHorizontal from './components/ChartBar';
 
 const Statistics = () => {
   const title = 'Analytics Dashboard';
@@ -323,7 +323,7 @@ const Statistics = () => {
           <Card className="mb-5 sh-40">
             <Card.Body style={{ height: 'inherit' }}>
               {revenueStats.length > 0 ? (
-                <ChartHorizontalBar revenueSummary={prepareRevenueChartData()} />
+                <ChartHorizontal revenueSummary={prepareRevenueChartData()} />
               ) : (
                 <div className="d-flex justify-content-center align-items-center h-100">
                   <span className="text-muted">No data available</span>

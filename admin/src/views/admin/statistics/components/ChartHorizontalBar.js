@@ -48,6 +48,12 @@ const ChartHorizontalBar = () => {
           backgroundColor: `rgba(${themeValues.primaryrgb},0.1)`,
           data: [456, 479, 324, 569],
         },
+        {
+          label: 'Breads2',
+          borderColor: themeValues.primary,
+          backgroundColor: `rgba(${themeValues.primaryrgb},0.1)`,
+          data: [200, 300, 324, 569],
+        },
       ],
     };
   }, [themeValues]);

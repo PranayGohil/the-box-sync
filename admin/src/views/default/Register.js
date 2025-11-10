@@ -171,7 +171,7 @@ const RegisterNew = () => {
   const leftSide = (
     <div className="min-h-100 d-flex align-items-center">
       <div className="w-100 w-lg-75 w-xxl-50">
-        <div>
+        {/* <div>
           <div className="mb-5">
             <h1 className="display-3 text-white">Multiple Niches</h1>
             <h1 className="display-3 text-white">Ready for Your Project</h1>
@@ -185,7 +185,7 @@ const RegisterNew = () => {
               Learn More
             </Button>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
