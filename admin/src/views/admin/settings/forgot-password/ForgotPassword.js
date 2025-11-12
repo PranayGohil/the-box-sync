@@ -62,7 +62,7 @@ function ForgotPassword() {
         }
     };
 
-    const handleResetPassword = async (e) => {
+    const handleResetPassword = async (e) => { 
         setIsLoading(true);
 
         e.preventDefault();
@@ -80,7 +80,7 @@ function ForgotPassword() {
             setSuccess(response.data.message);
             setError("");
             setTimeout(() => {
-                window.location.href = "/login"; // Redirect to the admin login page
+                window.location.href = "/login"; 
             }, 1000);
         } catch (err) {
             setError(err.response?.data?.message || "An error occurred.");

@@ -13,11 +13,11 @@ const Login = () => {
   const title = 'Login';
   const description = 'Login Page';
   const history = useHistory();
-  
+
   const { login } = useContext(AuthContext);
 
   const [error, setError] = useState('');
-
+  const [showPassword, setShowPassword] = useState(false);
   const validationSchema = Yup.object().shape({
     email: Yup.string().email().required('Email is required'),
     password: Yup.string().min(6, 'Must be at least 6 chars!').required('Password is required'),
@@ -27,7 +27,7 @@ const Login = () => {
   const onSubmit = async (values) => {
     try {
       const res = await axios.post(`${process.env.REACT_APP_API}/user/login`, values);
-      if(res.data.success) {
+      if (res.data.success) {
         login(res.data.token, res.data.user);
         window.location.href = '/';
       } else {
@@ -89,12 +89,21 @@ const Login = () => {
             </div>
             <div className="mb-3 filled form-group tooltip-end-top">
               <CsLineIcons icon="lock-off" />
-              <Form.Control type="password" name="password" onChange={handleChange} value={values.password} placeholder="Password" />
-              <NavLink className="text-small position-absolute t-3 e-3" to="/settings/forgot-password">
-                Forgot?
-              </NavLink>
+              <Form.Control type={showPassword ? 'text' : 'password'} name="password" onChange={handleChange} value={values.password} placeholder="Password" />
+              {showPassword ?
+                <div className='t-2 e-3 text-end cursor-pointer position-absolute right-3' onClick={() => setShowPassword(false)}>
+                  <CsLineIcons icon="eye-off" />
+                </div> :
+                <div className='t-2 e-3 text-end cursor-pointer position-absolute right-3' onClick={() => setShowPassword(true)}>
+                  <CsLineIcons icon="eye" />
+                </div>
+              }
+
               {errors.password && touched.password && <div className="d-block invalid-tooltip">{errors.password}</div>}
             </div>
+            <NavLink className="text-small t-3 e-3" to="/forgot-password">
+              Forgot Password?
+            </NavLink>
             <div className='mb-3 mx-2'>
               {error && <div className="text-danger">{error}</div>}
             </div>
