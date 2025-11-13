@@ -74,6 +74,7 @@
     "react-toastify": "^7.0.4",
     "react-webcam": "^7.2.0",
     "reduxjs-toolkit-persist": "^7.0.1",
+    "socket.io-client": "^4.8.1",
     "sortablejs": "^1.14.0",
     "web-vitals": "^0.2.4",
     "xlsx": "^0.18.5",

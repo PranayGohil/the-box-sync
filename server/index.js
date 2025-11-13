@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const path = require("path");
+const http = require('http');
+const { Server } = require('socket.io');
 
 const connectDB = require("./utils/db");
 const uploadRouter = require("./router/upload-router");
@@ -36,6 +38,47 @@ const PORT = process.env.PORT;
 
 const app = express();
 
+// create HTTP server and pass to socket
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Replace with frontend domain in production
+    methods: ["GET", "POST"],
+  },
+});
+
+const emitToUser = (userId, event, data) => {
+  const socketId = connectedUsers[userId];
+  if (socketId && io) {
+    io.to(socketId).emit(event, data);
+  }
+};
+
+module.exports = { emitToUser };
+
+const connectedUsers = {}; // Track employees
+
+io.on("connection", (socket) => {
+  socket.on("register", (employeeId) => {
+    connectedUsers[employeeId] = socket.id;
+    console.log(
+      `Employee ${employeeId} registered with socket ID ${socket.id}`
+    );
+  });
+
+  socket.on("disconnect", () => {
+    for (let id in connectedUsers) {
+      if (connectedUsers[id] === socket.id) {
+        delete connectedUsers[id];
+        break;
+      }
+    }
+  });
+});
+
+app.set("io", io);
+app.set("connectedUsers", connectedUsers);
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors());

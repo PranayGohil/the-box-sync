@@ -1,4 +1,5 @@
 const Inventory = require("../models/inventoryModel");
+const Notification = require("../models/notificationModel");
 
 const getInventoryData = (req, res) => {
   try {
@@ -79,6 +80,20 @@ const addInventoryRequest = async (req, res) => {
     };
 
     const data = await Inventory.create(inventoryData);
+
+    const io = req.app.get("io");
+    const connectedUsers = req.app.get("connectedUsers");
+
+    if (assign_to && connectedUsers[assign_to]) {
+      const notification = await Notification.create({
+        receiver: assign_to,
+        actor: req.user,
+        type: "new_inventory_request",
+        data: data,
+      });
+      io.to(connectedUsers[assign_to]).emit("new_inventory_request", "New Inventory Request");
+    }
+
     res.json(data);
   } catch (error) {
     console.error(error);
