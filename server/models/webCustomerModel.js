@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const Schema = mongoose.Schema;
-const customerSchema = new Schema({
+const webCustomerSchema = new Schema({
     name: {
         type: String,
     },
@@ -19,9 +19,6 @@ const customerSchema = new Schema({
     address: {
         type: String,
     },
-    id_proof: {
-        type: String
-    },
     date_of_birth: {
         type: Date,
     },
@@ -31,12 +28,12 @@ const customerSchema = new Schema({
     tag: {
         type: Array,
     },
-    user_id: {
+    restaurant_code: {
         type: String,
     },
 });
 
-customerSchema.pre("save", async function (next) {
+webCustomerSchema.pre("save", async function (next) {
     const user = this;
     if (!user.isModified("password")) {
         next();
@@ -51,7 +48,7 @@ customerSchema.pre("save", async function (next) {
     }
 });
 
-customerSchema.methods.generateAuthToken = async function (role) {
+webCustomerSchema.methods.generateAuthToken = async function (role) {
     try {
         const user = this;
         const token = jwt.sign(
@@ -63,5 +60,5 @@ customerSchema.methods.generateAuthToken = async function (role) {
     } catch (error) { }
 };
 
-const Customer = mongoose.model("customer", customerSchema);
-module.exports = Customer
+const WebCustomer = mongoose.model("web-customer", webCustomerSchema);
+module.exports = WebCustomer;

@@ -29,6 +29,7 @@ const statisticsRouter = require("./router/statisticsRoutes.js");
 const roomRouter = require("./router/roomRoutes.js");
 const hotelBookingRouter = require("./router/hotelBookingRoutes.js");
 const customerRouter = require("./router/customerRoutes.js");
+const webCustomerRouter = require("./router/webCustomerRoutes.js");
 
 const PORT = process.env.PORT;
 // const ORIGINS = process.env.ORIGINS ? process.env.ORIGINS.split(",") : [];
@@ -73,6 +74,7 @@ app.use("/api/statistics", statisticsRouter);
 app.use("/api/room", roomRouter);
 app.use("/api/hotel-booking", hotelBookingRouter);
 app.use("/api/customer", customerRouter);
+app.use("/api/web-customer", webCustomerRouter);
 
 connectDB().then(() => {
   app.listen(PORT, () => {
