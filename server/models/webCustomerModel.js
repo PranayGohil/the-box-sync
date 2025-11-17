@@ -16,9 +16,40 @@ const webCustomerSchema = new Schema({
     password: {
         type: String,
     },
-    address: {
-        type: String,
-    },
+    addresses: [
+        {
+            address: {
+                type: String,
+            },
+            city: {
+                type: String,
+            },
+            state: {
+                type: String,
+            },
+            country: {
+                type: String,
+            },
+            pincode: {
+                type: String,
+            },
+            is_default: {
+                type: Boolean,
+                default: false,
+            },
+        }
+    ],
+    cart: [
+        {
+            dish_id: {
+                type: mongoose.Schema.Types.ObjectId,
+            },
+            quantity: {
+                type: Number,
+                default: 1,
+            }
+        }
+    ],
     date_of_birth: {
         type: Date,
     },
