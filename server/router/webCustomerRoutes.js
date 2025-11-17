@@ -14,11 +14,13 @@ const {
 } = require("../controllers/webCustomerController");
 
 const webCustomerRouter = express.Router();
-;
+
 webCustomerRouter.post("/register", registerCustomer);
 webCustomerRouter.post("/login", loginCustomer);
+
 webCustomerRouter.get("/get/:id", getCustomer);
 webCustomerRouter.put("/update/:id", updateCustomer);
+
 webCustomerRouter.post("/add-address/:id", addAddress);
 webCustomerRouter.put("/edit-address/:id", editAddress);
 webCustomerRouter.delete("/delete-address/:id", deleteAddress);
