@@ -1,18 +1,21 @@
 const mongoose = require('mongoose');
 
 const NotificationSchema = new mongoose.Schema({
-    receiver: {
+    restaurant_id: {
         type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true
-    }, 
-    actor: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'User'
-    }, 
+    },
+    sender: {
+        type: String, required: true
+    },
+    receiver: {
+        type: String, required: true
+    },
     type: {
         type: String, required: true
-    }, 
+    },
     data: {
         type: mongoose.Schema.Types.Mixed
-    }, 
+    },
     read: {
         type: Boolean, default: false
     },

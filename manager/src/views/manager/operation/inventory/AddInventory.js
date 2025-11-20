@@ -51,17 +51,15 @@ function AddInventory() {
       });
 
       axios.post(
-        axios.post(
-          `${process.env.REACT_APP_API}/inventory/add-request`,
-          formik.values,
-          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-        ).then((res) => {
-          console.log(res.data);
-          history.push("/operations/requested-inventory"); // ✅ redirect after success
-        }).catch((err) => {
-          console.error(err);
-        })
-      );
+        `${process.env.REACT_APP_API}/inventory/add-request`,
+        formik.values,
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      ).then((res) => {
+        console.log("res: ", res.data);
+        history.push("/operations/requested-inventory"); // ✅ redirect after success
+      }).catch((err) => {
+        console.error(err);
+      })
     },
   });
 

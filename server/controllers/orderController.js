@@ -43,7 +43,7 @@ const getCustomerData = (req, res) => {
 };
 
 const getOrderData = async (req, res) => {
-  console.log(req.params.id);
+  console.log(req.user);
   try {
     // Find the order first
     const orderData = await Order.findById(req.params.id);

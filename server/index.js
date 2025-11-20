@@ -48,6 +48,8 @@ const io = new Server(server, {
   },
 });
 
+const connectedUsers = {}; // Track employees
+
 const emitToUser = (userId, event, data) => {
   const socketId = connectedUsers[userId];
   if (socketId && io) {
@@ -57,28 +59,26 @@ const emitToUser = (userId, event, data) => {
 
 module.exports = { emitToUser };
 
-const connectedUsers = {}; // Track employees
-
 io.on("connection", (socket) => {
-  socket.on("register", (employeeId) => {
-    connectedUsers[employeeId] = socket.id;
-    console.log(
-      `Employee ${employeeId} registered with socket ID ${socket.id}`
-    );
+  console.log("Socket connected:", socket.id);
+
+  socket.on("register", ({ userId, role }) => {
+    const key = `${userId}_${role}`;
+    connectedUsers[key] = socket.id;
+    console.log("Connected users:", connectedUsers);
   });
 
   socket.on("disconnect", () => {
     for (let id in connectedUsers) {
-      if (connectedUsers[id] === socket.id) {
-        delete connectedUsers[id];
-        break;
-      }
+      if (connectedUsers[id] === socket.id) delete connectedUsers[id];
     }
   });
 });
 
+
 app.set("io", io);
 app.set("connectedUsers", connectedUsers);
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors());
@@ -120,7 +120,7 @@ app.use("/api/customer", customerRouter);
 app.use("/api/web-customer", webCustomerRouter);
 
 connectDB().then(() => {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
 });
