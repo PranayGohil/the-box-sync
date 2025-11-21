@@ -432,7 +432,7 @@ exports.updateCart = async (req, res) => {
     try {
         const { id } = req.params;
         const { dish_id, quantity } = req.body;
-
+	console.log("Req.body", req.body);
         const customer = await WebCustomer.findById(id);
         if (!customer) {
             return res.status(404).json({
@@ -440,8 +440,9 @@ exports.updateCart = async (req, res) => {
                 message: 'Customer not found',
             });
         }
-
+	console.log("Customer : ", customer);
         const productIndex = customer.cart.findIndex((item) => item.dish_id.toString() === dish_id);
+	console.log("Product Index : ", productIndex);
         if (productIndex === -1) {
             return res.status(404).json({
                 success: false,

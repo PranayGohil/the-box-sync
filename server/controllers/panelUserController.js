@@ -134,7 +134,8 @@ exports.panelLogin = async (req, res) => {
   try {
     const { planName } = req.params;
     const { restaurant_code, username, password } = req.body;
-
+	console.log("Req.body : ", req.body);
+	console.log("Restaurant Code : ", restaurant_code, "Username : ", username, "password : ", password);
     const user = await User.findOne({ restaurant_code });
 
     if (!user) {
