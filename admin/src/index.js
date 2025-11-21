@@ -17,6 +17,7 @@ import LangProvider from 'lang/LangProvider';
 
 // import contexts
 import { AuthProvider } from 'contexts/AuthContext';
+import { SocketProvider } from 'contexts/SocketContext';
 
 // import routing modules
 import { BrowserRouter as Router } from 'react-router-dom';
@@ -44,7 +45,9 @@ const Main = () => {
         <Router basename={process.env.REACT_APP_BASENAME}>
           <LangProvider>
             <AuthProvider>
-              <RouteIdentifier routes={[...layoutlessRoutes, ...defaultRoutes]} fallback={<Loading />} />
+              <SocketProvider>
+                <RouteIdentifier routes={[...layoutlessRoutes, ...defaultRoutes]} fallback={<Loading />} />
+              </SocketProvider>
             </AuthProvider>
           </LangProvider>
         </Router>

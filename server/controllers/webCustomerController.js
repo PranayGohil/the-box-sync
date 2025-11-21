@@ -376,7 +376,7 @@ exports.getCart = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            data: customer,
+            data: customer.cart,
         });
     } catch (error) {
         console.error('Error fetching cart:', error);

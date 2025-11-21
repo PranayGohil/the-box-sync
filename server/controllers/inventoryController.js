@@ -62,6 +62,7 @@ const addInventory = (req, res) => {
 const addInventoryRequest = async (req, res) => {
   try {
     let { items, ...rest } = req.body;
+    console.log(req.user);
 
     // Handle case where items is sent as a JSON string inside FormData
     if (typeof items === "string") {
@@ -84,16 +85,21 @@ const addInventoryRequest = async (req, res) => {
     const io = req.app.get("io");
     const connectedUsers = req.app.get("connectedUsers");
 
-    if (assign_to && connectedUsers[assign_to]) {
+    const userId = req.user._id;
+    const role = "Admin";
+    const key = `${userId}_${role}`;
+    console.log("Key :", key);
+    console.log("Connected Users: ", connectedUsers);
+    if (key && connectedUsers[key]) {
       const notification = await Notification.create({
-        receiver: assign_to,
-        actor: req.user,
+        restaurant_id: req.user._id,
+        sender: "Manager",
+        receiver: "Admin",
         type: "new_inventory_request",
         data: data,
       });
-      io.to(connectedUsers[assign_to]).emit("new_inventory_request", "New Inventory Request");
+      io.to(connectedUsers[key]).emit("new_inventory_request", notification);
     }
-
     res.json(data);
   } catch (error) {
     console.error(error);

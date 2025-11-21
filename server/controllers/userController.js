@@ -170,6 +170,7 @@ const getUserData = async (req, res) => {
       const fetchuser = await User.findOne({ _id: user._id });
       const userdata = {};
       if (req.user.Role === "Admin") {
+        userdata._id = fetchuser._id;
         userdata.restaurant_code = fetchuser.restaurant_code;
         userdata.name = fetchuser.name;
         userdata.logo = fetchuser.logo;
@@ -187,6 +188,7 @@ const getUserData = async (req, res) => {
         userdata.purchasedPlan = fetchuser.purchasedPlan;
         userdata.feedbackToken = fetchuser.feedbackToken;
       } else {
+        userdata._id = fetchuser._id;
         userdata.restaurant_code = fetchuser.restaurant_code;
         userdata.name = fetchuser.name;
         userdata.logo = fetchuser.logo;
