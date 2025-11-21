@@ -11,6 +11,7 @@ const {
   dineInController,
   takeawayController,
   deliveryController,
+  deliveryFromSiteController,
 } = require("../controllers/orderController");
 
 const orderRouter = express.Router();
@@ -29,5 +30,6 @@ orderRouter.route("/get-orders").get(authMiddleware, orderHistory);
 orderRouter.route("/dine-in").post(authMiddleware, dineInController);
 orderRouter.route("/takeaway").post(authMiddleware, takeawayController);
 orderRouter.route("/delivery").post(authMiddleware, deliveryController);
+orderRouter.route("/delivery-from-site/:rescode").post(deliveryFromSiteController);
 
 module.exports = orderRouter;

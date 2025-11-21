@@ -1,3 +1,4 @@
+const User = require("../models/userModel");
 const Order = require("../models/orderModel");
 const Customer = require("../models/customerModel");
 const TokenCounter = require("../models/TokenCounter");
@@ -719,6 +720,142 @@ const deliveryController = async (req, res) => {
   }
 };
 
+const deliveryFromSiteController = async (req, res) => {
+  try {
+    console.log("Delivery order request:", req.body);
+
+    let { orderInfo, customerInfo } = req.body;
+    const orderId = orderInfo.order_id;
+    const restaurant_code = req.params.rescode;
+
+    const restauant = await User.findOne({ restaurant_code });
+
+    if (!restauant) {
+      return res.status(404).json({ message: "Restaurant not found" });
+    }
+
+    orderInfo.user_id = restauant._id;
+
+    // ✅ Validate required fields for delivery
+    if (
+      !customerInfo ||
+      !customerInfo.name ||
+      !customerInfo.phone ||
+      !customerInfo.address
+    ) {
+      return res.status(400).json({
+        message:
+          "Customer name, phone, and address are required for delivery orders",
+      });
+    }
+
+    let savedOrder;
+    let savedCustomer;
+
+    // ✅ 1. Save customer (required for delivery)
+    try {
+      // Check if customer already exists
+      let existingCustomer = null;
+      if (customerInfo.phone) {
+        existingCustomer = await Customer.findOne({
+          phone: customerInfo.phone,
+        });
+      } else if (customerInfo.email) {
+        existingCustomer = await Customer.findOne({
+          email: customerInfo.email,
+        });
+      }
+
+      if (existingCustomer) {
+        // Update existing customer
+        savedCustomer = await Customer.findByIdAndUpdate(
+          existingCustomer._id,
+          customerInfo,
+          { new: true }
+        );
+      } else {
+        // Create new customer
+        const customer = new Customer(customerInfo);
+        savedCustomer = await customer.save();
+      }
+
+      orderInfo.customer_id = savedCustomer._id;
+    } catch (error) {
+      console.error("Error handling customer:", error);
+      return res
+        .status(500)
+        .json({ message: "Error saving customer information" });
+    }
+
+    // ✅ 2. Update item statuses based on order status
+    if (orderInfo.order_status === "KOT") {
+      orderInfo.order_items = orderInfo.order_items.map((item) => ({
+        ...item,
+        status: item.status === "Pending" ? "Preparing" : item.status,
+      }));
+    }
+
+    // ✅ 3. Handle order cancellation
+    if (orderInfo.order_status === "Cancelled") {
+      orderInfo.order_items = orderInfo.order_items.map((item) => ({
+        ...item,
+        status: "Cancelled",
+      }));
+
+      if (orderId) {
+        savedOrder = await Order.findByIdAndUpdate(orderId, orderInfo, {
+          new: true,
+        });
+        if (!savedOrder) {
+          return res.status(404).json({ message: "Order not found" });
+        }
+      }
+
+      return res.status(200).json({
+        status: "success",
+        message: "Order cancelled successfully",
+        order: savedOrder,
+      });
+    }
+
+    // ✅ 4. Handle existing order update
+    if (orderId) {
+      savedOrder = await Order.findByIdAndUpdate(orderId, orderInfo, {
+        new: true,
+      });
+
+      if (!savedOrder) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      return res.status(200).json({
+        status: "success",
+        message: "Order updated successfully",
+        order: savedOrder,
+        customer: savedCustomer,
+      });
+    }
+
+    // ✅ 5. Handle new order creation
+    const newOrder = new Order(orderInfo);
+    savedOrder = await newOrder.save();
+
+    return res.status(200).json({
+      status: "success",
+      message: "Order created successfully",
+      order: savedOrder,
+      customer: savedCustomer,
+      orderId: savedOrder._id,
+    });
+  } catch (error) {
+    console.error("Error processing delivery order:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
 const orderHistory = async (req, res) => {
   try {
     const orderData = await Order.find({ user_id: req.user });
@@ -743,4 +880,5 @@ module.exports = {
   dineInController,
   takeawayController,
   deliveryController,
+  deliveryFromSiteController,
 };
