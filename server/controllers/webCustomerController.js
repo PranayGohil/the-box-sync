@@ -472,9 +472,9 @@ exports.updateCart = async (req, res) => {
 
 exports.getCustomerOrders = async (req, res) => {
     try {
-        const { customerid } = req.params;
+        const { id } = req.params;
 
-        const customer = await WebCustomer.findById(customerid);
+        const customer = await WebCustomer.findById(id);
         if (!customer) {
             return res.status(404).json({
                 success: false,
@@ -482,7 +482,7 @@ exports.getCustomerOrders = async (req, res) => {
             });
         }
 
-        const orders = await Order.find({ customer_id: customerid });
+        const orders = await Order.find({ customer_id: id });
         if (!orders) {
             return res.status(404).json({
                 success: false,
@@ -492,7 +492,7 @@ exports.getCustomerOrders = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            data: customer.orders,
+            data: orders,
         });
     } catch (error) {
         console.error('Error fetching customer orders:', error);
