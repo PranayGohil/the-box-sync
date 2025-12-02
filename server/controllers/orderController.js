@@ -4,6 +4,7 @@ const Customer = require("../models/customerModel");
 const WebCustomer = require("../models/webCustomerModel");
 const TokenCounter = require("../models/TokenCounter");
 const Table = require("../models/tableModel");
+const Notification = require("../models/notificationModel");
 
 const cron = require("node-cron");
 
@@ -840,6 +841,25 @@ const deliveryFromSiteController = async (req, res) => {
     // ✅ 5. Handle new order creation
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();
+
+    const io = req.app.get("io");
+    const connectedUsers = req.app.get("connectedUsers");
+
+    const userId = restauant._id;
+    const role = "Admin";
+    const key = `${userId}_${role}`;
+    console.log("Key :", key);
+    console.log("Connected Users: ", connectedUsers);
+    if (key && connectedUsers[key]) {
+      const notification = await Notification.create({
+        restaurant_id: restauant._id,
+        sender: "Web Customer",
+        receiver: "Admin",
+        type: "web_order_recieved",
+        data: savedOrder,
+      });
+      io.to(connectedUsers[key]).emit("web_order_recieved", notification);
+    };
 
     return res.status(200).json({
       status: "success",
