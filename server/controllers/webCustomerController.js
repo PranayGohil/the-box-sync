@@ -1,5 +1,6 @@
 const WebCustomer = require('../models/webCustomerModel');
 const Menu = require('../models/menuModel');
+const Order = require('../models/orderModel');
 const bcrypt = require('bcryptjs');
 
 exports.registerCustomer = async (req, res) => {
@@ -468,3 +469,40 @@ exports.updateCart = async (req, res) => {
         });
     }
 }
+<<<<<<< HEAD
+=======
+
+exports.getCustomerOrders = async (req, res) => {
+    try {
+        const { customerid } = req.params;
+
+        const customer = await WebCustomer.findById(customerid);
+        if (!customer) {
+            return res.status(404).json({
+                success: false,
+                message: 'Customer not found',
+            });
+        }
+
+        const orders = await Order.find({ customer_id: customerid });
+        if (!orders) {
+            return res.status(404).json({
+                success: false,
+                message: 'Orders not found',
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: customer.orders,
+        });
+    } catch (error) {
+        console.error('Error fetching customer orders:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching customer orders',
+            error: error.message,
+        });
+    }
+};
+>>>>>>> ca3434f2417201934249a02a7bdfd27cbe5b041f

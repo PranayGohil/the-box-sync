@@ -11,6 +11,7 @@ const {
     getCart,
     removeFromCart,
     updateCart,
+    getCustomerOrders,
 } = require("../controllers/webCustomerController");
 
 const webCustomerRouter = express.Router();
@@ -29,5 +30,7 @@ webCustomerRouter.put("/add-to-cart/:id", addToCart);
 webCustomerRouter.get("/get-cart/:id", getCart);
 webCustomerRouter.put("/remove-from-cart/:id", removeFromCart);
 webCustomerRouter.put("/update-cart/:id", updateCart);
+
+webCustomerRouter.get("/get-orders/:id", getCustomerOrders);
 
 module.exports = webCustomerRouter;

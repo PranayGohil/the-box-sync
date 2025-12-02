@@ -1,6 +1,7 @@
 const User = require("../models/userModel");
 const Order = require("../models/orderModel");
 const Customer = require("../models/customerModel");
+const WebCustomer = require("../models/webCustomerModel");
 const TokenCounter = require("../models/TokenCounter");
 const Table = require("../models/tableModel");
 
@@ -757,25 +758,25 @@ const deliveryFromSiteController = async (req, res) => {
       // Check if customer already exists
       let existingCustomer = null;
       if (customerInfo.phone) {
-        existingCustomer = await Customer.findOne({
+        existingCustomer = await WebCustomer.findOne({
           phone: customerInfo.phone,
         });
       } else if (customerInfo.email) {
-        existingCustomer = await Customer.findOne({
+        existingCustomer = await WebCustomer.findOne({
           email: customerInfo.email,
         });
       }
 
       if (existingCustomer) {
         // Update existing customer
-        savedCustomer = await Customer.findByIdAndUpdate(
+        savedCustomer = await WebCustomer.findByIdAndUpdate(
           existingCustomer._id,
           customerInfo,
           { new: true }
         );
       } else {
         // Create new customer
-        const customer = new Customer(customerInfo);
+        const customer = new WebCustomer(customerInfo);
         savedCustomer = await customer.save();
       }
 
