@@ -469,8 +469,6 @@ exports.updateCart = async (req, res) => {
         });
     }
 }
-<<<<<<< HEAD
-=======
 
 exports.getCustomerOrders = async (req, res) => {
     try {
@@ -505,4 +503,3 @@ exports.getCustomerOrders = async (req, res) => {
         });
     }
 };
->>>>>>> ca3434f2417201934249a02a7bdfd27cbe5b041f
