@@ -93,6 +93,8 @@ module.exports = {
     'jsx-a11y/no-onchange': 'off',
     'eslint-disable-next-line': 'off',
     'no-else-return': 'off',
+    'jsx-a11y/media-has-caption': 'off',
+    'no-new': 'off',
   },
   globals: {
     window: true,

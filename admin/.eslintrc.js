@@ -95,6 +95,8 @@ module.exports = {
     'new-cap': 'off',
     'react/jsx-boolean-value': 'off',
     'no-plusplus': 'off',
+    'jsx-a11y/media-has-caption': 'off',
+    'no-new': 'off',
   },
   globals: {
     window: true,

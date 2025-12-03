@@ -31,7 +31,7 @@ const OrderHistory = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API}/order/get-orders`, {
+      const res = await axios.get(`${process.env.REACT_APP_API}/order/get-orders?order_source=QSR`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -42,10 +42,10 @@ const OrderHistory = () => {
           ...rest,
           id: _id,
         }));
-        const filteredOrders = transformedOrders.filter((order) => order.order_source === 'QSR');
-        const sortOrders = filteredOrders.sort((a, b) => new Date(b.order_date) - new Date(a.order_date)); 
+
+        const sortOrders = transformedOrders.sort((a, b) => new Date(b.order_date) - new Date(a.order_date)); 
         console.log("Fetched Orders:", sortOrders);
-        setData(filteredOrders);
+        setData(sortOrders);
       } else {
         console.log(res.data.message);
         setError(res.data.message);

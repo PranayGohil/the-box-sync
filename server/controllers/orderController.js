@@ -879,17 +879,97 @@ const deliveryFromSiteController = async (req, res) => {
 
 const orderHistory = async (req, res) => {
   try {
-    const orderData = await Order.find({ user_id: req.user });
-    console.log(req.user);
-    if (!orderData) {
-      return res.json({ success: false, message: "Order not found" });
+    // Query params for flexible filters
+    const {
+      order_source,    // e.g. "QSR", "Manager", "Captain", "Restaurant Website"
+      order_status,    // e.g. "Completed", "Pending"
+      from,            // e.g. "2025-01-01"
+      to,              // e.g. "2025-12-31"
+      search,          // optional: for future use (customer_name, table_no, etc.)
+      // page = 1,
+      // limit = 20,
+      sortBy = "order_date",
+      sortOrder = "desc", // "asc" or "desc"
+    } = req.query;
+
+    // const pageNumber = parseInt(page, 10) || 1;
+    // const pageSize = parseInt(limit, 10) || 20;
+
+    // Base filter: by logged-in user
+    const filter = {
+      user_id: req.user, // or String(req.user._id) depending on your auth
+    };
+
+    // Filter by order_source if provided
+    if (order_source) {
+      filter.order_source = order_source;
     }
-    console.log(orderData);
-    res.json({ success: true, message: "Order found", data: orderData });
+
+    // Filter by order_status if provided
+    if (order_status) {
+      filter.order_status = order_status;
+    }
+
+    // Date range filter
+    if (from || to) {
+      filter.order_date = {};
+      if (from) {
+        filter.order_date.$gte = new Date(from);
+      }
+      if (to) {
+        // to end of day
+        const toDate = new Date(to);
+        toDate.setHours(23, 59, 59, 999);
+        filter.order_date.$lte = toDate;
+      }
+    }
+
+    // Optional: simple text search (example: search by customer_name or table_no)
+    if (search) {
+      filter.$or = [
+        { customer_name: { $regex: search, $options: "i" } },
+        { table_no: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Sorting
+    const sort = {
+      [sortBy]: sortOrder === "asc" ? 1 : -1,
+    };
+
+    // Use Promise.all so count + data run in parallel
+    const [orders, total] = await Promise.all([
+      Order.find(filter)
+        .sort(sort)
+        // .skip((pageNumber - 1) * pageSize)
+        // .limit(pageSize)
+        .lean(), // faster, returns plain JS objects
+      Order.countDocuments(filter),
+    ]);
+
+    console.log("Orders:", orders);
+    console.log("Total:", total);
+
+    return res.json({
+      success: true,
+      message: "Order list",
+      data: orders,
+      // pagination: {
+      //   total,
+      //   page: pageNumber,
+      //   limit: pageSize,
+      //   totalPages: Math.ceil(total / pageSize),
+      // },
+    });
   } catch (error) {
-    console.log(error);
+    console.error("orderHistory error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
   }
 };
+
 
 module.exports = {
   addCustomer,

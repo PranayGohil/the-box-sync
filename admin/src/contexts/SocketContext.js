@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { toast } from "react-toastify";
+import { Modal, Button, Table, Badge, Alert } from "react-bootstrap";
 import { AuthContext } from "./AuthContext";
 
 const SocketContext = createContext();
@@ -9,150 +10,336 @@ export const useSocket = () => useContext(SocketContext);
 
 // Order Modal Component
 const OrderModal = ({ order, onClose, onApprove, onReject }) => {
-  if (!order) return null;
+  const audioRef = React.useRef(null);
+  const timeoutRef = React.useRef(null);
+  const [audioError, setAudioError] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsPlaying(false);
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  };
+
+  const playAudio = () => {
+    if (audioRef.current) {
+      // Store user interaction in localStorage
+      localStorage.setItem('audioInteractionGranted', 'true');
+      console.log("Audio interaction granted!");
+
+      audioRef.current.play()
+        .then(() => {
+          setIsPlaying(true);
+          setAudioError(false);
+
+          // Stop audio after 30 seconds
+          timeoutRef.current = setTimeout(() => {
+            stopAudio();
+          }, 30000);
+        })
+        .catch(err => {
+          console.error("Audio play failed:", err);
+          setAudioError(true);
+        });
+    }
+  };
+
+  React.useEffect(() => {
+    if (order) {
+      // Check if user has previously interacted
+      const hasInteracted = localStorage.getItem('audioInteractionGranted') === 'true';
+
+      if (hasInteracted) {
+        // User has interacted before, try autoplay
+        playAudio();
+      } else {
+        // First time - audio will likely be blocked
+        playAudio();
+      }
+
+      // Also try to show browser notification
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("New Web Order Received!", {
+          body: `Order from ${order.customer_name || 'Customer'} - ₹${order.total_amount?.toFixed(2) || '0.00'}`,
+          icon: "/logo192.png", // Make sure you have a logo in public folder
+          badge: "/logo192.png",
+          tag: "order-notification",
+          requireInteraction: true
+        });
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      stopAudio();
+    };
+  }, [order]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg w-full h-full md:w-11/12 md:h-5/6 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
-          <h2 className="text-2xl font-bold">New Web Order Received</h2>
-          <button
-            onClick={onClose}
-            type="button"
-            className="hover:bg-blue-700 rounded-full p-2 transition"
-          >
-            X
-          </button>
-        </div>
+    <>
+      {/* Audio element - hidden */}
+      <audio
+        ref={audioRef}
+        loop
+        preload="auto"
+      >
+        <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg" />
+        Your browser does not support the audio element.
+      </audio>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl mx-auto space-y-6">
-            {/* Order ID and Status */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">Order ID</p>
-                  <p className="text-lg font-semibold">{order.orderId || "N/A"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Order Date</p>
-                  <p className="text-lg font-semibold">
-                    {order.orderDate ? new Date(order.orderDate).toLocaleString() : "N/A"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Customer Information */}
-            {order.customer && (
-              <div className="bg-white border rounded-lg p-4">
-                <h3 className="text-xl font-semibold mb-3">Customer Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-sm text-gray-600">Name</p>
-                    <p className="font-medium">{order.customer.name || "N/A"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Email</p>
-                    <p className="font-medium">{order.customer.email || "N/A"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Phone</p>
-                    <p className="font-medium">{order.customer.phone || "N/A"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Address</p>
-                    <p className="font-medium">{order.customer.address || "N/A"}</p>
-                  </div>
-                </div>
-              </div>
+      <Modal
+        show={!!order}
+        onHide={() => {
+          stopAudio();
+          onClose();
+        }}
+        backdrop="static"
+        keyboard={false}
+        size="xl"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title className="d-flex align-items-center gap-2">
+            New Web Order Received 🔔
+            {!isPlaying && audioError && (
+              <Button
+                size="sm"
+                variant="warning"
+                onClick={playAudio}
+                className="ms-auto"
+              >
+                🔊 Play Alert Sound
+              </Button>
             )}
+            {isPlaying && (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={stopAudio}
+                className="ms-auto"
+              >
+                🔇 Stop Sound
+              </Button>
+            )}
+          </Modal.Title>
+        </Modal.Header>
 
-            {/* Order Items */}
-            {order.items && order.items.length > 0 && (
-              <div className="bg-white border rounded-lg p-4">
-                <h3 className="text-xl font-semibold mb-3">Order Items</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-100">
+        <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+          {order && (
+            <>
+              {audioError && (
+                <Alert variant="warning" dismissible onClose={() => setAudioError(false)}>
+                  <small>Click the "Play Alert Sound" button to enable audio notifications for new orders.</small>
+                </Alert>
+              )}
+
+              {/* Order ID and Status */}
+              <div className="mb-4 p-3 bg-light rounded">
+                <div className="row">
+                  <div className="col-md-4 mb-2">
+                    <small className="text-muted d-block">Order ID</small>
+                    <strong>{order._id || "N/A"}</strong>
+                  </div>
+                  <div className="col-md-4 mb-2">
+                    <small className="text-muted d-block">Order Date</small>
+                    <strong>{order.order_date ? new Date(order.order_date).toLocaleString() : "N/A"}</strong>
+                  </div>
+                  <div className="col-md-4 mb-2">
+                    <small className="text-muted d-block">Status</small>
+                    <Badge bg="warning" text="dark">{order.order_status}</Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer Information */}
+              <div className="mb-4">
+                <h6 className="mb-3">Customer Information</h6>
+                <div className="row">
+                  <div className="col-md-6 mb-2">
+                    <small className="text-muted d-block">Customer Name</small>
+                    <strong>{order.customer_name || "N/A"}</strong>
+                  </div>
+                  <div className="col-md-6 mb-2">
+                    <small className="text-muted d-block">Customer ID</small>
+                    <strong>{order.customer_id || "N/A"}</strong>
+                  </div>
+                  <div className="col-md-6 mb-2">
+                    <small className="text-muted d-block">Order Type</small>
+                    <Badge bg="info">{order.order_type}</Badge>
+                  </div>
+                  <div className="col-md-6 mb-2">
+                    <small className="text-muted d-block">Order Source</small>
+                    <strong>{order.order_source || "N/A"}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              {order.order_items && order.order_items.length > 0 && (
+                <div className="mb-4">
+                  <h6 className="mb-3">Order Items</h6>
+                  <Table striped bordered hover responsive>
+                    <thead>
                       <tr>
-                        <th className="px-4 py-2 text-left">Item</th>
-                        <th className="px-4 py-2 text-left">Quantity</th>
-                        <th className="px-4 py-2 text-left">Price</th>
-                        <th className="px-4 py-2 text-left">Total</th>
+                        <th>Dish Name</th>
+                        <th className="text-center">Quantity</th>
+                        <th className="text-end">Price</th>
+                        <th className="text-end">Total</th>
+                        <th>Status</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {order.items.map((item, index) => (
-                        <tr key={index} className="border-b">
-                          <td className="px-4 py-3">{item.name || "N/A"}</td>
-                          <td className="px-4 py-3">{item.quantity || 0}</td>
-                          <td className="px-4 py-3">${item.price?.toFixed(2) || "0.00"}</td>
-                          <td className="px-4 py-3">
-                            ${((item.quantity || 0) * (item.price || 0)).toFixed(2)}
+                      {order.order_items.map((item, index) => (
+                        <tr key={item._id || index}>
+                          <td>
+                            <div>
+                              <strong>{item.dish_name || "N/A"}</strong>
+                              {item.special_notes && (
+                                <div className="text-muted small fst-italic">
+                                  Note: {item.special_notes}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="text-center">{item.quantity || 0}</td>
+                          <td className="text-end">₹{item.dish_price?.toFixed(2) || "0.00"}</td>
+                          <td className="text-end">
+                            <strong>₹{((item.quantity || 0) * (item.dish_price || 0)).toFixed(2)}</strong>
+                          </td>
+                          <td>
+                            <Badge bg="warning" text="dark">{item.status}</Badge>
                           </td>
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </Table>
+                </div>
+              )}
+
+              {/* Payment Information */}
+              <div className="mb-4">
+                <h6 className="mb-3">Payment Information</h6>
+                <div>
+                  <small className="text-muted">Payment Type: </small>
+                  <Badge bg="success">{order.payment_type}</Badge>
                 </div>
               </div>
-            )}
 
-            {/* Order Summary */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-xl font-semibold mb-3">Order Summary</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-medium">${order.subtotal?.toFixed(2) || "0.00"}</span>
+              {/* Order Summary */}
+              <div className="mb-4 p-3 bg-light rounded">
+                <h6 className="mb-3">Order Summary</h6>
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-muted">Sub Total:</span>
+                  <strong>₹{order.sub_total?.toFixed(2) || "0.00"}</strong>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tax:</span>
-                  <span className="font-medium">${order.tax?.toFixed(2) || "0.00"}</span>
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-muted">Bill Amount:</span>
+                  <strong>₹{order.bill_amount?.toFixed(2) || "0.00"}</strong>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping:</span>
-                  <span className="font-medium">${order.shipping?.toFixed(2) || "0.00"}</span>
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-muted">CGST:</span>
+                  <strong>₹{order.cgst_amount?.toFixed(2) || "0.00"}</strong>
                 </div>
-                <div className="flex justify-between text-lg font-bold border-t pt-2">
-                  <span>Total:</span>
-                  <span className="text-blue-600">${order.total?.toFixed(2) || "0.00"}</span>
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-muted">SGST:</span>
+                  <strong>₹{order.sgst_amount?.toFixed(2) || "0.00"}</strong>
+                </div>
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-muted">Discount:</span>
+                  <strong className="text-danger">-₹{order.discount_amount?.toFixed(2) || "0.00"}</strong>
+                </div>
+                <hr />
+                <div className="d-flex justify-content-between">
+                  <span className="fw-bold">Total Amount:</span>
+                  <span className="fw-bold text-primary fs-5">₹{order.total_amount?.toFixed(2) || "0.00"}</span>
                 </div>
               </div>
-            </div>
 
-            {/* Additional Notes */}
-            {order.notes && (
-              <div className="bg-white border rounded-lg p-4">
-                <h3 className="text-xl font-semibold mb-3">Additional Notes</h3>
-                <p className="text-gray-700">{order.notes}</p>
-              </div>
-            )}
-          </div>
-        </div>
+              {/* Additional Comments */}
+              {order.comment && (
+                <div className="mb-3">
+                  <h6 className="mb-2">Customer Comments</h6>
+                  <div className="p-3 bg-light rounded">
+                    <p className="mb-0">{order.comment}</p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </Modal.Body>
 
-        {/* Footer with Actions */}
-        <div className="bg-gray-100 px-6 py-4 flex justify-end gap-3 border-t">
-          <button
-            onClick={onReject}
-            type="button"
-            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+        <Modal.Footer>
+          <Button
+            variant="danger"
+            onClick={() => {
+              stopAudio();
+              onReject();
+            }}
           >
             Reject Order
-          </button>
-          <button
-            onClick={onApprove}
-            type="button"
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+          </Button>
+          <Button
+            variant="success"
+            onClick={() => {
+              stopAudio();
+              onApprove();
+            }}
           >
             Approve Order
-          </button>
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+  );
+};
+
+// Audio Enabler Component - One-time interaction to enable autoplay
+const AudioEnabler = () => {
+  const [dismissed, setDismissed] = useState(false);
+  const hasInteracted = localStorage.getItem('audioInteractionGranted') === 'true';
+
+  const enableAudio = () => {
+    // Create a silent audio and play it to enable autoplay
+    const silentAudio = new Audio('data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV');
+
+    silentAudio.play()
+      .then(() => {
+        localStorage.setItem('audioInteractionGranted', 'true');
+        console.log('Audio notifications enabled! You will now hear alerts for new orders.');
+        setDismissed(true);
+      })
+      .catch(err => {
+        console.error('Failed to enable audio:', err);
+        toast.error('Please allow audio in your browser settings.');
+      });
+  };
+
+  if (hasInteracted || dismissed) {
+    return null;
+  }
+
+  return (
+    <Alert variant="warning" className="m-3">
+      <div className="d-flex justify-content-between align-items-center">
+        <div>
+          <strong>🔔 Enable Audio Alerts</strong>
+          <p className="mb-0 small">Click to enable sound notifications for new orders. This needs to be done once.</p>
+        </div>
+        <div className="d-flex gap-2">
+          <Button size="sm" variant="warning" onClick={enableAudio}>
+            Enable Audio
+          </Button>
+          <Button size="sm" variant="outline-secondary" onClick={() => setDismissed(true)}>
+            Dismiss
+          </Button>
         </div>
       </div>
-    </div>
+    </Alert>
   );
 };
 
@@ -166,7 +353,7 @@ export const SocketProvider = ({ children }) => {
     if (currentOrder && socket) {
       // Emit approval event to server
       socket.emit("approve_order", {
-        orderId: currentOrder.orderId,
+        orderId: currentOrder._id,
         adminId: currentUser._id,
       });
 
@@ -179,7 +366,7 @@ export const SocketProvider = ({ children }) => {
     if (currentOrder && socket) {
       // Emit rejection event to server
       socket.emit("reject_order", {
-        orderId: currentOrder.orderId,
+        orderId: currentOrder._id,
         adminId: currentUser._id,
       });
 
@@ -208,14 +395,12 @@ export const SocketProvider = ({ children }) => {
     });
 
     s.on("web_order_recieved", (notification) => {
-      console.log("New Order:", notification);
+      console.log("New Order received:", notification);
       setNotifications((prev) => [...prev, notification]);
 
-      // Show the modal with order data
-      if (notification.data) {
-        setCurrentOrder(notification.data);
-        toast.info("New web order received!");
-      }
+      // The notification object itself contains the order data
+      setCurrentOrder(notification.data);
+      toast.info("New web order received!");
     });
 
     setSocket(s);
@@ -225,6 +410,7 @@ export const SocketProvider = ({ children }) => {
 
   return (
     <SocketContext.Provider value={{ socket, notifications, setNotifications }}>
+      <AudioEnabler />
       {children}
       <OrderModal
         order={currentOrder}
