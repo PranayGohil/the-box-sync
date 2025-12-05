@@ -31,7 +31,7 @@ const OrderHistory = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API}/order/get-orders`, {
+      const res = await axios.get(`${process.env.REACT_APP_API}/order/get-orders?page=1?limit=100`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,

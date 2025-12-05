@@ -95,34 +95,34 @@ const getActiveOrders = async (req, res) => {
     if (source === "Manager") {
       // Active Dine In Tables
       activeDineInTables = await Order.find({
+        user_id: req.user,
         order_type: "Dine In",
         order_status: { $in: ["KOT", "Save"] },
-        user_id: req.user,
       });
     }
 
     if (source === "QSR") {
       // Active Dine In Tables
       activeDineInTables = await Order.find({
+        user_id: req.user,
+        order_source: source,
         order_type: "Dine In",
         $or: [
           { order_status: { $ne: "Paid" } },
           { "order_items.status": "Preparing" },
         ],
-        user_id: req.user,
-        order_source: source,
       });
     }
 
     // Active Takeaways & Deliveries
     const activeTakeawaysAndDeliveries = await Order.find({
+      user_id: req.user,
+      order_source: source,
       order_type: { $in: ["Takeaway", "Delivery"] },
       $or: [
         { order_status: { $ne: "Paid" } },
         { "order_items.status": "Preparing" },
       ],
-      user_id: req.user,
-      order_source: source,
     });
 
     res.json({
@@ -879,87 +879,89 @@ const deliveryFromSiteController = async (req, res) => {
 
 const orderHistory = async (req, res) => {
   try {
-    // Query params for flexible filters
     const {
-      order_source,    // e.g. "QSR", "Manager", "Captain", "Restaurant Website"
-      order_status,    // e.g. "Completed", "Pending"
-      from,            // e.g. "2025-01-01"
-      to,              // e.g. "2025-12-31"
-      search,          // optional: for future use (customer_name, table_no, etc.)
-      // page = 1,
-      // limit = 20,
+      order_source,
+      order_status,
+      from,
+      to,
+      search,
+      page = 1,
+      limit = 20,
       sortBy = "order_date",
-      sortOrder = "desc", // "asc" or "desc"
+      sortOrder = "desc",
     } = req.query;
 
-    // const pageNumber = parseInt(page, 10) || 1;
-    // const pageSize = parseInt(limit, 10) || 20;
+    const pageNumber = parseInt(page, 10) || 1;
+    const pageSize = parseInt(limit, 10) || 20;
+    const skip = (pageNumber - 1) * pageSize;
 
-    // Base filter: by logged-in user
     const filter = {
-      user_id: req.user, // or String(req.user._id) depending on your auth
+      user_id: req.user, // make sure this matches the schema type
     };
 
-    // Filter by order_source if provided
-    if (order_source) {
-      filter.order_source = order_source;
-    }
+    if (order_source) filter.order_source = order_source;
+    if (order_status) filter.order_status = order_status;
 
-    // Filter by order_status if provided
-    if (order_status) {
-      filter.order_status = order_status;
-    }
-
-    // Date range filter
     if (from || to) {
       filter.order_date = {};
       if (from) {
         filter.order_date.$gte = new Date(from);
       }
       if (to) {
-        // to end of day
         const toDate = new Date(to);
         toDate.setHours(23, 59, 59, 999);
         filter.order_date.$lte = toDate;
       }
     }
 
-    // Optional: simple text search (example: search by customer_name or table_no)
     if (search) {
+      const regex = new RegExp("^" + search, "i"); // index-friendly prefix search
       filter.$or = [
-        { customer_name: { $regex: search, $options: "i" } },
-        { table_no: { $regex: search, $options: "i" } },
+        { customer_name: regex },
+        { table_no: regex },
       ];
     }
 
-    // Sorting
     const sort = {
       [sortBy]: sortOrder === "asc" ? 1 : -1,
     };
 
-    // Use Promise.all so count + data run in parallel
+    const projection = {
+      table_no: 1,
+      table_area: 1,
+      order_type: 1,
+      order_status: 1,
+      order_source: 1,
+      bill_amount: 1,
+      total_amount: 1,
+      order_date: 1,
+      customer_name: 1,
+      payment_type: 1,
+      // order_items: 0, // uncomment if you really don't need items
+    };
+
+    const needTotal = pageNumber === 1; // or always false if you want super-fast
+
     const [orders, total] = await Promise.all([
       Order.find(filter)
+        .select(projection)
         .sort(sort)
-        // .skip((pageNumber - 1) * pageSize)
-        // .limit(pageSize)
-        .lean(), // faster, returns plain JS objects
-      Order.countDocuments(filter),
+        .skip(skip)
+        .limit(pageSize)
+        .lean(),
+      needTotal ? Order.countDocuments(filter) : Promise.resolve(null),
     ]);
-
-    console.log("Orders:", orders);
-    console.log("Total:", total);
 
     return res.json({
       success: true,
       message: "Order list",
       data: orders,
-      // pagination: {
-      //   total,
-      //   page: pageNumber,
-      //   limit: pageSize,
-      //   totalPages: Math.ceil(total / pageSize),
-      // },
+      pagination: {
+        total,
+        page: pageNumber,
+        limit: pageSize,
+        totalPages: total ? Math.ceil(total / pageSize) : null,
+      },
     });
   } catch (error) {
     console.error("orderHistory error:", error);
@@ -969,6 +971,7 @@ const orderHistory = async (req, res) => {
     });
   }
 };
+
 
 
 module.exports = {

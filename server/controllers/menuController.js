@@ -6,14 +6,29 @@ const User = require("../models/userModel");
 const addMenu = async (req, res) => {
   try {
     const user_id = req.user;
-    const { category, meal_type, dishes } = req.body;
+    let { category, meal_type, dishes } = req.body;
+    console.log("Add Menu Data:", req.body);
 
-    if (!category || !meal_type || !Array.isArray(JSON.parse(dishes))) {
-      return res.status(400).json({ message: "Missing required fields" });
+    // Normalize dishes: if it's string, parse; if it's already array, use as is
+    let parsedDishes;
+
+    if (typeof dishes === "string") {
+      try {
+        parsedDishes = JSON.parse(dishes);
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid dishes JSON" });
+      }
+    } else if (Array.isArray(dishes)) {
+      parsedDishes = dishes;
+    } else {
+      return res
+        .status(400)
+        .json({ message: "dishes must be an array or JSON string" });
     }
 
-    const parsedDishes =
-      typeof dishes === "string" ? JSON.parse(dishes) : dishes;
+    if (!category || !meal_type || !Array.isArray(parsedDishes) || parsedDishes.length === 0) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
 
     // Attach uploaded image path as string to each dish
     const uploadedImages = req.files?.dish_img || [];
@@ -23,6 +38,19 @@ const addMenu = async (req, res) => {
         parsedDishes[index].dish_img = "/menu/dishes/" + file.filename;
       }
     });
+
+    // Optional: Cast numbers properly
+    parsedDishes = parsedDishes.map((dish) => ({
+      ...dish,
+      dish_price:
+        dish.dish_price !== "" && dish.dish_price != null
+          ? Number(dish.dish_price)
+          : undefined,
+      quantity:
+        dish.quantity !== "" && dish.quantity != null
+          ? Number(dish.quantity)
+          : undefined,
+    }));
 
     const menuData = {
       category,
@@ -58,6 +86,7 @@ const addMenu = async (req, res) => {
       .json({ message: "Server error", error: error.message });
   }
 };
+
 
 const getMenuData = async (req, res) => {
   try {

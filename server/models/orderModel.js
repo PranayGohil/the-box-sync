@@ -104,5 +104,14 @@ const orderSchema = new Schema({
   },
 });
 
+// 1. Order history & active orders by user + type + status
+orderSchema.index({ user_id: 1, order_type: 1, order_status: 1 });
+
+// 2. When order_source is also used (QSR, Takeaway, Delivery filters)
+orderSchema.index({ user_id: 1, order_source: 1, order_type: 1, order_status: 1 });
+
+// 3. For history / token generation if needed
+orderSchema.index({ user_id: 1, order_source: 1, order_date: -1 });
+
 const Order = mongoose.model("order", orderSchema);
 module.exports = Order;

@@ -123,7 +123,7 @@ const Dashboard = () => {
                         </h5>
                         <p className="mb-0 text-muted">Token: {order.token}</p>
                       </div>
-                      <Badge bg={order.order_status === 'Paid' ? 'success' : 'warning'} className="text-white">
+                      <Badge bg={order.order_status === 'Paid' ? 'success' : order.order_status === 'Save' ? 'primary' : 'warning'} className="text-white">
                         {order.order_status}
                       </Badge>
                     </div>
