@@ -74,19 +74,19 @@ const RequestedInventory = () => {
         accessor: 'formatted_date',
         Cell: ({ cell }) => <div> {cell.value} </div>,
       },
-      // {
-      //   Header: 'Items',
-      //   accessor: 'items',
-      //   Cell: ({ cell }) => (
-      //     <>
-      //       {cell.value.map((item, i) => (
-      //         <div key={i}>
-      //           {item.item_name} - {item.item_quantity} {item.unit}
-      //         </div>
-      //       ))}
-      //     </>
-      //   ),
-      // },
+      {
+        Header: 'Items',
+        accessor: 'items',
+        Cell: ({ cell }) => (
+          <>
+            {cell.value.map((item, i) => (
+              <div key={i}>
+                {item.item_name} - {item.item_quantity} {item.unit}
+              </div>
+            ))}
+          </>
+        ),
+      },
       {
         Header: 'Status',
         accessor: 'status',

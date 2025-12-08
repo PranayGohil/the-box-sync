@@ -21,6 +21,7 @@ const userSchema = new Schema({
   },
   password: {
     type: String,
+    select: false,
   },
   mobile: {
     type: Number,
@@ -92,6 +93,23 @@ const userSchema = new Schema({
     type: String,
   },
 });
+
+// userModel.js
+
+// Email: used in emailCheck, login, OTP, reset, etc.
+userSchema.index({ email: 1 }, { unique: true, sparse: true });
+
+// Restaurant code: used in getUserDataByCode + should be unique
+userSchema.index({ restaurant_code: 1 }, { unique: true, sparse: true });
+
+// For register: you query by country + state and sort by createdAt
+userSchema.index({ country: 1, state: 1, createdAt: -1 });
+
+// Optional: if you search by mobile anywhere
+// userSchema.index({ mobile: 1 }, { sparse: true });
+
+// Optional: if you use feedbackToken in links
+userSchema.index({ feedbackToken: 1 }, { sparse: true });
 
 userSchema.pre("save", async function (next) {
   const user = this;

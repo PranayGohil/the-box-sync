@@ -36,15 +36,12 @@ const Dashboard = () => {
 
   const fetchActiveOrders = async () => {
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API}/order/get-active`,
-        {
+      const response = await axios.get(`${process.env.REACT_APP_API}/order/get-active`, {
+        params: {
           source: 'Manager',
         },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
-      );
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
       console.log(response.data.data);
 
       setActiveDineInOrders(response.data.activeDineInTables);
@@ -147,7 +144,7 @@ const Dashboard = () => {
                       }
 
                       return (
-                        <Col key={table._id} xs="6" sm="6" md="4" lg="3" >
+                        <Col key={table._id} xs="6" sm="6" md="4" lg="3">
                           <Card
                             key={table._id}
                             className={`sh-20 hover-border-primary mb-5 ${bgClass}`}

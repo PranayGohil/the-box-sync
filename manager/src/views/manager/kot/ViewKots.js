@@ -20,7 +20,7 @@ const ViewKots = () => {
 
   const fetchOrderData = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API}/kot/showkots`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const response = await axios.get(`${process.env.REACT_APP_API}/kot/show`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       const managerKots = response.data.filter((order) => order.order_source === 'Manager' || order.order_source === 'Captain');
       console.log(managerKots);
       setKotData(managerKots);
@@ -36,7 +36,7 @@ const ViewKots = () => {
   const updateDishStatus = async (orderId, dishId) => {
     try {
       await axios.put(
-        `${process.env.REACT_APP_API}/kot/updatedishstatus`,
+        `${process.env.REACT_APP_API}/kot/dish/update-status`,
         { orderId, dishId, status: 'Completed' },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -49,7 +49,7 @@ const ViewKots = () => {
   const updateAllDishStatus = async (orderId) => {
     try {
       await axios.put(
-        `${process.env.REACT_APP_API}/kot/updatealldishstatus`,
+        `${process.env.REACT_APP_API}/kot/dish/update-all-status`,
         { orderId, status: 'Completed' },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const addMenu = new Schema({
+const menu = new Schema({
   user_id: {
     type: String,
   },
@@ -46,5 +46,17 @@ const addMenu = new Schema({
   },
 });
 
-const Menu = mongoose.model("menu", addMenu);
+// One menu document per (user, category, meal_type)
+menu.index({ user_id: 1, category: 1, meal_type: 1 }, { unique: true });
+
+// For listing menus by user
+menu.index({ user_id: 1 });
+
+// For website menu (if you filter by show_on_website)
+menu.index({ user_id: 1, show_on_website: 1 });
+
+// Optional: if you often search by category alone
+menu.index({ user_id: 1, category: 1 });
+
+const Menu = mongoose.model("menu", menu);
 module.exports = Menu;

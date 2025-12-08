@@ -84,5 +84,15 @@ const addStaff = new Schema({
   ],
 });
 
+// positions per user
+addStaff.index({ user_id: 1, position: 1 });
+
+// quick lookup by email / staff_id if you ever need it
+addStaff.index({ user_id: 1, email: 1 }, { sparse: true });
+addStaff.index({ user_id: 1, staff_id: 1 }, { sparse: true });
+
+// for face encodings query (mostly filter by user_id)
+addStaff.index({ user_id: 1 });
+
 const Staff = mongoose.model("staff", addStaff);
 module.exports = Staff;

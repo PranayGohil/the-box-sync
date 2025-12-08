@@ -48,7 +48,7 @@ const AddFeedback = () => {
     setIsSubmitting(true);
     setError('');
 
-    console.log(feedbackData);
+    console.log("Feedback data:", feedbackData);
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API}/feedback/add`,
@@ -62,6 +62,7 @@ const AddFeedback = () => {
       );
 
       if (response.data.success) {
+        console.log('Feedback submitted successfully');
         setShowModal(true);
         setFeedbackData({
           customer_name: '',
@@ -70,6 +71,8 @@ const AddFeedback = () => {
           rating: 0,
           feedback: '',
         });
+      } else {
+        setError('Failed to submit feedback. Please try again.');
       }
     } catch (err) {
       console.error('Error submitting feedback:', err);

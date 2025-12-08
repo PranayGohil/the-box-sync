@@ -46,7 +46,6 @@ const getCustomerData = (req, res) => {
 };
 
 const getOrderData = async (req, res) => {
-  console.log(req.user);
   try {
     // Find the order first
     const orderData = await Order.findById(req.params.id);
@@ -85,9 +84,8 @@ const getOrderData = async (req, res) => {
 
 const getActiveOrders = async (req, res) => {
   try {
-    const { source } = req.body;
-    console.log("Source : ", source);
-
+    const { source } = req.query;
+    console.log("Source:", req.query);
     if (!source)
       return res.status(400).json({ message: "Source not provided" });
 
@@ -98,7 +96,7 @@ const getActiveOrders = async (req, res) => {
         user_id: req.user,
         order_type: "Dine In",
         order_status: { $in: ["KOT", "Save"] },
-      });
+      }).lean();
     }
 
     if (source === "QSR") {
@@ -111,7 +109,7 @@ const getActiveOrders = async (req, res) => {
           { order_status: { $ne: "Paid" } },
           { "order_items.status": "Preparing" },
         ],
-      });
+      }).lean();
     }
 
     // Active Takeaways & Deliveries
@@ -123,7 +121,7 @@ const getActiveOrders = async (req, res) => {
         { order_status: { $ne: "Paid" } },
         { "order_items.status": "Preparing" },
       ],
-    });
+    }).lean();
 
     res.json({
       activeDineInTables,
@@ -224,8 +222,6 @@ const updateTableStatus = async (tableId, status, orderId = null) => {
 
 const orderController = async (req, res) => {
   try {
-    console.log(req.body);
-
     let { orderInfo, table_id: tableId, customerInfo } = req.body;
     const orderId = orderInfo.order_id;
     orderInfo.user_id = req.user;
@@ -330,8 +326,6 @@ const orderController = async (req, res) => {
 
 const dineInController = async (req, res) => {
   try {
-    console.log("Dine-in order request:", req.body);
-
     let { orderInfo, table_id: tableId, customerInfo } = req.body;
     const orderId = orderInfo.order_id;
     orderInfo.user_id = req.user;
@@ -476,8 +470,6 @@ const dineInController = async (req, res) => {
 
 const takeawayController = async (req, res) => {
   try {
-    console.log("Takeaway order request:", req.body);
-
     let { orderInfo, customerInfo } = req.body;
     const orderId = orderInfo.order_id;
     orderInfo.user_id = req.user;
@@ -596,8 +588,6 @@ const takeawayController = async (req, res) => {
 
 const deliveryController = async (req, res) => {
   try {
-    console.log("Delivery order request:", req.body);
-
     let { orderInfo, customerInfo } = req.body;
     const orderId = orderInfo.order_id;
     orderInfo.user_id = req.user;
@@ -724,8 +714,6 @@ const deliveryController = async (req, res) => {
 
 const deliveryFromSiteController = async (req, res) => {
   try {
-    console.log("Delivery order request:", req.body);
-
     let { orderInfo, customerInfo } = req.body;
     const orderId = orderInfo.order_id;
     const restaurant_code = req.params.rescode;
@@ -848,8 +836,6 @@ const deliveryFromSiteController = async (req, res) => {
     const userId = restauant._id;
     const role = "Admin";
     const key = `${userId}_${role}`;
-    console.log("Key :", key);
-    console.log("Connected Users: ", connectedUsers);
     if (key && connectedUsers[key]) {
       const notification = await Notification.create({
         restaurant_id: restauant._id,
@@ -859,7 +845,7 @@ const deliveryFromSiteController = async (req, res) => {
         data: savedOrder,
       });
       io.to(connectedUsers[key]).emit("web_order_recieved", notification);
-    };
+    }
 
     return res.status(200).json({
       status: "success",
@@ -916,10 +902,7 @@ const orderHistory = async (req, res) => {
 
     if (search) {
       const regex = new RegExp("^" + search, "i"); // index-friendly prefix search
-      filter.$or = [
-        { customer_name: regex },
-        { table_no: regex },
-      ];
+      filter.$or = [{ customer_name: regex }, { table_no: regex }];
     }
 
     const sort = {
@@ -971,8 +954,6 @@ const orderHistory = async (req, res) => {
     });
   }
 };
-
-
 
 module.exports = {
   addCustomer,

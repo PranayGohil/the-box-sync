@@ -27,8 +27,12 @@ const StaffProfile = () => {
 
   const fetchStaff = async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API}/staff/get/${id}`);
-      setStaff(res.data);
+      const res = await axios.get(`${process.env.REACT_APP_API}/staff/get/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      setStaff(res.data.data);
     } catch (err) {
       console.error('Error fetching staff:', err);
     } finally {

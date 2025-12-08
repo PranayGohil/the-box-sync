@@ -11,20 +11,19 @@ const NavIconMenu = () => {
   const history = useHistory();
   const { color } = useSelector((state) => state.settings);
   const dispatch = useDispatch();
-  
-  
+
   const onLightDarkModeClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
     dispatch(settingsChangeColor(color.includes('light') ? color.replace('light', 'dark') : color.replace('dark', 'light')));
   };
   const [showSearchModal, setShowSearchModal] = useState(false);
-  
+
   const onSearchIconClick = (e) => {
     e.preventDefault();
     setShowSearchModal(true);
   };
-  
+
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = () => {
@@ -32,7 +31,7 @@ const NavIconMenu = () => {
     console.log('User logged out');
     setShowLogoutModal(false);
     history.push('/login');
-  }
+  };
   return (
     <>
       <ul className="list-unstyled list-inline text-center menu-icons">

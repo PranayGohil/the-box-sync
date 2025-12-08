@@ -52,7 +52,7 @@ const ViewAttendance = () => {
         }
       );
 
-      const staff = response.data;
+      const staff = response.data.data;
       setStaffData(staff);
 
       const events = staff.attandance.map((att) => {

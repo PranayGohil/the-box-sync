@@ -109,7 +109,7 @@ const Settings = () => {
   const { width } = useWindowSize();
 
   const { themeValues } = useSelector((state) => state.settings);
-  const lgBreakpoint = parseInt(themeValues.lg.replace('px', ''), 10);
+  const lgBreakpoint = parseInt(themeValues.lg.replace('px', ''), 10) || 1200;
 
   const { activePlans } = useContext(AuthContext);
 

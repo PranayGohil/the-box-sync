@@ -1,70 +1,158 @@
 const Inventory = require("../models/inventoryModel");
 const Notification = require("../models/notificationModel");
 
-const getInventoryData = (req, res) => {
+const getInventoryData = async (req, res) => {
   try {
-    Inventory.find({ user_id: req.user })
-      .then((data) => {
-        res.json(data);
-      })
-      .catch((err) => res.json(err));
+    const userId = req.user;
+    const { page = 1, limit = 20 } = req.query;
+    const pageNumber = parseInt(page, 10) || 1;
+    const pageSize = parseInt(limit, 10) || 20;
+
+    const projection = {
+      request_date: 1,
+      bill_date: 1,
+      bill_number: 1,
+      vendor_name: 1,
+      category: 1,
+      total_amount: 1,
+      paid_amount: 1,
+      unpaid_amount: 1,
+      status: 1,
+      items: 1,
+      bill_files: 1,
+      // omit items & bill_files if listing table doesn’t need them
+    };
+
+    const [data, total] = await Promise.all([
+      Inventory.find({ user_id: userId })
+        .select(projection)
+        .sort({ request_date: -1 })
+        .skip((pageNumber - 1) * pageSize)
+        .limit(pageSize)
+        .lean(),
+      Inventory.countDocuments({ user_id: userId }),
+    ]);
+
+    res.json({
+      success: true,
+      data,
+      pagination: {
+        total,
+        page: pageNumber,
+        limit: pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-const getInventoryDataByStatus = (req, res) => {
+const getInventoryDataByStatus = async (req, res) => {
   try {
-    const status = req.params.status;
-    Inventory.find({ user_id: req.user, status: status })
-      .then((data) => {
-        res.json({ data, success: true });
-      })
-      .catch((err) => res.json(err));
+    const userId = req.user;
+    const { status } = req.params;
+    const { page = 1, limit = 20 } = req.query;
+
+    const pageNumber = parseInt(page, 10) || 1;
+    const pageSize = parseInt(limit, 10) || 20;
+
+    const query = { user_id: userId, status };
+
+    const projection = {
+      request_date: 1,
+      bill_date: 1,
+      bill_number: 1,
+      vendor_name: 1,
+      category: 1,
+      total_amount: 1,
+      paid_amount: 1,
+      unpaid_amount: 1,
+      status: 1,
+      items: 1,
+    };
+
+    const [data, total] = await Promise.all([
+      Inventory.find(query)
+        .select(projection)
+        .sort({ request_date: -1 })
+        .skip((pageNumber - 1) * pageSize)
+        .limit(pageSize)
+        .lean(),
+      Inventory.countDocuments(query),
+    ]);
+
+    res.json({
+      success: true,
+      data,
+      pagination: {
+        total,
+        page: pageNumber,
+        limit: pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-const getInventoryDataById = (req, res) => {
+const getInventoryDataById = async (req, res) => {
   try {
-    const inventoryId = req.params.id;
-    Inventory.findOne({ _id: inventoryId })
-      .then((data) => {
-        res.json(data);
-      })
-      .catch((err) => res.json(err));
+    const { id } = req.params;
+    const userId = req.user;
+
+    const data = await Inventory.findOne({ _id: id, user_id: userId }).lean();
+
+    if (!data) {
+      return res.status(404).json({ success: false, message: "Not found" });
+    }
+
+    res.json(data);
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-const addInventory = (req, res) => {
+const addInventory = async (req, res) => {
   try {
-    const fileNames = req.files.map(file => file.filename); // or originalname if needed
+    const userId = req.user;
+    const fileNames = (req.files || []).map(
+      (file) => `/inventory/bills/${file.filename}`
+    );
+
+    let items = req.body.items;
+    if (typeof items === "string") {
+      try {
+        items = JSON.parse(items);
+      } catch (err) {
+        return res.status(400).json({ error: "Invalid items format" });
+      }
+    }
 
     const inventoryData = {
       ...req.body,
-      user_id: req.user, // from verifyToken middleware
-      bill_files: "/inventory/bills/" + fileNames,
-      items: JSON.parse(req.body.items), // convert string back to array
+      user_id: userId,
+      bill_files: fileNames,
+      items,
     };
 
-    Inventory.create(inventoryData)
-      .then((data) => res.json(data))
-      .catch((err) => res.status(500).json(err));
+    const data = await Inventory.create(inventoryData);
+    res.json({ success: true, data });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: 'Server error' });
+    console.error(error);
+    res.status(500).json({ success: false, error: "Server error" });
   }
 };
 
 const addInventoryRequest = async (req, res) => {
   try {
     let { items, ...rest } = req.body;
-    console.log(req.user);
+    const user = req.user; // assuming auth middleware attaches user object
 
-    // Handle case where items is sent as a JSON string inside FormData
     if (typeof items === "string") {
       try {
         items = JSON.parse(items);
@@ -76,8 +164,9 @@ const addInventoryRequest = async (req, res) => {
 
     const inventoryData = {
       ...rest,
-      user_id: req.user, // assuming req.user contains restaurant id
+      user_id: user._id || user,
       items,
+      status: "Pending",
     };
 
     const data = await Inventory.create(inventoryData);
@@ -85,86 +174,115 @@ const addInventoryRequest = async (req, res) => {
     const io = req.app.get("io");
     const connectedUsers = req.app.get("connectedUsers");
 
-    const userId = req.user._id;
-    const role = "Admin";
-    const key = `${userId}_${role}`;
-    console.log("Key :", key);
-    console.log("Connected Users: ", connectedUsers);
-    if (key && connectedUsers[key]) {
+    const adminKey = `${user._id}_Admin`; // or however you store admin socket
+    if (io && connectedUsers && connectedUsers[adminKey]) {
       const notification = await Notification.create({
-        restaurant_id: req.user._id,
+        restaurant_id: user._id,
         sender: "Manager",
         receiver: "Admin",
         type: "new_inventory_request",
-        data: data,
+        data: {
+          _id: data._id,
+          category: data.category,
+          total_amount: data.total_amount,
+          request_date: data.request_date,
+        },
       });
-      io.to(connectedUsers[key]).emit("new_inventory_request", notification);
+      io.to(connectedUsers[adminKey]).emit(
+        "new_inventory_request",
+        notification
+      );
     }
-    res.json(data);
+
+    res.json({ success: true, data });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ success: false, error: "Server error" });
   }
 };
 
-const editInventoryRequest = async (req, res) => {
-  try {
-    const id = req.params.id;
-    const updatedData = req.body;
-
-    const data = await Inventory.findByIdAndUpdate(id, updatedData, { new: true });
-    res.json(data);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server error" });
-  }
-}
-
-
 const updateInventory = async (req, res) => {
   const { id } = req.params;
-  const updatedData = req.body;
+  const userId = req.user;
+  const updatedData = { ...req.body };
 
   try {
-    // ✅ Parse items from string to array (only if it's a string)
-    if (typeof updatedData.items === 'string') {
+    if (typeof updatedData.items === "string") {
       updatedData.items = JSON.parse(updatedData.items);
     }
 
-    // ✅ Optionally handle new file uploads
     if (req.files && req.files.length > 0) {
-      updatedData.bill_files = "/inventory/bills/" + req.files.map(file => file.filename); // Normalize paths
+      updatedData.bill_files = req.files.map(
+        (file) => `/inventory/bills/${file.filename}`
+      );
     }
 
-    const updatedInventory = await Inventory.findByIdAndUpdate(id, updatedData, {
-      new: true,
-      runValidators: true,
+    // Only allow these fields to be updated
+    const allowedFields = [
+      "bill_date",
+      "bill_number",
+      "vendor_name",
+      "category",
+      "total_amount",
+      "paid_amount",
+      "unpaid_amount",
+      "items",
+      "status",
+      "bill_files",
+    ];
+
+    const safeUpdate = {};
+    allowedFields.forEach((field) => {
+      if (updatedData[field] !== undefined) {
+        safeUpdate[field] = updatedData[field];
+      }
     });
+
+    const updatedInventory = await Inventory.findOneAndUpdate(
+      { _id: id, user_id: userId },
+      safeUpdate,
+      { new: true, runValidators: true }
+    );
 
     if (!updatedInventory) {
       return res.status(404).json({ message: "Inventory item not found" });
     }
 
     res.status(200).json({
+      success: true,
       message: "Inventory updated successfully",
       data: updatedInventory,
     });
   } catch (error) {
     console.error("Error updating inventory:", error);
-    res.status(500).json({ message: "Failed to update inventory", error });
+    res.status(500).json({
+      success: false,
+      message: "Failed to update inventory",
+      error,
+    });
   }
 };
 
-
-const deleteInventory = (req, res) => {
+const deleteInventory = async (req, res) => {
   try {
-    const inventoryId = req.params.id; // This is the inventory ID you want to delete
-    Inventory.deleteOne({ _id: inventoryId })
-      .then((data) => res.json(data))
-      .catch((err) => res.json(err));
+    const inventoryId = req.params.id;
+    const userId = req.user;
+
+    const result = await Inventory.deleteOne({
+      _id: inventoryId,
+      user_id: userId,
+    });
+
+    if (result.deletedCount === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Inventory not found" });
+    }
+
+    res.json({ success: true, message: "Inventory deleted successfully" });
   } catch (error) {
     console.log(error);
-    res.status(500).send("An error occurred");
+    res.status(500).json({ success: false, message: "An error occurred" });
   }
 };
 
@@ -181,12 +299,16 @@ const completeInventoryRequest = async (req, res) => {
       unpaid_amount,
     } = req.body;
 
-    // ✅ Parse JSON arrays
-    const items = JSON.parse(req.body.items);
-    const remainingItems = JSON.parse(req.body.remainingItems);
+    let items = req.body.items;
+    let remainingItems = req.body.remainingItems;
 
-    // ✅ File names
-    const bill_files = req.files.map(file => "/inventory/bills/" + file.filename);
+    if (typeof items === "string") items = JSON.parse(items);
+    if (typeof remainingItems === "string")
+      remainingItems = JSON.parse(remainingItems);
+
+    const bill_files = (req.files || []).map(
+      (file) => `/inventory/bills/${file.filename}`
+    );
 
     const inventory = await Inventory.findById(_id);
     if (!inventory) {
@@ -200,8 +322,8 @@ const completeInventoryRequest = async (req, res) => {
       await inventory.save();
     }
 
-    // ✅ Create completed inventory
     const completedItems = {
+      request_date: new Date(),
       bill_date,
       bill_number,
       vendor_name,
@@ -217,28 +339,41 @@ const completeInventoryRequest = async (req, res) => {
 
     await Inventory.create(completedItems);
 
-    res.status(200).json({ message: "Inventory updated successfully" });
+    res.status(200).json({
+      success: true,
+      message: "Inventory updated successfully",
+    });
   } catch (error) {
     console.error("Error updating inventory:", error);
-    res.status(500).json({ message: "Error updating inventory", error });
+    res
+      .status(500)
+      .json({ success: false, message: "Error updating inventory", error });
   }
 };
 
-
 const rejectInventoryRequest = async (req, res) => {
   const id = req.params.id;
+  const userId = req.user;
+
   try {
-    const inventory = await Inventory.findByIdAndUpdate(
-      id,
+    const inventory = await Inventory.findOneAndUpdate(
+      { _id: id, user_id: userId },
       { status: "Rejected" },
       { new: true }
     );
+
     if (!inventory) {
       return res.status(404).json({ message: "Inventory not found" });
     }
-    res.status(200).json({ message: "Inventory updated successfully" });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Inventory updated successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error updating inventory", error });
+    console.error("Error updating inventory:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Error updating inventory", error });
   }
 };
 

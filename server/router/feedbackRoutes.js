@@ -11,7 +11,7 @@ const adminAuth = require("../middlewares/adminAuth");
 
 const feedbackRouter = express.Router();
 
-feedbackRouter.route("/add").post(authMiddleware, addFeedback);
+feedbackRouter.route("/add").post(addFeedback);
 feedbackRouter.route("/get").get(authMiddleware, getFeedbacks);
 feedbackRouter
   .route("/delete/:id")

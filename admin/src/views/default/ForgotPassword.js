@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import axios from 'axios';
-import { Card, Col, Row, Button, Form, Alert, Spinner } from "react-bootstrap";
+import { Card, Col, Row, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import LayoutFullpage from 'layout/LayoutFullpage';
@@ -14,27 +14,24 @@ const ForgotPassword = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1); // Step 1: OTP, Step 2: Change Password
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleSendOtp = async (e) => {
     setIsLoading(true);
     e.preventDefault();
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API}/user/send-otp`,
-        { email }
-      );
+      const response = await axios.post(`${process.env.REACT_APP_API}/user/send-otp`, { email });
       setSuccess(response.data.message);
-      setError("");
+      setError('');
       setStep(2); // Move to the next step
     } catch (err) {
-      setError(err.response?.data?.message || "An error occurred.");
-      setSuccess("");
+      setError(err.response?.data?.message || 'An error occurred.');
+      setSuccess('');
     } finally {
       setIsLoading(false);
     }
@@ -44,45 +41,42 @@ const ForgotPassword = () => {
     setIsLoading(true);
     e.preventDefault();
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API}/user/verify-otp`,
-        { email, otp }
-      );
-      setSuccess(response.data.message);
-      setError("");
-      setStep(3); // Move to the password reset step
+      const response = await axios.post(`${process.env.REACT_APP_API}/user/verify-otp`, { email, otp });
+      if (!response.data.verified) {
+        throw new Error('OTP verification failed.');
+      } else {
+        setSuccess(response.data.message);
+        setError('');
+        setStep(3);
+      }
     } catch (err) {
-      setError(err.response?.data?.message || "Invalid OTP.");
-      setSuccess("");
+      setError(err.response?.data?.message || 'Invalid OTP.');
+      setSuccess('');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleResetPassword = async (e) => {
-
     setIsLoading(true);
 
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
-      setSuccess("");
+      setError('Passwords do not match.');
+      setSuccess('');
       setIsLoading(false);
       return;
     }
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API}/user/reset-password`,
-        { email, newPassword }
-      );
+      const response = await axios.post(`${process.env.REACT_APP_API}/user/reset-password`, { email, newPassword });
       setSuccess(response.data.message);
-      setError("");
+      setError('');
       setTimeout(() => {
-        window.location.href = "/login";
+        window.location.href = '/login';
       }, 1000);
     } catch (err) {
-      setError(err.response?.data?.message || "An error occurred.");
-      setSuccess("");
+      setError(err.response?.data?.message || 'An error occurred.');
+      setSuccess('');
     } finally {
       setIsLoading(false);
     }
@@ -110,9 +104,9 @@ const ForgotPassword = () => {
           <Card className="mb-5">
             <Card.Header>
               <Card.Title className="mb-0">
-                {step === 1 && "Enter Your Email"}
-                {step === 2 && "Verify OTP"}
-                {step === 3 && "Reset Password"}
+                {step === 1 && 'Enter Your Email'}
+                {step === 2 && 'Verify OTP'}
+                {step === 3 && 'Reset Password'}
               </Card.Title>
             </Card.Header>
             <Card.Body>
@@ -129,20 +123,10 @@ const ForgotPassword = () => {
                 <Form onSubmit={handleSendOtp}>
                   <Form.Group className="mb-3">
                     <Form.Label>Email Address</Form.Label>
-                    <Form.Control
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      placeholder="Enter your email"
-                    />
+                    <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="Enter your email" />
                   </Form.Group>
                   <div className="d-flex justify-content-between align-items-center">
-                    <Button
-                      variant="primary"
-                      type="submit"
-                      disabled={isLoading}
-                    >
+                    <Button variant="primary" type="submit" disabled={isLoading}>
                       {isLoading ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />
@@ -167,20 +151,10 @@ const ForgotPassword = () => {
                 <Form onSubmit={handleVerifyOtp}>
                   <Form.Group className="mb-3">
                     <Form.Label>Verification OTP</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                      required
-                      placeholder="Enter the OTP sent to your email"
-                    />
+                    <Form.Control type="text" value={otp} onChange={(e) => setOtp(e.target.value)} required placeholder="Enter the OTP sent to your email" />
                   </Form.Group>
                   <div className="d-flex justify-content-between align-items-center">
-                    <Button
-                      variant="primary"
-                      type="submit"
-                      disabled={isLoading}
-                    >
+                    <Button variant="primary" type="submit" disabled={isLoading}>
                       {isLoading ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />
@@ -193,10 +167,7 @@ const ForgotPassword = () => {
                         </>
                       )}
                     </Button>
-                    <Button
-                      variant="outline-secondary mx-3"
-                      onClick={() => setStep(1)}
-                    >
+                    <Button variant="outline-secondary mx-3" onClick={() => setStep(1)}>
                       <CsLineIcons icon="arrow-left" className="me-1" />
                       Change Email
                     </Button>
@@ -227,11 +198,7 @@ const ForgotPassword = () => {
                     />
                   </Form.Group>
                   <div className="d-flex justify-content-between align-items-center">
-                    <Button
-                      variant="primary"
-                      type="submit"
-                      disabled={isLoading}
-                    >
+                    <Button variant="primary" type="submit" disabled={isLoading}>
                       {isLoading ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />
@@ -244,10 +211,7 @@ const ForgotPassword = () => {
                         </>
                       )}
                     </Button>
-                    <Button
-                      variant="outline-secondary mx-3"
-                      onClick={() => setStep(2)}
-                    >
+                    <Button variant="outline-secondary mx-3" onClick={() => setStep(2)}>
                       <CsLineIcons icon="arrow-left" className="me-1" />
                       Back to OTP
                     </Button>

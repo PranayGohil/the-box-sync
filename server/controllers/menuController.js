@@ -7,39 +7,44 @@ const addMenu = async (req, res) => {
   try {
     const user_id = req.user;
     let { category, meal_type, dishes } = req.body;
-    console.log("Add Menu Data:", req.body);
 
-    // Normalize dishes: if it's string, parse; if it's already array, use as is
     let parsedDishes;
 
     if (typeof dishes === "string") {
       try {
         parsedDishes = JSON.parse(dishes);
       } catch (e) {
-        return res.status(400).json({ message: "Invalid dishes JSON" });
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid dishes JSON" });
       }
     } else if (Array.isArray(dishes)) {
       parsedDishes = dishes;
     } else {
+      return res.status(400).json({
+        success: false,
+        message: "dishes must be an array or JSON string",
+      });
+    }
+
+    if (
+      !category ||
+      !meal_type ||
+      !Array.isArray(parsedDishes) ||
+      parsedDishes.length === 0
+    ) {
       return res
         .status(400)
-        .json({ message: "dishes must be an array or JSON string" });
+        .json({ success: false, message: "Missing required fields" });
     }
 
-    if (!category || !meal_type || !Array.isArray(parsedDishes) || parsedDishes.length === 0) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-
-    // Attach uploaded image path as string to each dish
     const uploadedImages = req.files?.dish_img || [];
-
     uploadedImages.forEach((file, index) => {
       if (parsedDishes[index]) {
         parsedDishes[index].dish_img = "/menu/dishes/" + file.filename;
       }
     });
 
-    // Optional: Cast numbers properly
     parsedDishes = parsedDishes.map((dish) => ({
       ...dish,
       dish_price:
@@ -52,98 +57,109 @@ const addMenu = async (req, res) => {
           : undefined,
     }));
 
-    const menuData = {
-      category,
-      meal_type,
-      user_id,
+    const filter = { user_id, category, meal_type };
+
+    const update = {
+      $push: { dishes: { $each: parsedDishes } },
     };
 
-    // Check if menu already exists
-    const existingMenu = await Menu.findOne({
-      category,
-      meal_type,
-      user_id,
-    });
+    const options = {
+      new: true,
+      upsert: true, // create if not exists
+    };
 
-    if (existingMenu) {
-      existingMenu.dishes.push(...parsedDishes);
-      await existingMenu.save();
-      return res
-        .status(200)
-        .json({ message: "Menu updated", data: existingMenu });
-    } else {
-      const newMenu = new Menu({
-        ...menuData,
-        dishes: parsedDishes,
-      });
-      await newMenu.save();
-      return res.status(201).json({ message: "Menu created", data: newMenu });
-    }
+    const updatedMenu = await Menu.findOneAndUpdate(filter, update, options);
+
+    const isNew = updatedMenu.isNew; // not directly available; if needed, you can check via separate flag logic
+
+    res.status(200).json({
+      success: true,
+      message: "Menu saved",
+      data: updatedMenu,
+    });
   } catch (error) {
     console.error("Error adding menu:", error);
     return res
       .status(500)
-      .json({ message: "Server error", error: error.message });
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
-
 
 const getMenuData = async (req, res) => {
   try {
     const query = { user_id: req.user };
-    console.log("Query : ", query);
-    const menuData = await Menu.find(query);
-    console.log("Menu Data : ", menuData);
-    res.json({ data: menuData });
+
+    const projection = {
+      category: 1,
+      meal_type: 1,
+      dishes: 1,
+      show_on_website: 1,
+    };
+
+    const menuData = await Menu.find(query).select(projection).lean();
+
+    res.json({ success: true, data: menuData });
   } catch (error) {
     console.error("Error fetching menu data:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ success: false, error: "Internal server error" });
   }
 };
 
 const getMenuDataByResCode = async (req, res) => {
   try {
     const restaurant_code = req.params.res_code;
-    const restaurant = await User.findOne({ restaurant_code });
+
+    const restaurant = await User.findOne({ restaurant_code })
+      .select("_id")
+      .lean();
     if (!restaurant) {
-      return res.status(404).json({ error: "Restaurant not found" });
+      return res
+        .status(404)
+        .json({ success: false, error: "Restaurant not found" });
     }
     const user_id = restaurant._id;
-    console.log("Restaurant ID : ", user_id);
 
-    const menuData = await Menu.find({ user_id });
-    console.log("Menu Data : ", menuData);
-    res.json(menuData);
+    const menuData = await Menu.find({ user_id }).lean();
+
+    res.json({ success: true, data: menuData });
   } catch (error) {
     console.error("Error fetching menu data:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ success: false, error: "Internal server error" });
   }
 };
 
 const getMenuCategories = async (req, res) => {
   try {
-    // Retrieve unique category names
     const categories = await Menu.distinct("category", {
       user_id: req.user,
     });
-    res.json(categories);
+    res.json({ success: true, data: categories });
   } catch (error) {
     console.error("Error fetching categories:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ success: false, error: "Internal server error" });
   }
 };
-const getMenuDataById = (req, res) => {
+
+const getMenuDataById = async (req, res) => {
   try {
     const dishId = req.params.id;
+    const userId = req.user;
 
-    Menu.findOne({ "dishes._id": dishId })
-      .then((data) => {
-        const dish = data.dishes.find((d) => d._id.toString() === dishId);
-        res.json(dish);
-      })
-      .catch((err) => res.json(err));
+    const menu = await Menu.findOne(
+      { user_id: userId, "dishes._id": dishId },
+      { "dishes.$": 1 } // only the matched dish
+    ).lean();
+
+    if (!menu || !menu.dishes || menu.dishes.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Dish not found" });
+    }
+
+    res.json({ success: true, data: menu.dishes[0] });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -159,29 +175,46 @@ const updateMenu = async (req, res) => {
       is_special,
       is_available,
     } = req.body;
-    console.log("Update Menu Data:", req.body);
+
+    const userId = req.user;
 
     const updateFields = {
       "dishes.$.dish_name": dish_name,
-      "dishes.$.dish_price": dish_price,
+      "dishes.$.dish_price":
+        dish_price !== "" && dish_price != null
+          ? Number(dish_price)
+          : undefined,
       "dishes.$.description": description,
-      "dishes.$.quantity": quantity,
+      "dishes.$.quantity":
+        quantity !== "" && quantity != null ? Number(quantity) : undefined,
       "dishes.$.unit": unit,
-      "dishes.$.is_special": is_special === "true",
-      "dishes.$.is_available": is_available === "true",
+      "dishes.$.is_special":
+        typeof is_special === "string" ? is_special === "true" : !!is_special,
+      "dishes.$.is_available":
+        typeof is_available === "string"
+          ? is_available === "true"
+          : !!is_available,
     };
 
     if (req.file) {
-      // Use only the filename (clean path), multer already saved it under /uploads/menu/dishes
       updateFields["dishes.$.dish_img"] = "/menu/dishes/" + req.file.filename;
     }
 
+    Object.keys(updateFields).forEach(
+      (key) => updateFields[key] === undefined && delete updateFields[key]
+    );
+
     const result = await Menu.updateOne(
-      { "dishes._id": _id },
+      { user_id: userId, "dishes._id": _id },
       { $set: updateFields }
     );
 
-    console.log("Update Result:", result);
+    if (result.matchedCount === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Dish not found" });
+    }
+
     res.json({ success: true, message: "Dish updated", result });
   } catch (error) {
     console.error("Error updating menu:", error);
@@ -191,17 +224,19 @@ const updateMenu = async (req, res) => {
 
 const deleteMenu = async (req, res) => {
   try {
-    console.log("User : " + req.user);
+    const userId = req.user;
     const dishId = req.params.id;
 
-    // Find the document containing the dish
-    const dishData = await Menu.findOne({ "dishes._id": dishId });
-    if (!dishData) {
+    const menu = await Menu.findOne(
+      { user_id: userId, "dishes._id": dishId },
+      { category: 1, meal_type: 1, dishes: 1 } // projection
+    );
+
+    if (!menu) {
       return res.status(404).json({ message: "Dish not found" });
     }
 
-    // Find the dish object
-    const dishToDelete = dishData.dishes.find(
+    const dishToDelete = menu.dishes.find(
       (dish) => dish._id.toString() === dishId
     );
     if (!dishToDelete) {
@@ -209,11 +244,13 @@ const deleteMenu = async (req, res) => {
     }
 
     // Delete dish image if exists
-    if (dishToDelete.image) {
+    if (dishToDelete.dish_img) {
+      // dish_img = "/menu/dishes/filename"
+      const filename = path.basename(dishToDelete.dish_img);
       const imagePath = path.join(
         __dirname,
         "../uploads/menu/dishes",
-        dishToDelete.image
+        filename
       );
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
@@ -221,9 +258,8 @@ const deleteMenu = async (req, res) => {
       }
     }
 
-    // Remove the dish from the dishes array
     const updateResult = await Menu.updateOne(
-      { "dishes._id": dishId },
+      { user_id: userId, "dishes._id": dishId },
       { $pull: { dishes: { _id: dishId } } }
     );
 
@@ -233,92 +269,25 @@ const deleteMenu = async (req, res) => {
         .json({ message: "Dish not found or already deleted" });
     }
 
-    // Check if any dishes remain in the same category + meal_type
-    const category = dishData.category;
-    const meal_type = dishData.meal_type;
-
+    // Delete empty menu documents for that category + meal_type
     const updatedMenu = await Menu.findOne({
-      category,
-      meal_type,
-      user_id: req.user,
-    });
+      user_id: userId,
+      category: menu.category,
+      meal_type: menu.meal_type,
+    }).select("dishes");
 
     if (updatedMenu && updatedMenu.dishes.length === 0) {
-      await Menu.deleteOne({ category, meal_type, user_id: req.user });
+      await Menu.deleteOne({
+        user_id: userId,
+        category: menu.category,
+        meal_type: menu.meal_type,
+      });
     }
 
-    res.json({ message: "Dish deleted successfully" });
+    res.json({ success: true, message: "Dish deleted successfully" });
   } catch (error) {
     console.error("Error in delete Menu:", error);
-    res.status(500).send("An error occurred");
-  }
-};
-
-const setSpecialMenu = (req, res) => {
-  try {
-    console.log(req.params.id);
-    const dishId = req.params.id;
-    Menu.updateOne(
-      { "dishes._id": dishId },
-      {
-        $set: {
-          "dishes.$.is_special": true,
-        },
-      }
-    )
-      .then((data) => {
-        console.log(data);
-        res.json(data);
-      })
-      .catch((err) => res.json(err));
-  } catch {
-    console.log(error);
-    res.status(500).send("An error occurred");
-  }
-};
-
-const removeSpecialMenu = (req, res) => {
-  try {
-    console.log(req.params.id);
-    const dishId = req.params.id;
-    Menu.updateOne(
-      { "dishes._id": dishId },
-      {
-        $set: {
-          "dishes.$.is_special": false,
-        },
-      }
-    )
-      .then((data) => {
-        console.log(data);
-        res.json(data);
-      })
-      .catch((err) => res.json(err));
-  } catch {
-    console.log(error);
-    res.status(500).send("An error occurred");
-  }
-};
-
-const updateDishAvailability = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { is_available } = req.body;
-
-    // Find the dish and update its availability
-    const updatedMenu = await Menu.updateOne(
-      { "dishes._id": id },
-      { $set: { "dishes.$.is_available": is_available } }
-    );
-
-    if (updatedMenu.modifiedCount > 0) {
-      res.status(200).json({ message: "Dish availability updated" });
-    } else {
-      res.status(404).json({ message: "Dish not found" });
-    }
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ success: false, message: "An error occurred" });
   }
 };
 
@@ -330,7 +299,4 @@ module.exports = {
   getMenuCategories,
   updateMenu,
   deleteMenu,
-  setSpecialMenu,
-  removeSpecialMenu,
-  updateDishAvailability,
 };

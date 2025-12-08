@@ -322,7 +322,7 @@ const EditStaff = () => {
                 const res = await axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
                 });
-                setPositions(res.data);
+                setPositions(res.data.data);
             } catch (error) {
                 console.error("Error fetching positions:", error);
             }
@@ -334,7 +334,7 @@ const EditStaff = () => {
                     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
                 });
 
-                const staff = res.data;
+                const staff = res.data.data;
                 setFieldValue("staff_id", staff.staff_id);
                 setFieldValue("f_name", staff.f_name);
                 setFieldValue("l_name", staff.l_name);

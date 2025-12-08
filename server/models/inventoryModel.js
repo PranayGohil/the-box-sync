@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const addinventory = new Schema({
+const inventory = new Schema({
   request_date: {
     type: Date,
     default: Date.now,
+    index: true,
   },
   bill_date: {
     type: Date,
@@ -30,7 +31,7 @@ const addinventory = new Schema({
   unpaid_amount: {
     type: Number,
   },
-  items : [
+  items: [
     {
       item_name: {
         type: String,
@@ -43,9 +44,9 @@ const addinventory = new Schema({
       },
       item_price: {
         type: Number,
-        default: null
+        default: null,
       },
-    }
+    },
   ],
   status: {
     type: String,
@@ -55,5 +56,17 @@ const addinventory = new Schema({
   },
 });
 
-const Inventory = mongoose.model("inventory", addinventory);
+// For all inventory lists by user
+inventory.index({ user_id: 1, request_date: -1 });
+
+// For “by status” listings (Pending/Completed/Rejected)
+inventory.index({ user_id: 1, status: 1, request_date: -1 });
+
+// Optional: if you often filter by category
+inventory.index({ user_id: 1, category: 1, request_date: -1 });
+
+// Optional: if you search by vendor
+inventory.index({ user_id: 1, vendor_name: 1, request_date: -1 });
+
+const Inventory = mongoose.model("inventory", inventory);
 module.exports = Inventory;

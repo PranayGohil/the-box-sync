@@ -27,5 +27,15 @@ const addTable = new Schema({
   },
 });
 
+// One doc per (user, area)
+addTable.index({ user_id: 1, area: 1 });
+
+// Speed up checkTable
+addTable.index({ user_id: 1, area: 1, "tables.table_no": 1 });
+
+// Optional: quicker lookup for embedded table _id per user
+addTable.index({ user_id: 1, "tables._id": 1 });
+
+
 const Table = mongoose.model("tableDetails", addTable);
 module.exports = Table;

@@ -166,7 +166,7 @@ const ViewAttendance = () => {
         }
       );
 
-      const staff = response.data;
+      const staff = response.data.data;
       setStaffData(staff);
 
       // Create calendar events

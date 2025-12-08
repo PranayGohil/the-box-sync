@@ -26,15 +26,12 @@ const Dashboard = () => {
 
   const fetchActiveOrders = async () => {
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API}/order/get-active`,
-        {
+      const response = await axios.get(`${process.env.REACT_APP_API}/order/get-active`, {
+        params: {
           source: 'QSR',
         },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
-      );
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
       console.log(response.data);
 
       setActiveDineInOrders(response.data.activeDineInTables);

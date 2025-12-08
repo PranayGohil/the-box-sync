@@ -134,15 +134,22 @@ exports.panelLogin = async (req, res) => {
   try {
     const { planName } = req.params;
     const { restaurant_code, username, password } = req.body;
-	console.log("Req.body : ", req.body);
-	console.log("Restaurant Code : ", restaurant_code, "Username : ", username, "password : ", password);
+    console.log("Req.body : ", req.body);
+    console.log(
+      "Restaurant Code : ",
+      restaurant_code,
+      "Username : ",
+      username,
+      "password : ",
+      password
+    );
     const user = await User.findOne({ restaurant_code });
 
     if (!user) {
       console.log("User not found");
       return res.json({ message: "Invalid restaurant code" });
     }
-    
+
     const Model = getModel(planName);
     const panelUser = await Model.findOne({ username, user_id: user._id });
     console.log("Model : " + planName);

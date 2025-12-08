@@ -32,7 +32,7 @@ export default function ManageAttendance() {
       const response = await axios.get(`${process.env.REACT_APP_API}/staff/get-all`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      setStaffList(response.data);
+      setStaffList(response.data.data);
     } catch (error) {
       console.error('Error fetching staff:', error);
     } finally {

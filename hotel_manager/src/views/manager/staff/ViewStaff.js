@@ -16,7 +16,7 @@ const ViewStaff = () => {
       });
       if (response.data || response.data !== "Null") {
         console.log(response.data);
-        setStaff(response.data);
+        setStaff(response.data.data);
       } else {
         setStaff([]);
       }
@@ -38,14 +38,6 @@ const ViewStaff = () => {
     groups[position].push(member);
     return groups;
   }, {});
-
-  const handleProfileClick = async (id) => {
-    try {
-      await axios.get(`${process.env.REACT_APP_API}/staff/get/${id}`);
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   return (
     <>
@@ -86,7 +78,6 @@ const ViewStaff = () => {
                   <Glide.Item className="my-3">
                     <Card
                       className="sh-20 hover-shadow hover-border-primary cursor-pointer"
-                      onClick={() => handleProfileClick(staffMember._id)}
                     >
                       <Card.Body className="p-4 text-center d-flex flex-column align-items-center justify-content-between">
                         <div className="d-flex sh-8 sw-8 bg-gradient-light rounded-xl overflow-hidden mb-3">

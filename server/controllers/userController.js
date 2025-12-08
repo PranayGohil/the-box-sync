@@ -4,14 +4,18 @@ const { sendEmail } = require("../utils/emailService");
 
 const emailCheck = async (req, res) => {
   try {
-    const userExists = await User.findOne({ email: req.body.email });
-    if (userExists) {
-      return res.json({ message: "User Already Exists" });
-    } else {
-      return res.json({ message: "User Not Found" });
-    }
+    const userExists = await User.findOne({ email: req.body.email })
+      .select("_id")
+      .lean();
+
+    return res.json({
+      success: true,
+      exists: !!userExists,
+      message: userExists ? "User Already Exists" : "User Not Found",
+    });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -31,11 +35,12 @@ const register = async (req, res) => {
 
     // Find the highest existing code for this country and state
     const latestUser = await User.findOne({
-      $and: [{ country: countryPrefix }, { state: statePrefix }],
+      country: countryPrefix,
+      state: statePrefix,
     })
-      .limit(1)
       .sort({ createdAt: -1 })
-      .exec();
+      .select("restaurant_code")
+      .lean();
 
     let sequenceNumber = 1;
 
@@ -126,15 +131,19 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email }).select("+password");
 
     if (!userExists) {
-      return res.json({ success: false, message: "Invalid Credentials" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid Credentials" });
     }
 
     const matchPass = await bcrypt.compare(password, userExists.password);
     if (!matchPass) {
-      return res.json({ success: false, message: "Invalid Credentials" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid Credentials" });
     }
 
     const token = await userExists.generateAuthToken("Admin");
@@ -150,7 +159,7 @@ const login = async (req, res) => {
     });
   } catch (error) {
     console.error(error.message);
-    res.json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -165,62 +174,57 @@ const logout = async (req, res) => {
 
 const getUserData = async (req, res) => {
   try {
-    if (req.user != null) {
-      const user = req.user;
-      const fetchuser = await User.findOne({ _id: user._id });
-      const userdata = {};
-      if (req.user.Role === "Admin") {
-        userdata._id = fetchuser._id;
-        userdata.restaurant_code = fetchuser.restaurant_code;
-        userdata.name = fetchuser.name;
-        userdata.logo = fetchuser.logo;
-        userdata.gst_no = fetchuser.gst_no;
-        userdata.email = fetchuser.email;
-        userdata.mobile = fetchuser.mobile;
-        userdata.address = fetchuser.address;
-        userdata.country = fetchuser.country;
-        userdata.state = fetchuser.state;
-        userdata.city = fetchuser.city;
-        userdata.pincode = fetchuser.pincode;
-        userdata.createdAt = fetchuser.createdAt;
-        userdata.taxInfo = fetchuser.taxInfo;
-        userdata.containerCharges = fetchuser.containerCharges;
-        userdata.purchasedPlan = fetchuser.purchasedPlan;
-        userdata.feedbackToken = fetchuser.feedbackToken;
-      } else {
-        userdata._id = fetchuser._id;
-        userdata.restaurant_code = fetchuser.restaurant_code;
-        userdata.name = fetchuser.name;
-        userdata.logo = fetchuser.logo;
-        userdata.gst_no = fetchuser.gst_no;
-        userdata.email = fetchuser.email;
-        userdata.mobile = fetchuser.mobile;
-        userdata.address = fetchuser.address;
-        userdata.country = fetchuser.country;
-        userdata.state = fetchuser.state;
-        userdata.city = fetchuser.city;
-        userdata.pincode = fetchuser.pincode;
-        userdata.taxInfo = fetchuser.taxInfo;
-        userdata.containerCharges = fetchuser.containerCharges;
-        userdata.feedbackToken = fetchuser.feedbackToken;
-      }
-      res.send(userdata);
-    } else {
-      console.log("Null");
-      res.send("Null");
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
     }
+
+    const userId = req.user._id || req.user; // depending on how auth stores it
+
+    const projection = {
+      _id: 1,
+      restaurant_code: 1,
+      name: 1,
+      logo: 1,
+      gst_no: 1,
+      email: 1,
+      mobile: 1,
+      address: 1,
+      country: 1,
+      state: 1,
+      city: 1,
+      pincode: 1,
+      createdAt: 1,
+      taxInfo: 1,
+      containerCharges: 1,
+      purchasedPlan: 1,
+      feedbackToken: 1,
+      // don't include password, otp, feedbacks by default
+    };
+
+    const fetchuser = await User.findById(userId).select(projection).lean();
+
+    if (!fetchuser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(fetchuser);
   } catch (error) {
     console.log(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 const getUserDataByCode = async (req, res) => {
   try {
     const { code } = req.params;
-    const userdata = await User.findOne({ restaurant_code: code });
+    const userdata = await User.findOne({ restaurant_code: code }).lean();
+    if (!userdata) {
+      return res.status(404).json({ message: "User not found" });
+    }
     res.send(userdata);
   } catch (error) {
     console.log(error);
+    res.status(500).json({ error, message: "Server error" });
   }
 };
 
@@ -282,7 +286,7 @@ const verifyAdminOtp = async (req, res) => {
   const { email, otp } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("otp otpExpiry").lean();
     if (!user) {
       return res.status(404).json({ message: "Email not found." });
     }
@@ -292,7 +296,7 @@ const verifyAdminOtp = async (req, res) => {
     }
 
     // OTP is valid
-    res.json({ message: "OTP verified successfully." });
+    res.json({ verified: true, message: "OTP verified successfully." });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "An error occurred while verifying OTP." });
@@ -409,28 +413,54 @@ const updateTax = async (req, res) => {
         vat: taxInfo?.vat ?? 0,
       },
     });
-    res.status(200).send("Tax information updated successfully!");
+
+    res.status(200).json({
+      success: true,
+      message: "Tax information updated successfully.",
+    });
   } catch (error) {
     console.error("Error updating tax info:", error);
     res.status(500).send("Failed to update tax information.");
   }
 };
 
-const getTokenRole = async (req, res) => {
-  try {
-    const user = req.user;
-    const role = user.Role;
-    res.status(200).json({ role });
-  } catch (error) {
-    console.error("Error getting token role:", error);
-    res.status(500).json({ error: "Internal server error." });
-  }
-};
-
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password");
-    res.json(users);
+    const { page = 1, limit = 50 } = req.query;
+    const pageNumber = parseInt(page, 10) || 1;
+    const pageSize = parseInt(limit, 10) || 50;
+
+    const projection = {
+      _id: 1,
+      restaurant_code: 1,
+      name: 1,
+      email: 1,
+      mobile: 1,
+      country: 1,
+      state: 1,
+      city: 1,
+      createdAt: 1,
+      purchasedPlan: 1,
+    };
+
+    const [users, total] = await Promise.all([
+      User.find()
+        .select(projection)
+        .skip((pageNumber - 1) * pageSize)
+        .limit(pageSize)
+        .lean(),
+      User.countDocuments(),
+    ]);
+
+    res.json({
+      data: users,
+      pagination: {
+        total,
+        page: pageNumber,
+        limit: pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    });
   } catch (err) {
     res.status(500).json({ message: "Error fetching users" });
   }
@@ -448,6 +478,5 @@ module.exports = {
   resetAdminPassword,
   updateUser,
   updateTax,
-  getTokenRole,
   getAllUsers,
 };

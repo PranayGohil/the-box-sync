@@ -469,7 +469,6 @@ exports.updateCart = async (req, res) => {
         });
     }
 }
-
 exports.getCustomerOrders = async (req, res) => {
     try {
         const { id } = req.params;

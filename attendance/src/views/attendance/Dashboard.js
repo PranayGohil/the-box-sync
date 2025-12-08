@@ -76,7 +76,7 @@ export default function Dashboard() {
       const res = await axios.get(`${process.env.REACT_APP_API}/staff/face-data`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      setStaffList(res.data);
+      setStaffList(res.data.data);
     } catch (err) {
       console.error('Error fetching staff face data:', err);
       setError('Failed to load staff data');

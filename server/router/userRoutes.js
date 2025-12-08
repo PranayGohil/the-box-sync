@@ -35,7 +35,6 @@ userRouter.route("/get").get(authMiddleware, getUserData);
 userRouter.route("/get/:code").get(authMiddleware, getUserDataByCode);
 userRouter.route("/update").put(authMiddleware, adminAuth, upload.single("logo"), updateUser);
 userRouter.route("/update-tax").put(authMiddleware, adminAuth, updateTax);
-userRouter.route("/gettokenrole").get(authMiddleware, getTokenRole);
 userRouter.route("/get-all").get(authMiddleware, getAllUsers);
 
 module.exports = userRouter;

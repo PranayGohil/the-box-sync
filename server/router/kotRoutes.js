@@ -4,17 +4,14 @@ const {
   showKOTs,
   updateDishStatus,
   updateAllDishStatus,
-  kotLogin,
 } = require("../controllers/kotController");
 
 const kotRouter = express.Router();
 
-kotRouter.route("/showkots").get(authMiddleware, showKOTs);
-kotRouter.route("/updatedishstatus").put(authMiddleware, updateDishStatus);
+kotRouter.route("/show").get(authMiddleware, showKOTs);
+kotRouter.route("/dish/update-status").put(authMiddleware, updateDishStatus);
 kotRouter
-  .route("/updatealldishstatus")
+  .route("/dish/update-all-status")
   .put(authMiddleware, updateAllDishStatus);
-
-kotRouter.route("/login").post(kotLogin);
 
 module.exports = kotRouter;

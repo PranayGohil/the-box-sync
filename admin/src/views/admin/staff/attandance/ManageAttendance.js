@@ -37,7 +37,7 @@ export default function ManageAttendance() {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 }
             );
-            setStaffList(response.data);
+            setStaffList(response.data.data);
         } catch (error) {
             console.error("Error fetching staff:", error);
             setErrorMessage("Failed to fetch staff data");

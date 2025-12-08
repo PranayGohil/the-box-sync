@@ -33,9 +33,10 @@ const Dashboard = () => {
 
   const fetchActiveOrders = async () => {
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API}/order/get-active`, {
-        source: 'Manager',
-      }, {
+      const response = await axios.get(`${process.env.REACT_APP_API}/order/get-active`, {
+        params: {
+          source: 'Manager',
+        },
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       console.log(response.data.data);
@@ -78,7 +79,6 @@ const Dashboard = () => {
     }
   };
 
-
   return (
     <>
       <HtmlHead title={title} description={description} />
@@ -109,7 +109,7 @@ const Dashboard = () => {
                       }
 
                       return (
-                        <Col key={table._id} xs="6" sm="6" md="3" lg="2" >
+                        <Col key={table._id} xs="6" sm="6" md="3" lg="2">
                           <Card className={`sh-20 hover-border-primary mb-5 ${bgClass}`} onClick={() => handleTableClick(table._id, activeOrder?._id)}>
                             <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
                               <div className="d-flex sh-7 sw-7 bg-gradient-light mb-3 align-items-center justify-content-center rounded-xl">

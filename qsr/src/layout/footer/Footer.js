@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Container, Row, Col, Breadcrumb } from 'react-bootstrap';
+import { Container, Row, Col } from 'react-bootstrap';
 
 const Footer = () => {
   useEffect(() => {

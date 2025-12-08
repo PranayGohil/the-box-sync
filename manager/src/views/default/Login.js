@@ -1,62 +1,36 @@
-import React, { useEffect, useState, useContext } from "react";
-import { NavLink, useHistory } from "react-router-dom";
-import { Button, Form } from "react-bootstrap";
-import * as Yup from "yup";
-import { useFormik } from "formik";
-import LayoutFullpage from "layout/LayoutFullpage";
-import CsLineIcons from "cs-line-icons/CsLineIcons";
-import HtmlHead from "components/html-head/HtmlHead";
-import axios from "axios";
-import { AuthContext } from "contexts/AuthContext";
+import React, { useState, useContext } from 'react';
+import { NavLink } from 'react-router-dom';
+import { Button, Form } from 'react-bootstrap';
+import * as Yup from 'yup';
+import { useFormik } from 'formik';
+import LayoutFullpage from 'layout/LayoutFullpage';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import HtmlHead from 'components/html-head/HtmlHead';
+import axios from 'axios';
+import { AuthContext } from 'contexts/AuthContext';
 
 const Login = () => {
-  const title = "Login";
-  const description = "Login Page";
+  const title = 'Login';
+  const description = 'Login Page';
 
-  const history = useHistory();
   const { login } = useContext(AuthContext);
-  const [wrongMsg, setWrongMsg] = useState("");
-
-  const fetchUserData = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_API}/user/userdata`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      );
-      if (response.data !== "Null") {
-        history.push("/dashboard");
-      }
-    } catch (error) {
-      console.log("Error fetching user data:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchUserData();
-  }, []);
+  const [wrongMsg, setWrongMsg] = useState('');
 
   // ✅ Validation Schema
   const validationSchema = Yup.object().shape({
-    restaurant_code: Yup.string().required("Restaurant Code is required"),
-    username: Yup.string().required("Username is required"),
-    password: Yup.string()
-      .required("Password is required"),
+    restaurant_code: Yup.string().required('Restaurant Code is required'),
+    username: Yup.string().required('Username is required'),
+    password: Yup.string().required('Password is required'),
   });
 
   // ✅ Initial form values
-  const initialValues = { restaurant_code: "", username: "", password: "" };
+  const initialValues = { restaurant_code: '', username: '', password: '' };
 
   // ✅ Submit handler
   const onSubmit = async (values, { setSubmitting }) => {
     try {
-      const res = await axios.post(
-        `${process.env.REACT_APP_API}/manager/login`,
-        values,
-        { headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          } }
-      );
-      if (res.data.message === "Logged In") {
+      const res = await axios.post(`${process.env.REACT_APP_API}/panel-user/login/Manager`, values);
+      if (res.data.message === 'Logged In') {
         login(res.data.token, res.data.user);
         window.location.href = '/dashboard';
       } else {
@@ -64,15 +38,14 @@ const Login = () => {
       }
     } catch (err) {
       console.error(err);
-      setWrongMsg("Login failed. Please try again.");
+      setWrongMsg('Login failed. Please try again.');
     }
     setSubmitting(false);
   };
 
   // ✅ Formik integration
   const formik = useFormik({ initialValues, validationSchema, onSubmit });
-  const { handleSubmit, handleChange, values, touched, errors, isSubmitting } =
-    formik;
+  const { handleSubmit, handleChange, values, touched, errors, isSubmitting } = formik;
 
   // Left Side Content (unchanged)
   const leftSide = (
@@ -114,73 +87,39 @@ const Login = () => {
         <div className="mb-5">
           <p className="h6">Please use your credentials to login.</p>
           <p className="h6">
-            If you are not a member, please{" "}
-            <NavLink to="/register">register</NavLink>.
+            If you are not a member, please <NavLink to="/register">register</NavLink>.
           </p>
         </div>
 
         {/* ✅ Login Form */}
-        <form
-          id="loginForm"
-          className="tooltip-end-bottom"
-          onSubmit={handleSubmit}
-        >
+        <form id="loginForm" className="tooltip-end-bottom" onSubmit={handleSubmit}>
           {/* Restaurant Code */}
           <div className="mb-3 filled form-group tooltip-end-top">
             <CsLineIcons icon="building" />
-            <Form.Control
-              type="text"
-              name="restaurant_code"
-              placeholder="Restaurant Code"
-              value={values.restaurant_code}
-              onChange={handleChange}
-            />
-            {errors.restaurant_code && touched.restaurant_code && (
-              <div className="d-block invalid-tooltip">
-                {errors.restaurant_code}
-              </div>
-            )}
+            <Form.Control type="text" name="restaurant_code" placeholder="Restaurant Code" value={values.restaurant_code} onChange={handleChange} />
+            {errors.restaurant_code && touched.restaurant_code && <div className="d-block invalid-tooltip">{errors.restaurant_code}</div>}
           </div>
 
           {/* Username */}
           <div className="mb-3 filled form-group tooltip-end-top">
             <CsLineIcons icon="user" />
-            <Form.Control
-              type="text"
-              name="username"
-              placeholder="Username"
-              value={values.username}
-              onChange={handleChange}
-            />
-            {errors.username && touched.username && (
-              <div className="d-block invalid-tooltip">{errors.username}</div>
-            )}
+            <Form.Control type="text" name="username" placeholder="Username" value={values.username} onChange={handleChange} />
+            {errors.username && touched.username && <div className="d-block invalid-tooltip">{errors.username}</div>}
           </div>
 
           {/* Password */}
           <div className="mb-3 filled form-group tooltip-end-top">
             <CsLineIcons icon="lock-off" />
-            <Form.Control
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={values.password}
-              onChange={handleChange}
-            />
-            <NavLink
-              className="text-small position-absolute t-3 e-3"
-              to="/forgot-password"
-            >
+            <Form.Control type="password" name="password" placeholder="Password" value={values.password} onChange={handleChange} />
+            <NavLink className="text-small position-absolute t-3 e-3" to="/forgot-password">
               Forgot?
             </NavLink>
-            {errors.password && touched.password && (
-              <div className="d-block invalid-tooltip">{errors.password}</div>
-            )}
+            {errors.password && touched.password && <div className="d-block invalid-tooltip">{errors.password}</div>}
           </div>
 
           {/* Submit */}
           <Button size="lg" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Logging in..." : "Login"}
+            {isSubmitting ? 'Logging in...' : 'Login'}
           </Button>
 
           {/* Wrong Message */}

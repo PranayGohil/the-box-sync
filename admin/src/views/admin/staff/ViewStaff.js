@@ -14,7 +14,7 @@ const ViewStaff = () => {
       const response = await axios.get(`${process.env.REACT_APP_API}/staff/get-all`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      setStaff(response.data);
+      setStaff(response.data.data);
     } catch (error) {
       console.error('Error fetching staff data:', error);
     }
@@ -33,14 +33,6 @@ const ViewStaff = () => {
     groups[position].push(member);
     return groups;
   }, {});
-
-  const handleProfileClick = async (id) => {
-    try {
-      await axios.get(`${process.env.REACT_APP_API}/staff/get/${id}`);
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   return (
     <>
@@ -84,7 +76,6 @@ const ViewStaff = () => {
                   <Glide.Item className="my-3">
                     <Card
                       className="sh-20 hover-shadow hover-border-primary cursor-pointer"
-                      onClick={() => handleProfileClick(staffMember._id)}
                     >
                       <Card.Body className="p-4 text-center d-flex flex-column align-items-center justify-content-between">
                         <div className="d-flex sh-8 sw-8 bg-gradient-light rounded-xl overflow-hidden mb-3">

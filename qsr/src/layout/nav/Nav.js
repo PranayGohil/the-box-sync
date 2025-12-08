@@ -9,7 +9,6 @@ import MainMenu from './main-menu/MainMenu';
 import NavLogo from './NavLogo';
 import NavMobileButtons from './NavMobileButtons';
 import { menuChangeAttrMenuAnimate, menuChangeCollapseAll } from './main-menu/menuSlice';
-import NavLanguageSwitcher from './NavLanguageSwitcher';
 
 const DELAY = 80;
 
@@ -59,7 +58,6 @@ const Nav = () => {
         style={placementStatus.placementHtmlData === MENU_PLACEMENT.Horizontal && menuPadding ? { paddingRight: menuPadding } : {}}
       >
         <NavLogo />
-        {/* <NavLanguageSwitcher /> */}
         <NavUserMenu />
         <NavIconMenu />
         <MainMenu />

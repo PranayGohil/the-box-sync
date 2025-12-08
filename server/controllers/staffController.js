@@ -2,109 +2,157 @@ const Staff = require("../models/staffModel");
 const fs = require("fs");
 const path = require("path");
 
-const getStaffPositions = (req, res) => {
+const getStaffPositions = async (req, res) => {
   try {
-    Staff.distinct("position", { user_id: req.user }).then((data) =>
-      res.json(data)
-    );
+    const positions = await Staff.distinct("position", { user_id: req.user });
+    res.json({ success: true, data: positions });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-const getStaffData = (req, res) => {
+const getStaffData = async (req, res) => {
   try {
-    Staff.find({ user_id: req.user })
-      .then((data) => {
-        res.json(data);
-      })
-      .catch((err) => res.json(err));
-  } catch (error) {
-    console.log(error);
-  }
-};
+    const userId = req.user;
+    const { page = 1, limit = 50 } = req.query;
+    const pageNumber = parseInt(page, 10) || 1;
+    const pageSize = parseInt(limit, 10) || 50;
 
-const getStaffDataById = (req, res) => {
-  try {
-    const staffId = req.params.id;
-    Staff.findOne({ _id: staffId }).then((data) => {
-      res.json(data);
+    const projection = {
+      staff_id: 1,
+      f_name: 1,
+      l_name: 1,
+      email: 1,
+      phone_no: 1,
+      position: 1,
+      salary: 1,
+      photo: 1,
+      joining_date: 1,
+      attandance: 1,
+      // do NOT include face_encoding, face_embeddings, attandance by default
+    };
+
+    const [data, total] = await Promise.all([
+      Staff.find({ user_id: userId })
+        .select(projection)
+        .sort({ f_name: 1 })
+        .skip((pageNumber - 1) * pageSize)
+        .limit(pageSize)
+        .lean(),
+      Staff.countDocuments({ user_id: userId }),
+    ]);
+
+    res.json({
+      success: true,
+      data,
+      pagination: {
+        total,
+        page: pageNumber,
+        limit: pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-const addStaff = (req, res) => {
+const getStaffDataById = async (req, res) => {
+  try {
+    const staffId = req.params.id;
+    const userId = req.user;
+
+    const staff = await Staff.findOne({ _id: staffId, user_id: userId }).lean();
+
+    if (!staff) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Staff member not found" });
+    }
+
+    res.json({ success: true, data: staff });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+const addStaff = async (req, res) => {
   try {
     const staffData = {
       ...req.body,
       user_id: req.user,
     };
 
-    // If files are uploaded, store their paths
-    if (req.files.photo) {
+    if (req.files?.photo?.[0]) {
       staffData.photo = `/staff/profile/${req.files.photo[0].filename}`;
     }
-    if (req.files.front_image) {
+    if (req.files?.front_image?.[0]) {
       staffData.front_image = `/staff/id_cards/${req.files.front_image[0].filename}`;
     }
-    if (req.files.back_image) {
+    if (req.files?.back_image?.[0]) {
       staffData.back_image = `/staff/id_cards/${req.files.back_image[0].filename}`;
     }
 
-    Staff.create(staffData)
-      .then((data) => res.json(data))
-      .catch((err) => res.status(500).json({ error: err.message }));
+    const staff = await Staff.create(staffData);
+
+    res.json({ success: true, data: staff });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server error" });
+    console.error("Error adding staff:", error);
+    res.status(500).json({ success: false, error: "Server error" });
   }
 };
-
 
 const updateStaff = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user;
 
-    // Find the current staff data before updating
-    const existingStaff = await Staff.findById(id);
+    const existingStaff = await Staff.findOne({ _id: id, user_id: userId });
     if (!existingStaff) {
       return res.status(404).json({ error: "Staff member not found" });
     }
 
     const staffData = {
       ...req.body,
-      user_id: req.user,
     };
 
-    // Helper to remove old file
-    const removeFile = (filePath) => {
-      if (filePath) {
-        const fullPath = path.join(__dirname, "..", "public", filePath);
-        fs.unlink(fullPath, (err) => {
-          if (err) {
-            console.error(`Error deleting file: ${fullPath}`, err);
-          }
-        });
+    const removeFile = (relativePath) => {
+      if (!relativePath) return;
+
+      // relativePath stored like "/staff/profile/filename.jpg"
+      const filename = path.basename(relativePath);
+      let folder = "";
+
+      if (relativePath.includes("/staff/profile")) {
+        folder = "staff/profile";
+      } else if (relativePath.includes("/staff/id_cards")) {
+        folder = "staff/id_cards";
       }
+
+      const fullPath = path.join(__dirname, "..", "uploads", folder, filename);
+      fs.unlink(fullPath, (err) => {
+        if (err) {
+          console.error(`Error deleting file: ${fullPath}`, err);
+        }
+      });
     };
 
-    // If new files are uploaded, delete old ones and set new paths
     if (req.files?.photo?.[0]) {
-      removeFile("../uploads" + existingStaff.photo); // delete old
+      removeFile(existingStaff.photo);
       staffData.photo = `/staff/profile/${req.files.photo[0].filename}`;
     }
     if (req.files?.front_image?.[0]) {
-      removeFile("../uploads" + existingStaff.front_image);
+      removeFile(existingStaff.front_image);
       staffData.front_image = `/staff/id_cards/${req.files.front_image[0].filename}`;
     }
     if (req.files?.back_image?.[0]) {
-      removeFile("../uploads" + existingStaff.back_image);
+      removeFile(existingStaff.back_image);
       staffData.back_image = `/staff/id_cards/${req.files.back_image[0].filename}`;
     }
 
-    // Parse face_encoding if it exists
     if (staffData.face_encoding) {
       try {
         staffData.face_encoding = JSON.parse(staffData.face_encoding);
@@ -114,73 +162,53 @@ const updateStaff = async (req, res) => {
       }
     }
 
-    // Update the staff member
-    const updatedStaff = await Staff.findByIdAndUpdate(
-      id,
+    const updatedStaff = await Staff.findOneAndUpdate(
+      { _id: id, user_id: userId },
       { $set: staffData },
       { new: true, runValidators: true }
     );
 
     res.json({
+      success: true,
       message: "Staff updated successfully",
       staff: updatedStaff,
     });
   } catch (error) {
     console.error("Error updating staff:", error);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ success: false, error: "Server error" });
   }
 };
 
-
 const deleteStaff = async (req, res) => {
   try {
-    const staffId = req.params.id; // This is the staff ID you want to delete
-    const staffData = await Staff.findById(staffId);
+    const staffId = req.params.id;
+    const userId = req.user;
+
+    const staffData = await Staff.findOne({ _id: staffId, user_id: userId });
 
     if (!staffData) {
       return res.status(404).json({ message: "Staff not found" });
     }
 
-    if (staffData.photo) {
-      console.log("Photo Found");
-      const oldPhotoPath = path.join(
-        __dirname,
-        `../uploads/staff/profile/${staffData.photo}`
-      );
-      console.log("Old Path : ", oldPhotoPath);
-      if (fs.existsSync(oldPhotoPath)) {
-        fs.unlinkSync(oldPhotoPath);
-      } else {
-        console.log("Photo Not Found");
+    const deleteIfExists = (relativePath, folder) => {
+      if (!relativePath) return;
+      const filename = path.basename(relativePath);
+      const fullPath = path.join(__dirname, "..", "uploads", folder, filename);
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
       }
-    }
+    };
 
-    if (staffData.front_image) {
-      const oldFrontImagePath = path.join(
-        __dirname,
-        `../uploads/staff/id_cards/${staffData.front_image}`
-      );
-      if (fs.existsSync(oldFrontImagePath)) {
-        fs.unlinkSync(oldFrontImagePath);
-      }
-    }
+    deleteIfExists(staffData.photo, "staff/profile");
+    deleteIfExists(staffData.front_image, "staff/id_cards");
+    deleteIfExists(staffData.back_image, "staff/id_cards");
 
-    if (staffData.back_image) {
-      const oldBackImagePath = path.join(
-        __dirname,
-        `../uploads/staff/id_cards/${staffData.back_image}`
-      );
-      if (fs.existsSync(oldBackImagePath)) {
-        fs.unlinkSync(oldBackImagePath);
-      }
-    }
+    await Staff.deleteOne({ _id: staffId, user_id: userId });
 
-    Staff.deleteOne({ _id: staffId })
-      .then((data) => res.json(data))
-      .catch((err) => res.json(err));
+    res.json({ success: true, message: "Staff deleted successfully" });
   } catch (error) {
     console.log(error);
-    res.status(500).send("An error occurred");
+    res.status(500).send({ success: false, message: "An error occurred" });
   }
 };
 
@@ -280,22 +308,25 @@ const markAbsent = async (req, res) => {
 
 const getAllFaceEncodings = async (req, res) => {
   try {
-    const staff = await Staff.find(
-      {
-        face_encoding: {
-          $exists: true,
-          $ne: null,
-          $not: { $size: 0 },
-        },
-        user_id: req.user,
+    const staff = await Staff.find({
+      user_id: req.user,
+      face_encoding: {
+        $exists: true,
+        $ne: null,
+        $not: { $size: 0 },
       },
-      "_id staff_id f_name l_name email position face_encoding attandance"
-    );
+    })
+      .select(
+        "_id staff_id f_name l_name email position face_encoding"
+      )
+      .lean();
 
-    res.json(staff);
+    res.json({ success: true, data: staff });
   } catch (err) {
     console.error("Error fetching encodings:", err);
-    res.status(500).json({ error: "Failed to fetch face encodings" });
+    res
+      .status(500)
+      .json({ success: false, error: "Failed to fetch face encodings" });
   }
 };
 

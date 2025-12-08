@@ -400,7 +400,6 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     const s = io(process.env.REACT_APP_API_URL);
-    console.log("User : ", currentUser);
 
     s.on("connect", () => {
       if (currentUser) {
@@ -408,17 +407,14 @@ export const SocketProvider = ({ children }) => {
           userId: currentUser._id,
           role: "Admin",
         });
-        console.log("Connected to the server");
       }
     });
 
     s.on("new_inventory_request", (notification) => {
-      console.log("New Notification:", notification);
       setNotifications((prev) => [...prev, notification]);
     });
 
     s.on("web_order_recieved", (notification) => {
-      console.log("New Order received:", notification);
       setNotifications((prev) => [...prev, notification]);
       setCurrentOrder(notification);
       toast.info("New web order received!");
