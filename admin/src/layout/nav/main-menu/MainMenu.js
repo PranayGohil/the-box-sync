@@ -6,7 +6,7 @@ import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import { getMenuItems } from 'routing/helper';
 import { useWindowSize } from 'hooks/useWindowSize';
 import { useWindowScroll } from 'hooks/useWindowScroll';
-import routesAndMenuItems from 'routes.js';
+import allRoutes from 'routes.js';
 import { layoutShowingNavMenu } from 'layout/layoutSlice';
 import MainMenuItems from './MainMenuItems';
 import {
@@ -30,7 +30,7 @@ const MainMenu = () => {
   const menuItemsMemo = useMemo(
     () =>
       getMenuItems({
-        data: attrMobile && useSidebar ? routesAndMenuItems : routesAndMenuItems.mainMenuItems,
+        data: attrMobile && useSidebar ? allRoutes : allRoutes.mainRoutes,
         isLogin,
         userRole: currentUser.role,
       }),

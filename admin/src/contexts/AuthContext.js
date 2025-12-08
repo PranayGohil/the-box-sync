@@ -25,8 +25,8 @@ export const AuthProvider = ({ children }) => {
                     },
                 }
             );
-            if (response.data.length > 0) {
-                const fetchActivePlans = response.data.filter(
+            if (response.data.data.length > 0) {
+                const fetchActivePlans = response.data.data.filter(
                     (plan) => plan.status === "active"
                 );
                 setActivePlans(fetchActivePlans.map((plan) => plan.plan_name));

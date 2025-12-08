@@ -59,10 +59,10 @@ const Subscription = () => {
         }),
       ]);
 
-      setSubscriptionPlans(plansRes.data);
+      setSubscriptionPlans(plansRes.data.data);
 
-      const enriched = userRes.data.map((sub) => {
-        const plan = plansRes.data.find((p) => p._id === sub.plan_id); // eslint-disable-line no-underscore-dangle
+      const enriched = userRes.data.data.map((sub) => {
+        const plan = plansRes.data.data.find((p) => p._id === sub.plan_id); // eslint-disable-line no-underscore-dangle
         return {
           ...sub,
           plan_name: plan?.plan_name || 'Unknown',
@@ -91,18 +91,18 @@ const Subscription = () => {
 
       const inactivePlans = enriched.filter((sub) => sub.status === 'inactive');
 
-      const purchasedPlanIds = new Set(userRes.data.map((sub) => sub.plan_id));
-      const available = plansRes.data.filter((plan) => !purchasedPlanIds.has(plan._id));
+      const purchasedPlanIds = new Set(userRes.data.data.map((sub) => sub.plan_id));
+      const available = plansRes.data.data.filter((plan) => !purchasedPlanIds.has(plan._id));
       setAvailablePlans(available);
 
       setInactiveAddOns(
         inactivePlans
           .filter((sub) => {
-            const plan = plansRes.data.find((p) => p._id === sub.plan_id);
+            const plan = plansRes.data.data.find((p) => p._id === sub.plan_id);
             return plan?.is_addon;
           })
           .map((sub) => {
-            const plan = plansRes.data.find((p) => p._id === sub.plan_id);
+            const plan = plansRes.data.data.find((p) => p._id === sub.plan_id);
             return {
               ...sub,
               plan_price: plan?.plan_price || 0,
@@ -145,7 +145,7 @@ const Subscription = () => {
         { subscriptionId },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-      fetchData();
+      window.location.reload();
     } catch (err) {
       console.error('Renew failed:', err);
     }
@@ -157,7 +157,7 @@ const Subscription = () => {
       await axios.post(`${process.env.REACT_APP_API}/subscription/buy/${planId}`, null, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      fetchData();
+      window.location.reload();
     } catch (err) {
       console.error('Error purchasing plan:', err);
     }

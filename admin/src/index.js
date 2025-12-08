@@ -27,7 +27,7 @@ import Loading from 'components/loading/Loading';
 // import routes
 import { getLayoutlessRoutes } from 'routing/helper';
 import defaultRoutes from 'routing/default-routes';
-import routesAndMenuItems from 'routes.js';
+import allRoutes from 'routes.js';
 
 // import toastify for notification
 import { Slide, ToastContainer } from 'react-toastify';
@@ -36,7 +36,7 @@ import { Slide, ToastContainer } from 'react-toastify';
 import '@mock-api';
 
 const Main = () => {
-  const layoutlessRoutes = useMemo(() => getLayoutlessRoutes({ data: routesAndMenuItems }), []);
+  const layoutlessRoutes = useMemo(() => getLayoutlessRoutes({ data: allRoutes }), []);
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistedStore}>

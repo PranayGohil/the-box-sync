@@ -30,7 +30,7 @@ const dashboards = {
 
 const appRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
 
-const routesAndMenuItems = {
+const allRoutes = {
   mainMenuItems: [
     {
       path: DEFAULT_PATHS.APP,
@@ -116,4 +116,4 @@ const routesAndMenuItems = {
     },
   ],
 };
-export default routesAndMenuItems;
+export default allRoutes;

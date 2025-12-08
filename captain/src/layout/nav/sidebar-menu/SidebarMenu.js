@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Col } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { getMenuItems } from 'routing/helper';
-import routesAndMenuItems from 'routes.js';
+import allRoutes from 'routes.js';
 import SidebarMenuItems from './SidebarMenuItems';
 
 const SidebarMenu = () => {
@@ -12,7 +12,7 @@ const SidebarMenu = () => {
   const menuItemsMemo = useMemo(
     () =>
       getMenuItems({
-        data: routesAndMenuItems.sidebarItems,
+        data: allRoutes.sidebarItems,
         isLogin,
         userRole: currentUser.role,
       }),

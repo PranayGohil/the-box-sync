@@ -6,7 +6,7 @@ import { useHistory } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { getSearchItems } from 'routing/helper';
 import { USE_MULTI_LANGUAGE } from 'config.js';
-import routesAndMenuItems from 'routes.js';
+import allRoutes from 'routes.js';
 
 const RESULT_LIMIT = 10;
 
@@ -28,7 +28,7 @@ const SearchInput = ({ show, setShow }) => {
   const routes = useMemo(
     () =>
       getSearchItems({
-        data: routesAndMenuItems,
+        data: allRoutes,
         isLogin,
         userRole: currentUser.role,
       })(),

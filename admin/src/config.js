@@ -21,6 +21,7 @@ export const DEFAULT_PATHS = {
   NOTFOUND: '/page-not-found',
   UNAUTHORIZED: '/unauthorized',
   INVALID_ACCESS: '/invalid-access',
+  SELECT_PLAN: '/select-plan',
 };
 
 export const DEFAULT_SETTINGS = {

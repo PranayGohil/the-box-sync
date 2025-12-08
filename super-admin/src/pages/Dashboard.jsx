@@ -22,7 +22,7 @@ const Dashboard = () => {
       if (response.data === "Null") {
         navigate("/login");
       }
-      setUsers(response.data);
+      setUsers(response.data.data);
     } catch (error) {
       console.error("Failed to fetch users", error);
     } finally {

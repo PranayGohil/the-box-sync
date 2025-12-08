@@ -41,7 +41,7 @@ export const convertToRoutes = ({
   if (Array.isArray(data)) {
     items = data;
   } else {
-    items = [...data.sidebarItems, ...data.mainMenuItems];
+    items = [...data.sidebarItems, ...data.mainRoutes];
   }
 
   const routes = [];
@@ -135,7 +135,7 @@ export const convertToMenuItems = ({ data = [], authGuardActive = IS_AUTH_GUARD_
   if (Array.isArray(data)) {
     items = data;
   } else {
-    items = [...data.sidebarItems, ...data.mainMenuItems];
+    items = [...data.sidebarItems, ...data.mainRoutes];
   }
 
   const itemMapper = (item) => {
@@ -212,7 +212,7 @@ export const convertToSearchItems = ({ data = [], authGuardActive = IS_AUTH_GUAR
   if (Array.isArray(data)) {
     items = data;
   } else {
-    items = [...data.sidebarItems, ...data.mainMenuItems];
+    items = [...data.sidebarItems, ...data.mainRoutes];
   }
 
   const menuItems = [];

@@ -1,33 +1,24 @@
 const express = require("express");
 const authMiddleware = require("../middlewares/auth-middlewares");
 const {
-    // Revenue
-    getRevenueStats,
-
-    // Orders
-    getOrderStats,
-
-    // Dishes & Menu
-    getTopDishes,
-    getCategoryStats,
-    getLowPerformingDishes,
-
-    // Customers
-    getCustomerStats,
-
-    // Time-based
-    getPeakHours,
-    getDayOfWeekStats,
-
-    // Comparison
-    getComparison,
-
-    // Dashboard
-    getOverview,
-
-    // Performance
-    getWaiterPerformance,
-    getTablePerformance
+  getRevenueStats,
+  getOrderStats,
+  getTopDishes,
+  getCategoryStats,
+  getLowPerformingDishes,
+  getCustomerStats,
+  getPeakHours,
+  getDayOfWeekStats,
+  getComparison,
+  getOverview,
+  getWaiterPerformance,
+  getTablePerformance,
+  //   v2
+  getSalesReport,
+  getMenuPerformanceReport,
+  getCustomerInsightsReport,
+  getOperationalReport,
+  getFinancialReport,
 } = require("../controllers/statisticsController");
 
 const statisticsRouter = express.Router();
@@ -57,7 +48,11 @@ statisticsRouter.get("/orders", authMiddleware, getOrderStats);
 statisticsRouter.get("/dishes/top", authMiddleware, getTopDishes);
 
 // GET /api/statistics/dishes/low-performing?period=month|year&threshold=5&start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
-statisticsRouter.get("/dishes/low-performing", authMiddleware, getLowPerformingDishes);
+statisticsRouter.get(
+  "/dishes/low-performing",
+  authMiddleware,
+  getLowPerformingDishes
+);
 
 // GET /api/statistics/categories?period=week|month|year&start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
 statisticsRouter.get("/categories", authMiddleware, getCategoryStats);
@@ -87,9 +82,23 @@ statisticsRouter.get("/comparison", authMiddleware, getComparison);
 // PERFORMANCE ANALYTICS
 // ============================================
 // GET /api/statistics/performance/waiters?period=week|month&start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
-statisticsRouter.get("/performance/waiters", authMiddleware, getWaiterPerformance);
+statisticsRouter.get(
+  "/performance/waiters",
+  authMiddleware,
+  getWaiterPerformance
+);
 
 // GET /api/statistics/performance/tables?period=week|month&start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
-statisticsRouter.get("/performance/tables", authMiddleware, getTablePerformance);
+statisticsRouter.get(
+  "/performance/tables",
+  authMiddleware,
+  getTablePerformance
+);
+
+statisticsRouter.get("/sales/report", authMiddleware, getSalesReport);
+statisticsRouter.get("/menu/report", authMiddleware, getMenuPerformanceReport);
+statisticsRouter.get("/customers/insights", authMiddleware, getCustomerInsightsReport);
+statisticsRouter.get("/operational", authMiddleware, getOperationalReport);
+statisticsRouter.get("/financial", authMiddleware, getFinancialReport);
 
 module.exports = statisticsRouter;

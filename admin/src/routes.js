@@ -2,6 +2,7 @@
 import { lazy } from 'react';
 import { USER_ROLE } from 'constants.js';
 import { DEFAULT_PATHS } from 'config.js';
+import { components } from 'react-select/dist/react-select.cjs.prod';
 
 const admin = {
   dashboard: lazy(() => import('views/admin/Dashboard')),
@@ -11,17 +12,21 @@ const admin = {
   statistics: lazy(() => import('views/admin/statistics/Statistics')),
   orderhistory: lazy(() => import('views/admin/operation/order/OrderHistory')),
 };
-const dashboards = {
-  index: lazy(() => import('views/dashboards/Dashboards')),
-  default: lazy(() => import('views/dashboards/DashboardsDefault')),
-  visual: lazy(() => import('views/dashboards/DashboardsVisual')),
-  analytic: lazy(() => import('views/dashboards/DashboardsAnalytic')),
+
+const report = {
+  sales: lazy(() => import('views/admin/statistics/SalesReport')),
+  customers: lazy(() => import('views/admin/statistics/CustomerInsightsReport')),
+  operational: lazy(() => import('views/admin/statistics/OperationalReport')),
+  menu: lazy(() => import('views/admin/statistics/MenuPerformanceReport')),
+  // financial: lazy(() => import('views/admin/statistics/FinancialReport')),
 };
+
+const selectPlan = lazy(() => import('views/default/SelectPlan'));
 
 const appRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
 
-const routesAndMenuItems = {
-  mainMenuItems: [
+const allRoutes = {
+  mainRoutes: [
     {
       path: DEFAULT_PATHS.APP,
       exact: true,
@@ -57,8 +62,22 @@ const routesAndMenuItems = {
       label: 'Statistics',
       icon: 'chart-4',
       component: admin.statistics,
-    }
+      subs: [
+        { path: '/overview', label: 'Overview', component: admin.statistics },
+        { path: '/sales', label: 'Sales Report', component: report.sales },
+        { path: '/customers', label: 'Customer Insights Report', component: report.customers },
+        { path: '/operational', label: 'Operational Report', component: report.operational },
+        { path: '/menu', label: 'Menu Performance Report', component: report.menu },
+        // { path: '/financial', label: 'Financial Report', component: report.financial },
+      ],
+    },
+    {
+      path: `${appRoot}/select-plan`,
+
+      component: selectPlan,
+    },
   ],
+
   sidebarItems: [
     { path: '#connections', label: 'menu.connections', icon: 'diagram-1', hideInRoute: true },
     { path: '#bookmarks', label: 'menu.bookmarks', icon: 'bookmark', hideInRoute: true },
@@ -97,4 +116,5 @@ const routesAndMenuItems = {
     },
   ],
 };
-export default routesAndMenuItems;
+
+export default allRoutes;
