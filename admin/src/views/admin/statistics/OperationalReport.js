@@ -6,8 +6,8 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const OperationalReport = () => {
   const title = 'Operational Performance Report';
@@ -137,7 +137,7 @@ const OperationalReport = () => {
     doc.text('Waiter Performance', 14, yPosition);
     yPosition += 8;
 
-    doc.autoTable({
+    autoTable({
       startY: yPosition,
       head: [['Waiter', 'Orders', 'Revenue', 'Avg Order', 'Tables']],
       body: reportData.waiterPerformance.map((waiter) => [
@@ -163,7 +163,7 @@ const OperationalReport = () => {
     doc.text('Top 15 Tables by Revenue', 14, yPosition);
     yPosition += 8;
 
-    doc.autoTable({
+    autoTable({
       startY: yPosition,
       head: [['Table', 'Area', 'Orders', 'Revenue', 'Avg Order']],
       body: reportData.tablePerformance

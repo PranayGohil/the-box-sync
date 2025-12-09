@@ -147,19 +147,50 @@ const addTable = async (req, res) => {
   }
 };
 
-const updateTable = async (req, res) => {
+const updateTableArea = async (req, res) => {
   try {
-    const { _id, table_no, max_person } = req.body;
+    const id = req.params.id;
+    const { area } = req.body;
     const userId = req.user;
 
-    if (!_id || !table_no) {
+    if (!id || !area) {
       return res
         .status(400)
-        .json({ success: false, message: "_id and table_no are required" });
+        .json({ success: false, message: "id and area are required" });
     }
 
     const result = await Table.updateOne(
-      { user_id: userId, "tables._id": _id },
+      { user_id: userId, _id: id },
+      { area: String(area).trim() }
+    );
+
+    if (result.matchedCount === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Table not found" });
+    }
+
+    res.json({ success: true, message: "Table area updated", result });
+  } catch (error) {
+    console.error("Error updating table area:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const updateTable = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { table_no, max_person } = req.body;
+    const userId = req.user;
+
+    if (!id || !table_no) {
+      return res
+        .status(400)
+        .json({ success: false, message: "id and table_no are required" });
+    }
+
+    const result = await Table.updateOne(
+      { user_id: userId, "tables._id": id },
       {
         $set: {
           "tables.$.table_no": String(table_no).trim(),
@@ -237,6 +268,7 @@ module.exports = {
   getDiningAreas,
   checkTable,
   addTable,
+  updateTableArea,
   updateTable,
   deleteTable,
 };

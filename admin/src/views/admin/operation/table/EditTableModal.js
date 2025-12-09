@@ -18,8 +18,7 @@ const EditTableModal = ({ show, handleClose, data, onUpdateSuccess }) => {
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
-        await axios.put(`${process.env.REACT_APP_API}/table/update`, {
-          _id: data?.id,
+        await axios.put(`${process.env.REACT_APP_API}/table/update/${data?.id}`, {
           table_no: values.table_no,
           max_person: values.max_person,
         }, {
@@ -43,7 +42,7 @@ const EditTableModal = ({ show, handleClose, data, onUpdateSuccess }) => {
         <Modal.Title>Edit Table</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form id="edit_dish_form" onSubmit={formik.handleSubmit}>
+        <Form id="edit_table_form" onSubmit={formik.handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Table No</Form.Label>
             <Form.Control type="text" name="table_no" value={formik.values.table_no} onChange={formik.handleChange} />
@@ -64,8 +63,8 @@ const EditTableModal = ({ show, handleClose, data, onUpdateSuccess }) => {
         <Button variant="secondary" onClick={handleClose}>
           Cancel
         </Button>
-        <Button variant="dark" type="submit" form="edit_dish_form">
-          Update Dish
+        <Button variant="dark" type="submit" form="edit_table_form">
+          Update Table
         </Button>
       </Modal.Footer>
     </Modal>

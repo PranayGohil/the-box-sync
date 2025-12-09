@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { Button, Form, Card, Col, Row } from 'react-bootstrap';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -9,6 +9,8 @@ import axios from 'axios';
 
 const AddTable = () => {
   const history = useHistory();
+  const location = useLocation();
+
   const title = 'Add Table';
   const description = 'Add restaurant tables with validations.';
 
@@ -21,6 +23,9 @@ const AddTable = () => {
   const [fetchError, setFetchError] = useState('');
   const [tableErrors, setTableErrors] = useState({});
   const [diningAreas, setDiningAreas] = useState([]);
+
+  const isFromManageTable = location.state?.fromManageTable || false;
+  const prefilledArea = isFromManageTable ? location.state?.area || '' : '';
 
   useEffect(() => {
     const fetchDiningAreas = async () => {
@@ -57,9 +62,10 @@ const AddTable = () => {
 
   const formik = useFormik({
     initialValues: {
-      area: '',
+      area: prefilledArea,
       tables: [{ tableNo: '', maxPerson: '' }],
     },
+    enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
       console.log(values);
@@ -178,7 +184,8 @@ const AddTable = () => {
                       value={formik.values.area}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      list="diningAreaList"
+                      list={isFromManageTable ? undefined : 'diningAreaList'}
+                      readOnly={isFromManageTable}
                       isInvalid={formik.touched.area && !!formik.errors.area}
                     />
                     <datalist id="diningAreaList">

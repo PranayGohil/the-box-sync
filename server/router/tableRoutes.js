@@ -6,6 +6,7 @@ const {
   getDiningAreas,
   checkTable,
   addTable,
+  updateTableArea,
   updateTable,
   deleteTable,
 } = require("../controllers/tableController");
@@ -17,7 +18,8 @@ tableRouter.route("/check-table").get(authMiddleware, checkTable);
 tableRouter.route("/add").post(authMiddleware, addTable);
 tableRouter.route("/get-all").get(authMiddleware, getTables);
 tableRouter.route("/get/:id").get(authMiddleware, getTableDataById);
-tableRouter.route("/update").put(authMiddleware, updateTable);
+tableRouter.route("/update/area/:id").put(authMiddleware, updateTableArea);
+tableRouter.route("/update/:id").put(authMiddleware, updateTable);
 tableRouter
   .route("/delete/:id")
   .delete(authMiddleware, deleteTable);

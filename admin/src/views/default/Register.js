@@ -95,7 +95,7 @@ const RegisterNew = () => {
       });
       if (res.data) {
         login(res.data.token, res.data.user);
-        history.push('/');
+        window.location.href = '/select-plan';
       } else {
         alert('Something went wrong!');
       }

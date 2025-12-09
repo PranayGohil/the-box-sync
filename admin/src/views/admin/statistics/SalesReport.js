@@ -6,8 +6,8 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const SalesReport = () => {
   const title = 'Sales Report';
@@ -41,6 +41,14 @@ const SalesReport = () => {
       currency: 'INR',
       maximumFractionDigits: 0,
     }).format(amount || 0);
+  };
+
+  const formatCurrencyPDF = (amount) => {
+    const value = new Intl.NumberFormat('en-IN', {
+      maximumFractionDigits: 0,
+    }).format(amount || 0);
+
+    return `Rs. ${value}`;
   };
 
   const fetchSalesReport = async () => {
@@ -157,13 +165,13 @@ const SalesReport = () => {
     doc.text('Summary', 14, yPosition);
     yPosition += 8;
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: yPosition,
       head: [['Metric', 'Value']],
       body: [
-        ['Total Revenue', formatCurrency(reportData.revenue.summary.totalRevenue)],
+        ['Total Revenue', formatCurrencyPDF(reportData.revenue.summary.totalRevenue)],
         ['Total Orders', reportData.revenue.summary.totalOrders],
-        ['Average Order Value', formatCurrency(reportData.revenue.summary.averageOrderValue)],
+        ['Average Order Value', formatCurrencyPDF(reportData.revenue.summary.averageOrderValue)],
       ],
       theme: 'grid',
       headStyles: { fillColor: [41, 128, 185] },
@@ -181,12 +189,18 @@ const SalesReport = () => {
     doc.text('Top 10 Dishes', 14, yPosition);
     yPosition += 8;
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: yPosition,
       head: [['Rank', 'Dish', 'Category', 'Qty', 'Revenue']],
       body: reportData.dishes.data
         .slice(0, 10)
-        .map((dish, idx) => [idx + 1, dish.dishName, dish.category || 'N/A', dish.totalQuantity, formatCurrency(dish.totalRevenue)]),
+        .map((dish, idx) => [
+          idx + 1,
+          dish.dishName,
+          dish.category || 'N/A',
+          dish.totalQuantity,
+          formatCurrencyPDF(dish.totalRevenue),
+        ]),
       theme: 'striped',
       headStyles: { fillColor: [41, 128, 185] },
     });
@@ -203,16 +217,22 @@ const SalesReport = () => {
     doc.text('Order Type Breakdown', 14, yPosition);
     yPosition += 8;
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: yPosition,
       head: [['Type', 'Count', 'Revenue', 'Avg Value']],
-      body: reportData.orders.data.map((order) => [order.category, order.count, formatCurrency(order.totalRevenue), formatCurrency(order.avgOrderValue)]),
+      body: reportData.orders.data.map((order) => [
+        order.category,
+        order.count,
+        formatCurrencyPDF(order.totalRevenue),
+        formatCurrencyPDF(order.avgOrderValue),
+      ]),
       theme: 'striped',
       headStyles: { fillColor: [41, 128, 185] },
     });
 
     doc.save(`Sales_Report_${startDate}_to_${endDate}.pdf`);
   };
+
 
   const printReport = () => {
     window.print();

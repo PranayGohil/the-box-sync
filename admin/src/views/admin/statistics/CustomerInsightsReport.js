@@ -6,8 +6,8 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const CustomerInsightsReport = () => {
   const title = 'Customer Insights Report';
@@ -128,7 +128,7 @@ const CustomerInsightsReport = () => {
     doc.text('Top 20 Customers by Spending', 14, yPosition);
     yPosition += 8;
 
-    doc.autoTable({
+    autoTable({
       startY: yPosition,
       head: [['Rank', 'Customer', 'Orders', 'Total Spent', 'Avg Value']],
       body: reportData.topCustomers

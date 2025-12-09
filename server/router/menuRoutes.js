@@ -6,6 +6,7 @@ const {
   getMenuCategories,
   getMenuDataById,
   getMenuDataByResCode,
+  updateMenuCategoryAndMealType,
   updateMenu,
   deleteMenu,
 } = require("../controllers/menuController");
@@ -21,10 +22,13 @@ menuRouter
     addMenu
   );
 menuRouter.route("/get").get(authMiddleware, getMenuData);
-menuRouter.route("/get/:id").get(authMiddleware, getMenuData);
-menuRouter.route("/getmenudata/:id").get(getMenuDataById);
+menuRouter.route("/get/:id").get(authMiddleware, getMenuDataById);
 menuRouter.route("/get/rescode/:res_code").get(getMenuDataByResCode);
 menuRouter.route("/get-categories").get(authMiddleware, getMenuCategories);
+
+menuRouter
+  .route("/update/category/:id")
+  .put(authMiddleware, updateMenuCategoryAndMealType);
 menuRouter
   .route("/update")
   .put(authMiddleware, upload.single("dish_img"), updateMenu);

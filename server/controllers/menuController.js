@@ -163,6 +163,25 @@ const getMenuDataById = async (req, res) => {
   }
 };
 
+const updateMenuCategoryAndMealType = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { category, meal_type } = req.body;
+    const userId = req.user;
+
+    const updatedMenu = await Menu.findOneAndUpdate(
+      { user_id: userId, _id: id },
+      { category, meal_type },
+      { new: true }
+    );
+
+    res.json({ success: true, data: updatedMenu });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+}
+
 const updateMenu = async (req, res) => {
   try {
     const {
@@ -297,6 +316,7 @@ module.exports = {
   getMenuDataById,
   getMenuDataByResCode,
   getMenuCategories,
+  updateMenuCategoryAndMealType,
   updateMenu,
   deleteMenu,
 };

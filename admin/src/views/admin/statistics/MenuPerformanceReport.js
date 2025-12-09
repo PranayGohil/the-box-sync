@@ -6,8 +6,8 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const MenuPerformanceReport = () => {
   const title = 'Menu Performance Report';
@@ -156,7 +156,7 @@ const MenuPerformanceReport = () => {
     doc.text('Summary', 14, yPosition);
     yPosition += 8;
 
-    doc.autoTable({
+    autoTable({
       startY: yPosition,
       head: [['Metric', 'Value']],
       body: [
@@ -178,7 +178,7 @@ const MenuPerformanceReport = () => {
     doc.text('Top 20 Dishes by Revenue', 14, yPosition);
     yPosition += 8;
 
-    doc.autoTable({
+    autoTable({
       startY: yPosition,
       head: [['Rank', 'Dish', 'Category', 'Qty', 'Revenue', 'Special']],
       body: reportData.dishPerformance
@@ -208,7 +208,7 @@ const MenuPerformanceReport = () => {
     doc.text('Category Performance', 14, yPosition);
     yPosition += 8;
 
-    doc.autoTable({
+    autoTable({
       startY: yPosition,
       head: [['Category', 'Quantity', 'Revenue', 'Dishes']],
       body: reportData.categoryPerformance.map((cat) => [cat.category, cat.totalQuantity, formatCurrency(cat.totalRevenue), cat.uniqueDishCount]),
