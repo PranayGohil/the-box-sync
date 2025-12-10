@@ -8,6 +8,7 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import BoxedVariationsStripe from './components/BoxedVariationsStripe';
 import EditTableModal from './EditTableModal';
+import EditTableAreaModal from './EditTableAreaModal';
 import DeleteTableModal from './DeleteTableModal';
 
 
@@ -23,6 +24,8 @@ const ManageTable = () => {
 
   const [editTableModalShow, setEditTableModalShow] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
+  const [editTableAreaModalShow, setEditTableAreaModalShow] = useState(false);
+  const [selectedTableArea, setSelectedTableArea] = useState(null);
   const [deleteTableModalShow, setDeleteTableModalShow] = useState(false);
   const [tableToDelete, setTableToDelete] = useState(null);
   const [tableData, setTableData] = useState([]);
@@ -117,7 +120,7 @@ const ManageTable = () => {
                 <Col md={6} key={table.id}>
                   <section className="scroll-section" id="stripe">
                     <Card body className="mb-5">
-                      <BoxedVariationsStripe columns={columns} data={data} area={table.area} />
+                      <BoxedVariationsStripe columns={columns} data={data} table={table} setSelectedTableArea={setSelectedTableArea} setEditTableAreaModalShow={setEditTableAreaModalShow} />
                     </Card>
                   </section>
                 </Col>
@@ -137,14 +140,24 @@ const ManageTable = () => {
         />
       )}
 
+      {selectedTableArea && (
+        <EditTableAreaModal
+          show={editTableAreaModalShow}
+          handleClose={() => setEditTableAreaModalShow(false)}
+          data={selectedTableArea}
+          onUpdateSuccess={fetchTableData}
+        />
+      )}
 
-      {tableToDelete && <DeleteTableModal
-        show={deleteTableModalShow}
-        handleClose={() => setDeleteTableModalShow(false)}
-        data={tableToDelete}
-        onDeleteSuccess={fetchTableData}
-      />
-      }
+
+      {tableToDelete && (
+        <DeleteTableModal
+          show={deleteTableModalShow}
+          handleClose={() => setDeleteTableModalShow(false)}
+          data={tableToDelete}
+          onDeleteSuccess={fetchTableData}
+        />
+      )}
     </>
   );
 };

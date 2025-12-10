@@ -1,5 +1,5 @@
 import React from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { Card, Col, Row, Button, Form as BForm } from 'react-bootstrap';
 import { Formik, Form, FieldArray, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -18,10 +18,15 @@ const AddDishes = () => {
   ];
 
   const history = useHistory();
+  const location = useLocation();
+
+  const isFromManageMenu = location.state?.fromManageMenu || false;
+  const prefilledCategory = isFromManageMenu ? location.state?.category || '' : '';
+  const prefilledMealType = isFromManageMenu ? location.state?.mealType || 'veg' : 'veg';
 
   const initialValues = {
-    category: '',
-    mealType: 'veg',
+    category: prefilledCategory,
+    mealType: prefilledMealType,
     dishes: [
       {
         dish_name: '',
@@ -97,14 +102,23 @@ const AddDishes = () => {
 
           <section className="scroll-section" id="formRow">
             <Card body className="mb-5">
-              <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+              <Formik
+                initialValues={initialValues}
+                validationSchema={validationSchema}
+                onSubmit={handleSubmit}
+                enableReinitialize
+              >
                 {({ values, isSubmitting, handleChange, setFieldValue }) => (
                   <Form>
                     <Row className="mb-3">
                       <Col md={4}>
                         <BForm.Group>
                           <BForm.Label>Dish Category</BForm.Label>
-                          <Field name="category" className="form-control" />
+                          <Field
+                            name="category"
+                            className="form-control"
+                            readOnly={isFromManageMenu}
+                          />
                           <ErrorMessage name="category" component="div" className="text-danger" />
                         </BForm.Group>
                       </Col>

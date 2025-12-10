@@ -11,7 +11,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
     if (data?.dish_img) {
       setPreviewImg(`${process.env.REACT_APP_UPLOAD_DIR}${data.dish_img}`);
     }
-    if(data?.quantity){
+    if (data?.quantity) {
       setShowAdvancedOptions(true);
     } else {
       setShowAdvancedOptions(false);
@@ -28,7 +28,6 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
       unit: data?.unit || '',
       dish_img: null,
       is_special: data?.is_special || false,
-      is_available: data?.is_available || false,
     },
     enableReinitialize: true,
     onSubmit: async (values) => {
@@ -41,7 +40,6 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
         formData.append('quantity', values.quantity);
         formData.append('unit', values.unit);
         formData.append('is_special', values.is_special);
-        formData.append('is_available', values.is_available);
 
         if (values.dish_img) {
           formData.append('dish_img', values.dish_img);
@@ -50,7 +48,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
         await axios.put(`${process.env.REACT_APP_API}/menu/update`, formData, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data',
           },
         });
 
@@ -131,14 +129,6 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
             label="Special Dish"
             checked={formik.values.is_special}
             onChange={(e) => formik.setFieldValue('is_special', e.target.checked)}
-            className="mb-3"
-          />
-
-          <Form.Check
-            type="checkbox"
-            label="Available"
-            checked={formik.values.is_available}
-            onChange={(e) => formik.setFieldValue('is_available', e.target.checked)}
             className="mb-3"
           />
         </Form>

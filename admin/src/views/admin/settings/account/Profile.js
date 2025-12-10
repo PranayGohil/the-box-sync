@@ -106,6 +106,7 @@ const Profile = () => {
 
             setProfile({ ...intialProfile });
             setEditMode(false);
+            window.location.reload();
         } catch (err) {
             console.error('Failed to update profile', err);
             setError('Failed to update profile. Please try again.');

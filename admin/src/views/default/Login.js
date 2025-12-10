@@ -27,16 +27,20 @@ const Login = () => {
   const onSubmit = async (values) => {
     try {
       const res = await axios.post(`${process.env.REACT_APP_API}/user/login`, values);
+
       if (res.data.success) {
         login(res.data.token, res.data.user);
         window.location.href = '/';
       } else {
         setError(res.data.message);
       }
+
     } catch (err) {
-      console.log(err.data.message);
+      console.log("Login Error:", err.response?.data?.message);
+      setError(err.response?.data?.message || "Something went wrong");
     }
   };
+
 
   const formik = useFormik({ initialValues, validationSchema, onSubmit });
   const { handleSubmit, handleChange, values, touched, errors } = formik;
@@ -101,15 +105,18 @@ const Login = () => {
 
               {errors.password && touched.password && <div className="d-block invalid-tooltip">{errors.password}</div>}
             </div>
-            <NavLink className="text-small t-3 e-3" to="/forgot-password">
-              Forgot Password?
-            </NavLink>
             <div className='mb-3 mx-2'>
-              {error && <div className="text-danger">{error}</div>}
+              {error && <div className="text-danger text-medium">{error}</div>}
             </div>
-            <Button size="lg" type="submit">
-              Login
-            </Button>
+
+            <div className='d-flex justify-content-between align-items-center'>
+              <Button size="lg" type="submit">
+                Login
+              </Button>
+              <NavLink className="text-small t-3 e-3" to="/forgot-password">
+                Forgot Password?
+              </NavLink>
+            </div>
           </form>
         </div>
       </div>

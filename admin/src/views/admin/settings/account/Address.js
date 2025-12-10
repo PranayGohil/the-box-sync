@@ -155,6 +155,7 @@ const Address = () => {
 
             setProfile({ ...intialProfile });
             setEditMode(false);
+            window.location.reload();
         } catch (err) {
             console.error('Failed to update address', err);
             setError('Update failed. Please try again.');

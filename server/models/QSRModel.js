@@ -21,7 +21,7 @@ const qsrSchema = new Schema({
 qsrSchema.pre("save", async function (next) {
   const user = this;
   if (!user.isModified("password")) {
-    next();
+    return next();
   }
 
   try {

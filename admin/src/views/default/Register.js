@@ -220,7 +220,7 @@ const RegisterNew = () => {
               {/* Step 1 - Restaurant Info */}
               <Step id="step1" name="Restaurant" desc="Basic Information">
                 <div>
-                  <Formik innerRef={forms[0]} initialValues={fields} validationSchema={validationSchemas[0]} validateOnMount onSubmit={() => {}}>
+                  <Formik innerRef={forms[0]} initialValues={fields} validationSchema={validationSchemas[0]} validateOnMount onSubmit={() => { }}>
                     {({ errors, touched, setFieldValue }) => (
                       <Form>
                         <h5 className="card-title">Restaurant Information</h5>
@@ -289,7 +289,7 @@ const RegisterNew = () => {
               {/* Step 2 - Address */}
               <Step id="step2" name="Address" desc="Location Details">
                 <div>
-                  <Formik innerRef={forms[1]} initialValues={fields} validationSchema={validationSchemas[1]} validateOnMount onSubmit={() => {}}>
+                  <Formik innerRef={forms[1]} initialValues={fields} validationSchema={validationSchemas[1]} validateOnMount onSubmit={() => { }}>
                     {({ errors, touched, values, setFieldValue }) => (
                       <Form>
                         <h5 className="card-title">Address Information</h5>
@@ -318,7 +318,7 @@ const RegisterNew = () => {
                           >
                             <option value="">Select Country</option>
                             {Country.getAllCountries().map((c) => (
-                              <option key={c.isoCode} value={c.isoCode}>
+                              <option key={c.isoCode} value={c.name}>
                                 {c.name}
                               </option>
                             ))}
@@ -341,8 +341,10 @@ const RegisterNew = () => {
                             }}
                           >
                             <option value="">Select State</option>
-                            {State.getStatesOfCountry(values.country).map((s) => (
-                              <option key={s.isoCode} value={s.isoCode}>
+                            {State.getStatesOfCountry(
+                              Country.getAllCountries().find(c => c.name === values.country)?.isoCode
+                            ).map((s) => (
+                              <option key={s.isoCode} value={s.name}>
                                 {s.name}
                               </option>
                             ))}
@@ -356,9 +358,18 @@ const RegisterNew = () => {
 
                         <div className="mb-3 top-label tooltip-end-top">
                           <Form.Label>CITY</Form.Label>
-                          <select className="form-control" value={values.city} onChange={(e) => setFieldValue('city', e.target.value)}>
+                          <select
+                            className="form-control"
+                            value={values.city}
+                            onChange={(e) => setFieldValue('city', e.target.value)}
+                          >
                             <option value="">Select City</option>
-                            {City.getCitiesOfState(values.country, values.state).map((city) => (
+                            {City.getCitiesOfState(
+                              Country.getAllCountries().find(c => c.name === values.country)?.isoCode,
+                              State.getStatesOfCountry(
+                                Country.getAllCountries().find(c => c.name === values.country)?.isoCode
+                              ).find(s => s.name === values.state)?.isoCode
+                            ).map((city) => (
                               <option key={city.name} value={city.name}>
                                 {city.name}
                               </option>
@@ -389,7 +400,7 @@ const RegisterNew = () => {
               {/* Step 3 - Security */}
               <Step id="step3" name="Security" desc="Account Setup">
                 <div>
-                  <Formik innerRef={forms[2]} initialValues={fields} validationSchema={validationSchemas[2]} validateOnMount onSubmit={() => {}}>
+                  <Formik innerRef={forms[2]} initialValues={fields} validationSchema={validationSchemas[2]} validateOnMount onSubmit={() => { }}>
                     {({ errors, touched }) => (
                       <Form>
                         <h5 className="card-title">Security & Business Details</h5>

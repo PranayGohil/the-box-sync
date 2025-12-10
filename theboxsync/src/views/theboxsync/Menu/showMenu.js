@@ -31,7 +31,7 @@ const showMenu = () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API}/menu/get/rescode/${res_code}`);
       console.log(res.data);
-      const transformedMenu = res.data.map(({ _id, ...rest }) => ({
+      const transformedMenu = res.data.data.map(({ _id, ...rest }) => ({
         ...rest,
         id: _id,
       }));

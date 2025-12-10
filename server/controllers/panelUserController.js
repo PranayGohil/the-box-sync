@@ -44,16 +44,26 @@ exports.createOrUpdatePanelUser = async (req, res) => {
     const { planName } = req.params;
     const userId = req.user._id;
     const { username, password, adminPassword } = req.body;
+    console.log("Plan name : ", planName);
+    console.log("User ID :", userId);
+    console.log("Body :", req.body)
 
     // If creating new account or changing password, verify admin password
     if (password) {
-      const admin = await User.findById(userId);
-      if (!admin) return res.status(404).json({ message: "Admin not found" });
+      const admin = await User.findById(userId).select('+password');
+      if (!admin) {
+        return res.status(404).json({ message: "Admin not found" });
+      }
+
+      if (!adminPassword) {
+        return res.status(400).json({ message: "Admin password is required" });
+      }
 
       const isMatch = await bcrypt.compare(adminPassword, admin.password);
       if (!isMatch) {
         return res.status(401).json({ message: "Invalid admin password" });
       }
+
     }
 
     const Model = getModel(planName);
@@ -85,7 +95,7 @@ exports.changePanelPassword = async (req, res) => {
     const { adminPassword, newPassword } = req.body;
 
     // Verify admin password
-    const admin = await User.findById(userId);
+    const admin = await User.findById(userId).select('+password');
     if (!admin) return res.status(404).json({ message: "Admin not found" });
 
     const isMatch = await bcrypt.compare(adminPassword, admin.password);
@@ -95,7 +105,7 @@ exports.changePanelPassword = async (req, res) => {
 
     // Get correct panel model
     const Model = getModel(planName);
-    const panelUser = await Model.findOne({ user_id: userId });
+    const panelUser = await Model.findOne({ user_id: userId }).select('+password');
     if (!panelUser) {
       return res.status(404).json({ message: "Panel account not found" });
     }

@@ -6,6 +6,7 @@ import axios from 'axios';
 
 function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
 
   const isAddMode = !data?._id;
@@ -220,6 +221,9 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
                   isInvalid={touched.confirmPassword && !!errors.confirmPassword}
                 />
                 {renderError('confirmPassword')}
+              </div>
+              <div className='mb-3 mx-2'>
+                {error && <div className="text-danger text-medium">{error}</div>}
               </div>
             </>
           )}

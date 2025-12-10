@@ -7,6 +7,7 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
 import BoxedVariationsStripe from './components/BoxedVariationsStripe';
 import EditDishModal from './EditDishModal';
+import EditDishCategoryModal from './EditDishCategoryModal';
 import DeleteDishModal from './DeleteDishModal';
 
 const ManageMenu = () => {
@@ -22,6 +23,8 @@ const ManageMenu = () => {
   // Modal and selected dish state
   const [editMenuModalShow, setEditMenuModalShow] = useState(false);
   const [selectedDish, setSelectedDish] = useState(null);
+  const [editCategoryModalShow, setEditCategoryModalShow] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [deleteDishModalShow, setDeleteDishModalShow] = useState(false);
   const [dishToDelete, setDishToDelete] = useState(null);
   const [menuData, setMenuData] = useState([]);
@@ -134,11 +137,10 @@ const ManageMenu = () => {
                   sortable: true,
                   headerClassName: 'text-muted text-small text-uppercase w-40',
                   Cell: ({ row }) => (
-                    <div className="d-flex align-items-center">
+                    <>
                       {row.original.dish_name}
                       {row.original.is_special && <i className={`icon-20 ${starFillIcon.c} ms-2 text-warning`} />}
-                      {row.original.is_available === false && <CsLineIcons icon="slash" className="ms-2 text-danger" />  }
-                    </div>
+                    </>
                   ),
                 },
                 {
@@ -184,17 +186,18 @@ const ManageMenu = () => {
               return (
                 <Col md={6} lg={6} key={category.id}>
                   <Card body className="mb-4">
-                    <BoxedVariationsStripe columns={columns} data={data} category={category} />
+                    <BoxedVariationsStripe columns={columns} data={data} category={category} setEditCategoryModalShow={setEditCategoryModalShow} setSelectedCategory={setSelectedCategory} />
                   </Card>
                 </Col>
               );
             })}
-          </Row>  
+          </Row>
         </Col>
       </Row>
 
-      {/* Edit Modal */}
       {selectedDish && <EditDishModal show={editMenuModalShow} handleClose={() => setEditMenuModalShow(false)} data={selectedDish} fetchMenuData={fetchMenuData} />}
+
+      {selectedCategory && <EditDishCategoryModal show={editCategoryModalShow} handleClose={() => setEditCategoryModalShow(false)} data={selectedCategory} fetchMenuData={fetchMenuData} />}
 
       {dishToDelete && <DeleteDishModal show={deleteDishModalShow} handleClose={() => setDeleteDishModalShow(false)} data={dishToDelete} fetchMenuData={fetchMenuData} />}
     </>
