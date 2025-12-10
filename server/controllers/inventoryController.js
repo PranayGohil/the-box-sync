@@ -166,7 +166,7 @@ const addInventoryRequest = async (req, res) => {
       ...rest,
       user_id: user._id || user,
       items,
-      status: "Pending",
+      status: "Requested",
     };
 
     const data = await Inventory.create(inventoryData);
