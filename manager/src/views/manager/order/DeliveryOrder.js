@@ -105,7 +105,7 @@ const DeliveryOrder = () => {
       const response = await axios.get(`${process.env.REACT_APP_API}/menu/get-categories`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      setCategories(response.data);
+      setCategories(response.data.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }

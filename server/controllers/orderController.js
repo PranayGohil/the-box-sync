@@ -326,9 +326,10 @@ const orderController = async (req, res) => {
 
 const dineInController = async (req, res) => {
   try {
-    let { orderInfo, table_id: tableId, customerInfo } = req.body;
+    let { orderInfo, tableId, customerInfo } = req.body;
     const orderId = orderInfo.order_id;
     orderInfo.user_id = req.user;
+    console.log("Order Info : ", req.body);
 
     // if (!tableId) {
     //   console.error("Table ID is required for Dine In orders");

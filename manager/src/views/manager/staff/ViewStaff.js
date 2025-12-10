@@ -15,7 +15,6 @@ const ViewStaff = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       if (response.data || response.data !== "Null") {
-        console.log(response.data);
         setStaff(response.data.data);
       } else {
         setStaff([]);

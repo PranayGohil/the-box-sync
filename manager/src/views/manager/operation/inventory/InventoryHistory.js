@@ -150,18 +150,6 @@ const InventoryHistory = () => {
             <Button variant="link" size="sm" title="View" onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}> 
               <CsLineIcons icon="eye" />
             </Button>
-            <Button variant="link" size="sm" title="Edit" onClick={() => history.push(`/operations/edit-inventory/${row.original._id}`)}> 
-              <CsLineIcons icon="edit" />
-            </Button>
-            <Button
-              variant="link"
-              size="sm"
-              title="Delete"
-              onClick={() => handleShow(row.original)}
-            >
-              <CsLineIcons icon="bin" />
-            </Button>
-
           </div>
         ),
       },
@@ -194,48 +182,12 @@ const InventoryHistory = () => {
             <Button variant="link" size="sm" title="View" onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}> {/* eslint-disable-line no-underscore-dangle */}
               <CsLineIcons icon="eye" />
             </Button>
-            <Button
-              variant="link"
-              size="sm"
-              title="Delete"
-              onClick={() => handleShow(row.original)}
-            >
-              <CsLineIcons icon="bin" />
-            </Button>
-
           </>
         ),
       },
     ],
     []
   );
-
-  const handleDelete = async () => {
-    if (!data?._id) return; // eslint-disable-line no-underscore-dangle
-    setIsDeleting(true);
-
-    try {
-      const res = await axios.delete(`${process.env.REACT_APP_API}/inventory/delete/${data._id}`, { // eslint-disable-line no-underscore-dangle
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (res.status === 200 || res.data.success) {
-        // Remove from local state UI
-        setCompletedData((prev) => prev.filter((item) => item._id !== data._id)); // eslint-disable-line no-underscore-dangle
-        setRejectedData((prev) => prev.filter((item) => item._id !== data._id)); // eslint-disable-line no-underscore-dangle
-
-        handleClose();
-      } else {
-        console.error('Delete failed:', res.data);
-      }
-    } catch (error) {
-      console.error('Error deleting inventory:', error);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
 
   const completedTable = useTable(
@@ -293,27 +245,6 @@ const InventoryHistory = () => {
           <TablePagination tableInstance={rejectedTable} />
         </Col>
       </Row>
-
-      {/* Delete Inventory Modal */}
-      <Modal className="modal-close-out" show={show} onHide={handleClose} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Delete Inventory</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>Are you sure you want to delete this inventory?</p>
-          <p>
-            <strong>{data?.bill_number}</strong>
-          </p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose} disabled={isDeleting}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={handleDelete} disabled={isDeleting}>
-            {isDeleting ? <Spinner animation="border" size="sm" /> : 'Delete'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </>
   );
 };

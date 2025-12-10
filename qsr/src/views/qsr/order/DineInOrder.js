@@ -63,7 +63,7 @@ const DineInOrder = () => {
       const response = await axios.get(`${process.env.REACT_APP_API}/table/get/${tableId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      setTableInfo(response.data);
+      setTableInfo(response.data.data);
     } catch (error) {
       console.error('Error fetching table info:', error);
     }
@@ -106,7 +106,7 @@ const DineInOrder = () => {
       const response = await axios.get(`${process.env.REACT_APP_API}/menu/get-categories`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      setCategories(response.data);
+      setCategories(response.data.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -234,8 +234,6 @@ const DineInOrder = () => {
       const response = await axios.post(`${process.env.REACT_APP_API}/order/dine-in`, payload, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-
-      console.log('Order saved:', response.data);
 
       if (response.data.status === 'success') {
         if (status === 'Paid') {

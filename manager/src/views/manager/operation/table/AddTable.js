@@ -136,7 +136,6 @@ const AddTable = () => {
           values,
           { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
         );
-        console.log(response.data);
         history.push('/operations/manage-table');
       } catch (err) {
         console.error(err);

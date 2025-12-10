@@ -20,36 +20,20 @@ function EditInventory() {
     { to: `operations/edit-inventory/${id}`, title: 'Edit Inventory' },
   ];
 
-  useEffect(() => {
-    axios
-      .get(`${process.env.REACT_APP_API}/inventory/get/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      })
-      .then((res) => {
-        console.log(res.data);
-        setItems(res.data.items);
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }, []);
-
   // ✅ Formik setup with your schema
   const formik = useFormik({
     initialValues: { items, status: 'Requested' },
     validationSchema: Yup.object({
-      items: Yup.array()
-        .of(
-          Yup.object().shape({
-            item_name: Yup.string().required('Item Name is required'),
-            unit: Yup.string().required('Unit is required'),
-            item_quantity: Yup.number()
-              .typeError('Quantity must be a number') // handles non-numeric input
-              .required('Item Quantity is required')
-              .positive('Quantity must be greater than 0'),
-          })
-        )
-        .min(1, 'At least one item is required'), // optional: at least one item
+      items: Yup.array().of(
+        Yup.object().shape({
+          item_name: Yup.string().required('Item Name is required'),
+          unit: Yup.string().required('Unit is required'),
+          item_quantity: Yup.number()
+            .typeError('Quantity must be a number')
+            .required('Item Quantity is required')
+            .positive('Quantity must be greater than 0'),
+        })
+      ),
       status: Yup.string().required('Status is required'),
     }),
     onSubmit: (values) => {
@@ -74,6 +58,21 @@ function EditInventory() {
         });
     },
   });
+
+  useEffect(() => {
+    axios
+      .get(`${process.env.REACT_APP_API}/inventory/get/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      })
+      .then((res) => {
+        console.log(res.data);
+        setItems(res.data.items);
+        formik.setFieldValue('items', res.data.items);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }, []);
 
   // ✅ Add/Remove/Change handlers
   const addItem = () => {

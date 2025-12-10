@@ -27,9 +27,11 @@ const InventoryDetails = () => {
                 setLoading(true);
                 const res = await axios.get(
                     `${process.env.REACT_APP_API}/inventory/get/${id}`,
-                    { headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          } }
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem('token')}`,
+                        }
+                    }
                 );
                 setInventory(res.data);
             } catch (err) {
@@ -159,9 +161,11 @@ const InventoryDetails = () => {
                     <Button variant="secondary" onClick={() => history.push('/operations/inventory-history')}>
                         Back to Inventory
                     </Button>{' '}
-                    <Button variant="dark" onClick={() => history.push(`/operations/edit-inventory/${id}`)}>
-                        Edit Inventory
-                    </Button>
+                    {inventory.status === "Requested" && (
+                        <Button variant="dark" onClick={() => history.push(`/operations/edit-inventory/${id}`)}>
+                            Edit Inventory
+                        </Button>
+                    )}
                 </Col>
             </Row>
         </>

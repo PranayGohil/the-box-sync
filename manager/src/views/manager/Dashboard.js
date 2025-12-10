@@ -42,7 +42,7 @@ const Dashboard = () => {
         },
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      console.log(response.data.data);
+      console.log("Resaponse : ", response.data.activeDineInTables);
 
       setActiveDineInOrders(response.data.activeDineInTables);
       setActiveTakeawaysAndDeliveries(response.data.activeTakeawaysAndDeliveries);
