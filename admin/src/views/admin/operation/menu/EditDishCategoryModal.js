@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
     const formik = useFormik({
@@ -32,6 +33,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                 handleClose();
             } catch (err) {
                 console.error('Error updating category:', err);
+                toast.error('Failed to update category.');
             }
         },
     });

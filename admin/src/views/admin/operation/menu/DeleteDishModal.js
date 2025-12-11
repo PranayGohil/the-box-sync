@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const DeleteDishModal = ({ show, handleClose, data, fetchMenuData }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -13,10 +14,12 @@ const DeleteDishModal = ({ show, handleClose, data, fetchMenuData }) => {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
+      toast.success('Dish deleted successfully!');
       await fetchMenuData(); // Refresh the UI
       handleClose();
     } catch (err) {
       console.error('Error deleting dish:', err);
+      toast.error('Failed to delete dish.');
     } finally {
       setIsDeleting(false);
     }

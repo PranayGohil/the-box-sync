@@ -7,6 +7,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import { Country, State, City } from 'country-state-city';
+import { toast } from 'react-toastify';
 
 const EditStaff = () => {
   const title = 'Edit Staff';
@@ -120,12 +121,12 @@ const EditStaff = () => {
           },
         });
 
-        alert('Staff updated successfully!');
+        toast.success('Staff updated successfully!');
         history.push('/staff/view');
       } catch (err) {
         console.error('Error updating staff:', err);
         setFileUploadError('Update failed. Please try again.');
-        alert('Update failed.');
+        toast.error('Update failed.');
       } finally {
         setSubmitting(false);
       }
@@ -145,6 +146,7 @@ const EditStaff = () => {
         setPositions(res.data.data);
       } catch (error) {
         console.error('Error fetching positions:', error);
+        toast.error('Failed to fetch positions.');
       }
     };
 
@@ -183,6 +185,7 @@ const EditStaff = () => {
       } catch (error) {
         console.error('Error fetching staff data:', error);
         setLoading(false);
+        toast.error('Failed to fetch staff data.');
       }
     };
 

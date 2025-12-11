@@ -6,6 +6,7 @@ import * as Yup from 'yup';
 import axios from 'axios';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
+import { toast } from 'react-toastify';
 
 const AddDishes = () => {
   const title = 'Add Dishes';
@@ -77,12 +78,12 @@ const AddDishes = () => {
         },
       });
 
-      alert(res.data.message || 'Menu saved');
+      toast.success(res.data.message || 'Menu saved');
       resetForm();
       history.push('/operations/manage-menu');
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('Something went wrong!');
+      toast.error('Something went wrong!');
     } finally {
       setSubmitting(false);
     }

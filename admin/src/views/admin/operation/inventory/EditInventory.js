@@ -6,6 +6,7 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { toast } from 'react-toastify';
 
 const validationSchema = Yup.object().shape({
   bill_date: Yup.date().required('Bill date is required'),
@@ -73,11 +74,11 @@ const EditInventory = () => {
           },
         });
 
-        alert('Inventory updated successfully!');
+        toast.success('Inventory updated successfully!');
         history.push('/operations/inventory-history');
       } catch (error) {
         console.error('Failed to update inventory:', error);
-        alert('Update failed.');
+        toast.error('Update failed.');
       }
     },
   });
@@ -107,7 +108,7 @@ const EditInventory = () => {
         setFilePreviews(data.bill_files.map((name) => ({ type: 'existing', name })));
       } catch (err) {
         console.error('Failed to fetch inventory:', err);
-        alert('Could not load inventory data');
+        toast.error('Could not load inventory data');
       }
     };
 

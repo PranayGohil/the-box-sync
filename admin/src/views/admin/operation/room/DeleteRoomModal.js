@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const DeleteRoomModal = ({ show, handleClose, data, fetchRoomData }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -14,10 +15,12 @@ const DeleteRoomModal = ({ show, handleClose, data, fetchRoomData }) => {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
+      toast.success('Room deleted successfully!');
       await fetchRoomData(); 
       handleClose();
     } catch (err) {
       console.error('Error deleting room:', err);
+      toast.error('Failed to delete room.');
     } finally {
       setIsDeleting(false);
     }

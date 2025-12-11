@@ -4,6 +4,7 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
 import { Country, State, City } from 'country-state-city';
+import { toast } from 'react-toastify';
 
 const Address = () => {
     const title = 'Address';
@@ -62,6 +63,7 @@ const Address = () => {
             } catch (err) {
                 console.error('Failed to load address data', err);
                 setError('Failed to load data');
+                toast.error('Failed to load data');
             } finally {
                 setLoading(false);
             }
@@ -159,6 +161,7 @@ const Address = () => {
         } catch (err) {
             console.error('Failed to update address', err);
             setError('Update failed. Please try again.');
+            toast.error('Update failed. Please try again.');
         }
     };
 

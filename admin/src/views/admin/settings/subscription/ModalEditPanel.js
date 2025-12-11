@@ -3,6 +3,7 @@ import { Modal, Button, Form } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -95,7 +96,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
         handleClose();
       } catch (err) {
         console.error(err);
-        alert(err.response?.data?.message || 'Something went wrong');
+        toast.error(err.response?.data?.message || 'Something went wrong');
       } finally {
         setIsLoading(false);
       }

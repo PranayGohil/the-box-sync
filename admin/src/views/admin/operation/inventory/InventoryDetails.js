@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Card, Table, Row, Col, Spinner, Button, Alert } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
+import { toast } from 'react-toastify';
 
 const InventoryDetails = () => {
   const title = 'Inventory Details';
@@ -31,6 +32,7 @@ const InventoryDetails = () => {
         setInventory(res.data);
       } catch (err) {
         setError('Failed to load inventory details.');
+        toast.error('Failed to load inventory details. Please try again.');
       } finally {
         setLoading(false);
       }

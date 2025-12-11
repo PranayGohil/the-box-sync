@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Col, Row, ButtonGroup, Dropdown, Pagination, Modal, Button, Form } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -46,6 +47,7 @@ const ManageTable = () => {
       setTableData(transformedTables);
     } catch (error) {
       console.error('Error fetching table data:', error);
+      toast.error('Failed to fetch table data.');
     }
   };
 

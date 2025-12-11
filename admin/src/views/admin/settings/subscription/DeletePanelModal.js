@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const DeletePanelModal = ({ show, handleClose, planName, fetchData }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -17,6 +18,7 @@ const DeletePanelModal = ({ show, handleClose, planName, fetchData }) => {
       handleClose();
     } catch (err) {
       console.error('Error deleting panel:', err);
+      toast.error('Failed to delete panel.');
     } finally {
       setIsDeleting(false);
     }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Badge, Button, Col, Form, Card, Row, Modal } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
+import { toast } from 'react-toastify';
 import Scrollspy from 'components/scrollspy/Scrollspy';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -59,6 +60,7 @@ const RequestedInventory = () => {
       }
     } catch (error) {
       console.error('Error fetching requested inventory:', error);
+      toast.error('Failed to fetch requested inventory. Please try again.');
     }
   }
 
@@ -119,10 +121,12 @@ const RequestedInventory = () => {
       .then((res) => {
         console.log("Inventory rejected:", res.data);
         setRejectInventoryModal(false);
+        toast.success('Inventory rejected successfully!');
         fetchRequestedInventory();
       })
       .catch((err) => {
         console.error("Error rejecting inventory:", err);
+        toast.error('Failed to reject inventory. Please try again.');
       });
   };
 
