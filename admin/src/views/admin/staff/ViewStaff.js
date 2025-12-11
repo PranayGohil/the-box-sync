@@ -4,6 +4,7 @@ import { useHistory, Link } from 'react-router-dom';
 import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import Glide from 'components/carousel/Glide';
+import { toast } from 'react-toastify';
 
 const ViewStaff = () => {
   const history = useHistory();
@@ -17,6 +18,7 @@ const ViewStaff = () => {
       setStaff(response.data.data);
     } catch (error) {
       console.error('Error fetching staff data:', error);
+      toast.error('Failed to fetch staff data.');
     }
   };
 

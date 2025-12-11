@@ -3,6 +3,7 @@ import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { Badge, Button, Col, Form, Row, Modal, Spinner } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
+import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -76,6 +77,7 @@ const InventoryHistory = () => {
       }
     } catch (error) {
       console.error('Error fetching requested inventory:', error);
+      toast.error('Failed to fetch requested inventory. Please try again.');
     }
   };
 
@@ -116,6 +118,7 @@ const InventoryHistory = () => {
       }
     } catch (error) {
       console.error('Error fetching requested inventory:', error);
+      toast.error('Failed to fetch requested inventory. Please try again.');
     }
   };
 
@@ -225,13 +228,14 @@ const InventoryHistory = () => {
         // Remove from local state UI
         setCompletedData((prev) => prev.filter((item) => item._id !== data._id)); // eslint-disable-line no-underscore-dangle
         setRejectedData((prev) => prev.filter((item) => item._id !== data._id)); // eslint-disable-line no-underscore-dangle
-
+        toast.success('Inventory deleted successfully!');
         handleClose();
       } else {
         console.error('Delete failed:', res.data);
       }
     } catch (error) {
       console.error('Error deleting inventory:', error);
+      toast.error('Failed to delete inventory. Please try again.');
     } finally {
       setIsDeleting(false);
     }

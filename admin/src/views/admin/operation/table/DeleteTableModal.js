@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button, Modal } from 'react-bootstrap';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const DeleteTableModal = ({ show, handleClose, data, onDeleteSuccess }) => {
   const handleDelete = async () => {
@@ -15,9 +16,11 @@ const DeleteTableModal = ({ show, handleClose, data, onDeleteSuccess }) => {
       );
       console.log('Table deleted:', res.data);
       handleClose();
+      toast.success('Table deleted successfully!');
       onDeleteSuccess(); // to refresh the table list
     } catch (error) {
       console.error('Error deleting table:', error);
+      toast.error('Failed to delete table.');
     }
   };
 

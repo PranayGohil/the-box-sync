@@ -7,6 +7,7 @@ import axios from 'axios';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { toast } from 'react-toastify';
 
 const AddRoomCategory = () => {
   const title = 'Add Room Category';
@@ -114,14 +115,14 @@ const AddRoomCategory = () => {
         },
       });
 
-      alert(res.data.message || 'Room category saved successfully');
+      toast.success(res.data.message || 'Room category saved successfully');
       resetForm();
       setCategoryImages([]);
       setThumbnailIndex(0);
       history.push('/operations/manage-rooms');
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('Something went wrong!');
+      toast.error('Something went wrong!');
     } finally {
       setSubmitting(false);
     }

@@ -14,6 +14,7 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, AlignmentType, WidthType } from "docx";
+import { toast } from "react-toastify";
 
 const ViewAttendance = () => {
   const { id } = useParams();
@@ -212,6 +213,7 @@ const ViewAttendance = () => {
     } catch (err) {
       console.error("Error fetching attendance:", err);
       setError("Failed to load attendance data. Please try again.");
+      toast.error("Failed to load attendance data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -224,7 +226,7 @@ const ViewAttendance = () => {
 
   const handleExport = (type) => {
     if (filteredAttendance.length === 0) {
-      alert("No attendance records found for the selected filters.");
+      toast.error("No attendance records found for the selected filters.");
       return;
     }
 

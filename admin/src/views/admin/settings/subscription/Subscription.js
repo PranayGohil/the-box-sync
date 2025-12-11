@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Row, Col, Button, Badge, Modal } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy, usePagination } from 'react-table';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { toast } from 'react-toastify';
 
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -31,7 +32,6 @@ const Subscription = () => {
     { to: 'admin/subscriptions', title: 'Subscriptions' },
   ];
 
-  const [subscriptionPlans, setSubscriptionPlans] = useState([]);
   const [userSubscription, setUserSubscription] = useState([]);
   const [availablePlans, setAvailablePlans] = useState([]);
   const [existingQueries, setExistingQueries] = useState({});
@@ -58,8 +58,6 @@ const Subscription = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }),
       ]);
-
-      setSubscriptionPlans(plansRes.data.data);
 
       const enriched = userRes.data.data.map((sub) => {
         const plan = plansRes.data.data.find((p) => p._id === sub.plan_id); // eslint-disable-line no-underscore-dangle
@@ -131,6 +129,7 @@ const Subscription = () => {
       setExistingQueries(queries);
     } catch (err) {
       console.error('Error fetching subscriptions:', err);
+      toast.error('Failed to fetch subscriptions.');
     }
   };
 
@@ -148,6 +147,7 @@ const Subscription = () => {
       window.location.reload();
     } catch (err) {
       console.error('Renew failed:', err);
+      toast.error('Renew failed.');
     }
   };
 
@@ -160,6 +160,7 @@ const Subscription = () => {
       window.location.reload();
     } catch (err) {
       console.error('Error purchasing plan:', err);
+      toast.error('Failed to purchase plan.');
     }
   };
 
@@ -174,6 +175,7 @@ const Subscription = () => {
       setShowPanelModal(true);
     } catch (err) {
       console.error('Error fetching panel user for edit:', err);
+      toast.error('Failed to fetch panel user.');
     }
   };
 
@@ -193,6 +195,7 @@ const Subscription = () => {
       fetchData();
     } catch (err) {
       console.error('Error saving panel user:', err);
+      toast.error('Failed to save panel user.');
     }
   };
 
@@ -224,7 +227,7 @@ const Subscription = () => {
     } else if (planName === 'Restaurant Website') {
       history.push('/settings/manage-website');
     } else {
-      alert('Invalid Plan');
+      toast.error('Invalid Plan');
     }
   };
 

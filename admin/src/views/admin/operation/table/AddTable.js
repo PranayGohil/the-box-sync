@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Button, Form, Card, Col, Row } from 'react-bootstrap';
+import { toast } from 'react-toastify';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
 import { useFormik } from 'formik';
@@ -139,6 +140,7 @@ const AddTable = () => {
         history.push('/operations/manage-table');
       } catch (err) {
         console.error(err);
+        toast.error(err.response.data.message);
       }
     },
   });

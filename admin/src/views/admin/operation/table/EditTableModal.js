@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Button, Form, Modal } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { toast } from 'react-toastify';
 
 const EditTableModal = ({ show, handleClose, data, onUpdateSuccess }) => {
 
@@ -32,6 +33,7 @@ const EditTableModal = ({ show, handleClose, data, onUpdateSuccess }) => {
         onUpdateSuccess();
       } catch (err) {
         console.error("Edit failed:", err);
+        toast.error('Failed to update table.');
       }
     },
   });

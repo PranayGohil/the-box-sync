@@ -8,6 +8,7 @@ import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } fro
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { toast } from 'react-toastify';
 
 import ControlsPageSize from './components/ControlsPageSize';
 import ControlsSearch from './components/ControlsSearch';
@@ -48,6 +49,7 @@ const OrderHistory = () => {
       } else {
         console.log(res.data.message);
         setError(res.data.message);
+        toast.error(res.data.message);
       }
     } catch (err) {
       console.log(err);

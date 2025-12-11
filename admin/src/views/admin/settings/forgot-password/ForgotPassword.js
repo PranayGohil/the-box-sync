@@ -6,6 +6,7 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { set } from 'date-fns';
+import { toast } from 'react-toastify';
 
 function ForgotPassword() {
   const title = 'Forgot Password';
@@ -36,6 +37,7 @@ function ForgotPassword() {
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred.');
       setSuccess('');
+      toast.error(err.response?.data?.message || 'An error occurred.');
     } finally {
       setIsLoading(false);
     }
@@ -56,6 +58,7 @@ function ForgotPassword() {
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid OTP.');
       setSuccess('');
+      toast.error(err.response?.data?.message || 'Invalid OTP.');
     } finally {
       setIsLoading(false);
     }
@@ -81,6 +84,7 @@ function ForgotPassword() {
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred.');
       setSuccess('');
+      toast.error(err.response?.data?.message || 'An error occurred.');
     } finally {
       setIsLoading(false);
     }

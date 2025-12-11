@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, NavLink, useHistory } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { Button, Row, Col, Card, Nav, Tab, Spinner } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -41,6 +42,7 @@ const StaffProfile = () => {
       setStaff(res.data.data);
     } catch (err) {
       console.error('Error fetching staff:', err);
+      toast.error('Failed to fetch staff.');
     } finally {
       setLoading(false);
     }
@@ -198,24 +200,28 @@ const StaffProfile = () => {
                     </Row>
                     <Row>
                       <strong>Document Images:</strong>
-                      <Col md={6}>
-                        <div className="mt-2">
-                          <img
-                            src={`${process.env.REACT_APP_UPLOAD_DIR}${staff.front_image}` || '/img/placeholder.png'}
-                            alt="Front ID"
-                            className="img-fluid rounded border"
-                          />
-                        </div>
-                      </Col>
-                      <Col md={6}>
-                        <div className="mt-2">
-                          <img
-                            src={`${process.env.REACT_APP_UPLOAD_DIR}${staff.back_image}` || '/img/placeholder.png'}
-                            alt="Back ID"
-                            className="img-fluid rounded border"
-                          />
-                        </div>
-                      </Col>
+                      {staff.front_image && (
+                        <Col md={6}>
+                          <div className="mt-2">
+                            <img
+                              src={`${process.env.REACT_APP_UPLOAD_DIR}${staff.front_image}` || '/img/placeholder.png'}
+                              alt="Front ID"
+                              className="img-fluid rounded border"
+                            />
+                          </div>
+                        </Col>
+                      )}
+                      {staff.back_image && (
+                        <Col md={6}>
+                          <div className="mt-2">
+                            <img
+                              src={`${process.env.REACT_APP_UPLOAD_DIR}${staff.back_image}` || '/img/placeholder.png'}
+                              alt="Back ID"
+                              className="img-fluid rounded border"
+                            />
+                          </div>
+                        </Col>
+                      )}
                     </Row>
                   </Card.Body>
                 </Card>

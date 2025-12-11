@@ -3,6 +3,7 @@ import { Modal, Button, Form } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 function RaiseInquiryModal({ show, handleClose, subscriptionName, fetchData }) {
     const [isLoading, setIsLoading] = useState(false);
@@ -41,7 +42,7 @@ function RaiseInquiryModal({ show, handleClose, subscriptionName, fetchData }) {
                 handleClose();
             } catch (err) {
                 console.error('Error raising inquiry:', err);
-                alert('Failed to send inquiry. Try again.');
+                toast.error('Failed to send inquiry. Try again.');
             } finally {
                 setIsLoading(false);
             }

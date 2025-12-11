@@ -6,6 +6,7 @@ import * as Yup from 'yup';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const defaultValues = {
   bill_date: '',
@@ -91,6 +92,7 @@ const CompleteInventory = () => {
         });
       } catch (error) {
         console.error('Error fetching inventory:', error);
+        toast.error('Failed to fetch inventory. Please try again.');
       }
     };
     fetchInventory();
@@ -164,11 +166,11 @@ const CompleteInventory = () => {
                   },
                 });
 
-                alert('Inventory completed successfully!');
+                toast.success('Inventory completed successfully!');
                 history.push('/operations/requested-inventory');
               } catch (error) {
                 console.error('Submission failed:', error);
-                alert('Failed to complete request.');
+                toast.error('Failed to complete request.');
               } finally {
                 setSubmitting(false);
               }

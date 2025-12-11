@@ -3,6 +3,7 @@ import { Form, Button, Card, Row, Col, Spinner } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Gst = () => {
   const title = 'Tax Info';
@@ -54,6 +55,7 @@ const Gst = () => {
       } catch (err) {
         console.error('Failed to load tax info', err);
         setError('Failed to load tax info.');
+        toast.error('Failed to load tax info.');
       } finally {
         setLoading(false);
       }
@@ -104,6 +106,7 @@ const Gst = () => {
     } catch (err) {
       console.error('Failed to update tax info', err);
       setError('Update failed. Please try again.');
+      toast.error('Update failed. Please try again.');
     }
   };
 

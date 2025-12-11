@@ -3,6 +3,7 @@ import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { Badge, Col, Form, Row, Button, Modal, Spinner } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
+import { toast } from 'react-toastify';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -41,10 +42,11 @@ const Feedback = () => {
       if (response.data.success === true) {
         setFeedbacks(response.data.feedbacks);
       } else {
-        alert(response.message);
+        toast.error(response.message, { position: toast.POSITION.TOP_RIGHT, autoClose: 2000 });
       }
     } catch (error) {
       console.error('Error fetching feedbacks:', error);
+      toast.error('Failed to fetch feedbacks. Please try again.');
     }
     setLoading(false);
   };
@@ -71,9 +73,10 @@ const Feedback = () => {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       setShowReplyModal(false);
-      alert('Reply sent successfully!');
+      toast.success('Reply sent successfully!', { position: toast.POSITION.TOP_RIGHT, autoClose: 2000 });
     } catch (error) {
       console.error('Error sending reply:', error);
+      toast.error('Failed to send reply. Please try again.');
     }
     setLoading(false);
   };
@@ -128,11 +131,16 @@ const Feedback = () => {
             <Button variant="outline-primary" size="sm" className="btn-icon btn-icon-only me-1" onClick={() => handleReply(row.original)} title="Reply">
               <CsLineIcons icon="message" />
             </Button>
-            <Button variant="outline-danger" size="sm" className="btn-icon btn-icon-only" onClick={() => {
-              setSelectedFeedback(row.original);
-              setShowDeleteModal(true);
-            }}
-              title="Delete">
+            <Button
+              variant="outline-danger"
+              size="sm"
+              className="btn-icon btn-icon-only"
+              onClick={() => {
+                setSelectedFeedback(row.original);
+                setShowDeleteModal(true);
+              }}
+              title="Delete"
+            >
               <CsLineIcons icon="bin" />
             </Button>
           </div>
@@ -170,7 +178,7 @@ const Feedback = () => {
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
               <Col xs="12" md="5" className="d-flex align-items-start justify-content-end">
-                <Button variant='primary' onClick={() => history.push('/operations/qr-for-feedback')}>
+                <Button variant="primary" onClick={() => history.push('/operations/qr-for-feedback')}>
                   <CsLineIcons icon="qr-code" className="me-2" /> Feedback QR
                 </Button>
               </Col>
@@ -203,7 +211,7 @@ const Feedback = () => {
       </Row>
 
       {/* Reply Modal */}
-      <Modal className="modal-right large" show={showReplyModal} onHide={() => setShowReplyModal(false)} backdrop="static" >
+      <Modal className="modal-right large" show={showReplyModal} onHide={() => setShowReplyModal(false)} backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Reply to Feedback</Modal.Title>
         </Modal.Header>
@@ -238,10 +246,15 @@ const Feedback = () => {
       </Modal>
 
       {/* Delete Modal */}
-      <DeleteFeedbackModal show={showDeleteModal} handleClose={() => {
-        setShowDeleteModal(false);
-        setSelectedFeedback(null);
-      }} data={selectedFeedback} fetchFeedbacks={fetchFeedbacks} />
+      <DeleteFeedbackModal
+        show={showDeleteModal}
+        handleClose={() => {
+          setShowDeleteModal(false);
+          setSelectedFeedback(null);
+        }}
+        data={selectedFeedback}
+        fetchFeedbacks={fetchFeedbacks}
+      />
     </>
   );
 };

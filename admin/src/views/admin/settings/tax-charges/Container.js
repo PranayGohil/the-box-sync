@@ -5,6 +5,7 @@ import * as Yup from 'yup';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Container = () => {
   const title = 'Edit Container Charges';
@@ -60,6 +61,7 @@ const Container = () => {
       } catch (err) {
         console.error(err);
         setServerError('Server error occurred.');
+        toast.error('Server error occurred.');
       }
     },
   });
@@ -83,6 +85,7 @@ const Container = () => {
         }
       } catch (err) {
         console.error('Error fetching user data:', err);
+        toast.error('Failed to fetch user data.');
       }
     };
     fetchData();

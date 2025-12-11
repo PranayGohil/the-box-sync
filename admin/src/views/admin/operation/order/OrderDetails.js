@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Row, Col, Card, Button, Spinner, Table } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
+import { toast } from 'react-toastify';
 
 const OrderDetails = () => {
   const title = 'Order Details';
@@ -43,10 +44,12 @@ const OrderDetails = () => {
         } else {
           console.log(orderRes.data.message);
           setError(orderRes.data.message);
+          toast.error(orderRes.data.message);
         }
       } catch (err) {
         console.log('Error fetching order:', err);
         setError('Unable to fetch order');
+        toast.error('Unable to fetch order');
       } finally {
         setLoading(false);
       }

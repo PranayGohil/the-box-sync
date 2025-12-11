@@ -7,6 +7,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import { Country, State, City } from 'country-state-city';
+import { toast } from 'react-toastify';
 
 const AddStaff = () => {
   const title = 'Add Staff';
@@ -28,40 +29,79 @@ const AddStaff = () => {
   const [cities, setCities] = useState([]);
   const [positions, setPositions] = useState([]);
 
-  const addStaff = Yup.object({
+  const addStaff = Yup.object().shape({
     staff_id: Yup.string()
       .required('Staff ID is required')
       .matches(/^[A-Za-z0-9]+$/, 'Staff ID must be alphanumeric'),
+
     f_name: Yup.string()
       .required('First name is required')
       .matches(/^[A-Za-z\s]+$/, 'First name must only contain letters'),
+
     l_name: Yup.string()
       .required('Last name is required')
       .matches(/^[A-Za-z\s]+$/, 'Last name must only contain letters'),
+
     birth_date: Yup.date().required('Birth date is required').max(new Date(), 'Birth date cannot be in the future'),
+
     joining_date: Yup.date().required('Joining date is required').min(Yup.ref('birth_date'), 'Joining date must be after birth date'),
+
     address: Yup.string().required('Address is required'),
     country: Yup.string().required('Country is required'),
     state: Yup.string().required('State is required'),
     city: Yup.string().required('City is required'),
+
     phone_no: Yup.string()
       .required('Phone number is required')
       .matches(/^[0-9]{10}$/, 'Phone number must be 10 digits'),
+
     email: Yup.string().required('Email is required').email('Enter a valid email address'),
+
     salary: Yup.number().required('Salary is required').positive('Salary must be a positive number'),
+
     position: Yup.string().required('Position is required'),
+
     photo: Yup.mixed()
       .required('Photo is required')
       .test('fileSize', 'File size is too large', (value) => !value || (value && value.size <= 2 * 1024 * 1024))
       .test('fileType', 'Unsupported file format', (value) => !value || (value && ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(value.type))),
+
     document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Pan Card', 'Voter Card'], 'Invalid document type'),
-    id_number: Yup.string().required('ID number is required'),
+
+    // Validate ID number depending on document_type (use when so we don't need `this`)
+    id_number: Yup.string()
+      .required('ID number is required')
+      .when('document_type', (docType, schema) => {
+        const aadharRegex = /^[0-9]{4}\s?[0-9]{4}\s?[0-9]{4}$/;
+        const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+        const voterRegex = /^[A-Z]{3}[0-9]{7}$/;
+
+        if (docType === 'National Identity Card') {
+          return schema.matches(aadharRegex, 'Aadhar number must be 12 digits (format: XXXX XXXX XXXX)');
+        }
+        if (docType === 'Pan Card') {
+          return schema.matches(panRegex, 'PAN card format must be ABCDE1234F (5 letters, 4 digits, 1 letter)');
+        }
+        if (docType === 'Voter Card') {
+          return schema.matches(voterRegex, 'Voter ID format must be ABC1234567 (3 letters, 7 digits)');
+        }
+        return schema;
+      }),
+
+    // Front image always required
     front_image: Yup.mixed()
       .required('Front ID image is required')
       .test('fileSize', 'File size is too large', (value) => !value || (value && value.size <= 2 * 1024 * 1024))
       .test('fileType', 'Unsupported file format', (value) => !value || (value && ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(value.type))),
+
+    // Back image - required only for Aadhar (use when instead of this.parent)
     back_image: Yup.mixed()
-      .required('Back ID image is required')
+      .when('document_type', (docType, schema) => {
+        if (docType === 'National Identity Card') {
+          return schema.required('Back ID image is required for Aadhar card');
+        }
+        return schema.notRequired();
+      })
       .test('fileSize', 'File size is too large', (value) => !value || (value && value.size <= 2 * 1024 * 1024))
       .test('fileType', 'Unsupported file format', (value) => !value || (value && ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(value.type))),
   });
@@ -112,12 +152,12 @@ const AddStaff = () => {
         });
 
         console.log('Staff added successfully:', addResponse.data);
-        alert('Staff added successfully!');
+        toast.success('Staff added successfully!');
         history.push('/staff/view');
       } catch (err) {
         console.error('Error during staff submission:', err);
         setFileUploadError('Staff submission failed. Please try again.');
-        alert('Add staff failed.');
+        toast.error('Add staff failed.');
       } finally {
         setSubmitting(false);
       }
@@ -136,24 +176,30 @@ const AddStaff = () => {
         setPositions(response.data.data);
       } catch (error) {
         console.error('Error fetching positions:', error);
+        toast.error('Failed to fetch positions.');
       }
     };
     fetchPositions();
   }, []);
 
   const handleCountryChange = (event) => {
-    const countryIsoCode = event.target.value;
-    setFieldValue('country', countryIsoCode);
-    setStates(State.getStatesOfCountry(countryIsoCode));
+    const countryName = event.target.value;
+    const selectedCountry = countries.find((c) => c.name === countryName);
+
+    setFieldValue('country', countryName);
+    setStates(selectedCountry ? State.getStatesOfCountry(selectedCountry.isoCode) : []);
     setCities([]);
     setFieldValue('state', '');
     setFieldValue('city', '');
   };
 
   const handleStateChange = (event) => {
-    const stateIsoCode = event.target.value;
-    setFieldValue('state', stateIsoCode);
-    setCities(City.getCitiesOfState(values.country, stateIsoCode));
+    const stateName = event.target.value;
+    const selectedCountry = countries.find((c) => c.name === values.country);
+    const selectedState = states.find((s) => s.name === stateName);
+
+    setFieldValue('state', stateName);
+    setCities(selectedCountry && selectedState ? City.getCitiesOfState(selectedCountry.isoCode, selectedState.isoCode) : []);
     setFieldValue('city', '');
   };
 
@@ -271,7 +317,7 @@ const AddStaff = () => {
                     <Form.Select name="country" value={values.country} onChange={handleCountryChange} isInvalid={touched.country && errors.country}>
                       <option value="">Select Country</option>
                       {countries.map((country) => (
-                        <option key={country.isoCode} value={country.isoCode}>
+                        <option key={country.isoCode} value={country.name}>
                           {country.name}
                         </option>
                       ))}
@@ -291,7 +337,7 @@ const AddStaff = () => {
                     >
                       <option value="">Select State</option>
                       {states.map((state) => (
-                        <option key={state.isoCode} value={state.isoCode}>
+                        <option key={state.isoCode} value={state.name}>
                           {state.name}
                         </option>
                       ))}
@@ -428,8 +474,24 @@ const AddStaff = () => {
                       value={values.id_number}
                       onChange={handleChange}
                       isInvalid={touched.id_number && errors.id_number}
+                      placeholder={
+                        values.document_type === 'National Identity Card'
+                          ? 'XXXX XXXX XXXX'
+                          : values.document_type === 'Pan Card'
+                          ? 'ABCDE1234F'
+                          : values.document_type === 'Voter Card'
+                          ? 'ABC1234567'
+                          : 'Enter ID number'
+                      }
                     />
                     <Form.Control.Feedback type="invalid">{errors.id_number}</Form.Control.Feedback>
+                    {values.document_type === 'National Identity Card' && <Form.Text className="text-muted">Format: 12 digits (XXXX XXXX XXXX)</Form.Text>}
+                    {values.document_type === 'Pan Card' && (
+                      <Form.Text className="text-muted">Format: 5 letters, 4 digits, 1 letter (e.g., ABCDE1234F)</Form.Text>
+                    )}
+                    {values.document_type === 'Voter Card' && (
+                      <Form.Text className="text-muted">Format: 3 letters followed by 7 digits (e.g., ABC1234567)</Form.Text>
+                    )}
                   </Form.Group>
                 </Col>
               </Row>
@@ -457,7 +519,11 @@ const AddStaff = () => {
                 </Col>
                 <Col md={6}>
                   <Form.Group>
-                    <Form.Label>ID Card Back Image</Form.Label>
+                    <Form.Label>
+                      ID Card Back Image
+                      {values.document_type === 'National Identity Card' && <span className="text-danger"> *</span>}
+                      {values.document_type && values.document_type !== 'National Identity Card' && <span className="text-muted"> (Optional)</span>}
+                    </Form.Label>
                     <Form.Control
                       type="file"
                       accept="image/*"
@@ -468,6 +534,7 @@ const AddStaff = () => {
                       isInvalid={touched.back_image && errors.back_image}
                     />
                     <Form.Control.Feedback type="invalid">{errors.back_image}</Form.Control.Feedback>
+                    {values.document_type === 'National Identity Card' && <Form.Text className="text-muted">Back image is required for Aadhar card</Form.Text>}
                     {backImagePreview && (
                       <div className="mt-2">
                         <img src={backImagePreview} alt="Back Image Preview" className="img-thumbnail" style={{ maxWidth: '150px', maxHeight: '150px' }} />

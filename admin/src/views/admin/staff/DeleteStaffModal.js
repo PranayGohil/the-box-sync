@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const DeleteStaffModal = ({ show, handleClose, data }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -13,9 +14,11 @@ const DeleteStaffModal = ({ show, handleClose, data }) => {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
+      toast.success('Staff deleted successfully!');
       handleClose();
     } catch (err) {
       console.error('Error deleting staff:', err);
+      toast.error('Failed to delete staff.');
     } finally {
       setIsDeleting(false);
     }

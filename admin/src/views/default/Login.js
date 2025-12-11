@@ -8,6 +8,7 @@ import LayoutFullpage from 'layout/LayoutFullpage';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import { AuthContext } from 'contexts/AuthContext';
+import { toast } from 'react-toastify';
 
 const Login = () => {
   const title = 'Login';
@@ -38,6 +39,7 @@ const Login = () => {
     } catch (err) {
       console.log("Login Error:", err.response?.data?.message);
       setError(err.response?.data?.message || "Something went wrong");
+      toast.error(err.response?.data?.message || "Something went wrong");
     }
   };
 

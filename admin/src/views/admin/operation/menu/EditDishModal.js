@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
   const [previewImg, setPreviewImg] = useState(null);
@@ -56,6 +57,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
         handleClose();
       } catch (err) {
         console.error('Error updating dish:', err);
+        toast.error('Failed to update dish.');
       }
     },
   });

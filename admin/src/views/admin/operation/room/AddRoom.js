@@ -7,6 +7,7 @@ import axios from 'axios';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { toast } from 'react-toastify';
 
 const AddRoom = () => {
     const title = 'Add Rooms';
@@ -32,6 +33,7 @@ const AddRoom = () => {
             setCategories(res.data.data);
         } catch (error) {
             console.error('Error fetching categories:', error);
+            toast.error('Failed to fetch categories. Please try again.');
         }
     };
 
@@ -151,13 +153,13 @@ const AddRoom = () => {
                 },
             });
 
-            alert(res.data.message || 'Rooms saved successfully');
+            toast.success(res.data.message || 'Rooms saved successfully');
             resetForm();
             setRoomImages({});
             history.push('/operations/manage-rooms');
         } catch (error) {
             console.error('Error submitting form:', error);
-            alert('Something went wrong!');
+            toast.error('Something went wrong!');
         } finally {
             setSubmitting(false);
         }

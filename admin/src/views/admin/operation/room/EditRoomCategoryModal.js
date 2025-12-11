@@ -3,6 +3,7 @@ import { Modal, Button, Form, Row, Col, Badge } from 'react-bootstrap';
 import { useFormik, FieldArray, FormikProvider } from 'formik';
 import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { toast } from 'react-toastify';
 
 const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
   const [roomImages, setRoomImages] = useState([]);
@@ -74,7 +75,7 @@ const EditRoomCategoryModal = ({ show, handleClose, data, fetchRoomData }) => {
         handleClose();
       } catch (err) {
         console.error('Error updating category:', err);
-        alert('Error updating category');
+        toast.error('Error updating category');
       }
     },
   });

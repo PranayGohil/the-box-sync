@@ -10,6 +10,7 @@ import LayoutFullpage from 'layout/LayoutFullpage';
 import HtmlHead from 'components/html-head/HtmlHead';
 import { AuthContext } from 'contexts/AuthContext';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { toast } from 'react-toastify';
 
 const RegisterNew = () => {
   const history = useHistory();
@@ -97,11 +98,12 @@ const RegisterNew = () => {
         login(res.data.token, res.data.user);
         window.location.href = '/select-plan';
       } else {
-        alert('Something went wrong!');
+        toast.error('Something went wrong!');
       }
     } catch (err) {
       console.error(err);
       setBottomNavHidden(false);
+      toast.error('Something went wrong!');
     } finally {
       setLoading(false);
     }

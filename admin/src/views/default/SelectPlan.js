@@ -4,6 +4,7 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { Button, Card, Modal } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import LayoutFull from 'layout/LayoutFull';
+import { toast } from 'react-toastify';
 
 const SelectPlan = () => {
   const title = 'Select Plan';
@@ -28,11 +29,11 @@ const SelectPlan = () => {
       if (response.data.success) {
         window.location.href = `/dashboard`;
       } else {
-        alert(response.data.message);
+        toast.error(response.data.message);
       }
     } catch (error) {
       console.error('Error purchasing plan:', error);
-      alert('An error occurred while processing your request.');
+      toast.error('An error occurred while processing your request.');
     }
   };
 

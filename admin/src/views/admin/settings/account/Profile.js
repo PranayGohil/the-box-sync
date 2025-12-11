@@ -3,6 +3,7 @@ import { Button, Form, Card, Col, Row, Image, Spinner } from 'react-bootstrap';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Profile = () => {
     const title = 'Profile';
@@ -56,6 +57,7 @@ const Profile = () => {
             } catch (err) {
                 console.error('Failed to load profile', err);
                 setError('Failed to load profile');
+                toast.error('Failed to load profile');
             } finally {
                 setLoading(false);
             }
@@ -110,6 +112,7 @@ const Profile = () => {
         } catch (err) {
             console.error('Failed to update profile', err);
             setError('Failed to update profile. Please try again.');
+            toast.error('Failed to update profile. Please try again.');
         }
     };
 

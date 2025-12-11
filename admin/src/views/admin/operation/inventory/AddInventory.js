@@ -6,6 +6,7 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { toast } from 'react-toastify';
 
 const validationSchema = Yup.object().shape({
   bill_date: Yup.date().required('Bill date is required'),
@@ -73,11 +74,11 @@ const AddInventory = () => {
           },
         });
 
-        alert('Inventory added successfully!');
+        toast.success('Inventory added successfully!');
         history.push('/operations/inventory-history');
       } catch (error) {
         console.error('Failed to add inventory:', error);
-        alert('Add inventory failed.');
+        toast.error('Add inventory failed.');
       } finally {
         setSubmitting(false);
       }

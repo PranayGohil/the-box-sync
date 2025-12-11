@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, Col, Row, Form } from 'react-bootstrap';
+import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import csInterfaceIcons from 'views/interface/content/icons/data/cs-interface-icons-tags';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -51,6 +52,7 @@ const ManageMenu = () => {
       setFilteredMenuData(transformedMenu);
     } catch (error) {
       console.error('Error fetching menu data:', error);
+      toast.error('Failed to fetch menu data. Please try again.');
     }
   };
 

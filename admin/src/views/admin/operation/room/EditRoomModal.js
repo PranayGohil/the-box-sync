@@ -3,6 +3,7 @@ import { Modal, Button, Form, Row, Col, Badge } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { toast } from 'react-toastify';
 
 const EditRoomModal = ({ show, handleClose, data, fetchRoomData }) => {
     const [roomImages, setRoomImages] = useState([]);
@@ -90,7 +91,7 @@ const EditRoomModal = ({ show, handleClose, data, fetchRoomData }) => {
                 handleClose();
             } catch (err) {
                 console.error('Error updating room:', err);
-                alert('Error updating room');
+                toast.error('Error updating room');
             }
         },
     });

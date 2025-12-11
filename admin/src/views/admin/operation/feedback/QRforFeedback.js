@@ -4,6 +4,7 @@ import { AuthContext } from 'contexts/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button, Card, Row, Col, Alert } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { toast } from 'react-toastify';
 
 const QRforFeedback = () => {
   const [feedbackToken, setFeedbackToken] = useState('');
@@ -40,7 +41,7 @@ const QRforFeedback = () => {
       console.log('Feedback token:', response.data.feedbackToken);
     } catch (error) {
       console.error('Error generating feedback token:', error);
-      console.log(error);
+      toast.error('Failed to generate feedback token. Please try again.');
     } finally {
       setLoading(false);
     }

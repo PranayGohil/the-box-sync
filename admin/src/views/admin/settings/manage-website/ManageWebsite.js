@@ -5,6 +5,7 @@ import * as Yup from 'yup';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const validationSchema = Yup.object().shape({
   restaurant_name: Yup.string().required('Restaurant name is required'),
@@ -47,10 +48,10 @@ const ManageWebsite = () => {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         });
-        alert('Website settings updated successfully.');
+        toast.success('Website settings updated successfully.');
       } catch (err) {
         console.error('Failed to update:', err);
-        alert('Update failed.');
+        toast.error('Update failed.');
       }
     },
   });
@@ -71,6 +72,7 @@ const ManageWebsite = () => {
         }
       } catch (err) {
         console.log(err);
+        toast.error('Failed to fetch settings.');
       }
     };
 
@@ -80,6 +82,7 @@ const ManageWebsite = () => {
         setAllDishes(res.data);
       } catch (err) {
         console.log(err);
+        toast.error('Failed to fetch dishes.');
       }
     };
 
