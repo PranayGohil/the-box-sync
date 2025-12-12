@@ -1,4 +1,4 @@
-import React, { createRef, useState, useContext } from 'react';
+import React, { createRef, useState, useContext, useRef } from 'react';
 import { Wizard, Steps, Step, WithWizard } from 'react-albus';
 import { Button, Form, Spinner } from 'react-bootstrap';
 import { useHistory } from 'react-router-dom';
@@ -12,7 +12,7 @@ import { AuthContext } from 'contexts/AuthContext';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
 
-const RegisterNew = () => {
+const Register = () => {
   const history = useHistory();
   const title = 'Register';
   const description = 'Register Page';
@@ -39,6 +39,13 @@ const RegisterNew = () => {
     confirmPassword: '',
   });
 
+  // Add near other useState declarations
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [verificationCountdown, setVerificationCountdown] = useState(0); // seconds until resend allowed
+  const [verificationCodeInput, setVerificationCodeInput] = useState('');
+  const countdownRef = useRef(null);
+
   const pinRegex = /^[1-9][0-9]{5}$/; // Indian PIN: 6 digits, first digit not 0
   const fssaiRegex = /^[0-9]{7,14}$/; // FSSAI: allow 7 to 14 digits (adjust if you want strict 14)
   const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;     // GSTIN pattern: 2 digits (state) + 5 letters (PAN) + 4 digits + 1 letter + 1 alphanumeric (entity) + 'Z' + 1 checksum char
@@ -61,6 +68,12 @@ const RegisterNew = () => {
             console.error(err);
             return false;
           }
+        })
+        .test('email-verified', 'Please verify your email', function (value) {
+          // only require verification if an email value exists and matches current entered value
+          // this uses outer isEmailVerified state
+          if (!value) return true;
+          return isEmailVerified === true;
         }),
       mobile: Yup.string()
         .matches(/^\d{10}$/, 'Must be 10 digits')
@@ -93,6 +106,64 @@ const RegisterNew = () => {
         .oneOf([Yup.ref('password')], 'Passwords must match'),
     }),
   ];
+
+  // send verification code (starts countdown)
+  const sendVerification = async (email) => {
+    if (!email) {
+      toast.error('Enter an email first');
+      return;
+    }
+    try {
+      setVerificationSent(false);
+      const res = await axios.post(`${process.env.REACT_APP_API}/otp/send-verification`, { email });
+      // expect success status || res.data.success
+      if (res.status === 200 && (res.data?.success ?? true)) {
+        toast.success('Verification code sent to your email');
+        setVerificationSent(true);
+        setVerificationCountdown(60); // 60s cooldown before resend
+        // run countdown
+        if (countdownRef.current) clearInterval(countdownRef.current);
+        countdownRef.current = setInterval(() => {
+          setVerificationCountdown(prev => {
+            if (prev <= 1) {
+              clearInterval(countdownRef.current);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } else {
+        toast.error(res.data?.message || 'Failed to send code');
+      }
+    } catch (err) {
+      console.error('sendVerification error', err);
+      toast.error('Failed to send verification code');
+    }
+  };
+
+  // verify code entered by user
+  const verifyCode = async (email) => {
+    if (!verificationCodeInput) {
+      toast.error('Enter verification code');
+      return;
+    }
+    try {
+      const res = await axios.post(`${process.env.REACT_APP_API}/otp/verify-email`, { email, code: verificationCodeInput });
+      if (res.status === 200 && (res.data?.verified ?? false)) {
+        setIsEmailVerified(true);
+        toast.success('Email verified');
+        // optionally disable resend UI
+        setVerificationSent(false);
+        if (countdownRef.current) clearInterval(countdownRef.current);
+      } else {
+        toast.error(res.data?.message || 'Invalid verification code');
+      }
+    } catch (err) {
+      console.error('verifyCode error', err);
+      toast.error('Verification failed');
+    }
+  };
+
 
   const handleSubmit = async (finalData) => {
     setBottomNavHidden(true);
@@ -139,6 +210,19 @@ const RegisterNew = () => {
       return;
     }
 
+    // inside onClickNext after `const formIndex = steps.indexOf(step);`
+    if (formIndex === 0) {
+      // if email not verified, block and show toast
+      if (!isEmailVerified) {
+        toast.error('Please verify your email before continuing');
+        // also mark touched so error shows
+        if (form) {
+          form.setTouched({ ...form.touched, email: true });
+        }
+        return;
+      }
+    }
+
     form.submitForm().then(async () => {
       // Validate all fields in this form
       const errors = await form.validateForm();
@@ -167,6 +251,7 @@ const RegisterNew = () => {
       }
     });
   };
+
 
   const onClickPrev = (goToPrev, steps, step) => {
     if (steps.indexOf(step) <= 0) {
@@ -239,7 +324,9 @@ const RegisterNew = () => {
               <Step id="step1" name="Restaurant" desc="Basic Information">
                 <div>
                   <Formik innerRef={forms[0]} initialValues={fields} validationSchema={validationSchemas[0]} validateOnMount onSubmit={() => { }}>
-                    {({ errors, touched, setFieldValue }) => (
+                    {({ errors, touched, setFieldValue, values
+
+                    }) => (
                       <Form>
                         <h5 className="card-title">Restaurant Information</h5>
                         <p className="card-text text-alternate mb-4">Please provide your restaurant's basic details and contact information.</p>
@@ -279,15 +366,48 @@ const RegisterNew = () => {
                           )}
                         </div>
 
-                        <div className="mb-3 top-label tooltip-end-top">
+                        <div className="mb-3 top-label tooltip-end-top d-flex flex-column">
                           <Form.Label>EMAIL</Form.Label>
-                          <Field className="form-control" name="email" type="email" />
+                          <div className="d-flex align-items-center">
+                            <Field className="form-control me-2" name="email" type="email" />
+                            <div>
+                              <Button
+                                variant="outline-primary"
+                                onClick={() => sendVerification(values.email)}
+                                disabled={verificationCountdown > 0}
+                                style={{ whiteSpace: 'nowrap' }}
+                              >
+                                {verificationCountdown > 0 ? `Resend in ${verificationCountdown}s` : 'Send Code'}
+                              </Button>
+                            </div>
+                          </div>
                           {errors.email && touched.email && (
                             <Form.Control.Feedback type="invalid" tooltip className="d-block">
                               {errors.email}
                             </Form.Control.Feedback>
                           )}
+                          {/* If verified, show a small badge */}
+                          {isEmailVerified && (
+                            <div className="mt-2 mx-2">
+                              <small className="text-success">Email verified ✓</small>
+                            </div>
+                          )}
                         </div>
+                        {/* Show code entry when a code has been sent */}
+                        {verificationSent && !isEmailVerified && (
+                          <div className="mb-3 top-label tooltip-end-top">
+                            <Form.Label>VERIFICATION CODE</Form.Label>
+                            <div className="mt-2 d-flex align-items-center">
+                              <input
+                                className="form-control me-2"
+                                placeholder="Enter verification code"
+                                value={verificationCodeInput}
+                                onChange={(e) => setVerificationCodeInput(e.target.value)}
+                              />
+                              <Button onClick={() => verifyCode(values.email)}>Verify</Button>
+                            </div>
+                          </div>
+                        )}
 
                         <div className="mb-3 top-label tooltip-end-top">
                           <Form.Label>PHONE NUMBER</Form.Label>
@@ -522,4 +642,4 @@ const RegisterNew = () => {
   );
 };
 
-export default RegisterNew;
+export default Register;

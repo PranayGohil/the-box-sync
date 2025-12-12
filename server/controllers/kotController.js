@@ -56,6 +56,9 @@ const showKOTs = async (req, res) => {
 const updateDishStatus = async (req, res) => {
   try {
     const { orderId, dishId, status } = req.body;
+    if(!orderId || !dishId || !status) {
+      res.status(404).json({ success: false, message: "Something was Missing"});
+    }
     await Order.updateOne(
       {
         _id: orderId,
