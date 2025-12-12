@@ -16,6 +16,9 @@ const userSchema = new Schema({
   gst_no: {
     type: String,
   },
+  fssai_no: {
+    type: String,
+  },
   email: {
     type: String,
   },

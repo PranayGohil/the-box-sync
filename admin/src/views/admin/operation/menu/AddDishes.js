@@ -70,7 +70,9 @@ const AddDishes = () => {
         };
       });
       formData.append('dishes', JSON.stringify(dishData));
-
+      for (const pair of formData.entries()) {
+        console.log(pair[0], ': ', pair[1]);
+      }
       const res = await axios.post(`${process.env.REACT_APP_API}/menu/add`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',

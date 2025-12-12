@@ -186,6 +186,7 @@ const getUserData = async (req, res) => {
       name: 1,
       logo: 1,
       gst_no: 1,
+      fssai_no: 1,
       email: 1,
       mobile: 1,
       address: 1,

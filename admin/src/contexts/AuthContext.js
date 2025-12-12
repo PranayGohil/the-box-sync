@@ -33,12 +33,10 @@ export const AuthProvider = ({ children }) => {
                 setActivePlans(fetchActivePlans.map((plan) => plan.plan_name));
                 console.log(fetchActivePlans.map((plan) => plan.plan_name));
             } else {
-                toast.error("No Active Subscription Found");
                 history.push("/select-plan");
             }
         } catch (error) {
             console.error("Error fetching subscription plans:", error);
-            toast.error("Error fetching subscription plans");
         }
     };
 

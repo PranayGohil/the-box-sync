@@ -9,6 +9,7 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import { AuthContext } from 'contexts/AuthContext';
 import { toast } from 'react-toastify';
+import { Underline } from 'docx';
 
 const Login = () => {
   const title = 'Login';
@@ -83,7 +84,7 @@ const Login = () => {
         <div className="mb-5">
           <p className="h6">Please use your credentials to login.</p>
           <p className="h6">
-            If you are not a member, please <NavLink to="/register">register</NavLink>.
+            If you are not a member, please <NavLink to="/register" style={{ color: "blue",textDecoration: "underline" }}>register</NavLink>.
           </p>
         </div>
         <div>

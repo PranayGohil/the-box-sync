@@ -33,10 +33,16 @@ const RegisterNew = () => {
     state: '',
     city: '',
     pincode: '',
+    fssai_no: '',
     gst_no: '',
     password: '',
     confirmPassword: '',
   });
+
+  const pinRegex = /^[1-9][0-9]{5}$/; // Indian PIN: 6 digits, first digit not 0
+  const fssaiRegex = /^[0-9]{7,14}$/; // FSSAI: allow 7 to 14 digits (adjust if you want strict 14)
+  const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;     // GSTIN pattern: 2 digits (state) + 5 letters (PAN) + 4 digits + 1 letter + 1 alphanumeric (entity) + 'Z' + 1 checksum char
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=[\]{};:'"\\|,.<>/?]).{8,}$/;   // At least 8 chars, 1 lowercase, 1 uppercase, 1 number, 1 special symbol
 
   const validationSchemas = [
     // Step 1 schema
@@ -66,15 +72,25 @@ const RegisterNew = () => {
       country: Yup.string().required('Country is required'),
       state: Yup.string().required('State is required'),
       city: Yup.string().required('City is required'),
-      pincode: Yup.string().required('Zip code is required'),
+      pincode: Yup.string()
+        .required('Zip code is required')
+        .matches(pinRegex, 'Enter a valid 6-digit PIN code'),
     }),
     // Step 3 schema
     Yup.object({
-      gst_no: Yup.string().required('GST Number is required'),
-      password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+      fssai_no: Yup.string()
+        .required('FSSAI License Number is required')
+        .matches(fssaiRegex, 'Enter a valid FSSAI number (7 to 14 digits)'),
+      gst_no: Yup.string()
+        .required('GST Number is required')
+        .matches(gstRegex, 'Enter a valid 15-character GSTIN (e.g. 27ABCDE1234F1Z5)'),
+      password: Yup.string()
+        .required('Password is required')
+        .min(8, 'Password must be at least 8 characters')
+        .matches(passwordRegex, 'Password must include uppercase, lowercase, number and symbol'),
       confirmPassword: Yup.string()
-        .oneOf([Yup.ref('password')], 'Passwords must match')
-        .required('Confirm password is required'),
+        .required('Confirm password is required')
+        .oneOf([Yup.ref('password')], 'Passwords must match'),
     }),
   ];
 
@@ -112,7 +128,7 @@ const RegisterNew = () => {
   const stepFields = [
     ['name', 'logo', 'email', 'mobile'],
     ['address', 'country', 'state', 'city', 'pincode'],
-    ['gst_no', 'password', 'confirmPassword'],
+    ['fssai_no', 'gst_no', 'password', 'confirmPassword'],
   ];
 
   const onClickNext = async (goToNext, steps, step) => {
@@ -407,6 +423,16 @@ const RegisterNew = () => {
                       <Form>
                         <h5 className="card-title">Security & Business Details</h5>
                         <p className="card-text text-alternate mb-4">Complete your registration with business and security information.</p>
+
+                        <div className="mb-3 top-label tooltip-end-top">
+                          <Form.Label>FSSAI LICENSE NUMBER</Form.Label>
+                          <Field className="form-control" name="fssai_no" />
+                          {errors.fssai_no && touched.fssai_no && (
+                            <Form.Control.Feedback type="invalid" tooltip className="d-block">
+                              {errors.fssai_no}
+                            </Form.Control.Feedback>
+                          )}
+                        </div>
 
                         <div className="mb-3 top-label tooltip-end-top">
                           <Form.Label>GST NUMBER</Form.Label>
