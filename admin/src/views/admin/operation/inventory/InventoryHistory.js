@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { Badge, Button, Col, Form, Row, Modal, Spinner } from 'react-bootstrap';
+import { Badge, Button, Col, Form, Row, Modal, Spinner, Alert } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -25,10 +25,12 @@ const InventoryHistory = () => {
 
   const [completedData, setCompletedData] = useState([]);
   const [rejectedData, setRejectedData] = useState([]);
-
+  const [loading, setLoading] = useState({ completed: true, rejected: true });
   const [show, setShow] = useState(false);
-  const [data, setData] = useState(null); // For the selected inventory record
+  const [data, setData] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showRejectReasonModal, setShowRejectReasonModal] = useState(false);
+  const [selectedRejectReason, setSelectedRejectReason] = useState('');
 
   const handleShow = (rowData) => {
     setData(rowData);
@@ -40,16 +42,25 @@ const InventoryHistory = () => {
     setData(null);
   };
 
+  const truncateWords = (text, limit = 8) => {
+    if (!text) return '';
+    const words = text.split(' ');
+    return words.length > limit
+      ? words.slice(0, limit).join(' ')
+      : text;
+  };
+
+
   const fetchCompletedInventory = async () => {
     try {
+      setLoading(prev => ({ ...prev, completed: true }));
       const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Completed`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      console.log("Completed Inventory", res.data);
       if (res.data.success) {
-        const comnpletedInventory = res.data.data
+        const completedInventory = res.data.data
           .map((item) => ({
             ...item,
             request_date_obj: new Date(item.request_date),
@@ -68,27 +79,25 @@ const InventoryHistory = () => {
             })
           }));
 
-        comnpletedInventory.sort(
-          (a, b) => b.request_date_obj - a.request_date_obj
-        );
-
-        console.log(comnpletedInventory);
-        setCompletedData(comnpletedInventory);
+        completedInventory.sort((a, b) => b.request_date_obj - a.request_date_obj);
+        setCompletedData(completedInventory);
       }
     } catch (error) {
-      console.error('Error fetching requested inventory:', error);
-      toast.error('Failed to fetch requested inventory. Please try again.');
+      console.error('Error fetching completed inventory:', error);
+      toast.error('Failed to fetch completed inventory. Please try again.');
+    } finally {
+      setLoading(prev => ({ ...prev, completed: false }));
     }
   };
 
   const fetchRejectedInventory = async () => {
     try {
+      setLoading(prev => ({ ...prev, rejected: true }));
       const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Rejected`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      console.log("Rejected Inventory", res.data);
       if (res.data.success) {
         const rejectedInventory = res.data.data
           .map((item) => ({
@@ -109,16 +118,14 @@ const InventoryHistory = () => {
             })
           }));
 
-        rejectedInventory.sort(
-          (a, b) => b.request_date_obj - a.request_date_obj
-        );
-
-        console.log(rejectedInventory);
+        rejectedInventory.sort((a, b) => b.request_date_obj - a.request_date_obj);
         setRejectedData(rejectedInventory);
       }
     } catch (error) {
-      console.error('Error fetching requested inventory:', error);
-      toast.error('Failed to fetch requested inventory. Please try again.');
+      console.error('Error fetching rejected inventory:', error);
+      toast.error('Failed to fetch rejected inventory. Please try again.');
+    } finally {
+      setLoading(prev => ({ ...prev, rejected: false }));
     }
   };
 
@@ -127,7 +134,6 @@ const InventoryHistory = () => {
     fetchRejectedInventory();
   }, []);
 
-  // Completed Table
   const completedColumns = React.useMemo(
     () => [
       { Header: 'Requested Date', accessor: 'formatted_request_date' },
@@ -136,40 +142,40 @@ const InventoryHistory = () => {
       { Header: 'Vendor Name', accessor: 'vendor_name' },
       { Header: 'Total Amount', accessor: 'total_amount' },
       { Header: 'Unpaid Amount', accessor: 'unpaid_amount' },
-      // {
-      //   Header: 'Items',
-      //   accessor: 'items',
-      //   Cell: ({ cell }) =>
-      //     cell.value.map((item, i) => (
-      //       <div key={i}>
-      //         {item.item_name} - {item.item_quantity} {item.unit}
-      //       </div>
-      //     )),
-      // },
       {
         Header: 'Actions',
         Cell: ({ row }) => (
-          <>
-            <Button variant="link" size="sm" title="View" onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}> {/* eslint-disable-line no-underscore-dangle */}
+          <div className="d-flex gap-2">
+            <Button
+              variant="outline-primary"
+              size="sm"
+              title="View"
+              onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}
+            >
               <CsLineIcons icon="eye" />
             </Button>
-            <Button variant="link" size="sm" title="Edit" onClick={() => history.push(`/operations/edit-inventory/${row.original._id}`)}> {/* eslint-disable-line no-underscore-dangle */}
+            <Button
+              variant="outline-warning"
+              size="sm"
+              title="Edit"
+              onClick={() => history.push(`/operations/edit-inventory/${row.original._id}`)}
+            >
               <CsLineIcons icon="edit" />
             </Button>
             <Button
-              variant="link"
+              variant="outline-danger"
               size="sm"
               title="Delete"
               onClick={() => handleShow(row.original)}
+              disabled={isDeleting}
             >
               <CsLineIcons icon="bin" />
             </Button>
-
-          </>
+          </div>
         ),
       },
     ],
-    []
+    [history, isDeleting]
   );
 
   const rejectedColumns = React.useMemo(
@@ -188,50 +194,82 @@ const InventoryHistory = () => {
       {
         Header: 'Status',
         accessor: 'status',
-        Cell: ({ cell }) => <Badge bg="outline-primary">{cell.value}</Badge>,
+        Cell: ({ cell }) => <Badge bg="danger">{cell.value}</Badge>,
+      },
+      {
+        Header: 'Reject Reason',
+        accessor: 'reject_reason',
+        Cell: ({ cell }) => {
+          const text = cell.value || '';
+          const isLong = text.split(' ').length > 8;
+
+          return (
+            <div>
+              <span>{truncateWords(text, 8)}</span>
+              {isLong && (
+                <>
+                  {'... '}
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="p-0"
+                    onClick={() => {
+                      setSelectedRejectReason(text);
+                      setShowRejectReasonModal(true);
+                    }}
+                  >
+                    More
+                  </Button>
+                </>
+              )}
+            </div>
+          );
+        },
       },
       {
         Header: 'Actions',
         Cell: ({ row }) => (
-          <>
-            <Button variant="link" size="sm" title="View" onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}> {/* eslint-disable-line no-underscore-dangle */}
+          <div className="d-flex gap-2">
+            <Button
+              variant="outline-primary"
+              size="sm"
+              title="View"
+              onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}
+            >
               <CsLineIcons icon="eye" />
             </Button>
             <Button
-              variant="link"
+              variant="outline-danger"
               size="sm"
               title="Delete"
               onClick={() => handleShow(row.original)}
+              disabled={isDeleting}
             >
               <CsLineIcons icon="bin" />
             </Button>
-
-          </>
+          </div>
         ),
       },
     ],
-    []
+    [history, isDeleting]
   );
 
   const handleDelete = async () => {
-    if (!data?._id) return; // eslint-disable-line no-underscore-dangle
+    if (!data?._id) return;
     setIsDeleting(true);
 
     try {
-      const res = await axios.delete(`${process.env.REACT_APP_API}/inventory/delete/${data._id}`, { // eslint-disable-line no-underscore-dangle
+      const res = await axios.delete(`${process.env.REACT_APP_API}/inventory/delete/${data._id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
 
       if (res.status === 200 || res.data.success) {
-        // Remove from local state UI
-        setCompletedData((prev) => prev.filter((item) => item._id !== data._id)); // eslint-disable-line no-underscore-dangle
-        setRejectedData((prev) => prev.filter((item) => item._id !== data._id)); // eslint-disable-line no-underscore-dangle
+        setCompletedData((prev) => prev.filter((item) => item._id !== data._id));
+        setRejectedData((prev) => prev.filter((item) => item._id !== data._id));
         toast.success('Inventory deleted successfully!');
         handleClose();
-      } else {
-        console.error('Delete failed:', res.data);
       }
     } catch (error) {
       console.error('Error deleting inventory:', error);
@@ -241,7 +279,6 @@ const InventoryHistory = () => {
     }
   };
 
-
   const completedTable = useTable(
     { columns: completedColumns, data: completedData, initialState: { pageIndex: 0 } },
     useGlobalFilter,
@@ -250,7 +287,13 @@ const InventoryHistory = () => {
     useRowSelect,
   );
 
-  const rejectedTable = useTable({ columns: rejectedColumns, data: rejectedData, initialState: { pageIndex: 0 } }, useGlobalFilter, useSortBy, usePagination, useRowSelect,);
+  const rejectedTable = useTable(
+    { columns: rejectedColumns, data: rejectedData, initialState: { pageIndex: 0 } },
+    useGlobalFilter,
+    useSortBy,
+    usePagination,
+    useRowSelect
+  );
 
   return (
     <>
@@ -268,56 +311,130 @@ const InventoryHistory = () => {
 
           {/* Completed Requests */}
           <h4 className="mb-3">Completed Requests</h4>
-          <Row className="mb-3">
-            <Col sm="12" md="5" lg="3" xxl="2">
-              <div className="search-input-container w-100 shadow bg-foreground">
-                <ControlsSearch tableInstance={completedTable} />
-              </div>
-            </Col>
-            <Col className="text-end">
-              <ControlsPageSize tableInstance={completedTable} />
-            </Col>
-          </Row>
-          <Table className="react-table rows" tableInstance={completedTable} />
-          <TablePagination tableInstance={completedTable} />
+          {loading.completed ? (
+            <Row className="justify-content-center my-5">
+              <Col xs={12} className="text-center">
+                <Spinner animation="border" variant="primary" className="mb-3" />
+                <p>Loading completed inventory...</p>
+              </Col>
+            </Row>
+          ) : completedData.length === 0 ? (
+            <Alert variant="info" className="mb-4">
+              <CsLineIcons icon="inbox" className="me-2" />
+              No completed inventory found.
+            </Alert>
+          ) : (
+            <>
+              <Row className="mb-3">
+                <Col sm="12" md="5" lg="3" xxl="2">
+                  <div className="search-input-container w-100 shadow bg-foreground">
+                    <ControlsSearch tableInstance={completedTable} />
+                  </div>
+                </Col>
+                <Col className="text-end">
+                  <ControlsPageSize tableInstance={completedTable} />
+                </Col>
+              </Row>
+              <Table className="react-table rows" tableInstance={completedTable} />
+              <TablePagination tableInstance={completedTable} />
+            </>
+          )}
 
           {/* Rejected Requests */}
           <h4 className="mt-5 mb-3">Rejected Requests</h4>
-          <Row className="mb-3">
-            <Col sm="12" md="5" lg="3" xxl="2">
-              <div className="search-input-container w-100 shadow bg-foreground">
-                <ControlsSearch tableInstance={rejectedTable} />
-              </div>
-            </Col>
-            <Col className="text-end">
-              <ControlsPageSize tableInstance={rejectedTable} />
-            </Col>
-          </Row>
-          <Table className="react-table rows" tableInstance={rejectedTable} />
-          <TablePagination tableInstance={rejectedTable} />
+          {loading.rejected ? (
+            <Row className="justify-content-center my-5">
+              <Col xs={12} className="text-center">
+                <Spinner animation="border" variant="danger" className="mb-3" />
+                <p>Loading rejected inventory...</p>
+              </Col>
+            </Row>
+          ) : rejectedData.length === 0 ? (
+            <Alert variant="info" className="mb-4">
+              <CsLineIcons icon="inbox" className="me-2" />
+              No rejected inventory found.
+            </Alert>
+          ) : (
+            <>
+              <Row className="mb-3">
+                <Col sm="12" md="5" lg="3" xxl="2">
+                  <div className="search-input-container w-100 shadow bg-foreground">
+                    <ControlsSearch tableInstance={rejectedTable} />
+                  </div>
+                </Col>
+                <Col className="text-end">
+                  <ControlsPageSize tableInstance={rejectedTable} />
+                </Col>
+              </Row>
+              <Table className="react-table rows" tableInstance={rejectedTable} />
+              <TablePagination tableInstance={rejectedTable} />
+            </>
+          )}
         </Col>
       </Row>
 
       {/* Delete Inventory Modal */}
       <Modal className="modal-close-out" show={show} onHide={handleClose} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Delete Inventory</Modal.Title>
+          <Modal.Title>
+            <CsLineIcons icon="warning" className="text-warning me-2" />
+            Delete Inventory
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>Are you sure you want to delete this inventory?</p>
           <p>
-            <strong>{data?.bill_number}</strong>
+            <strong>{data?.bill_number}</strong> - {data?.vendor_name}
           </p>
+          <Alert variant="warning" className="mt-3">
+            <CsLineIcons icon="alert" className="me-2" />
+            This action cannot be undone.
+          </Alert>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose} disabled={isDeleting}>
             Cancel
           </Button>
           <Button variant="danger" onClick={handleDelete} disabled={isDeleting}>
-            {isDeleting ? <Spinner animation="border" size="sm" /> : 'Delete'}
+            {isDeleting ? (
+              <>
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                  className="me-2"
+                />
+                Deleting...
+              </>
+            ) : 'Delete'}
           </Button>
         </Modal.Footer>
       </Modal>
+      <Modal
+        show={showRejectReasonModal}
+        onHide={() => setShowRejectReasonModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <CsLineIcons icon="warning" className="text-danger me-2" />
+            Reject Reason
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body style={{ maxHeight: '300px', overflowY: 'auto' }}>
+          <p className="mb-0">{selectedRejectReason}</p>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowRejectReasonModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
     </>
   );
 };

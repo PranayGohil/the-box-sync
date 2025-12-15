@@ -37,6 +37,7 @@ const Register = () => {
     gst_no: '',
     password: '',
     confirmPassword: '',
+    verificationCode: '',
   });
 
   // Add near other useState declarations
@@ -44,12 +45,15 @@ const Register = () => {
   const [verificationSent, setVerificationSent] = useState(false);
   const [verificationCountdown, setVerificationCountdown] = useState(0); // seconds until resend allowed
   const [verificationCodeInput, setVerificationCodeInput] = useState('');
+  const [sendingVerification, setSendingVerification] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const countdownRef = useRef(null);
 
-  const pinRegex = /^[1-9][0-9]{5}$/; // Indian PIN: 6 digits, first digit not 0
-  const fssaiRegex = /^[0-9]{7,14}$/; // FSSAI: allow 7 to 14 digits (adjust if you want strict 14)
-  const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;     // GSTIN pattern: 2 digits (state) + 5 letters (PAN) + 4 digits + 1 letter + 1 alphanumeric (entity) + 'Z' + 1 checksum char
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=[\]{};:'"\\|,.<>/?]).{8,}$/;   // At least 8 chars, 1 lowercase, 1 uppercase, 1 number, 1 special symbol
+  const pinRegex = /^[1-9][0-9]{5}$/;
+  const fssaiRegex = /^[0-9]{7,14}$/;
+  const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=[\]{};:'"\\|,.<>/?]).{8,}$/;
 
   const validationSchemas = [
     // Step 1 schema
@@ -68,12 +72,6 @@ const Register = () => {
             console.error(err);
             return false;
           }
-        })
-        .test('email-verified', 'Please verify your email', function (value) {
-          // only require verification if an email value exists and matches current entered value
-          // this uses outer isEmailVerified state
-          if (!value) return true;
-          return isEmailVerified === true;
         }),
       mobile: Yup.string()
         .matches(/^\d{10}$/, 'Must be 10 digits')
@@ -108,20 +106,34 @@ const Register = () => {
   ];
 
   // send verification code (starts countdown)
-  const sendVerification = async (email) => {
+  const sendVerification = async (email, setFieldError, setFieldTouched) => {
     if (!email) {
-      toast.error('Enter an email first');
+      setFieldError('email', 'Enter an email first');
+      setFieldTouched('email', true, false);
       return;
     }
+
+    setSendingVerification(true);
+
     try {
+      // 1) CHECK IF EMAIL ALREADY EXISTS
+      const checkRes = await axios.post(`${process.env.REACT_APP_API}/user/check-email`, { email });
+      if (checkRes.data.exists) {
+        setFieldError("email", "Email already exists");
+        setFieldTouched("email", true, false);
+        setSendingVerification(false);
+        return; // ❌ STOP — do not send OTP
+      }
+
+      // 2) SEND OTP IF EMAIL DOES NOT EXIST
       setVerificationSent(false);
       const res = await axios.post(`${process.env.REACT_APP_API}/otp/send-verification`, { email });
-      // expect success status || res.data.success
+
       if (res.status === 200 && (res.data?.success ?? true)) {
-        toast.success('Verification code sent to your email');
+        toast.success("Verification code sent to your email");
         setVerificationSent(true);
-        setVerificationCountdown(60); // 60s cooldown before resend
-        // run countdown
+        setVerificationCountdown(60);
+
         if (countdownRef.current) clearInterval(countdownRef.current);
         countdownRef.current = setInterval(() => {
           setVerificationCountdown(prev => {
@@ -132,35 +144,52 @@ const Register = () => {
             return prev - 1;
           });
         }, 1000);
+
+        setFieldError("email", undefined);
       } else {
-        toast.error(res.data?.message || 'Failed to send code');
+        setFieldError("email", res.data?.message || "Failed to send code");
+        setFieldTouched("email", true, false);
       }
     } catch (err) {
-      console.error('sendVerification error', err);
-      toast.error('Failed to send verification code');
+      console.error("sendVerification error", err);
+      setFieldError("email", "Failed to send verification code");
+      setFieldTouched("email", true, false);
+    } finally {
+      setSendingVerification(false);
     }
   };
 
+
   // verify code entered by user
-  const verifyCode = async (email) => {
+  const verifyCode = async (email, setFieldError, setFieldTouched) => {
     if (!verificationCodeInput) {
-      toast.error('Enter verification code');
+      setFieldError('verificationCode', 'Enter verification code');
+      setFieldTouched('verificationCode', true, false);
       return;
     }
+
+    setVerifyingCode(true);
     try {
       const res = await axios.post(`${process.env.REACT_APP_API}/otp/verify-email`, { email, code: verificationCodeInput });
       if (res.status === 200 && (res.data?.verified ?? false)) {
         setIsEmailVerified(true);
         toast.success('Email verified');
+        // Clear errors
+        setFieldError('verificationCode', undefined);
+        setFieldError('email', undefined);
         // optionally disable resend UI
         setVerificationSent(false);
         if (countdownRef.current) clearInterval(countdownRef.current);
       } else {
-        toast.error(res.data?.message || 'Invalid verification code');
+        setFieldError('verificationCode', res.data?.message || 'Invalid verification code');
+        setFieldTouched('verificationCode', true, false);
       }
     } catch (err) {
       console.error('verifyCode error', err);
-      toast.error('Verification failed');
+      setFieldError('verificationCode', 'Verification failed');
+      setFieldTouched('verificationCode', true, false);
+    } finally {
+      setVerifyingCode(false);
     }
   };
 
@@ -210,46 +239,38 @@ const Register = () => {
       return;
     }
 
-    // inside onClickNext after `const formIndex = steps.indexOf(step);`
-    if (formIndex === 0) {
-      // if email not verified, block and show toast
-      if (!isEmailVerified) {
-        toast.error('Please verify your email before continuing');
-        // also mark touched so error shows
-        if (form) {
-          form.setTouched({ ...form.touched, email: true });
-        }
-        return;
-      }
+    // Validate all fields in this form first
+    const errors = await form.validateForm();
+
+    // Mark current step's fields as touched
+    const touchedFields = {};
+    stepFields[formIndex].forEach((field) => {
+      touchedFields[field] = true;
+    });
+    form.setTouched(touchedFields, false);
+
+    // Check email verification for step 1
+    if (formIndex === 0 && !isEmailVerified) {
+      form.setFieldError("email", "Please verify your email");
+      form.setTouched({ ...touchedFields, email: true }, false);
+      return;
     }
 
-    form.submitForm().then(async () => {
-      // Validate all fields in this form
-      const errors = await form.validateForm();
+    // Only proceed if no errors in current step
+    const stepHasErrors = stepFields[formIndex].some((field) => errors[field]);
 
-      // Mark current step's fields as touched
-      const touchedFields = {};
-      stepFields[formIndex].forEach((field) => {
-        touchedFields[field] = true;
-      });
-      form.setTouched(touchedFields);
+    if (!stepHasErrors && form.isValid) {
+      const newFields = { ...fields, ...form.values };
+      setFields(newFields);
 
-      // Only proceed if no errors in current step
-      const stepHasErrors = stepFields[formIndex].some((field) => errors[field]);
-
-      if (!stepHasErrors && form.isValid) {
-        const newFields = { ...fields, ...form.values };
-        setFields(newFields);
-
-        if (formIndex === forms.length - 1) {
-          // Final step - submit
-          handleSubmit(newFields);
-        } else {
-          goToNext();
-          step.isDone = true;
-        }
+      if (formIndex === forms.length - 1) {
+        // Final step - submit
+        handleSubmit(newFields);
+      } else {
+        goToNext();
+        step.isDone = true;
       }
-    });
+    }
   };
 
 
@@ -324,9 +345,7 @@ const Register = () => {
               <Step id="step1" name="Restaurant" desc="Basic Information">
                 <div>
                   <Formik innerRef={forms[0]} initialValues={fields} validationSchema={validationSchemas[0]} validateOnMount onSubmit={() => { }}>
-                    {({ errors, touched, setFieldValue, values
-
-                    }) => (
+                    {({ errors, touched, setFieldValue, values, setFieldError, setFieldTouched }) => (
                       <Form>
                         <h5 className="card-title">Restaurant Information</h5>
                         <p className="card-text text-alternate mb-4">Please provide your restaurant's basic details and contact information.</p>
@@ -346,11 +365,18 @@ const Register = () => {
                           <input
                             type="file"
                             className="form-control"
+                            accept="image/*"
+                            disabled={uploadingLogo}
                             onChange={(e) => {
                               const file = e.target.files[0];
-                              setFieldValue('logo', file);
                               if (file) {
-                                setPreviewLogo(URL.createObjectURL(file));
+                                setUploadingLogo(true);
+                                setFieldValue('logo', file);
+                                // Simulate processing time for better UX
+                                setTimeout(() => {
+                                  setPreviewLogo(URL.createObjectURL(file));
+                                  setUploadingLogo(false);
+                                }, 500);
                               }
                             }}
                           />
@@ -359,9 +385,16 @@ const Register = () => {
                               {errors.logo}
                             </Form.Control.Feedback>
                           )}
-                          {previewLogo && (
-                            <div className="mt-2">
-                              <img src={previewLogo} alt="Logo Preview" className="img-thumbnail" style={{ maxWidth: '100px', maxHeight: '100px' }} />
+                          {uploadingLogo && (
+                            <div className="mt-2 d-flex align-items-center">
+                              <Spinner animation="border" size="sm" variant="primary" className="me-2" />
+                              <small className="text-muted">Processing logo...</small>
+                            </div>
+                          )}
+                          {previewLogo && !uploadingLogo && (
+                            <div className="mt-2 d-flex align-items-center">
+                              <img src={previewLogo} alt="Logo Preview" className="img-thumbnail me-2" style={{ maxWidth: '100px', maxHeight: '100px' }} />
+                              <small className="text-success">✓ Logo uploaded</small>
                             </div>
                           )}
                         </div>
@@ -373,11 +406,20 @@ const Register = () => {
                             <div>
                               <Button
                                 variant="outline-primary"
-                                onClick={() => sendVerification(values.email)}
-                                disabled={verificationCountdown > 0}
-                                style={{ whiteSpace: 'nowrap' }}
+                                onClick={() => sendVerification(values.email, setFieldError, setFieldTouched)}
+                                disabled={verificationCountdown > 0 || sendingVerification}
+                                style={{ whiteSpace: 'nowrap', minWidth: '120px' }}
                               >
-                                {verificationCountdown > 0 ? `Resend in ${verificationCountdown}s` : 'Send Code'}
+                                {sendingVerification ? (
+                                  <>
+                                    <Spinner animation="border" size="sm" className="me-1" />
+                                    Sending...
+                                  </>
+                                ) : verificationCountdown > 0 ? (
+                                  `Resend (${verificationCountdown}s)`
+                                ) : (
+                                  'Send Code'
+                                )}
                               </Button>
                             </div>
                           </div>
@@ -389,7 +431,7 @@ const Register = () => {
                           {/* If verified, show a small badge */}
                           {isEmailVerified && (
                             <div className="mt-2 mx-2">
-                              <small className="text-success">Email verified ✓</small>
+                              <small className="text-success fw-bold">✓ Email verified successfully</small>
                             </div>
                           )}
                         </div>
@@ -398,14 +440,43 @@ const Register = () => {
                           <div className="mb-3 top-label tooltip-end-top">
                             <Form.Label>VERIFICATION CODE</Form.Label>
                             <div className="mt-2 d-flex align-items-center">
-                              <input
+                              <Field
                                 className="form-control me-2"
-                                placeholder="Enter verification code"
+                                name="verificationCode"
+                                placeholder="Enter 6-digit code"
+                                maxLength="6"
+                                disabled={verifyingCode}
                                 value={verificationCodeInput}
-                                onChange={(e) => setVerificationCodeInput(e.target.value)}
+                                onChange={(e) => {
+                                  setVerificationCodeInput(e.target.value);
+                                  setFieldValue('verificationCode', e.target.value);
+                                  // Clear error when user starts typing
+                                  if (errors.verificationCode) {
+                                    setFieldError('verificationCode', undefined);
+                                  }
+                                }}
                               />
-                              <Button onClick={() => verifyCode(values.email)}>Verify</Button>
+                              <Button
+                                variant="primary"
+                                onClick={() => verifyCode(values.email, setFieldError, setFieldTouched)}
+                                disabled={verifyingCode || !verificationCodeInput}
+                                style={{ minWidth: '100px' }}
+                              >
+                                {verifyingCode ? (
+                                  <>
+                                    <Spinner animation="border" size="sm" className="me-1" />
+                                    Verifying...
+                                  </>
+                                ) : (
+                                  'Verify'
+                                )}
+                              </Button>
                             </div>
+                            {errors.verificationCode && touched.verificationCode && (
+                              <Form.Control.Feedback type="invalid" tooltip className="d-block">
+                                {errors.verificationCode}
+                              </Form.Control.Feedback>
+                            )}
                           </div>
                         )}
 
@@ -618,10 +689,16 @@ const Register = () => {
                     variant="outline-primary"
                     className={`btn-icon btn-icon-start me-1 ${steps.indexOf(step) <= 0 ? 'disabled' : ''}`}
                     onClick={() => onClickPrev(previous, steps, step)}
+                    disabled={sendingVerification || verifyingCode || uploadingLogo}
                   >
                     <CsLineIcons icon="chevron-left" /> <span>Back</span>
                   </Button>
-                  <Button variant="outline-primary" className="btn-icon btn-icon-end" onClick={() => onClickNext(next, steps, step)}>
+                  <Button
+                    variant="outline-primary"
+                    className="btn-icon btn-icon-end"
+                    onClick={() => onClickNext(next, steps, step)}
+                    disabled={sendingVerification || verifyingCode || uploadingLogo}
+                  >
                     <span>{steps.indexOf(step) === steps.length - 2 ? 'Submit' : 'Next'}</span>
                     <CsLineIcons icon="chevron-right" />
                   </Button>

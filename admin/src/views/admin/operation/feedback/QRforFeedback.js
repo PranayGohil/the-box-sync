@@ -2,13 +2,15 @@ import React, { useState, useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from 'contexts/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
-import { Button, Card, Row, Col, Alert } from 'react-bootstrap';
+import { Button, Card, Row, Col, Alert, Spinner } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
 
 const QRforFeedback = () => {
   const [feedbackToken, setFeedbackToken] = useState('');
   const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [copying, setCopying] = useState(false);
   const qrCodeRef = useRef(null);
 
   const { currentUser, userSubscriptions, activePlans } = useContext(AuthContext);
@@ -16,10 +18,6 @@ const QRforFeedback = () => {
   useEffect(() => {
     if (currentUser.feedbackToken) {
       setFeedbackToken(currentUser.feedbackToken);
-      console.log("User : ", currentUser);
-      console.log("Feedback Token : ", currentUser.feedbackToken);
-    } else {
-      console.log("Token Not Found")
     }
   }, [currentUser]);
 
@@ -29,8 +27,7 @@ const QRforFeedback = () => {
     //   return;
     // }
 
-    setLoading(true);
-    console.log('Generating feedback token...');
+    setGenerating(true);
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API}/feedback/generate-token`,
@@ -38,12 +35,12 @@ const QRforFeedback = () => {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       setFeedbackToken(response.data.feedbackToken);
-      console.log('Feedback token:', response.data.feedbackToken);
+      toast.success('QR Code generated successfully!');
     } catch (error) {
       console.error('Error generating feedback token:', error);
       toast.error('Failed to generate feedback token. Please try again.');
     } finally {
-      setLoading(false);
+      setGenerating(false);
     }
   };
 
@@ -73,6 +70,31 @@ const QRforFeedback = () => {
     newWindow.close();
   };
 
+  const copyToClipboard = async () => {
+    setCopying(true);
+    try {
+      await navigator.clipboard.writeText(`${process.env.REACT_APP_URL}/feedback/${feedbackToken}`);
+      toast.success('URL copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy:', error);
+      toast.error('Failed to copy URL');
+    } finally {
+      setTimeout(() => setCopying(false), 500);
+    }
+  };
+
+  // Show loading state while checking user data
+  if (loading) {
+    return (
+      <Row className="justify-content-center align-items-center min-vh-100">
+        <Col xs={12} className="text-center">
+          <Spinner animation="border" variant="primary" className="mb-3" />
+          <h5>Loading QR Code Generator...</h5>
+        </Col>
+      </Row>
+    );
+  }
+
   // if (!activePlans.includes('Feedback')) {
   //   return (
   //     <Card className="mb-5">
@@ -93,7 +115,7 @@ const QRforFeedback = () => {
             <Card.Title className="mb-0">Feedback QR Code</Card.Title>
           </Card.Header>
           <Card.Body className="text-center">
-            {feedbackToken && (
+            {feedbackToken ? (
               <>
                 <div className="mb-4">
                   <p className="text-muted mb-2">Scan the QR code to provide feedback:</p>
@@ -103,25 +125,65 @@ const QRforFeedback = () => {
                   <div className="small text-muted mb-3">Feedback URL: {`${process.env.REACT_APP_URL}/feedback/${feedbackToken}`}</div>
                 </div>
 
-                <Button variant="outline-primary" onClick={printQRCode} className="me-2">
-                  <CsLineIcons icon="print" className="me-2" />
-                  Print QR Code
-                </Button>
+                <div className="d-flex justify-content-center gap-2 mb-4">
+                  <Button variant="outline-primary" onClick={printQRCode} disabled={generating}>
+                    <CsLineIcons icon="print" className="me-2" />
+                    Print QR Code
+                  </Button>
 
-                <Button variant="outline-secondary" onClick={() => navigator.clipboard.writeText(`${process.env.REACT_APP_URL}/feedback/${feedbackToken}`)}>
-                  <CsLineIcons icon="copy" className="me-2" />
-                  Copy URL
-                </Button>
+                  <Button
+                    variant="outline-secondary"
+                    onClick={copyToClipboard}
+                    disabled={copying || generating}
+                  >
+                    {copying ? (
+                      <>
+                        <Spinner
+                          as="span"
+                          animation="border"
+                          size="sm"
+                          role="status"
+                          aria-hidden="true"
+                          className="me-2"
+                        />
+                        Copying...
+                      </>
+                    ) : (
+                      <>
+                        <CsLineIcons icon="copy" className="me-2" />
+                        Copy URL
+                      </>
+                    )}
+                  </Button>
+                </div>
               </>
+            ) : (
+              <Alert variant="info" className="mb-4">
+                <CsLineIcons icon="info" className="me-2" />
+                No feedback QR code generated yet. Click the button below to create one.
+              </Alert>
             )}
 
             <p className="text-muted my-4">Generate a QR code that customers can scan to provide feedback about your service.</p>
 
-            <Button variant="primary" onClick={generateFeedbackQR} disabled={loading} className="mb-4">
-              {loading ? (
+            <Button
+              variant="primary"
+              onClick={generateFeedbackQR}
+              disabled={generating}
+              className="mb-4"
+              style={{ minWidth: '200px' }}
+            >
+              {generating ? (
                 <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
-                  Generating...
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                    className="me-2"
+                  />
+                  Generating QR Code...
                 </>
               ) : (
                 <>
@@ -131,6 +193,15 @@ const QRforFeedback = () => {
               )}
             </Button>
 
+            {/* Additional loading indicator for any async operations */}
+            {generating && (
+              <div className="mt-3">
+                <Alert variant="light" className="d-inline-flex align-items-center">
+                  <Spinner animation="border" size="sm" className="me-2" />
+                  <small>Please wait while we generate your QR code...</small>
+                </Alert>
+              </div>
+            )}
           </Card.Body>
         </Card>
       </Col>

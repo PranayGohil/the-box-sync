@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Modal, Button, Row, Col, Card, Form, Alert } from 'react-bootstrap';
+import { Modal, Button, Row, Col, Card, Form, Alert, Spinner } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const AddFeedback = () => {
@@ -19,6 +19,7 @@ const AddFeedback = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [hoverRating, setHoverRating] = useState(0);
+  const [isPageLoading, setIsPageLoading] = useState(false); // Optional for page load
 
   const handleChange = (e) => {
     setFeedbackData({ ...feedbackData, [e.target.name]: e.target.value });
@@ -48,7 +49,6 @@ const AddFeedback = () => {
     setIsSubmitting(true);
     setError('');
 
-    console.log(feedbackData);
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API}/feedback/add`,
@@ -62,18 +62,21 @@ const AddFeedback = () => {
       );
 
       if (response.data.success) {
-        setShowModal(true);
-        setFeedbackData({
-          customer_name: '',
-          customer_email: '',
-          customer_phone: '',
-          rating: 0,
-          feedback: '',
-        });
+        // Add small delay for better UX
+        setTimeout(() => {
+          setShowModal(true);
+          setFeedbackData({
+            customer_name: '',
+            customer_email: '',
+            customer_phone: '',
+            rating: 0,
+            feedback: '',
+          });
+        }, 300);
       }
     } catch (err) {
       console.error('Error submitting feedback:', err);
-      setError('Failed to submit feedback. Please try again.');
+      setError(err.response?.data?.message || 'Failed to submit feedback. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -88,15 +91,16 @@ const AddFeedback = () => {
         <span
           key={i}
           className="star-rating-icon"
-          onClick={() => handleStarClick(i)}
-          onMouseEnter={() => handleStarHover(i)}
+          onClick={() => !isSubmitting && handleStarClick(i)}
+          onMouseEnter={() => !isSubmitting && handleStarHover(i)}
           onMouseLeave={handleStarLeave}
           style={{
-            cursor: 'pointer',
+            cursor: isSubmitting ? 'not-allowed' : 'pointer',
             fontSize: '2.5rem',
-            color: isFilled ? '#ffc107' : '#e4e5e9',
+            color: isFilled ? '#ffc107' : isSubmitting ? '#e9ecef' : '#e4e5e9',
             transition: 'color 0.2s ease',
             margin: '0 0.2rem',
+            opacity: isSubmitting ? 0.7 : 1,
           }}
         >
           ★
@@ -124,6 +128,18 @@ const AddFeedback = () => {
     }
   };
 
+  // Optional: Show loading state while page initializes
+  if (isPageLoading) {
+    return (
+      <Row className="justify-content-center align-items-center min-vh-100">
+        <Col xs={12} className="text-center">
+          <Spinner animation="border" variant="primary" className="mb-3" />
+          <h5>Loading feedback form...</h5>
+        </Col>
+      </Row>
+    );
+  }
+
   return (
     <Row className="justify-content-center">
       <Col xs={12} lg={8} xl={6}>
@@ -140,8 +156,10 @@ const AddFeedback = () => {
           <Card.Body>
             {error && (
               <Alert variant="danger" className="mb-4">
-                <CsLineIcons icon="error" className="me-2" />
-                {error}
+                <div className="d-flex align-items-center">
+                  <CsLineIcons icon="error" className="me-2" />
+                  {error}
+                </div>
               </Alert>
             )}
 
@@ -159,6 +177,8 @@ const AddFeedback = () => {
                       onChange={handleChange}
                       required
                       placeholder="Enter your full name"
+                      disabled={isSubmitting}
+                      className={isSubmitting ? 'bg-light' : ''}
                     />
                   </Form.Group>
                 </Col>
@@ -171,6 +191,8 @@ const AddFeedback = () => {
                       value={feedbackData.customer_email}
                       onChange={handleChange}
                       placeholder="Enter your email address"
+                      disabled={isSubmitting}
+                      className={isSubmitting ? 'bg-light' : ''}
                     />
                   </Form.Group>
                 </Col>
@@ -184,6 +206,8 @@ const AddFeedback = () => {
                   value={feedbackData.customer_phone}
                   onChange={handleChange}
                   placeholder="Enter your phone number"
+                  disabled={isSubmitting}
+                  className={isSubmitting ? 'bg-light' : ''}
                 />
               </Form.Group>
 
@@ -194,13 +218,15 @@ const AddFeedback = () => {
                 <div className="text-center mb-2">
                   <div className="star-rating-container">{renderStars()}</div>
                   <div className="rating-text mt-2">
-                    <small className="text-muted">
+                    <small className={`${isSubmitting ? 'text-muted' : 'text-muted'}`}>
                       {getRatingText()}
                       {feedbackData.rating > 0 && ` (${feedbackData.rating}/5)`}
                     </small>
                   </div>
                 </div>
-                <Form.Text className="text-muted d-block text-center">Click on the stars to rate your experience</Form.Text>
+                <Form.Text className="text-muted d-block text-center">
+                  Click on the stars to rate your experience
+                </Form.Text>
               </Form.Group>
 
               <Form.Group className="mb-4">
@@ -215,15 +241,30 @@ const AddFeedback = () => {
                   onChange={handleChange}
                   required
                   placeholder="Please share your detailed feedback here..."
+                  disabled={isSubmitting}
+                  className={isSubmitting ? 'bg-light' : ''}
                 />
                 <Form.Text className="text-muted">Your comments help us improve our services.</Form.Text>
               </Form.Group>
 
               <div className="d-grid">
-                <Button type="submit" variant="primary" size="lg" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  disabled={isSubmitting}
+                  className="position-relative"
+                >
                   {isSubmitting ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                      <Spinner
+                        as="span"
+                        animation="border"
+                        size="sm"
+                        role="status"
+                        aria-hidden="true"
+                        className="me-2"
+                      />
                       Submitting...
                     </>
                   ) : (
@@ -251,9 +292,17 @@ const AddFeedback = () => {
               <CsLineIcons icon="check-circle" className="text-success me-2" />
               Thank You!
             </Modal.Title>
-            <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowModal(false)} />
+            <button
+              type="button"
+              className="btn-close"
+              aria-label="Close"
+              onClick={() => setShowModal(false)}
+            />
           </Modal.Header>
           <Modal.Body className="text-center">
+            <div className="mb-4">
+              <CsLineIcons icon="check-circle" className="text-success" size={60} />
+            </div>
             <p className="mb-0">Your feedback has been submitted successfully.</p>
             <p className="text-muted mt-2">We appreciate you taking the time to help us improve.</p>
           </Modal.Body>
@@ -263,6 +312,31 @@ const AddFeedback = () => {
             </Button>
           </Modal.Footer>
         </Modal>
+
+        {/* Optional: Full-page overlay loader */}
+        {isSubmitting && (
+          <div
+            className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.7)',
+              zIndex: 9999,
+              backdropFilter: 'blur(2px)'
+            }}
+          >
+            <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
+              <Card.Body className="text-center p-4">
+                <Spinner
+                  animation="border"
+                  variant="primary"
+                  className="mb-3"
+                  style={{ width: '3rem', height: '3rem' }}
+                />
+                <h5 className="mb-0">Submitting Feedback...</h5>
+                <small className="text-muted">Please wait a moment</small>
+              </Card.Body>
+            </Card>
+          </div>
+        )}
       </Col>
     </Row>
   );

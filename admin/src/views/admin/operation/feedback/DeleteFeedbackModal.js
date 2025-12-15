@@ -36,7 +36,19 @@ const DeleteFeedbackModal = ({ show, handleClose, data, fetchFeedbacks }) => {
                     Cancel
                 </Button>
                 <Button variant="danger" onClick={handleDelete} disabled={isDeleting}>
-                    {isDeleting ? <Spinner animation="border" size="sm" /> : 'Delete'}
+                    {isDeleting ? (
+                        <>
+                            <Spinner
+                                as="span"
+                                animation="border"
+                                size="sm"
+                                role="status"
+                                aria-hidden="true"
+                                className="me-2"
+                            />
+                            Deleting...
+                        </>
+                    ) : 'Delete'}
                 </Button>
             </Modal.Footer>
         </Modal>

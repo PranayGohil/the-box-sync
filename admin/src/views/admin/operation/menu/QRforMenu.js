@@ -1,11 +1,15 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import { AuthContext } from 'contexts/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
-import { Button, Card, Row, Col, Alert } from 'react-bootstrap';
+import { Button, Card, Row, Col, Alert, Spinner } from 'react-bootstrap';
+import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { toast } from 'react-toastify';
 
 const QRforMenu = ({ setSection }) => {
   const [loading, setLoading] = useState(true);
+  const [generatingQR, setGeneratingQR] = useState(false);
+  const [copying, setCopying] = useState(false);
   const qrCodeRef = useRef(null);
 
   const { currentUser, userSubscriptions, activePlans } = useContext(AuthContext);
@@ -13,11 +17,11 @@ const QRforMenu = ({ setSection }) => {
 
   useEffect(() => {
     setLoading(true);
-    // if (!activePlans.includes('Scan For Menu')) {
-    //   alert('You need to buy or renew to Scan For Menu plan to access this page.');
-    //   window.location.reload();
-    // }
-    setLoading(false);
+    // Simulate loading for better UX
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const printQRCode = () => {
@@ -48,6 +52,35 @@ const QRforMenu = ({ setSection }) => {
 
   const menuLink = `${process.env.REACT_APP_HOME_URL}/${restaurant_code}`;
 
+  const copyToClipboard = async () => {
+    setCopying(true);
+    try {
+      await navigator.clipboard.writeText(menuLink);
+      toast.success('URL copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy:', error);
+      toast.error('Failed to copy URL');
+    } finally {
+      setTimeout(() => setCopying(false), 500);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Row className="justify-content-center">
+        <Col>
+          <Card className="mb-5">
+            <Card.Body className="text-center py-5">
+              <Spinner animation="border" variant="primary" className="mb-3" />
+              <h5>Loading Menu QR Code...</h5>
+              <p className="text-muted">Please wait a moment</p>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    );
+  }
+
   // if (!activePlans.includes('Scan For Menu')) {
   //   return (
   //     <Card className="mb-5">
@@ -60,23 +93,6 @@ const QRforMenu = ({ setSection }) => {
   //   );
   // }
 
-  if (loading) {
-    return (
-      <Row className="justify-content-center">
-        <Col>
-          <Card className="mb-5">
-            <Card.Body className="text-center">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <p className="mt-2 text-muted">Loading...</p>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    );
-  }
-
   return (
     <Row className="justify-content-center">
       <Col>
@@ -87,13 +103,14 @@ const QRforMenu = ({ setSection }) => {
               variant="outline-primary"
               size="sm"
               onClick={() => setSection("ViewMenu")}
+              disabled={generatingQR}
             >
               <CsLineIcons icon="eye" className="me-2" />
               View Menu
             </Button>
           </Card.Header>
           <Card.Body className="text-center">
-            {restaurant_code && (
+            {restaurant_code ? (
               <>
                 <div className="mb-4">
                   <p className="text-muted mb-2">Scan the QR code to view your restaurant menu:</p>
@@ -103,23 +120,57 @@ const QRforMenu = ({ setSection }) => {
                   <div className="small text-muted mb-3">Menu URL: {menuLink}</div>
                 </div>
 
-                <Button variant="outline-primary" onClick={printQRCode} className="me-2">
-                  <CsLineIcons icon="print" className="me-2" />
-                  Print QR Code
-                </Button>
+                <div className="d-flex justify-content-center gap-2">
+                  <Button
+                    variant="outline-primary"
+                    onClick={printQRCode}
+                    disabled={generatingQR}
+                  >
+                    <CsLineIcons icon="print" className="me-2" />
+                    Print QR Code
+                  </Button>
 
-                <Button variant="outline-secondary" onClick={() => navigator.clipboard.writeText(menuLink)}>
-                  <CsLineIcons icon="copy" className="me-2" />
-                  Copy URL
-                </Button>
+                  <Button
+                    variant="outline-secondary"
+                    onClick={copyToClipboard}
+                    disabled={copying || generatingQR}
+                  >
+                    {copying ? (
+                      <>
+                        <Spinner
+                          as="span"
+                          animation="border"
+                          size="sm"
+                          role="status"
+                          aria-hidden="true"
+                          className="me-2"
+                        />
+                        Copying...
+                      </>
+                    ) : (
+                      <>
+                        <CsLineIcons icon="copy" className="me-2" />
+                        Copy URL
+                      </>
+                    )}
+                  </Button>
+                </div>
               </>
-            )}
-
-            {!restaurant_code && (
+            ) : (
               <Alert variant="warning" className="text-center">
                 <CsLineIcons icon="warning" className="me-2" />
                 Restaurant code not found. Please contact support.
               </Alert>
+            )}
+
+            {/* Loading overlay for any async operations */}
+            {generatingQR && (
+              <div className="mt-4">
+                <Alert variant="light" className="d-inline-flex align-items-center">
+                  <Spinner animation="border" size="sm" className="me-2" />
+                  <small>Generating QR code...</small>
+                </Alert>
+              </div>
             )}
           </Card.Body>
         </Card>

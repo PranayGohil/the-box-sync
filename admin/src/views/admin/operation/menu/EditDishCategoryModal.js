@@ -1,10 +1,14 @@
-import React, { useEffect } from 'react';
-import { Modal, Button, Form } from 'react-bootstrap';
+import React, { useEffect, useState } from 'react';
+import { Modal, Button, Form, Spinner } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [loading, setLoading] = useState(true);
+
     const formik = useFormik({
         initialValues: {
             category: data?.category || '',
@@ -12,6 +16,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
         },
         enableReinitialize: true,
         onSubmit: async (values) => {
+            setIsSubmitting(true);
             try {
                 const payload = {
                     category: values.category,
@@ -30,20 +35,33 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                 );
 
                 await fetchMenuData();
+                toast.success('Category updated successfully!');
                 handleClose();
             } catch (err) {
                 console.error('Error updating category:', err);
-                toast.error('Failed to update category.');
+                toast.error(err.response?.data?.message || 'Failed to update category.');
+            } finally {
+                setIsSubmitting(false);
             }
         },
     });
 
-    // Optional: log incoming data for debugging
     useEffect(() => {
         if (data) {
-            console.log('Edit Category Data:', data);
+            setLoading(false);
         }
     }, [data]);
+
+    if (loading) {
+        return (
+            <Modal show={show} onHide={handleClose} centered>
+                <Modal.Body className="text-center py-5">
+                    <Spinner animation="border" variant="primary" />
+                    <p className="mt-3">Loading category data...</p>
+                </Modal.Body>
+            </Modal>
+        );
+    }
 
     return (
         <Modal
@@ -53,7 +71,10 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
             backdrop="static"
         >
             <Modal.Header closeButton>
-                <Modal.Title>Edit Category</Modal.Title>
+                <Modal.Title>
+                    <CsLineIcons icon="edit" className="me-2" />
+                    Edit Category
+                </Modal.Title>
             </Modal.Header>
 
             <Modal.Body>
@@ -66,22 +87,24 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                             value={formik.values.category}
                             onChange={formik.handleChange}
                             placeholder="Enter category name"
+                            disabled={isSubmitting}
                         />
                     </Form.Group>
 
                     <Form.Group className="mb-3">
                         <Form.Label>Meal Type</Form.Label>
-                        <div>
+                        <div className="d-flex gap-3">
                             {['veg', 'egg', 'non-veg'].map((type) => (
                                 <Form.Check
                                     inline
                                     key={type}
-                                    label={type}
+                                    label={type.charAt(0).toUpperCase() + type.slice(1)}
                                     name="meal_type"
                                     type="radio"
                                     id={`meal-${type}`}
                                     checked={formik.values.meal_type === type}
                                     onChange={() => formik.setFieldValue('meal_type', type)}
+                                    disabled={isSubmitting}
                                 />
                             ))}
                         </div>
@@ -90,11 +113,30 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
             </Modal.Body>
 
             <Modal.Footer>
-                <Button variant="secondary" onClick={handleClose}>
+                <Button variant="secondary" onClick={handleClose} disabled={isSubmitting}>
                     Cancel
                 </Button>
-                <Button variant="dark" type="submit" form="edit_category_form">
-                    Update Category
+                <Button
+                    variant="dark"
+                    type="submit"
+                    form="edit_category_form"
+                    disabled={isSubmitting}
+                >
+                    {isSubmitting ? (
+                        <>
+                            <Spinner
+                                as="span"
+                                animation="border"
+                                size="sm"
+                                role="status"
+                                aria-hidden="true"
+                                className="me-2"
+                            />
+                            Updating...
+                        </>
+                    ) : (
+                        'Update Category'
+                    )}
                 </Button>
             </Modal.Footer>
         </Modal>

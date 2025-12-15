@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
-import { NavLink, useHistory } from 'react-router-dom';
-import { Button, Form } from 'react-bootstrap';
+import { NavLink } from 'react-router-dom';
+import { Button, Form, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
@@ -9,17 +9,17 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import { AuthContext } from 'contexts/AuthContext';
 import { toast } from 'react-toastify';
-import { Underline } from 'docx';
 
 const Login = () => {
   const title = 'Login';
   const description = 'Login Page';
-  const history = useHistory();
 
   const { login } = useContext(AuthContext);
 
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const validationSchema = Yup.object().shape({
     email: Yup.string().email().required('Email is required'),
     password: Yup.string().min(6, 'Must be at least 6 chars!').required('Password is required'),
@@ -27,44 +27,44 @@ const Login = () => {
   const initialValues = { email: '', password: '' };
 
   const onSubmit = async (values) => {
+    setIsLoading(true);
+    setError(''); // Clear previous errors
+
     try {
       const res = await axios.post(`${process.env.REACT_APP_API}/user/login`, values);
 
       if (res.data.success) {
-        login(res.data.token, res.data.user);
-        window.location.href = '/';
+        // Add small delay for better UX feedback
+        setTimeout(() => {
+          login(res.data.token, res.data.user);
+          window.location.href = '/';
+        }, 500);
       } else {
         setError(res.data.message);
+        setIsLoading(false);
       }
 
     } catch (err) {
       console.log("Login Error:", err.response?.data?.message);
-      setError(err.response?.data?.message || "Something went wrong");
-      toast.error(err.response?.data?.message || "Something went wrong");
+      const errorMessage = err.response?.data?.message || "Something went wrong";
+      setError(errorMessage);
+      toast.error(errorMessage);
+      setIsLoading(false);
     }
   };
 
+  const formik = useFormik({
+    initialValues,
+    validationSchema,
+    onSubmit
+  });
 
-  const formik = useFormik({ initialValues, validationSchema, onSubmit });
   const { handleSubmit, handleChange, values, touched, errors } = formik;
 
   const leftSide = (
     <div className="min-h-100 d-flex align-items-center">
       <div className="w-100 w-lg-75 w-xxl-50">
-        {/* <div>
-          <div className="mb-5">
-            <h1 className="display-3 text-white">Multiple Niches</h1>
-            <h1 className="display-3 text-white">Ready for Your Project</h1>
-          </div>
-          <p className="h6 text-white lh-1-5 mb-5">
-            Dynamically target high-payoff intellectual capital for customized technologies. Objectively integrate emerging core competencies before process-centric communities...
-          </p>
-          <div className="mb-5">
-            <Button size="lg" variant="outline-white" href="/">
-              Learn More
-            </Button>
-          </div>
-        </div> */}
+        {/* Optional content */}
       </div>
     </div>
   );
@@ -84,39 +84,112 @@ const Login = () => {
         <div className="mb-5">
           <p className="h6">Please use your credentials to login.</p>
           <p className="h6">
-            If you are not a member, please <NavLink to="/register" style={{ color: "blue",textDecoration: "underline" }}>register</NavLink>.
+            If you are not a member, please{' '}
+            <NavLink
+              to="/register"
+              style={{ color: "blue", textDecoration: "underline" }}
+              className={isLoading ? 'disabled-link' : ''}
+            >
+              register
+            </NavLink>.
           </p>
         </div>
         <div>
           <form id="loginForm" className="tooltip-end-bottom" onSubmit={handleSubmit}>
             <div className="mb-3 filled form-group tooltip-end-top">
               <CsLineIcons icon="email" />
-              <Form.Control type="text" name="email" placeholder="Email" value={values.email} onChange={handleChange} />
-              {errors.email && touched.email && <div className="d-block invalid-tooltip">{errors.email}</div>}
+              <Form.Control
+                type="text"
+                name="email"
+                placeholder="Email"
+                value={values.email}
+                onChange={handleChange}
+                disabled={isLoading}
+                className={isLoading ? 'bg-light' : ''}
+              />
+              {errors.email && touched.email && (
+                <div className="d-block invalid-tooltip">{errors.email}</div>
+              )}
             </div>
-            <div className="mb-3 filled form-group tooltip-end-top">
-              <CsLineIcons icon="lock-off" />
-              <Form.Control type={showPassword ? 'text' : 'password'} name="password" onChange={handleChange} value={values.password} placeholder="Password" />
-              {showPassword ?
-                <div className='t-2 e-3 text-end cursor-pointer position-absolute right-3' onClick={() => setShowPassword(false)}>
-                  <CsLineIcons icon="eye-off" />
-                </div> :
-                <div className='t-2 e-3 text-end cursor-pointer position-absolute right-3' onClick={() => setShowPassword(true)}>
-                  <CsLineIcons icon="eye" />
-                </div>
-              }
 
-              {errors.password && touched.password && <div className="d-block invalid-tooltip">{errors.password}</div>}
+            <div className="mb-3 filled form-group tooltip-end-top position-relative">
+              <CsLineIcons icon="lock-off" />
+              <Form.Control
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                onChange={handleChange}
+                value={values.password}
+                placeholder="Password"
+                disabled={isLoading}
+                className={isLoading ? 'bg-light' : ''}
+              />
+
+              {!isLoading && (
+                <>
+                  {showPassword ? (
+                    <div
+                      className='t-2 e-3 text-end cursor-pointer position-absolute right-3'
+                      onClick={() => setShowPassword(false)}
+                      style={{ top: '50%', transform: 'translateY(-50%)' }}
+                    >
+                      <CsLineIcons icon="eye-off" />
+                    </div>
+                  ) : (
+                    <div
+                      className='t-2 e-3 text-end cursor-pointer position-absolute right-3'
+                      onClick={() => setShowPassword(true)}
+                      style={{ top: '50%', transform: 'translateY(-50%)' }}
+                    >
+                      <CsLineIcons icon="eye" />
+                    </div>
+                  )}
+                </>
+              )}
+
+              {errors.password && touched.password && (
+                <div className="d-block invalid-tooltip">{errors.password}</div>
+              )}
             </div>
+
             <div className='mb-3 mx-2'>
-              {error && <div className="text-danger text-medium">{error}</div>}
+              {error && (
+                <div className="text-danger text-medium d-flex align-items-center">
+                  <CsLineIcons icon="warning" className="me-1" />
+                  {error}
+                </div>
+              )}
             </div>
 
             <div className='d-flex justify-content-between align-items-center'>
-              <Button size="lg" type="submit">
-                Login
+              <Button
+                size="lg"
+                type="submit"
+                disabled={isLoading}
+                className="position-relative"
+                style={{ minWidth: '100px' }}
+              >
+                {isLoading ? (
+                  <>
+                    <Spinner
+                      as="span"
+                      animation="border"
+                      size="sm"
+                      role="status"
+                      aria-hidden="true"
+                      className="me-2"
+                    />
+                    Logging in...
+                  </>
+                ) : (
+                  'Login'
+                )}
               </Button>
-              <NavLink className="text-small t-3 e-3" to="/forgot-password">
+
+              <NavLink
+                className={`text-small t-3 e-3 ${isLoading ? 'disabled-link' : ''}`}
+                to="/forgot-password"
+                onClick={(e) => isLoading && e.preventDefault()}
+              >
                 Forgot Password?
               </NavLink>
             </div>
@@ -126,8 +199,27 @@ const Login = () => {
     </div>
   );
 
+  // Add CSS for disabled links
+  const style = `
+    .disabled-link {
+      pointer-events: none;
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .spinner-container {
+      display: inline-flex;
+      align-items: center;
+    }
+    
+    .login-spinner {
+      margin-right: 8px;
+    }
+  `;
+
   return (
     <>
+      <style>{style}</style>
       <HtmlHead title={title} description={description} />
       <LayoutFullpage left={leftSide} right={rightSide} />
     </>

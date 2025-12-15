@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
-import { Card, Col, Row, Button, Form as BForm } from 'react-bootstrap';
+import { Card, Col, Row, Button, Form as BForm, Spinner, Alert } from 'react-bootstrap';
 import { Formik, Form, FieldArray, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
 import { toast } from 'react-toastify';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const AddDishes = () => {
   const title = 'Add Dishes';
@@ -20,6 +21,8 @@ const AddDishes = () => {
 
   const history = useHistory();
   const location = useLocation();
+  const [imagePreviews, setImagePreviews] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isFromManageMenu = location.state?.fromManageMenu || false;
   const prefilledCategory = isFromManageMenu ? location.state?.category || '' : '';
@@ -56,23 +59,24 @@ const AddDishes = () => {
   });
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+    setIsSubmitting(true);
     try {
       const formData = new FormData();
       formData.append('category', values.category);
       formData.append('meal_type', values.mealType);
+
       const dishData = values.dishes.map((dish, i) => {
         if (dish.dish_img) {
-          formData.append(`dish_img`, dish.dish_img); // same field for each
+          formData.append(`dish_img`, dish.dish_img);
         }
         return {
           ...dish,
-          dish_img: '', // placeholder to be filled on server
+          dish_img: '',
         };
       });
+
       formData.append('dishes', JSON.stringify(dishData));
-      for (const pair of formData.entries()) {
-        console.log(pair[0], ': ', pair[1]);
-      }
+
       const res = await axios.post(`${process.env.REACT_APP_API}/menu/add`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -80,14 +84,25 @@ const AddDishes = () => {
         },
       });
 
-      toast.success(res.data.message || 'Menu saved');
+      toast.success(res.data.message || 'Menu saved successfully!');
       resetForm();
+      setImagePreviews({});
       history.push('/operations/manage-menu');
     } catch (error) {
       console.error('Error submitting form:', error);
-      toast.error('Something went wrong!');
+      toast.error(error.response?.data?.message || 'Failed to save menu. Please try again.');
     } finally {
+      setIsSubmitting(false);
       setSubmitting(false);
+    }
+  };
+
+  const handleImageChange = (e, index, setFieldValue) => {
+    const file = e.currentTarget.files[0];
+    if (file) {
+      setFieldValue(`dishes[${index}].dish_img`, file);
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreviews(prev => ({ ...prev, [index]: previewUrl }));
     }
   };
 
@@ -111,7 +126,7 @@ const AddDishes = () => {
                 onSubmit={handleSubmit}
                 enableReinitialize
               >
-                {({ values, isSubmitting, handleChange, setFieldValue }) => (
+                {({ values, handleChange, setFieldValue }) => (
                   <Form>
                     <Row className="mb-3">
                       <Col md={4}>
@@ -121,6 +136,7 @@ const AddDishes = () => {
                             name="category"
                             className="form-control"
                             readOnly={isFromManageMenu}
+                            disabled={isSubmitting}
                           />
                           <ErrorMessage name="category" component="div" className="text-danger" />
                         </BForm.Group>
@@ -137,6 +153,7 @@ const AddDishes = () => {
                             id={`meal-${type}`}
                             checked={values.mealType === type}
                             onChange={() => setFieldValue('mealType', type)}
+                            disabled={isSubmitting}
                           />
                         ))}
                       </Col>
@@ -151,19 +168,31 @@ const AddDishes = () => {
                                 <Col md={4}>
                                   <BForm.Group>
                                     <BForm.Label>Dish Name</BForm.Label>
-                                    <Field name={`dishes[${index}].dish_name`} className="form-control" />
+                                    <Field
+                                      name={`dishes[${index}].dish_name`}
+                                      className="form-control"
+                                      disabled={isSubmitting}
+                                    />
                                     <ErrorMessage name={`dishes[${index}].dish_name`} component="div" className="text-danger" />
                                   </BForm.Group>
                                 </Col>
                                 <Col md={4}>
                                   <BForm.Group>
                                     <BForm.Label>Price</BForm.Label>
-                                    <Field name={`dishes[${index}].dish_price`} className="form-control" />
+                                    <Field
+                                      name={`dishes[${index}].dish_price`}
+                                      className="form-control"
+                                      disabled={isSubmitting}
+                                    />
                                     <ErrorMessage name={`dishes[${index}].dish_price`} component="div" className="text-danger" />
                                   </BForm.Group>
                                 </Col>
                                 <Col md={4} className="d-flex align-items-end">
-                                  <Button variant="outline-danger" onClick={() => remove(index)}>
+                                  <Button
+                                    variant="outline-danger"
+                                    onClick={() => remove(index)}
+                                    disabled={isSubmitting || values.dishes.length === 1}
+                                  >
                                     Remove
                                   </Button>
                                 </Col>
@@ -176,14 +205,33 @@ const AddDishes = () => {
                                     <input
                                       type="file"
                                       className="form-control"
-                                      onChange={(e) => setFieldValue(`dishes[${index}].dish_img`, e.currentTarget.files[0])}
+                                      accept="image/*"
+                                      onChange={(e) => handleImageChange(e, index, setFieldValue)}
+                                      disabled={isSubmitting}
                                     />
+                                    {imagePreviews[index] && (
+                                      <div className="mt-2">
+                                        <img
+                                          src={imagePreviews[index]}
+                                          alt="Preview"
+                                          className="img-thumbnail"
+                                          style={{ maxWidth: '100px', maxHeight: '100px' }}
+                                        />
+                                        <small className="text-muted d-block">Image preview</small>
+                                      </div>
+                                    )}
                                   </BForm.Group>
                                 </Col>
                                 <Col md={8}>
                                   <BForm.Group>
                                     <BForm.Label>Description</BForm.Label>
-                                    <Field as="textarea" rows={2} name={`dishes[${index}].description`} className="form-control" />
+                                    <Field
+                                      as="textarea"
+                                      rows={2}
+                                      name={`dishes[${index}].description`}
+                                      className="form-control"
+                                      disabled={isSubmitting}
+                                    />
                                   </BForm.Group>
                                 </Col>
                               </Row>
@@ -194,6 +242,7 @@ const AddDishes = () => {
                                 checked={dish.showAdvancedOptions}
                                 onChange={() => setFieldValue(`dishes[${index}].showAdvancedOptions`, !dish.showAdvancedOptions)}
                                 className="mt-2"
+                                disabled={isSubmitting}
                               />
 
                               {dish.showAdvancedOptions && (
@@ -201,13 +250,22 @@ const AddDishes = () => {
                                   <Col md={6}>
                                     <BForm.Group>
                                       <BForm.Label>Quantity</BForm.Label>
-                                      <Field name={`dishes[${index}].quantity`} className="form-control" />
+                                      <Field
+                                        name={`dishes[${index}].quantity`}
+                                        className="form-control"
+                                        disabled={isSubmitting}
+                                      />
                                     </BForm.Group>
                                   </Col>
                                   <Col md={6}>
                                     <BForm.Group>
                                       <BForm.Label>Unit</BForm.Label>
-                                      <Field as="select" name={`dishes[${index}].unit`} className="form-select">
+                                      <Field
+                                        as="select"
+                                        name={`dishes[${index}].unit`}
+                                        className="form-select"
+                                        disabled={isSubmitting}
+                                      >
                                         <option value="">Select unit</option>
                                         <option value="kg">kg</option>
                                         <option value="g">g</option>
@@ -237,8 +295,10 @@ const AddDishes = () => {
                                   showAdvancedOptions: false,
                                 })
                               }
+                              disabled={isSubmitting}
                             >
-                              + Add More Dishes
+                              <CsLineIcons icon="plus" className="me-1" />
+                              Add More Dishes
                             </Button>
                           </div>
                         </>
@@ -246,14 +306,61 @@ const AddDishes = () => {
                     </FieldArray>
 
                     <div className="mt-4">
-                      <Button type="submit" variant="success" disabled={isSubmitting}>
-                        {isSubmitting ? 'Saving...' : 'Save Menu'}
+                      <Button
+                        type="submit"
+                        variant="success"
+                        disabled={isSubmitting}
+                        style={{ minWidth: '120px' }}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Spinner
+                              as="span"
+                              animation="border"
+                              size="sm"
+                              role="status"
+                              aria-hidden="true"
+                              className="me-2"
+                            />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <CsLineIcons icon="save" className="me-2" />
+                            Save Menu
+                          </>
+                        )}
                       </Button>
                     </div>
                   </Form>
                 )}
               </Formik>
             </Card>
+
+            {/* Full page loader overlay */}
+            {isSubmitting && (
+              <div
+                className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                  zIndex: 9999,
+                  backdropFilter: 'blur(2px)'
+                }}
+              >
+                <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
+                  <Card.Body className="text-center p-4">
+                    <Spinner
+                      animation="border"
+                      variant="success"
+                      className="mb-3"
+                      style={{ width: '3rem', height: '3rem' }}
+                    />
+                    <h5 className="mb-0">Saving Dishes...</h5>
+                    <small className="text-muted">Please wait a moment</small>
+                  </Card.Body>
+                </Card>
+              </div>
+            )}
           </section>
         </Col>
       </Row>

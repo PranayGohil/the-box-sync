@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { Badge, Col, Form, Row, Button, Modal, Spinner } from 'react-bootstrap';
+import { Badge, Col, Form, Row, Button, Modal, Spinner, Alert } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
 import { toast } from 'react-toastify';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -11,7 +11,6 @@ import ControlsPageSize from './components/ControlsPageSize';
 import ControlsSearch from './components/ControlsSearch';
 import Table from './components/Table';
 import TablePagination from './components/TablePagination';
-
 import DeleteFeedbackModal from './DeleteFeedbackModal';
 
 const Feedback = () => {
@@ -30,7 +29,7 @@ const Feedback = () => {
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [replyMessage, setReplyMessage] = useState('');
-
+  const [sendingReply, setSendingReply] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const fetchFeedbacks = async () => {
@@ -47,8 +46,9 @@ const Feedback = () => {
     } catch (error) {
       console.error('Error fetching feedbacks:', error);
       toast.error('Failed to fetch feedbacks. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   // Fetch feedbacks from the backend
@@ -65,7 +65,12 @@ const Feedback = () => {
 
   // Send reply
   const handleSendReply = async () => {
-    setLoading(true);
+    if (!replyMessage.trim()) {
+      toast.error('Please enter a reply message.');
+      return;
+    }
+
+    setSendingReply(true);
     try {
       await axios.post(
         `${process.env.REACT_APP_API}/feedback/reply/${selectedFeedback._id}`,
@@ -74,11 +79,13 @@ const Feedback = () => {
       );
       setShowReplyModal(false);
       toast.success('Reply sent successfully!', { position: toast.POSITION.TOP_RIGHT, autoClose: 2000 });
+      setReplyMessage('');
     } catch (error) {
       console.error('Error sending reply:', error);
       toast.error('Failed to send reply. Please try again.');
+    } finally {
+      setSendingReply(false);
     }
-    setLoading(false);
   };
 
   const columns = React.useMemo(
@@ -128,7 +135,14 @@ const Feedback = () => {
         headerClassName: 'text-muted text-small text-uppercase w-10 text-center',
         Cell: ({ row }) => (
           <div className="d-flex justify-content-center">
-            <Button variant="outline-primary" size="sm" className="btn-icon btn-icon-only me-1" onClick={() => handleReply(row.original)} title="Reply">
+            <Button
+              variant="outline-primary"
+              size="sm"
+              className="btn-icon btn-icon-only me-1"
+              onClick={() => handleReply(row.original)}
+              title="Reply"
+              disabled={loading}
+            >
               <CsLineIcons icon="message" />
             </Button>
             <Button
@@ -140,6 +154,7 @@ const Feedback = () => {
                 setShowDeleteModal(true);
               }}
               title="Delete"
+              disabled={loading}
             >
               <CsLineIcons icon="bin" />
             </Button>
@@ -147,7 +162,7 @@ const Feedback = () => {
         ),
       },
     ],
-    []
+    [loading]
   );
 
   const tableInstance = useTable(
@@ -178,35 +193,59 @@ const Feedback = () => {
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
               <Col xs="12" md="5" className="d-flex align-items-start justify-content-end">
-                <Button variant="primary" onClick={() => history.push('/operations/qr-for-feedback')}>
+                <Button
+                  variant="primary"
+                  onClick={() => history.push('/operations/qr-for-feedback')}
+                  disabled={loading}
+                >
                   <CsLineIcons icon="qr-code" className="me-2" /> Feedback QR
                 </Button>
               </Col>
             </Row>
           </div>
 
-          <div className="mt-3">
-            <Row className="mb-3">
-              <Col sm="12" md="5" lg="3" xxl="2">
-                <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
-                  <ControlsSearch tableInstance={tableInstance} />
-                </div>
-              </Col>
-              <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
-                <div className="d-inline-block">
-                  <ControlsPageSize tableInstance={tableInstance} />
-                </div>
+          {/* Loading State */}
+          {loading && (
+            <Row className="justify-content-center my-5">
+              <Col xs={12} className="text-center">
+                <Spinner animation="border" variant="primary" className="mb-3" />
+                <p>Loading feedback data...</p>
               </Col>
             </Row>
-            <Row>
-              <Col xs="12">
-                <Table className="react-table rows" tableInstance={tableInstance} />
-              </Col>
-              <Col xs="12">
-                <TablePagination tableInstance={tableInstance} />
-              </Col>
-            </Row>
-          </div>
+          )}
+
+          {/* Content */}
+          {!loading && (
+            <div className="mt-3">
+              <Row className="mb-3">
+                <Col sm="12" md="5" lg="3" xxl="2">
+                  <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
+                    <ControlsSearch tableInstance={tableInstance} />
+                  </div>
+                </Col>
+                <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
+                  <div className="d-inline-block">
+                    <ControlsPageSize tableInstance={tableInstance} />
+                  </div>
+                </Col>
+              </Row>
+              <Row>
+                <Col xs="12">
+                  {feedbacks.length === 0 ? (
+                    <Alert variant="info" className="text-center">
+                      <CsLineIcons icon="inbox" className="me-2" />
+                      No feedback found.
+                    </Alert>
+                  ) : (
+                    <>
+                      <Table className="react-table rows" tableInstance={tableInstance} />
+                      <TablePagination tableInstance={tableInstance} />
+                    </>
+                  )}
+                </Col>
+              </Row>
+            </div>
+          )}
         </Col>
       </Row>
 
@@ -230,17 +269,30 @@ const Feedback = () => {
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
                   placeholder="Write your reply message here..."
+                  disabled={sendingReply}
                 />
               </Form.Group>
             </>
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowReplyModal(false)}>
+          <Button variant="secondary" onClick={() => setShowReplyModal(false)} disabled={sendingReply}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleSendReply} disabled={loading}>
-            {loading ? <Spinner animation="border" size="sm" /> : 'Send Reply'}
+          <Button variant="primary" onClick={handleSendReply} disabled={sendingReply || !replyMessage.trim()}>
+            {sendingReply ? (
+              <>
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                  className="me-2"
+                />
+                Sending...
+              </>
+            ) : 'Send Reply'}
           </Button>
         </Modal.Footer>
       </Modal>
