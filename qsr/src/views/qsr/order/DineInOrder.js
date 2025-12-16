@@ -15,6 +15,7 @@ const DineInOrder = () => {
   const tableId = urlParams.get('tableId');
   const orderId = urlParams.get('orderId');
   const mode = urlParams.get('mode'); // 'new' or 'edit'
+  const [showCategories, setShowCategories] = useState(false);
 
   const title = `${mode === 'new' ? 'New' : 'Edit'} Dine-In Order`;
   const description = 'Manage dine-in orders';
@@ -263,102 +264,166 @@ const DineInOrder = () => {
     <>
       <HtmlHead title={title} description={description} />
 
-      {/* Header */}
-      <div className="page-title-container">
-        <Row>
-          <Col md="7">
-            <h1 className="mb-0 pb-0 display-4">{title}</h1>
-            <BreadcrumbList items={breadcrumbs} />
-          </Col>
-          <Col md="5" className="d-flex align-items-start justify-content-end">
-            <Button variant="outline-secondary" onClick={() => history.push('/dashboard')}>
-              <CsLineIcons icon="arrow-left" /> Back to Dashboard
-            </Button>
-          </Col>
-        </Row>
-      </div>
+      <Row className="g-1">
+        {/* Menu Section - Now taking 8 columns */}
+        <Col lg="8" className="px-1">
+          <Card className="h-100 position-relative overflow-hidden">
 
-      <Row>
-        {/* Menu Section */}
-        <Col lg="6">
-          <Card className="h-100">
+            {/* HEADER */}
             <Card.Header>
-              <h5 className="mb-0">Menu Items</h5>
-            </Card.Header>
-            <Card.Body>
-              {/* Filters */}
-              <Row className="mb-3">
-                <Col md="6">
-                  <Form.Control type="text" placeholder="Search items..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+              <Row className="align-items-center">
+                <Col className="d-flex align-items-center gap-2">
+                  <h5 className="mb-0">Menu Items</h5>
                 </Col>
-                <Col md="4">
-                  <Form.Select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
-                    <option value="">All Categories</option>
-                    {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Col>
-                <Col md="2">
-                  <Form.Check type="checkbox" label="Special" checked={showSpecial} onChange={(e) => setShowSpecial(e.target.checked)} />
+
+                <Col className="d-flex justify-content-end">
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={() => history.push('/dashboard')}
+                  >
+                    <CsLineIcons icon="arrow-left" /> Back
+                  </Button>
                 </Col>
               </Row>
+            </Card.Header>
 
-              {/* Menu Items */}
-              <div style={{ maxHeight: '500px', overflowY: 'auto', overflowX: 'hidden' }}>
-                {filteredMenuData.map((category) => (
-                  <div key={category._id} className="mb-4">
-                    <h6 className="text-muted mb-3">{category.category}</h6>
-                    <Row>
-                      {category.dishes.map((dish) => (
-                        <Col xs="6" sm="4" md="3" key={dish._id}>
-                          <Card className="sh-20 hover-border-primary mb-5" onClick={() => addItemToOrder(dish)}>
-                            <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
-                              <p className="cta-4 mb-2 lh-1">{dish.dish_name}</p>
-                              <p className="mb-2">₹{dish.dish_price}</p>
-                              <div className="d-flex sh-3 sw-3 bg-gradient-light align-items-center justify-content-center rounded-xl">
-                                <h2 className="mb-0 lh-1 text-white">
-                                  <CsLineIcons icon="plus" />
-                                </h2>
-                              </div>
-                            </Card.Body>
-                            <Badge
-                              variant="outline"
-                              className={`text-white mb-2 ${
-                                category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
-                              }`}
-                              style={{ position: 'absolute', top: '5px', right: '5px' }}
-                            >
-                              {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
-                            </Badge>
-                            {dish.is_special && (
-                              <i className="bi bi-stars text-warning" style={{ fontSize: '20px', position: 'absolute', top: '0px', left: '2px' }} />
-                            )}
-                          </Card>
-                        </Col>
-                      ))}
-                    </Row>
+            {/* BODY */}
+            <Card.Body className="p-0 d-flex h-100">
+
+              {/* SIDEBAR */}
+              <div
+                className={`bg-light border-end position-absolute h-100 ${showCategories ? 'start-0' : ''
+                  }`}
+                style={{
+                  width: '220px',
+                  transform: showCategories ? 'translateX(0)' : 'translateX(-100%)',
+                  transition: 'transform 0.3s ease',
+                  zIndex: 10,
+                  overflowY: 'auto'
+                }}
+              >
+                <div className="p-2">
+                  <div
+                    onClick={() => {
+                      setSelectedCategory('');
+                      setShowCategories(false);
+                    }}
+                    className={`py-2 px-2 mb-1 rounded ${selectedCategory === '' ? 'bg-primary text-white' : 'bg-white'
+                      }`}
+                    style={{ cursor: 'pointer', fontSize: '13px' }}
+                  >
+                    All
                   </div>
-                ))}
+
+                  {categories.map(category => (
+                    <div
+                      key={category}
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        setShowCategories(false);
+                      }}
+                      className={`py-2 px-2 mb-1 rounded ${selectedCategory === category ? 'bg-primary text-white' : 'bg-white'
+                        }`}
+                      style={{ cursor: 'pointer', fontSize: '13px' }}
+                    >
+                      {category}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* MAIN CONTENT */}
+              <div
+                className="flex-grow-1 p-2"
+                style={{ marginLeft: showCategories ? '220px' : '0', transition: 'margin 0.3s ease' }}
+              >
+
+                {/* FILTERS */}
+                <Row className="mb-2 g-1">
+                  <Col md="1">
+                    <Button
+                      variant="outline-primary"
+                      size="sm"
+                      onClick={() => setShowCategories(prev => !prev)}
+                    >
+                      <i className="bi bi-list" />
+                    </Button>
+                  </Col>
+                  <Col md="6">
+                    <Form.Control
+                      size="sm"
+                      placeholder="Search items..."
+                      value={searchText}
+                      onChange={(e) => setSearchText(e.target.value)}
+                    />
+                  </Col>
+                  <Col md="5">
+                    <Form.Check
+                      type="checkbox"
+                      label="Special"
+                      checked={showSpecial}
+                      onChange={(e) => setShowSpecial(e.target.checked)}
+                    />
+                  </Col>
+                </Row>
+
+                {/* MENU ITEMS */}
+                <div style={{ maxHeight: '500px', overflowY: 'auto', overflowX: 'hidden' }}>
+                  {filteredMenuData.map((category) => (
+                    <div key={category._id} className="mb-4">
+                      <h6 className="text-muted mb-3">{category.category}</h6>
+                      <Row className="g-2">
+                        {category.dishes.map((dish) => (
+                          <Col xs="4" sm="3" md={showCategories ? 3 : 2} key={dish._id}>
+                            <Card className="sh-14 hover-border-primary mb-2" onClick={() => addItemToOrder(dish)}>
+                              <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
+                                <p className="cta-8 mb-2 lh-1">{dish.dish_name}</p>
+                                <p className="mb-0" style={{ fontWeight: 'bold' }}>₹{dish.dish_price}</p>
+                              </Card.Body>
+                              <Badge
+                                variant="outline"
+                                className={`text-white mb-2 ${category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
+                                  }`}
+                                style={{ position: 'absolute', top: '3px', right: '5px' }}
+                              >
+                                {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
+                              </Badge>
+                              {dish.is_special && (
+                                <i className="bi bi-stars text-warning" style={{ fontSize: '20px', position: 'absolute', top: '0px', left: '2px' }} />
+                              )}
+                            </Card>
+                          </Col>
+                        ))}
+                      </Row>
+                    </div>
+                  ))}
+                </div>
+
               </div>
             </Card.Body>
           </Card>
         </Col>
 
-        {/* Order Details Section */}
-        <Col lg="6">
+        {/* Order Details Section - Now taking 4 columns */}
+        <Col lg="4" className="pe-0">
           <Card className="h-100">
             <Card.Header>
-              <h5 className="mb-0">
-                Order Details - Table {tableInfo.table_no}
-                {orderStatus && (
-                  <Badge bg="secondary" className="ms-2">
-                    {orderStatus}
-                  </Badge>
-                )}
-              </h5>
+              <Row>
+                <Col md="7">
+                  <h5 className="mb-0">
+                    Order Details - Table {tableInfo.table_no}
+                    {orderStatus && (
+                      <Badge bg="secondary" className="ms-2">
+                        {orderStatus}
+                      </Badge>
+                    )}
+                  </h5>
+                </Col>
+                <Col md="5" className="d-flex align-items-start justify-content-end">
+                  <h5>Dine-In</h5>
+                </Col>
+              </Row>
             </Card.Header>
             <Card.Body>
               {/* Customer Info */}
@@ -466,7 +531,6 @@ const DineInOrder = () => {
                 </div>
                 <div>
                   {/* Show Dashboard button if order is paid */}
-
                   {orderStatus === 'Paid' ? (
                     <Button variant="primary" onClick={() => history.push('/dashboard')}>
                       Go to Dashboard
