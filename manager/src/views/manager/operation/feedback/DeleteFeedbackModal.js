@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const DeleteFeedbackModal = ({ show, handleClose, data, fetchFeedbacks }) => {
     const [isDeleting, setIsDeleting] = useState(false);
@@ -11,9 +12,11 @@ const DeleteFeedbackModal = ({ show, handleClose, data, fetchFeedbacks }) => {
             await axios.delete(`${process.env.REACT_APP_API}/feedback/delete/${data._id}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
             });
+            toast.success('Feedback deleted successfully!');
             fetchFeedbacks();
         } catch (error) {
             console.error('Error deleting feedback:', error);
+            toast.error('Failed to delete feedback. Please try again.');
         } finally {
             setIsDeleting(false);
             handleClose();
@@ -33,7 +36,19 @@ const DeleteFeedbackModal = ({ show, handleClose, data, fetchFeedbacks }) => {
                     Cancel
                 </Button>
                 <Button variant="danger" onClick={handleDelete} disabled={isDeleting}>
-                    {isDeleting ? <Spinner animation="border" size="sm" /> : 'Delete'}
+                    {isDeleting ? (
+                        <>
+                            <Spinner
+                                as="span"
+                                animation="border"
+                                size="sm"
+                                role="status"
+                                aria-hidden="true"
+                                className="me-2"
+                            />
+                            Deleting...
+                        </>
+                    ) : 'Delete'}
                 </Button>
             </Modal.Footer>
         </Modal>

@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
-import { Row, Col, Card, Button, Form } from "react-bootstrap";
+import { Row, Col, Card, Button, Form, Spinner, Alert } from "react-bootstrap";
 import * as Yup from "yup";
 import HtmlHead from "components/html-head/HtmlHead";
 import BreadcrumbList from "components/breadcrumb-list/BreadcrumbList";
 import axios from "axios";
 import { useFormik } from "formik";
+import CsLineIcons from "cs-line-icons/CsLineIcons";
+import { toast } from "react-toastify";
 
 function AddInventory() {
   const title = "Add Inventory";
@@ -17,6 +19,7 @@ function AddInventory() {
   ];
 
   const history = useHistory();
+  const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([
     { item_name: "", unit: "", item_quantity: "" },
   ]);
@@ -31,35 +34,44 @@ function AddInventory() {
             item_name: Yup.string().required("Item Name is required"),
             unit: Yup.string().required("Unit is required"),
             item_quantity: Yup.number()
-              .typeError("Quantity must be a number") // handles non-numeric input
+              .typeError("Quantity must be a number")
               .required("Item Quantity is required")
               .positive("Quantity must be greater than 0"),
           })
         )
-        .min(1, "At least one item is required"), // optional: at least one item
+        .min(1, "At least one item is required"),
       status: Yup.string().required("Status is required"),
     }),
-    onSubmit: (values) => {
-      console.log("Submitting: ", values);
-      const formData = new FormData();
-      Object.entries(values).forEach(([key, val]) => {
-        if (key === 'items') {
-          formData.append('items', JSON.stringify(val));
-        } else {
-          formData.append(key, val);
-        }
-      });
+    onSubmit: async (values) => {
+      setLoading(true);
+      try {
+        const formData = new FormData();
+        Object.entries(values).forEach(([key, val]) => {
+          if (key === 'items') {
+            formData.append('items', JSON.stringify(val));
+          } else {
+            formData.append(key, val);
+          }
+        });
 
-      axios.post(
-        `${process.env.REACT_APP_API}/inventory/add-request`,
-        formik.values,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      ).then((res) => {
-        console.log("res: ", res.data);
-        history.push("/operations/requested-inventory"); // ✅ redirect after success
-      }).catch((err) => {
-        console.error(err);
-      })
+        const res = await axios.post(
+          `${process.env.REACT_APP_API}/inventory/add-request`,
+          values,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`
+            }
+          }
+        );
+
+        toast.success('Inventory request added successfully!');
+        history.push("/operations/requested-inventory");
+      } catch (err) {
+        console.error("Error adding inventory:", err);
+        toast.error(err.response?.data?.message || 'Failed to add inventory request.');
+      } finally {
+        setLoading(false);
+      }
     },
   });
 
@@ -119,14 +131,13 @@ function AddInventory() {
                             handleItemChange(index, "item_name", e.target.value)
                           }
                           isInvalid={itemTouched.item_name && itemErrors.item_name}
+                          disabled={loading}
                         />
                         <Form.Control.Feedback type="invalid">
                           {itemErrors.item_name}
                         </Form.Control.Feedback>
                       </Form.Group>
                     </Col>
-
-
 
                     {/* Quantity */}
                     <Col md={3}>
@@ -145,6 +156,7 @@ function AddInventory() {
                           isInvalid={
                             itemTouched.item_quantity && itemErrors.item_quantity
                           }
+                          disabled={loading}
                         />
                         <Form.Control.Feedback type="invalid">
                           {itemErrors.item_quantity}
@@ -161,6 +173,7 @@ function AddInventory() {
                             handleItemChange(index, "unit", e.target.value)
                           }
                           isInvalid={itemTouched.unit && itemErrors.unit}
+                          disabled={loading}
                         >
                           <option value="">Select</option>
                           <option value="kg">kg</option>
@@ -181,6 +194,7 @@ function AddInventory() {
                         variant="outline-danger"
                         size="sm"
                         onClick={() => removeItem(index)}
+                        disabled={loading || items.length === 1}
                       >
                         Remove
                       </Button>
@@ -190,16 +204,66 @@ function AddInventory() {
               })}
 
               {/* Add Item Button */}
-              <Button variant="primary" onClick={addItem} className="me-2">
-                + Add More
+              <Button
+                variant="primary"
+                onClick={addItem}
+                className="me-2"
+                disabled={loading}
+              >
+                <CsLineIcons icon="plus" className="me-1" />
+                Add More Items
               </Button>
             </Card>
 
             {/* Submit */}
-            <Button variant="success" type="submit">
-              Send Request
+            <Button
+              variant="success"
+              type="submit"
+              disabled={loading}
+              style={{ minWidth: '150px' }}
+            >
+              {loading ? (
+                <>
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                    className="me-2"
+                  />
+                  Sending...
+                </>
+              ) : (
+                'Send Request'
+              )}
             </Button>
           </Form>
+
+          {/* Submitting overlay */}
+          {loading && (
+            <div
+              className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                zIndex: 9999,
+                backdropFilter: 'blur(2px)'
+              }}
+            >
+              <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
+                <Card.Body className="text-center p-4">
+                  <Spinner
+                    animation="border"
+                    variant="success"
+                    className="mb-3"
+                    style={{ width: '3rem', height: '3rem' }}
+                  />
+                  <h5 className="mb-0">Adding Inventory Request...</h5>
+                  <small className="text-muted">Please wait a moment</small>
+                </Card.Body>
+              </Card>
+            </div>
+          )}
         </Col>
       </Row>
     </>

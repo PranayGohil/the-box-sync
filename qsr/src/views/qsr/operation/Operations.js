@@ -14,7 +14,6 @@ import ManageMenu from './menu/ManageMenu';
 import AddDishes from './menu/AddDishes';
 import QRforMenu from './menu/QRforMenu';
 
-import Feedback from './feedback/Feedback';
 
 const NavContent = () => {
   return (
@@ -52,13 +51,6 @@ const NavContent = () => {
           </Nav.Link>
         </div>
       </div>
-
-      {/* <div className="mb-2">
-        <Nav.Link as={NavLink} to="/operations/feedback" className="px-0">
-          <CsLineIcons icon="tablet" className="me-2 sw-3" size="17" />
-          <span className="align-middle">Feedback</span>
-        </Nav.Link>
-      </div> */}
     </Nav>
   );
 };
@@ -89,8 +81,6 @@ const Operations = () => {
             <Route path="/operations/manage-menu" component={ManageMenu} />
             <Route path="/operations/add-dishes" component={AddDishes} />
             <Route path="/operations/qr-for-menu" component={QRforMenu} />
-
-            {/* <Route path="/operations/feedback" component={Feedback} /> */}
             
           </Switch>
         </Col>

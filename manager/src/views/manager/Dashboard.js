@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory, Switch, Route, Redirect } from 'react-router-dom';
+import { useHistory, Switch, Route } from 'react-router-dom';
 import { Button, Row, Col, Card, Badge } from 'react-bootstrap';
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
-import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
-import Glide from 'components/carousel/Glide';
 
 import DineInOrder from './order/DineInOrder';
 import TakeawayOrder from './order/TakeawayOrder';
@@ -15,15 +13,9 @@ const Dashboard = () => {
   const description = 'Restaurant Management Dashboard';
   const history = useHistory();
 
-  const breadcrumbs = [
-    { to: '', text: 'Home' },
-    { to: 'dashboard', text: 'Dashboard' },
-  ];
-
   const [tables, setTables] = useState([]);
   const [activeDineInOrders, setActiveDineInOrders] = useState([]);
   const [activeTakeawaysAndDeliveries, setActiveTakeawaysAndDeliveries] = useState([]);
-  const [specialDishes, setSpecialDishes] = useState([]);
 
   const fetchTables = async () => {
     try {
@@ -51,24 +43,9 @@ const Dashboard = () => {
     }
   };
 
-  const fetchSpecialDishes = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API}/menu/get`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      const specialDishesRes = response.data.data
-        .flatMap((category) => category.dishes)
-        .filter((dish) => dish.is_special)
-        .slice(0, 6);
-
-      setSpecialDishes(specialDishesRes);
-    } catch (error) {
-      console.error('Error fetching special dishes:', error);
-    }
-  };
-
   useEffect(() => {
     fetchTables();
     fetchActiveOrders();
-    fetchSpecialDishes();
   }, []);
 
   const handleTableClick = async (tableId, orderId) => {
@@ -215,30 +192,6 @@ const Dashboard = () => {
           </div>
         </Col>
       </Row>
-
-      {/* Special Dishes Section */}
-      <div className="mt-5">
-        <h2 className="small-title mb-4">Today's Special</h2>
-        <Row className="g-2">
-          {specialDishes.map((dish) => (
-            <Col md="3" sm="6" lg="2" key={dish._id}>
-              <Card className="bg-gradient-light text-white">
-                <Card.Body className="p-3">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                      <h6 className="mb-0">{dish.dish_name}</h6>
-                      <small className="opacity-75">₹{dish.dish_price}</small>
-                    </div>
-                    <Badge bg="warning" className="text-dark">
-                      Special
-                    </Badge>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </div>
 
       <Switch>
         <Route exact path="/order/dine-in" render={() => <DineInOrder />} />

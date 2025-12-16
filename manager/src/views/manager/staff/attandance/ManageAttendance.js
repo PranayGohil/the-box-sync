@@ -10,6 +10,7 @@ import ControlsPageSize from 'components/table/ControlsPageSize';
 import ControlsSearch from 'components/table/ControlsSearch';
 import Table from 'components/table/Table';
 import TablePagination from 'components/table/TablePagination';
+import { toast } from 'react-toastify';
 
 export default function ManageAttendance() {
   const title = 'Manage Attendance';
@@ -20,23 +21,34 @@ export default function ManageAttendance() {
   ];
 
   const history = useHistory();
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState({
+    initial: true,
+    actions: {
+      checkin: false,
+      checkout: false,
+      absent: false
+    }
+  });
   const [staffList, setStaffList] = useState([]);
   const [showActionModal, setShowActionModal] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [actionType, setActionType] = useState('');
+  const [error, setError] = useState('');
 
   const fetchStaff = async () => {
     try {
-      setIsLoading(true);
+      setLoading(prev => ({ ...prev, initial: true }));
+      setError('');
       const response = await axios.get(`${process.env.REACT_APP_API}/staff/get-all`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setStaffList(response.data.data);
-    } catch (error) {
-      console.error('Error fetching staff:', error);
+    } catch (err) {
+      console.error('Error fetching staff:', err);
+      setError('Failed to load staff attendance data. Please try again.');
+      toast.error('Failed to fetch staff data.');
     } finally {
-      setIsLoading(false);
+      setLoading(prev => ({ ...prev, initial: false }));
     }
   };
 
@@ -56,7 +68,8 @@ export default function ManageAttendance() {
     return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const handleCheckIn = async (staffId) => {
+  const handleCheckIn = async (staffId, staffName) => {
+    setLoading(prev => ({ ...prev, actions: { ...prev.actions, checkin: true } }));
     try {
       await axios.post(
         `${process.env.REACT_APP_API}/staff/check-in`,
@@ -69,13 +82,18 @@ export default function ManageAttendance() {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }
       );
+      toast.success(`${staffName} checked in successfully!`);
       fetchStaff();
-    } catch (error) {
-      console.error('Error during Check-In:', error);
+    } catch (err) {
+      console.error('Error during Check-In:', err);
+      toast.error(err.response?.data?.message || 'Failed to check in.');
+    } finally {
+      setLoading(prev => ({ ...prev, actions: { ...prev.actions, checkin: false } }));
     }
   };
 
-  const handleCheckOut = async (staffId) => {
+  const handleCheckOut = async (staffId, staffName) => {
+    setLoading(prev => ({ ...prev, actions: { ...prev.actions, checkout: true } }));
     try {
       await axios.post(
         `${process.env.REACT_APP_API}/staff/check-out`,
@@ -88,13 +106,18 @@ export default function ManageAttendance() {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }
       );
+      toast.success(`${staffName} checked out successfully!`);
       fetchStaff();
-    } catch (error) {
-      console.error('Error during Check-Out:', error);
+    } catch (err) {
+      console.error('Error during Check-Out:', err);
+      toast.error(err.response?.data?.message || 'Failed to check out.');
+    } finally {
+      setLoading(prev => ({ ...prev, actions: { ...prev.actions, checkout: false } }));
     }
   };
 
-  const handleAbsent = async (staffId) => {
+  const handleAbsent = async (staffId, staffName) => {
+    setLoading(prev => ({ ...prev, actions: { ...prev.actions, absent: true } }));
     try {
       await axios.post(
         `${process.env.REACT_APP_API}/staff/mark-absent`,
@@ -106,9 +129,13 @@ export default function ManageAttendance() {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }
       );
+      toast.success(`${staffName} marked as absent!`);
       fetchStaff();
-    } catch (error) {
-      console.error('Error marking Absent:', error);
+    } catch (err) {
+      console.error('Error marking Absent:', err);
+      toast.error(err.response?.data?.message || 'Failed to mark as absent.');
+    } finally {
+      setLoading(prev => ({ ...prev, actions: { ...prev.actions, absent: false } }));
     }
   };
 
@@ -119,12 +146,14 @@ export default function ManageAttendance() {
   };
 
   const confirmAction = () => {
+    if (!selectedStaff) return;
+
     if (actionType === 'checkin') {
-      handleCheckIn(selectedStaff._id);
+      handleCheckIn(selectedStaff._id, `${selectedStaff.f_name} ${selectedStaff.l_name}`);
     } else if (actionType === 'checkout') {
-      handleCheckOut(selectedStaff._id);
+      handleCheckOut(selectedStaff._id, `${selectedStaff.f_name} ${selectedStaff.l_name}`);
     } else if (actionType === 'absent') {
-      handleAbsent(selectedStaff._id);
+      handleAbsent(selectedStaff._id, `${selectedStaff.f_name} ${selectedStaff.l_name}`);
     }
     setShowActionModal(false);
   };
@@ -225,6 +254,7 @@ export default function ManageAttendance() {
                     className="btn-icon btn-icon-only me-1"
                     onClick={() => handleAction(row.original, 'checkin')}
                     title="Check-In"
+                    disabled={loading.actions.checkin || loading.actions.checkout || loading.actions.absent}
                   >
                     <CsLineIcons icon="login" />
                   </Button>
@@ -234,6 +264,7 @@ export default function ManageAttendance() {
                     className="btn-icon btn-icon-only me-1"
                     onClick={() => handleAction(row.original, 'absent')}
                     title="Mark Absent"
+                    disabled={loading.actions.checkin || loading.actions.checkout || loading.actions.absent}
                   >
                     <i className="bi-person-x-fill" />
                   </Button>
@@ -245,6 +276,7 @@ export default function ManageAttendance() {
                   className="btn-icon btn-icon-only me-1"
                   onClick={() => handleAction(row.original, 'checkout')}
                   title="Check-Out"
+                  disabled={loading.actions.checkin || loading.actions.checkout || loading.actions.absent}
                 >
                   <CsLineIcons icon="logout" />
                 </Button>
@@ -259,6 +291,7 @@ export default function ManageAttendance() {
                 className="btn-icon btn-icon-only"
                 onClick={() => history.push(`/staff/attendance/view/${row.original._id}`)}
                 title="View Attendance History"
+                disabled={loading.initial}
               >
                 <CsLineIcons icon="eye" />
               </Button>
@@ -267,7 +300,7 @@ export default function ManageAttendance() {
         },
       },
     ],
-    []
+    [loading]
   );
 
   const tableInstance = useTable(
@@ -285,6 +318,31 @@ export default function ManageAttendance() {
     useRowSelect
   );
 
+  const handleRefresh = () => {
+    fetchStaff();
+  };
+
+  if (loading.initial) {
+    return (
+      <>
+        <HtmlHead title={title} description={description} />
+        <Row>
+          <Col>
+            <div className="page-title-container">
+              <h1 className="mb-0 pb-0 display-4">{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </div>
+            <div className="text-center py-5">
+              <Spinner animation="border" variant="primary" className="mb-3" />
+              <h5>Loading Attendance Data...</h5>
+              <p className="text-muted">Please wait while we fetch staff attendance information</p>
+            </div>
+          </Col>
+        </Row>
+      </>
+    );
+  }
+
   return (
     <>
       <HtmlHead title={title} description={description} />
@@ -292,36 +350,74 @@ export default function ManageAttendance() {
       <Row>
         <Col>
           <div className="page-title-container">
-            <Row>
+            <Row className="align-items-center">
               <Col xs="12" md="7">
                 <h1 className="mb-0 pb-0 display-4">{title}</h1>
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
               <Col xs="12" md="5" className="d-flex align-items-start justify-content-end">
-                <Button variant="outline-primary" as={Link} to="/staff/view">
-                  <CsLineIcons icon="eye" className="me-2" />
-                  View Staff
-                </Button>
+                <div className="d-flex gap-2">
+                  <Button
+                    variant="outline-primary"
+                    onClick={handleRefresh}
+                    disabled={loading.initial || loading.actions.checkin || loading.actions.checkout || loading.actions.absent}
+                  >
+                    <CsLineIcons icon="refresh" className="me-2" />
+                    Refresh
+                  </Button>
+                  <Button variant="outline-primary" as={Link} to="/staff/view">
+                    <CsLineIcons icon="eye" className="me-2" />
+                    View Staff
+                  </Button>
+                </div>
               </Col>
             </Row>
           </div>
 
+          {error && (
+            <Alert variant="danger" className="mb-4">
+              <CsLineIcons icon="error" className="me-2" />
+              {error}
+              <Button
+                variant="outline-danger"
+                size="sm"
+                className="ms-3"
+                onClick={fetchStaff}
+                disabled={loading.initial}
+              >
+                Retry
+              </Button>
+            </Alert>
+          )}
+
           <Card className="mb-5">
-            <Card.Header>
-              <Card.Title className="mb-0">Today's Attendance - {formatDateDisplay(getTodayDate())}</Card.Title>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <div>
+                <Card.Title className="mb-0">
+                  <CsLineIcons icon="calendar" className="me-2" />
+                  Today's Attendance - {formatDateDisplay(getTodayDate())}
+                </Card.Title>
+                <small className="text-muted">
+                  All times are in IST (Asia/Kolkata) timezone
+                </small>
+              </div>
+              <Badge bg="light" text="dark" className="p-2">
+                <CsLineIcons icon="users" className="me-1" />
+                {staffList.length} staff member{staffList.length !== 1 ? 's' : ''}
+              </Badge>
             </Card.Header>
             <Card.Body>
-              {isLoading ? (
-                <div className="text-center py-4">
-                  <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
-                  <p className="mt-2 text-muted">Loading staff data...</p>
-                </div>
-              ) : staffList.length === 0 ? (
+              {staffList.length === 0 ? (
                 <Alert variant="info" className="text-center">
-                  <CsLineIcons icon="info" className="me-2" />
-                  No staff members found. Please add staff first.
+                  <div className="py-4">
+                    <CsLineIcons icon="inbox" size="48" className="text-muted mb-3" />
+                    <h5>No Staff Members Found</h5>
+                    <p className="text-muted mb-4">Please add staff members to manage attendance</p>
+                    <Button variant="primary" as={Link} to="/staff/add">
+                      <CsLineIcons icon="plus" className="me-2" />
+                      Add Staff
+                    </Button>
+                  </div>
                 </Alert>
               ) : (
                 <div className="mt-3">
@@ -349,10 +445,32 @@ export default function ManageAttendance() {
               )}
             </Card.Body>
             <Card.Footer className="bg-transparent">
-              <small className="text-muted">
-                <CsLineIcons icon="clock" className="me-1" />
-                All times are in IST (Asia/Kolkata) timezone
-              </small>
+              <div className="d-flex flex-wrap gap-3">
+                <div className="d-flex align-items-center">
+                  <Badge bg="warning" className="me-2 px-2 py-1">
+                    <CsLineIcons icon="clock" size="12" />
+                  </Badge>
+                  <small>Pending</small>
+                </div>
+                <div className="d-flex align-items-center">
+                  <Badge bg="success" className="me-2 px-2 py-1">
+                    <CsLineIcons icon="log-in" size="12" />
+                  </Badge>
+                  <small>Checked In</small>
+                </div>
+                <div className="d-flex align-items-center">
+                  <Badge bg="primary" className="me-2 px-2 py-1">
+                    <CsLineIcons icon="check" size="12" />
+                  </Badge>
+                  <small>Completed</small>
+                </div>
+                <div className="d-flex align-items-center">
+                  <Badge bg="danger" className="me-2 px-2 py-1">
+                    <i className="bi-person-x-fill" width="12" height="12" />
+                  </Badge>
+                  <small>Absent</small>
+                </div>
+              </div>
             </Card.Footer>
           </Card>
         </Col>
@@ -362,6 +480,14 @@ export default function ManageAttendance() {
       <Modal show={showActionModal} onHide={() => setShowActionModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>
+            <CsLineIcons
+              icon={
+                actionType === 'checkin' ? 'login' :
+                  actionType === 'checkout' ? 'logout' :
+                    'user-block'
+              }
+              className="me-2"
+            />
             {actionType === 'checkin' && 'Confirm Check-In'}
             {actionType === 'checkout' && 'Confirm Check-Out'}
             {actionType === 'absent' && 'Confirm Absent'}
@@ -378,20 +504,88 @@ export default function ManageAttendance() {
                 </strong>
                 ?
               </p>
-              {actionType === 'checkin' && <p className="text-muted">Check-in time: {getCurrentTime()}</p>}
-              {actionType === 'checkout' && <p className="text-muted">Check-out time: {getCurrentTime()}</p>}
+              {actionType === 'checkin' && (
+                <p className="text-muted">
+                  <CsLineIcons icon="clock" className="me-1" />
+                  Check-in time: {getCurrentTime()}
+                </p>
+              )}
+              {actionType === 'checkout' && (
+                <p className="text-muted">
+                  <CsLineIcons icon="clock" className="me-1" />
+                  Check-out time: {getCurrentTime()}
+                </p>
+              )}
+              {actionType === 'absent' && (
+                <Alert variant="warning" className="mt-3">
+                  <CsLineIcons icon="alert" className="me-2" />
+                  This will mark the staff as absent for today.
+                </Alert>
+              )}
             </div>
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowActionModal(false)}>
+          <Button variant="secondary" onClick={() => setShowActionModal(false)} disabled={loading.actions.checkin || loading.actions.checkout || loading.actions.absent}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={confirmAction}>
-            Confirm
+          <Button
+            variant={
+              actionType === 'checkin' ? 'primary' :
+                actionType === 'checkout' ? 'secondary' :
+                  'danger'
+            }
+            onClick={confirmAction}
+            disabled={loading.actions.checkin || loading.actions.checkout || loading.actions.absent}
+            style={{ minWidth: '100px' }}
+          >
+            {loading.actions.checkin || loading.actions.checkout || loading.actions.absent ? (
+              <>
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                  className="me-2"
+                />
+                Processing...
+              </>
+            ) : (
+              'Confirm'
+            )}
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Action processing overlay */}
+      {(loading.actions.checkin || loading.actions.checkout || loading.actions.absent) && (
+        <div
+          className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            zIndex: 9999,
+            backdropFilter: 'blur(2px)'
+          }}
+        >
+          <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
+            <Card.Body className="text-center p-4">
+              <Spinner
+                animation="border"
+                variant="primary"
+                className="mb-3"
+                style={{ width: '3rem', height: '3rem' }}
+              />
+              <h5 className="mb-0">
+                {loading.actions.checkin && 'Checking In...'}
+                {loading.actions.checkout && 'Checking Out...'}
+                {loading.actions.absent && 'Marking Absent...'}
+              </h5>
+              <small className="text-muted">Please wait a moment</small>
+            </Card.Body>
+          </Card>
+        </div>
+      )}
     </>
   );
 }

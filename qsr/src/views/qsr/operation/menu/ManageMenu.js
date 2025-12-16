@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Card, Col, Row, Form } from 'react-bootstrap';
+import { Card, Col, Row, Form, Spinner, Alert, Button } from 'react-bootstrap';
+import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import csInterfaceIcons from 'views/interface/content/icons/data/cs-interface-icons-tags';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -20,7 +21,6 @@ const ManageMenu = () => {
     { to: 'operations/manage-menu', title: 'Manage Menu' },
   ];
 
-  // Modal and selected dish state
   const [editMenuModalShow, setEditMenuModalShow] = useState(false);
   const [selectedDish, setSelectedDish] = useState(null);
   const [editCategoryModalShow, setEditCategoryModalShow] = useState(false);
@@ -31,34 +31,46 @@ const ManageMenu = () => {
   const [filteredMenuData, setFilteredMenuData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({ meal_type: '', category: '' });
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const starFillIcon = csInterfaceIcons.find((icon) => icon.c === 'cs-star-full');
 
   const fetchMenuData = async () => {
     try {
+      setLoading(true);
       const res = await axios.get(`${process.env.REACT_APP_API}/menu/get`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      console.log(res.data.data);
+
       const transformedMenu = res.data.data.map(({ _id, ...rest }) => ({
         ...rest,
         id: _id,
       }));
+
       setMenuData(transformedMenu);
       setFilteredMenuData(transformedMenu);
     } catch (error) {
       console.error('Error fetching menu data:', error);
+      toast.error('Failed to fetch menu data. Please try again.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const refreshData = () => {
+    setRefreshing(true);
+    fetchMenuData();
   };
 
   useEffect(() => {
     fetchMenuData();
   }, []);
 
-  /* eslint-disable camelcase */
   const applyFilters = ({ meal_type, category, searchText }) => {
     let filtered = [...menuData];
 
@@ -74,7 +86,9 @@ const ManageMenu = () => {
       filtered = filtered
         .map((item) => ({
           ...item,
-          dishes: item.dishes.filter((dish) => dish.dish_name.toLowerCase().includes(searchText.toLowerCase())),
+          dishes: item.dishes.filter((dish) =>
+            dish.dish_name.toLowerCase().includes(searchText.toLowerCase())
+          ),
         }))
         .filter((item) => item.dishes.length > 0);
     }
@@ -93,22 +107,82 @@ const ManageMenu = () => {
     applyFilters({ ...newFilters, searchText: searchTerm });
   };
 
+  if (loading) {
+    return (
+      <>
+        <HtmlHead title={title} description={description} />
+        <Row>
+          <Col>
+            <div className="page-title-container mb-4">
+              <h1 className="mb-0 pb-0 display-4">{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </div>
+            <div className="text-center py-5">
+              <Spinner animation="border" variant="primary" className="mb-3" />
+              <p>Loading menu data...</p>
+            </div>
+          </Col>
+        </Row>
+      </>
+    );
+  }
+
   return (
     <>
       <HtmlHead title={title} description={description} />
       <Row>
         <Col>
           <div className="page-title-container mb-4">
-            <h1 className="mb-0 pb-0 display-4">{title}</h1>
-            <BreadcrumbList items={breadcrumbs} />
+            <Row className="align-items-center">
+              <Col xs="12" md="7">
+                <h1 className="mb-0 pb-0 display-4">{title}</h1>
+                <BreadcrumbList items={breadcrumbs} />
+              </Col>
+              <Col xs="12" md="5" className="text-end">
+                <Button
+                  variant="outline-primary"
+                  onClick={refreshData}
+                  disabled={refreshing}
+                  className="me-2"
+                >
+                  {refreshing ? (
+                    <>
+                      <Spinner animation="border" size="sm" className="me-2" />
+                      Refreshing...
+                    </>
+                  ) : (
+                    <>
+                      <CsLineIcons icon="refresh" className="me-2" />
+                      Refresh
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="primary"
+                  href="/operations/add-dish"
+                >
+                  <CsLineIcons icon="plus" className="me-2" />
+                  Add New Dish
+                </Button>
+              </Col>
+            </Row>
           </div>
+
           <Form className="mb-4">
             <Row>
               <Col md={4}>
-                <Form.Control type="text" placeholder="Search dishes..." onChange={(e) => handleSearch(e.target.value)} />
+                <Form.Control
+                  type="text"
+                  placeholder="Search dishes..."
+                  onChange={(e) => handleSearch(e.target.value)}
+                  disabled={refreshing}
+                />
               </Col>
               <Col md={3}>
-                <Form.Select onChange={(e) => handleFilter('meal_type', e.target.value)}>
+                <Form.Select
+                  onChange={(e) => handleFilter('meal_type', e.target.value)}
+                  disabled={refreshing}
+                >
                   <option value="">All Meal Types</option>
                   <option value="veg">Veg</option>
                   <option value="non-veg">Non-Veg</option>
@@ -116,7 +190,10 @@ const ManageMenu = () => {
                 </Form.Select>
               </Col>
               <Col md={3}>
-                <Form.Select onChange={(e) => handleFilter('category', e.target.value)}>
+                <Form.Select
+                  onChange={(e) => handleFilter('category', e.target.value)}
+                  disabled={refreshing}
+                >
                   <option value="">All Categories</option>
                   {Array.from(new Set(menuData.map((cat) => cat.category))).map((cat) => (
                     <option key={cat} value={cat}>
@@ -128,78 +205,124 @@ const ManageMenu = () => {
             </Row>
           </Form>
 
-          <Row>
-            {filteredMenuData.map((category) => {
-              const columns = [
-                {
-                  Header: 'Dish Name',
-                  accessor: 'dish_name',
-                  sortable: true,
-                  headerClassName: 'text-muted text-small text-uppercase w-40',
-                  Cell: ({ row }) => (
-                    <>
-                      {row.original.dish_name}
-                      {row.original.is_special && <i className={`icon-20 ${starFillIcon.c} ms-2 text-warning`} />}
-                    </>
-                  ),
-                },
-                {
-                  Header: 'Price',
-                  accessor: 'dish_price',
-                  sortable: true,
-                  headerClassName: 'text-muted text-small text-uppercase w-20',
-                  cellClassName: 'text-alternate',
-                },
-                {
-                  Header: 'Actions',
-                  id: 'actions',
-                  headerClassName: 'text-muted text-small text-uppercase w-20',
-                  Cell: ({ row }) => (
-                    <div className="d-flex gap-2">
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-icon btn-outline-primary"
-                        onClick={() => {
-                          setSelectedDish(row.original);
-                          setEditMenuModalShow(true);
-                        }}
-                      >
-                        <CsLineIcons icon="edit" />
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-icon btn-outline-danger"
-                        onClick={() => {
-                          setDishToDelete(row.original);
-                          setDeleteDishModalShow(true);
-                        }}
-                      >
-                        <CsLineIcons icon="bin" />
-                      </button>
-                    </div>
-                  ),
-                },
-              ];
+          {refreshing && (
+            <Alert variant="info" className="mb-4">
+              <div className="d-flex align-items-center">
+                <Spinner animation="border" size="sm" className="me-2" />
+                Refreshing menu data...
+              </div>
+            </Alert>
+          )}
 
-              const data = category.dishes;
+          {filteredMenuData.length === 0 ? (
+            <Alert variant="info" className="text-center">
+              <CsLineIcons icon="inbox" size={24} className="me-2" />
+              No dishes found. Add some dishes to get started.
+            </Alert>
+          ) : (
+            <Row>
+              {filteredMenuData.map((category) => {
+                const columns = [
+                  {
+                    Header: 'Dish Name',
+                    accessor: 'dish_name',
+                    sortable: true,
+                    headerClassName: 'text-muted text-small text-uppercase w-40',
+                    Cell: ({ row }) => (
+                      <>
+                        {row.original.dish_name}
+                        {row.original.is_special && <i className={`icon-20 ${starFillIcon.c} ms-2 text-warning`} />}
+                      </>
+                    ),
+                  },
+                  {
+                    Header: 'Price',
+                    accessor: 'dish_price',
+                    sortable: true,
+                    headerClassName: 'text-muted text-small text-uppercase w-20',
+                    cellClassName: 'text-alternate',
+                  },
+                  {
+                    Header: 'Actions',
+                    id: 'actions',
+                    headerClassName: 'text-muted text-small text-uppercase w-20',
+                    Cell: ({ row }) => (
+                      <div className="d-flex gap-2">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-icon btn-outline-primary"
+                          onClick={() => {
+                            setSelectedDish(row.original);
+                            setEditMenuModalShow(true);
+                          }}
+                          disabled={refreshing}
+                        >
+                          <CsLineIcons icon="edit" />
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-icon btn-outline-danger"
+                          onClick={() => {
+                            setDishToDelete(row.original);
+                            setDeleteDishModalShow(true);
+                          }}
+                          disabled={refreshing}
+                        >
+                          <CsLineIcons icon="bin" />
+                        </button>
+                      </div>
+                    ),
+                  },
+                ];
 
-              return (
-                <Col md={6} lg={6} key={category.id}>
-                  <Card body className="mb-4">
-                    <BoxedVariationsStripe columns={columns} data={data} category={category} setEditCategoryModalShow={setEditCategoryModalShow} setSelectedCategory={setSelectedCategory} />
-                  </Card>
-                </Col>
-              );
-            })}
-          </Row>
+                const data = category.dishes;
+
+                return (
+                  <Col md={6} lg={6} key={category.id}>
+                    <Card body className="mb-4">
+                      <BoxedVariationsStripe
+                        columns={columns}
+                        data={data}
+                        category={category}
+                        setEditCategoryModalShow={setEditCategoryModalShow}
+                        setSelectedCategory={setSelectedCategory}
+                        refreshing={refreshing}
+                      />
+                    </Card>
+                  </Col>
+                );
+              })}
+            </Row>
+          )}
+
+          {selectedDish && (
+            <EditDishModal
+              show={editMenuModalShow}
+              handleClose={() => setEditMenuModalShow(false)}
+              data={selectedDish}
+              fetchMenuData={fetchMenuData}
+            />
+          )}
+
+          {selectedCategory && (
+            <EditDishCategoryModal
+              show={editCategoryModalShow}
+              handleClose={() => setEditCategoryModalShow(false)}
+              data={selectedCategory}
+              fetchMenuData={fetchMenuData}
+            />
+          )}
+
+          {dishToDelete && (
+            <DeleteDishModal
+              show={deleteDishModalShow}
+              handleClose={() => setDeleteDishModalShow(false)}
+              data={dishToDelete}
+              fetchMenuData={fetchMenuData}
+            />
+          )}
         </Col>
       </Row>
-
-      {selectedDish && <EditDishModal show={editMenuModalShow} handleClose={() => setEditMenuModalShow(false)} data={selectedDish} fetchMenuData={fetchMenuData} />}
-
-      {selectedCategory && <EditDishCategoryModal show={editCategoryModalShow} handleClose={() => setEditCategoryModalShow(false)} data={selectedCategory} fetchMenuData={fetchMenuData} />}
-
-      {dishToDelete && <DeleteDishModal show={deleteDishModalShow} handleClose={() => setDeleteDishModalShow(false)} data={dishToDelete} fetchMenuData={fetchMenuData} />}
     </>
   );
 };
