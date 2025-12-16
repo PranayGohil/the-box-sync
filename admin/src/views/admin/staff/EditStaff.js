@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
-import { Row, Col, Card, Button, Form, Modal, Alert } from 'react-bootstrap';
+import { Row, Col, Card, Button, Form, Modal, Alert, Spinner } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import { useFormik } from 'formik';
@@ -23,7 +23,11 @@ const EditStaff = () => {
     ];
     const { id } = useParams();
     const history = useHistory();
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState({
+        initial: true,
+        submitting: false,
+        faceModels: false
+    });
     const [fileUploadError, setFileUploadError] = useState(null);
     const [photoPreview, setPhotoPreview] = useState(null);
     const [frontImagePreview, setFrontImagePreview] = useState(null);
@@ -32,6 +36,11 @@ const EditStaff = () => {
     const [states, setStates] = useState([]);
     const [cities, setCities] = useState([]);
     const [positions, setPositions] = useState([]);
+    const [uploadingFiles, setUploadingFiles] = useState({
+        photo: false,
+        front_image: false,
+        back_image: false
+    });
 
     // Face capture states
     const [showFaceModal, setShowFaceModal] = useState(false);
@@ -71,17 +80,16 @@ const EditStaff = () => {
 
         photo: Yup.mixed()
             .test('required-or-existing', 'Photo is required', (value) => {
-                // value can be: File object (new upload), string (existing URL), or falsy
                 if (!value) return false;
-                if (typeof value === 'string') return true; // existing URL — OK
-                return isFileObject(value); // must be a File-like object
+                if (typeof value === 'string') return true;
+                return isFileObject(value);
             })
-            .test('fileSize', 'File size is too large', (value) => {
+            .test('fileSize', 'File size is too large (max 2MB)', (value) => {
                 if (!value) return true;
-                if (typeof value === 'string') return true; // existing URL — skip size check
+                if (typeof value === 'string') return true;
                 return isFileObject(value) ? value.size <= maxSize : true;
             })
-            .test('fileType', 'Unsupported file format', (value) => {
+            .test('fileType', 'Unsupported file format (JPEG, PNG, JPG, WebP only)', (value) => {
                 if (!value) return true;
                 if (typeof value === 'string') return true;
                 return isFileObject(value) ? allowedTypes.includes(value.type) : true;
@@ -108,28 +116,25 @@ const EditStaff = () => {
                 return schema;
             }),
 
-        // Front image always required
         front_image: Yup.mixed()
             .test('required-or-existing', 'Front ID image is required', (value) => {
                 if (!value) return false;
                 if (typeof value === 'string') return true;
                 return isFileObject(value);
             })
-            .test('fileSize', 'File size is too large', (value) => {
+            .test('fileSize', 'File size is too large (max 2MB)', (value) => {
                 if (!value) return true;
                 if (typeof value === 'string') return true;
                 return isFileObject(value) ? value.size <= maxSize : true;
             })
-            .test('fileType', 'Unsupported file format', (value) => {
+            .test('fileType', 'Unsupported file format (JPEG, PNG, JPG, WebP only)', (value) => {
                 if (!value) return true;
                 if (typeof value === 'string') return true;
                 return isFileObject(value) ? allowedTypes.includes(value.type) : true;
             }),
 
-        // Back image - required only for Aadhar (use when instead of this.parent)
         back_image: Yup.mixed()
             .when('document_type', (docType, schema) => {
-                // if Aadhar, it's required — but allow existing URL string
                 if (docType === 'National Identity Card') {
                     return schema.test('required-or-existing', 'Back ID image is required for Aadhar card', (value) => {
                         if (!value) return false;
@@ -137,14 +142,14 @@ const EditStaff = () => {
                         return isFileObject(value);
                     });
                 }
-                return schema; // not required for other document types
+                return schema;
             })
-            .test('fileSize', 'File size is too large', (value) => {
+            .test('fileSize', 'File size is too large (max 2MB)', (value) => {
                 if (!value) return true;
                 if (typeof value === 'string') return true;
                 return isFileObject(value) ? value.size <= maxSize : true;
             })
-            .test('fileType', 'Unsupported file format', (value) => {
+            .test('fileType', 'Unsupported file format (JPEG, PNG, JPG, WebP only)', (value) => {
                 if (!value) return true;
                 if (typeof value === 'string') return true;
                 return isFileObject(value) ? allowedTypes.includes(value.type) : true;
@@ -152,20 +157,26 @@ const EditStaff = () => {
     });
 
     const loadModels = async () => {
-        await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
-        await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
-        await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+        setLoading(prev => ({ ...prev, faceModels: true }));
+        try {
+            await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+            await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+            await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+            console.log('Face detection models loaded');
+        } catch (error) {
+            console.error('Error loading face models:', error);
+            toast.error('Failed to load face detection models');
+        } finally {
+            setLoading(prev => ({ ...prev, faceModels: false }));
+        }
     };
 
     useEffect(() => {
         if (activePlans.includes("Payroll By The Box")) {
-            loadModels().then(() => {
-                console.log('Face detection models loaded');
-            });
+            loadModels();
         }
-    }, []);
+    }, [activePlans]);
 
-    // Replace your existing useEffect for face detection with this:
     useEffect(() => {
         let interval;
         const detectFace = async () => {
@@ -173,7 +184,6 @@ const EditStaff = () => {
                 const { video } = webcamRef.current;
                 const canvas = document.getElementById('faceCanvas');
 
-                // Check if canvas exists before proceeding
                 if (!canvas) {
                     return;
                 }
@@ -201,7 +211,6 @@ const EditStaff = () => {
 
         if (showFaceModal) {
             setIsDetecting(true);
-            // Add a small delay to ensure the canvas is rendered
             setTimeout(() => {
                 interval = setInterval(detectFace, 300);
             }, 100);
@@ -212,7 +221,6 @@ const EditStaff = () => {
             if (interval) {
                 clearInterval(interval);
             }
-            // Clear canvas safely
             const canvas = document.getElementById('faceCanvas');
             if (canvas) {
                 const ctx = canvas.getContext('2d');
@@ -221,7 +229,6 @@ const EditStaff = () => {
         };
     }, [showFaceModal]);
 
-    // Also update your handleFaceCapture function:
     const handleFaceCapture = async () => {
         try {
             setIsCapturing(true);
@@ -232,18 +239,20 @@ const EditStaff = () => {
 
             if (detection) {
                 const descriptorArray = Array.from(detection.descriptor);
-                console.log('Description Array', descriptorArray);
                 setFaceDescriptor(descriptorArray);
                 setCaptureStatus('success');
                 setCaptureErrorMessage('');
+                toast.success('Face captured successfully!');
             } else {
                 setCaptureStatus('error');
                 setCaptureErrorMessage('No face detected. Please try again.');
+                toast.error('No face detected. Please try again.');
             }
         } catch (err) {
             console.error('Face capture error:', err);
             setCaptureStatus('error');
             setCaptureErrorMessage('Error capturing face. Try again.');
+            toast.error('Error capturing face. Try again.');
         } finally {
             setIsCapturing(false);
         }
@@ -273,6 +282,8 @@ const EditStaff = () => {
         validationSchema: editStaff,
         enableReinitialize: true,
         onSubmit: async (values, { setSubmitting }) => {
+            setLoading(prev => ({ ...prev, submitting: true }));
+            setFileUploadError(null);
             try {
                 const formData = new FormData();
                 Object.keys(values).forEach((key) => {
@@ -285,7 +296,6 @@ const EditStaff = () => {
                 if (values.front_image instanceof File) formData.append('front_image', values.front_image);
                 if (values.back_image instanceof File) formData.append('back_image', values.back_image);
 
-                // Add face descriptor if captured
                 if (faceDescriptor) {
                     formData.append('face_encoding', JSON.stringify(faceDescriptor));
                 }
@@ -301,9 +311,10 @@ const EditStaff = () => {
                 history.push('/staff/view');
             } catch (err) {
                 console.error('Error updating staff:', err);
-                setFileUploadError('Update failed. Please try again.');
+                setFileUploadError(err.response?.data?.message || 'Update failed. Please try again.');
                 toast.error('Update failed.');
             } finally {
+                setLoading(prev => ({ ...prev, submitting: false }));
                 setSubmitting(false);
             }
         },
@@ -314,25 +325,22 @@ const EditStaff = () => {
     useEffect(() => {
         setCountries(Country.getAllCountries());
 
-        const fetchPositions = async () => {
+        const fetchData = async () => {
             try {
-                const res = await axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-                });
-                setPositions(res.data.data);
-            } catch (error) {
-                console.error('Error fetching positions:', error);
-                toast.error('Failed to fetch positions.');
-            }
-        };
+                setLoading(prev => ({ ...prev, initial: true }));
 
-        const fetchStaffData = async () => {
-            try {
-                const res = await axios.get(`${process.env.REACT_APP_API}/staff/get/${id}`, {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-                });
+                const [positionsRes, staffRes] = await Promise.all([
+                    axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
+                        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                    }),
+                    axios.get(`${process.env.REACT_APP_API}/staff/get/${id}`, {
+                        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                    })
+                ]);
 
-                const staff = res.data.data;
+                setPositions(positionsRes.data.data);
+
+                const staff = staffRes.data.data;
                 setFieldValue('staff_id', staff.staff_id);
                 setFieldValue('f_name', staff.f_name);
                 setFieldValue('l_name', staff.l_name);
@@ -352,45 +360,39 @@ const EditStaff = () => {
                 setFieldValue('front_image', staff.front_image || '');
                 setFieldValue('back_image', staff.back_image || '');
 
-                // Set face descriptor if exists
                 if (staff.face_encoding && staff.face_encoding.length > 0) {
                     setFaceDescriptor(staff.face_encoding);
                     setCaptureStatus('success');
                 }
 
-                // Find country by name to get ISO code
                 const selectedCountry = Country.getAllCountries().find((c) => c.name === staff.country);
 
                 if (selectedCountry) {
-                    // Load states using the country ISO code
                     const countryStates = State.getStatesOfCountry(selectedCountry.isoCode);
                     setStates(countryStates);
 
-                    // Find state by name to get ISO code
                     const selectedState = countryStates.find((s) => s.name === staff.state);
 
                     if (selectedState) {
-                        // Load cities using both country and state ISO codes
                         setCities(City.getCitiesOfState(selectedCountry.isoCode, selectedState.isoCode));
                     }
                 }
 
-                setPhotoPreview(`${process.env.REACT_APP_UPLOAD_DIR}/${staff.photo}`);
-                setFrontImagePreview(`${process.env.REACT_APP_UPLOAD_DIR}/${staff.front_image}`);
+                setPhotoPreview(staff.photo ? `${process.env.REACT_APP_UPLOAD_DIR}/${staff.photo}` : null);
+                setFrontImagePreview(staff.front_image ? `${process.env.REACT_APP_UPLOAD_DIR}/${staff.front_image}` : null);
                 if (staff.back_image) {
                     setBackImagePreview(`${process.env.REACT_APP_UPLOAD_DIR}/${staff.back_image}`);
                 }
 
-                setLoading(false);
             } catch (error) {
-                console.error('Error fetching staff data:', error);
-                setLoading(false);
+                console.error('Error fetching data:', error);
                 toast.error('Failed to fetch staff data.');
+            } finally {
+                setLoading(prev => ({ ...prev, initial: false }));
             }
         };
 
-        fetchPositions();
-        fetchStaffData();
+        fetchData();
     }, [id, setFieldValue]);
 
     const handleCountryChange = (event) => {
@@ -414,12 +416,39 @@ const EditStaff = () => {
         setFieldValue('city', '');
     };
 
-    const handleFileChange = (fieldName, file, setPreview) => {
+    const handleFileChange = async (fieldName, file, setPreview) => {
+        setUploadingFiles(prev => ({ ...prev, [fieldName]: true }));
+
+        await new Promise(resolve => setTimeout(resolve, 300));
+
         setFieldValue(fieldName, file);
         if (file) {
             setPreview(URL.createObjectURL(file));
         }
+
+        setUploadingFiles(prev => ({ ...prev, [fieldName]: false }));
     };
+
+    if (loading.initial) {
+        return (
+            <>
+                <HtmlHead title={title} description={description} />
+                <Row>
+                    <Col>
+                        <div className="page-title-container">
+                            <h1 className="mb-0 pb-0 display-4">{title}</h1>
+                            <BreadcrumbList items={breadcrumbs} />
+                        </div>
+                        <div className="text-center py-5">
+                            <Spinner animation="border" variant="primary" className="mb-3" />
+                            <h5>Loading Staff Information...</h5>
+                            <p className="text-muted">Please wait while we fetch staff details</p>
+                        </div>
+                    </Col>
+                </Row>
+            </>
+        );
+    }
 
     return (
         <>
@@ -429,11 +458,11 @@ const EditStaff = () => {
                     <div className="page-title-container">
                         <Row className="align-items-center">
                             <Col>
-                                <h1 className="mb-0 pb-0 display-4">Edit Staff</h1>
+                                <h1 className="mb-0 pb-0 display-4">{title}</h1>
                                 <BreadcrumbList items={breadcrumbs} />
                             </Col>
                             <Col xs="auto">
-                                <Button variant="outline-primary" onClick={() => history.push('/staff/view')}>
+                                <Button variant="outline-primary" onClick={() => history.push('/staff/view')} disabled={loading.submitting}>
                                     <CsLineIcons icon="eye" className="me-2" />
                                     View Staff
                                 </Button>
@@ -443,6 +472,7 @@ const EditStaff = () => {
 
                     {fileUploadError && (
                         <Alert variant="danger" className="mb-4">
+                            <CsLineIcons icon="error" className="me-2" />
                             {fileUploadError}
                         </Alert>
                     )}
@@ -456,21 +486,42 @@ const EditStaff = () => {
                                 <Col md={4}>
                                     <Form.Group>
                                         <Form.Label>Staff ID</Form.Label>
-                                        <Form.Control type="text" name="staff_id" value={values.staff_id} onChange={handleChange} isInvalid={touched.staff_id && errors.staff_id} />
+                                        <Form.Control
+                                            type="text"
+                                            name="staff_id"
+                                            value={values.staff_id}
+                                            onChange={handleChange}
+                                            isInvalid={touched.staff_id && errors.staff_id}
+                                            disabled={loading.submitting}
+                                        />
                                         <Form.Control.Feedback type="invalid">{errors.staff_id}</Form.Control.Feedback>
                                     </Form.Group>
                                 </Col>
                                 <Col md={4}>
                                     <Form.Group>
                                         <Form.Label>First Name</Form.Label>
-                                        <Form.Control type="text" name="f_name" value={values.f_name} onChange={handleChange} isInvalid={touched.f_name && errors.f_name} />
+                                        <Form.Control
+                                            type="text"
+                                            name="f_name"
+                                            value={values.f_name}
+                                            onChange={handleChange}
+                                            isInvalid={touched.f_name && errors.f_name}
+                                            disabled={loading.submitting}
+                                        />
                                         <Form.Control.Feedback type="invalid">{errors.f_name}</Form.Control.Feedback>
                                     </Form.Group>
                                 </Col>
                                 <Col md={4}>
                                     <Form.Group>
                                         <Form.Label>Last Name</Form.Label>
-                                        <Form.Control type="text" name="l_name" value={values.l_name} onChange={handleChange} isInvalid={touched.l_name && errors.l_name} />
+                                        <Form.Control
+                                            type="text"
+                                            name="l_name"
+                                            value={values.l_name}
+                                            onChange={handleChange}
+                                            isInvalid={touched.l_name && errors.l_name}
+                                            disabled={loading.submitting}
+                                        />
                                         <Form.Control.Feedback type="invalid">{errors.l_name}</Form.Control.Feedback>
                                     </Form.Group>
                                 </Col>
@@ -486,6 +537,7 @@ const EditStaff = () => {
                                             value={values.birth_date}
                                             onChange={handleChange}
                                             isInvalid={touched.birth_date && errors.birth_date}
+                                            disabled={loading.submitting}
                                         />
                                         <Form.Control.Feedback type="invalid">{errors.birth_date}</Form.Control.Feedback>
                                     </Form.Group>
@@ -499,6 +551,7 @@ const EditStaff = () => {
                                             value={values.joining_date}
                                             onChange={handleChange}
                                             isInvalid={touched.joining_date && errors.joining_date}
+                                            disabled={loading.submitting}
                                         />
                                         <Form.Control.Feedback type="invalid">{errors.joining_date}</Form.Control.Feedback>
                                     </Form.Group>
@@ -516,6 +569,7 @@ const EditStaff = () => {
                                             value={values.address}
                                             onChange={handleChange}
                                             isInvalid={touched.address && errors.address}
+                                            disabled={loading.submitting}
                                         />
                                         <Form.Control.Feedback type="invalid">{errors.address}</Form.Control.Feedback>
                                     </Form.Group>
@@ -526,49 +580,67 @@ const EditStaff = () => {
                                 <Col md={4}>
                                     <Form.Group>
                                         <Form.Label>Country</Form.Label>
-                                        <Form.Select name="country" value={values.country} onChange={handleCountryChange} isInvalid={touched.country && errors.country}>
-                                            <option value="">Select Country</option>
-                                            {countries.map((country) => (
-                                                <option key={country.isoCode} value={country.name}>
-                                                    {country.name}
-                                                </option>
-                                            ))}
-                                        </Form.Select>
-                                        <Form.Control.Feedback type="invalid">{errors.country}</Form.Control.Feedback>
+                                        <div className="position-relative">
+                                            <Form.Select
+                                                name="country"
+                                                value={values.country}
+                                                onChange={handleCountryChange}
+                                                isInvalid={touched.country && errors.country}
+                                                disabled={loading.submitting}
+                                            >
+                                                <option value="">Select Country</option>
+                                                {countries.map((country) => (
+                                                    <option key={country.isoCode} value={country.name}>
+                                                        {country.name}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
+                                            <Form.Control.Feedback type="invalid">{errors.country}</Form.Control.Feedback>
+                                        </div>
                                     </Form.Group>
                                 </Col>
                                 <Col md={4}>
                                     <Form.Group>
                                         <Form.Label>State</Form.Label>
-                                        <Form.Select
-                                            name="state"
-                                            value={values.state}
-                                            onChange={handleStateChange}
-                                            disabled={!values.country}
-                                            isInvalid={touched.state && errors.state}
-                                        >
-                                            <option value="">Select State</option>
-                                            {states.map((state) => (
-                                                <option key={state.isoCode} value={state.name}>
-                                                    {state.name}
-                                                </option>
-                                            ))}
-                                        </Form.Select>
-                                        <Form.Control.Feedback type="invalid">{errors.state}</Form.Control.Feedback>
+                                        <div className="position-relative">
+                                            <Form.Select
+                                                name="state"
+                                                value={values.state}
+                                                onChange={handleStateChange}
+                                                disabled={!values.country || loading.submitting}
+                                                isInvalid={touched.state && errors.state}
+                                            >
+                                                <option value="">Select State</option>
+                                                {states.map((state) => (
+                                                    <option key={state.isoCode} value={state.name}>
+                                                        {state.name}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
+                                            <Form.Control.Feedback type="invalid">{errors.state}</Form.Control.Feedback>
+                                        </div>
                                     </Form.Group>
                                 </Col>
                                 <Col md={4}>
                                     <Form.Group>
                                         <Form.Label>City</Form.Label>
-                                        <Form.Select name="city" value={values.city} onChange={handleChange} disabled={!values.state} isInvalid={touched.city && errors.city}>
-                                            <option value="">Select City</option>
-                                            {cities.map((city) => (
-                                                <option key={city.name} value={city.name}>
-                                                    {city.name}
-                                                </option>
-                                            ))}
-                                        </Form.Select>
-                                        <Form.Control.Feedback type="invalid">{errors.city}</Form.Control.Feedback>
+                                        <div className="position-relative">
+                                            <Form.Select
+                                                name="city"
+                                                value={values.city}
+                                                onChange={handleChange}
+                                                disabled={!values.state || loading.submitting}
+                                                isInvalid={touched.city && errors.city}
+                                            >
+                                                <option value="">Select City</option>
+                                                {cities.map((city) => (
+                                                    <option key={city.name} value={city.name}>
+                                                        {city.name}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
+                                            <Form.Control.Feedback type="invalid">{errors.city}</Form.Control.Feedback>
+                                        </div>
                                     </Form.Group>
                                 </Col>
                             </Row>
@@ -583,6 +655,7 @@ const EditStaff = () => {
                                             value={values.phone_no}
                                             onChange={handleChange}
                                             isInvalid={touched.phone_no && errors.phone_no}
+                                            disabled={loading.submitting}
                                         />
                                         <Form.Control.Feedback type="invalid">{errors.phone_no}</Form.Control.Feedback>
                                     </Form.Group>
@@ -590,7 +663,14 @@ const EditStaff = () => {
                                 <Col md={6}>
                                     <Form.Group>
                                         <Form.Label>Email</Form.Label>
-                                        <Form.Control type="email" name="email" value={values.email} onChange={handleChange} isInvalid={touched.email && errors.email} />
+                                        <Form.Control
+                                            type="email"
+                                            name="email"
+                                            value={values.email}
+                                            onChange={handleChange}
+                                            isInvalid={touched.email && errors.email}
+                                            disabled={loading.submitting}
+                                        />
                                         <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
                                     </Form.Group>
                                 </Col>
@@ -600,19 +680,22 @@ const EditStaff = () => {
                                 <Col md={6}>
                                     <Form.Group>
                                         <Form.Label>Position</Form.Label>
-                                        <Form.Control
-                                            list="positions"
-                                            name="position"
-                                            value={values.position}
-                                            onChange={handleChange}
-                                            isInvalid={touched.position && errors.position}
-                                        />
-                                        <datalist id="positions">
-                                            {positions.map((pos, index) => (
-                                                <option key={index} value={pos} />
-                                            ))}
-                                        </datalist>
-                                        <Form.Control.Feedback type="invalid">{errors.position}</Form.Control.Feedback>
+                                        <div className="position-relative">
+                                            <Form.Control
+                                                list="positions"
+                                                name="position"
+                                                value={values.position}
+                                                onChange={handleChange}
+                                                isInvalid={touched.position && errors.position}
+                                                disabled={loading.submitting}
+                                            />
+                                            <datalist id="positions">
+                                                {positions.map((pos, index) => (
+                                                    <option key={index} value={pos} />
+                                                ))}
+                                            </datalist>
+                                            <Form.Control.Feedback type="invalid">{errors.position}</Form.Control.Feedback>
+                                        </div>
                                     </Form.Group>
                                 </Col>
                                 <Col md={6}>
@@ -625,6 +708,7 @@ const EditStaff = () => {
                                             value={values.salary}
                                             onChange={handleChange}
                                             isInvalid={touched.salary && errors.salary}
+                                            disabled={loading.submitting}
                                         />
                                         <Form.Control.Feedback type="invalid">{errors.salary}</Form.Control.Feedback>
                                     </Form.Group>
@@ -640,21 +724,29 @@ const EditStaff = () => {
                                 <Col md={6}>
                                     <Form.Group>
                                         <Form.Label>Photo</Form.Label>
-                                        <Form.Control
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={(e) => {
-                                                const file = e.target.files[0];
-                                                handleFileChange('photo', file, setPhotoPreview);
-                                            }}
-                                            isInvalid={touched.photo && errors.photo}
-                                        />
-                                        <Form.Control.Feedback type="invalid">{errors.photo}</Form.Control.Feedback>
-                                        {photoPreview && (
-                                            <div className="mt-2">
-                                                <img src={photoPreview} alt="Photo Preview" className="img-thumbnail" style={{ maxWidth: '150px', maxHeight: '150px' }} />
-                                            </div>
-                                        )}
+                                        <div className="position-relative">
+                                            <Form.Control
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) handleFileChange('photo', file, setPhotoPreview);
+                                                }}
+                                                isInvalid={touched.photo && errors.photo}
+                                                disabled={loading.submitting || uploadingFiles.photo}
+                                            />
+                                            {uploadingFiles.photo && (
+                                                <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                                                    <Spinner animation="border" size="sm" />
+                                                </div>
+                                            )}
+                                            <Form.Control.Feedback type="invalid">{errors.photo}</Form.Control.Feedback>
+                                            {photoPreview && (
+                                                <div className="mt-2">
+                                                    <img src={photoPreview} alt="Photo Preview" className="img-thumbnail" style={{ maxWidth: '150px', maxHeight: '150px' }} />
+                                                </div>
+                                            )}
+                                        </div>
                                     </Form.Group>
                                 </Col>
                                 <Col md={6}>
@@ -665,6 +757,7 @@ const EditStaff = () => {
                                             value={values.document_type}
                                             onChange={handleChange}
                                             isInvalid={touched.document_type && errors.document_type}
+                                            disabled={loading.submitting}
                                         >
                                             <option value="">Select ID Type</option>
                                             <option value="National Identity Card">National Identity Card</option>
@@ -695,6 +788,7 @@ const EditStaff = () => {
                                                             ? 'ABC1234567'
                                                             : 'Enter ID number'
                                             }
+                                            disabled={loading.submitting}
                                         />
                                         <Form.Control.Feedback type="invalid">{errors.id_number}</Form.Control.Feedback>
                                         {values.document_type === 'National Identity Card' && <Form.Text className="text-muted">Format: 12 digits (XXXX XXXX XXXX)</Form.Text>}
@@ -712,21 +806,29 @@ const EditStaff = () => {
                                 <Col md={6}>
                                     <Form.Group>
                                         <Form.Label>ID Card Front Image</Form.Label>
-                                        <Form.Control
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={(e) => {
-                                                const file = e.target.files[0];
-                                                handleFileChange('front_image', file, setFrontImagePreview);
-                                            }}
-                                            isInvalid={touched.front_image && errors.front_image}
-                                        />
-                                        <Form.Control.Feedback type="invalid">{errors.front_image}</Form.Control.Feedback>
-                                        {frontImagePreview && (
-                                            <div className="mt-2">
-                                                <img src={frontImagePreview} alt="Front Image Preview" className="img-thumbnail" style={{ maxWidth: '150px', maxHeight: '150px' }} />
-                                            </div>
-                                        )}
+                                        <div className="position-relative">
+                                            <Form.Control
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) handleFileChange('front_image', file, setFrontImagePreview);
+                                                }}
+                                                isInvalid={touched.front_image && errors.front_image}
+                                                disabled={loading.submitting || uploadingFiles.front_image}
+                                            />
+                                            {uploadingFiles.front_image && (
+                                                <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                                                    <Spinner animation="border" size="sm" />
+                                                </div>
+                                            )}
+                                            <Form.Control.Feedback type="invalid">{errors.front_image}</Form.Control.Feedback>
+                                            {frontImagePreview && (
+                                                <div className="mt-2">
+                                                    <img src={frontImagePreview} alt="Front Image Preview" className="img-thumbnail" style={{ maxWidth: '150px', maxHeight: '150px' }} />
+                                                </div>
+                                            )}
+                                        </div>
                                     </Form.Group>
                                 </Col>
                                 {values.document_type && values.document_type === 'National Identity Card' && (
@@ -735,24 +837,31 @@ const EditStaff = () => {
                                             <Form.Label>
                                                 ID Card Back Image
                                                 {values.document_type === 'National Identity Card' && <span className="text-danger"> *</span>}
-                                                {values.document_type && values.document_type !== 'National Identity Card' && <span className="text-muted"> (Optional)</span>}
                                             </Form.Label>
-                                            <Form.Control
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={(e) => {
-                                                    const file = e.target.files[0];
-                                                    handleFileChange('back_image', file, setBackImagePreview);
-                                                }}
-                                                isInvalid={touched.back_image && errors.back_image}
-                                            />
-                                            <Form.Control.Feedback type="invalid">{errors.back_image}</Form.Control.Feedback>
-                                            {values.document_type === 'National Identity Card' && <Form.Text className="text-muted">Back image is required for Aadhar card</Form.Text>}
-                                            {backImagePreview && (
-                                                <div className="mt-2">
-                                                    <img src={backImagePreview} alt="Back Image Preview" className="img-thumbnail" style={{ maxWidth: '150px', maxHeight: '150px' }} />
-                                                </div>
-                                            )}
+                                            <div className="position-relative">
+                                                <Form.Control
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files[0];
+                                                        if (file) handleFileChange('back_image', file, setBackImagePreview);
+                                                    }}
+                                                    isInvalid={touched.back_image && errors.back_image}
+                                                    disabled={loading.submitting || uploadingFiles.back_image}
+                                                />
+                                                {uploadingFiles.back_image && (
+                                                    <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                                                        <Spinner animation="border" size="sm" />
+                                                    </div>
+                                                )}
+                                                <Form.Control.Feedback type="invalid">{errors.back_image}</Form.Control.Feedback>
+                                                <Form.Text className="text-muted">Back image is required for Aadhar card</Form.Text>
+                                                {backImagePreview && (
+                                                    <div className="mt-2">
+                                                        <img src={backImagePreview} alt="Back Image Preview" className="img-thumbnail" style={{ maxWidth: '150px', maxHeight: '150px' }} />
+                                                    </div>
+                                                )}
+                                            </div>
                                         </Form.Group>
                                     </Col>
                                 )}
@@ -789,20 +898,84 @@ const EditStaff = () => {
                                     variant={faceDescriptor && faceDescriptor.length > 0 ? 'outline-warning' : 'primary'}
                                     onClick={() => setShowFaceModal(true)}
                                     className="me-2"
+                                    disabled={loading.faceModels || loading.submitting}
                                 >
-                                    <CsLineIcons icon="camera" className="me-2" />
-                                    {faceDescriptor && faceDescriptor.length > 0 ? 'Recapture Face' : 'Capture Face'}
+                                    {loading.faceModels ? (
+                                        <>
+                                            <Spinner
+                                                as="span"
+                                                animation="border"
+                                                size="sm"
+                                                role="status"
+                                                aria-hidden="true"
+                                                className="me-2"
+                                            />
+                                            Loading Models...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CsLineIcons icon="camera" className="me-2" />
+                                            {faceDescriptor && faceDescriptor.length > 0 ? 'Recapture Face' : 'Capture Face'}
+                                        </>
+                                    )}
                                 </Button>
                             </Card>
                         )}
 
                         <div className="d-flex justify-content-start">
-                            <Button variant="success" type="submit" className="mx-2 px-4">
-                                <CsLineIcons icon="check" className="me-2" />
-                                Submit Changes
+                            <Button
+                                variant="success"
+                                type="submit"
+                                className="mx-2 px-4"
+                                disabled={loading.submitting}
+                                style={{ minWidth: '150px' }}
+                            >
+                                {loading.submitting ? (
+                                    <>
+                                        <Spinner
+                                            as="span"
+                                            animation="border"
+                                            size="sm"
+                                            role="status"
+                                            aria-hidden="true"
+                                            className="me-2"
+                                        />
+                                        Updating...
+                                    </>
+                                ) : (
+                                    <>
+                                        <CsLineIcons icon="check" className="me-2" />
+                                        Submit Changes
+                                    </>
+                                )}
                             </Button>
                         </div>
                     </Form>
+
+                    {/* Submitting overlay */}
+                    {loading.submitting && (
+                        <div
+                            className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
+                            style={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                                zIndex: 9999,
+                                backdropFilter: 'blur(2px)'
+                            }}
+                        >
+                            <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
+                                <Card.Body className="text-center p-4">
+                                    <Spinner
+                                        animation="border"
+                                        variant="success"
+                                        className="mb-3"
+                                        style={{ width: '3rem', height: '3rem' }}
+                                    />
+                                    <h5 className="mb-0">Updating Staff Information...</h5>
+                                    <small className="text-muted">Please wait a moment</small>
+                                </Card.Body>
+                            </Card>
+                        </div>
+                    )}
                 </Col>
             </Row>
 
@@ -810,80 +983,106 @@ const EditStaff = () => {
             {activePlans.includes("Payroll By The Box") && (
                 <Modal show={showFaceModal} onHide={() => setShowFaceModal(false)} centered size="lg">
                     <Modal.Header closeButton>
-                        <Modal.Title>Face Capture</Modal.Title>
+                        <Modal.Title>
+                            <CsLineIcons icon="camera" className="me-2" />
+                            Face Capture
+                        </Modal.Title>
                     </Modal.Header>
                     <Modal.Body className="d-flex flex-column align-items-center">
-                        <div
-                            style={{
-                                position: 'relative',
-                                width: '100%',
-                                maxWidth: '640px',
-                                aspectRatio: '4 / 3',
-                                margin: '0 auto',
-                                background: '#000',
-                            }}
-                        >
-                            <Webcam
-                                ref={webcamRef}
-                                audio={false}
-                                screenshotFormat="image/jpeg"
-                                videoConstraints={{
-                                    facingMode: 'user',
-                                }}
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover',
-                                    zIndex: 1,
-                                    borderRadius: '8px',
-                                }}
-                            />
+                        {loading.faceModels ? (
+                            <div className="text-center py-5">
+                                <Spinner animation="border" variant="primary" className="mb-3" />
+                                <h5>Loading Face Detection...</h5>
+                                <p className="text-muted">Please wait while we initialize the camera</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div
+                                    style={{
+                                        position: 'relative',
+                                        width: '100%',
+                                        maxWidth: '640px',
+                                        aspectRatio: '4 / 3',
+                                        margin: '0 auto',
+                                        background: '#000',
+                                    }}
+                                >
+                                    <Webcam
+                                        ref={webcamRef}
+                                        audio={false}
+                                        screenshotFormat="image/jpeg"
+                                        videoConstraints={{
+                                            facingMode: 'user',
+                                        }}
+                                        style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover',
+                                            zIndex: 1,
+                                            borderRadius: '8px',
+                                        }}
+                                    />
 
-                            <canvas
-                                id="faceCanvas"
-                                width={640}
-                                height={480}
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    zIndex: 2,
-                                    pointerEvents: 'none',
-                                }}
-                            />
-                        </div>
+                                    <canvas
+                                        id="faceCanvas"
+                                        width={640}
+                                        height={480}
+                                        style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            zIndex: 2,
+                                            pointerEvents: 'none',
+                                        }}
+                                    />
+                                </div>
 
-                        <Button
-                            variant="primary"
-                            className="mt-4"
-                            disabled={!faceBox || isCapturing}
-                            onClick={async () => {
-                                await handleFaceCapture();
-                                if (captureStatus === 'success') {
-                                    setTimeout(() => {
-                                        setShowFaceModal(false);
-                                    }, 1000);
-                                }
-                            }}
-                        >
-                            {isCapturing ? (
-                                <>
-                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
-                                    Capturing...
-                                </>
-                            ) : (
-                                <>
-                                    <CsLineIcons icon="camera" className="me-2" />
-                                    Capture Face
-                                </>
-                            )}
-                        </Button>
+                                {!faceBox && (
+                                    <Alert variant="warning" className="mt-3">
+                                        <CsLineIcons icon="warning" className="me-2" />
+                                        Please position your face in the frame
+                                    </Alert>
+                                )}
+
+                                <Button
+                                    variant="primary"
+                                    className="mt-4"
+                                    disabled={!faceBox || isCapturing}
+                                    onClick={handleFaceCapture}
+                                    style={{ minWidth: '150px' }}
+                                >
+                                    {isCapturing ? (
+                                        <>
+                                            <Spinner
+                                                as="span"
+                                                animation="border"
+                                                size="sm"
+                                                role="status"
+                                                aria-hidden="true"
+                                                className="me-2"
+                                            />
+                                            Capturing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CsLineIcons icon="camera" className="me-2" />
+                                            Capture Face
+                                        </>
+                                    )}
+                                </Button>
+                            </>
+                        )}
                     </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={() => setShowFaceModal(false)} disabled={isCapturing}>
+                            Close
+                        </Button>
+                    </Modal.Footer>
                 </Modal>
             )}
         </>

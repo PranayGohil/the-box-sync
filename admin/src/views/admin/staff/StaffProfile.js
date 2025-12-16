@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, NavLink, useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Button, Row, Col, Card, Nav, Tab, Spinner } from 'react-bootstrap';
+import { Button, Row, Col, Card, Nav, Tab, Spinner, Alert } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -15,8 +15,9 @@ const StaffProfile = () => {
   const { id } = useParams();
   const history = useHistory();
 
-  const [staff, setStaff] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [staff, setStaff] = useState(null);
+  const [error, setError] = useState('');
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [staffToDelete, setStaffToDelete] = useState(null);
@@ -34,6 +35,8 @@ const StaffProfile = () => {
 
   const fetchStaff = async () => {
     try {
+      setLoading(true);
+      setError('');
       const res = await axios.get(`${process.env.REACT_APP_API}/staff/get/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -42,6 +45,7 @@ const StaffProfile = () => {
       setStaff(res.data.data);
     } catch (err) {
       console.error('Error fetching staff:', err);
+      setError('Failed to fetch staff details. Please try again.');
       toast.error('Failed to fetch staff.');
     } finally {
       setLoading(false);
@@ -52,16 +56,81 @@ const StaffProfile = () => {
     fetchStaff();
   }, [id]);
 
+  const handleDeleteSuccess = () => {
+    history.push('/staff/view');
+  };
+
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
-        <Spinner animation="border" />
-      </div>
+      <>
+        <HtmlHead title={title} description={description} />
+        <Row>
+          <Col>
+            <div className="page-title-container">
+              <h1 className="mb-0 pb-0 display-4">{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </div>
+            <div className="text-center py-5">
+              <Spinner animation="border" variant="primary" className="mb-3" />
+              <h5>Loading Staff Profile...</h5>
+              <p className="text-muted">Please wait while we fetch staff details</p>
+            </div>
+          </Col>
+        </Row>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <HtmlHead title={title} description={description} />
+        <Row>
+          <Col>
+            <div className="page-title-container">
+              <h1 className="mb-0 pb-0 display-4">{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </div>
+            <Alert variant="danger" className="my-4">
+              <CsLineIcons icon="error" className="me-2" />
+              {error}
+              <div className="mt-3">
+                <Button variant="outline-primary" onClick={() => history.push('/staff/view')}>
+                  <CsLineIcons icon="arrow-left" className="me-2" />
+                  Back to Staff List
+                </Button>
+              </div>
+            </Alert>
+          </Col>
+        </Row>
+      </>
     );
   }
 
   if (!staff) {
-    return <p className="text-center mt-5">Staff not found.</p>;
+    return (
+      <>
+        <HtmlHead title={title} description={description} />
+        <Row>
+          <Col>
+            <div className="page-title-container">
+              <h1 className="mb-0 pb-0 display-4">{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </div>
+            <Alert variant="info" className="my-4">
+              <CsLineIcons icon="inbox" className="me-2" />
+              Staff not found.
+              <div className="mt-3">
+                <Button variant="outline-primary" onClick={() => history.push('/staff/view')}>
+                  <CsLineIcons icon="arrow-left" className="me-2" />
+                  Back to Staff List
+                </Button>
+              </div>
+            </Alert>
+          </Col>
+        </Row>
+      </>
+    );
   }
 
   return (
@@ -78,7 +147,12 @@ const StaffProfile = () => {
             <BreadcrumbList items={breadcrumbs} />
           </Col>
           <Col md="5" className="d-flex align-items-start justify-content-end">
-            <Button variant="outline-primary" className="btn-icon btn-icon-start btn-icon w-100 w-md-auto ms-1" as={NavLink} to={`/staff/edit/${id}`}>
+            <Button
+              variant="outline-primary"
+              className="btn-icon btn-icon-start btn-icon w-100 w-md-auto ms-1"
+              as={NavLink}
+              to={`/staff/edit/${id}`}
+            >
               <CsLineIcons icon="edit-square" /> <span>Edit</span>
             </Button>
             <Button
@@ -109,6 +183,10 @@ const StaffProfile = () => {
                       className="img-fluid rounded-xl"
                       alt="profile"
                       style={{ aspectRatio: '1/1', objectFit: 'cover' }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/img/profile/default.png';
+                      }}
                     />
                   </div>
                   <div className="h5 mb-0">
@@ -200,28 +278,38 @@ const StaffProfile = () => {
                     </Row>
                     <Row>
                       <strong>Document Images:</strong>
-                      {staff.front_image && (
-                        <Col md={6}>
-                          <div className="mt-2">
+                      <div className="d-flex flex-wrap gap-3 mt-2">
+                        {staff.front_image && (
+                          <div className="position-relative">
                             <img
                               src={`${process.env.REACT_APP_UPLOAD_DIR}${staff.front_image}` || '/img/placeholder.png'}
                               alt="Front ID"
                               className="img-fluid rounded border"
+                              style={{ maxWidth: '300px', maxHeight: '200px', objectFit: 'contain' }}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = '/img/placeholder.png';
+                              }}
                             />
+                            <small className="text-muted d-block mt-1 text-center">Front Image</small>
                           </div>
-                        </Col>
-                      )}
-                      {staff.back_image && (
-                        <Col md={6}>
-                          <div className="mt-2">
+                        )}
+                        {staff.back_image && (
+                          <div className="position-relative">
                             <img
                               src={`${process.env.REACT_APP_UPLOAD_DIR}${staff.back_image}` || '/img/placeholder.png'}
                               alt="Back ID"
                               className="img-fluid rounded border"
+                              style={{ maxWidth: '300px', maxHeight: '200px', objectFit: 'contain' }}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = '/img/placeholder.png';
+                              }}
                             />
+                            <small className="text-muted d-block mt-1 text-center">Back Image</small>
                           </div>
-                        </Col>
-                      )}
+                        )}
+                      </div>
                     </Row>
                   </Card.Body>
                 </Card>
@@ -237,9 +325,9 @@ const StaffProfile = () => {
           handleClose={() => {
             setShowDeleteModal(false);
             setStaffToDelete(null);
-            history.push('/staff/view');
           }}
           data={staffToDelete}
+          onDeleteSuccess={handleDeleteSuccess}
         />
       )}
     </>

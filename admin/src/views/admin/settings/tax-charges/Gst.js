@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Form, Button, Card, Row, Col, Spinner } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Form, Button, Card, Row, Col, Spinner, Alert } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const Gst = () => {
   const title = 'Tax Info';
@@ -16,6 +17,7 @@ const Gst = () => {
   ];
 
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [error, setError] = useState('');
 
@@ -31,6 +33,7 @@ const Gst = () => {
   useEffect(() => {
     const fetchTaxInfo = async () => {
       try {
+        setLoading(true);
         const res = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -79,6 +82,7 @@ const Gst = () => {
       return;
     }
 
+    setSaving(true);
     try {
       setError('');
       const response = await axios.put(
@@ -100,13 +104,17 @@ const Gst = () => {
       if (response.data.success) {
         setProfile({ ...intialProfile });
         setEditMode(false);
+        toast.success('Tax information updated successfully!');
       } else {
         setError(response.data.message || 'Update failed. Please try again.');
+        toast.error('Update failed. Please try again.');
       }
     } catch (err) {
       console.error('Failed to update tax info', err);
       setError('Update failed. Please try again.');
       toast.error('Update failed. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -118,9 +126,22 @@ const Gst = () => {
 
   if (loading) {
     return (
-      <div className="text-center mt-5">
-        <Spinner animation="border" variant="primary" />
-      </div>
+      <>
+        <HtmlHead title={title} description={description} />
+        <Row>
+          <Col>
+            <div className="page-title-container">
+              <h1 className="mb-0 pb-0 display-4">{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </div>
+            <div className="text-center py-5">
+              <Spinner animation="border" variant="primary" className="mb-3" />
+              <h5>Loading Tax Information...</h5>
+              <p className="text-muted">Please wait while we fetch your tax details</p>
+            </div>
+          </Col>
+        </Row>
+      </>
     );
   }
 
@@ -142,7 +163,13 @@ const Gst = () => {
                 <Row className="mb-4">
                   <Col md="6">
                     <Form.Label>GST Number</Form.Label>
-                    <Form.Control type="text" name="gst_no" value={intialProfile.gst_no} onChange={handleChange} disabled={!editMode} />
+                    <Form.Control
+                      type="text"
+                      name="gst_no"
+                      value={intialProfile.gst_no}
+                      onChange={handleChange}
+                      disabled={!editMode || saving}
+                    />
                   </Col>
                 </Row>
 
@@ -154,7 +181,7 @@ const Gst = () => {
                       name="cgst"
                       value={intialProfile.cgst}
                       onChange={handleChange}
-                      disabled={!editMode}
+                      disabled={!editMode || saving}
                       min="0"
                       max="100"
                       step="0.01"
@@ -167,7 +194,7 @@ const Gst = () => {
                       name="sgst"
                       value={intialProfile.sgst}
                       onChange={handleChange}
-                      disabled={!editMode}
+                      disabled={!editMode || saving}
                       min="0"
                       max="100"
                       step="0.01"
@@ -180,7 +207,7 @@ const Gst = () => {
                       name="vat"
                       value={intialProfile.vat}
                       onChange={handleChange}
-                      disabled={!editMode}
+                      disabled={!editMode || saving}
                       min="0"
                       max="100"
                       step="0.01"
@@ -188,25 +215,81 @@ const Gst = () => {
                   </Col>
                 </Row>
 
-                {error && <p className="text-danger">{error}</p>}
+                {error && (
+                  <Alert variant="danger" className="mb-3">
+                    <CsLineIcons icon="error" className="me-2" />
+                    {error}
+                  </Alert>
+                )}
 
                 <div className="mt-4">
                   {editMode ? (
                     <>
-                      <Button variant="primary" onClick={handleSave} className="me-2">
-                        Save
+                      <Button
+                        variant="primary"
+                        onClick={handleSave}
+                        className="me-2"
+                        disabled={saving}
+                        style={{ minWidth: '100px' }}
+                      >
+                        {saving ? (
+                          <>
+                            <Spinner
+                              as="span"
+                              animation="border"
+                              size="sm"
+                              role="status"
+                              aria-hidden="true"
+                              className="me-2"
+                            />
+                            Saving...
+                          </>
+                        ) : 'Save'}
                       </Button>
-                      <Button variant="secondary" onClick={handleCancel}>
+                      <Button
+                        variant="secondary"
+                        onClick={handleCancel}
+                        disabled={saving}
+                      >
                         Cancel
                       </Button>
                     </>
                   ) : (
-                    <Button variant="outline-primary" onClick={() => setEditMode(true)}>
+                    <Button
+                      variant="outline-primary"
+                      onClick={() => setEditMode(true)}
+                    >
+                      <CsLineIcons icon="edit" className="me-2" />
                       Edit
                     </Button>
                   )}
                 </div>
               </Form>
+
+              {/* Saving overlay */}
+              {saving && (
+                <div
+                  className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
+                  style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                    zIndex: 9999,
+                    backdropFilter: 'blur(2px)'
+                  }}
+                >
+                  <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
+                    <Card.Body className="text-center p-4">
+                      <Spinner
+                        animation="border"
+                        variant="primary"
+                        className="mb-3"
+                        style={{ width: '3rem', height: '3rem' }}
+                      />
+                      <h5 className="mb-0">Updating Tax Information...</h5>
+                      <small className="text-muted">Please wait a moment</small>
+                    </Card.Body>
+                  </Card>
+                </div>
+              )}
             </Card>
           </section>
         </Col>

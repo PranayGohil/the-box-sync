@@ -625,7 +625,7 @@ const getCustomerStats = async (req, res) => {
     const repeatRate =
       uniqueCustomerCount > 0
         ? Math.round((repeatCustomerCount / uniqueCustomerCount) * 100 * 100) /
-          100
+        100
         : 0;
 
     res.status(200).json({
@@ -1841,8 +1841,16 @@ const getOperationalReport = async (req, res) => {
           totalRevenue: { $sum: "$total_amount" },
           avgOrderValue: { $avg: "$total_amount" },
           totalPersons: {
-            $sum: { $toInt: { $ifNull: ["$total_persons", "0"] } },
+            $sum: {
+              $convert: {
+                input: "$total_persons",
+                to: "int",
+                onError: 0,
+                onNull: 0,
+              },
+            },
           },
+
         },
       },
       {
@@ -1854,8 +1862,13 @@ const getOperationalReport = async (req, res) => {
           avgOrderValue: { $round: ["$avgOrderValue", 2] },
           totalPersons: 1,
           avgPersonsPerOrder: {
-            $round: [{ $divide: ["$totalPersons", "$orderCount"] }, 1],
+            $cond: [
+              { $gt: ["$orderCount", 0] },
+              { $round: [{ $divide: ["$totalPersons", "$orderCount"] }, 1] },
+              0,
+            ],
           },
+
           revenuePerPerson: {
             $cond: [
               { $gt: ["$totalPersons", 0] },
@@ -1965,9 +1978,15 @@ const getOperationalReport = async (req, res) => {
           avgOrderValue: { $round: ["$avgOrderValue", 2] },
           tableCount: { $size: "$uniqueTables" },
           revenuePerTable: {
-            $round: [
-              { $divide: ["$totalRevenue", { $size: "$uniqueTables" }] },
-              2,
+            $cond: [
+              { $gt: [{ $size: "$uniqueTables" }, 0] },
+              {
+                $round: [
+                  { $divide: ["$totalRevenue", { $size: "$uniqueTables" }] },
+                  2,
+                ],
+              },
+              0,
             ],
           },
           _id: 0,
@@ -2159,13 +2178,13 @@ const getFinancialReport = async (req, res) => {
         discountPercentage:
           summary.grossRevenue > 0
             ? Math.round(
-                (summary.totalDiscount / summary.grossRevenue) * 100 * 100
-              ) / 100
+              (summary.totalDiscount / summary.grossRevenue) * 100 * 100
+            ) / 100
             : 0,
         taxPercentage:
           summary.netRevenue > 0
             ? Math.round((summary.totalTax / summary.netRevenue) * 100 * 100) /
-              100
+            100
             : 0,
       },
       dailyFinancials,
