@@ -20,10 +20,8 @@ const ViewKots = () => {
 
   const fetchOrderData = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API}/kot/show`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      const managerKots = response.data.filter((order) => order.order_source === 'Manager' || order.order_source === 'Captain');
-      console.log(managerKots);
-      setKotData(managerKots);
+      const response = await axios.get(`${process.env.REACT_APP_API}/kot/show?order_source=Manager,Captain`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      setKotData(response.data.data);
     } catch (error) {
       console.log('Error fetching order data:', error);
     }

@@ -911,6 +911,7 @@ const orderHistory = async (req, res) => {
     };
 
     const projection = {
+      token: 1,
       table_no: 1,
       table_area: 1,
       order_type: 1,

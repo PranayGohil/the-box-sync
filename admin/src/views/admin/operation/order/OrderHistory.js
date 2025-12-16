@@ -1,13 +1,12 @@
-// OrderHistory.js
-
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { Badge, Col, Form, Row, Button } from 'react-bootstrap';
-import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table'; // Removed useRowState
+import { Badge, Col, Form, Row, Button, Spinner, Alert } from 'react-bootstrap';
+import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { toast } from 'react-toastify';
 
 import ControlsPageSize from './components/ControlsPageSize';
 import ControlsSearch from './components/ControlsSearch';
@@ -28,10 +27,14 @@ const OrderHistory = () => {
 
   const [error, setError] = useState(null);
   const [data, setData] = React.useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [printing, setPrinting] = useState({});
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API}/order/get-orders?page=1?limit=100`, {
+      setLoading(true);
+      const res = await axios.get(`${process.env.REACT_APP_API}/order/get-orders?page=1&limit=100`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -48,11 +51,21 @@ const OrderHistory = () => {
       } else {
         console.log(res.data.message);
         setError(res.data.message);
+        toast.error(res.data.message);
       }
     } catch (err) {
       console.log(err);
-      setError(err);
+      setError(err.message || 'Failed to fetch orders');
+      toast.error('Failed to fetch orders. Please try again.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const refreshData = () => {
+    setRefreshing(true);
+    fetchOrders();
   };
 
   useEffect(() => {
@@ -60,6 +73,7 @@ const OrderHistory = () => {
   }, []);
 
   const handlePrint = async (orderId) => {
+    setPrinting(prev => ({ ...prev, [orderId]: true }));
     try {
       const orderResponse = await axios.get(
         `${process.env.REACT_APP_API}/order/get/${orderId}`,
@@ -206,11 +220,15 @@ const OrderHistory = () => {
       printWindow.close();
 
       document.body.removeChild(printDiv);
+      toast.success('Invoice printed successfully!');
     } catch (err) {
       console.error("Error fetching order or user data:", err);
+      toast.error('Failed to print invoice. Please try again.');
+    } finally {
+      setPrinting(prev => ({ ...prev, [orderId]: false }));
     }
   };
-  
+
   const columns = React.useMemo(
     () => [
       {
@@ -246,30 +264,71 @@ const OrderHistory = () => {
         Header: 'Order Type',
         accessor: 'order_type',
         headerClassName: 'text-muted text-small text-uppercase w-10',
+        Cell: ({ value }) => (
+          <Badge bg={
+            value === 'Dine In' ? 'primary' :
+              value === 'Takeaway' ? 'warning' :
+                value === 'Delivery' ? 'success' : 'secondary'
+          }>
+            {value}
+          </Badge>
+        ),
       },
       {
         Header: 'Total Amount',
         accessor: 'total_amount',
         headerClassName: 'text-muted text-small text-uppercase w-15',
-        Cell: ({ value }) => `₹ ${value.toFixed(2)}`,
+        Cell: ({ value }) => `₹ ${parseFloat(value).toFixed(2)}`,
+      },
+      {
+        Header: 'Status',
+        accessor: 'order_status',
+        headerClassName: 'text-muted text-small text-uppercase w-10',
+        Cell: ({ value }) => (
+          <Badge bg={
+            value === 'Completed' ? 'success' :
+              value === 'Pending' ? 'warning' :
+                value === 'Cancelled' ? 'danger' : 'secondary'
+          }>
+            {value}
+          </Badge>
+        ),
       },
       {
         Header: 'Action',
         id: 'action',
         headerClassName: 'text-muted text-small text-uppercase w-10 text-center',
         Cell: ({ row }) => (
-          <div className="d-flex justify-content-center">
-            <Button variant="link" size="sm" title="View" className="px-1" onClick={() => history.push(`/operations/order-details/${row.original.id}`)}>
+          <div className="d-flex justify-content-center gap-2">
+            <Button
+              variant="outline-primary"
+              size="sm"
+              title="View"
+              className="btn-icon btn-icon-only"
+              onClick={() => history.push(`/operations/order-details/${row.original.id}`)}
+              disabled={refreshing}
+            >
               <CsLineIcons icon="eye" />
             </Button>
-            <Button variant="link" size="sm" title="Print" className="px-1" onClick={() => handlePrint(row.original.id)}>
-              <CsLineIcons icon="print" />
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              title="Print"
+              className="btn-icon btn-icon-only"
+              onClick={() => handlePrint(row.original.id)}
+              disabled={refreshing || printing[row.original.id]}
+            >
+              {printing[row.original.id] ? (
+                <Spinner animation="border" size="sm" />
+              ) : (
+                <CsLineIcons icon="print" />
+              )}
             </Button>
           </div>
         ),
       },
     ],
-    []
+    [history, refreshing, printing]
   );
 
   const tableInstance = useTable(
@@ -287,6 +346,31 @@ const OrderHistory = () => {
     useRowSelect
   );
 
+  if (loading) {
+    return (
+      <>
+        <HtmlHead title={title} description={description} />
+        <Row>
+          <Col>
+            <div className="page-title-container">
+              <Row>
+                <Col xs="12" md="7">
+                  <h1 className="mb-0 pb-0 display-4">{title}</h1>
+                  <BreadcrumbList items={breadcrumbs} />
+                </Col>
+              </Row>
+            </div>
+            <div className="text-center py-5">
+              <Spinner animation="border" variant="primary" className="mb-3" />
+              <h5>Loading Order History...</h5>
+              <p className="text-muted">Please wait while we fetch your orders</p>
+            </div>
+          </Col>
+        </Row>
+      </>
+    );
+  }
+
   return (
     <>
       <HtmlHead title={title} description={description} />
@@ -294,38 +378,88 @@ const OrderHistory = () => {
       <Row>
         <Col>
           <div className="page-title-container">
-            <Row>
+            <Row className="align-items-center">
               <Col xs="12" md="7">
                 <h1 className="mb-0 pb-0 display-4">{title}</h1>
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
+              <Col xs="12" md="5" className="text-end">
+                <Button
+                  variant="outline-primary"
+                  onClick={refreshData}
+                  disabled={refreshing}
+                  className="me-2"
+                >
+                  {refreshing ? (
+                    <>
+                      <Spinner
+                        as="span"
+                        animation="border"
+                        size="sm"
+                        role="status"
+                        aria-hidden="true"
+                        className="me-2"
+                      />
+                      Refreshing...
+                    </>
+                  ) : (
+                    <>
+                      <CsLineIcons icon="refresh" className="me-2" />
+                      Refresh
+                    </>
+                  )}
+                </Button>
+              </Col>
             </Row>
           </div>
 
-          <div>
-            <Row className="mb-3">
-              <Col sm="12" md="5" lg="3" xxl="2">
-                <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
-                  <ControlsSearch tableInstance={tableInstance} />
-                </div>
-              </Col>
-              <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
-                <div className="d-inline-block">
-                  <ControlsPageSize tableInstance={tableInstance} />
-                </div>
-              </Col>
-            </Row>
-            <Row>
-              <Col xs="12">
-                <Table className="react-table rows" tableInstance={tableInstance} />
-              </Col>
-              <Col xs="12">
-                <TablePagination tableInstance={tableInstance} />
-              </Col>
-            </Row>
-          </div>
-          {/* If ModalAddEdit is not directly tied to individual row state or general table editing, it might not need tableInstance passed or could be removed. */}
-          {/* <ModalAddEdit tableInstance={tableInstance} /> */}
+          {error && (
+            <Alert variant="danger" className="mb-4">
+              <CsLineIcons icon="error" className="me-2" />
+              {error}
+            </Alert>
+          )}
+
+          {refreshing && (
+            <Alert variant="info" className="mb-4">
+              <div className="d-flex align-items-center">
+                <Spinner animation="border" size="sm" className="me-2" />
+                Refreshing order data...
+              </div>
+            </Alert>
+          )}
+
+          {data.length === 0 ? (
+            <Alert variant="info" className="text-center">
+              <CsLineIcons icon="inbox" size={24} className="me-2" />
+              No orders found. Orders will appear here once created.
+            </Alert>
+          ) : (
+            <>
+              <div>
+                <Row className="mb-3">
+                  <Col sm="12" md="5" lg="3" xxl="2">
+                    <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
+                      <ControlsSearch tableInstance={tableInstance} />
+                    </div>
+                  </Col>
+                  <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
+                    <div className="d-inline-block">
+                      <ControlsPageSize tableInstance={tableInstance} />
+                    </div>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col xs="12">
+                    <Table className="react-table rows" tableInstance={tableInstance} />
+                  </Col>
+                  <Col xs="12">
+                    <TablePagination tableInstance={tableInstance} />
+                  </Col>
+                </Row>
+              </div>
+            </>
+          )}
         </Col>
       </Row>
     </>

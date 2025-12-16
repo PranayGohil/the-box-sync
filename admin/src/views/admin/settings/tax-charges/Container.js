@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, Card, Col, Row, Alert } from 'react-bootstrap';
+import { Button, Form, Card, Col, Row, Alert, Spinner } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
+import { toast } from 'react-toastify';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const Container = () => {
   const title = 'Edit Container Charges';
@@ -14,6 +16,8 @@ const Container = () => {
     { to: 'settings/container-charges', title: 'Container Charges' },
   ];
 
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -35,6 +39,7 @@ const Container = () => {
     },
     validationSchema,
     onSubmit: async (values) => {
+      setSaving(true);
       try {
         const res = await axios.put(
           `${process.env.REACT_APP_API}/charge/update-container-charge`,
@@ -54,12 +59,17 @@ const Container = () => {
           setSuccessMessage('Container charges updated successfully.');
           setServerError('');
           setIsEditing(false);
+          toast.success('Container charges updated successfully!');
         } else {
           setServerError('Update failed.');
+          toast.error('Update failed.');
         }
       } catch (err) {
         console.error(err);
         setServerError('Server error occurred.');
+        toast.error('Server error occurred.');
+      } finally {
+        setSaving(false);
       }
     },
   });
@@ -67,6 +77,7 @@ const Container = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         const res = await axios.get(`${process.env.REACT_APP_API}/charge/get-container-charges`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
@@ -83,6 +94,9 @@ const Container = () => {
         }
       } catch (err) {
         console.error('Error fetching user data:', err);
+        toast.error('Failed to fetch container charges.');
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
@@ -97,6 +111,29 @@ const Container = () => {
     updated.splice(index, 1);
     formik.setFieldValue('containers', updated);
   };
+
+  if (loading) {
+    return (
+      <>
+        <HtmlHead title={title} />
+        <Row>
+          <Col>
+            <section className="scroll-section" id="title">
+              <div className="page-title-container">
+                <h1 className="mb-0 pb-0 display-4">{title}</h1>
+                <BreadcrumbList items={breadcrumbs} />
+              </div>
+            </section>
+            <div className="text-center py-5">
+              <Spinner animation="border" variant="primary" className="mb-3" />
+              <h5>Loading Container Charges...</h5>
+              <p className="text-muted">Please wait while we fetch your container information</p>
+            </div>
+          </Col>
+        </Row>
+      </>
+    );
+  }
 
   return (
     <>
@@ -123,7 +160,7 @@ const Container = () => {
                         value={container.name}
                         onChange={formik.handleChange}
                         isInvalid={!!formik.errors.containers?.[index]?.name}
-                        disabled={!isEditing}
+                        disabled={!isEditing || saving}
                         readOnly={!isEditing}
                       />
                       <Form.Control.Feedback type="invalid">{formik.errors.containers?.[index]?.name}</Form.Control.Feedback>
@@ -138,7 +175,7 @@ const Container = () => {
                             value={container.sizeValue}
                             onChange={formik.handleChange}
                             isInvalid={!!formik.errors.containers?.[index]?.sizeValue}
-                            disabled={!isEditing}
+                            disabled={!isEditing || saving}
                             placeholder="Quantity"
                           />
                           <Form.Control.Feedback type="invalid">{formik.errors.containers?.[index]?.sizeValue}</Form.Control.Feedback>
@@ -149,7 +186,7 @@ const Container = () => {
                             value={container.sizeUnit}
                             onChange={formik.handleChange}
                             isInvalid={!!formik.errors.containers?.[index]?.sizeUnit}
-                            disabled={!isEditing}
+                            disabled={!isEditing || saving}
                           >
                             <option value="">Select Unit</option>
                             <option value="ml">ml</option>
@@ -170,13 +207,17 @@ const Container = () => {
                         value={container.price}
                         onChange={formik.handleChange}
                         isInvalid={!!formik.errors.containers?.[index]?.price}
-                        disabled={!isEditing}
+                        disabled={!isEditing || saving}
                       />
                       <Form.Control.Feedback type="invalid">{formik.errors.containers?.[index]?.price}</Form.Control.Feedback>
                     </Col>
                     <Col md={3} className="d-flex align-items-end">
                       {isEditing && (
-                        <Button variant="outline-danger" onClick={() => removeContainer(index)}>
+                        <Button
+                          variant="outline-danger"
+                          onClick={() => removeContainer(index)}
+                          disabled={saving}
+                        >
                           Delete
                         </Button>
                       )}
@@ -184,34 +225,98 @@ const Container = () => {
                   </Row>
                 ))}
 
-                {isEditing ? (
-                  <>
-                    <Button variant="secondary" onClick={addContainer} className="me-2">
-                      Add Container
+                <div className="mt-4">
+                  {isEditing ? (
+                    <>
+                      <Button
+                        variant="secondary"
+                        onClick={addContainer}
+                        className="me-2"
+                        disabled={saving}
+                      >
+                        Add Container
+                      </Button>
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        disabled={saving}
+                        style={{ minWidth: '100px' }}
+                      >
+                        {saving ? (
+                          <>
+                            <Spinner
+                              as="span"
+                              animation="border"
+                              size="sm"
+                              role="status"
+                              aria-hidden="true"
+                              className="me-2"
+                            />
+                            Saving...
+                          </>
+                        ) : 'Save Changes'}
+                      </Button>
+                      <Button
+                        variant="outline-secondary"
+                        onClick={() => {
+                          setIsEditing(false);
+                          setServerError('');
+                          setSuccessMessage('');
+                        }}
+                        className="ms-2"
+                        disabled={saving}
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button variant="outline-primary" onClick={() => setIsEditing(true)}>
+                      <CsLineIcons icon="edit" className="me-2" />
+                      Edit Charges
                     </Button>
-                    <Button type="submit" variant="primary">
-                      Save Changes
-                    </Button>
-                  </>
-                ) : (
-                  <Button variant="primary" onClick={() => setIsEditing(true)}>
-                    Edit Charges
-                  </Button>
-                )}
+                  )}
+                </div>
 
                 {serverError && (
                   <Alert variant="danger" className="mt-3">
+                    <CsLineIcons icon="error" className="me-2" />
                     {serverError}
                   </Alert>
                 )}
                 {successMessage && (
                   <Alert variant="success" className="mt-3">
+                    <CsLineIcons icon="check" className="me-2" />
                     {successMessage}
                   </Alert>
                 )}
               </Form>
             </Card>
           </section>
+
+          {/* Saving overlay */}
+          {saving && (
+            <div
+              className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                zIndex: 9999,
+                backdropFilter: 'blur(2px)'
+              }}
+            >
+              <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
+                <Card.Body className="text-center p-4">
+                  <Spinner
+                    animation="border"
+                    variant="primary"
+                    className="mb-3"
+                    style={{ width: '3rem', height: '3rem' }}
+                  />
+                  <h5 className="mb-0">Updating Container Charges...</h5>
+                  <small className="text-muted">Please wait a moment</small>
+                </Card.Body>
+              </Card>
+            </div>
+          )}
         </Col>
       </Row>
     </>

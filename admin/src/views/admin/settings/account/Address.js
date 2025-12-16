@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Card, Row, Col, Spinner } from 'react-bootstrap';
+import { Form, Button, Card, Row, Col, Spinner, Alert } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
 import { Country, State, City } from 'country-state-city';
+import { toast } from 'react-toastify';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const Address = () => {
     const title = 'Address';
@@ -16,8 +18,10 @@ const Address = () => {
     ];
 
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [error, setError] = useState('');
+    const [loadingStates, setLoadingStates] = useState({ countries: true, states: false, cities: false });
 
     const [profile, setProfile] = useState({
         address: '',
@@ -62,6 +66,7 @@ const Address = () => {
             } catch (err) {
                 console.error('Failed to load address data', err);
                 setError('Failed to load data');
+                toast.error('Failed to load data');
             } finally {
                 setLoading(false);
             }
@@ -71,30 +76,66 @@ const Address = () => {
     }, []);
 
     useEffect(() => {
-        setCountries(Country.getAllCountries());
+        setLoadingStates(prev => ({ ...prev, countries: true }));
+        const timer = setTimeout(() => {
+            setCountries(Country.getAllCountries());
+            setLoadingStates(prev => ({ ...prev, countries: false }));
+        }, 300);
+        return () => clearTimeout(timer);
     }, []);
 
+    // Load states when country changes
+    useEffect(() => {
+        let timer;
+        if (intialProfile.country) {
+            setLoadingStates(prev => ({ ...prev, states: true }));
+            timer = setTimeout(() => {
+                const selectedCountry = Country.getAllCountries()
+                    .find(c => c.name === intialProfile.country);
+                if (selectedCountry) {
+                    setStates(State.getStatesOfCountry(selectedCountry.isoCode));
+                } else {
+                    setStates([]);
+                }
+                setLoadingStates(prev => ({ ...prev, states: false }));
+            }, 300);
+        }
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
+    }, [intialProfile.country]);
 
     // Load cities when state changes
     useEffect(() => {
-        const selectedCountry = Country.getAllCountries().find((c) => c.name === intialProfile.country);
-        if (selectedCountry) {
-            const fetchedStates = State.getStatesOfCountry(selectedCountry.isoCode);
-            setStates(fetchedStates);
-
-            const selectedState = fetchedStates.find((s) => s.name === intialProfile.state);
-            if (selectedState) {
-                const fetchedCities = City.getCitiesOfState(selectedCountry.isoCode, selectedState.isoCode);
-                setCities(fetchedCities);
-            } else {
-                setCities([]);
-            }
-        } else {
-            setStates([]);
-            setCities([]);
+        let timer;
+        if (intialProfile.country && intialProfile.state) {
+            setLoadingStates(prev => ({ ...prev, cities: true }));
+            timer = setTimeout(() => {
+                const selectedCountry = Country.getAllCountries()
+                    .find(c => c.name === intialProfile.country);
+                if (selectedCountry) {
+                    const selectedState = State.getStatesOfCountry(selectedCountry.isoCode)
+                        .find(s => s.name === intialProfile.state);
+                    if (selectedState) {
+                        setCities(
+                            City.getCitiesOfState(
+                                selectedCountry.isoCode,
+                                selectedState.isoCode
+                            )
+                        );
+                    } else {
+                        setCities([]);
+                    }
+                } else {
+                    setCities([]);
+                }
+                setLoadingStates(prev => ({ ...prev, cities: false }));
+            }, 300);
         }
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
     }, [intialProfile.country, intialProfile.state]);
-
 
 
     const handleChange = (e) => {
@@ -106,35 +147,23 @@ const Address = () => {
             if (name === 'country') {
                 updated.state = '';
                 updated.city = '';
-
-                const selectedCountry = Country.getAllCountries().find(c => c.name === value);
-                if (selectedCountry) {
-                    setStates(State.getStatesOfCountry(selectedCountry.isoCode));
-                    setCities([]);
-                }
+                setCities([]);
             }
 
             if (name === 'state') {
                 updated.city = '';
-
-                const selectedCountry = Country.getAllCountries().find(c => c.name === prev.country);
-                const selectedState = State.getStatesOfCountry(selectedCountry?.isoCode || '').find(s => s.name === value);
-
-                if (selectedCountry && selectedState) {
-                    setCities(City.getCitiesOfState(selectedCountry.isoCode, selectedState.isoCode));
-                }
             }
 
             return updated;
         });
     };
 
-
     const handleSave = async () => {
-        if (!intialProfile.address || !intialProfile.country || !intialProfile.state || !intialProfile.city || !intialProfile.pincode) { 
-            setError('Please fill all the fields.'); 
+        if (!intialProfile.address || !intialProfile.country || !intialProfile.state || !intialProfile.city || !intialProfile.pincode) {
+            setError('Please fill all the fields.');
             return;
         }
+        setSaving(true);
         try {
             setError('');
             await axios.put(
@@ -155,10 +184,13 @@ const Address = () => {
 
             setProfile({ ...intialProfile });
             setEditMode(false);
-            window.location.reload();
+            toast.success('Address updated successfully!');
         } catch (err) {
             console.error('Failed to update address', err);
-            setError('Update failed. Please try again.');
+            setError(err.response?.data?.message || 'Update failed. Please try again.');
+            toast.error('Update failed. Please try again.');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -170,9 +202,22 @@ const Address = () => {
 
     if (loading) {
         return (
-            <div className="text-center mt-5">
-                <Spinner animation="border" variant="primary" />
-            </div>
+            <>
+                <HtmlHead title={title} description={description} />
+                <Row>
+                    <Col>
+                        <div className="page-title-container">
+                            <h1 className="mb-0 pb-0 display-4">{title}</h1>
+                            <BreadcrumbList items={breadcrumbs} />
+                        </div>
+                        <div className="text-center py-5">
+                            <Spinner animation="border" variant="primary" className="mb-3" />
+                            <h5>Loading Address Information...</h5>
+                            <p className="text-muted">Please wait while we fetch your address details</p>
+                        </div>
+                    </Col>
+                </Row>
+            </>
         );
     }
 
@@ -199,7 +244,7 @@ const Address = () => {
                                             name="address"
                                             value={intialProfile.address}
                                             onChange={handleChange}
-                                            disabled={!editMode}
+                                            disabled={!editMode || saving}
                                         />
                                     </Col>
                                 </Row>
@@ -207,53 +252,74 @@ const Address = () => {
                                 <Row className="mb-4">
                                     <Col md="4">
                                         <Form.Label>Country</Form.Label>
-                                        <Form.Select
-                                            name="country"
-                                            value={intialProfile.country}
-                                            onChange={handleChange}
-                                            disabled={!editMode}
-                                        >
-                                            <option value="">Select Country</option>
-                                            {countries.map((country) => (
-                                                <option key={country.isoCode} value={country.name}>
-                                                    {country.name}
-                                                </option>
-                                            ))}
-                                        </Form.Select>
+                                        <div className="position-relative">
+                                            <Form.Select
+                                                name="country"
+                                                value={intialProfile.country}
+                                                onChange={handleChange}
+                                                disabled={!editMode || saving || loadingStates.countries}
+                                            >
+                                                <option value="">Select Country</option>
+                                                {countries.map((country) => (
+                                                    <option key={country.isoCode} value={country.name}>
+                                                        {country.name}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
+                                            {loadingStates.countries && (
+                                                <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                                                    <Spinner animation="border" size="sm" />
+                                                </div>
+                                            )}
+                                        </div>
                                     </Col>
 
                                     <Col md="4">
                                         <Form.Label>State</Form.Label>
-                                        <Form.Select
-                                            name="state"
-                                            value={intialProfile.state}
-                                            onChange={handleChange}
-                                            disabled={!editMode || !intialProfile.country}
-                                        >
-                                            <option value="">Select State</option>
-                                            {states.map((state) => (
-                                                <option key={state.isoCode} value={state.name}>
-                                                    {state.name}
-                                                </option>
-                                            ))}
-                                        </Form.Select>
+                                        <div className="position-relative">
+                                            <Form.Select
+                                                name="state"
+                                                value={intialProfile.state}
+                                                onChange={handleChange}
+                                                disabled={!editMode || saving || !intialProfile.country || loadingStates.states}
+                                            >
+                                                <option value="">Select State</option>
+                                                {states.map((state) => (
+                                                    <option key={state.isoCode} value={state.name}>
+                                                        {state.name}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
+                                            {loadingStates.states && (
+                                                <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                                                    <Spinner animation="border" size="sm" />
+                                                </div>
+                                            )}
+                                        </div>
                                     </Col>
 
                                     <Col md="4">
                                         <Form.Label>City</Form.Label>
-                                        <Form.Select
-                                            name="city"
-                                            value={intialProfile.city}
-                                            onChange={handleChange}
-                                            disabled={!editMode || !intialProfile.country || !intialProfile.state}
-                                        >
-                                            <option value="">Select City</option>
-                                            {cities.map((city) => (
-                                                <option key={city.name} value={city.name}>
-                                                    {city.name}
-                                                </option>
-                                            ))}
-                                        </Form.Select>
+                                        <div className="position-relative">
+                                            <Form.Select
+                                                name="city"
+                                                value={intialProfile.city}
+                                                onChange={handleChange}
+                                                disabled={!editMode || saving || !intialProfile.country || !intialProfile.state || loadingStates.cities}
+                                            >
+                                                <option value="">Select City</option>
+                                                {cities.map((city) => (
+                                                    <option key={city.name} value={city.name}>
+                                                        {city.name}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
+                                            {loadingStates.cities && (
+                                                <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                                                    <Spinner animation="border" size="sm" />
+                                                </div>
+                                            )}
+                                        </div>
                                     </Col>
                                 </Row>
 
@@ -265,30 +331,91 @@ const Address = () => {
                                             name="pincode"
                                             value={intialProfile.pincode}
                                             onChange={handleChange}
-                                            disabled={!editMode}
+                                            disabled={!editMode || saving}
                                         />
                                     </Col>
                                 </Row>
 
-                                {error && <p className="text-danger">{error}</p>}
+                                {error && (
+                                    <Alert variant="danger" className="mb-3">
+                                        <CsLineIcons icon="error" className="me-2" />
+                                        {error}
+                                    </Alert>
+                                )}
 
                                 <div className="mt-4">
                                     {editMode ? (
                                         <>
-                                            <Button variant="primary" onClick={handleSave} className="me-2">
-                                                Save
+                                            <Button
+                                                variant="primary"
+                                                onClick={handleSave}
+                                                className="me-2"
+                                                disabled={saving}
+                                                style={{ minWidth: '100px' }}
+                                            >
+                                                {saving ? (
+                                                    <>
+                                                        <Spinner
+                                                            as="span"
+                                                            animation="border"
+                                                            size="sm"
+                                                            role="status"
+                                                            aria-hidden="true"
+                                                            className="me-2"
+                                                        />
+                                                        Saving...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <CsLineIcons icon="save" className="me-2" />
+                                                        Save
+                                                    </>
+                                                )}
                                             </Button>
-                                            <Button variant="secondary" onClick={handleCancel}>
+                                            <Button
+                                                variant="secondary"
+                                                onClick={handleCancel}
+                                                disabled={saving}
+                                            >
                                                 Cancel
                                             </Button>
                                         </>
                                     ) : (
-                                        <Button variant="outline-primary" onClick={() => setEditMode(true)}>
+                                        <Button
+                                            variant="outline-primary"
+                                            onClick={() => setEditMode(true)}
+                                        >
+                                            <CsLineIcons icon="edit" className="me-2" />
                                             Edit
                                         </Button>
                                     )}
                                 </div>
                             </Form>
+
+                            {/* Saving overlay */}
+                            {saving && (
+                                <div
+                                    className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
+                                    style={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                                        zIndex: 9999,
+                                        backdropFilter: 'blur(2px)'
+                                    }}
+                                >
+                                    <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
+                                        <Card.Body className="text-center p-4">
+                                            <Spinner
+                                                animation="border"
+                                                variant="primary"
+                                                className="mb-3"
+                                                style={{ width: '3rem', height: '3rem' }}
+                                            />
+                                            <h5 className="mb-0">Updating Address...</h5>
+                                            <small className="text-muted">Please wait a moment</small>
+                                        </Card.Body>
+                                    </Card>
+                                </div>
+                            )}
                         </Card>
                     </section>
                 </Col>

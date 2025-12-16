@@ -5,7 +5,7 @@ import { Card, Col, Row, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
-import { set } from 'date-fns';
+import { toast } from 'react-toastify';
 
 function ForgotPassword() {
   const title = 'Forgot Password';
@@ -26,61 +26,75 @@ function ForgotPassword() {
   const [success, setSuccess] = useState('');
 
   const handleSendOtp = async (e) => {
-    setIsLoading(true);
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+
     try {
       const response = await axios.post(`${process.env.REACT_APP_API}/user/send-otp`, { email });
       setSuccess(response.data.message);
-      setError('');
       setStep(2); // Move to the next step
+      toast.success('OTP sent successfully!');
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred.');
-      setSuccess('');
+      const errorMsg = err.response?.data?.message || 'Failed to send OTP. Please try again.';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleVerifyOtp = async (e) => {
-    setIsLoading(true);
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+
     try {
       const response = await axios.post(`${process.env.REACT_APP_API}/user/verify-otp`, { email, otp });
       if (!response.data.verified) {
         throw new Error('OTP verification failed.');
       } else {
         setSuccess(response.data.message);
-        setError('');
         setStep(3);
+        toast.success('OTP verified successfully!');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid OTP.');
-      setSuccess('');
+      const errorMsg = err.response?.data?.message || 'Invalid OTP. Please try again.';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleResetPassword = async (e) => {
-    setIsLoading(true);
-
     e.preventDefault();
+
     if (newPassword !== confirmPassword) {
       setError('Passwords do not match.');
       setSuccess('');
-      setIsLoading(false);
+      toast.error('Passwords do not match.');
       return;
     }
+
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+
     try {
       const response = await axios.post(`${process.env.REACT_APP_API}/user/reset-password`, { email, newPassword });
       setSuccess(response.data.message);
-      setError('');
+      toast.success('Password reset successfully! Redirecting to login...');
+
       setTimeout(() => {
         window.location.href = '/login';
-      }, 1000);
+      }, 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred.');
-      setSuccess('');
+      const errorMsg = err.response?.data?.message || 'Failed to reset password. Please try again.';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -96,8 +110,9 @@ function ForgotPassword() {
       <Row className="justify-content-center">
         <Col xs={12} lg={8} xl={6}>
           <Card className="mb-5">
-            <Card.Header>
-              <Card.Title className="mb-0">
+            <Card.Header className="bg-primary text-white">
+              <Card.Title className="mb-0 d-flex align-items-center">
+                <CsLineIcons icon="lock" className="me-2" />
                 {step === 1 && 'Enter Your Email'}
                 {step === 2 && 'Verify OTP'}
                 {step === 3 && 'Reset Password'}
@@ -117,10 +132,17 @@ function ForgotPassword() {
                 <Form onSubmit={handleSendOtp}>
                   <Form.Group className="mb-3">
                     <Form.Label>Email Address</Form.Label>
-                    <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="Enter your email" />
+                    <Form.Control
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      placeholder="Enter your email"
+                      disabled={isLoading}
+                    />
                   </Form.Group>
                   <div className="d-flex justify-content-between align-items-center">
-                    <Button variant="primary" type="submit" disabled={isLoading}>
+                    <Button variant="primary" type="submit" disabled={isLoading} style={{ minWidth: '120px' }}>
                       {isLoading ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />
@@ -133,7 +155,7 @@ function ForgotPassword() {
                         </>
                       )}
                     </Button>
-                    <Link to="/login" className="text-muted">
+                    <Link to="/login" className="text-muted text-decoration-none">
                       <CsLineIcons icon="arrow-left" className="me-1" />
                       Back to Login
                     </Link>
@@ -145,10 +167,20 @@ function ForgotPassword() {
                 <Form onSubmit={handleVerifyOtp}>
                   <Form.Group className="mb-3">
                     <Form.Label>Verification OTP</Form.Label>
-                    <Form.Control type="text" value={otp} onChange={(e) => setOtp(e.target.value)} required placeholder="Enter the OTP sent to your email" />
+                    <Form.Control
+                      type="text"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      required
+                      placeholder="Enter the OTP sent to your email"
+                      disabled={isLoading}
+                    />
+                    <Form.Text className="text-muted">
+                      OTP is valid for 10 minutes
+                    </Form.Text>
                   </Form.Group>
                   <div className="d-flex justify-content-between align-items-center">
-                    <Button variant="primary" type="submit" disabled={isLoading}>
+                    <Button variant="primary" type="submit" disabled={isLoading} style={{ minWidth: '120px' }}>
                       {isLoading ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />
@@ -161,7 +193,7 @@ function ForgotPassword() {
                         </>
                       )}
                     </Button>
-                    <Button variant="outline-secondary" onClick={() => setStep(1)}>
+                    <Button variant="outline-secondary" onClick={() => setStep(1)} disabled={isLoading}>
                       <CsLineIcons icon="arrow-left" className="me-1" />
                       Change Email
                     </Button>
@@ -179,6 +211,7 @@ function ForgotPassword() {
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
                       placeholder="Enter your new password"
+                      disabled={isLoading}
                     />
                   </Form.Group>
                   <Form.Group className="mb-4">
@@ -189,10 +222,11 @@ function ForgotPassword() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                       placeholder="Confirm your new password"
+                      disabled={isLoading}
                     />
                   </Form.Group>
                   <div className="d-flex justify-content-between align-items-center">
-                    <Button variant="primary" type="submit" disabled={isLoading}>
+                    <Button variant="primary" type="submit" disabled={isLoading} style={{ minWidth: '120px' }}>
                       {isLoading ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />
@@ -205,7 +239,7 @@ function ForgotPassword() {
                         </>
                       )}
                     </Button>
-                    <Button variant="outline-secondary" onClick={() => setStep(2)}>
+                    <Button variant="outline-secondary" onClick={() => setStep(2)} disabled={isLoading}>
                       <CsLineIcons icon="arrow-left" className="me-1" />
                       Back to OTP
                     </Button>

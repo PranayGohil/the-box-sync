@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { Row, Col, Button, Badge, Modal } from 'react-bootstrap';
+import { Row, Col, Button, Badge, Modal, Spinner, Alert } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy, usePagination } from 'react-table';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { toast } from 'react-toastify';
 
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -16,7 +17,6 @@ import ModalEditPanel from './ModalEditPanel';
 import DeletePanelModal from './DeletePanelModal';
 import RaiseInquiryModal from './RaiseInquiryModal';
 
-// import RaiseInquiryModal from "./RaiseInquiryModal";
 const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'Payroll By The Box', 'KOT Panel', 'Hotel Manager'];
 
 const Subscription = () => {
@@ -31,7 +31,7 @@ const Subscription = () => {
     { to: 'admin/subscriptions', title: 'Subscriptions' },
   ];
 
-  const [subscriptionPlans, setSubscriptionPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [userSubscription, setUserSubscription] = useState([]);
   const [availablePlans, setAvailablePlans] = useState([]);
   const [existingQueries, setExistingQueries] = useState({});
@@ -46,23 +46,28 @@ const Subscription = () => {
   const [deletePlanName, setDeletePlanName] = useState('');
 
   const [panelAccounts, setPanelAccounts] = useState({});
-
   const [inactiveAddOns, setInactiveAddOns] = useState([]);
+
+  const [actionLoading, setActionLoading] = useState({
+    renew: false,
+    buy: false,
+    redirect: false
+  });
 
   const fetchData = async () => {
     try {
-      console.log('fetchData');
+      setLoading(true);
       const [plansRes, userRes] = await Promise.all([
-        axios.get(`${process.env.REACT_APP_API}/subscription/get-plans`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
+        axios.get(`${process.env.REACT_APP_API}/subscription/get-plans`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }),
         axios.get(`${process.env.REACT_APP_API}/subscription/get`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }),
       ]);
 
-      setSubscriptionPlans(plansRes.data.data);
-
       const enriched = userRes.data.data.map((sub) => {
-        const plan = plansRes.data.data.find((p) => p._id === sub.plan_id); // eslint-disable-line no-underscore-dangle
+        const plan = plansRes.data.data.find((p) => p._id === sub.plan_id);
         return {
           ...sub,
           plan_name: plan?.plan_name || 'Unknown',
@@ -83,6 +88,7 @@ const Subscription = () => {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
               })
               .then((res) => ({ [sub.plan_name]: res.data.exists }))
+              .catch(() => ({ [sub.plan_name]: false }))
           )
       );
 
@@ -121,6 +127,7 @@ const Subscription = () => {
               headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
             })
             .then((res) => ({ plan: s.plan_name, data: res.data }))
+            .catch(() => ({ plan: s.plan_name, data: { exists: false } }))
         )
       );
 
@@ -131,6 +138,9 @@ const Subscription = () => {
       setExistingQueries(queries);
     } catch (err) {
       console.error('Error fetching subscriptions:', err);
+      toast.error('Failed to fetch subscriptions.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -139,27 +149,36 @@ const Subscription = () => {
   }, []);
 
   const handleRenew = async (subscriptionId) => {
+    setActionLoading(prev => ({ ...prev, renew: true }));
     try {
       await axios.post(
         `${process.env.REACT_APP_API}/subscription/renew`,
         { subscriptionId },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-      window.location.reload();
+      toast.success('Subscription renewed successfully!');
+      fetchData();
     } catch (err) {
       console.error('Renew failed:', err);
+      toast.error(err.response?.data?.message || 'Renew failed.');
+    } finally {
+      setActionLoading(prev => ({ ...prev, renew: false }));
     }
   };
 
   const handleBuyPlan = async (planId) => {
-    console.log(localStorage.getItem('token'));
+    setActionLoading(prev => ({ ...prev, buy: true }));
     try {
       await axios.post(`${process.env.REACT_APP_API}/subscription/buy/${planId}`, null, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      window.location.reload();
+      toast.success('Plan purchased successfully!');
+      fetchData();
     } catch (err) {
       console.error('Error purchasing plan:', err);
+      toast.error(err.response?.data?.message || 'Failed to purchase plan.');
+    } finally {
+      setActionLoading(prev => ({ ...prev, buy: false }));
     }
   };
 
@@ -174,17 +193,17 @@ const Subscription = () => {
       setShowPanelModal(true);
     } catch (err) {
       console.error('Error fetching panel user for edit:', err);
+      toast.error('Failed to fetch panel user.');
     }
   };
 
   const handleAddPanel = (planName) => {
     setCurrentPlanName(planName);
-    setCurrentPanelData({ username: '', password: '' }); // empty for new
+    setCurrentPanelData({ username: '', password: '' });
     setShowPanelModal(true);
   };
 
   const handleSavePanel = async (formValues) => {
-    console.log('Save Panel');
     try {
       await axios.post(`${process.env.REACT_APP_API}/panel-user/${currentPlanName}`, formValues, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -193,6 +212,7 @@ const Subscription = () => {
       fetchData();
     } catch (err) {
       console.error('Error saving panel user:', err);
+      toast.error('Failed to save panel user.');
     }
   };
 
@@ -207,24 +227,29 @@ const Subscription = () => {
   };
 
   const handleRedirect = (planName) => {
-    if (planName === 'Staff Management') {
-      history.push('/staff');
-    } else if (planName === 'Feedback') {
-      history.push('/operations/feedback');
-    } else if (planName === 'Scan For Menu') {
-      history.push('/operations/qr-for-menu');
-    } else if (planName === 'Online Order Reconciliation') {
-      history.push('/online-order-reconcilation');
-    } else if (planName === 'Reservation Manager') {
-      history.push('/reservation-management');
-    } else if (planName === 'Dynamic Reports') {
-      history.push('/dynamic-report');
-    } else if (planName === 'Payroll By The Box') {
-      history.push('/staff');
-    } else if (planName === 'Restaurant Website') {
-      history.push('/settings/manage-website');
-    } else {
-      alert('Invalid Plan');
+    setActionLoading(prev => ({ ...prev, redirect: true }));
+    try {
+      if (planName === 'Staff Management') {
+        history.push('/staff');
+      } else if (planName === 'Feedback') {
+        history.push('/operations/feedback');
+      } else if (planName === 'Scan For Menu') {
+        history.push('/operations/qr-for-menu');
+      } else if (planName === 'Online Order Reconciliation') {
+        history.push('/online-order-reconcilation');
+      } else if (planName === 'Reservation Manager') {
+        history.push('/reservation-management');
+      } else if (planName === 'Dynamic Reports') {
+        history.push('/dynamic-report');
+      } else if (planName === 'Payroll By The Box') {
+        history.push('/staff');
+      } else if (planName === 'Restaurant Website') {
+        history.push('/settings/manage-website');
+      } else {
+        toast.error('Invalid Plan');
+      }
+    } finally {
+      setActionLoading(prev => ({ ...prev, redirect: false }));
     }
   };
 
@@ -268,28 +293,57 @@ const Subscription = () => {
           let actionButtons = null;
 
           if (isActive && PANEL_PLANS.includes(original.plan_name)) {
-            // Panel plans logic
             actionButtons = panelAccounts[original.plan_name] ? (
               <>
-                <Button variant="outline-primary" size="sm" onClick={() => handleEditPanel(original.plan_name)} style={{ height: 'auto' }}>
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={() => handleEditPanel(original.plan_name)}
+                  style={{ height: 'auto' }}
+                  disabled={loading || actionLoading.renew}
+                >
                   <CsLineIcons icon="edit" />
                 </Button>
-                <Button variant="outline-danger" size="sm" onClick={() => openDeletePanelModal(original.plan_name)} style={{ height: 'auto' }}>
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  onClick={() => openDeletePanelModal(original.plan_name)}
+                  style={{ height: 'auto' }}
+                  disabled={loading}
+                >
                   <CsLineIcons icon="bin" />
                 </Button>
                 {original.plan_name === 'Payroll By The Box' && (
-                  <Button variant="outline-primary" size="sm" onClick={() => handleRedirect(original.plan_name)} style={{ height: 'auto' }}>
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => handleRedirect(original.plan_name)}
+                    style={{ height: 'auto' }}
+                    disabled={loading || actionLoading.redirect}
+                  >
                     <CsLineIcons icon="eye" />
                   </Button>
                 )}
               </>
             ) : (
               <>
-                <Button variant="outline-success" size="sm" onClick={() => handleAddPanel(original.plan_name)} style={{ height: 'auto' }}>
+                <Button
+                  variant="outline-success"
+                  size="sm"
+                  onClick={() => handleAddPanel(original.plan_name)}
+                  style={{ height: 'auto' }}
+                  disabled={loading}
+                >
                   <CsLineIcons icon="plus" />
                 </Button>
                 {original.plan_name === 'Payroll By The Box' && (
-                  <Button variant="outline-primary" size="sm" onClick={() => handleRedirect(original.plan_name)} style={{ height: 'auto' }}>
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => handleRedirect(original.plan_name)}
+                    style={{ height: 'auto' }}
+                    disabled={loading || actionLoading.redirect}
+                  >
                     <CsLineIcons icon="eye" />
                   </Button>
                 )}
@@ -297,20 +351,43 @@ const Subscription = () => {
             );
           } else if (isActive) {
             actionButtons = (
-              <Button variant="outline-primary" size="sm" onClick={() => handleRedirect(original.plan_name)} style={{ height: 'auto' }}>
+              <Button
+                variant="outline-primary"
+                size="sm"
+                onClick={() => handleRedirect(original.plan_name)}
+                style={{ height: 'auto' }}
+                disabled={loading || actionLoading.redirect}
+              >
                 <CsLineIcons icon="eye" />
               </Button>
             );
           } else if (isInactive) {
             actionButtons = (
-              <Button variant="outline-success" size="sm" title="Renew" onClick={() => handleRenew(original._id)} style={{ height: 'auto' }}>
-                <CsLineIcons icon="refresh-horizontal" />
+              <Button
+                variant="outline-success"
+                size="sm"
+                title="Renew"
+                onClick={() => handleRenew(original._id)}
+                style={{ height: 'auto' }}
+                disabled={loading || actionLoading.renew}
+              >
+                {actionLoading.renew ? (
+                  <Spinner animation="border" size="sm" />
+                ) : (
+                  <CsLineIcons icon="refresh-horizontal" />
+                )}
               </Button>
             );
           } else if (isBlocked) {
             if (isBlockedWithQuery) {
               actionButtons = (
-                <Button variant="outline-warning" size="sm" title="Already Inquiry Raised" style={{ height: 'auto' }}>
+                <Button
+                  variant="outline-warning"
+                  size="sm"
+                  title="Already Inquiry Raised"
+                  style={{ height: 'auto' }}
+                  disabled
+                >
                   <CsLineIcons icon="hourglass" />
                 </Button>
               );
@@ -322,6 +399,7 @@ const Subscription = () => {
                   title="Raise Inquiry"
                   onClick={() => handleRaiseInquiry(original.plan_name)}
                   style={{ height: 'auto' }}
+                  disabled={loading}
                 >
                   <CsLineIcons icon="send" />
                 </Button>
@@ -333,10 +411,35 @@ const Subscription = () => {
         },
       },
     ],
-    [existingQueries]
+    [existingQueries, loading, actionLoading]
   );
 
-  const tableInstance = useTable({ columns, data: userSubscription, initialState: { pageIndex: 0 } }, useGlobalFilter, useSortBy, usePagination);
+  const tableInstance = useTable({
+    columns,
+    data: userSubscription,
+    initialState: { pageIndex: 0 }
+  }, useGlobalFilter, useSortBy, usePagination);
+
+  if (loading) {
+    return (
+      <>
+        <HtmlHead title={title} description={description} />
+        <Row>
+          <Col>
+            <div className="page-title-container">
+              <h1 className="mb-0 pb-0 display-4">{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </div>
+            <div className="text-center py-5">
+              <Spinner animation="border" variant="primary" className="mb-3" />
+              <h5>Loading Subscription Plans...</h5>
+              <p className="text-muted">Please wait while we fetch your subscription information</p>
+            </div>
+          </Col>
+        </Row>
+      </>
+    );
+  }
 
   return (
     <>
@@ -368,14 +471,22 @@ const Subscription = () => {
 
           <Row>
             <Col xs="12">
-              <Table className="react-table rows" tableInstance={tableInstance} />
-            </Col>
-            <Col xs="12">
-              <TablePagination tableInstance={tableInstance} />
+              {userSubscription.length === 0 ? (
+                <Alert variant="info" className="text-center">
+                  <CsLineIcons icon="inbox" className="me-2" />
+                  No subscriptions found.
+                </Alert>
+              ) : (
+                <>
+                  <Table className="react-table rows" tableInstance={tableInstance} />
+                  <TablePagination tableInstance={tableInstance} />
+                </>
+              )}
             </Col>
           </Row>
         </Col>
       </Row>
+
       {inactiveAddOns.length > 0 && (
         <Row className="mt-5">
           <h2>Inactive Add-on Plans</h2>
@@ -393,8 +504,25 @@ const Subscription = () => {
                     Expired on: {sub.formatted_end}
                   </p>
 
-                  <Button variant="success" onClick={() => handleRenew(sub._id)}>
-                    Renew Plan
+                  <Button
+                    variant="success"
+                    onClick={() => handleRenew(sub._id)}
+                    disabled={actionLoading.renew}
+                    style={{ minWidth: '100px' }}
+                  >
+                    {actionLoading.renew ? (
+                      <>
+                        <Spinner
+                          as="span"
+                          animation="border"
+                          size="sm"
+                          role="status"
+                          aria-hidden="true"
+                          className="me-2"
+                        />
+                        Renewing...
+                      </>
+                    ) : 'Renew Plan'}
                   </Button>
                 </div>
               </div>
@@ -408,8 +536,6 @@ const Subscription = () => {
           <h2>Available Add-on Plans</h2>
           {availablePlans.map((plan) => (
             <Col key={plan._id} sm="12" md="6" lg="4" className="mb-4">
-              {' '}
-              {/* eslint-disable-line no-underscore-dangle */}
               <div className="card shadow">
                 <div className="card-body">
                   <h5 className="card-title">{plan.plan_name}</h5>
@@ -428,10 +554,25 @@ const Subscription = () => {
                       </>
                     )}
                   </p>
-                  <Button variant="primary" onClick={() => handleBuyPlan(plan._id)}>
-                    {' '}
-                    {/* eslint-disable-line no-underscore-dangle */}
-                    Buy Plan
+                  <Button
+                    variant="primary"
+                    onClick={() => handleBuyPlan(plan._id)}
+                    disabled={actionLoading.buy}
+                    style={{ minWidth: '100px' }}
+                  >
+                    {actionLoading.buy ? (
+                      <>
+                        <Spinner
+                          as="span"
+                          animation="border"
+                          size="sm"
+                          role="status"
+                          aria-hidden="true"
+                          className="me-2"
+                        />
+                        Buying...
+                      </>
+                    ) : 'Buy Plan'}
                   </Button>
                 </div>
               </div>
@@ -451,11 +592,50 @@ const Subscription = () => {
       )}
 
       {showDeletePanelModal && (
-        <DeletePanelModal show={showDeletePanelModal} handleClose={() => setShowDeletePanelModal(false)} planName={deletePlanName} fetchData={fetchData} />
+        <DeletePanelModal
+          show={showDeletePanelModal}
+          handleClose={() => setShowDeletePanelModal(false)}
+          planName={deletePlanName}
+          fetchData={fetchData}
+        />
       )}
 
       {showInquiryModal && (
-        <RaiseInquiryModal show={showInquiryModal} handleClose={() => setShowInquiryModal(false)} subscriptionName={inquirySubName} fetchData={fetchData} />
+        <RaiseInquiryModal
+          show={showInquiryModal}
+          handleClose={() => setShowInquiryModal(false)}
+          subscriptionName={inquirySubName}
+          fetchData={fetchData}
+        />
+      )}
+
+      {/* Global loading overlay for actions */}
+      {(actionLoading.renew || actionLoading.buy || actionLoading.redirect) && (
+        <div
+          className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            zIndex: 9999,
+            backdropFilter: 'blur(2px)'
+          }}
+        >
+          <div className="card shadow-lg border-0" style={{ minWidth: '200px' }}>
+            <div className="card-body text-center p-4">
+              <Spinner
+                animation="border"
+                variant="primary"
+                className="mb-3"
+                style={{ width: '3rem', height: '3rem' }}
+              />
+              <h5 className="mb-0">
+                {actionLoading.renew && 'Renewing Subscription...'}
+                {actionLoading.buy && 'Processing Purchase...'}
+                {actionLoading.redirect && 'Redirecting...'}
+              </h5>
+              <small className="text-muted">Please wait a moment</small>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

@@ -8,6 +8,7 @@ const {
 
 const kotRouter = express.Router();
 
+// /api/kot/show?order_source=Manager,Captain
 kotRouter.route("/show").get(authMiddleware, showKOTs);
 kotRouter.route("/dish/update-status").put(authMiddleware, updateDishStatus);
 kotRouter

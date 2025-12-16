@@ -51,6 +51,9 @@ const inventory = new Schema({
   status: {
     type: String,
   },
+  reject_reason: {
+    type: String,
+  },
   user_id: {
     type: String,
   },

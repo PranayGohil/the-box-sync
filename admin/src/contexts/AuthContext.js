@@ -2,6 +2,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 export const AuthContext = createContext();
 
@@ -31,6 +32,8 @@ export const AuthProvider = ({ children }) => {
                 );
                 setActivePlans(fetchActivePlans.map((plan) => plan.plan_name));
                 console.log(fetchActivePlans.map((plan) => plan.plan_name));
+            } else {
+                history.push("/select-plan");
             }
         } catch (error) {
             console.error("Error fetching subscription plans:", error);
@@ -53,6 +56,7 @@ export const AuthProvider = ({ children }) => {
                         localStorage.removeItem("token");
                         setCurrentUser(null);
                         setIsLogin(false);
+                        toast.error("Session Expired");
                     }
                     console.log(res.data);
                     setCurrentUser(res.data);

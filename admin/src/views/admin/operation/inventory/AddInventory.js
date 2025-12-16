@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
-import { Row, Col, Card, Button, Form } from 'react-bootstrap';
+import { Row, Col, Card, Button, Form, Spinner } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { toast } from 'react-toastify';
 
 const validationSchema = Yup.object().shape({
   bill_date: Yup.date().required('Bill date is required'),
@@ -36,6 +37,8 @@ const AddInventory = () => {
 
   const history = useHistory();
   const [filePreviews, setFilePreviews] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCalculating, setIsCalculating] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -52,6 +55,7 @@ const AddInventory = () => {
     },
     validationSchema,
     onSubmit: async (values, { setSubmitting }) => {
+      setIsSubmitting(true);
       try {
         const formData = new FormData();
         Object.entries(values).forEach(([key, val]) => {
@@ -73,12 +77,13 @@ const AddInventory = () => {
           },
         });
 
-        alert('Inventory added successfully!');
+        toast.success('Inventory added successfully!');
         history.push('/operations/inventory-history');
       } catch (error) {
         console.error('Failed to add inventory:', error);
-        alert('Add inventory failed.');
+        toast.error(error.response?.data?.message || 'Add inventory failed.');
       } finally {
+        setIsSubmitting(false);
         setSubmitting(false);
       }
     },
@@ -87,10 +92,15 @@ const AddInventory = () => {
   const { values, handleChange, handleSubmit, setFieldValue, errors, touched } = formik;
 
   useEffect(() => {
-    const unpaid = values.total_amount - values.paid_amount;
-    if (!Number.isNaN(unpaid)) {
-      setFieldValue('unpaid_amount', unpaid);
-    }
+    setIsCalculating(true);
+    const timer = setTimeout(() => {
+      const unpaid = parseFloat(values.total_amount) - parseFloat(values.paid_amount || 0);
+      if (!Number.isNaN(unpaid)) {
+        setFieldValue('unpaid_amount', unpaid.toFixed(2));
+      }
+      setIsCalculating(false);
+    }, 100);
+    return () => clearTimeout(timer);
   }, [values.total_amount, values.paid_amount]);
 
   const handleItemChange = (index, field, value) => {
@@ -150,6 +160,7 @@ const AddInventory = () => {
                       value={values.bill_date}
                       onChange={handleChange}
                       isInvalid={touched.bill_date && errors.bill_date}
+                      disabled={isSubmitting}
                     />
                     <Form.Control.Feedback type="invalid">{errors.bill_date}</Form.Control.Feedback>
                   </Form.Group>
@@ -163,6 +174,7 @@ const AddInventory = () => {
                       value={values.bill_number}
                       onChange={handleChange}
                       isInvalid={touched.bill_number && errors.bill_number}
+                      disabled={isSubmitting}
                     />
                     <Form.Control.Feedback type="invalid">{errors.bill_number}</Form.Control.Feedback>
                   </Form.Group>
@@ -179,6 +191,7 @@ const AddInventory = () => {
                       value={values.vendor_name}
                       onChange={handleChange}
                       isInvalid={touched.vendor_name && errors.vendor_name}
+                      disabled={isSubmitting}
                     />
                     <Form.Control.Feedback type="invalid">{errors.vendor_name}</Form.Control.Feedback>
                   </Form.Group>
@@ -186,7 +199,14 @@ const AddInventory = () => {
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label>Category</Form.Label>
-                    <Form.Control type="text" name="category" value={values.category} onChange={handleChange} isInvalid={touched.category && errors.category} />
+                    <Form.Control
+                      type="text"
+                      name="category"
+                      value={values.category}
+                      onChange={handleChange}
+                      isInvalid={touched.category && errors.category}
+                      disabled={isSubmitting}
+                    />
                     <Form.Control.Feedback type="invalid">{errors.category}</Form.Control.Feedback>
                   </Form.Group>
                 </Col>
@@ -202,6 +222,7 @@ const AddInventory = () => {
                       value={values.total_amount}
                       onChange={handleChange}
                       isInvalid={touched.total_amount && errors.total_amount}
+                      disabled={isSubmitting}
                     />
                     <Form.Control.Feedback type="invalid">{errors.total_amount}</Form.Control.Feedback>
                   </Form.Group>
@@ -215,6 +236,7 @@ const AddInventory = () => {
                       value={values.paid_amount}
                       onChange={handleChange}
                       isInvalid={touched.paid_amount && errors.paid_amount}
+                      disabled={isSubmitting}
                     />
                     <Form.Control.Feedback type="invalid">{errors.paid_amount}</Form.Control.Feedback>
                   </Form.Group>
@@ -222,7 +244,22 @@ const AddInventory = () => {
                 <Col md={4}>
                   <Form.Group>
                     <Form.Label>Unpaid Amount</Form.Label>
-                    <Form.Control type="number" value={values.unpaid_amount} readOnly />
+                    <div className="position-relative">
+                      <Form.Control
+                        type="number"
+                        value={values.unpaid_amount}
+                        readOnly
+                        className="bg-light"
+                      />
+                      {isCalculating && (
+                        <Spinner
+                          animation="border"
+                          size="sm"
+                          className="position-absolute"
+                          style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}
+                        />
+                      )}
+                    </div>
                   </Form.Group>
                 </Col>
               </Row>
@@ -236,6 +273,7 @@ const AddInventory = () => {
                       multiple
                       onChange={handleFileChange}
                       isInvalid={touched.bill_files && errors.bill_files}
+                      disabled={isSubmitting}
                     />
                     <Form.Control.Feedback type="invalid">{errors.bill_files}</Form.Control.Feedback>
                   </Form.Group>
@@ -270,6 +308,7 @@ const AddInventory = () => {
                           value={item.item_name}
                           onChange={(e) => handleItemChange(index, 'item_name', e.target.value)}
                           isInvalid={itemTouched.item_name && itemErrors.item_name}
+                          disabled={isSubmitting}
                         />
                         <Form.Control.Feedback type="invalid">{itemErrors.item_name}</Form.Control.Feedback>
                       </Form.Group>
@@ -282,6 +321,7 @@ const AddInventory = () => {
                           value={item.item_quantity}
                           onChange={(e) => handleItemChange(index, 'item_quantity', e.target.value)}
                           isInvalid={itemTouched.item_quantity && itemErrors.item_quantity}
+                          disabled={isSubmitting}
                         />
                         <Form.Control.Feedback type="invalid">{itemErrors.item_quantity}</Form.Control.Feedback>
                       </Form.Group>
@@ -292,6 +332,7 @@ const AddInventory = () => {
                           value={item.unit}
                           onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
                           isInvalid={itemTouched.unit && itemErrors.unit}
+                          disabled={isSubmitting}
                         >
                           <option value="">Unit</option>
                           <option value="kg">kg</option>
@@ -311,12 +352,18 @@ const AddInventory = () => {
                           value={item.item_price}
                           onChange={(e) => handleItemChange(index, 'item_price', e.target.value)}
                           isInvalid={itemTouched.item_price && itemErrors.item_price}
+                          disabled={isSubmitting}
                         />
                         <Form.Control.Feedback type="invalid">{itemErrors.item_price}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                     <Col md={2} className="d-flex align-items-center">
-                      <Button variant="outline-danger" size="sm" onClick={() => removeItem(index)}>
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => removeItem(index)}
+                        disabled={isSubmitting || values.items.length === 1}
+                      >
                         Remove
                       </Button>
                     </Col>
@@ -324,15 +371,57 @@ const AddInventory = () => {
                 );
               })}
 
-              <Button variant="primary" onClick={addItem}>
+              <Button variant="primary" onClick={addItem} disabled={isSubmitting}>
                 + Add Item
               </Button>
             </Card>
 
-            <Button variant="success" type="submit">
-              Save Inventory
+            <Button
+              variant="success"
+              type="submit"
+              disabled={isSubmitting}
+              style={{ minWidth: '150px' }}
+            >
+              {isSubmitting ? (
+                <>
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                    className="me-2"
+                  />
+                  Saving...
+                </>
+              ) : 'Save Inventory'}
             </Button>
           </Form>
+
+          {/* Full page loader overlay (optional) */}
+          {isSubmitting && (
+            <div
+              className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                zIndex: 9999,
+                backdropFilter: 'blur(2px)'
+              }}
+            >
+              <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
+                <Card.Body className="text-center p-4">
+                  <Spinner
+                    animation="border"
+                    variant="primary"
+                    className="mb-3"
+                    style={{ width: '3rem', height: '3rem' }}
+                  />
+                  <h5 className="mb-0">Adding Inventory...</h5>
+                  <small className="text-muted">Please wait a moment</small>
+                </Card.Body>
+              </Card>
+            </div>
+          )}
         </Col>
       </Row>
     </>

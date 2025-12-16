@@ -10,6 +10,7 @@ import ControlsPageSize from 'components/table/ControlsPageSize';
 import ControlsSearch from 'components/table/ControlsSearch';
 import Table from 'components/table/Table';
 import TablePagination from 'components/table/TablePagination';
+import { toast } from "react-toastify";
 
 export default function ManageAttendance() {
     const title = 'Manage Attendance';
@@ -41,6 +42,7 @@ export default function ManageAttendance() {
         } catch (error) {
             console.error("Error fetching staff:", error);
             setErrorMessage("Failed to fetch staff data");
+            toast.error("Failed to fetch staff data");
         } finally {
             setIsLoading(false);
         }
@@ -91,6 +93,7 @@ export default function ManageAttendance() {
         } catch (error) {
             console.error("Error during Check-In:", error);
             setErrorMessage(error.response?.data?.message || "Error during check-in");
+            toast.error(error.response?.data?.message || "Error during check-in");
         }
     };
 
@@ -112,6 +115,7 @@ export default function ManageAttendance() {
         } catch (error) {
             console.error("Error during Check-Out:", error);
             setErrorMessage(error.response?.data?.message || "Error during check-out");
+            toast.error(error.response?.data?.message || "Error during check-out");
         }
     };
 
@@ -132,6 +136,7 @@ export default function ManageAttendance() {
         } catch (error) {
             console.error("Error marking Absent:", error);
             setErrorMessage(error.response?.data?.message || "Error marking absent");
+            toast.error(error.response?.data?.message || "Error marking absent");
         }
     };
 

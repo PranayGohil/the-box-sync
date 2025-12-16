@@ -20,10 +20,6 @@ import ManageMenu from './menu/ManageMenu';
 import AddDishes from './menu/AddDishes';
 import QRforMenu from './menu/QRforMenu';
 
-import AddRoom from './room/AddRoom';
-import AddRoomCategory from './room/AddRoomCategory';
-import ManageRooms from './room/ManageRooms';
-
 import RequestedInventory from './inventory/RequestedInventory';
 import AddInventory from './inventory/AddInventory';
 import EditInventory from './inventory/EditInventory';
@@ -194,31 +190,6 @@ const Operations = () => {
               }
             </>
             } />
-
-            <Route exact path="/operations/manage-rooms"
-              render={() => <>
-                {
-                  activePlans.includes("Hotel Manager") ?
-                    <ManageRooms /> :
-                    <div className="text-center">You need to buy or renew to Hotel Manager plan to access this page.</div>
-                }</>}
-            />
-            <Route exact path="/operations/add-room"
-              render={() => <>
-                {
-                  activePlans.includes("Hotel Manager") ?
-                    <AddRoom /> :
-                    <div className="text-center">You need to buy or renew to Hotel Manager plan to access this page.</div>
-                }</>}
-            />
-            <Route exact path="/operations/add-room-category"
-              render={() => <>
-                {
-                  activePlans.includes("Hotel Manager") ?
-                    <AddRoomCategory /> :
-                    <div className="text-center">You need to buy or renew to Hotel Manager plan to access this page.</div>
-                }</>}
-            />
 
             <Route exact path="/operations/requested-inventory" render={() => <RequestedInventory />} />
             <Route exact path="/operations/inventory-history" render={() => <InventoryHistory />} />

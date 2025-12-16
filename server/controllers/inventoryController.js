@@ -71,6 +71,7 @@ const getInventoryDataByStatus = async (req, res) => {
       unpaid_amount: 1,
       status: 1,
       items: 1,
+      reject_reason: 1,
     };
 
     const [data, total] = await Promise.all([
@@ -354,11 +355,12 @@ const completeInventoryRequest = async (req, res) => {
 const rejectInventoryRequest = async (req, res) => {
   const id = req.params.id;
   const userId = req.user;
+  const { reject_reason } = req.body;
 
   try {
     const inventory = await Inventory.findOneAndUpdate(
       { _id: id, user_id: userId },
-      { status: "Rejected" },
+      { status: "Rejected", reject_reason },
       { new: true }
     );
 

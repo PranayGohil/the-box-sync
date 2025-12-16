@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Form } from 'react-bootstrap';
+import { Modal, Button, Form, Spinner, Alert } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
+import { toast } from 'react-toastify';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -49,9 +51,9 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
     enableReinitialize: true,
     validationSchema,
     onSubmit: async (formValues) => {
+      setIsLoading(true);
+      setError(null);
       try {
-        setIsLoading(true);
-
         if (isAddMode) {
           await axios.post(
             `${process.env.REACT_APP_API}/panel-user/${planName}`,
@@ -64,6 +66,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
               headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
             }
           );
+          toast.success('Panel user created successfully!');
         } else {
           if (showPasswordFields) {
             await axios.post(
@@ -76,6 +79,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
               }
             );
+            toast.success('Password updated successfully!');
           }
 
           await axios.post(
@@ -87,6 +91,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
               headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
             }
           );
+          toast.success('Panel user updated successfully!');
         }
 
         onSave({ username: formValues.username });
@@ -95,7 +100,8 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
         handleClose();
       } catch (err) {
         console.error(err);
-        alert(err.response?.data?.message || 'Something went wrong');
+        setError(err.response?.data?.message || 'Something went wrong');
+        toast.error(err.response?.data?.message || 'Something went wrong');
       } finally {
         setIsLoading(false);
       }
@@ -106,6 +112,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
     if (!show) {
       resetForm();
       setShowPasswordFields(false);
+      setError(null);
     }
   }, [show, resetForm]);
 
@@ -117,127 +124,191 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
     ) : null;
 
   return (
-    <Modal className="modal-right large fade" show={show} onHide={handleClose} backdrop="static">
-      <Modal.Header closeButton>
-        <Modal.Title>{isAddMode ? 'Add' : 'Edit'} {planName}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form noValidate>
-          <div className="mb-3">
-            <Form.Label>Username</Form.Label>
-            <Form.Control
-              type="text"
-              name="username"
-              value={values.username}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              isInvalid={touched.username && !!errors.username}
-            />
-            {renderError('username')}
+    <>
+      <Modal className="modal-right large fade" show={show} onHide={handleClose} backdrop="static">
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <CsLineIcons icon={isAddMode ? "plus" : "edit"} className="me-2" />
+            {isAddMode ? 'Add' : 'Edit'} {planName}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form noValidate>
+            <div className="mb-3">
+              <Form.Label>Username</Form.Label>
+              <Form.Control
+                type="text"
+                name="username"
+                value={values.username}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                isInvalid={touched.username && !!errors.username}
+                disabled={isLoading}
+              />
+              {renderError('username')}
+            </div>
+
+            {isAddMode && (
+              <>
+                <div className="mb-3">
+                  <Form.Label>Admin Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    name="adminPassword"
+                    value={values.adminPassword}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    isInvalid={touched.adminPassword && !!errors.adminPassword}
+                    disabled={isLoading}
+                  />
+                  {renderError('adminPassword')}
+                </div>
+                <div className="mb-3">
+                  <Form.Label>Panel Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    name="newPassword"
+                    value={values.newPassword}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    isInvalid={touched.newPassword && !!errors.newPassword}
+                    disabled={isLoading}
+                  />
+                  {renderError('newPassword')}
+                </div>
+                <div className="mb-3">
+                  <Form.Label>Confirm Panel Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    name="confirmPassword"
+                    value={values.confirmPassword}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    isInvalid={touched.confirmPassword && !!errors.confirmPassword}
+                    disabled={isLoading}
+                  />
+                  {renderError('confirmPassword')}
+                </div>
+              </>
+            )}
+
+            {!isAddMode && !showPasswordFields && (
+              <Button
+                variant="outline-warning"
+                size="sm"
+                onClick={() => setShowPasswordFields(true)}
+                disabled={isLoading}
+              >
+                <CsLineIcons icon="lock" className="me-2" />
+                Change Password
+              </Button>
+            )}
+
+            {!isAddMode && showPasswordFields && (
+              <>
+                <hr />
+                <div className="mb-3">
+                  <Form.Label>Admin Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    name="adminPassword"
+                    value={values.adminPassword}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    isInvalid={touched.adminPassword && !!errors.adminPassword}
+                    disabled={isLoading}
+                  />
+                  {renderError('adminPassword')}
+                </div>
+                <div className="mb-3">
+                  <Form.Label>New Panel Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    name="newPassword"
+                    value={values.newPassword}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    isInvalid={touched.newPassword && !!errors.newPassword}
+                    disabled={isLoading}
+                  />
+                  {renderError('newPassword')}
+                </div>
+                <div className="mb-3">
+                  <Form.Label>Confirm New Panel Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    name="confirmPassword"
+                    value={values.confirmPassword}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    isInvalid={touched.confirmPassword && !!errors.confirmPassword}
+                    disabled={isLoading}
+                  />
+                  {renderError('confirmPassword')}
+                </div>
+              </>
+            )}
+
+            {error && (
+              <Alert variant="danger" className="mt-3">
+                <CsLineIcons icon="error" className="me-2" />
+                {error}
+              </Alert>
+            )}
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-primary" onClick={handleClose} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={isLoading}
+            style={{ minWidth: '100px' }}
+          >
+            {isLoading ? (
+              <>
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                  className="me-2"
+                />
+                Saving...
+              </>
+            ) : 'Save'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Saving overlay */}
+      {isLoading && (
+        <div
+          className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            zIndex: 9999,
+            backdropFilter: 'blur(2px)'
+          }}
+        >
+          <div className="card shadow-lg border-0" style={{ minWidth: '200px' }}>
+            <div className="card-body text-center p-4">
+              <Spinner
+                animation="border"
+                variant="primary"
+                className="mb-3"
+                style={{ width: '3rem', height: '3rem' }}
+              />
+              <h5 className="mb-0">{isAddMode ? 'Creating' : 'Updating'} Panel User...</h5>
+              <small className="text-muted">Please wait a moment</small>
+            </div>
           </div>
-
-          {isAddMode && (
-            <>
-              <div className="mb-3">
-                <Form.Label>Admin Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="adminPassword"
-                  value={values.adminPassword}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  isInvalid={touched.adminPassword && !!errors.adminPassword}
-                />
-                {renderError('adminPassword')}
-              </div>
-              <div className="mb-3">
-                <Form.Label>Panel Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="newPassword"
-                  value={values.newPassword}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  isInvalid={touched.newPassword && !!errors.newPassword}
-                />
-                {renderError('newPassword')}
-              </div>
-              <div className="mb-3">
-                <Form.Label>Confirm Panel Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="confirmPassword"
-                  value={values.confirmPassword}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  isInvalid={touched.confirmPassword && !!errors.confirmPassword}
-                />
-                {renderError('confirmPassword')}
-              </div>
-            </>
-          )}
-
-          {!isAddMode && !showPasswordFields && (
-            <Button variant="outline-warning" size="sm" onClick={() => setShowPasswordFields(true)}>
-              Change Password
-            </Button>
-          )}
-
-          {!isAddMode && showPasswordFields && (
-            <>
-              <hr />
-              <div className="mb-3">
-                <Form.Label>Admin Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="adminPassword"
-                  value={values.adminPassword}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  isInvalid={touched.adminPassword && !!errors.adminPassword}
-                />
-                {renderError('adminPassword')}
-              </div>
-              <div className="mb-3">
-                <Form.Label>New Panel Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="newPassword"
-                  value={values.newPassword}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  isInvalid={touched.newPassword && !!errors.newPassword}
-                />
-                {renderError('newPassword')}
-              </div>
-              <div className="mb-3">
-                <Form.Label>Confirm New Panel Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="confirmPassword"
-                  value={values.confirmPassword}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  isInvalid={touched.confirmPassword && !!errors.confirmPassword}
-                />
-                {renderError('confirmPassword')}
-              </div>
-              <div className='mb-3 mx-2'>
-                {error && <div className="text-danger text-medium">{error}</div>}
-              </div>
-            </>
-          )}
-        </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="outline-primary" onClick={handleClose}>
-          Cancel
-        </Button>
-        <Button variant="primary" onClick={handleSubmit} disabled={isLoading}>
-          {isLoading ? 'Saving...' : 'Save'}
-        </Button>
-      </Modal.Footer>
-    </Modal>
+        </div>
+      )}
+    </>
   );
 }
 

@@ -7,6 +7,7 @@ import { useFormik } from 'formik';
 import LayoutFullpage from 'layout/LayoutFullpage';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
+import { toast } from 'react-toastify';
 
 const ForgotPassword = () => {
   const title = 'Forgot Password';
@@ -32,6 +33,7 @@ const ForgotPassword = () => {
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred.');
       setSuccess('');
+      toast.error(err.response?.data?.message || 'An error occurred.');
     } finally {
       setIsLoading(false);
     }
@@ -52,6 +54,7 @@ const ForgotPassword = () => {
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid OTP.');
       setSuccess('');
+      toast.error(err.response?.data?.message || 'Invalid OTP.');
     } finally {
       setIsLoading(false);
     }
@@ -77,6 +80,7 @@ const ForgotPassword = () => {
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred.');
       setSuccess('');
+      toast.error(err.response?.data?.message || 'An error occurred.');
     } finally {
       setIsLoading(false);
     }
