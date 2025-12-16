@@ -103,8 +103,7 @@ const Dashboard = () => {
       <div className="page-title-container">
         <Row>
           <Col md="7">
-            <h1 className="mb-0 pb-0 display-4">{title}</h1>
-            <BreadcrumbList items={breadcrumbs} />
+            <h1 className="mb-0 pb-0 display-4">Dine-In Tables</h1>
           </Col>
           <Col md="5" className="d-flex align-items-start justify-content-end gap-2">
             <Button variant="outline-primary" onClick={() => createNewOrder('takeaway')}>
@@ -118,13 +117,12 @@ const Dashboard = () => {
       </div>
 
       <Row>
-        <Col lg="6">
-          <h2 className="small-title mb-4">Dine-In Tables</h2>
+        <Col lg="12">
           {tables.map((tableArea) => (
             <div className="gx-2" key={tableArea._id}>
               <h3 className="mb-3 text-primary">{tableArea.area}</h3>
               <Col className="p-0">
-                <Row className="g-3 mb-5">
+                <Row className="g-3">
                   {tableArea.tables
                     .sort((a, b) => a.table_no - b.table_no)
                     .map((table) => {
@@ -144,7 +142,7 @@ const Dashboard = () => {
                       }
 
                       return (
-                        <Col key={table._id} xs="6" sm="6" md="4" lg="3">
+                        <Col key={table._id} xs="4" sm="4" md="3" lg="1">
                           <Card
                             key={table._id}
                             className={`sh-20 hover-border-primary mb-5 ${bgClass}`}

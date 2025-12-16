@@ -180,7 +180,7 @@ const ViewKots = () => {
                       </div>
                     )}
                     <div>
-                      order source: <strong>{data.order_source}</strong>
+                      Order source: <strong>{data.order_source}</strong>
                     </div>
                   </Card>
                 </Col>
