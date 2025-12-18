@@ -96,7 +96,7 @@ const getActiveOrders = async (req, res) => {
         user_id: req.user,
         order_type: "Dine In",
         order_status: { $in: ["KOT", "Save"] },
-      }).lean();
+      }).sort({ "order_date": -1 }).lean();
     }
 
     if (source === "QSR") {
@@ -109,7 +109,7 @@ const getActiveOrders = async (req, res) => {
           { order_status: { $ne: "Paid" } },
           { "order_items.status": "Preparing" },
         ],
-      }).lean();
+      }).sort({ "order_date": -1 }).lean();
     }
 
     // Active Takeaways & Deliveries
@@ -121,7 +121,7 @@ const getActiveOrders = async (req, res) => {
         { order_status: { $ne: "Paid" } },
         { "order_items.status": "Preparing" },
       ],
-    }).lean();
+    }).sort({ "order_date": -1 }).lean();
 
     res.json({
       activeDineInTables,
@@ -874,16 +874,16 @@ const orderHistory = async (req, res) => {
       search,
       page = 1,
       limit = 20,
-      sortBy = "order_date",
+      sortBy = "updated_at",
       sortOrder = "desc",
     } = req.query;
 
-    const pageNumber = parseInt(page, 10) || 1;
-    const pageSize = parseInt(limit, 10) || 20;
+    const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
+    const pageSize = Math.max(parseInt(limit, 10) || 20, 1);
     const skip = (pageNumber - 1) * pageSize;
 
     const filter = {
-      user_id: req.user, // make sure this matches the schema type
+      user_id: req.user,
     };
 
     if (order_source) filter.order_source = order_source;
@@ -891,9 +891,7 @@ const orderHistory = async (req, res) => {
 
     if (from || to) {
       filter.order_date = {};
-      if (from) {
-        filter.order_date.$gte = new Date(from);
-      }
+      if (from) filter.order_date.$gte = new Date(from);
       if (to) {
         const toDate = new Date(to);
         toDate.setHours(23, 59, 59, 999);
@@ -902,7 +900,7 @@ const orderHistory = async (req, res) => {
     }
 
     if (search) {
-      const regex = new RegExp("^" + search, "i"); // index-friendly prefix search
+      const regex = new RegExp("^" + search, "i");
       filter.$or = [{ customer_name: regex }, { table_no: regex }];
     }
 
@@ -922,10 +920,8 @@ const orderHistory = async (req, res) => {
       order_date: 1,
       customer_name: 1,
       payment_type: 1,
-      // order_items: 0, // uncomment if you really don't need items
+      updated_at: 1,
     };
-
-    const needTotal = pageNumber === 1; // or always false if you want super-fast
 
     const [orders, total] = await Promise.all([
       Order.find(filter)
@@ -934,7 +930,7 @@ const orderHistory = async (req, res) => {
         .skip(skip)
         .limit(pageSize)
         .lean(),
-      needTotal ? Order.countDocuments(filter) : Promise.resolve(null),
+      Order.countDocuments(filter), // ✅ ALWAYS calculate
     ]);
 
     return res.json({
@@ -945,7 +941,7 @@ const orderHistory = async (req, res) => {
         total,
         page: pageNumber,
         limit: pageSize,
-        totalPages: total ? Math.ceil(total / pageSize) : null,
+        totalPages: Math.ceil(total / pageSize),
       },
     });
   } catch (error) {
@@ -956,6 +952,7 @@ const orderHistory = async (req, res) => {
     });
   }
 };
+
 
 module.exports = {
   addCustomer,

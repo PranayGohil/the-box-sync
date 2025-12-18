@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const orderSchema = new Schema({
+  user_id: {
+    type: String,
+  },
   table_no: {
     type: String,
   },
@@ -34,7 +37,7 @@ const orderSchema = new Schema({
     },
   ],
   order_status: {
-    type: String, 
+    type: String,
   },
   customer_id: {
     type: String,
@@ -49,7 +52,7 @@ const orderSchema = new Schema({
     type: String,
   },
   waiter: {
-    type: String, 
+    type: String,
   },
   bill_amount: {
     type: Number,
@@ -90,19 +93,23 @@ const orderSchema = new Schema({
   payment_type: {
     type: String,
   },
+  order_source: {
+    type: String,
+    required: true,
+    enum: ["Manager", "QSR", "Captain", "Restaurant Website"],
+  },
   order_date: {
     type: Date,
     default: Date.now,
   },
-  user_id: {
-    type: String,
-  },
-  order_source: {
-    type: String, 
-    required: true,
-    enum: ["Manager", "QSR", "Captain", "Restaurant Website"], 
-  },
-});
+},
+  {
+    timestamps: {
+      createdAt: "order_date",
+      updatedAt: "updated_at",
+    },
+  }
+);
 
 // 1. Order history & active orders by user + type + status
 orderSchema.index({ user_id: 1, order_type: 1, order_status: 1 });

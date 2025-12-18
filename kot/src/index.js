@@ -30,6 +30,7 @@ import allRoutes from 'routes.js';
 
 // import toastify for notification
 import { Slide, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // mock server register for demo
 import '@mock-api';
@@ -40,7 +41,17 @@ const Main = () => {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistedStore}>
         <Helmet {...REACT_HELMET_PROPS} />
-        <ToastContainer transition={Slide} newestOnTop />
+        <ToastContainer
+          theme="light"
+          transition={Slide}
+          newestOnTop
+          position="top-right"
+          autoClose={2000}
+          hideProgressBar={false}
+          closeOnClick
+          pauseOnHover
+          draggable
+        />
         <Router basename={process.env.REACT_APP_BASENAME}>
           <LangProvider>
             <AuthProvider>

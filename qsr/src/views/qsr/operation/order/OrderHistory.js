@@ -46,8 +46,7 @@ const OrderHistory = () => {
           id: _id,
         }));
         console.log('Fetched Orders:', transformedOrders);
-        const sortedOrders = transformedOrders.sort((a, b) => new Date(b.order_date) - new Date(a.order_date));
-        setData(sortedOrders);
+        setData(transformedOrders);
       } else {
         console.log(res.data.message);
         setError(res.data.message);
@@ -286,8 +285,8 @@ const OrderHistory = () => {
         headerClassName: 'text-muted text-small text-uppercase w-10',
         Cell: ({ value }) => (
           <Badge bg={
-            value === 'Completed' ? 'success' :
-              value === 'Pending' ? 'warning' :
+            value === 'Paid' || value === 'Save' ? 'success' :
+              value === 'KOT' ? 'warning' :
                 value === 'Cancelled' ? 'danger' : 'secondary'
           }>
             {value}

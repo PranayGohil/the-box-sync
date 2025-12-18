@@ -3,7 +3,6 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { Button, Row, Col, Card, Form, Badge, Table, Modal } from 'react-bootstrap';
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
-import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const TakeawayOrder = () => {
@@ -18,12 +17,6 @@ const TakeawayOrder = () => {
 
   const title = `${mode === 'new' ? 'New' : 'Edit'} Takeaway Order`;
   const description = 'Manage takeaway orders';
-
-  const breadcrumbs = [
-    { to: '', text: 'Home' },
-    { to: '/dashboard', text: 'Dashboard' },
-    { to: '', text: title },
-  ];
 
   // State
   const [orderItems, setOrderItems] = useState([]);
@@ -486,7 +479,7 @@ const TakeawayOrder = () => {
                       size="sm"
                       onClick={() => setShowCategories(prev => !prev)}
                     >
-                      <i className="bi bi-list" />
+                      {showCategories ? <i className="bi bi-x" /> : <i className="bi bi-list" />}
                     </Button>
                   </Col>
                   <Col md="6">

@@ -12,17 +12,12 @@ const NavUserMenu = () => {
     return <></>;
   }
 
-  const handleClick = (e) => {
-    e.preventDefault();
-    history.push('/settings/profile');
-  };
-
   return (
     <div className="user-container d-flex">
-      <a href="/settings/profile" onClick={handleClick} className="d-flex user position-relative">
+      <div className="d-flex user position-relative">
         <img className="profile" alt={currentUser?.namne || 'Restaurant'} src={process.env.REACT_APP_UPLOAD_DIR + currentUser?.logo} />
         <div className="name">{currentUser?.name || 'Restaurant'}</div>
-      </a>
+      </div>
     </div>
   );
 };
