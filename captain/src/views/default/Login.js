@@ -81,14 +81,7 @@ const Login = () => {
           </NavLink>
         </div>
         <div className="mb-5">
-          <h2 className="cta-1 mb-0 text-primary">Welcome,</h2>
-          <h2 className="cta-1 text-primary">let's get started!</h2>
-        </div>
-        <div className="mb-5">
-          <p className="h6">Please use your credentials to login.</p>
-          <p className="h6">
-            If you are not a member, please <NavLink to="/register">register</NavLink>.
-          </p>
+          <h2 className="cta-1 mb-0 text-primary">Captain, Login!</h2>
         </div>
 
         {/* ✅ Login Form */}
