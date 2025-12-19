@@ -78,7 +78,8 @@ const Login = () => {
           </NavLink>
         </div>
         <div className="mb-5">
-          <h2 className="cta-1 mb-0 text-primary">Welcome,</h2>
+          <h2 className="cta-1 mb-0 text-primary">Welcome, Admin
+          </h2>
           <h2 className="cta-1 text-primary">let's get started!</h2>
         </div>
         <div className="mb-5">
