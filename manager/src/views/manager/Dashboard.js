@@ -105,8 +105,21 @@ const Dashboard = () => {
                     .map((table) => {
                       const activeOrder = activeDineInOrders.find((order) => order.table_no === table.table_no && order.table_area === tableArea.area);
 
+                      let preparingCount = 0;
+                      let completedCount = 0;
+
+                      if (activeOrder) {
+                        preparingCount = activeOrder.order_items.filter(
+                          (item) => item.status === 'Preparing' || item.status === 'Pending'
+                        ).length;
+
+                        completedCount = activeOrder.order_items.filter(
+                          (item) => item.status === 'Completed'
+                        ).length;
+                      }
+
                       let bgClass = '';
-                      let statusColor = 'secondary';
+                      let statusColor = '';
 
                       if (activeOrder) {
                         if (activeOrder.order_status === 'Save') {
@@ -119,7 +132,20 @@ const Dashboard = () => {
                       }
 
                       return (
-                        <Col key={table._id} xs="4" sm="4" md="3" lg="1">
+                        <Col key={table._id} xs="4" sm="4" md="3" lg="1"
+                          style={{ position: "relative" }}
+                        >
+                          {completedCount > 0 && (
+                            <Badge bg="success"
+                              style={{
+                                position: 'absolute',
+                                zIndex: 1,
+                                top: '-5px',
+                                right: '0'
+                              }}>
+                              Served: {completedCount}
+                            </Badge>
+                          )}
                           <Card
                             key={table._id}
                             className={`sh-20 hover-border-primary mb-5 ${bgClass}`}
@@ -133,9 +159,26 @@ const Dashboard = () => {
                                 <p className="mb-0 lh-1">Max Person</p>
                                 <p className="cta-3 mb-0 text-primary">{table.max_person}</p>
                                 {activeOrder && (
-                                  <Badge bg={statusColor} className="text-white">
-                                    {activeOrder.order_status}
-                                  </Badge>
+                                  activeOrder.order_status === 'KOT' ?
+                                    (
+                                      <div className="d-flex flex-column gap-1">
+                                        {preparingCount >= 0 && (
+                                          <Badge bg="warning">
+                                            KOT: {preparingCount}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    ) :
+                                    activeOrder.order_status === 'Save' &&
+                                    (
+                                      <div className="d-flex flex-column gap-1">
+                                        {preparingCount >= 0 && (
+                                          <Badge bg="success">
+                                            Save: {preparingCount}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    )
                                 )}
                               </div>
                             </Card.Body>
@@ -160,34 +203,36 @@ const Dashboard = () => {
                 </Card.Body>
               </Card>
             ) : (
-              activeTakeawaysAndDeliveries.map((order) => (
-                <Card key={order._id} className="mb-3 hover-border-primary cursor-pointer" onClick={() => handleOrderClick(order)}>
-                  <Card.Body>
-                    <div className="d-flex justify-content-between align-items-start mb-2">
-                      <div>
-                        <h5 className="mb-1">
-                          {order.order_type}
-                          {order.token && <span className="text-muted"> #{order.token}</span>}
-                        </h5>
-                        <p className="mb-0 text-muted">
-                          {order.order_type === 'Takeaway' ? `Token: ${order.token}` : `Customer: ${order.customer_name || 'N/A'}`}
-                        </p>
+              activeTakeawaysAndDeliveries.map((order) => {
+                return (
+                  <Card key={order._id} className="mb-3 hover-border-primary cursor-pointer" onClick={() => handleOrderClick(order)}>
+                    <Card.Body>
+                      <div className="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                          <h5 className="mb-1">
+                            {order.order_type}
+                            {order.token && <span className="text-muted"> #{order.token}</span>}
+                          </h5>
+                          <p className="mb-0 text-muted">
+                            {order.order_type === 'Takeaway' ? `Token: ${order.token}` : `Customer: ${order.customer_name || 'N/A'}`}
+                          </p>
+                        </div>
+                        <Badge bg={order.order_status === 'Paid' || order.order_status === 'Save' ? 'success' : 'warning'} className="text-white">
+                          {order.order_status}
+                        </Badge>
                       </div>
-                      <Badge bg={order.order_status === 'Paid' ? 'success' : 'warning'} className="text-white">
-                        {order.order_status}
-                      </Badge>
-                    </div>
-                    <div className="d-flex flex-wrap gap-1">
-                      {order.order_items.slice(0, 3).map((item, i) => (
-                        <small key={i} className="badge bg-light text-dark">
-                          {item.dish_name} x{item.quantity}
-                        </small>
-                      ))}
-                      {order.order_items.length > 3 && <small className="badge bg-secondary">+{order.order_items.length - 3} more</small>}
-                    </div>
-                  </Card.Body>
-                </Card>
-              ))
+                      <div className="d-flex flex-wrap gap-1">
+                        {order.order_items.slice(0, 3).map((item, i) => (
+                          <small key={i} className="badge bg-light text-dark">
+                            {item.dish_name} x{item.quantity}
+                          </small>
+                        ))}
+                        {order.order_items.length > 3 && <small className="badge bg-secondary">+{order.order_items.length - 3} more</small>}
+                      </div>
+                    </Card.Body>
+                  </Card>
+                )
+              })
             )}
           </div>
         </Col>
