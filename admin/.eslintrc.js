@@ -92,6 +92,7 @@ module.exports = {
     'no-nested-ternary': 'off',
     'jsx-a11y/no-onchange': 'off',
     'eslint-disable-next-line': 'off',
+    'no-else-return': 'off',
     'new-cap': 'off',
     'react/jsx-boolean-value': 'off',
     'no-plusplus': 'off',

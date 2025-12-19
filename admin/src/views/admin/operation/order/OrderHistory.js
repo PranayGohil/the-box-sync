@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { Badge, Col, Form, Row, Button, Spinner, Alert } from 'react-bootstrap';
@@ -25,6 +25,7 @@ const OrderHistory = () => {
 
   const history = useHistory();
 
+  const isInitialMount = useRef(true);
   const [error, setError] = useState(null);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,99 +42,152 @@ const OrderHistory = () => {
   const [sortOrder, setSortOrder] = useState('desc');
 
   const fetchOrders = useCallback(async () => {
+    console.log("Fetch Orders - Start");
+
+    // Create an abort controller to cancel previous requests
+    const controller = new AbortController();
+    const { signal } = controller;
+
+
     try {
-      console.log("Fetch Orders");
       setLoading(true);
       setError(null);
 
       const params = {
-        page: pageIndex + 1, // API expects 1-based pagination
+        page: pageIndex + 1,
         limit: pageSize,
         sortBy,
         sortOrder,
       };
 
-      if (searchTerm) {
+      if (searchTerm.trim()) {
         params.search = searchTerm;
       }
 
-      const res = await axios.get(`${process.env.REACT_APP_API}/order/get-orders`, {
-        params,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const { data: resData } = await axios.get(
+        `${process.env.REACT_APP_API}/order/get-orders`,
+        {
+          params,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          signal,
+        }
+      );
 
-      if (res.data.success) {
-        const transformedOrders = res.data.data.map(({ _id, ...rest }) => ({
+
+      if (resData.success) {
+        const transformedOrders = resData.data.map(({ _id, ...rest }) => ({
           ...rest,
           id: _id,
         }));
 
         setData(transformedOrders);
 
-        // Update pagination metadata
-        if (res.data.pagination) {
-          setTotalRecords(res.data.pagination.total || 0);
-          setTotalPages(res.data.pagination.totalPages || 0);
+        if (resData.pagination) {
+          setTotalRecords(resData.pagination.total || 0);
+          setTotalPages(resData.pagination.totalPages || 0);
         }
       } else {
-        setError(res.data.message);
-        toast.error(res.data.message);
+        setError(resData.message);
+        toast.error(resData.message);
       }
     } catch (err) {
-      console.error('Fetch orders error:', err);
-      setError(err.message || 'Failed to fetch orders');
-      toast.error('Failed to fetch orders. Please try again.');
+      if (axios.isCancel(err)) {
+        console.log('Request canceled:', err.message);
+      } else {
+        console.error('Fetch orders error:', err);
+        setError(err.message || 'Failed to fetch orders');
+        toast.error('Failed to fetch orders. Please try again.');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
+
+    return () => {
+      controller.abort('Request canceled due to new request');
+    };
   }, [pageIndex, pageSize, searchTerm, sortBy, sortOrder]);
 
   useEffect(() => {
-    console.log("Fetch Orders");
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    console.log("Fetch Orders triggered by dependencies");
     fetchOrders();
+  }, [pageIndex, pageSize, searchTerm, sortBy, sortOrder]);
+
+  useEffect(() => {
+    console.log("Initial Fetch Orders");
+    fetchOrders();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let isMounted = true;
+
+    const loadData = async () => {
+      if (isMounted) {
+        await fetchOrders();
+      }
+    };
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [fetchOrders]);
 
   useEffect(() => {
-    console.log("Page Index or Total pages changed");
     if (pageIndex >= totalPages && totalPages > 0) {
+      console.log("Total Pages or Page Index Changes");
       setPageIndex(totalPages - 1);
     }
   }, [totalPages, pageIndex]);
 
   const refreshData = () => {
-    console.log("Refrese");
+    console.log("Refresh");
     setRefreshing(true);
-    setPageIndex(prev => prev); // trigger useEffect safely
+    fetchOrders();
   };
 
   const handlePageChange = (newPageIndex) => {
-    setPageIndex(newPageIndex);
+    console.log("Page Change to:", newPageIndex);
+    if (newPageIndex !== pageIndex) {
+      setPageIndex(newPageIndex);
+    }
   };
 
   const handlePageSizeChange = (newPageSize) => {
+    console.log("Page Size Change")
     setPageSize(newPageSize);
-    setPageIndex(0); // Reset to first page when changing page size
+    setPageIndex(0);
   };
 
   const handleSearch = (value) => {
-    setSearchTerm(value);
-    setPageIndex(0); // Reset to first page when searching
+    console.log("Search Trigger with value:", value);
+
+    if (value !== searchTerm) {
+      setSearchTerm(value);
+      setPageIndex(0);
+    }
   };
 
   const handleSort = (columnId) => {
+    console.log("Sort Chnage")
     if (sortBy === columnId) {
-      // Toggle sort order if same column
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
-      // Set new column with default desc order
       setSortBy(columnId);
       setSortOrder('desc');
     }
-    setPageIndex(0); // Reset to first page when sorting
+    setPageIndex(0);
   };
 
   const handlePrint = async (orderId) => {
@@ -399,7 +453,6 @@ const OrderHistory = () => {
       data,
       manualPagination: true,
       manualSortBy: true,
-      manualGlobalFilter: true,
       pageCount: totalPages,
       state: {
         pageIndex,
@@ -407,9 +460,7 @@ const OrderHistory = () => {
       },
       autoResetPage: false,
       autoResetSortBy: false,
-      autoResetGlobalFilter: false,
     },
-    useGlobalFilter,
     useSortBy
   );
 
@@ -508,32 +559,35 @@ const OrderHistory = () => {
             </Alert>
           )}
 
-          {data.length === 0 && !loading ? (
-            <Alert variant="info" className="text-center">
-              <CsLineIcons icon="inbox" size={24} className="me-2" />
-              No orders found. Orders will appear here once created.
-            </Alert>
-          ) : (
-            <>
-              <div>
-                <Row className="mb-3">
-                  <Col sm="12" md="5" lg="3" xxl="2">
-                    <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
-                      <ControlsSearch onSearch={handleSearch} />
-                    </div>
-                  </Col>
-                  <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
-                    <div className="d-inline-block me-2 text-muted">
-                      Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0} to {Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords} entries
-                    </div>
-                    <div className="d-inline-block">
-                      <ControlsPageSize
-                        pageSize={pageSize}
-                        onPageSizeChange={handlePageSizeChange}
-                      />
-                    </div>
-                  </Col>
-                </Row>
+
+          <div>
+            <Row className="mb-3">
+              <Col sm="12" md="5" lg="3" xxl="2">
+                <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
+                  <ControlsSearch onSearch={handleSearch} initialValue={searchTerm} />
+                </div>
+              </Col>
+              <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
+                <div className="d-inline-block me-2 text-muted">
+                  Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0} to {Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords} entries
+                </div>
+                <div className="d-inline-block">
+                  <ControlsPageSize
+                    pageSize={pageSize}
+                    onPageSizeChange={handlePageSizeChange}
+                  />
+                </div>
+              </Col>
+            </Row>
+
+            {/* Show table or "no data" message */}
+            {data.length === 0 && !loading ? (
+              <Alert variant="info" className="text-center">
+                <CsLineIcons icon="inbox" size={24} className="me-2" />
+                No orders found. {searchTerm ? 'Try a different search term.' : 'Orders will appear here once created.'}
+              </Alert>
+            ) : (
+              <>
                 <Row>
                   <Col xs="12">
                     <Table
@@ -546,9 +600,9 @@ const OrderHistory = () => {
                     <TablePagination paginationProps={paginationProps} />
                   </Col>
                 </Row>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </Col>
       </Row>
     </>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Button, Row, Col, Card, Form, Badge, Table, Modal } from 'react-bootstrap';
 import axios from 'axios';
+import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const DineInOrder = () => {

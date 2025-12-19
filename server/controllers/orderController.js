@@ -953,7 +953,6 @@ const orderHistory = async (req, res) => {
   }
 };
 
-
 module.exports = {
   addCustomer,
   getOrderData,

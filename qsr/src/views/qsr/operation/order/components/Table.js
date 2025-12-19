@@ -1,8 +1,8 @@
 import classNames from 'classnames';
 import React from 'react';
 
-const Table = ({ tableInstance, className = 'react-table boxed' }) => {
-  const { getTableProps, headerGroups, page, getTableBodyProps, prepareRow } = tableInstance;
+const Table = ({ tableInstance, className = 'react-table boxed', onSort }) => {
+  const { getTableProps, headerGroups, rows, getTableBodyProps, prepareRow } = tableInstance;
 
   return (
     <>
@@ -14,12 +14,18 @@ const Table = ({ tableInstance, className = 'react-table boxed' }) => {
                 return (
                   <th
                     key={`th.${index}`}
-                    {...column.getHeaderProps(column.getSortByToggleProps())}
+                    {...column.getHeaderProps()}
                     className={classNames(column.headerClassName, {
                       sorting_desc: column.isSortedDesc,
                       sorting_asc: column.isSorted && !column.isSortedDesc,
                       sorting: column.sortable,
                     })}
+                    onClick={() => {
+                      if (column.sortable && onSort) {
+                        onSort(column.id || column.accessor);
+                      }
+                    }}
+                    style={column.sortable ? { cursor: 'pointer' } : {}}
                   >
                     {column.render('Header')}
                   </th>
@@ -29,7 +35,7 @@ const Table = ({ tableInstance, className = 'react-table boxed' }) => {
           ))}
         </thead>
         <tbody {...getTableBodyProps()}>
-          {page.map((row, i) => {
+          {rows.map((row, i) => {
             prepareRow(row);
 
             return (
