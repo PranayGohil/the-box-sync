@@ -69,6 +69,7 @@ const Dashboard = () => {
               </Card>
             ) : (
               activeDineInOrders.map((order) => {
+
                 const preparingCount = order.order_items.filter(
                   (item) => item.status === 'Preparing' || item.status === 'Pending'
                 ).length;
@@ -93,16 +94,24 @@ const Dashboard = () => {
                           <p className="mb-0 text-muted">Token: {order.token}</p>
                         </div>
                         <div className="d-flex gap-2">
-                          {preparingCount > 0 && (
-                            <Badge bg="warning">
-                              KOT: {preparingCount}
+                          {order.order_status === 'Save' && (
+                            <Badge bg="success">
+                              {order.order_status}
                             </Badge>
                           )}
-
-                          {completedCount > 0 && (
-                            <Badge bg="success">
-                              Served: {completedCount}
-                            </Badge>
+                          {order.order_status === 'KOT' && (
+                            <>
+                              {preparingCount > 0 && (
+                                <Badge bg="warning">
+                                  KOT: {preparingCount}
+                                </Badge>
+                              )}
+                              {completedCount > 0 && (
+                                <Badge bg="success">
+                                  Served: {completedCount}
+                                </Badge>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>

@@ -21,22 +21,29 @@ const emailCheck = async (req, res) => {
 
 const register = async (req, res) => {
   try {
-    const { country, state, name, email } = req.body;
+    const { country, country_code, state, state_code, name, email } = req.body;
 
-    if (!country || !state || !name || !email) {
-      return res
-        .status(400)
-        .json({ message: "Country, state, name, and email are required" });
+    if (
+      !country ||
+      !country_code ||
+      !state ||
+      !state_code ||
+      !name ||
+      !email
+    ) {
+      return res.status(400).json({
+        message: "Country, state, name, and email are required",
+      });
     }
 
     // Generate the prefix for the restaurant code
-    const countryPrefix = country.toUpperCase();
-    const statePrefix = state.toUpperCase();
+    const countryPrefix = country_code.toUpperCase(); // IN
+    const statePrefix = state_code.toUpperCase();     // GJ
 
     // Find the highest existing code for this country and state
     const latestUser = await User.findOne({
-      country: countryPrefix,
-      state: statePrefix,
+      country: country,
+      state: state,
     })
       .sort({ createdAt: -1 })
       .select("restaurant_code")
@@ -55,14 +62,27 @@ const register = async (req, res) => {
       }
     }
 
-    const restaurantCode = `${statePrefix}${String(sequenceNumber).padStart(
-      4,
-      "0"
-    )}${countryPrefix}`;
+    let restaurantCode;
+    let codeExists = true;
+
+    while (codeExists) {
+      restaurantCode = `${statePrefix}${String(sequenceNumber).padStart(
+        4,
+        "0"
+      )}${countryPrefix}`;
+
+      codeExists = await User.exists({ restaurant_code: restaurantCode });
+
+      if (codeExists) {
+        sequenceNumber++;
+      }
+    }
 
     // Create the new user with the generated restaurant code
     const userdata = {
       ...req.body,
+      country,
+      state,
       logo: req.file ? "/branding/logo/" + req.file.filename : null,
       restaurant_code: restaurantCode,
     };
@@ -110,11 +130,11 @@ const register = async (req, res) => {
       </p>
       `;
 
-    // await sendEmail({
-    //   to: email,
-    //   subject: "Successful Registration Confirmation for Your TheBox Account",
-    //   html: regEmail,
-    // });
+    await sendEmail({
+      to: email,
+      subject: "Successful Registration Confirmation for Your TheBox Account",
+      html: regEmail,
+    });
 
     res.json({
       message: "Registered",

@@ -429,6 +429,17 @@ const dineInController = async (req, res) => {
         await updateTableStatus(tableId, "Save", orderId);
       } else if (orderInfo.order_status === "KOT") {
         await updateTableStatus(tableId, "KOT", orderId);
+        const io = req.app.get("io");
+        const connectedUsers = req.app.get("connectedUsers");
+        console.log("Now it's time for kot refresh", connectedUsers)
+
+        const key = `${req.user._id}_KOT`; // or however you store admin socket
+        console.log("kot Key", key)
+        if (io && connectedUsers && connectedUsers[key]) {
+          io.to(connectedUsers[key]).emit(
+            "kot_update"
+          );
+        }
       } else if (orderInfo.order_status === "Paid") {
         await clearTable(tableId);
       }
@@ -452,6 +463,17 @@ const dineInController = async (req, res) => {
       await updateTableStatus(tableId, "Save", savedOrder._id);
     } else if (orderInfo.order_status === "KOT") {
       await updateTableStatus(tableId, "KOT", savedOrder._id);
+      const io = req.app.get("io");
+      const connectedUsers = req.app.get("connectedUsers");
+      console.log("Now it's time for kot refresh", connectedUsers)
+
+      const key = `${req.user._id}_KOT`; // or however you store admin socket
+      console.log("kot Key", key)
+      if (io && connectedUsers && connectedUsers[key]) {
+        io.to(connectedUsers[key]).emit(
+          "kot_update"
+        );
+      }
     }
 
     return res.status(200).json({
@@ -556,6 +578,20 @@ const takeawayController = async (req, res) => {
         return res.status(404).json({ message: "Order not found" });
       }
 
+      if (savedOrder.order_status === "KOT") {
+        const io = req.app.get("io");
+        const connectedUsers = req.app.get("connectedUsers");
+        console.log("Now it's time for kot refresh", connectedUsers)
+
+        const key = `${req.user._id}_KOT`; // or however you store admin socket
+        console.log("kot Key", key)
+        if (io && connectedUsers && connectedUsers[key]) {
+          io.to(connectedUsers[key]).emit(
+            "kot_update"
+          );
+        }
+      }
+
       return res.status(200).json({
         status: "success",
         message: "Order updated successfully",
@@ -570,6 +606,20 @@ const takeawayController = async (req, res) => {
 
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();
+
+    if (savedOrder.order_status === "KOT") {
+      const io = req.app.get("io");
+      const connectedUsers = req.app.get("connectedUsers");
+      console.log("Now it's time for kot refresh", connectedUsers)
+
+      const key = `${req.user._id}_KOT`; // or however you store admin socket
+      console.log("kot Key", key)
+      if (io && connectedUsers && connectedUsers[key]) {
+        io.to(connectedUsers[key]).emit(
+          "kot_update"
+        );
+      }
+    }
 
     return res.status(200).json({
       status: "success",
@@ -685,6 +735,20 @@ const deliveryController = async (req, res) => {
         return res.status(404).json({ message: "Order not found" });
       }
 
+      if (savedOrder.order_status === "KOT") {
+        const io = req.app.get("io");
+        const connectedUsers = req.app.get("connectedUsers");
+        console.log("Now it's time for kot refresh", connectedUsers)
+
+        const key = `${req.user._id}_KOT`; // or however you store admin socket
+        console.log("kot Key", key)
+        if (io && connectedUsers && connectedUsers[key]) {
+          io.to(connectedUsers[key]).emit(
+            "kot_update"
+          );
+        }
+      }
+
       return res.status(200).json({
         status: "success",
         message: "Order updated successfully",
@@ -696,6 +760,20 @@ const deliveryController = async (req, res) => {
     // ✅ 5. Handle new order creation
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();
+
+    if (savedOrder.order_status === "KOT") {
+      const io = req.app.get("io");
+      const connectedUsers = req.app.get("connectedUsers");
+      console.log("Now it's time for kot refresh", connectedUsers)
+
+      const key = `${req.user._id}_KOT`; // or however you store admin socket
+      console.log("kot Key", key)
+      if (io && connectedUsers && connectedUsers[key]) {
+        io.to(connectedUsers[key]).emit(
+          "kot_update"
+        );
+      }
+    }
 
     return res.status(200).json({
       status: "success",

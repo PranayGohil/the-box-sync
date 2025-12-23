@@ -4,6 +4,7 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import axios from 'axios';
+import { useSocket } from 'contexts/SocketContext';
 
 const ViewKots = () => {
   const title = 'Manage KOTs';
@@ -15,6 +16,7 @@ const ViewKots = () => {
     { to: 'operations/view-kots', title: 'Manage KOTs' },
   ];
 
+  const { socket } = useSocket();
   const [kotData, setKotData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -32,6 +34,13 @@ const ViewKots = () => {
   useEffect(() => {
     fetchOrderData();
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.on("kot_update", () => {
+      fetchOrderData();
+    });
+  })
 
   const updateDishStatus = async (orderId, dishId) => {
     try {
@@ -116,13 +125,24 @@ const ViewKots = () => {
                           </div>
                         </div>
                       )}
-                      {data.order_type === 'Dine In' && (
+                      {data.order_type === 'Dine In' && data.order_source !== 'QSR' && (
                         <div className="text-end">
                           <h5 className="mb-1">
                             Area: <span className="fw-bold">{data.table_area}</span>
                           </h5>
                           <div className="d-flex justify-content-end">
                             <div className="fw-bold bg-primary rounded-pill py-2 px-3 text-center text-white">{data.table_no}</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {data.order_type === 'Dine In' && data.order_source === 'QSR' && (
+                        <div className="text-end">
+                          <h5 className="mb-1">
+                            Token
+                          </h5>
+                          <div className="d-flex justify-content-end">
+                            <div className="fw-bold bg-primary rounded-pill py-2 px-3 text-center text-white">{data.token}</div>
                           </div>
                         </div>
                       )}

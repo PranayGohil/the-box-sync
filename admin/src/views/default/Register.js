@@ -30,7 +30,9 @@ const Register = () => {
     mobile: '',
     address: '',
     country: '',
+    country_code: '',
     state: '',
+    state_code: '',
     city: '',
     pincode: '',
     fssai_no: '',
@@ -520,10 +522,17 @@ const Register = () => {
                             className="form-control"
                             value={values.country}
                             onChange={(e) => {
-                              setFieldValue('country', e.target.value);
+                              const selectedCountry = Country.getAllCountries().find(
+                                c => c.name === e.target.value
+                              );
+
+                              setFieldValue('country', selectedCountry.name);
+                              setFieldValue('country_code', selectedCountry.isoCode);
                               setFieldValue('state', '');
+                              setFieldValue('state_code', '');
                               setFieldValue('city', '');
                             }}
+
                           >
                             <option value="">Select Country</option>
                             {Country.getAllCountries().map((c) => (
@@ -545,14 +554,16 @@ const Register = () => {
                             className="form-control"
                             value={values.state}
                             onChange={(e) => {
-                              setFieldValue('state', e.target.value);
+                              const selectedState = State.getStatesOfCountry(values.country_code)
+                                .find(s => s.name === e.target.value);
+
+                              setFieldValue('state', selectedState.name);
+                              setFieldValue('state_code', selectedState.isoCode);
                               setFieldValue('city', '');
                             }}
                           >
                             <option value="">Select State</option>
-                            {State.getStatesOfCountry(
-                              Country.getAllCountries().find(c => c.name === values.country)?.isoCode
-                            ).map((s) => (
+                            {State.getStatesOfCountry(values.country_code).map((s) => (
                               <option key={s.isoCode} value={s.name}>
                                 {s.name}
                               </option>
@@ -574,10 +585,8 @@ const Register = () => {
                           >
                             <option value="">Select City</option>
                             {City.getCitiesOfState(
-                              Country.getAllCountries().find(c => c.name === values.country)?.isoCode,
-                              State.getStatesOfCountry(
-                                Country.getAllCountries().find(c => c.name === values.country)?.isoCode
-                              ).find(s => s.name === values.state)?.isoCode
+                              values.country_code,
+                              values.state_code
                             ).map((city) => (
                               <option key={city.name} value={city.name}>
                                 {city.name}

@@ -59,7 +59,7 @@ const NavIconMenu = () => {
 
       <Modal className="modal-close-out" show={showLogoutModal} onHide={() => setShowLogoutModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Delete Table</Modal.Title>
+          <Modal.Title>Logout</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>Are you sure you want to Logout</p>

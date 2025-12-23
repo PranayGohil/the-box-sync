@@ -13,8 +13,6 @@ const showKOTs = async (req, res) => {
       sort = "-order_date"         // default newest first
     } = req.query;
 
-    console.log("Req.user : ", req.user)
-
     // Build match filter
     const match = {
       user_id: userId,
@@ -40,7 +38,6 @@ const showKOTs = async (req, res) => {
       // Optionally filter order_items to only items not Completed (so kitchen only sees pending)
       { $sort: { [sort.replace('-', '')]: sort.startsWith('-') ? -1 : 1 } }, // basic sort parse
     ];
-    console.log(pipeline)
     const orders = await Order.aggregate(pipeline).exec();
 
     return res.json({
