@@ -21,7 +21,7 @@ const ViewKots = () => {
   const [loading, setLoading] = useState({
     initial: true,
     updatingDish: false,
-    updatingAllDishes: false
+    updatingAllDishes: false,
   });
   const [error, setError] = useState('');
   const [updatingDishId, setUpdatingDishId] = useState(null);
@@ -29,10 +29,10 @@ const ViewKots = () => {
 
   const fetchOrderData = async () => {
     try {
-      setLoading(prev => ({ ...prev, initial: true }));
+      setLoading((prev) => ({ ...prev, initial: true }));
       setError('');
       const response = await axios.get(`${process.env.REACT_APP_API}/kot/show?order_source=QSR`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setKotData(response.data.data);
     } catch (err) {
@@ -40,7 +40,7 @@ const ViewKots = () => {
       setError('Failed to fetch KOT data. Please try again.');
       toast.error('Failed to load KOTs.');
     } finally {
-      setLoading(prev => ({ ...prev, initial: false }));
+      setLoading((prev) => ({ ...prev, initial: false }));
     }
   };
 
@@ -98,9 +98,12 @@ const ViewKots = () => {
         <HtmlHead title={title} description={description} />
         <Row>
           <Col>
-            <div className="page-title-container mb-4">
-              <h1 className="mb-0 pb-0 display-4">{title}</h1>
-              <BreadcrumbList items={breadcrumbs} />
+            <div className="d-flex justify-contentent-between">
+              <div className="page-title-container mb-4">
+                <h1 className="mb-0 pb-0 display-4">{title}</h1>
+                <BreadcrumbList items={breadcrumbs} />
+              </div>
+              <div>Date: {new Date().toLocaleDateString()}</div>
             </div>
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" className="mb-3" />
@@ -118,21 +121,21 @@ const ViewKots = () => {
       <HtmlHead title={title} description={description} />
       <Row>
         <Col>
-          <div className="page-title-container mb-4">
-            <h1 className="mb-0 pb-0 display-4">{title}</h1>
-            <BreadcrumbList items={breadcrumbs} />
+          <div className="d-flex justify-content-between">
+            <div className="page-title-container mb-4">
+              <h1 className="mb-0 pb-0 display-4">{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </div>
+            <div>
+              <span>Date:</span> <span className='fw-bold fs-5'>{new Date().toLocaleDateString()}</span>
+            </div>
           </div>
 
           {error && (
             <Alert variant="danger" className="mb-4">
               <CsLineIcons icon="error" className="me-2" />
               {error}
-              <Button
-                variant="outline-danger"
-                size="sm"
-                className="ms-3"
-                onClick={fetchOrderData}
-              >
+              <Button variant="outline-danger" size="sm" className="ms-3" onClick={fetchOrderData}>
                 Retry
               </Button>
             </Alert>
@@ -161,7 +164,7 @@ const ViewKots = () => {
               </Col>
               <Col md={4} className="d-flex align-items-center justify-content-end">
                 <div>Pending Dishes to Complete : </div>
-                <div className='mx-2 fs-3 fw-bold'>
+                <div className="mx-2 fs-3 fw-bold">
                   {loading.initial ? (
                     <Spinner animation="border" size="sm" className="ms-2" />
                   ) : (
@@ -178,9 +181,7 @@ const ViewKots = () => {
                 <div className="py-5">
                   <CsLineIcons icon="inbox" size="48" className="text-muted mb-3" />
                   <h5>No KOTs Found</h5>
-                  <p className="text-muted">
-                    {searchTerm ? `No KOTs matching "${searchTerm}"` : 'No kitchen orders available'}
-                  </p>
+                  <p className="text-muted">{searchTerm ? `No KOTs matching "${searchTerm}"` : 'No kitchen orders available'}</p>
                 </div>
               </Col>
             </Row>
@@ -201,9 +202,7 @@ const ViewKots = () => {
                           <div className="text-end">
                             <h5 className="mb-1">Token</h5>
                             <div className="d-flex justify-content-end">
-                              <div className="fw-bold bg-primary rounded-pill py-2 px-3 text-center text-white">
-                                {data.token}
-                              </div>
+                              <div className="fw-bold bg-primary rounded-pill py-2 px-3 text-center text-white">{data.token}</div>
                             </div>
                           </div>
                         )}
@@ -213,9 +212,7 @@ const ViewKots = () => {
                               Area: <span className="fw-bold">{data.table_area}</span>
                             </h5>
                             <div className="d-flex justify-content-end">
-                              <div className="fw-bold bg-primary rounded-pill py-2 px-3 text-center text-white">
-                                {data.table_no}
-                              </div>
+                              <div className="fw-bold bg-primary rounded-pill py-2 px-3 text-center text-white">{data.table_no}</div>
                             </div>
                           </div>
                         )}
@@ -248,13 +245,7 @@ const ViewKots = () => {
                                           disabled={updatingDishId === dish._id}
                                         >
                                           {updatingDishId === dish._id ? (
-                                            <Spinner
-                                              as="span"
-                                              animation="border"
-                                              size="sm"
-                                              role="status"
-                                              aria-hidden="true"
-                                            />
+                                            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
                                           ) : (
                                             <CsLineIcons icon="check" />
                                           )}
@@ -291,14 +282,7 @@ const ViewKots = () => {
                           >
                             {updatingOrderId === data._id ? (
                               <>
-                                <Spinner
-                                  as="span"
-                                  animation="border"
-                                  size="sm"
-                                  role="status"
-                                  aria-hidden="true"
-                                  className="me-2"
-                                />
+                                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
                                 Updating...
                               </>
                             ) : (
@@ -326,17 +310,12 @@ const ViewKots = () => {
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.7)',
                 zIndex: 9999,
-                backdropFilter: 'blur(2px)'
+                backdropFilter: 'blur(2px)',
               }}
             >
               <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
                 <Card.Body className="text-center p-4">
-                  <Spinner
-                    animation="border"
-                    variant="primary"
-                    className="mb-3"
-                    style={{ width: '3rem', height: '3rem' }}
-                  />
+                  <Spinner animation="border" variant="primary" className="mb-3" style={{ width: '3rem', height: '3rem' }} />
                   <h5 className="mb-0">Updating Dishes...</h5>
                   <small className="text-muted">Please wait a moment</small>
                 </Card.Body>

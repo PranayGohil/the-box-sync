@@ -37,10 +37,10 @@ const ViewKots = () => {
 
   useEffect(() => {
     if (!socket) return;
-    socket.on("kot_update", () => {
+    socket.on('kot_update', () => {
       fetchOrderData();
     });
-  })
+  });
 
   const updateDishStatus = async (orderId, dishId) => {
     try {
@@ -81,9 +81,14 @@ const ViewKots = () => {
       <HtmlHead title={title} description={description} />
       <Row>
         <Col>
-          <div className="page-title-container mb-4">
-            <h1 className="mb-0 pb-0 display-4">{title}</h1>
-            <BreadcrumbList items={breadcrumbs} />
+          <div className="d-flex justify-content-between">
+            <div className="page-title-container mb-4">
+              <h1 className="mb-0 pb-0 display-4">{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </div>
+            <div>
+              <span>Date:</span> <span className="fw-bold fs-5">{new Date().toLocaleDateString()}</span>
+            </div>
           </div>
 
           <Form className="mb-4">
@@ -138,9 +143,7 @@ const ViewKots = () => {
 
                       {data.order_type === 'Dine In' && data.order_source === 'QSR' && (
                         <div className="text-end">
-                          <h5 className="mb-1">
-                            Token
-                          </h5>
+                          <h5 className="mb-1">Token</h5>
                           <div className="d-flex justify-content-end">
                             <div className="fw-bold bg-primary rounded-pill py-2 px-3 text-center text-white">{data.token}</div>
                           </div>

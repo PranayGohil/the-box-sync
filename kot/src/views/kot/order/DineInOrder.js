@@ -425,9 +425,13 @@ const DineInOrder = () => {
                         <td className="text-center">₹{item.dish_price}</td>
                         <td className="text-center">₹{item.dish_price * item.quantity}</td>
                         <td className="text-center">
-                          <Button variant="outline-danger" size="sm" onClick={() => removeItem(index)}>
-                            <CsLineIcons icon="bin" />
-                          </Button>
+                          {item.status === 'Completed' ? (
+                            <Badge bg="success">Completed</Badge>
+                          ) : (
+                            <Button variant="outline-danger" size="sm" onClick={() => removeItem(index)}>
+                              <CsLineIcons icon="bin" />
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     ))}

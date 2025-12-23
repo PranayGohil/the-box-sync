@@ -94,7 +94,7 @@ const Dashboard = () => {
       </div>
 
       <Row>
-        <Col lg="12">
+        <Col lg="6">
           {tables.map((tableArea) => (
             <div className="gx-2" key={tableArea._id}>
               <h3 className="mb-3 text-primary">{tableArea.area}</h3>
@@ -132,7 +132,7 @@ const Dashboard = () => {
                       }
 
                       return (
-                        <Col key={table._id} xs="4" sm="4" md="3" lg="1"
+                        <Col key={table._id} xs="6" sm="4" md="3" lg="2"
                           style={{ position: "relative" }}
                         >
                           {completedCount > 0 && (

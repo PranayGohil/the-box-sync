@@ -113,12 +113,12 @@ const DeliveryOrder = () => {
         ...prevData,
         cgstPercent: taxInfo.cgst || 0,
         sgstPercent: taxInfo.sgst || 0,
-        vatPercent: taxInfo.vat || 0
+        vatPercent: taxInfo.vat || 0,
       }));
       setTaxRates({
         cgst: taxInfo.cgst || 0,
         sgst: taxInfo.sgst || 0,
-        vat: taxInfo.vat || 0
+        vat: taxInfo.vat || 0,
       });
       setContainerCharges(response.data.containerCharges || []);
     } catch (error) {
@@ -340,7 +340,14 @@ const DeliveryOrder = () => {
           quantity: item.quantity,
           dish_price: item.dish_price,
           special_notes: item.special_notes || '',
-          status: status === 'KOT' ? 'Preparing' : status === 'Save' ? 'Pending' : item.status,
+          status:
+            status === 'KOT'
+              ? item.status === 'Pending'
+                ? 'Preparing'
+                : item.status // keep Completed as-is
+              : status === 'Save'
+              ? item.status || 'Pending'
+              : item.status,
         })),
         order_status: status,
         customer_name: customerInfo.name,
@@ -377,12 +384,13 @@ const DeliveryOrder = () => {
       });
 
       if (response.data.status === 'success') {
-        if (status === 'Paid') {
-          fetchOrderDetails();
-          setShowPaymentModal(false);
-        } else {
-          history.push('/dashboard');
-        }
+        history.push('/dashboard');
+        // if (status === 'Paid') {
+        //   fetchOrderDetails();
+        //   setShowPaymentModal(false);
+        // } else {
+        //   history.push('/dashboard');
+        // }
       }
     } catch (error) {
       console.error('Error saving order:', error);
@@ -419,7 +427,6 @@ const DeliveryOrder = () => {
         {/* Menu Section - Now taking 8 columns */}
         <Col lg="8" className="px-1">
           <Card className="h-100 position-relative overflow-hidden">
-
             {/* HEADER */}
             <Card.Header>
               <Row className="align-items-center">
@@ -428,11 +435,7 @@ const DeliveryOrder = () => {
                 </Col>
 
                 <Col className="d-flex justify-content-end">
-                  <Button
-                    variant="outline-secondary"
-                    size="sm"
-                    onClick={() => history.push('/dashboard')}
-                  >
+                  <Button variant="outline-secondary" size="sm" onClick={() => history.push('/dashboard')}>
                     <CsLineIcons icon="arrow-left" /> Back
                   </Button>
                 </Col>
@@ -441,17 +444,15 @@ const DeliveryOrder = () => {
 
             {/* BODY */}
             <Card.Body className="p-0 d-flex h-100">
-
               {/* SIDEBAR - Same as DineInOrder */}
               <div
-                className={`bg-light border-end position-absolute h-100 ${showCategories ? 'start-0' : ''
-                  }`}
+                className={`bg-light border-end position-absolute h-100 ${showCategories ? 'start-0' : ''}`}
                 style={{
                   width: '220px',
                   transform: showCategories ? 'translateX(0)' : 'translateX(-100%)',
                   transition: 'transform 0.3s ease',
                   zIndex: 10,
-                  overflowY: 'auto'
+                  overflowY: 'auto',
                 }}
               >
                 <div className="p-2">
@@ -460,22 +461,20 @@ const DeliveryOrder = () => {
                       setSelectedCategory('');
                       setShowCategories(false);
                     }}
-                    className={`py-2 px-2 mb-1 rounded ${selectedCategory === '' ? 'bg-primary text-white' : 'bg-white'
-                      }`}
+                    className={`py-2 px-2 mb-1 rounded ${selectedCategory === '' ? 'bg-primary text-white' : 'bg-white'}`}
                     style={{ cursor: 'pointer', fontSize: '13px' }}
                   >
                     All
                   </div>
 
-                  {categories.map(category => (
+                  {categories.map((category) => (
                     <div
                       key={category}
                       onClick={() => {
                         setSelectedCategory(category);
                         setShowCategories(false);
                       }}
-                      className={`py-2 px-2 mb-1 rounded ${selectedCategory === category ? 'bg-primary text-white' : 'bg-white'
-                        }`}
+                      className={`py-2 px-2 mb-1 rounded ${selectedCategory === category ? 'bg-primary text-white' : 'bg-white'}`}
                       style={{ cursor: 'pointer', fontSize: '13px' }}
                     >
                       {category}
@@ -485,29 +484,16 @@ const DeliveryOrder = () => {
               </div>
 
               {/* MAIN CONTENT */}
-              <div
-                className="flex-grow-1 p-2"
-                style={{ marginLeft: showCategories ? '220px' : '0', transition: 'margin 0.3s ease' }}
-              >
-
+              <div className="flex-grow-1 p-2" style={{ marginLeft: showCategories ? '220px' : '0', transition: 'margin 0.3s ease' }}>
                 {/* FILTERS */}
                 <Row className="mb-2 g-1">
                   <Col md="1">
-                    <Button
-                      variant="outline-primary"
-                      size="sm"
-                      onClick={() => setShowCategories(prev => !prev)}
-                    >
+                    <Button variant="outline-primary" size="sm" onClick={() => setShowCategories((prev) => !prev)}>
                       {showCategories ? <i className="bi bi-x" /> : <i className="bi bi-list" />}
                     </Button>
                   </Col>
                   <Col md="6">
-                    <Form.Control
-                      size="sm"
-                      placeholder="Search items..."
-                      value={searchText}
-                      onChange={(e) => setSearchText(e.target.value)}
-                    />
+                    <Form.Control size="sm" placeholder="Search items..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
                   </Col>
                   <Col md="5" className="d-flex gap-3 align-items-center">
                     <Form.Check
@@ -517,12 +503,7 @@ const DeliveryOrder = () => {
                       onChange={(e) => setShowSpecial(e.target.checked)}
                       disabled={showParcelCharge}
                     />
-                    <Form.Check
-                      type="checkbox"
-                      label="Parcel Charges"
-                      checked={showParcelCharge}
-                      onChange={(e) => setShowParcelCharge(e.target.checked)}
-                    />
+                    <Form.Check type="checkbox" label="Parcel Charges" checked={showParcelCharge} onChange={(e) => setShowParcelCharge(e.target.checked)} />
                   </Col>
                 </Row>
 
@@ -539,12 +520,15 @@ const DeliveryOrder = () => {
                               <Card className="sh-14 hover-border-primary mb-2" onClick={() => addItemToOrder(dish)}>
                                 <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
                                   <p className="cta-8 mb-2 lh-1">{dish.dish_name}</p>
-                                  <p className="mb-0" style={{ fontWeight: 'bold' }}>₹{dish.dish_price}</p>
+                                  <p className="mb-0" style={{ fontWeight: 'bold' }}>
+                                    ₹{dish.dish_price}
+                                  </p>
                                 </Card.Body>
                                 <Badge
                                   variant="outline"
-                                  className={`text-white mb-2 ${category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
-                                    }`}
+                                  className={`text-white mb-2 ${
+                                    category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
+                                  }`}
                                   style={{ position: 'absolute', top: '3px', right: '5px' }}
                                 >
                                   {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
@@ -565,8 +549,12 @@ const DeliveryOrder = () => {
                         <Col xs="4" sm="3" md={showCategories ? 3 : 2} key={charge._id}>
                           <Card className="sh-14 hover-border-primary mb-2" onClick={() => addParcelCharge(charge)}>
                             <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
-                              <p className="cta-8 mb-2 lh-1">{charge.name} - {charge.size}</p>
-                              <p className="mb-0" style={{ fontWeight: 'bold' }}>₹{charge.price}</p>
+                              <p className="cta-8 mb-2 lh-1">
+                                {charge.name} - {charge.size}
+                              </p>
+                              <p className="mb-0" style={{ fontWeight: 'bold' }}>
+                                ₹{charge.price}
+                              </p>
                             </Card.Body>
                           </Card>
                         </Col>
@@ -574,7 +562,6 @@ const DeliveryOrder = () => {
                     </Row>
                   )}
                 </div>
-
               </div>
             </Card.Body>
           </Card>
@@ -605,6 +592,14 @@ const DeliveryOrder = () => {
                 </Col>
               </Row>
             </Card.Header>
+            <Row className="mt-1">
+              <Col md="12">
+                <div className="d-flex justify-content-center align-items-center">
+                  <div className="mx-1">Date: </div>
+                  <div className="fw-bold">{new Date().toLocaleDateString()}</div>
+                </div>
+              </Col>
+            </Row>
             <Card.Body>
               {/* Customer Info - Adjusted for 4 columns */}
               <Row className="mb-3">
@@ -684,9 +679,13 @@ const DeliveryOrder = () => {
                         <td className="text-center">₹{item.dish_price}</td>
                         <td className="text-center">₹{item.dish_price * item.quantity}</td>
                         <td className="text-center">
-                          <Button variant="outline-danger" size="sm" onClick={() => removeItem(index)}>
-                            <CsLineIcons icon="bin" />
-                          </Button>
+                          {item.status === 'Completed' ? (
+                            <Badge bg="success">Completed</Badge>
+                          ) : (
+                            <Button variant="outline-danger" size="sm" onClick={() => removeItem(index)}>
+                              <CsLineIcons icon="bin" />
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -716,12 +715,16 @@ const DeliveryOrder = () => {
                 <div>
                   {orderItems.length > 0 && (
                     <>
-                      <Button variant="secondary" className="me-2" onClick={() => handleSaveOrder('Save')} disabled={isLoading}>
-                        Save Order
-                      </Button>
-                      <Button variant="primary" onClick={() => handleSaveOrder('KOT')} disabled={isLoading}>
-                        Send to Kitchen
-                      </Button>
+                      {orderStatus === 'Save' && (
+                        <Button variant="secondary" className="me-2" onClick={() => handleSaveOrder('Save')} disabled={isLoading}>
+                          Save Order
+                        </Button>
+                      )}
+                      {orderStatus !== 'Paid' && (
+                        <Button variant="primary" onClick={() => handleSaveOrder('KOT')} disabled={isLoading}>
+                          Send to Kitchen
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>
@@ -855,7 +858,7 @@ const DeliveryOrder = () => {
                   style={{
                     fontWeight: 'bold',
                     backgroundColor: parseFloat(paymentData.waveoffAmount) !== 0 ? '#fff3cd' : '#f8f9fa',
-                    color: parseFloat(paymentData.waveoffAmount) > 0 ? '#856404' : parseFloat(paymentData.waveoffAmount) < 0 ? '#721c24' : '#000'
+                    color: parseFloat(paymentData.waveoffAmount) > 0 ? '#856404' : parseFloat(paymentData.waveoffAmount) < 0 ? '#721c24' : '#000',
                   }}
                 />
                 {parseFloat(paymentData.waveoffAmount) !== 0 && (
