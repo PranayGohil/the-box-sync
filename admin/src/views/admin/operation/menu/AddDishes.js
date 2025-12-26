@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Card, Col, Row, Button, Form as BForm, Spinner, Alert } from 'react-bootstrap';
 import { Formik, Form, FieldArray, Field, ErrorMessage } from 'formik';
@@ -23,6 +23,8 @@ const AddDishes = () => {
   const location = useLocation();
   const [imagePreviews, setImagePreviews] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   const isFromManageMenu = location.state?.fromManageMenu || false;
   const prefilledCategory = isFromManageMenu ? location.state?.category || '' : '';
@@ -43,6 +45,31 @@ const AddDishes = () => {
       },
     ],
   };
+
+  const getMenuCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const response = await axios.get(
+        `${process.env.REACT_APP_API}/menu/get-categories`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }
+      );
+
+      if (response.data.success) {
+        setCategories(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching menu categories:', error);
+      toast.error('Failed to load menu categories');
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  useEffect(() => {
+    getMenuCategories();
+  }, []);
 
   const validationSchema = Yup.object().shape({
     category: Yup.string().required('Category is required'),
@@ -134,11 +161,24 @@ const AddDishes = () => {
                           <BForm.Label>Dish Category</BForm.Label>
                           <Field
                             name="category"
+                            list="categorySuggestions"
                             className="form-control"
                             readOnly={isFromManageMenu}
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || loadingCategories}
                           />
-                          <ErrorMessage name="category" component="div" className="text-danger" />
+                          <datalist id="categorySuggestions">
+                            {categories.map((cat, index) => (
+                              <option key={index} value={cat} />
+                            ))}
+                          </datalist>
+                          {loadingCategories && (
+                            <small className="text-muted">Loading categories...</small>
+                          )}
+                          <ErrorMessage
+                            name="category"
+                            component="div"
+                            className="text-danger"
+                          />
                         </BForm.Group>
                       </Col>
                       <Col md={8}>
@@ -158,7 +198,6 @@ const AddDishes = () => {
                         ))}
                       </Col>
                     </Row>
-
                     <FieldArray name="dishes">
                       {({ push, remove }) => (
                         <>
@@ -187,12 +226,13 @@ const AddDishes = () => {
                                     <ErrorMessage name={`dishes[${index}].dish_price`} component="div" className="text-danger" />
                                   </BForm.Group>
                                 </Col>
-                                <Col md={4} className="d-flex align-items-end">
+                                <Col md={4} className="d-flex align-items-start">
                                   <Button
                                     variant="outline-danger"
                                     onClick={() => remove(index)}
                                     disabled={isSubmitting || values.dishes.length === 1}
                                   >
+                                    <CsLineIcons icon="bin" className='me-1' />
                                     Remove
                                   </Button>
                                 </Col>
@@ -298,7 +338,7 @@ const AddDishes = () => {
                               disabled={isSubmitting}
                             >
                               <CsLineIcons icon="plus" className="me-1" />
-                              Add More Dishes
+                              Add More
                             </Button>
                           </div>
                         </>

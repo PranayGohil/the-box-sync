@@ -91,7 +91,7 @@ const Inquiries = () => {
                   <td>{inq.restaurant_name}</td>
                   <td>{inq.purpose}</td>
                   <td>{inq.message}</td>
-                  <td>{new Date(inq.date).toLocaleDateString()}</td>
+                  <td>{new Date(inq.date).toLocaleDateString('en-IN')}</td>
                   <td>
                     <span
                       className={`badge ${

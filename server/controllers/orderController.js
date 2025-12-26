@@ -406,6 +406,17 @@ const dineInController = async (req, res) => {
       // Clear the table
       await clearTable(tableId);
 
+      const io = req.app.get("io");
+      const connectedUsers = req.app.get("connectedUsers");
+
+      const key = `${req.user._id}_KOT`; // or however you store admin socket
+      console.log("kot Key", key)
+      if (io && connectedUsers && connectedUsers[key]) {
+        io.to(connectedUsers[key]).emit(
+          "kot_update"
+        );
+      }
+
       return res.status(200).json({
         status: "success",
         message: "Order cancelled successfully",
@@ -442,6 +453,16 @@ const dineInController = async (req, res) => {
         }
       } else if (orderInfo.order_status === "Paid") {
         await clearTable(tableId);
+        const io = req.app.get("io");
+        const connectedUsers = req.app.get("connectedUsers");
+
+        const key = `${req.user._id}_KOT`; // or however you store admin socket
+        console.log("kot Key", key)
+        if (io && connectedUsers && connectedUsers[key]) {
+          io.to(connectedUsers[key]).emit(
+            "kot_update"
+          );
+        }
       }
 
       return res.status(200).json({
@@ -561,6 +582,17 @@ const takeawayController = async (req, res) => {
         }
       }
 
+      const io = req.app.get("io");
+      const connectedUsers = req.app.get("connectedUsers");
+
+      const key = `${req.user._id}_KOT`; // or however you store admin socket
+      console.log("kot Key", key)
+      if (io && connectedUsers && connectedUsers[key]) {
+        io.to(connectedUsers[key]).emit(
+          "kot_update"
+        );
+      }
+
       return res.status(200).json({
         status: "success",
         message: "Order cancelled successfully",
@@ -578,7 +610,7 @@ const takeawayController = async (req, res) => {
         return res.status(404).json({ message: "Order not found" });
       }
 
-      if (savedOrder.order_status === "KOT") {
+      if (savedOrder.order_status === "KOT" || savedOrder.order_status === "Paid") {
         const io = req.app.get("io");
         const connectedUsers = req.app.get("connectedUsers");
         console.log("Now it's time for kot refresh", connectedUsers)
@@ -607,7 +639,7 @@ const takeawayController = async (req, res) => {
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();
 
-    if (savedOrder.order_status === "KOT") {
+    if (savedOrder.order_status === "KOT" || savedOrder.order_status === "Paid") {
       const io = req.app.get("io");
       const connectedUsers = req.app.get("connectedUsers");
       console.log("Now it's time for kot refresh", connectedUsers)
@@ -718,6 +750,17 @@ const deliveryController = async (req, res) => {
         }
       }
 
+      const io = req.app.get("io");
+      const connectedUsers = req.app.get("connectedUsers");
+
+      const key = `${req.user._id}_KOT`; // or however you store admin socket
+      console.log("kot Key", key)
+      if (io && connectedUsers && connectedUsers[key]) {
+        io.to(connectedUsers[key]).emit(
+          "kot_update"
+        );
+      }
+
       return res.status(200).json({
         status: "success",
         message: "Order cancelled successfully",
@@ -735,7 +778,7 @@ const deliveryController = async (req, res) => {
         return res.status(404).json({ message: "Order not found" });
       }
 
-      if (savedOrder.order_status === "KOT") {
+      if (savedOrder.order_status === "KOT" || savedOrder.order_status === "Paid") {
         const io = req.app.get("io");
         const connectedUsers = req.app.get("connectedUsers");
         console.log("Now it's time for kot refresh", connectedUsers)
@@ -761,7 +804,7 @@ const deliveryController = async (req, res) => {
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();
 
-    if (savedOrder.order_status === "KOT") {
+    if (savedOrder.order_status === "KOT" || savedOrder.order_status === "Paid") {
       const io = req.app.get("io");
       const connectedUsers = req.app.get("connectedUsers");
       console.log("Now it's time for kot refresh", connectedUsers)

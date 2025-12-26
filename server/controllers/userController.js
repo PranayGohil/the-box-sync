@@ -113,7 +113,7 @@ const register = async (req, res) => {
       <p>
         <br><strong>Restaurant Code: </strong> ${restaurantCode}
         <br><strong>Email Address: </strong> ${email}
-        <br><strong>Date of Registration: </strong> ${new Date().toLocaleDateString()}
+        <br><strong>Date of Registration: </strong> ${new Date().toLocaleDateString('en-IN')}
       </p>
   
       <p>Please keep this information safe for your records.</p>
@@ -390,6 +390,7 @@ const resetAdminPassword = async (req, res) => {
 const updateUser = async (req, res) => {
   const userId = req.user;
   const { ...updates } = req.body;
+  console.log(req.body);
 
   if (!userId) {
     return res.status(400).json({ error: "User ID is required." });
@@ -408,9 +409,7 @@ const updateUser = async (req, res) => {
 
     // ✅ Update fields
     Object.keys(updates).forEach((key) => {
-      if (user[key] !== undefined) {
-        user[key] = updates[key];
-      }
+      user[key] = updates[key];
     });
 
     await user.save();

@@ -87,7 +87,7 @@ const ViewKots = () => {
               <BreadcrumbList items={breadcrumbs} />
             </div>
             <div>
-              <span>Date:</span> <span className="fw-bold fs-5">{new Date().toLocaleDateString()}</span>
+              <span>Date:</span> <span className="fw-bold fs-5">{new Date().toLocaleDateString('en-IN')}</span>
             </div>
           </div>
 

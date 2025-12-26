@@ -221,7 +221,7 @@ const AddDishes = () => {
                                 })
                               }
                             >
-                              + Add More Dishes
+                              + Add More
                             </Button>
                           </div>
                         </>

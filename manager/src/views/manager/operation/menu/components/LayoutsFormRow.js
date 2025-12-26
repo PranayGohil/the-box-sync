@@ -23,7 +23,7 @@ const LayoutsFormRow = () => {
           <Button variant="primary">Delete</Button>
         </Col>
         <Col xs="12" className="mt-3">
-          <Button variant="primary" className='me-3'>Add More Tables</Button>
+          <Button variant="primary" className='me-3'>Add More</Button>
           <Button variant="primary">Submit</Button>
         </Col>
       </Row>

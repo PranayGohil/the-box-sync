@@ -103,7 +103,7 @@ const ViewKots = () => {
                 <h1 className="mb-0 pb-0 display-4">{title}</h1>
                 <BreadcrumbList items={breadcrumbs} />
               </div>
-              <div>Date: {new Date().toLocaleDateString()}</div>
+              <div>Date: {new Date().toLocaleDateString('en-IN')}</div>
             </div>
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" className="mb-3" />
@@ -127,7 +127,7 @@ const ViewKots = () => {
               <BreadcrumbList items={breadcrumbs} />
             </div>
             <div>
-              <span>Date:</span> <span className='fw-bold fs-5'>{new Date().toLocaleDateString()}</span>
+              <span>Date:</span> <span className='fw-bold fs-5'>{new Date().toLocaleDateString('en-IN')}</span>
             </div>
           </div>
 

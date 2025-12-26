@@ -8,6 +8,7 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const EditTableModal = ({ show, handleClose, data, onUpdateSuccess }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState();
 
   const formik = useFormik({
     initialValues: {
@@ -37,7 +38,8 @@ const EditTableModal = ({ show, handleClose, data, onUpdateSuccess }) => {
         onUpdateSuccess();
       } catch (err) {
         console.error("Edit failed:", err);
-        toast.error(err.response?.data?.message || 'Failed to update table.');
+        // toast.error(err.response?.data?.message || 'Failed to update table.');
+        setError(err.response?.data?.message || 'Failed to update table.')
       } finally {
         setIsSubmitting(false);
       }
@@ -80,6 +82,11 @@ const EditTableModal = ({ show, handleClose, data, onUpdateSuccess }) => {
               {formik.errors.max_person}
             </small>
           </Form.Group>
+          {error && (
+            <div className='text-danger'>
+              {error}
+            </div>
+          )}
         </Form>
       </Modal.Body>
       <Modal.Footer>
@@ -104,7 +111,7 @@ const EditTableModal = ({ show, handleClose, data, onUpdateSuccess }) => {
               />
               Updating...
             </>
-          ) : 'Update Table'}
+          ) : 'Update'}
         </Button>
       </Modal.Footer>
     </Modal>

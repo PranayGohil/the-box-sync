@@ -111,7 +111,7 @@ const ViewAttendance = () => {
         const doc = new JsPDF();
         doc.text(`${staffData.f_name} ${staffData.l_name} - Attendance Report`, 14, 10);
         doc.setFontSize(11);
-        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 20);
+        doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}`, 14, 20);
 
         autoTable(doc, {
           head: [["Date", "Status", "Check-In", "Check-Out"]],
@@ -180,7 +180,7 @@ const ViewAttendance = () => {
                   bold: true
                 }),
                 new Paragraph({
-                  text: `Generated on: ${new Date().toLocaleDateString()}`,
+                  text: `Generated on: ${new Date().toLocaleDateString('en-IN')}`,
                 }),
                 new Table({ rows }),
               ],

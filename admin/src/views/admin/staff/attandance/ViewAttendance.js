@@ -256,7 +256,7 @@ const ViewAttendance = () => {
       doc.text(`${staffData.f_name} ${staffData.l_name} (${staffData.staff_id})`, 14, 22);
       doc.text(`Position: ${staffData.position}`, 14, 28);
       doc.setFontSize(9);
-      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 34);
+      doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}`, 14, 34);
 
       // Add statistics
       doc.text(`Total Days: ${stats.totalDays} | Present: ${stats.totalPresent} | Absent: ${stats.totalAbsent} | Rate: ${stats.attendanceRate}%`, 14, 40);
@@ -712,7 +712,7 @@ const ViewAttendance = () => {
                               <tr key={index}>
                                 <td>
                                   <div className="fw-medium">{formatDateDisplay(att.date)}</div>
-                                  <small className="text-muted">{new Date(att.date).toLocaleDateString('en-US', { weekday: 'short' })}</small>
+                                  <small className="text-muted">{new Date(att.date).toLocaleDateString('en-IN', { weekday: 'short' })}</small>
                                 </td>
                                 <td>
                                   {att.status === 'present' ? (
@@ -832,7 +832,7 @@ const ViewAttendance = () => {
                 <Col xs={6}>
                   <div className="text-muted small">Check-In Date</div>
                   <div className="fw-bold">{formatDateDisplay(selectedAttendance.date)}</div>
-                  <div className="text-muted small">{new Date(selectedAttendance.date).toLocaleDateString('en-US', { weekday: 'long' })}</div>
+                  <div className="text-muted small">{new Date(selectedAttendance.date).toLocaleDateString('en-IN', { weekday: 'long' })}</div>
                 </Col>
                 <Col xs={6} className="text-end">
                   <div className="text-muted small">Status</div>

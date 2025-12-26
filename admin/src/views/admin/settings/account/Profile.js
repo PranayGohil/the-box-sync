@@ -5,6 +5,8 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
 
 const Profile = () => {
     const title = 'Profile';
@@ -28,16 +30,27 @@ const Profile = () => {
         logo: '',
         email: '',
         mobile: '',
+        fssai_no: '',
     });
 
-    const [intialProfile, setIntialProfile] = useState({
-        restaurant_code: '',
-        name: '',
-        logo: '',
-        email: '',
-        mobile: '',
-        logoFile: null,
-        logoPreview: ''
+    const [logoFile, setLogoFile] = useState(null);
+    const [logoPreview, setLogoPreview] = useState('');
+
+    // Yup validation schema
+    const validationSchema = Yup.object().shape({
+        name: Yup.string()
+            .required('Restaurant name is required')
+            .min(3, 'Restaurant name must be at least 3 characters')
+            .max(100, 'Restaurant name must not exceed 100 characters'),
+        email: Yup.string()
+            .required('Email is required')
+            .email('Please enter a valid email address'),
+        mobile: Yup.string()
+            .required('Phone number is required')
+            .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits'),
+        fssai_no: Yup.string()
+            .required('FSSAI number is required')
+            .matches(/^[0-9]{14}$/, 'FSSAI number must be exactly 14 digits'),
     });
 
     // Fetch profile on mount
@@ -57,15 +70,7 @@ const Profile = () => {
                     logo: data.logo || '',
                     email: data.email || '',
                     mobile: data.mobile || '',
-                });
-                setIntialProfile({
-                    restaurant_code: data.restaurant_code || '',
-                    name: data.name || '',
-                    logo: data.logo || '',
-                    email: data.email || '',
-                    mobile: data.mobile || '',
-                    logoFile: null,
-                    logoPreview: ''
+                    fssai_no: data.fssai_no || '',
                 });
             } catch (err) {
                 console.error('Failed to load profile', err);
@@ -79,86 +84,94 @@ const Profile = () => {
         fetchProfile();
     }, []);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setIntialProfile((prev) => ({ ...prev, [name]: value }));
-    };
-
     const handleLogoChange = (e) => {
         const file = e.target.files[0];
-        if (file && file.type.startsWith('image/')) {
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                toast.error('Please select a valid image file');
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error('Image size should not exceed 5MB');
+                return;
+            }
+
             setUploadingLogo(true);
             // Simulate upload for better UX
             setTimeout(() => {
-                setIntialProfile((prev) => ({
-                    ...prev,
-                    logoFile: file,
-                    logoPreview: URL.createObjectURL(file),
-                }));
+                setLogoFile(file);
+                setLogoPreview(URL.createObjectURL(file));
                 setUploadingLogo(false);
             }, 500);
         }
     };
 
-    const handleSave = async () => {
-        if (!intialProfile.name || !intialProfile.email || !intialProfile.mobile) {
-            setError('Please fill all the required fields.');
-            return;
-        }
-
+    const handleEditSubmit = async (values, { setSubmitting }) => {
         setSaving(true);
         try {
             setError('');
             const formData = new FormData();
-            formData.append('name', intialProfile.name);
-            formData.append('email', intialProfile.email);
-            formData.append('mobile', intialProfile.mobile);
+            formData.append('name', values.name);
+            formData.append('email', values.email);
+            formData.append('mobile', values.mobile);
+            formData.append('fssai_no', values.fssai_no);
 
-            if (intialProfile.logoFile) {
-                formData.append('logo', intialProfile.logoFile);
+            if (logoFile) {
+                formData.append('logo', logoFile);
             }
 
-            await axios.put(`${process.env.REACT_APP_API}/user/update`, formData, {
+            const response = await axios.put(`${process.env.REACT_APP_API}/user/update`, formData, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'multipart/form-data',
                 },
             });
 
+            // Update profile state with new data
+            const updatedData = response.data.user || response.data;
             setProfile({
-                restaurant_code: intialProfile.restaurant_code,
-                name: intialProfile.name,
-                logo: intialProfile.logo,
-                email: intialProfile.email,
-                mobile: intialProfile.mobile,
+                restaurant_code: values.restaurant_code,
+                name: values.name,
+                logo: updatedData.logo || profile.logo,
+                email: values.email,
+                mobile: values.mobile,
+                fssai_no: values.fssai_no,
             });
+
+            // Clear logo file states
+            setLogoFile(null);
+            setLogoPreview('');
             setEditMode(false);
             toast.success('Profile updated successfully!');
+            window.location.reload();
         } catch (err) {
             console.error('Failed to update profile', err);
-            setError(err.response?.data?.message || 'Failed to update profile. Please try again.');
-            toast.error('Failed to update profile. Please try again.');
+            const errorMessage = err.response?.data?.message || 'Failed to update profile. Please try again.';
+            setError(errorMessage);
+            toast.error(errorMessage);
         } finally {
             setSaving(false);
+            setSubmitting(false);
         }
     };
 
-    const handleCancel = () => {
-        setIntialProfile({
-            ...profile,
-            logoFile: null,
-            logoPreview: ''
-        });
+    const handleCancel = (resetForm) => {
+        resetForm();
+        setLogoFile(null);
+        setLogoPreview('');
         setEditMode(false);
         setError('');
     };
 
     const getLogoSrc = () => {
-        if (intialProfile.logoPreview) {
-            return intialProfile.logoPreview;
-        } 
-        if (intialProfile.logo) {
-            return `${process.env.REACT_APP_UPLOAD_DIR}${intialProfile.logo}`;
+        if (logoPreview) {
+            return logoPreview;
+        }
+        if (profile.logo) {
+            return `${process.env.REACT_APP_UPLOAD_DIR}${profile.logo}`;
         }
         return '';
     };
@@ -198,150 +211,244 @@ const Profile = () => {
 
                     <section className="scroll-section" id="profileForm">
                         <Card body className="mb-5">
-                            <Form>
-                                {/* Logo Display Row */}
-                                <Row className="mb-4 justify-content-center text-center">
-                                    <Col md="6">
-                                        {getLogoSrc() ? (
-                                            <Image
-                                                src={getLogoSrc()}
-                                                roundedCircle
-                                                style={{ width: '150px', height: '150px', objectFit: 'cover' }}
-                                                className="mb-3"
-                                            />
-                                        ) : (
-                                            <div
-                                                className="rounded-circle bg-light d-flex align-items-center justify-content-center mb-3"
-                                                style={{ width: '150px', height: '150px', margin: '0 auto' }}
-                                            >
-                                                <CsLineIcons icon="image" size={48} className="text-muted" />
-                                            </div>
-                                        )}
-
-                                        {editMode && (
-                                            <div className="position-relative">
-                                                <Form.Control
-                                                    type="file"
-                                                    accept="image/*"
-                                                    onChange={handleLogoChange}
-                                                    disabled={uploadingLogo || saving}
-                                                />
-                                                {uploadingLogo && (
-                                                    <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
-                                                        <Spinner animation="border" size="sm" />
+                            <Formik
+                                initialValues={{
+                                    restaurant_code: profile.restaurant_code,
+                                    name: profile.name,
+                                    email: profile.email,
+                                    mobile: profile.mobile,
+                                    fssai_no: profile.fssai_no,
+                                }}
+                                validationSchema={validationSchema}
+                                onSubmit={handleEditSubmit}
+                                enableReinitialize
+                            >
+                                {({
+                                    values,
+                                    errors,
+                                    touched,
+                                    handleChange,
+                                    handleBlur,
+                                    handleSubmit,
+                                    isSubmitting,
+                                    resetForm,
+                                }) => (
+                                    <Form onSubmit={handleSubmit}>
+                                        {/* Logo Display Row */}
+                                        <Row className="mb-4 justify-content-center text-center">
+                                            <Col md="6">
+                                                {getLogoSrc() ? (
+                                                    <Image
+                                                        src={getLogoSrc()}
+                                                        roundedCircle
+                                                        style={{ width: '150px', height: '150px', objectFit: 'cover' }}
+                                                        className="mb-3"
+                                                    />
+                                                ) : (
+                                                    <div
+                                                        className="rounded-circle bg-light d-flex align-items-center justify-content-center mb-3"
+                                                        style={{ width: '150px', height: '150px', margin: '0 auto' }}
+                                                    >
+                                                        <CsLineIcons icon="image" size={48} className="text-muted" />
                                                     </div>
                                                 )}
-                                                {uploadingLogo && (
-                                                    <small className="text-muted d-block mt-1">Uploading logo...</small>
-                                                )}
-                                            </div>
-                                        )}
-                                    </Col>
-                                </Row>
 
-                                {/* Profile Fields */}
-                                <Row className="mb-4">
-                                    <Col md="6">
-                                        <Form.Label>Restaurant Code</Form.Label>
-                                        <Form.Control
-                                            type="text"
-                                            name="restaurant_code"
-                                            value={intialProfile.restaurant_code}
-                                            disabled
-                                            className="bg-light"
-                                        />
-                                    </Col>
-
-                                    <Col md="6">
-                                        <Form.Label>Restaurant Name *</Form.Label>
-                                        <Form.Control
-                                            type="text"
-                                            name="name"
-                                            value={intialProfile.name}
-                                            onChange={handleChange}
-                                            disabled={!editMode || saving}
-                                        />
-                                    </Col>
-
-                                    <Col md="6">
-                                        <Form.Label>Email *</Form.Label>
-                                        <Form.Control
-                                            type="email"
-                                            name="email"
-                                            value={intialProfile.email}
-                                            onChange={handleChange}
-                                            disabled={!editMode || saving}
-                                        />
-                                    </Col>
-
-                                    <Col md="6">
-                                        <Form.Label>Phone *</Form.Label>
-                                        <Form.Control
-                                            type="text"
-                                            name="mobile"
-                                            value={intialProfile.mobile}
-                                            onChange={handleChange}
-                                            disabled={!editMode || saving}
-                                        />
-                                    </Col>
-                                </Row>
-
-                                {error && (
-                                    <Alert variant="danger" className="mb-3">
-                                        <CsLineIcons icon="error" className="me-2" />
-                                        {error}
-                                    </Alert>
-                                )}
-
-                                {/* Actions */}
-                                <div className="mt-4">
-                                    {editMode ? (
-                                        <>
-                                            <Button
-                                                variant="primary"
-                                                onClick={handleSave}
-                                                className="me-2"
-                                                disabled={saving}
-                                                style={{ minWidth: '100px' }}
-                                            >
-                                                {saving ? (
-                                                    <>
-                                                        <Spinner
-                                                            as="span"
-                                                            animation="border"
-                                                            size="sm"
-                                                            role="status"
-                                                            aria-hidden="true"
-                                                            className="me-2"
+                                                {editMode && (
+                                                    <div className="position-relative">
+                                                        <Form.Control
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={handleLogoChange}
+                                                            disabled={uploadingLogo || saving}
                                                         />
-                                                        Saving...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <CsLineIcons icon="save" className="me-2" />
-                                                        Save
-                                                    </>
+                                                        {uploadingLogo && (
+                                                            <div
+                                                                className="position-absolute"
+                                                                style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}
+                                                            >
+                                                                <Spinner animation="border" size="sm" />
+                                                            </div>
+                                                        )}
+                                                        {uploadingLogo && (
+                                                            <small className="text-muted d-block mt-1">Uploading logo...</small>
+                                                        )}
+                                                    </div>
                                                 )}
-                                            </Button>
-                                            <Button
-                                                variant="secondary"
-                                                onClick={handleCancel}
-                                                disabled={saving}
-                                            >
-                                                Cancel
-                                            </Button>
-                                        </>
-                                    ) : (
-                                        <Button
-                                            variant="outline-primary"
-                                            onClick={() => setEditMode(true)}
-                                        >
-                                            <CsLineIcons icon="edit" className="me-2" />
-                                            Edit Profile
-                                        </Button>
-                                    )}
-                                </div>
-                            </Form>
+                                            </Col>
+                                        </Row>
+
+                                        {/* Profile Fields */}
+                                        <Row className="mb-3">
+                                            <Col md="6" className="mb-3">
+                                                <Form.Group>
+                                                    <Form.Label>Restaurant Code</Form.Label>
+                                                    <Form.Control
+                                                        type="text"
+                                                        name="restaurant_code"
+                                                        value={values.restaurant_code}
+                                                        disabled
+                                                        className="bg-light"
+                                                    />
+                                                </Form.Group>
+                                            </Col>
+
+                                            <Col md="6" className="mb-3">
+                                                <Form.Group>
+                                                    <Form.Label>
+                                                        Restaurant Name <span className="text-danger">*</span>
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        type="text"
+                                                        name="name"
+                                                        value={values.name}
+                                                        onChange={handleChange}
+                                                        onBlur={handleBlur}
+                                                        disabled={!editMode || saving}
+                                                        isInvalid={touched.name && errors.name}
+                                                        isValid={touched.name && !errors.name && editMode}
+                                                    />
+                                                    <Form.Control.Feedback type="invalid">
+                                                        {errors.name}
+                                                    </Form.Control.Feedback>
+                                                </Form.Group>
+                                            </Col>
+
+                                            <Col md="6" className="mb-3">
+                                                <Form.Group>
+                                                    <Form.Label>
+                                                        Email <span className="text-danger">*</span>
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        type="email"
+                                                        name="email"
+                                                        value={values.email}
+                                                        onChange={handleChange}
+                                                        onBlur={handleBlur}
+                                                        disabled={!editMode || saving}
+                                                        isInvalid={touched.email && errors.email}
+                                                        isValid={touched.email && !errors.email && editMode}
+                                                    />
+                                                    <Form.Control.Feedback type="invalid">
+                                                        {errors.email}
+                                                    </Form.Control.Feedback>
+                                                </Form.Group>
+                                            </Col>
+
+                                            <Col md="6" className="mb-3">
+                                                <Form.Group>
+                                                    <Form.Label>
+                                                        Phone <span className="text-danger">*</span>
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        type="text"
+                                                        name="mobile"
+                                                        value={values.mobile}
+                                                        onChange={handleChange}
+                                                        onBlur={handleBlur}
+                                                        disabled={!editMode || saving}
+                                                        isInvalid={touched.mobile && errors.mobile}
+                                                        isValid={touched.mobile && !errors.mobile && editMode}
+                                                        placeholder="Enter 10-digit phone number"
+                                                    />
+                                                    <Form.Control.Feedback type="invalid">
+                                                        {errors.mobile}
+                                                    </Form.Control.Feedback>
+                                                </Form.Group>
+                                            </Col>
+
+                                            <Col md="6" className="mb-3">
+                                                <Form.Group>
+                                                    <Form.Label>
+                                                        FSSAI No. <span className="text-danger">*</span>
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        type="text"
+                                                        name="fssai_no"
+                                                        value={values.fssai_no}
+                                                        onChange={handleChange}
+                                                        onBlur={handleBlur}
+                                                        disabled={!editMode || saving}
+                                                        isInvalid={touched.fssai_no && errors.fssai_no}
+                                                        isValid={touched.fssai_no && !errors.fssai_no && editMode}
+                                                        placeholder="Enter 14-digit FSSAI number"
+                                                    />
+                                                    <Form.Control.Feedback type="invalid">
+                                                        {errors.fssai_no}
+                                                    </Form.Control.Feedback>
+                                                </Form.Group>
+                                            </Col>
+                                        </Row>
+
+                                        {error && (
+                                            <Alert variant="danger" className="mb-3">
+                                                <CsLineIcons icon="error" className="me-2" />
+                                                {error}
+                                            </Alert>
+                                        )}
+
+                                        {/* Actions */}
+                                        <div className="mt-4">
+                                            {editMode ? (
+                                                <>
+                                                    <Button
+                                                        variant="primary"
+                                                        type="submit"
+                                                        className="me-2"
+                                                        disabled={saving || isSubmitting}
+                                                        style={{ minWidth: '100px' }}
+                                                    >
+                                                        {saving || isSubmitting ? (
+                                                            <>
+                                                                <Spinner
+                                                                    as="span"
+                                                                    animation="border"
+                                                                    size="sm"
+                                                                    role="status"
+                                                                    aria-hidden="true"
+                                                                    className="me-2"
+                                                                />
+                                                                Saving...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <CsLineIcons icon="save" className="me-2" />
+                                                                Save
+                                                            </>
+                                                        )}
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="secondary"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            handleCancel(resetForm);
+                                                        }}
+                                                        disabled={saving || isSubmitting}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+
+                                                </>
+                                            ) : (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline-primary"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setEditMode(true);
+                                                    }}
+                                                >
+                                                    <CsLineIcons icon="edit" className="me-2" />
+                                                    Edit Profile
+                                                </Button>
+
+                                            )}
+                                        </div>
+                                    </Form>
+                                )}
+                            </Formik>
 
                             {/* Saving overlay */}
                             {saving && (
@@ -350,7 +457,7 @@ const Profile = () => {
                                     style={{
                                         backgroundColor: 'rgba(255, 255, 255, 0.7)',
                                         zIndex: 9999,
-                                        backdropFilter: 'blur(2px)'
+                                        backdropFilter: 'blur(2px)',
                                     }}
                                 >
                                     <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>

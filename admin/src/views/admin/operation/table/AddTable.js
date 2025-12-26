@@ -242,25 +242,23 @@ const AddTable = () => {
                     <Row className="align-items-end mb-3" key={index}>
                       <Col md="4">
                         <Form.Label>Table No.</Form.Label>
-                        <div className="position-relative">
-                          <Form.Control
-                            type="text"
-                            name={`tables.${index}.tableNo`}
-                            value={table.tableNo}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            disabled={isSubmitting}
-                            isInvalid={
-                              formik.touched.tables?.[index]?.tableNo &&
-                              (!!formik.errors.tables?.[index]?.tableNo || !!tableErrors[index])
-                            }
-                          />
-                          {checkingTable[index] && (
-                            <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
-                              <Spinner animation="border" size="sm" />
-                            </div>
-                          )}
-                        </div>
+                        <Form.Control
+                          type="text"
+                          name={`tables.${index}.tableNo`}
+                          value={table.tableNo}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          disabled={isSubmitting}
+                          isInvalid={
+                            formik.touched.tables?.[index]?.tableNo &&
+                            (!!formik.errors.tables?.[index]?.tableNo || !!tableErrors[index])
+                          }
+                        />
+                        {checkingTable[index] && (
+                          <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                            <Spinner animation="border" size="sm" />
+                          </div>
+                        )}
                         <Form.Control.Feedback type="invalid">
                           {formik.errors.tables?.[index]?.tableNo || tableErrors[index]}
                         </Form.Control.Feedback>
@@ -311,7 +309,7 @@ const AddTable = () => {
                       disabled={isSubmitting}
                     >
                       <CsLineIcons icon="plus" className="me-1" />
-                      Add More Tables
+                      Add More
                     </Button>
                     <Button
                       type="submit"

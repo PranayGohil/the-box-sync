@@ -30,7 +30,6 @@ const ManageTable = () => {
   const [tableToDelete, setTableToDelete] = useState(null);
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
   const fetchTableData = async () => {
@@ -55,13 +54,7 @@ const ManageTable = () => {
       toast.error('Failed to fetch table data.');
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
-  };
-
-  const refreshData = () => {
-    setRefreshing(true);
-    fetchTableData();
   };
 
   useEffect(() => {
@@ -102,24 +95,6 @@ const ManageTable = () => {
               </Col>
               <Col xs="12" md="5" className="text-end">
                 <Button
-                  variant="outline-primary"
-                  onClick={refreshData}
-                  disabled={refreshing}
-                  className="me-2"
-                >
-                  {refreshing ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
-                      Refreshing...
-                    </>
-                  ) : (
-                    <>
-                      <CsLineIcons icon="refresh" className="me-2" />
-                      Refresh
-                    </>
-                  )}
-                </Button>
-                <Button
                   variant="primary"
                   href="/operations/add-table"
                 >
@@ -134,15 +109,6 @@ const ManageTable = () => {
             <Alert variant="danger" className="mb-4">
               <CsLineIcons icon="error" className="me-2" />
               {error}
-            </Alert>
-          )}
-
-          {refreshing && (
-            <Alert variant="info" className="mb-4">
-              <div className="d-flex align-items-center">
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
-                Refreshing table data...
-              </div>
             </Alert>
           )}
 
@@ -183,7 +149,6 @@ const ManageTable = () => {
                             setSelectedTable(row.original);
                             setEditTableModalShow(true);
                           }}
-                          disabled={refreshing}
                         >
                           <CsLineIcons icon="edit" />
                         </button>
@@ -194,7 +159,6 @@ const ManageTable = () => {
                             setTableToDelete({ ...row.original, area: table.area });
                             setDeleteTableModalShow(true);
                           }}
-                          disabled={refreshing}
                         >
                           <CsLineIcons icon="bin" />
                         </button>
@@ -212,7 +176,6 @@ const ManageTable = () => {
                         table={table}
                         setSelectedTableArea={setSelectedTableArea}
                         setEditTableAreaModalShow={setEditTableAreaModalShow}
-                        refreshing={refreshing}
                       />
                     </Card>
                   </Col>

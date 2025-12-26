@@ -76,7 +76,7 @@ const NavContent = () => {
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Manage Menu</span>
           </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/add-dishes" className="px-0 pt-1">
+          <Nav.Link as={NavLink} to="/operations/add-dish" className="px-0 pt-1">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Add Dishes</span>
           </Nav.Link>
@@ -181,7 +181,7 @@ const Operations = () => {
             <Route exact path="/operations/add-table" render={() => <AddTable />} />
 
             <Route exact path="/operations/manage-menu" render={() => <ManageMenu />} />
-            <Route exact path="/operations/add-dishes" render={() => <AddDishes />} />
+            <Route exact path="/operations/add-dish" render={() => <AddDishes />} />
             <Route exact path="/operations/qr-for-menu" render={() => <>
               {
                 activePlans.includes("Scan For Menu") ?

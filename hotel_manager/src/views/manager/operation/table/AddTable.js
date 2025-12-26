@@ -242,7 +242,7 @@ const AddTable = () => {
 
                 <div className="mt-4">
                   <Button variant="secondary" onClick={addMoreTable} className="me-2">
-                    Add More Tables
+                    Add More
                   </Button>
                   <Button type="submit" variant="primary">
                     Submit

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useHistory, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useHistory, useLocation, Prompt } from 'react-router-dom';
 import { Button, Row, Col, Card, Form, Badge, Table, Modal } from 'react-bootstrap';
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -20,6 +20,21 @@ const DineInOrder = () => {
   const description = 'Manage dine-in orders';
 
   // State
+  const [isDirty, setIsDirty] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [nextLocation, setNextLocation] = useState(null);
+
+  // 🔥 NEW: Store initial state to compare against
+  const initialStateRef = useRef({
+    orderItems: [],
+    customerInfo: {
+      name: '',
+      total_persons: '',
+      waiter: '',
+      comment: '',
+    }
+  });
+
   const [tableInfo, setTableInfo] = useState({});
   const [orderItems, setOrderItems] = useState([]);
   const [menuData, setMenuData] = useState([]);
@@ -59,6 +74,27 @@ const DineInOrder = () => {
   const [taxRates, setTaxRates] = useState({ cgst: 0, sgst: 0, vat: 0 });
   const [isLoading, setIsLoading] = useState(false);
 
+  // 🔥 NEW: Function to check if there are actual changes
+  const hasUnsavedChanges = () => {
+    const initial = initialStateRef.current;
+
+    // Compare order items (only check items that are not completed)
+    const currentEditableItems = orderItems.filter(item => item.status !== 'Completed');
+    const initialEditableItems = initial.orderItems.filter(item => item.status !== 'Completed');
+
+    const itemsChanged = JSON.stringify(currentEditableItems) !== JSON.stringify(initialEditableItems);
+
+    // Compare customer info
+    const customerInfoChanged = JSON.stringify(customerInfo) !== JSON.stringify(initial.customerInfo);
+
+    return itemsChanged || customerInfoChanged;
+  };
+
+  // 🔥 NEW: Update isDirty only when there are actual changes
+  useEffect(() => {
+    setIsDirty(hasUnsavedChanges());
+  }, [orderItems, customerInfo]);
+
   const fetchTableInfo = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API}/table/get/${tableId}`, {
@@ -77,14 +113,23 @@ const DineInOrder = () => {
       });
       console.log(response.data.data);
       const order = response.data.data;
-      setOrderItems(order.order_items || []);
-      setOrderStatus(order.order_status);
-      setCustomerInfo({
+      const items = order.order_items || [];
+      const custInfo = {
         name: order.customer_name || '',
         total_persons: order.total_persons || '',
         waiter: order.waiter || '',
         comment: order.comment || '',
-      });
+      };
+
+      setOrderItems(items);
+      setOrderStatus(order.order_status);
+      setCustomerInfo(custInfo);
+
+      // 🔥 NEW: Store initial state after fetching
+      initialStateRef.current = {
+        orderItems: JSON.parse(JSON.stringify(items)),
+        customerInfo: JSON.parse(JSON.stringify(custInfo))
+      };
     } catch (error) {
       console.error('Error fetching order details:', error);
     }
@@ -177,6 +222,43 @@ const DineInOrder = () => {
     });
   }, [orderItems, taxRates]);
 
+  // 🔥 Protect against browser refresh/close
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = ''; // Chrome requires returnValue to be set
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
+  // 🔥 Protect against browser back/forward buttons
+  useEffect(() => {
+    const unblock = history.block((loc, action) => {
+      if (isDirty && loc.pathname !== window.location.pathname) {
+        setNextLocation(loc.pathname);
+        setShowLeaveModal(true);
+        return false; // Block navigation
+      }
+      return true; // Allow navigation
+    });
+
+    return () => {
+      unblock();
+    };
+  }, [isDirty, history]);
+
+  const handleNavigation = (path) => {
+    if (isDirty) {
+      setNextLocation(path);
+      setShowLeaveModal(true);
+    } else {
+      history.push(path);
+    }
+  };
+
   // Filter menu data
   const filteredMenuData = menuData
     .map((category) => ({
@@ -194,13 +276,30 @@ const DineInOrder = () => {
   // Order item management
   const addItemToOrder = (item) => {
     setOrderItems((prevItems) => {
-      const existingItemIndex = prevItems.findIndex((orderItem) => orderItem.dish_name === item.dish_name && orderItem.status !== 'Completed');
+      // ONLY merge with non-completed items
+      const existingItemIndex = prevItems.findIndex(
+        (orderItem) =>
+          orderItem.dish_name === item.dish_name &&
+          (orderItem.status === 'Pending' || orderItem.status === 'Preparing')
+      );
 
       if (existingItemIndex > -1) {
-        return prevItems.map((orderItem, index) => (index === existingItemIndex ? { ...orderItem, quantity: orderItem.quantity + 1 } : orderItem));
-      } else {
-        return [...prevItems, { ...item, quantity: 1, status: 'Pending' }];
+        return prevItems.map((orderItem, index) =>
+          index === existingItemIndex
+            ? { ...orderItem, quantity: orderItem.quantity + 1 }
+            : orderItem
+        );
       }
+
+      // ✅ Always add NEW item if completed already
+      return [
+        ...prevItems,
+        {
+          ...item,
+          quantity: 1,
+          status: 'Pending',
+        },
+      ];
     });
   };
 
@@ -330,8 +429,8 @@ const DineInOrder = () => {
                 ? 'Preparing'
                 : item.status // keep Completed as-is
               : status === 'Save'
-              ? item.status || 'Pending'
-              : item.status,
+                ? item.status || 'Pending'
+                : item.status,
         })),
         order_status: status,
         customer_name: customerInfo.name,
@@ -371,13 +470,13 @@ const DineInOrder = () => {
       });
 
       if (response.data.status === 'success') {
+        // 🔥 NEW: Update initial state after successful save
+        initialStateRef.current = {
+          orderItems: JSON.parse(JSON.stringify(orderItems)),
+          customerInfo: JSON.parse(JSON.stringify(customerInfo))
+        };
+        setIsDirty(false);
         history.push('/dashboard');
-        // if (status === 'Paid') {
-        //   fetchOrderDetails();
-        //   setShowPaymentModal(false);
-        // } else {
-        //   history.push('/dashboard');
-        // }
       }
     } catch (error) {
       console.error('Error saving order:', error);
@@ -421,7 +520,7 @@ const DineInOrder = () => {
                 </Col>
 
                 <Col className="d-flex justify-content-end">
-                  <Button variant="outline-secondary" size="sm" onClick={() => history.push('/dashboard')}>
+                  <Button variant="outline-secondary" size="sm" onClick={() => handleNavigation('/dashboard')}>
                     <CsLineIcons icon="arrow-left" /> Back
                   </Button>
                 </Col>
@@ -503,9 +602,8 @@ const DineInOrder = () => {
                               </Card.Body>
                               <Badge
                                 variant="outline"
-                                className={`text-white mb-2 ${
-                                  category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
-                                }`}
+                                className={`text-white mb-2 ${category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
+                                  }`}
                                 style={{ position: 'absolute', top: '3px', right: '5px' }}
                               >
                                 {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
@@ -549,7 +647,7 @@ const DineInOrder = () => {
               <Col md="12">
                 <div className="d-flex justify-content-center align-items-center">
                   <div className="mx-1">Date: </div>
-                  <div className="fw-bold">{new Date().toLocaleDateString()}</div>
+                  <div className="fw-bold">{new Date().toLocaleDateString('en-IN')}</div>
                 </div>
               </Col>
             </Row>
@@ -604,11 +702,11 @@ const DineInOrder = () => {
                         <td>{item.dish_name}</td>
                         <td className="text-center">
                           <div className="d-flex align-items-center justify-content-center gap-1">
-                            <Button variant="outline-secondary" size="sm" onClick={() => updateItemQuantity(index, -1)} disabled={item.quantity <= 1}>
+                            <Button variant="outline-secondary" size="sm" onClick={() => updateItemQuantity(index, -1)} disabled={item.quantity <= 1 || item.status === 'Completed'}>
                               -
                             </Button>
                             <span className="mx-2">{item.quantity}</span>
-                            <Button variant="outline-secondary" size="sm" onClick={() => updateItemQuantity(index, 1)}>
+                            <Button variant="outline-secondary" size="sm" onClick={() => updateItemQuantity(index, 1)} disabled={item.status === 'Completed'}>
                               +
                             </Button>
                           </div>
@@ -650,7 +748,7 @@ const DineInOrder = () => {
               {/* Action Buttons */}
               <div className="d-flex justify-content-between">
                 <div>
-                  {orderItems.length > 0 && (
+                  {orderItems.length > 0 && isDirty && (
                     <>
                       {orderStatus === 'Save' && (
                         <Button variant="secondary" className="me-2" onClick={() => handleSaveOrder('Save')} disabled={isLoading}>
@@ -832,6 +930,83 @@ const DineInOrder = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* 🔥 IMPROVED: Leave Confirmation Modal */}
+      <Modal
+        show={showLeaveModal}
+        onHide={() => {
+          setShowLeaveModal(false);
+          setNextLocation(null);
+        }}
+        centered
+        backdrop="static" // Prevent closing by clicking outside
+        keyboard={false} // Prevent closing with ESC key
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Unsaved Changes</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>You have unsaved changes in this order.</p>
+          <p>Please {orderStatus === 'Save' && (<><strong>Save</strong> or</>)} <strong>Send to Kitchen</strong> before leaving.</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="danger"
+            onClick={() => {
+              // Clear dirty flag and close modal
+              setIsDirty(false);
+              setShowLeaveModal(false);
+
+              // Navigate to next location if set
+              if (nextLocation) {
+                setTimeout(() => {
+                  history.push(nextLocation);
+                }, 0);
+              }
+            }}
+          >
+            Discard & Leave
+          </Button>
+          {orderStatus === 'Save' && (
+            <Button
+              variant="secondary"
+              onClick={async () => {
+                await handleSaveOrder('Save');
+                setShowLeaveModal(false);
+
+                // Navigate after save
+                if (nextLocation) {
+                  setTimeout(() => {
+                    history.push(nextLocation);
+                  }, 0);
+                }
+              }}
+              disabled={isLoading}
+            >
+              Save Order
+            </Button>
+          )}
+
+          <Button
+            variant="primary"
+            onClick={async () => {
+              await handleSaveOrder('KOT');
+              setShowLeaveModal(false);
+
+              // Navigate after KOT
+              if (nextLocation) {
+                setTimeout(() => {
+                  history.push(nextLocation);
+                }, 0);
+              }
+            }}
+            disabled={isLoading}
+          >
+            Send to Kitchen
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
     </>
   );
 };

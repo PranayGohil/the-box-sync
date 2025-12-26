@@ -41,7 +41,7 @@ const NavContent = () => {
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Manage Menu</span>
           </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/add-dishes" className="px-0 pt-1">
+          <Nav.Link as={NavLink} to="/operations/add-dish" className="px-0 pt-1">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Add Dishes</span>
           </Nav.Link>
@@ -79,7 +79,7 @@ const Operations = () => {
             <Route path="/operations/order-details/:id" component={OrderDetails} />
 
             <Route path="/operations/manage-menu" component={ManageMenu} />
-            <Route path="/operations/add-dishes" component={AddDishes} />
+            <Route path="/operations/add-dish" component={AddDishes} />
             <Route path="/operations/qr-for-menu" component={QRforMenu} />
             
           </Switch>

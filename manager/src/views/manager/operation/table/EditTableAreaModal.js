@@ -87,7 +87,7 @@ const EditTableAreaModal = ({ show, handleClose, data, onUpdateSuccess }) => {
               />
               Updating...
             </>
-          ) : 'Update Table'}
+          ) : 'Update'}
         </Button>
       </Modal.Footer>
     </Modal>

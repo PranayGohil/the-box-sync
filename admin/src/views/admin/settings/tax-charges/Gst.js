@@ -5,6 +5,8 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
 
 const Gst = () => {
   const title = 'Tax Info';
@@ -28,7 +30,40 @@ const Gst = () => {
     vat: 0,
   });
 
-  const [intialProfile, setIntialProfile] = useState({ ...profile });
+  // Yup validation schema
+  const validationSchema = Yup.object().shape({
+    gst_no: Yup.string()
+      .required('GST number is required')
+      .matches(
+        /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+        'GST number format is invalid (e.g., 22AAAAA0000A1Z5)'
+      )
+      .length(15, 'GST number must be exactly 15 characters'),
+    cgst: Yup.number()
+      .required('CGST is required')
+      .min(0, 'CGST cannot be negative')
+      .max(100, 'CGST cannot exceed 100%')
+      .test('decimal', 'CGST can have maximum 2 decimal places', (value) => {
+        if (value === undefined || value === null) return true;
+        return /^\d+(\.\d{1,2})?$/.test(value.toString());
+      }),
+    sgst: Yup.number()
+      .required('SGST is required')
+      .min(0, 'SGST cannot be negative')
+      .max(100, 'SGST cannot exceed 100%')
+      .test('decimal', 'SGST can have maximum 2 decimal places', (value) => {
+        if (value === undefined || value === null) return true;
+        return /^\d+(\.\d{1,2})?$/.test(value.toString());
+      }),
+    vat: Yup.number()
+      .required('VAT is required')
+      .min(0, 'VAT cannot be negative')
+      .max(100, 'VAT cannot exceed 100%')
+      .test('decimal', 'VAT can have maximum 2 decimal places', (value) => {
+        if (value === undefined || value === null) return true;
+        return /^\d+(\.\d{1,2})?$/.test(value.toString());
+      }),
+  });
 
   useEffect(() => {
     const fetchTaxInfo = async () => {
@@ -48,13 +83,6 @@ const Gst = () => {
           sgst: data.taxInfo?.sgst || 0,
           vat: data.taxInfo?.vat || 0,
         });
-
-        setIntialProfile({
-          gst_no: data.gst_no || '',
-          cgst: data.taxInfo?.cgst || 0,
-          sgst: data.taxInfo?.sgst || 0,
-          vat: data.taxInfo?.vat || 0,
-        });
       } catch (err) {
         console.error('Failed to load tax info', err);
         setError('Failed to load tax info.');
@@ -67,32 +95,18 @@ const Gst = () => {
     fetchTaxInfo();
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    setIntialProfile((prev) => ({
-      ...prev,
-      [name]: name === 'cgst' || name === 'sgst' || name === 'vat' ? parseFloat(value) : value,
-    }));
-  };
-
-  const handleSave = async () => {
-    if (!intialProfile.gst_no) {
-      setError('GST number is required.');
-      return;
-    }
-
+  const handleEditSubmit = async (values, { setSubmitting }) => {
     setSaving(true);
     try {
       setError('');
       const response = await axios.put(
         `${process.env.REACT_APP_API}/user/update-tax`,
         {
-          gst_no: intialProfile.gst_no,
+          gst_no: values.gst_no,
           taxInfo: {
-            cgst: intialProfile.cgst,
-            sgst: intialProfile.sgst,
-            vat: intialProfile.vat,
+            cgst: parseFloat(values.cgst),
+            sgst: parseFloat(values.sgst),
+            vat: parseFloat(values.vat),
           },
         },
         {
@@ -101,25 +115,34 @@ const Gst = () => {
           },
         }
       );
+
       if (response.data.success) {
-        setProfile({ ...intialProfile });
+        setProfile({
+          gst_no: values.gst_no,
+          cgst: parseFloat(values.cgst),
+          sgst: parseFloat(values.sgst),
+          vat: parseFloat(values.vat),
+        });
         setEditMode(false);
         toast.success('Tax information updated successfully!');
       } else {
-        setError(response.data.message || 'Update failed. Please try again.');
-        toast.error('Update failed. Please try again.');
+        const errorMessage = response.data.message || 'Update failed. Please try again.';
+        setError(errorMessage);
+        toast.error(errorMessage);
       }
     } catch (err) {
       console.error('Failed to update tax info', err);
-      setError('Update failed. Please try again.');
-      toast.error('Update failed. Please try again.');
+      const errorMessage = err.response?.data?.message || 'Update failed. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
+      setSubmitting(false);
     }
   };
 
-  const handleCancel = () => {
-    setIntialProfile({ ...profile });
+  const handleCancel = (resetForm) => {
+    resetForm();
     setEditMode(false);
     setError('');
   };
@@ -159,112 +182,222 @@ const Gst = () => {
 
           <section className="scroll-section" id="taxForm">
             <Card body className="mb-5">
-              <Form>
-                <Row className="mb-4">
-                  <Col md="6">
-                    <Form.Label>GST Number</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="gst_no"
-                      value={intialProfile.gst_no}
-                      onChange={handleChange}
-                      disabled={!editMode || saving}
-                    />
-                  </Col>
-                </Row>
+              <Formik
+                initialValues={{
+                  gst_no: profile.gst_no,
+                  cgst: profile.cgst,
+                  sgst: profile.sgst,
+                  vat: profile.vat,
+                }}
+                validationSchema={validationSchema}
+                onSubmit={handleEditSubmit}
+                enableReinitialize
+              >
+                {({
+                  values,
+                  errors,
+                  touched,
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  isSubmitting,
+                  resetForm,
+                }) => (
+                  <Form onSubmit={handleSubmit}>
+                    <Row className="mb-3">
+                      <Col md="6" className="mb-3">
+                        <Form.Group>
+                          <Form.Label>
+                            GST Number <span className="text-danger">*</span>
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="gst_no"
+                            value={values.gst_no}
+                            onChange={(e) => {
+                              // Convert to uppercase automatically
+                              const upperValue = e.target.value.toUpperCase();
+                              handleChange({
+                                target: {
+                                  name: 'gst_no',
+                                  value: upperValue,
+                                },
+                              });
+                            }}
+                            onBlur={handleBlur}
+                            disabled={!editMode || saving}
+                            isInvalid={touched.gst_no && errors.gst_no}
+                            isValid={touched.gst_no && !errors.gst_no && editMode}
+                            placeholder="22AAAAA0000A1Z5"
+                            maxLength={15}
+                            style={{ textTransform: 'uppercase' }}
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {errors.gst_no}
+                          </Form.Control.Feedback>
+                          <Form.Text className="text-muted">
+                            Format: 2 digits + 5 letters + 4 digits + 1 letter + 1 alphanumeric + Z + 1 alphanumeric
+                          </Form.Text>
+                        </Form.Group>
+                      </Col>
+                    </Row>
 
-                <Row className="mb-4">
-                  <Col md="4">
-                    <Form.Label>CGST (%)</Form.Label>
-                    <Form.Control
-                      type="number"
-                      name="cgst"
-                      value={intialProfile.cgst}
-                      onChange={handleChange}
-                      disabled={!editMode || saving}
-                      min="0"
-                      max="100"
-                      step="0.01"
-                    />
-                  </Col>
-                  <Col md="4">
-                    <Form.Label>SGST (%)</Form.Label>
-                    <Form.Control
-                      type="number"
-                      name="sgst"
-                      value={intialProfile.sgst}
-                      onChange={handleChange}
-                      disabled={!editMode || saving}
-                      min="0"
-                      max="100"
-                      step="0.01"
-                    />
-                  </Col>
-                  <Col md="4">
-                    <Form.Label>VAT (%)</Form.Label>
-                    <Form.Control
-                      type="number"
-                      name="vat"
-                      value={intialProfile.vat}
-                      onChange={handleChange}
-                      disabled={!editMode || saving}
-                      min="0"
-                      max="100"
-                      step="0.01"
-                    />
-                  </Col>
-                </Row>
+                    <Row className="mb-3">
+                      <Col md="4" className="mb-3">
+                        <Form.Group>
+                          <Form.Label>
+                            CGST (%) <span className="text-danger">*</span>
+                          </Form.Label>
+                          <Form.Control
+                            type="number"
+                            name="cgst"
+                            value={values.cgst}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            disabled={!editMode || saving}
+                            isInvalid={touched.cgst && errors.cgst}
+                            isValid={touched.cgst && !errors.cgst && editMode}
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            placeholder="0.00"
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {errors.cgst}
+                          </Form.Control.Feedback>
+                        </Form.Group>
+                      </Col>
 
-                {error && (
-                  <Alert variant="danger" className="mb-3">
-                    <CsLineIcons icon="error" className="me-2" />
-                    {error}
-                  </Alert>
+                      <Col md="4" className="mb-3">
+                        <Form.Group>
+                          <Form.Label>
+                            SGST (%) <span className="text-danger">*</span>
+                          </Form.Label>
+                          <Form.Control
+                            type="number"
+                            name="sgst"
+                            value={values.sgst}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            disabled={!editMode || saving}
+                            isInvalid={touched.sgst && errors.sgst}
+                            isValid={touched.sgst && !errors.sgst && editMode}
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            placeholder="0.00"
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {errors.sgst}
+                          </Form.Control.Feedback>
+                        </Form.Group>
+                      </Col>
+
+                      <Col md="4" className="mb-3">
+                        <Form.Group>
+                          <Form.Label>
+                            VAT (%) <span className="text-danger">*</span>
+                          </Form.Label>
+                          <Form.Control
+                            type="number"
+                            name="vat"
+                            value={values.vat}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            disabled={!editMode || saving}
+                            isInvalid={touched.vat && errors.vat}
+                            isValid={touched.vat && !errors.vat && editMode}
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            placeholder="0.00"
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {errors.vat}
+                          </Form.Control.Feedback>
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    {/* Tax Summary Info Box */}
+                    {editMode && (
+                      <Row className="mb-3">
+                        <Col md="12">
+                          <Alert variant="info" className="mb-0">
+                            <CsLineIcons icon="info-circle" className="me-2" />
+                            <strong>Tax Summary:</strong> Total Tax = {(parseFloat(values.cgst || 0) + parseFloat(values.sgst || 0) + parseFloat(values.vat || 0)).toFixed(2)}%
+                          </Alert>
+                        </Col>
+                      </Row>
+                    )}
+
+                    {error && (
+                      <Alert variant="danger" className="mb-3">
+                        <CsLineIcons icon="error" className="me-2" />
+                        {error}
+                      </Alert>
+                    )}
+
+                    <div className="mt-4">
+                      {editMode ? (
+                        <>
+                          <Button
+                            variant="primary"
+                            type="submit"
+                            className="me-2"
+                            disabled={saving || isSubmitting}
+                            style={{ minWidth: '100px' }}
+                          >
+                            {saving || isSubmitting ? (
+                              <>
+                                <Spinner
+                                  as="span"
+                                  animation="border"
+                                  size="sm"
+                                  role="status"
+                                  aria-hidden="true"
+                                  className="me-2"
+                                />
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <CsLineIcons icon="save" className="me-2" />
+                                Save
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleCancel(resetForm);
+                            }}
+                            disabled={saving || isSubmitting}
+                          >
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          variant="outline-primary"
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setEditMode(true);
+                          }}
+                        >
+                          <CsLineIcons icon="edit" className="me-2" />
+                          Edit
+                        </Button>
+                      )}
+                    </div>
+                  </Form>
                 )}
-
-                <div className="mt-4">
-                  {editMode ? (
-                    <>
-                      <Button
-                        variant="primary"
-                        onClick={handleSave}
-                        className="me-2"
-                        disabled={saving}
-                        style={{ minWidth: '100px' }}
-                      >
-                        {saving ? (
-                          <>
-                            <Spinner
-                              as="span"
-                              animation="border"
-                              size="sm"
-                              role="status"
-                              aria-hidden="true"
-                              className="me-2"
-                            />
-                            Saving...
-                          </>
-                        ) : 'Save'}
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        onClick={handleCancel}
-                        disabled={saving}
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      variant="outline-primary"
-                      onClick={() => setEditMode(true)}
-                    >
-                      <CsLineIcons icon="edit" className="me-2" />
-                      Edit
-                    </Button>
-                  )}
-                </div>
-              </Form>
+              </Formik>
 
               {/* Saving overlay */}
               {saving && (

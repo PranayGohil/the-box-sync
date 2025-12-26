@@ -219,23 +219,28 @@ const OrderHistory = () => {
              <p style="margin: 0; font-size: 12px;">
                ${userData.city}, ${userData.state} - ${userData.pincode}
              </p>
-             <p style="margin: 10px; font-size: 12px;"><strong>Phone: </strong> ${userData.mobile}</p>
-             <p style="margin: 10px; font-size: 12px;"><strong>FSSAI Lic No:</strong> 11224333001459</p>
+             <p style="margin: 10px; font-size: 12px;"><strong>Ph.: </strong> ${userData.mobile}</p>
+             ${userData.fssai_no && userData.fssai_no !== 'null' ? `<p style="margin: 10px; font-size: 12px;"><strong>FSSAI No:</strong> ${userData.fssai_no}</p>` : ''}
              <p style="margin: 10px; font-size: 12px;"><strong>GST No:</strong> ${userData.gst_no}</p>
            </div>
            <hr style="border: 0.5px dashed #ccc;" />
            <p></p>
-           <table style="font-size: 12px; margin-bottom: 10px;">
+            <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
              <tr>
                <td style="width: 50%; height: 30px;">
                  <strong> Name: </strong> ${order?.customer_name || "(M: 1234567890)"} 
+               </td>
+                <td style="text-align: right;">
+                  <strong>${order.order_type}</strong>
                </td>
              </tr>
              <tr>
                <td style="width: 50%; height: 30px;">
                  <strong>Date:</strong> ${new Date(order.order_date).toLocaleString()}
                </td>
-               <td style="text-align: right;"><strong>${order.order_type}</strong></td>
+              <td style="text-align: right;">
+                   ${order.table_no ? ` <strong>Table No: </strong> <span style="margin-left: 5px; font-size: 16px;"> ${order.table_no} </span>` : order.token ? ` <strong>Token No: </strong> <span style="margin-left: 5px; font-size: 16px;"> ${order.token} </span>` : ''} </span>
+               </td>
              </tr>
              <tr>
                <td colspan="2"><strong>Bill No:</strong> ${order._id}</td>
@@ -312,7 +317,6 @@ const OrderHistory = () => {
       printWindow.close();
 
       document.body.removeChild(printDiv);
-      toast.success('Invoice printed successfully!');
     } catch (err) {
       console.error("Error fetching order or user data:", err);
       toast.error('Failed to print invoice. Please try again.');
@@ -331,7 +335,7 @@ const OrderHistory = () => {
         sortable: true,
         isSorted: sortBy === 'order_date',
         isSortedDesc: sortBy === 'order_date' && sortOrder === 'desc',
-        Cell: ({ value }) => new Date(value).toLocaleDateString(),
+        Cell: ({ value }) => new Date(value).toLocaleDateString('en-IN'),
       },
       {
         Header: 'Order Time',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Card, Col, Row, Button, Form as BForm, Spinner, Alert } from 'react-bootstrap';
 import { Formik, Form, FieldArray, Field, ErrorMessage } from 'formik';
@@ -8,6 +8,7 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import CreatableSelect from 'react-select/creatable';
 
 const AddDishes = () => {
   const title = 'Add Dishes';
@@ -23,6 +24,12 @@ const AddDishes = () => {
   const location = useLocation();
   const [imagePreviews, setImagePreviews] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const categoryOptions = categories.map(cat => ({
+    label: cat,
+    value: cat,
+  }));
 
   const isFromManageMenu = location.state?.fromManageMenu || false;
   const prefilledCategory = isFromManageMenu ? location.state?.category || '' : '';
@@ -43,6 +50,31 @@ const AddDishes = () => {
       },
     ],
   };
+
+  const getMenuCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const response = await axios.get(
+        `${process.env.REACT_APP_API}/menu/get-categories`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }
+      );
+
+      if (response.data.success) {
+        setCategories(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching menu categories:', error);
+      toast.error('Failed to load menu categories');
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  useEffect(() => {
+    getMenuCategories();
+  }, []);
 
   const validationSchema = Yup.object().shape({
     category: Yup.string().required('Category is required'),
@@ -132,14 +164,30 @@ const AddDishes = () => {
                       <Col md={4}>
                         <BForm.Group>
                           <BForm.Label>Dish Category</BForm.Label>
-                          <Field
-                            name="category"
-                            className="form-control"
-                            readOnly={isFromManageMenu}
-                            disabled={isSubmitting}
+
+                          <CreatableSelect
+                            isClearable
+                            isDisabled={isSubmitting || loadingCategories || isFromManageMenu}
+                            options={categoryOptions}
+                            value={
+                              values.category
+                                ? { label: values.category, value: values.category }
+                                : null
+                            }
+                            onChange={(selected) =>
+                              setFieldValue('category', selected ? selected.value : '')
+                            }
+                            placeholder="Select or create category"
+                            classNamePrefix="react-select"
                           />
-                          <ErrorMessage name="category" component="div" className="text-danger" />
+
+                          <ErrorMessage
+                            name="category"
+                            component="div"
+                            className="text-danger mt-1"
+                          />
                         </BForm.Group>
+
                       </Col>
                       <Col md={8}>
                         <BForm.Label className="d-block">Meal Type</BForm.Label>
@@ -158,7 +206,6 @@ const AddDishes = () => {
                         ))}
                       </Col>
                     </Row>
-
                     <FieldArray name="dishes">
                       {({ push, remove }) => (
                         <>
@@ -187,12 +234,13 @@ const AddDishes = () => {
                                     <ErrorMessage name={`dishes[${index}].dish_price`} component="div" className="text-danger" />
                                   </BForm.Group>
                                 </Col>
-                                <Col md={4} className="d-flex align-items-end">
+                                <Col md={4} className="d-flex align-items-start">
                                   <Button
                                     variant="outline-danger"
                                     onClick={() => remove(index)}
                                     disabled={isSubmitting || values.dishes.length === 1}
                                   >
+                                    <CsLineIcons icon="bin" className='me-1' />
                                     Remove
                                   </Button>
                                 </Col>
@@ -298,7 +346,7 @@ const AddDishes = () => {
                               disabled={isSubmitting}
                             >
                               <CsLineIcons icon="plus" className="me-1" />
-                              Add More Dishes
+                              Add More
                             </Button>
                           </div>
                         </>

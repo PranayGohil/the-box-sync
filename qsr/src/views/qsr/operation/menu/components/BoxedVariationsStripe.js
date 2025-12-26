@@ -44,7 +44,7 @@ const BoxedVariationsStripe = ({ columns, data, category, setEditCategoryModalSh
                 type="button"
                 className="btn btn-sm btn-icon btn-outline-success mx-2"
                 onClick={() => {
-                  history.push('/operations/add-dishes', {
+                  history.push('/operations/add-dish', {
                     category: category.category,
                     mealType: category.meal_type,
                     fromManageMenu: true,   // flag to lock fields

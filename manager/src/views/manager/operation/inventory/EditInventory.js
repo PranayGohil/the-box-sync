@@ -257,7 +257,7 @@ function EditInventory() {
                 disabled={loading.submitting}
               >
                 <CsLineIcons icon="plus" className="me-1" />
-                Add More Items
+                Add More
               </Button>
             </Card>
 

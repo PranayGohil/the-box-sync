@@ -230,7 +230,7 @@ const UserDetails = () => {
             </p>
             <p>
               <strong>Registered On:</strong>{" "}
-              {new Date(user?.createdAt).toLocaleDateString()}
+              {new Date(user?.createdAt).toLocaleDateString('en-IN')}
             </p>
           </div>
         </div>
@@ -292,8 +292,8 @@ const UserDetails = () => {
                     </td>
                     <td>{sub.plan_name}</td>
                     <td>{sub.plan_price}</td>
-                    <td>{new Date(sub.start_date).toLocaleDateString()}</td>
-                    <td>{new Date(sub.end_date).toLocaleDateString()}</td>
+                    <td>{new Date(sub.start_date).toLocaleDateString('en-IN')}</td>
+                    <td>{new Date(sub.end_date).toLocaleDateString('en-IN')}</td>
                     <td>
                       {sub.status === "active" && (
                         <span className="badge bg-success">Active</span>

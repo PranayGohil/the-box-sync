@@ -117,7 +117,7 @@ const Feedback = () => {
         Header: 'Date',
         accessor: 'createdAt',
         headerClassName: 'text-muted text-small text-uppercase w-15',
-        Cell: ({ value }) => (value ? new Date(value).toLocaleDateString() : 'N/A'),
+        Cell: ({ value }) => (value ? new Date(value).toLocaleDateString('en-IN') : 'N/A'),
       },
       {
         Header: 'Actions',

@@ -194,7 +194,7 @@ const Dashboard = () => {
 
         {/* Active Orders Section */}
         <Col lg="6">
-          <h2 className="small-title mb-4">Active Takeaways & Deliveries</h2>
+          <h3 className="mb-3 text-primary">Active Takeaways & Deliveries</h3>
           <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
             {activeTakeawaysAndDeliveries.length === 0 ? (
               <Card className="text-center p-4">

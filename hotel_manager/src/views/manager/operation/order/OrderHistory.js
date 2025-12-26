@@ -193,7 +193,7 @@ const OrderHistory = () => {
       accessor: 'order_date',
       id: 'order_date_only',
       headerClassName: 'text-muted text-small text-uppercase w-15',
-      Cell: ({ value }) => new Date(value).toLocaleDateString(),
+      Cell: ({ value }) => new Date(value).toLocaleDateString('en-IN'),
     },
     {
       Header: 'Order Time',

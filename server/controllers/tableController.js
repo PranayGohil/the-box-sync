@@ -179,7 +179,7 @@ const updateTableArea = async (req, res) => {
 
 const updateTable = async (req, res) => {
   try {
-    const id = req.params.id;
+    const id = req.params.id; // table _id
     const { table_no, max_person } = req.body;
     const userId = req.user;
 
@@ -189,28 +189,68 @@ const updateTable = async (req, res) => {
         .json({ success: false, message: "id and table_no are required" });
     }
 
-    const result = await Table.updateOne(
-      { user_id: userId, "tables._id": id },
-      {
-        $set: {
-          "tables.$.table_no": String(table_no).trim(),
-          "tables.$.max_person": parseInt(max_person, 10) || 0,
-        },
-      }
-    );
+    const trimmedTableNo = String(table_no).trim();
 
-    if (result.matchedCount === 0) {
+    /**
+     * STEP 1: Find the document (to get area)
+     */
+    const tableDoc = await Table.findOne({
+      user_id: userId,
+      "tables._id": id,
+    });
+
+    if (!tableDoc) {
       return res
         .status(404)
         .json({ success: false, message: "Table not found" });
     }
 
-    res.json({ success: true, message: "Table updated", result });
+    const area = tableDoc.area;
+
+    /**
+     * STEP 2: Check duplicate table number in SAME area
+     * (excluding current table)
+     */
+    const duplicate = await Table.findOne({
+      user_id: userId,
+      area: area,
+      tables: {
+        $elemMatch: {
+          table_no: trimmedTableNo,
+          _id: { $ne: id },
+        },
+      },
+    });
+
+    if (duplicate) {
+      return res.status(409).json({
+        success: false,
+        message: "Table number already exists in this area",
+      });
+    }
+
+    /**
+     * STEP 3: Update table
+     */
+    const result = await Table.updateOne(
+      { user_id: userId, "tables._id": id },
+      {
+        $set: {
+          "tables.$.table_no": trimmedTableNo,
+          "tables.$.max_person": parseInt(max_person, 10) || 0,
+        },
+      }
+    );
+
+    res.json({ success: true, message: "Table updated successfully" });
   } catch (error) {
     console.error("Error updating table:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
+
 
 const deleteTable = async (req, res) => {
   try {
