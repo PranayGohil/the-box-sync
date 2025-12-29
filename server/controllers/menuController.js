@@ -140,6 +140,59 @@ const getMenuCategories = async (req, res) => {
   }
 };
 
+const getMenuSuggestions = async (req, res) => {
+  try {
+    const userId = req.user;
+    const { types } = req.query;
+
+    if (!types) {
+      return res.status(400).json({
+        success: false,
+        message: "types query param is required",
+      });
+    }
+
+    const typeList = types.split(",");
+    const result = {};
+
+    const promises = [];
+
+    // CATEGORY suggestions
+    if (typeList.includes("category")) {
+      promises.push(
+        Menu.distinct("category", {
+          user_id: userId,
+          category: { $nin: [null, ""] },
+        }).then((data) => {
+          result.categories = data.sort();
+        })
+      );
+    }
+
+    // DISH NAME suggestions
+    if (typeList.includes("dish")) {
+      promises.push(
+        Menu.distinct("dishes.dish_name", {
+          user_id: userId,
+          "dishes.dish_name": { $nin: [null, ""] },
+        }).then((data) => {
+          result.dishes = data.sort();
+        })
+      );
+    }
+
+    await Promise.all(promises);
+
+    res.json(result);
+  } catch (error) {
+    console.error("Menu suggestion error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to load menu suggestions",
+    });
+  }
+};
+
 const getMenuDataById = async (req, res) => {
   try {
     const dishId = req.params.id;
@@ -316,6 +369,7 @@ module.exports = {
   getMenuDataById,
   getMenuDataByResCode,
   getMenuCategories,
+  getMenuSuggestions,
   updateMenuCategoryAndMealType,
   updateMenu,
   deleteMenu,

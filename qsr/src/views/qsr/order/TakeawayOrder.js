@@ -32,7 +32,7 @@ const TakeawayOrder = () => {
       comment: '',
     }
   });
-  const allowNavigationRef = useRef(false); // ++Update
+  const allowNavigationRef = useRef(false); 
 
   const [orderItems, setOrderItems] = useState([]);
   const [menuData, setMenuData] = useState([]);
@@ -216,7 +216,7 @@ const TakeawayOrder = () => {
   }, [isDirty]);
 
   // 🔥 Protect against browser back/forward buttons
-  useEffect(() => { // ++Update
+  useEffect(() => { 
     const unblock = history.block((loc) => {
       // ✅ Allow navigation if explicitly permitted
       if (allowNavigationRef.current) {
@@ -461,7 +461,7 @@ const TakeawayOrder = () => {
       });
 
       if (response.data.status === 'success') {
-         allowNavigationRef.current = true;  // ++Update
+         allowNavigationRef.current = true;  
         // 🔥 NEW: Update initial state after successful save
         initialStateRef.current = {
           orderItems: JSON.parse(JSON.stringify(orderItems)),
@@ -988,7 +988,7 @@ const TakeawayOrder = () => {
             variant="danger"
             onClick={() => {
               // Clear dirty flag and close modal
-              allowNavigationRef.current = true; // ++Update
+              allowNavigationRef.current = true; 
               setIsDirty(false);
               setShowLeaveModal(false);
 
@@ -1006,7 +1006,7 @@ const TakeawayOrder = () => {
             <Button
               variant="secondary"
               onClick={async () => {
-                allowNavigationRef.current = true; // ++Update
+                allowNavigationRef.current = true; 
                 await handleSaveOrder('Save');
                 setShowLeaveModal(false);
 
@@ -1026,7 +1026,7 @@ const TakeawayOrder = () => {
           <Button
             variant="primary"
             onClick={async () => {
-              allowNavigationRef.current = true; // ++Update
+              allowNavigationRef.current = true; 
               await handleSaveOrder('KOT');
               setShowLeaveModal(false);
 

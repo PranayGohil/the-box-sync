@@ -7,6 +7,7 @@ import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast } from 'react-toastify';
+import CreatableSelect from 'react-select/creatable';
 
 const validationSchema = Yup.object().shape({
   bill_date: Yup.date().required('Bill date is required'),
@@ -36,10 +37,48 @@ const AddInventory = () => {
   ];
 
   const history = useHistory();
+  const [suggestions, setSuggestions] = useState({
+    vendors: [],
+    categories: [],
+    items: [],
+  });
   const [filePreviews, setFilePreviews] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
 
+  const vendorOptions = (suggestions.vendors || []).map(v => ({
+    label: v,
+    value: v,
+  }));
+
+  const categoryOptions = (suggestions.categories || []).map(c => ({
+    label: c,
+    value: c,
+  }));
+
+  const itemOptions = (suggestions.items || []).map(i => ({
+    label: i,
+    value: i,
+  }));
+
+  useEffect(() => {
+    const getSuggestions = async () => {
+      try {
+        const { data } = await axios.get(`${process.env.REACT_APP_API}/inventory/get-suggestions?types=vendor,category,item`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        setSuggestions(data);
+      } catch (error) {
+        console.error('Error fetching vendors:', error);
+        toast.error('Failed to fetch vendors. Please try again.');
+      }
+    };
+
+    getSuggestions();
+  }, []);
+  
   const formik = useFormik({
     initialValues: {
       bill_date: '',
@@ -50,7 +89,7 @@ const AddInventory = () => {
       paid_amount: '',
       unpaid_amount: '',
       bill_files: [],
-      status: 'pending',
+      status: 'Completed',
       items: [{ item_name: '', item_quantity: 1, unit: '', item_price: 0 }],
     },
     validationSchema,
@@ -185,28 +224,52 @@ const AddInventory = () => {
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label>Vendor Name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="vendor_name"
-                      value={values.vendor_name}
-                      onChange={handleChange}
-                      isInvalid={touched.vendor_name && errors.vendor_name}
-                      disabled={isSubmitting}
+                    <CreatableSelect
+                      isClearable
+                      isDisabled={isSubmitting}
+                      options={vendorOptions}
+                      value={
+                        values.vendor_name
+                          ? { label: values.vendor_name, value: values.vendor_name }
+                          : null
+                      }
+                      onChange={(selected) =>
+                        setFieldValue('vendor_name', selected ? selected.value : '')
+                      }
+                      placeholder="Select or create vendor"
+                      classNamePrefix="react-select"
                     />
+
+                    {touched.vendor_name && errors.vendor_name && (
+                      <div className="text-danger mt-1">{errors.vendor_name}</div>
+                    )}
+
                     <Form.Control.Feedback type="invalid">{errors.vendor_name}</Form.Control.Feedback>
                   </Form.Group>
                 </Col>
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label>Category</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="category"
-                      value={values.category}
-                      onChange={handleChange}
-                      isInvalid={touched.category && errors.category}
-                      disabled={isSubmitting}
+                    <CreatableSelect
+                      isClearable
+                      isDisabled={isSubmitting}
+                      options={categoryOptions}
+                      value={
+                        values.category
+                          ? { label: values.category, value: values.category }
+                          : null
+                      }
+                      onChange={(selected) =>
+                        setFieldValue('category', selected ? selected.value : '')
+                      }
+                      placeholder="Select or create category"
+                      classNamePrefix="react-select"
                     />
+
+                    {touched.category && errors.category && (
+                      <div className="text-danger mt-1">{errors.category}</div>
+                    )}
+
                     <Form.Control.Feedback type="invalid">{errors.category}</Form.Control.Feedback>
                   </Form.Group>
                 </Col>
@@ -302,14 +365,30 @@ const AddInventory = () => {
                   <Row key={index} className="mb-3">
                     <Col md={3}>
                       <Form.Group>
-                        <Form.Control
-                          type="text"
-                          placeholder="Item Name"
-                          value={item.item_name}
-                          onChange={(e) => handleItemChange(index, 'item_name', e.target.value)}
-                          isInvalid={itemTouched.item_name && itemErrors.item_name}
-                          disabled={isSubmitting}
+                        <CreatableSelect
+                          isClearable
+                          isDisabled={isSubmitting}
+                          options={itemOptions}
+                          value={
+                            item.item_name
+                              ? { label: item.item_name, value: item.item_name }
+                              : null
+                          }
+                          onChange={(selected) =>
+                            handleItemChange(
+                              index,
+                              'item_name',
+                              selected ? selected.value : ''
+                            )
+                          }
+                          placeholder="Select or create item"
+                          classNamePrefix="react-select"
                         />
+
+                        {itemTouched.item_name && itemErrors.item_name && (
+                          <div className="text-danger mt-1">{itemErrors.item_name}</div>
+                        )}
+
                         <Form.Control.Feedback type="invalid">{itemErrors.item_name}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>

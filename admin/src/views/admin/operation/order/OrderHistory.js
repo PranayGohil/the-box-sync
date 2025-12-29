@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { Badge, Col, Form, Row, Button, Spinner, Alert } from 'react-bootstrap';
-import { useTable, useGlobalFilter, useSortBy } from 'react-table';
+import { Badge, Col, Row, Button, Spinner, Alert } from 'react-bootstrap';
+import { useTable, useSortBy } from 'react-table';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';

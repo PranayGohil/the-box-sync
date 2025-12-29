@@ -7,6 +7,7 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import CreatableSelect from 'react-select/creatable';
 
 const defaultValues = {
   bill_date: '',
@@ -62,10 +63,24 @@ const completeInventory = Yup.object().shape({
 const CompleteInventory = () => {
   const { id } = useParams();
   const history = useHistory();
+  const [suggestions, setSuggestions] = useState({
+    vendors: [],
+    categories: [],
+  });
   const [initialValues, setInitialValues] = useState(null);
   const [filePreviews, setFilePreviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  const vendorOptions = (suggestions.vendors || []).map(v => ({
+    label: v,
+    value: v,
+  }));
+
+  const categoryOptions = (suggestions.categories || []).map(c => ({
+    label: c,
+    value: c,
+  }));
 
   useEffect(() => {
     const fetchInventory = async () => {
@@ -96,7 +111,22 @@ const CompleteInventory = () => {
         setLoading(false);
       }
     };
+
+    const getSuggestions = async () => {
+      try {
+        const { data } = await axios.get(`${process.env.REACT_APP_API}/inventory/get-suggestions?types=vendor,category`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        setSuggestions(data);
+      } catch (error) {
+        console.error('Error fetching vendors:', error);
+        toast.error('Failed to fetch vendors. Please try again.');
+      }
+    };
     fetchInventory();
+    getSuggestions();
   }, [id]);
 
   const previewFiles = (files) => {
@@ -199,7 +229,7 @@ const CompleteInventory = () => {
                   <Row>
                     <Col md={6}>
                       <label>Bill Date</label>
-                      <Field type="date" name="bill_date" className="form-control" disabled={isSubmitting} />
+                      <Field type="date" name="bill_date" className="form-control" min={new Date(initialValues.request_date).toISOString().split('T')[0]} disabled={isSubmitting} />
                       <ErrorMessage name="bill_date" component="div" className="text-danger" />
                     </Col>
                     <Col md={6}>
@@ -212,12 +242,42 @@ const CompleteInventory = () => {
                   <Row className="mt-3">
                     <Col md={6}>
                       <label>Vendor Name</label>
-                      <Field type="text" name="vendor_name" className="form-control" disabled={isSubmitting} />
+                      <CreatableSelect
+                        isClearable
+                        isDisabled={isSubmitting}
+                        options={vendorOptions}
+                        value={
+                          values.vendor_name
+                            ? { label: values.vendor_name, value: values.vendor_name }
+                            : null
+                        }
+                        onChange={(selected) =>
+                          setFieldValue('vendor_name', selected ? selected.value : '')
+                        }
+                        placeholder="Select or create vendor"
+                        classNamePrefix="react-select"
+                      />
+
                       <ErrorMessage name="vendor_name" component="div" className="text-danger" />
                     </Col>
                     <Col md={6}>
                       <label>Category</label>
-                      <Field type="text" name="category" className="form-control" disabled={isSubmitting} />
+                      <CreatableSelect
+                        isClearable
+                        isDisabled={isSubmitting}
+                        options={categoryOptions}
+                        value={
+                          values.category
+                            ? { label: values.category, value: values.category }
+                            : null
+                        }
+                        onChange={(selected) =>
+                          setFieldValue('category', selected ? selected.value : '')
+                        }
+                        placeholder="Select or create category"
+                        classNamePrefix="react-select"
+                      />
+
                       <ErrorMessage name="category" component="div" className="text-danger" />
                     </Col>
                   </Row>

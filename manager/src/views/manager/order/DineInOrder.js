@@ -34,7 +34,7 @@ const DineInOrder = () => {
       comment: '',
     }
   });
-  const allowNavigationRef = useRef(false); // ++Update
+  const allowNavigationRef = useRef(false); 
 
   const [tableInfo, setTableInfo] = useState({});
   const [orderItems, setOrderItems] = useState([]);
@@ -236,7 +236,7 @@ const DineInOrder = () => {
   }, [isDirty]);
 
   // 🔥 Protect against browser back/forward buttons
-  useEffect(() => { // ++Update
+  useEffect(() => { 
     const unblock = history.block((loc) => {
       // ✅ Allow navigation if explicitly permitted
       if (allowNavigationRef.current) {
@@ -478,7 +478,7 @@ const DineInOrder = () => {
 
       if (response.data.status === 'success') {
         // 🔥 NEW: Update initial state after successful save
-        allowNavigationRef.current = true;  // ++Update
+        allowNavigationRef.current = true;  
         initialStateRef.current = {
           orderItems: JSON.parse(JSON.stringify(orderItems)),
           customerInfo: JSON.parse(JSON.stringify(customerInfo))
@@ -962,7 +962,7 @@ const DineInOrder = () => {
             variant="danger"
             onClick={() => {
               // Clear dirty flag and close modal
-              allowNavigationRef.current = true; // ++Update
+              allowNavigationRef.current = true; 
               setIsDirty(false);
               setShowLeaveModal(false);
 
@@ -980,7 +980,7 @@ const DineInOrder = () => {
             <Button
               variant="secondary"
               onClick={async () => {
-                allowNavigationRef.current = true; // ++Update
+                allowNavigationRef.current = true; 
                 await handleSaveOrder('Save');
                 setShowLeaveModal(false);
 
@@ -1000,7 +1000,7 @@ const DineInOrder = () => {
           <Button
             variant="primary"
             onClick={async () => {
-              allowNavigationRef.current = true; // ++Update
+              allowNavigationRef.current = true; 
               await handleSaveOrder('KOT');
               setShowLeaveModal(false);
 

@@ -8,6 +8,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import CreatableSelect from 'react-select/creatable';
 
 const AddTable = () => {
   const history = useHistory();
@@ -28,6 +29,10 @@ const AddTable = () => {
   const [loadingAreas, setLoadingAreas] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkingTable, setCheckingTable] = useState({});
+  const diningAreasOptions = diningAreas.map(cat => ({
+    label: cat,
+    value: cat,
+  }));
 
   const isFromManageTable = location.state?.fromManageTable || false;
   const prefilledArea = isFromManageTable ? location.state?.area || '' : '';
@@ -207,39 +212,34 @@ const AddTable = () => {
                   <Row className="g-3">
                     <Col md="6">
                       <Form.Label>Dining Type</Form.Label>
-                      <div className="position-relative">
-                        <Form.Control
-                          type="text"
-                          name="area"
-                          value={formik.values.area}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          list={isFromManageTable ? undefined : 'diningAreaList'}
-                          readOnly={isFromManageTable}
-                          disabled={isSubmitting}
-                          isInvalid={formik.touched.area && !!formik.errors.area}
-                        />
-                        {loadingAreas && (
-                          <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
-                            <Spinner animation="border" size="sm" />
-                          </div>
-                        )}
-                      </div>
-                      <datalist id="diningAreaList">
-                        {diningAreas.map((area, i) => (
-                          <option key={i} value={area} />
-                        ))}
-                      </datalist>
-                      <Form.Control.Feedback type="invalid">
-                        {formik.errors.area}
-                      </Form.Control.Feedback>
+
+                      <CreatableSelect
+                        isClearable
+                        isDisabled={isSubmitting || loadingAreas || isFromManageTable}
+                        options={diningAreasOptions}
+                        value={
+                          formik.values.area
+                            ? { label: formik.values.area, value: formik.values.area }
+                            : null
+                        }
+                        onChange={(selected) => {
+                          formik.setFieldValue('area', selected ? selected.value : '');
+                        }}
+                        onBlur={() => formik.setFieldTouched('area', true)}
+                        placeholder="Select or create dining area"
+                        classNamePrefix="react-select"
+                      />
+
+                      {formik.touched.area && formik.errors.area && (
+                        <div className="text-danger mt-1">{formik.errors.area}</div>
+                      )}
                     </Col>
                   </Row>
 
                   <hr />
 
                   {formik.values.tables.map((table, index) => (
-                    <Row className="align-items-end mb-3" key={index}>
+                    <Row className="align-items-start mb-3" key={index}>
                       <Col md="4">
                         <Form.Label>Table No.</Form.Label>
                         <Form.Control

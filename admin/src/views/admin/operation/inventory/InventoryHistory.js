@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { Badge, Button, Col, Row, Modal, Spinner, Alert } from 'react-bootstrap';
-import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
+import { useTable, useGlobalFilter, useSortBy } from 'react-table';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -15,7 +15,7 @@ import TablePagination from './components/TablePagination';
 const InventoryHistory = () => {
   const history = useHistory();
   const title = 'Inventory History';
-  const description = 'Completed and Rejected inventory with modern table UI and dummy data.';
+  const description = 'Completed and Rejected inventory with modern table UI.';
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
@@ -23,14 +23,32 @@ const InventoryHistory = () => {
     { to: 'operations/inventory-history', title: 'Inventory History' },
   ];
 
+  // Completed inventory state
   const [completedData, setCompletedData] = useState([]);
+  const [completedPageIndex, setCompletedPageIndex] = useState(0);
+  const [completedPageSize, setCompletedPageSize] = useState(10);
+  const [completedTotalRecords, setCompletedTotalRecords] = useState(0);
+  const [completedTotalPages, setCompletedTotalPages] = useState(0);
+  const [completedSearchTerm, setCompletedSearchTerm] = useState('');
+
+  // Rejected inventory state
   const [rejectedData, setRejectedData] = useState([]);
+  const [rejectedPageIndex, setRejectedPageIndex] = useState(0);
+  const [rejectedPageSize, setRejectedPageSize] = useState(10);
+  const [rejectedTotalRecords, setRejectedTotalRecords] = useState(0);
+  const [rejectedTotalPages, setRejectedTotalPages] = useState(0);
+  const [rejectedSearchTerm, setRejectedSearchTerm] = useState('');
+
   const [loading, setLoading] = useState({ completed: true, rejected: true });
   const [show, setShow] = useState(false);
   const [data, setData] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showRejectReasonModal, setShowRejectReasonModal] = useState(false);
   const [selectedRejectReason, setSelectedRejectReason] = useState('');
+
+  // Use refs to prevent infinite loops
+  const completedFetchRef = useRef(false);
+  const rejectedFetchRef = useRef(false);
 
   const handleShow = (rowData) => {
     setData(rowData);
@@ -45,93 +63,165 @@ const InventoryHistory = () => {
   const truncateWords = (text, limit = 8) => {
     if (!text) return '';
     const words = text.split(' ');
-    return words.length > limit
-      ? words.slice(0, limit).join(' ')
-      : text;
+    return words.length > limit ? words.slice(0, limit).join(' ') : text;
   };
 
-
-  const fetchCompletedInventory = async () => {
+  const fetchCompletedInventory = useCallback(async () => {
     try {
       setLoading(prev => ({ ...prev, completed: true }));
-      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Completed`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      if (res.data.success) {
-        const completedInventory = res.data.data
-          .map((item) => ({
-            ...item,
-            request_date_obj: new Date(item.request_date),
-            formatted_request_date: new Date(item.request_date).toLocaleString("en-IN", {
-              timeZone: "Asia/Kolkata",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            }),
-            bill_date_obj: new Date(item.bill_date),
-            formatted_bill_date: new Date(item.bill_date).toLocaleString("en-IN", {
-              timeZone: "Asia/Kolkata",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })
-          }));
 
-        completedInventory.sort((a, b) => b.request_date_obj - a.request_date_obj);
+      const params = {
+        page: completedPageIndex + 1,
+        limit: completedPageSize,
+      };
+
+      if (completedSearchTerm) {
+        params.search = completedSearchTerm;
+      }
+
+      const res = await axios.get(
+        `${process.env.REACT_APP_API}/inventory/get-by-status/Completed`,
+        {
+          params,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+
+      if (res.data.success) {
+        const completedInventory = res.data.data.map((item) => ({
+          ...item,
+          request_date_obj: new Date(item.request_date),
+          formatted_request_date: new Date(item.request_date).toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }),
+          bill_date_obj: new Date(item.bill_date),
+          formatted_bill_date: new Date(item.bill_date).toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }),
+        }));
+
         setCompletedData(completedInventory);
+
+        if (res.data.pagination) {
+          setCompletedTotalRecords(res.data.pagination.total || 0);
+          setCompletedTotalPages(res.data.pagination.totalPages || 0);
+        }
       }
     } catch (error) {
       console.error('Error fetching completed inventory:', error);
       toast.error('Failed to fetch completed inventory. Please try again.');
     } finally {
       setLoading(prev => ({ ...prev, completed: false }));
+      completedFetchRef.current = false;
     }
-  };
+  }, [completedPageIndex, completedPageSize, completedSearchTerm]);
 
-  const fetchRejectedInventory = async () => {
+  const fetchRejectedInventory = useCallback(async () => {
     try {
       setLoading(prev => ({ ...prev, rejected: true }));
-      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Rejected`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      if (res.data.success) {
-        const rejectedInventory = res.data.data
-          .map((item) => ({
-            ...item,
-            request_date_obj: new Date(item.request_date),
-            formatted_request_date: new Date(item.request_date).toLocaleString("en-IN", {
-              timeZone: "Asia/Kolkata",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            }),
-            bill_date_obj: new Date(item.bill_date),
-            formatted_bill_date: new Date(item.bill_date).toLocaleString("en-IN", {
-              timeZone: "Asia/Kolkata",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })
-          }));
 
-        rejectedInventory.sort((a, b) => b.request_date_obj - a.request_date_obj);
+      const params = {
+        page: rejectedPageIndex + 1,
+        limit: rejectedPageSize,
+      };
+
+      if (rejectedSearchTerm) {
+        params.search = rejectedSearchTerm;
+      }
+
+      const res = await axios.get(
+        `${process.env.REACT_APP_API}/inventory/get-by-status/Rejected`,
+        {
+          params,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+
+      if (res.data.success) {
+        const rejectedInventory = res.data.data.map((item) => ({
+          ...item,
+          request_date_obj: new Date(item.request_date),
+          formatted_request_date: new Date(item.request_date).toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }),
+          bill_date_obj: new Date(item.bill_date),
+          formatted_bill_date: new Date(item.bill_date).toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }),
+        }));
+
         setRejectedData(rejectedInventory);
+
+        if (res.data.pagination) {
+          setRejectedTotalRecords(res.data.pagination.total || 0);
+          setRejectedTotalPages(res.data.pagination.totalPages || 0);
+        }
       }
     } catch (error) {
       console.error('Error fetching rejected inventory:', error);
       toast.error('Failed to fetch rejected inventory. Please try again.');
     } finally {
       setLoading(prev => ({ ...prev, rejected: false }));
+      rejectedFetchRef.current = false;
     }
-  };
+  }, [rejectedPageIndex, rejectedPageSize, rejectedSearchTerm]);
 
   useEffect(() => {
-    fetchCompletedInventory();
-    fetchRejectedInventory();
+    if (!completedFetchRef.current) {
+      completedFetchRef.current = true;
+      fetchCompletedInventory();
+    }
+  }, [fetchCompletedInventory]);
+
+  useEffect(() => {
+    if (!rejectedFetchRef.current) {
+      rejectedFetchRef.current = true;
+      fetchRejectedInventory();
+    }
+  }, [fetchRejectedInventory]);
+
+  const handleCompletedPageChange = (newPageIndex) => {
+    setCompletedPageIndex(newPageIndex);
+  };
+
+  const handleCompletedPageSizeChange = (newPageSize) => {
+    setCompletedPageSize(newPageSize);
+    setCompletedPageIndex(0);
+  };
+
+  const handleCompletedSearch = useCallback((value) => {
+    setCompletedSearchTerm(value);
+    setCompletedPageIndex(0);
+  }, []);
+
+  const handleRejectedPageChange = (newPageIndex) => {
+    setRejectedPageIndex(newPageIndex);
+  };
+
+  const handleRejectedPageSizeChange = (newPageSize) => {
+    setRejectedPageSize(newPageSize);
+    setRejectedPageIndex(0);
+  };
+
+  const handleRejectedSearch = useCallback((value) => {
+    setRejectedSearchTerm(value);
+    setRejectedPageIndex(0);
   }, []);
 
   const completedColumns = React.useMemo(
@@ -266,10 +356,13 @@ const InventoryHistory = () => {
       });
 
       if (res.status === 200 || res.data.success) {
-        setCompletedData((prev) => prev.filter((item) => item._id !== data._id));
-        setRejectedData((prev) => prev.filter((item) => item._id !== data._id));
         toast.success('Inventory deleted successfully!');
         handleClose();
+        // Refresh both lists
+        completedFetchRef.current = true;
+        rejectedFetchRef.current = true;
+        fetchCompletedInventory();
+        fetchRejectedInventory();
       }
     } catch (error) {
       console.error('Error deleting inventory:', error);
@@ -280,20 +373,56 @@ const InventoryHistory = () => {
   };
 
   const completedTable = useTable(
-    { columns: completedColumns, data: completedData, initialState: { pageIndex: 0 } },
+    {
+      columns: completedColumns,
+      data: completedData,
+      manualPagination: true,
+      manualSortBy: true,
+      manualGlobalFilter: true,
+      pageCount: completedTotalPages,
+      autoResetPage: false,
+      autoResetSortBy: false,
+      autoResetGlobalFilter: false,
+    },
     useGlobalFilter,
-    useSortBy,
-    usePagination,
-    useRowSelect,
+    useSortBy
   );
 
   const rejectedTable = useTable(
-    { columns: rejectedColumns, data: rejectedData, initialState: { pageIndex: 0 } },
+    {
+      columns: rejectedColumns,
+      data: rejectedData,
+      manualPagination: true,
+      manualSortBy: true,
+      manualGlobalFilter: true,
+      pageCount: rejectedTotalPages,
+      autoResetPage: false,
+      autoResetSortBy: false,
+      autoResetGlobalFilter: false,
+    },
     useGlobalFilter,
-    useSortBy,
-    usePagination,
-    useRowSelect
+    useSortBy
   );
+
+  const completedPaginationProps = {
+    canPreviousPage: completedPageIndex > 0,
+    canNextPage: completedPageIndex < completedTotalPages - 1,
+    pageCount: completedTotalPages,
+    pageIndex: completedPageIndex,
+    gotoPage: handleCompletedPageChange,
+    nextPage: () => handleCompletedPageChange(completedPageIndex + 1),
+    previousPage: () => handleCompletedPageChange(completedPageIndex - 1),
+  };
+
+  const rejectedPaginationProps = {
+    canPreviousPage: rejectedPageIndex > 0,
+    canNextPage: rejectedPageIndex < rejectedTotalPages - 1,
+    pageCount: rejectedTotalPages,
+    pageIndex: rejectedPageIndex,
+    gotoPage: handleRejectedPageChange,
+    nextPage: () => handleRejectedPageChange(rejectedPageIndex + 1),
+    previousPage: () => handleRejectedPageChange(rejectedPageIndex - 1),
+  };
 
   return (
     <>
@@ -311,6 +440,35 @@ const InventoryHistory = () => {
 
           {/* Completed Requests */}
           <h4 className="mb-3">Completed Requests</h4>
+
+          {/* Search and controls - Always visible */}
+          <Row className="mb-3">
+            <Col sm="12" md="5" lg="3" xxl="2">
+              <div className="search-input-container w-100 shadow bg-foreground">
+                <ControlsSearch onSearch={handleCompletedSearch} />
+              </div>
+            </Col>
+            <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
+              <div className="d-inline-block me-2 text-muted">
+                {loading.completed ? (
+                  'Loading...'
+                ) : (
+                  <>
+                    Showing {completedData.length > 0 ? completedPageIndex * completedPageSize + 1 : 0} to{' '}
+                    {Math.min((completedPageIndex + 1) * completedPageSize, completedTotalRecords)} of{' '}
+                    {completedTotalRecords} entries
+                  </>
+                )}
+              </div>
+              <div className="d-inline-block">
+                <ControlsPageSize
+                  pageSize={completedPageSize}
+                  onPageSizeChange={handleCompletedPageSizeChange}
+                />
+              </div>
+            </Col>
+          </Row>
+
           {loading.completed ? (
             <Row className="justify-content-center my-5">
               <Col xs={12} className="text-center">
@@ -321,27 +479,46 @@ const InventoryHistory = () => {
           ) : completedData.length === 0 ? (
             <Alert variant="info" className="mb-4">
               <CsLineIcons icon="inbox" className="me-2" />
-              No completed inventory found.
+              {completedSearchTerm ? `No results found for "${completedSearchTerm}"` : 'No completed inventory found.'}
             </Alert>
           ) : (
             <>
-              <Row className="mb-3">
-                <Col sm="12" md="5" lg="3" xxl="2">
-                  <div className="search-input-container w-100 shadow bg-foreground">
-                    <ControlsSearch tableInstance={completedTable} />
-                  </div>
-                </Col>
-                <Col className="text-end">
-                  <ControlsPageSize tableInstance={completedTable} />
-                </Col>
-              </Row>
               <Table className="react-table rows" tableInstance={completedTable} />
-              <TablePagination tableInstance={completedTable} />
+              <TablePagination paginationProps={completedPaginationProps} />
             </>
           )}
 
           {/* Rejected Requests */}
           <h4 className="mt-5 mb-3">Rejected Requests</h4>
+
+          {/* Search and controls - Always visible */}
+          <Row className="mb-3">
+            <Col sm="12" md="5" lg="3" xxl="2">
+              <div className="search-input-container w-100 shadow bg-foreground">
+                <ControlsSearch onSearch={handleRejectedSearch} />
+              </div>
+            </Col>
+            <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
+              <div className="d-inline-block me-2 text-muted">
+                {loading.rejected ? (
+                  'Loading...'
+                ) : (
+                  <>
+                    Showing {rejectedData.length > 0 ? rejectedPageIndex * rejectedPageSize + 1 : 0} to{' '}
+                    {Math.min((rejectedPageIndex + 1) * rejectedPageSize, rejectedTotalRecords)} of{' '}
+                    {rejectedTotalRecords} entries
+                  </>
+                )}
+              </div>
+              <div className="d-inline-block">
+                <ControlsPageSize
+                  pageSize={rejectedPageSize}
+                  onPageSizeChange={handleRejectedPageSizeChange}
+                />
+              </div>
+            </Col>
+          </Row>
+
           {loading.rejected ? (
             <Row className="justify-content-center my-5">
               <Col xs={12} className="text-center">
@@ -352,22 +529,12 @@ const InventoryHistory = () => {
           ) : rejectedData.length === 0 ? (
             <Alert variant="info" className="mb-4">
               <CsLineIcons icon="inbox" className="me-2" />
-              No rejected inventory found.
+              {rejectedSearchTerm ? `No results found for "${rejectedSearchTerm}"` : 'No rejected inventory found.'}
             </Alert>
           ) : (
             <>
-              <Row className="mb-3">
-                <Col sm="12" md="5" lg="3" xxl="2">
-                  <div className="search-input-container w-100 shadow bg-foreground">
-                    <ControlsSearch tableInstance={rejectedTable} />
-                  </div>
-                </Col>
-                <Col className="text-end">
-                  <ControlsPageSize tableInstance={rejectedTable} />
-                </Col>
-              </Row>
               <Table className="react-table rows" tableInstance={rejectedTable} />
-              <TablePagination tableInstance={rejectedTable} />
+              <TablePagination paginationProps={rejectedPaginationProps} />
             </>
           )}
         </Col>
@@ -408,15 +575,15 @@ const InventoryHistory = () => {
                 />
                 Deleting...
               </>
-            ) : 'Delete'}
+            ) : (
+              'Delete'
+            )}
           </Button>
         </Modal.Footer>
       </Modal>
-      <Modal
-        show={showRejectReasonModal}
-        onHide={() => setShowRejectReasonModal(false)}
-        centered
-      >
+
+      {/* Reject Reason Modal */}
+      <Modal show={showRejectReasonModal} onHide={() => setShowRejectReasonModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>
             <CsLineIcons icon="warning" className="text-danger me-2" />
@@ -434,7 +601,6 @@ const InventoryHistory = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-
     </>
   );
 };

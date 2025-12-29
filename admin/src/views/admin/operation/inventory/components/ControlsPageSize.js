@@ -1,18 +1,9 @@
 import React from 'react';
 import { Dropdown, OverlayTrigger, Tooltip } from 'react-bootstrap';
 
-const ControlsPageSize = ({ tableInstance }) => {
-  const {
-    setPageSize,
-    gotoPage,
-    state: { pageSize },
-  } = tableInstance;
-  const options = [5, 10, 20];
+const ControlsPageSize = ({ pageSize, onPageSizeChange }) => {
+  const options = [5, 10, 20, 50, 100];
 
-  const onSelectPageSize = (size) => {
-    setPageSize(size);
-    gotoPage(0);
-  };
   return (
     <OverlayTrigger placement="top" delay={{ show: 1000, hide: 0 }} overlay={<Tooltip>Item Count</Tooltip>}>
       {({ ref, ...triggerHandler }) => (
@@ -34,7 +25,11 @@ const ControlsPageSize = ({ tableInstance }) => {
             }}
           >
             {options.map((pSize) => (
-              <Dropdown.Item key={`pageSize.${pSize}`} active={pSize === pageSize} onClick={() => onSelectPageSize(pSize)}>
+              <Dropdown.Item
+                key={`pageSize.${pSize}`}
+                active={pSize === pageSize}
+                onClick={() => onPageSizeChange(pSize)}
+              >
                 {pSize} Items
               </Dropdown.Item>
             ))}

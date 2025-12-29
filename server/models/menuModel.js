@@ -58,5 +58,7 @@ menu.index({ user_id: 1, show_on_website: 1 });
 // Optional: if you often search by category alone
 menu.index({ user_id: 1, category: 1 });
 
+menu.index({ user_id: 1, "dishes.dish_name": 1 });
+
 const Menu = mongoose.model("menu", menu);
 module.exports = Menu;

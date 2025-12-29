@@ -53,12 +53,34 @@ const getInventoryDataByStatus = async (req, res) => {
   try {
     const userId = req.user;
     const { status } = req.params;
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 20, search } = req.query;
 
     const pageNumber = parseInt(page, 10) || 1;
     const pageSize = parseInt(limit, 10) || 20;
 
     const query = { user_id: userId, status };
+
+    // Add search functionality
+    if (search) {
+      const searchRegex = new RegExp("^" + search, "i"); // Prefix search for better index usage
+
+      if (status === "Requested" || status === "Rejected") {
+        // For Requested status, search in items array as well
+        query.$or = [
+          { bill_number: searchRegex },
+          { vendor_name: searchRegex },
+          { category: searchRegex },
+          { "items.item_name": searchRegex }, // Search in item names
+        ];
+      } else {
+        // For Completed and Rejected status
+        query.$or = [
+          { bill_number: searchRegex },
+          { vendor_name: searchRegex },
+          { category: searchRegex },
+        ];
+      }
+    }
 
     const projection = {
       request_date: 1,
@@ -115,6 +137,62 @@ const getInventoryDataById = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+const getInventorySuggestions = async (req, res) => {
+  try {
+    const userId = req.user;
+    const { types } = req.query;
+
+    if (!types) {
+      return res.status(400).json({
+        success: false,
+        message: "types query param is required",
+      });
+    }
+
+    const typeList = types.split(","); // vendor,item,category
+
+    const tasks = {};
+    const promises = [];
+
+    if (typeList.includes("vendor")) {
+      promises.push(
+        Inventory.distinct("vendor_name", {
+          user_id: userId,
+          vendor_name: { $nin: [null, ""] },
+        }).then((data) => (tasks.vendors = data.sort()))
+      );
+    }
+
+    if (typeList.includes("category")) {
+      promises.push(
+        Inventory.distinct("category", {
+          user_id: userId,
+          category: { $nin: [null, ""] },
+        }).then((data) => (tasks.categories = data.sort()))
+      );
+    }
+
+    if (typeList.includes("item")) {
+      promises.push(
+        Inventory.distinct("items.item_name", {
+          user_id: userId,
+          "items.item_name": { $nin: [null, ""] },
+        }).then((data) => (tasks.items = data.sort()))
+      );
+    }
+
+    await Promise.all(promises);
+
+    res.json(tasks);
+  } catch (error) {
+    console.error("Suggestion error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to load suggestions",
+    });
   }
 };
 
@@ -383,6 +461,7 @@ module.exports = {
   getInventoryData,
   getInventoryDataByStatus,
   getInventoryDataById,
+  getInventorySuggestions,
   addInventory,
   addInventoryRequest,
   updateInventory,

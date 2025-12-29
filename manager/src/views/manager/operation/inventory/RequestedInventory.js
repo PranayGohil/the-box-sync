@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Badge, Button, Col, Form, Card, Row, Modal, Spinner, Alert } from 'react-bootstrap';
-import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
+import { Badge, Button, Col, Card, Row, Modal, Spinner, Alert } from 'react-bootstrap';
+import { useTable, useGlobalFilter, useSortBy } from 'react-table';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -14,7 +14,7 @@ import TablePagination from './components/TablePagination';
 
 const RequestedInventory = () => {
   const title = 'Requested Inventory';
-  const description = 'Requested inventory with modern table UI and dummy data.';
+  const description = 'Requested inventory with modern table UI.';
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
@@ -22,44 +22,67 @@ const RequestedInventory = () => {
     { to: 'operations/requested-inventory', title: 'Requested Inventory' },
   ];
 
-  const [loading, setLoading] = useState({
-    data: true,
-    deleting: false
-  });
   const [data, setData] = useState([]);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [loading, setLoading] = useState({ data: true, deleting: false });
   const [error, setError] = useState('');
 
   const [deleteInventoryModal, setDeleteInventoryModal] = useState(false);
   const [inventoryToDelete, setInventoryToDelete] = useState(null);
 
-  const fetchRequestedInventory = async () => {
+  // Ref to prevent infinite loops
+  const fetchRef = useRef(false);
+
+  const fetchRequestedInventory = useCallback(async () => {
     try {
       setLoading(prev => ({ ...prev, data: true }));
       setError('');
-      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Requested`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+
+      const params = {
+        page: pageIndex + 1,
+        limit: pageSize,
+      };
+
+      if (searchTerm) {
+        params.search = searchTerm;
+      }
+
+      const res = await axios.get(
+        `${process.env.REACT_APP_API}/inventory/get-by-status/Requested`,
+        {
+          params,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
 
       if (res.data.success) {
-        const requestedInventory = res.data.data
-          .map((item) => ({
-            ...item,
-            request_date_obj: new Date(item.request_date),
-            formatted_date: new Date(item.request_date).toLocaleString("en-IN", {
-              timeZone: "Asia/Kolkata",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            }),
-          }));
+        const requestedInventory = res.data.data.map((item) => ({
+          ...item,
+          request_date_obj: new Date(item.request_date),
+          formatted_date: new Date(item.request_date).toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          }),
+        }));
 
-        requestedInventory.sort((a, b) => b.request_date_obj - a.request_date_obj);
         setData(requestedInventory);
+
+        if (res.data.pagination) {
+          setTotalRecords(res.data.pagination.total || 0);
+          setTotalPages(res.data.pagination.totalPages || 0);
+        }
       }
     } catch (err) {
       console.error('Error fetching requested inventory:', err);
@@ -67,14 +90,59 @@ const RequestedInventory = () => {
       toast.error('Failed to fetch requested inventory.');
     } finally {
       setLoading(prev => ({ ...prev, data: false }));
+      fetchRef.current = false;
     }
-  }
+  }, [pageIndex, pageSize, searchTerm]);
 
   useEffect(() => {
-    fetchRequestedInventory();
-  }, [])
+    if (!fetchRef.current) {
+      fetchRef.current = true;
+      fetchRequestedInventory();
+    }
+  }, [fetchRequestedInventory]);
 
-  // Define table columns
+  const handlePageChange = (newPageIndex) => {
+    setPageIndex(newPageIndex);
+  };
+
+  const handlePageSizeChange = (newPageSize) => {
+    setPageSize(newPageSize);
+    setPageIndex(0);
+  };
+
+  const handleSearch = useCallback((value) => {
+    setSearchTerm(value);
+    setPageIndex(0);
+  }, []);
+
+  const handleRefresh = () => {
+    fetchRef.current = true;
+    fetchRequestedInventory();
+  };
+
+  const deleteInventory = async () => {
+    if (!inventoryToDelete) return;
+
+    setLoading(prev => ({ ...prev, deleting: true }));
+    try {
+      await axios.delete(
+        `${process.env.REACT_APP_API}/inventory/delete/${inventoryToDelete._id}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+
+      toast.success('Inventory request deleted successfully!');
+      setDeleteInventoryModal(false);
+      setInventoryToDelete(null);
+      fetchRef.current = true;
+      fetchRequestedInventory();
+    } catch (err) {
+      console.error('Error deleting inventory:', err);
+      toast.error(err.response?.data?.message || 'Failed to delete inventory.');
+    } finally {
+      setLoading(prev => ({ ...prev, deleting: false }));
+    }
+  };
+
   const columns = React.useMemo(
     () => [
       {
@@ -113,7 +181,7 @@ const RequestedInventory = () => {
         Header: 'Actions',
         headerClassName: 'text-muted text-small text-uppercase w-25 text-center',
         Cell: ({ row }) => (
-          <div className='d-flex align-items-center justify-content-center gap-2'>
+          <div className="d-flex align-items-center justify-content-center gap-2">
             <Link
               to={`/operations/edit-inventory/${row.original._id}`}
               className="btn btn-outline-primary btn-sm"
@@ -140,39 +208,33 @@ const RequestedInventory = () => {
     [loading.deleting]
   );
 
-  const deleteInventory = async () => {
-    if (!inventoryToDelete) return;
+  const tableInstance = useTable(
+    {
+      columns,
+      data,
+      manualPagination: true,
+      manualSortBy: true,
+      manualGlobalFilter: true,
+      pageCount: totalPages,
+      autoResetPage: false,
+      autoResetSortBy: false,
+      autoResetGlobalFilter: false,
+    },
+    useGlobalFilter,
+    useSortBy
+  );
 
-    setLoading(prev => ({ ...prev, deleting: true }));
-    try {
-      await axios.delete(
-        `${process.env.REACT_APP_API}/inventory/delete/${inventoryToDelete._id}`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-
-      toast.success('Inventory request deleted successfully!');
-      setDeleteInventoryModal(false);
-      setInventoryToDelete(null);
-      fetchRequestedInventory();
-    } catch (err) {
-      console.error("Error deleting inventory:", err);
-      toast.error(err.response?.data?.message || 'Failed to delete inventory.');
-    } finally {
-      setLoading(prev => ({ ...prev, deleting: false }));
-    }
+  const paginationProps = {
+    canPreviousPage: pageIndex > 0,
+    canNextPage: pageIndex < totalPages - 1,
+    pageCount: totalPages,
+    pageIndex,
+    gotoPage: handlePageChange,
+    nextPage: () => handlePageChange(pageIndex + 1),
+    previousPage: () => handlePageChange(pageIndex - 1),
   };
 
-  const tableInstance = useTable({
-    columns,
-    data,
-    initialState: { pageIndex: 0 }
-  }, useGlobalFilter, useSortBy, usePagination, useRowSelect);
-
-  const handleRefresh = () => {
-    fetchRequestedInventory();
-  };
-
-  if (loading.data) {
+  if (loading.data && pageIndex === 0 && !searchTerm) {
     return (
       <>
         <HtmlHead title={title} description={description} />
@@ -223,6 +285,34 @@ const RequestedInventory = () => {
             </Row>
           </div>
 
+          {/* Search and controls - Always visible */}
+          <Row className="mb-3">
+            <Col sm="12" md="5" lg="3" xxl="2">
+              <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
+                <ControlsSearch onSearch={handleSearch} />
+              </div>
+            </Col>
+            <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
+              <div className="d-inline-block me-3">
+                {loading.data ? (
+                  <span className="text-muted">Loading...</span>
+                ) : (
+                  <>
+                    <span className="text-muted me-2">
+                      Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0} to{' '}
+                      {Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords} entries
+                    </span>
+                    <ControlsPageSize pageSize={pageSize} onPageSizeChange={handlePageSizeChange} />
+                  </>
+                )}
+              </div>
+              <Badge bg="light" text="dark" className="p-2">
+                <CsLineIcons icon="list" className="me-1" />
+                {totalRecords} request{totalRecords !== 1 ? 's' : ''}
+              </Badge>
+            </Col>
+          </Row>
+
           {error ? (
             <Alert variant="danger" className="my-4">
               <CsLineIcons icon="error" className="me-2" />
@@ -231,48 +321,47 @@ const RequestedInventory = () => {
                 variant="outline-danger"
                 size="sm"
                 className="ms-3"
-                onClick={fetchRequestedInventory}
+                onClick={() => {
+                  fetchRef.current = true;
+                  fetchRequestedInventory();
+                }}
               >
                 Retry
               </Button>
             </Alert>
+          ) : loading.data ? (
+            <Row className="justify-content-center my-5">
+              <Col xs={12} className="text-center">
+                <Spinner animation="border" variant="primary" className="mb-3" />
+                <p className="text-muted">Loading...</p>
+              </Col>
+            </Row>
           ) : data.length === 0 ? (
             <Alert variant="info" className="my-4">
               <div className="text-center py-4">
                 <CsLineIcons icon="inbox" size="48" className="text-muted mb-3" />
-                <h5>No Inventory Requests Found</h5>
-                <p className="text-muted mb-4">Get started by creating your first inventory request</p>
-                <Link to="/operations/add-inventory" className="btn btn-primary">
-                  <CsLineIcons icon="plus" className="me-2" />
-                  Create First Request
-                </Link>
+                <h5>
+                  {searchTerm ? `No results found for "${searchTerm}"` : 'No Inventory Requests Found'}
+                </h5>
+                {!searchTerm && (
+                  <>
+                    <p className="text-muted mb-4">Get started by creating your first inventory request</p>
+                    <Link to="/operations/add-inventory" className="btn btn-primary">
+                      <CsLineIcons icon="plus" className="me-2" />
+                      Create First Request
+                    </Link>
+                  </>
+                )}
               </div>
             </Alert>
           ) : (
             <>
-              <Row className="mb-3">
-                <Col sm="12" md="5" lg="3" xxl="2">
-                  <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
-                    <ControlsSearch tableInstance={tableInstance} />
-                  </div>
-                </Col>
-                <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
-                  <div className="d-inline-block me-3">
-                    <ControlsPageSize tableInstance={tableInstance} />
-                  </div>
-                  <Badge bg="light" text="dark" className="p-2">
-                    <CsLineIcons icon="list" className="me-1" />
-                    {data.length} request{data.length !== 1 ? 's' : ''}
-                  </Badge>
-                </Col>
-              </Row>
-
               <Row>
                 <Col xs="12">
                   <Table className="react-table rows" tableInstance={tableInstance} />
                 </Col>
                 <Col xs="12">
-                  <TablePagination tableInstance={tableInstance} />
+                  <TablePagination paginationProps={paginationProps} />
                 </Col>
               </Row>
             </>
@@ -281,7 +370,12 @@ const RequestedInventory = () => {
       </Row>
 
       {/* Delete Inventory Modal */}
-      <Modal className="modal-close-out" show={deleteInventoryModal} onHide={() => setDeleteInventoryModal(false)} centered>
+      <Modal
+        className="modal-close-out"
+        show={deleteInventoryModal}
+        onHide={() => setDeleteInventoryModal(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>
             <CsLineIcons icon="warning" className="text-danger me-2" />
@@ -290,7 +384,8 @@ const RequestedInventory = () => {
         </Modal.Header>
         <Modal.Body>
           <p>
-            Are you sure you want to delete the request for <strong>{inventoryToDelete?.items?.length || 0} items</strong>?
+            Are you sure you want to delete the request for{' '}
+            <strong>{inventoryToDelete?.items?.length || 0} items</strong>?
           </p>
           <Alert variant="warning" className="mt-3">
             <CsLineIcons icon="alert" className="me-2" />
@@ -298,7 +393,11 @@ const RequestedInventory = () => {
           </Alert>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setDeleteInventoryModal(false)} disabled={loading.deleting}>
+          <Button
+            variant="secondary"
+            onClick={() => setDeleteInventoryModal(false)}
+            disabled={loading.deleting}
+          >
             Cancel
           </Button>
           <Button
@@ -319,7 +418,9 @@ const RequestedInventory = () => {
                 />
                 Deleting...
               </>
-            ) : 'Delete'}
+            ) : (
+              'Delete'
+            )}
           </Button>
         </Modal.Footer>
       </Modal>
@@ -331,7 +432,7 @@ const RequestedInventory = () => {
           style={{
             backgroundColor: 'rgba(255, 255, 255, 0.7)',
             zIndex: 9999,
-            backdropFilter: 'blur(2px)'
+            backdropFilter: 'blur(2px)',
           }}
         >
           <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>

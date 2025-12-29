@@ -8,6 +8,7 @@ import axios from 'axios';
 import { useFormik } from 'formik';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
+import CreatableSelect from 'react-select/creatable';
 
 function EditInventory() {
   const { id } = useParams();
@@ -16,6 +17,7 @@ function EditInventory() {
     initial: true,
     submitting: false
   });
+  const [itemOptions, setItemOptions] = useState([]);
   const [items, setItems] = useState([{ item_name: '', unit: '', item_quantity: '' }]);
   const [error, setError] = useState('');
 
@@ -26,6 +28,29 @@ function EditInventory() {
     { to: 'operations', text: 'Operations' },
     { to: `operations/edit-inventory/${id}`, title: 'Edit Inventory' },
   ];
+
+  useEffect(() => {
+    const fetchItemSuggestions = async () => {
+      try {
+        const { data } = await axios.get(
+          `${process.env.REACT_APP_API}/inventory/get-suggestions?types=item`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        setItemOptions(
+          (data.items || []).map(i => ({ label: i, value: i }))
+        );
+      } catch (err) {
+        console.error("Failed to load item suggestions", err);
+      }
+    };
+
+    fetchItemSuggestions();
+  }, []);
 
   // ✅ Formik setup with your schema
   const formik = useFormik({
@@ -187,14 +212,30 @@ function EditInventory() {
                     {/* Item Name */}
                     <Col md={4}>
                       <Form.Group>
-                        <Form.Control
-                          type="text"
-                          placeholder="Item Name"
-                          value={item.item_name}
-                          onChange={(e) => handleItemChange(index, 'item_name', e.target.value)}
-                          isInvalid={itemTouched.item_name && itemErrors.item_name}
-                          disabled={loading.submitting}
+                        <CreatableSelect
+                          isClearable
+                          isDisabled={loading.submitting}
+                          options={itemOptions}
+                          value={
+                            item.item_name
+                              ? { label: item.item_name, value: item.item_name }
+                              : null
+                          }
+                          onChange={(selected) =>
+                            handleItemChange(
+                              index,
+                              "item_name",
+                              selected ? selected.value : ""
+                            )
+                          }
+                          placeholder="Select or create item"
+                          classNamePrefix="react-select"
                         />
+
+                        {itemTouched.item_name && itemErrors.item_name && (
+                          <div className="text-danger mt-1">{itemErrors.item_name}</div>
+                        )}
+
                         <Form.Control.Feedback type="invalid">{itemErrors.item_name}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>

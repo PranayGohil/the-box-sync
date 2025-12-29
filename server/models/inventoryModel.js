@@ -71,5 +71,7 @@ inventory.index({ user_id: 1, category: 1, request_date: -1 });
 // Optional: if you search by vendor
 inventory.index({ user_id: 1, vendor_name: 1, request_date: -1 });
 
+inventory.index({ user_id: 1, "items.item_name": 1 });
+
 const Inventory = mongoose.model("inventory", inventory);
 module.exports = Inventory;

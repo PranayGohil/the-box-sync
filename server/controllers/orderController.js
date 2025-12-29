@@ -990,6 +990,8 @@ const orderHistory = async (req, res) => {
     const {
       order_source,
       order_status,
+      order_type,      // NEW: Filter by order type
+      table_area,      // NEW: Filter by table area
       from,
       to,
       search,
@@ -1007,9 +1009,34 @@ const orderHistory = async (req, res) => {
       user_id: req.user,
     };
 
-    if (order_source) filter.order_source = order_source;
+    // Existing filters
+    if (order_source) {
+      let sources = order_source;
+
+      // Handle axios array serialization
+      if (typeof order_source === 'object') {
+        sources = Object.values(order_source);
+      }
+
+      if (Array.isArray(sources)) {
+        filter.order_source = { $in: sources };
+      } else {
+        filter.order_source = sources;
+      }
+    }
     if (order_status) filter.order_status = order_status;
 
+    // NEW: Order Type Filter
+    if (order_type) {
+      filter.order_type = order_type;
+    }
+
+    // NEW: Table Area Filter (case-insensitive partial match)
+    if (table_area) {
+      filter.table_area = new RegExp(table_area, "i");
+    }
+
+    // Date Range Filter
     if (from || to) {
       filter.order_date = {};
       if (from) filter.order_date.$gte = new Date(from);
@@ -1020,15 +1047,21 @@ const orderHistory = async (req, res) => {
       }
     }
 
+    // Search Filter
     if (search) {
       const regex = new RegExp("^" + search, "i");
-      filter.$or = [{ customer_name: regex }, { table_no: regex }];
+      filter.$or = [
+        { customer_name: regex },
+        { table_no: regex }
+      ];
     }
 
+    // Sorting
     const sort = {
       [sortBy]: sortOrder === "asc" ? 1 : -1,
     };
 
+    // Projection
     const projection = {
       token: 1,
       table_no: 1,
@@ -1044,6 +1077,7 @@ const orderHistory = async (req, res) => {
       updated_at: 1,
     };
 
+    // Parallel execution of query and count
     const [orders, total] = await Promise.all([
       Order.find(filter)
         .select(projection)
@@ -1051,7 +1085,7 @@ const orderHistory = async (req, res) => {
         .skip(skip)
         .limit(pageSize)
         .lean(),
-      Order.countDocuments(filter), // ✅ ALWAYS calculate
+      Order.countDocuments(filter),
     ]);
 
     return res.json({

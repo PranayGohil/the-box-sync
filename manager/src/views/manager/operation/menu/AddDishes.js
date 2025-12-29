@@ -22,13 +22,18 @@ const AddDishes = () => {
 
   const history = useHistory();
   const location = useLocation();
+
+  const [suggestions, setSuggestions] = useState({});
   const [imagePreviews, setImagePreviews] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
-  const categoryOptions = categories.map(cat => ({
-    label: cat,
-    value: cat,
+  const categoryOptions = (suggestions.categories || []).map(c => ({
+    label: c,
+    value: c,
+  }));
+  const dishOptions = (suggestions.dishes || []).map(d => ({
+    label: d,
+    value: d,
   }));
 
   const isFromManageMenu = location.state?.fromManageMenu || false;
@@ -55,15 +60,12 @@ const AddDishes = () => {
     try {
       setLoadingCategories(true);
       const response = await axios.get(
-        `${process.env.REACT_APP_API}/menu/get-categories`,
+        `${process.env.REACT_APP_API}/menu/get-suggestions?types=category,dish`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }
       );
-
-      if (response.data.success) {
-        setCategories(response.data.data || []);
-      }
+      setSuggestions(response.data);
     } catch (error) {
       console.error('Error fetching menu categories:', error);
       toast.error('Failed to load menu categories');
@@ -164,7 +166,6 @@ const AddDishes = () => {
                       <Col md={4}>
                         <BForm.Group>
                           <BForm.Label>Dish Category</BForm.Label>
-
                           <CreatableSelect
                             isClearable
                             isDisabled={isSubmitting || loadingCategories || isFromManageMenu}
@@ -180,7 +181,6 @@ const AddDishes = () => {
                             placeholder="Select or create category"
                             classNamePrefix="react-select"
                           />
-
                           <ErrorMessage
                             name="category"
                             component="div"
@@ -215,10 +215,20 @@ const AddDishes = () => {
                                 <Col md={4}>
                                   <BForm.Group>
                                     <BForm.Label>Dish Name</BForm.Label>
-                                    <Field
-                                      name={`dishes[${index}].dish_name`}
-                                      className="form-control"
-                                      disabled={isSubmitting}
+                                    <CreatableSelect
+                                      isClearable
+                                      isDisabled={isSubmitting}
+                                      options={dishOptions}
+                                      value={
+                                        dish.dish_name
+                                          ? { label: dish.dish_name, value: dish.dish_name }
+                                          : null
+                                      }
+                                      onChange={(selected) =>
+                                        setFieldValue(`dishes[${index}].dish_name`, selected ? selected.value : '')
+                                      }
+                                      placeholder="Select or create dish name"
+                                      classNamePrefix="react-select"
                                     />
                                     <ErrorMessage name={`dishes[${index}].dish_name`} component="div" className="text-danger" />
                                   </BForm.Group>
