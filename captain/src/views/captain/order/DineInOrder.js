@@ -34,6 +34,8 @@ const DineInOrder = () => {
       comment: '',
     }
   });
+  const allowNavigationRef = useRef(false); // ++Update
+
   const [tableInfo, setTableInfo] = useState({});
   const [orderItems, setOrderItems] = useState([]);
   const [menuData, setMenuData] = useState([]);
@@ -225,19 +227,24 @@ const DineInOrder = () => {
   }, [isDirty]);
 
   // 🔥 Protect against browser back/forward buttons
-  useEffect(() => {
-    const unblock = history.block((loc, action) => {
+  useEffect(() => { // ++Update
+    const unblock = history.block((loc) => {
+      // ✅ Allow navigation if explicitly permitted
+      if (allowNavigationRef.current) {
+        allowNavigationRef.current = false;
+        return true;
+      }
+
       if (isDirty && loc.pathname !== window.location.pathname) {
         setNextLocation(loc.pathname);
         setShowLeaveModal(true);
-        return false; // Block navigation
+        return false;
       }
-      return true; // Allow navigation
+
+      return true;
     });
 
-    return () => {
-      unblock();
-    };
+    return unblock;
   }, [isDirty, history]);
 
   const handleNavigation = (path) => {
@@ -460,6 +467,7 @@ const DineInOrder = () => {
       });
 
       if (response.data.status === 'success') {
+         allowNavigationRef.current = true;  // ++Update
         // 🔥 NEW: Update initial state after successful save
         initialStateRef.current = {
           orderItems: JSON.parse(JSON.stringify(orderItems)),
@@ -949,6 +957,7 @@ const DineInOrder = () => {
             variant="danger"
             onClick={() => {
               // Clear dirty flag and close modal
+              allowNavigationRef.current = true; // ++Update
               setIsDirty(false);
               setShowLeaveModal(false);
 
@@ -966,6 +975,7 @@ const DineInOrder = () => {
             <Button
               variant="secondary"
               onClick={async () => {
+                allowNavigationRef.current = true; // ++Update
                 await handleSaveOrder('Save');
                 setShowLeaveModal(false);
 
@@ -985,6 +995,7 @@ const DineInOrder = () => {
           <Button
             variant="primary"
             onClick={async () => {
+              allowNavigationRef.current = true; // ++Update
               await handleSaveOrder('KOT');
               setShowLeaveModal(false);
 
