@@ -5,6 +5,7 @@ const WebCustomer = require("../models/webCustomerModel");
 const TokenCounter = require("../models/TokenCounter");
 const Table = require("../models/tableModel");
 const Notification = require("../models/notificationModel");
+const OrderCounter = require("../models/orderCounterModel");
 
 const cron = require("node-cron");
 
@@ -23,6 +24,17 @@ cron.schedule("0 0 * * *", async () => {
     console.error("Error resetting token counter:", error);
   }
 });
+
+const generateOrderNo = async (userId) => {
+  const counter = await OrderCounter.findOneAndUpdate(
+    { user_id: userId },
+    { $inc: { seq: 1 } },
+    { new: true, upsert: true }
+  );
+
+  const padded = String(counter.seq).padStart(6, "0");
+  return `ORD-${padded}`;
+};
 
 const addCustomer = (req, res) => {
   try {
@@ -476,6 +488,8 @@ const dineInController = async (req, res) => {
     const token = await generateToken(req.user, orderInfo.order_source);
     orderInfo.token = token;
 
+    orderInfo.order_no = await generateOrderNo(req.user);
+
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();
 
@@ -636,8 +650,11 @@ const takeawayController = async (req, res) => {
     const token = await generateToken(req.user, orderInfo.order_source);
     orderInfo.token = token;
 
+    orderInfo.order_no = await generateOrderNo(req.user);
+
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();
+
 
     if (savedOrder.order_status === "KOT" || savedOrder.order_status === "Paid") {
       const io = req.app.get("io");
@@ -799,6 +816,8 @@ const deliveryController = async (req, res) => {
         customer: savedCustomer,
       });
     }
+
+    orderInfo.order_no = await generateOrderNo(req.user);
 
     // ✅ 5. Handle new order creation
     const newOrder = new Order(orderInfo);
@@ -1063,6 +1082,7 @@ const orderHistory = async (req, res) => {
 
     // Projection
     const projection = {
+      order_no: 1,
       token: 1,
       table_no: 1,
       table_area: 1,

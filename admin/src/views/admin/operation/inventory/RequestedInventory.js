@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Badge, Button, Col, Form, Row, Modal, Spinner, Alert } from 'react-bootstrap';
+import { Badge, Button, Col, Form, Row, Modal, Spinner, Alert, Card, Collapse } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy } from 'react-table';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -30,6 +30,13 @@ const RequestedInventory = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Filter states
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    requestFromDate: '',
+    requestToDate: '',
+  });
+
   const [rejectInventoryModal, setRejectInventoryModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [rejecting, setRejecting] = useState(false);
@@ -37,6 +44,14 @@ const RequestedInventory = () => {
 
   // Use ref to prevent infinite loops
   const fetchRef = useRef(false);
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (filters.requestFromDate) count++;
+    if (filters.requestToDate) count++;
+    if (searchTerm) count++;
+    return count;
+  };
 
   const fetchRequestedInventory = useCallback(async () => {
     try {
@@ -49,6 +64,14 @@ const RequestedInventory = () => {
 
       if (searchTerm) {
         params.search = searchTerm;
+      }
+
+      if (filters.requestFromDate) {
+        params.request_from = filters.requestFromDate;
+      }
+
+      if (filters.requestToDate) {
+        params.request_to = filters.requestToDate;
       }
 
       const res = await axios.get(
@@ -90,7 +113,7 @@ const RequestedInventory = () => {
       setLoading(false);
       fetchRef.current = false;
     }
-  }, [pageIndex, pageSize, searchTerm]);
+  }, [pageIndex, pageSize, searchTerm, filters]);
 
   useEffect(() => {
     if (!fetchRef.current) {
@@ -112,6 +135,23 @@ const RequestedInventory = () => {
     setSearchTerm(value);
     setPageIndex(0);
   }, []);
+
+  const handleFilterChange = (filterName, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterName]: value,
+    }));
+    setPageIndex(0);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      requestFromDate: '',
+      requestToDate: '',
+    });
+    setSearchTerm('');
+    setPageIndex(0);
+  };
 
   const rejectInventory = async (id) => {
     setRejecting(true);
@@ -235,6 +275,72 @@ const RequestedInventory = () => {
             </Row>
           </div>
 
+          {/* Filter Section */}
+          <Card className="mb-3">
+            <Card.Body>
+              <div className="d-flex justify-content-between align-items-center">
+                <Button
+                  variant="link"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="p-0 text-decoration-none"
+                >
+                  <CsLineIcons icon="filter" className="me-2" />
+                  <strong>Filters</strong>
+                  {getActiveFilterCount() > 0 && (
+                    <Badge bg="primary" className="ms-2">
+                      {getActiveFilterCount()}
+                    </Badge>
+                  )}
+                  <CsLineIcons
+                    icon={showFilters ? 'chevron-top' : 'chevron-bottom'}
+                    className="ms-2"
+                  />
+                </Button>
+                {getActiveFilterCount() > 0 && (
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={handleClearFilters}
+                  >
+                    <CsLineIcons icon="close" className="me-1" />
+                    Clear All
+                  </Button>
+                )}
+              </div>
+
+              <Collapse in={showFilters}>
+                <div className="mt-2">
+                  <Row>
+                    {/* Request Date Range */}
+                    <Col md={4} className="mb-3">
+                      <Form.Label className="small text-muted fw-bold">Request Date Range</Form.Label>
+                      <Row>
+                        <Col md={6}>
+                          <Form.Label className="small text-muted">From</Form.Label>
+                          <Form.Control
+                            type="date"
+                            size="sm"
+                            value={filters.requestFromDate}
+                            onChange={(e) => handleFilterChange('requestFromDate', e.target.value)}
+                          />
+                        </Col>
+                        <Col md={6}>
+                          <Form.Label className="small text-muted">To</Form.Label>
+                          <Form.Control
+                            type="date"
+                            size="sm"
+                            value={filters.requestToDate}
+                            onChange={(e) => handleFilterChange('requestToDate', e.target.value)}
+                          />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </div>
+              </Collapse>
+            </Card.Body>
+          </Card>
+
           {/* Search and controls - Always visible */}
           <Row className="mb-3">
             <Col sm="12" md="5" lg="3" xxl="2">
@@ -269,7 +375,9 @@ const RequestedInventory = () => {
           ) : data.length === 0 ? (
             <Alert variant="info" className="mb-4">
               <CsLineIcons icon="inbox" className="me-2" />
-              {searchTerm ? `No results found for "${searchTerm}"` : 'No requested inventory found.'}
+              {searchTerm || getActiveFilterCount() > 0
+                ? 'No results found. Try adjusting your search or filters.'
+                : 'No requested inventory found.'}
             </Alert>
           ) : (
             <>

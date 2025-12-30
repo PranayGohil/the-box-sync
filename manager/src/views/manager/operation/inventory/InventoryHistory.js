@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { Badge, Button, Col, Row, Modal, Spinner, Alert } from 'react-bootstrap';
+import { Badge, Button, Col, Row, Modal, Spinner, Alert, Card, Collapse, Form } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy } from 'react-table';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -30,6 +30,12 @@ const InventoryHistory = () => {
   const [completedTotalRecords, setCompletedTotalRecords] = useState(0);
   const [completedTotalPages, setCompletedTotalPages] = useState(0);
   const [completedSearchTerm, setCompletedSearchTerm] = useState('');
+  const [completedFilters, setCompletedFilters] = useState({
+    requestFromDate: '',
+    requestToDate: '',
+    billFromDate: '',
+    billToDate: '',
+  });
 
   // Rejected inventory state
   const [rejectedData, setRejectedData] = useState([]);
@@ -38,12 +44,22 @@ const InventoryHistory = () => {
   const [rejectedTotalRecords, setRejectedTotalRecords] = useState(0);
   const [rejectedTotalPages, setRejectedTotalPages] = useState(0);
   const [rejectedSearchTerm, setRejectedSearchTerm] = useState('');
+  const [rejectedFilters, setRejectedFilters] = useState({
+    requestFromDate: '',
+    requestToDate: '',
+    billFromDate: '',
+    billToDate: '',
+  });
 
   const [loading, setLoading] = useState({ completed: true, rejected: true });
   const [error, setError] = useState({ completed: '', rejected: '' });
 
   const [selectedRejectReason, setSelectedRejectReason] = useState('');
   const [showRejectReasonModal, setShowRejectReasonModal] = useState(false);
+
+  // Filter visibility state
+  const [showCompletedFilters, setShowCompletedFilters] = useState(false);
+  const [showRejectedFilters, setShowRejectedFilters] = useState(false);
 
   // Refs to prevent infinite loops
   const completedFetchRef = useRef(false);
@@ -53,6 +69,26 @@ const InventoryHistory = () => {
     if (!text) return '';
     const words = text.split(' ');
     return words.length > limit ? words.slice(0, limit).join(' ') : text;
+  };
+
+  const getCompletedActiveFilterCount = () => {
+    let count = 0;
+    if (completedFilters.requestFromDate) count++;
+    if (completedFilters.requestToDate) count++;
+    if (completedFilters.billFromDate) count++;
+    if (completedFilters.billToDate) count++;
+    if (completedSearchTerm) count++;
+    return count;
+  };
+
+  const getRejectedActiveFilterCount = () => {
+    let count = 0;
+    if (rejectedFilters.requestFromDate) count++;
+    if (rejectedFilters.requestToDate) count++;
+    if (rejectedFilters.billFromDate) count++;
+    if (rejectedFilters.billToDate) count++;
+    if (rejectedSearchTerm) count++;
+    return count;
   };
 
   const fetchCompletedInventory = useCallback(async () => {
@@ -67,6 +103,22 @@ const InventoryHistory = () => {
 
       if (completedSearchTerm) {
         params.search = completedSearchTerm;
+      }
+
+      if (completedFilters.requestFromDate) {
+        params.request_from = completedFilters.requestFromDate;
+      }
+
+      if (completedFilters.requestToDate) {
+        params.request_to = completedFilters.requestToDate;
+      }
+
+      if (completedFilters.billFromDate) {
+        params.bill_from = completedFilters.billFromDate;
+      }
+
+      if (completedFilters.billToDate) {
+        params.bill_to = completedFilters.billToDate;
       }
 
       const res = await axios.get(
@@ -113,7 +165,7 @@ const InventoryHistory = () => {
       setLoading(prev => ({ ...prev, completed: false }));
       completedFetchRef.current = false;
     }
-  }, [completedPageIndex, completedPageSize, completedSearchTerm]);
+  }, [completedPageIndex, completedPageSize, completedSearchTerm, completedFilters]);
 
   const fetchRejectedInventory = useCallback(async () => {
     try {
@@ -127,6 +179,22 @@ const InventoryHistory = () => {
 
       if (rejectedSearchTerm) {
         params.search = rejectedSearchTerm;
+      }
+
+      if (rejectedFilters.requestFromDate) {
+        params.request_from = rejectedFilters.requestFromDate;
+      }
+
+      if (rejectedFilters.requestToDate) {
+        params.request_to = rejectedFilters.requestToDate;
+      }
+
+      if (rejectedFilters.billFromDate) {
+        params.bill_from = rejectedFilters.billFromDate;
+      }
+
+      if (rejectedFilters.billToDate) {
+        params.bill_to = rejectedFilters.billToDate;
       }
 
       const res = await axios.get(
@@ -173,7 +241,7 @@ const InventoryHistory = () => {
       setLoading(prev => ({ ...prev, rejected: false }));
       rejectedFetchRef.current = false;
     }
-  }, [rejectedPageIndex, rejectedPageSize, rejectedSearchTerm]);
+  }, [rejectedPageIndex, rejectedPageSize, rejectedSearchTerm, rejectedFilters]);
 
   useEffect(() => {
     if (!completedFetchRef.current) {
@@ -203,6 +271,25 @@ const InventoryHistory = () => {
     setCompletedPageIndex(0);
   }, []);
 
+  const handleCompletedFilterChange = (filterName, value) => {
+    setCompletedFilters(prev => ({
+      ...prev,
+      [filterName]: value,
+    }));
+    setCompletedPageIndex(0);
+  };
+
+  const handleClearCompletedFilters = () => {
+    setCompletedFilters({
+      requestFromDate: '',
+      requestToDate: '',
+      billFromDate: '',
+      billToDate: '',
+    });
+    setCompletedSearchTerm('');
+    setCompletedPageIndex(0);
+  };
+
   const handleRejectedPageChange = (newPageIndex) => {
     setRejectedPageIndex(newPageIndex);
   };
@@ -216,6 +303,25 @@ const InventoryHistory = () => {
     setRejectedSearchTerm(value);
     setRejectedPageIndex(0);
   }, []);
+
+  const handleRejectedFilterChange = (filterName, value) => {
+    setRejectedFilters(prev => ({
+      ...prev,
+      [filterName]: value,
+    }));
+    setRejectedPageIndex(0);
+  };
+
+  const handleClearRejectedFilters = () => {
+    setRejectedFilters({
+      requestFromDate: '',
+      requestToDate: '',
+      billFromDate: '',
+      billToDate: '',
+    });
+    setRejectedSearchTerm('');
+    setRejectedPageIndex(0);
+  };
 
   const handleRefresh = () => {
     completedFetchRef.current = true;
@@ -447,6 +553,97 @@ const InventoryHistory = () => {
               </h4>
             </div>
 
+            {/* Completed Filters */}
+            <Card className="mb-3">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center">
+                  <Button
+                    variant="link"
+                    onClick={() => setShowCompletedFilters(!showCompletedFilters)}
+                    className="p-0 text-decoration-none"
+                  >
+                    <CsLineIcons icon="filter" className="me-2" />
+                    <strong>Filters</strong>
+                    {getCompletedActiveFilterCount() > 0 && (
+                      <Badge bg="primary" className="ms-2">
+                        {getCompletedActiveFilterCount()}
+                      </Badge>
+                    )}
+                    <CsLineIcons
+                      icon={showCompletedFilters ? 'chevron-top' : 'chevron-bottom'}
+                      className="ms-2"
+                    />
+                  </Button>
+                  {getCompletedActiveFilterCount() > 0 && (
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      onClick={handleClearCompletedFilters}
+                    >
+                      <CsLineIcons icon="close" className="me-1" />
+                      Clear All
+                    </Button>
+                  )}
+                </div>
+
+                <Collapse in={showCompletedFilters}>
+                  <div className="mt-2">
+                    <Row>
+                      {/* Request Date Range */}
+                      <Col md={4} className="mb-3">
+                        <Form.Label className="small text-muted fw-bold">Request Date Range</Form.Label>
+                        <Row>
+                          <Col md={6}>
+                            <Form.Label className="small text-muted">From</Form.Label>
+                            <Form.Control
+                              type="date"
+                              size="sm"
+                              value={completedFilters.requestFromDate}
+                              onChange={(e) => handleCompletedFilterChange('requestFromDate', e.target.value)}
+                            />
+                          </Col>
+                          <Col md={6}>
+                            <Form.Label className="small text-muted">To</Form.Label>
+                            <Form.Control
+                              type="date"
+                              size="sm"
+                              value={completedFilters.requestToDate}
+                              onChange={(e) => handleCompletedFilterChange('requestToDate', e.target.value)}
+                            />
+                          </Col>
+                        </Row>
+                      </Col>
+
+                      {/* Bill Date Range */}
+                      <Col md={4} className="mb-3">
+                        <Form.Label className="small text-muted fw-bold">Bill Date Range</Form.Label>
+                        <Row>
+                          <Col md={6}>
+                            <Form.Label className="small text-muted">From</Form.Label>
+                            <Form.Control
+                              type="date"
+                              size="sm"
+                              value={completedFilters.billFromDate}
+                              onChange={(e) => handleCompletedFilterChange('billFromDate', e.target.value)}
+                            />
+                          </Col>
+                          <Col md={6}>
+                            <Form.Label className="small text-muted">To</Form.Label>
+                            <Form.Control
+                              type="date"
+                              size="sm"
+                              value={completedFilters.billToDate}
+                              onChange={(e) => handleCompletedFilterChange('billToDate', e.target.value)}
+                            />
+                          </Col>
+                        </Row>
+                      </Col>
+                    </Row>
+                  </div>
+                </Collapse>
+              </Card.Body>
+            </Card>
+
             {/* Search and controls - Always visible */}
             <Row className="mb-3">
               <Col sm="12" md="5" lg="3" xxl="2">
@@ -502,8 +699,8 @@ const InventoryHistory = () => {
             ) : completedData.length === 0 ? (
               <Alert variant="info" className="mb-4">
                 <CsLineIcons icon="inbox" className="me-2" />
-                {completedSearchTerm
-                  ? `No results found for "${completedSearchTerm}"`
+                {completedSearchTerm || getCompletedActiveFilterCount() > 0
+                  ? 'No results found. Try adjusting your search or filters.'
                   : 'No completed inventory found.'}
               </Alert>
             ) : (
@@ -523,6 +720,72 @@ const InventoryHistory = () => {
                 <span className="text-muted ms-2">({rejectedTotalRecords})</span>
               </h4>
             </div>
+
+            {/* Rejected Filters */}
+            <Card className="mb-3">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center">
+                  <Button
+                    variant="link"
+                    onClick={() => setShowRejectedFilters(!showRejectedFilters)}
+                    className="p-0 text-decoration-none"
+                  >
+                    <CsLineIcons icon="filter" className="me-2" />
+                    <strong>Filters</strong>
+                    {getRejectedActiveFilterCount() > 0 && (
+                      <Badge bg="primary" className="ms-2">
+                        {getRejectedActiveFilterCount()}
+                      </Badge>
+                    )}
+                    <CsLineIcons
+                      icon={showRejectedFilters ? 'chevron-top' : 'chevron-bottom'}
+                      className="ms-2"
+                    />
+                  </Button>
+                  {getRejectedActiveFilterCount() > 0 && (
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      onClick={handleClearRejectedFilters}
+                    >
+                      <CsLineIcons icon="close" className="me-1" />
+                      Clear All
+                    </Button>
+                  )}
+                </div>
+
+                <Collapse in={showRejectedFilters}>
+                  <div className="mt-2">
+                    <Row>
+                      {/* Request Date Range */}
+                      <Col md={4} className="mb-3">
+                        <Form.Label className="small text-muted fw-bold">Request Date Range</Form.Label>
+                        <Row>
+                          <Col md={6}>
+                            <Form.Label className="small text-muted">From</Form.Label>
+                            <Form.Control
+                              type="date"
+                              size="sm"
+                              value={rejectedFilters.requestFromDate}
+                              onChange={(e) => handleRejectedFilterChange('requestFromDate', e.target.value)}
+                            />
+                          </Col>
+                          <Col md={6}>
+                            <Form.Label className="small text-muted">To</Form.Label>
+                            <Form.Control
+                              type="date"
+                              size="sm"
+                              value={rejectedFilters.requestToDate}
+                              onChange={(e) => handleRejectedFilterChange('requestToDate', e.target.value)}
+                            />
+                          </Col>
+                        </Row>
+                      </Col>
+                    </Row>
+                  </div>
+                </Collapse>
+              </Card.Body>
+            </Card>
 
             {/* Search and controls - Always visible */}
             <Row className="mb-3">
@@ -579,8 +842,8 @@ const InventoryHistory = () => {
             ) : rejectedData.length === 0 ? (
               <Alert variant="info" className="mb-4">
                 <CsLineIcons icon="inbox" className="me-2" />
-                {rejectedSearchTerm
-                  ? `No results found for "${rejectedSearchTerm}"`
+                {rejectedSearchTerm || getRejectedActiveFilterCount() > 0
+                  ? 'No results found. Try adjusting your search or filters.'
                   : 'No rejected inventory found.'}
               </Alert>
             ) : (

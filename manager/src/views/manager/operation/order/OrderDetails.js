@@ -114,7 +114,7 @@ const OrderDetails = () => {
                </td>
                </tr>
                <tr>
-               <td colspan="2"><strong>Bill No:</strong> ${order._id}</td>
+               <td colspan="2"><strong>Bill No:</strong> ${order.order_no || order._id}</td>
                
                </tr>
              </table>
@@ -344,7 +344,7 @@ const OrderDetails = () => {
                 </p>
               )}
               <p>
-                <strong>Order ID:</strong> {order.id || '-'}
+                <strong>Order Number:</strong> {order.order_no || order.id || '-'}
               </p>
               <p>
                 <strong>Order Type:</strong> {' '}

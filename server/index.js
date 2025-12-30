@@ -29,6 +29,7 @@ const hotelBookingRouter = require("./router/hotelBookingRoutes.js");
 const customerRouter = require("./router/customerRoutes.js");
 const webCustomerRouter = require("./router/webCustomerRoutes.js");
 const otpRouter = require("./router/otpRoutes.js");
+const waiterRouter = require("./router/waiterRoutes.js");
 
 const PORT = process.env.PORT;
 // const ORIGINS = process.env.ORIGINS ? process.env.ORIGINS.split(",") : [];
@@ -110,6 +111,7 @@ app.use("/api/hotel-booking", hotelBookingRouter);
 app.use("/api/customer", customerRouter);
 app.use("/api/web-customer", webCustomerRouter);
 app.use("/api/otp", otpRouter)
+app.use("/api/waiter", waiterRouter);
 
 connectDB().then(() => {
   server.listen(PORT, () => {

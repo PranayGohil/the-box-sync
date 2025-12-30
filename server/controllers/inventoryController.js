@@ -53,12 +53,46 @@ const getInventoryDataByStatus = async (req, res) => {
   try {
     const userId = req.user;
     const { status } = req.params;
-    const { page = 1, limit = 20, search } = req.query;
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      request_from,  // NEW: Request date from
+      request_to,    // NEW: Request date to
+      bill_from,     // NEW: Bill date from
+      bill_to        // NEW: Bill date to
+    } = req.query;
 
     const pageNumber = parseInt(page, 10) || 1;
     const pageSize = parseInt(limit, 10) || 20;
 
     const query = { user_id: userId, status };
+
+    // NEW: Request Date Range Filter
+    if (request_from || request_to) {
+      query.request_date = {};
+      if (request_from) {
+        query.request_date.$gte = new Date(request_from);
+      }
+      if (request_to) {
+        const toDate = new Date(request_to);
+        toDate.setHours(23, 59, 59, 999); // Include entire day
+        query.request_date.$lte = toDate;
+      }
+    }
+
+    // NEW: Bill Date Range Filter
+    if (bill_from || bill_to) {
+      query.bill_date = {};
+      if (bill_from) {
+        query.bill_date.$gte = new Date(bill_from);
+      }
+      if (bill_to) {
+        const toDate = new Date(bill_to);
+        toDate.setHours(23, 59, 59, 999); // Include entire day
+        query.bill_date.$lte = toDate;
+      }
+    }
 
     // Add search functionality
     if (search) {

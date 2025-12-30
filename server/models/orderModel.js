@@ -4,6 +4,9 @@ const orderSchema = new Schema({
   user_id: {
     type: String,
   },
+  order_no: {
+    type: String,
+  },
   table_no: {
     type: String,
   },
@@ -110,6 +113,8 @@ const orderSchema = new Schema({
     },
   }
 );
+
+orderSchema.index({ user_id: 1, order_no: 1 });
 
 // 1. Order history & active orders by user + type + status
 orderSchema.index({ user_id: 1, order_type: 1, order_status: 1 });

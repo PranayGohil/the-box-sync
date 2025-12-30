@@ -15,8 +15,11 @@ const validationSchema = Yup.object().shape({
   vendor_name: Yup.string().required('Vendor name is required'),
   category: Yup.string().required('Category is required'),
   bill_files: Yup.mixed().required('Bill files are required'),
-  total_amount: Yup.number().required('Total amount is required').positive('Total amount must be positive'),
-  paid_amount: Yup.number().required('Paid amount is required').positive('Paid amount must be positive'),
+  total_amount: Yup.number().min(0),
+  paid_amount: Yup.number()
+    .required('Paid amount is required')
+    .min(0)
+    .max(Yup.ref('total_amount'), 'Paid amount cannot exceed total'),
   items: Yup.array().of(
     Yup.object().shape({
       item_name: Yup.string().required('Item name is required'),
@@ -78,7 +81,15 @@ const AddInventory = () => {
 
     getSuggestions();
   }, []);
-  
+
+  const calculateTotalAmount = (items) => {
+    return items.reduce((sum, item) => {
+      const qty = Number(item.item_quantity) || 0;
+      const price = Number(item.item_price) || 0;
+      return sum + qty * price;
+    }, 0);
+  };
+
   const formik = useFormik({
     initialValues: {
       bill_date: '',
@@ -131,16 +142,16 @@ const AddInventory = () => {
   const { values, handleChange, handleSubmit, setFieldValue, errors, touched } = formik;
 
   useEffect(() => {
-    setIsCalculating(true);
-    const timer = setTimeout(() => {
-      const unpaid = parseFloat(values.total_amount) - parseFloat(values.paid_amount || 0);
-      if (!Number.isNaN(unpaid)) {
-        setFieldValue('unpaid_amount', unpaid.toFixed(2));
-      }
-      setIsCalculating(false);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [values.total_amount, values.paid_amount]);
+    const total = calculateTotalAmount(values.items);
+
+    setFieldValue('total_amount', total.toFixed(2));
+
+    const unpaid = total - (Number(values.paid_amount) || 0);
+    setFieldValue(
+      'unpaid_amount',
+      unpaid >= 0 ? unpaid.toFixed(2) : '0.00'
+    );
+  }, [values.items, values.paid_amount]);
 
   const handleItemChange = (index, field, value) => {
     const updatedItems = [...values.items];
@@ -274,58 +285,6 @@ const AddInventory = () => {
                   </Form.Group>
                 </Col>
               </Row>
-
-              <Row className="mt-3">
-                <Col md={4}>
-                  <Form.Group>
-                    <Form.Label>Total Amount</Form.Label>
-                    <Form.Control
-                      type="number"
-                      name="total_amount"
-                      value={values.total_amount}
-                      onChange={handleChange}
-                      isInvalid={touched.total_amount && errors.total_amount}
-                      disabled={isSubmitting}
-                    />
-                    <Form.Control.Feedback type="invalid">{errors.total_amount}</Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-                <Col md={4}>
-                  <Form.Group>
-                    <Form.Label>Paid Amount</Form.Label>
-                    <Form.Control
-                      type="number"
-                      name="paid_amount"
-                      value={values.paid_amount}
-                      onChange={handleChange}
-                      isInvalid={touched.paid_amount && errors.paid_amount}
-                      disabled={isSubmitting}
-                    />
-                    <Form.Control.Feedback type="invalid">{errors.paid_amount}</Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-                <Col md={4}>
-                  <Form.Group>
-                    <Form.Label>Unpaid Amount</Form.Label>
-                    <div className="position-relative">
-                      <Form.Control
-                        type="number"
-                        value={values.unpaid_amount}
-                        readOnly
-                        className="bg-light"
-                      />
-                      {isCalculating && (
-                        <Spinner
-                          animation="border"
-                          size="sm"
-                          className="position-absolute"
-                          style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}
-                        />
-                      )}
-                    </div>
-                  </Form.Group>
-                </Col>
-              </Row>
               <Row className="mt-3">
                 <Col md={6}>
                   <Form.Group>
@@ -453,6 +412,55 @@ const AddInventory = () => {
               <Button variant="primary" onClick={addItem} disabled={isSubmitting}>
                 + Add Item
               </Button>
+              <Row className="mt-3">
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label>Total Amount</Form.Label>
+                    <Form.Control
+                      type="number"
+                      value={values.total_amount}
+                      readOnly
+                      className="bg-light"
+                    />
+                    <Form.Control.Feedback type="invalid">{errors.total_amount}</Form.Control.Feedback>
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label>Paid Amount</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="paid_amount"
+                      value={values.paid_amount}
+                      onChange={handleChange}
+                      isInvalid={touched.paid_amount && errors.paid_amount}
+                      disabled={isSubmitting}
+                    />
+                    <Form.Control.Feedback type="invalid">{errors.paid_amount}</Form.Control.Feedback>
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label>Unpaid Amount</Form.Label>
+                    <div className="position-relative">
+                      <Form.Control
+                        type="number"
+                        value={values.unpaid_amount}
+                        readOnly
+                        className="bg-light"
+                      />
+                      {isCalculating && (
+                        <Spinner
+                          animation="border"
+                          size="sm"
+                          className="position-absolute"
+                          style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}
+                        />
+                      )}
+                    </div>
+                  </Form.Group>
+                </Col>
+              </Row>
             </Card>
 
             <Button

@@ -4,6 +4,7 @@ import { Button, Row, Col, Card, Form, Badge, Table, Modal } from 'react-bootstr
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import CreatableSelect from 'react-select/creatable';
 
 const DineInOrder = () => {
   const history = useHistory();
@@ -24,6 +25,13 @@ const DineInOrder = () => {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [nextLocation, setNextLocation] = useState(null);
 
+  const [waiters, setWaiters] = useState([]);
+
+  const waiterOptions = (waiters || []).map((waiter) => ({
+    value: waiter.full_name,
+    label: waiter.full_name
+  }));
+
   // 🔥 NEW: Store initial state to compare against
   const initialStateRef = useRef({
     orderItems: [],
@@ -34,7 +42,7 @@ const DineInOrder = () => {
       comment: '',
     }
   });
-  const allowNavigationRef = useRef(false); 
+  const allowNavigationRef = useRef(false);
 
   const [tableInfo, setTableInfo] = useState({});
   const [orderItems, setOrderItems] = useState([]);
@@ -74,6 +82,23 @@ const DineInOrder = () => {
 
   const [taxRates, setTaxRates] = useState({ cgst: 0, sgst: 0, vat: 0 });
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchWaiters = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(`${process.env.REACT_APP_API}/waiter/get`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        setWaiters(response.data.data);
+      } catch (err) {
+        console.error('Error fetching waiters:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchWaiters();
+  })
 
   // 🔥 NEW: Function to check if there are actual changes
   const hasUnsavedChanges = () => {
@@ -227,7 +252,7 @@ const DineInOrder = () => {
   }, [isDirty]);
 
   // 🔥 Protect against browser back/forward buttons
-  useEffect(() => { 
+  useEffect(() => {
     const unblock = history.block((loc) => {
       // ✅ Allow navigation if explicitly permitted
       if (allowNavigationRef.current) {
@@ -467,7 +492,7 @@ const DineInOrder = () => {
       });
 
       if (response.data.status === 'success') {
-         allowNavigationRef.current = true;  
+        allowNavigationRef.current = true;
         // 🔥 NEW: Update initial state after successful save
         initialStateRef.current = {
           orderItems: JSON.parse(JSON.stringify(orderItems)),
@@ -669,7 +694,7 @@ const DineInOrder = () => {
                     />
                   </Form.Group>
                 </Col>
-                <Col md="3">
+                <Col md="6">
                   <Form.Group>
                     <Form.Label>Persons</Form.Label>
                     <Form.Control
@@ -680,10 +705,27 @@ const DineInOrder = () => {
                     />
                   </Form.Group>
                 </Col>
-                <Col md="3">
+                <Col md="6">
                   <Form.Group>
                     <Form.Label>Waiter</Form.Label>
-                    <Form.Control type="text" value={customerInfo.waiter} onChange={(e) => setCustomerInfo((prev) => ({ ...prev, waiter: e.target.value }))} />
+                    <CreatableSelect
+                      isClearable
+                      isDisabled={orderStatus === 'Paid'}
+                      options={waiterOptions}
+                      value={
+                        customerInfo.waiter
+                          ? { label: customerInfo.waiter, value: customerInfo.waiter }
+                          : null
+                      }
+                      onChange={(selected) =>
+                        setCustomerInfo((prev) => ({
+                          ...prev,
+                          waiter: selected ? selected.value : '',
+                        }))
+                      }
+                      placeholder="Select or add waiter"
+                      classNamePrefix="react-select"
+                    />
                   </Form.Group>
                 </Col>
               </Row>
@@ -957,7 +999,7 @@ const DineInOrder = () => {
             variant="danger"
             onClick={() => {
               // Clear dirty flag and close modal
-              allowNavigationRef.current = true; 
+              allowNavigationRef.current = true;
               setIsDirty(false);
               setShowLeaveModal(false);
 
@@ -975,7 +1017,7 @@ const DineInOrder = () => {
             <Button
               variant="secondary"
               onClick={async () => {
-                allowNavigationRef.current = true; 
+                allowNavigationRef.current = true;
                 await handleSaveOrder('Save');
                 setShowLeaveModal(false);
 
@@ -995,7 +1037,7 @@ const DineInOrder = () => {
           <Button
             variant="primary"
             onClick={async () => {
-              allowNavigationRef.current = true; 
+              allowNavigationRef.current = true;
               await handleSaveOrder('KOT');
               setShowLeaveModal(false);
 

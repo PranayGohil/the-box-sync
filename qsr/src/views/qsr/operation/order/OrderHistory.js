@@ -28,7 +28,6 @@ const OrderHistory = () => {
   const [error, setError] = useState(null);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [printing, setPrinting] = useState({});
 
   // Server-side pagination state
@@ -45,7 +44,6 @@ const OrderHistory = () => {
   const [filters, setFilters] = useState({
     orderStatus: '',
     orderType: '',
-    tableArea: '',
     fromDate: '',
     toDate: '',
   });
@@ -63,7 +61,7 @@ const OrderHistory = () => {
         limit: pageSize,
         sortBy,
         sortOrder,
-        order_source: 'QSR',
+        order_source: ['QSR'],
       };
 
       if (searchTerm.trim()) {
@@ -76,9 +74,6 @@ const OrderHistory = () => {
       }
       if (filters.orderType) {
         params.order_type = filters.orderType;
-      }
-      if (filters.tableArea) {
-        params.table_area = filters.tableArea;
       }
       if (filters.fromDate) {
         params.from = filters.fromDate;
@@ -120,7 +115,6 @@ const OrderHistory = () => {
       toast.error('Failed to fetch orders. Please try again.');
     } finally {
       setLoading(false);
-      setRefreshing(false);
       fetchRef.current = false;
     }
   }, [pageIndex, pageSize, searchTerm, sortBy, sortOrder, filters]);
@@ -131,12 +125,6 @@ const OrderHistory = () => {
       fetchOrders();
     }
   }, [fetchOrders]);
-
-  const refreshData = () => {
-    setRefreshing(true);
-    fetchRef.current = true;
-    fetchOrders();
-  };
 
   const handlePageChange = (newPageIndex) => {
     if (newPageIndex !== pageIndex) {
@@ -178,7 +166,6 @@ const OrderHistory = () => {
     setFilters({
       orderStatus: '',
       orderType: '',
-      tableArea: '',
       fromDate: '',
       toDate: '',
     });
@@ -190,7 +177,6 @@ const OrderHistory = () => {
     let count = 0;
     if (filters.orderStatus) count++;
     if (filters.orderType) count++;
-    if (filters.tableArea) count++;
     if (filters.fromDate) count++;
     if (filters.toDate) count++;
     if (searchTerm) count++;
@@ -250,7 +236,7 @@ const OrderHistory = () => {
                </td>
              </tr>
              <tr>
-               <td colspan="2"><strong>Bill No:</strong> ${order._id}</td>
+               <td colspan="2"><strong>Bill No:</strong> ${order.order_no || order._id}</td>
              </tr>
            </table>
            <hr style="border: 0.5px dashed #ccc;" />
@@ -336,6 +322,12 @@ const OrderHistory = () => {
   const columns = React.useMemo(
     () => [
       {
+        Header: 'Order Number',
+        accessor: 'order_no',
+        id: 'order_no',
+        headerClassName: 'text-muted text-small text-uppercase w-15',
+      },
+      {
         Header: 'Order Date',
         accessor: 'order_date',
         id: 'order_date',
@@ -360,22 +352,6 @@ const OrderHistory = () => {
         sortable: true,
         isSorted: sortBy === 'customer_name',
         isSortedDesc: sortBy === 'customer_name' && sortOrder === 'desc',
-      },
-      {
-        Header: 'Table No',
-        accessor: 'table_no',
-        headerClassName: 'text-muted text-small text-uppercase w-10',
-        sortable: true,
-        isSorted: sortBy === 'table_no',
-        isSortedDesc: sortBy === 'table_no' && sortOrder === 'desc',
-      },
-      {
-        Header: 'Table Area',
-        accessor: 'table_area',
-        headerClassName: 'text-muted text-small text-uppercase w-10',
-        sortable: true,
-        isSorted: sortBy === 'table_area',
-        isSortedDesc: sortBy === 'table_area' && sortOrder === 'desc',
       },
       {
         Header: 'Order Type',
@@ -433,7 +409,6 @@ const OrderHistory = () => {
               title="View"
               className="btn-icon btn-icon-only"
               onClick={() => history.push(`/operations/order-details/${row.original.id}`)}
-              disabled={refreshing}
             >
               <CsLineIcons icon="eye" />
             </Button>
@@ -443,7 +418,7 @@ const OrderHistory = () => {
               title="Print"
               className="btn-icon btn-icon-only"
               onClick={() => handlePrint(row.original.id)}
-              disabled={refreshing || printing[row.original.id]}
+              disabled={printing[row.original.id]}
             >
               {printing[row.original.id] ? (
                 <Spinner animation="border" size="sm" />
@@ -455,7 +430,7 @@ const OrderHistory = () => {
         ),
       },
     ],
-    [history, refreshing, printing, sortBy, sortOrder]
+    [history, printing, sortBy, sortOrder]
   );
 
   const tableInstance = useTable(
@@ -483,7 +458,7 @@ const OrderHistory = () => {
     previousPage: () => handlePageChange(pageIndex - 1),
   };
 
-  if (loading && !refreshing && pageIndex === 0) {
+  if (loading && pageIndex === 0) {
     return (
       <>
         <HtmlHead title={title} description={description} />
@@ -520,33 +495,6 @@ const OrderHistory = () => {
                 <h1 className="mb-0 pb-0 display-4">{title}</h1>
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
-              <Col xs="12" md="5" className="text-end">
-                <Button
-                  variant="outline-primary"
-                  onClick={refreshData}
-                  disabled={refreshing}
-                  className="me-2"
-                >
-                  {refreshing ? (
-                    <>
-                      <Spinner
-                        as="span"
-                        animation="border"
-                        size="sm"
-                        role="status"
-                        aria-hidden="true"
-                        className="me-2"
-                      />
-                      Refreshing...
-                    </>
-                  ) : (
-                    <>
-                      <CsLineIcons icon="refresh" className="me-2" />
-                      Refresh
-                    </>
-                  )}
-                </Button>
-              </Col>
             </Row>
           </div>
 
@@ -554,15 +502,6 @@ const OrderHistory = () => {
             <Alert variant="danger" className="mb-4">
               <CsLineIcons icon="error" className="me-2" />
               {error}
-            </Alert>
-          )}
-
-          {refreshing && (
-            <Alert variant="info" className="mb-4">
-              <div className="d-flex align-items-center">
-                <Spinner animation="border" size="sm" className="me-2" />
-                Refreshing order data...
-              </div>
             </Alert>
           )}
 
@@ -623,7 +562,7 @@ const OrderHistory = () => {
                     </Col>
 
                     {/* Order Status Filter */}
-                    <Col md={2} className="mb-3">
+                    <Col md={3} className="mb-3">
                       <Form.Label className="small text-muted">Order Status</Form.Label>
                       <Form.Select
                         size="sm"
@@ -639,7 +578,7 @@ const OrderHistory = () => {
                     </Col>
 
                     {/* Order Type Filter */}
-                    <Col md={2} className="mb-3">
+                    <Col md={3} className="mb-3">
                       <Form.Label className="small text-muted">Order Type</Form.Label>
                       <Form.Select
                         size="sm"
@@ -651,18 +590,6 @@ const OrderHistory = () => {
                         <option value="Takeaway">Takeaway</option>
                         <option value="Delivery">Delivery</option>
                       </Form.Select>
-                    </Col>
-
-                    {/* Table Area Filter */}
-                    <Col md={2} className="mb-3">
-                      <Form.Label className="small text-muted">Table Area</Form.Label>
-                      <Form.Control
-                        type="text"
-                        size="sm"
-                        placeholder="Table Area"
-                        value={filters.tableArea}
-                        onChange={(e) => handleFilterChange('tableArea', e.target.value)}
-                      />
                     </Col>
                   </Row>
                 </div>

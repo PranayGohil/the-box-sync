@@ -29,7 +29,6 @@ const completeInventory = Yup.object().shape({
   bill_files: Yup.mixed().test('fileRequired', 'Bill files are required', (value) => {
     return value && value.length > 0;
   }),
-  total_amount: Yup.number().required('Total amount is required').positive('Must be positive'),
   paid_amount: Yup.number().required('Paid amount is required').positive('Must be positive'),
   items: Yup.array()
     .of(
@@ -144,6 +143,19 @@ const CompleteInventory = () => {
     setFilePreviews(previews);
   };
 
+  const calculateTotalAmount = (items) => {
+    return items.reduce((sum, item) => {
+      if (
+        item.completed &&
+        Number(item.item_quantity) > 0 &&
+        Number(item.item_price) > 0
+      ) {
+        return sum + item.item_quantity * item.item_price;
+      }
+      return sum;
+    }, 0);
+  };
+
   if (loading) {
     return (
       <Row className="justify-content-center align-items-center min-vh-100">
@@ -222,200 +234,207 @@ const CompleteInventory = () => {
               }
             }}
           >
-            {({ values, errors, handleChange, setFieldValue, isSubmitting }) => (
-              <Form>
-                <Card body className="mb-4">
-                  <h5 className="mb-3">Purchase Details</h5>
-                  <Row>
-                    <Col md={6}>
-                      <label>Bill Date</label>
-                      <Field type="date" name="bill_date" className="form-control" min={new Date(initialValues.request_date).toISOString().split('T')[0]} disabled={isSubmitting} />
-                      <ErrorMessage name="bill_date" component="div" className="text-danger" />
-                    </Col>
-                    <Col md={6}>
-                      <label>Bill Number</label>
-                      <Field type="text" name="bill_number" className="form-control" disabled={isSubmitting} />
-                      <ErrorMessage name="bill_number" component="div" className="text-danger" />
-                    </Col>
-                  </Row>
+            {({ values, errors, handleChange, setFieldValue, isSubmitting }) => {
+              useEffect(() => {
+                const total = calculateTotalAmount(values.items);
+                setFieldValue('total_amount', total);
 
-                  <Row className="mt-3">
-                    <Col md={6}>
-                      <label>Vendor Name</label>
-                      <CreatableSelect
-                        isClearable
-                        isDisabled={isSubmitting}
-                        options={vendorOptions}
-                        value={
-                          values.vendor_name
-                            ? { label: values.vendor_name, value: values.vendor_name }
-                            : null
-                        }
-                        onChange={(selected) =>
-                          setFieldValue('vendor_name', selected ? selected.value : '')
-                        }
-                        placeholder="Select or create vendor"
-                        classNamePrefix="react-select"
-                      />
+                const unpaid =
+                  total - (Number(values.paid_amount) || 0);
 
-                      <ErrorMessage name="vendor_name" component="div" className="text-danger" />
-                    </Col>
-                    <Col md={6}>
-                      <label>Category</label>
-                      <CreatableSelect
-                        isClearable
-                        isDisabled={isSubmitting}
-                        options={categoryOptions}
-                        value={
-                          values.category
-                            ? { label: values.category, value: values.category }
-                            : null
-                        }
-                        onChange={(selected) =>
-                          setFieldValue('category', selected ? selected.value : '')
-                        }
-                        placeholder="Select or create category"
-                        classNamePrefix="react-select"
-                      />
-
-                      <ErrorMessage name="category" component="div" className="text-danger" />
-                    </Col>
-                  </Row>
-                  <Row className="mt-3">
-                    <Col md={4}>
-                      <label>Total Amount</label>
-                      <Field
-                        type="number"
-                        name="total_amount"
-                        className="form-control"
-                        onChange={(e) => {
-                          handleChange(e);
-                          const updatedTotal = +e.target.value;
-                          setFieldValue('unpaid_amount', updatedTotal - values.paid_amount);
-                        }}
-                        disabled={isSubmitting}
-                      />
-                      <ErrorMessage name="total_amount" component="div" className="text-danger" />
-                    </Col>
-                    <Col md={4}>
-                      <label>Paid Amount</label>
-                      <Field
-                        type="number"
-                        name="paid_amount"
-                        className="form-control"
-                        onChange={(e) => {
-                          handleChange(e);
-                          const updatedPaid = +e.target.value;
-                          setFieldValue('unpaid_amount', values.total_amount - updatedPaid);
-                        }}
-                        disabled={isSubmitting}
-                      />
-                      <ErrorMessage name="paid_amount" component="div" className="text-danger" />
-                    </Col>
-                    <Col md={4}>
-                      <label>Unpaid Amount</label>
-                      <input className="form-control" readOnly value={values.unpaid_amount} />
-                    </Col>
-                  </Row>
-                  <Row className="mt-3">
-                    <Col md={6}>
-                      <label>Bill Files</label>
-                      <input
-                        type="file"
-                        className="form-control"
-                        multiple
-                        accept="image/*,application/pdf"
-                        onChange={(e) => {
-                          setFieldValue('bill_files', e.currentTarget.files);
-                          previewFiles(e.currentTarget.files);
-                        }}
-                        disabled={isSubmitting}
-                      />
-                      <ErrorMessage name="bill_files" component="div" className="text-danger" />
-                      <div className="d-flex flex-wrap mt-2">
-                        {filePreviews.map((file, i) => (
-                          <div key={i} className="me-2">
-                            {file.type === 'image' ? <img src={file.src} alt={file.name} width="80" height="80" /> : <Badge bg="secondary">{file.name}</Badge>}
-                          </div>
-                        ))}
-                      </div>
-                    </Col>
-                  </Row>
-                </Card>
-
-                <Card body className="mb-4">
-                  <h5 className="mb-3">Item Details</h5>
-                  {values.items.map((item, index) => (
-                    <Row key={index} className="mb-3 align-items-start">
-                      <Col md={1} className="d-flex align-items-center justify-content-center pt-4">
-                        <Field type="checkbox" name={`items[${index}].completed`} className="form-check-input" disabled={isSubmitting} />
+                setFieldValue(
+                  'unpaid_amount',
+                  unpaid >= 0 ? unpaid : 0
+                );
+              }, [values.items, values.paid_amount]);
+              return (
+                <Form>
+                  <Card body className="mb-4">
+                    <h5 className="mb-3">Purchase Details</h5>
+                    <Row>
+                      <Col md={6}>
+                        <label>Bill Date</label>
+                        <Field type="date" name="bill_date" className="form-control" min={new Date(initialValues.request_date).toISOString().split('T')[0]} disabled={isSubmitting} />
+                        <ErrorMessage name="bill_date" component="div" className="text-danger" />
                       </Col>
-
-                      <Col md={3}>
-                        <label>Item Name</label>
-                        <Field name={`items[${index}].item_name`} readOnly className="form-control" />
-                      </Col>
-
-                      <Col md={2}>
-                        <label>Quantity</label>
-                        <Field
-                          type="number"
-                          name={`items[${index}].item_quantity`}
-                          className="form-control"
-                          disabled={!item.completed || isSubmitting}
-                        />
-                        <ErrorMessage name={`items[${index}].item_quantity`} component="div" className="text-danger" />
-                      </Col>
-
-                      <Col md={2}>
-                        <label>Unit</label>
-                        <Field as="select" name={`items[${index}].unit`} className="form-control" disabled={!item.completed || isSubmitting} value={item.unit}>
-                          <option value="">Select</option>
-                          <option value="kg">kg</option>
-                          <option value="g">g</option>
-                          <option value="litre">litre</option>
-                          <option value="ml">ml</option>
-                          <option value="piece">piece</option>
-                        </Field>
-                        <ErrorMessage name={`items[${index}].unit`} component="div" className="text-danger" />
-                      </Col>
-
-                      <Col md={3}>
-                        <label>Price</label>
-                        <Field
-                          type="number"
-                          name={`items[${index}].item_price`}
-                          className="form-control"
-                          disabled={!item.completed || isSubmitting}
-                        />
-                        <ErrorMessage name={`items[${index}].item_price`} component="div" className="text-danger" />
+                      <Col md={6}>
+                        <label>Bill Number</label>
+                        <Field type="text" name="bill_number" className="form-control" disabled={isSubmitting} />
+                        <ErrorMessage name="bill_number" component="div" className="text-danger" />
                       </Col>
                     </Row>
-                  ))}
-                  {typeof errors.items === 'string' && <div className="text-danger">{errors.items}</div>}
-                </Card>
-                <Button
-                  variant="success"
-                  type="submit"
-                  disabled={isSubmitting}
-                  style={{ minWidth: '150px' }}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Spinner
-                        as="span"
-                        animation="border"
-                        size="sm"
-                        role="status"
-                        aria-hidden="true"
-                        className="me-2"
-                      />
-                      Completing...
-                    </>
-                  ) : 'Complete Request'}
-                </Button>
-              </Form>
-            )}
+
+                    <Row className="mt-3">
+                      <Col md={6}>
+                        <label>Vendor Name</label>
+                        <CreatableSelect
+                          isClearable
+                          isDisabled={isSubmitting}
+                          options={vendorOptions}
+                          value={
+                            values.vendor_name
+                              ? { label: values.vendor_name, value: values.vendor_name }
+                              : null
+                          }
+                          onChange={(selected) =>
+                            setFieldValue('vendor_name', selected ? selected.value : '')
+                          }
+                          placeholder="Select or create vendor"
+                          classNamePrefix="react-select"
+                        />
+
+                        <ErrorMessage name="vendor_name" component="div" className="text-danger" />
+                      </Col>
+                      <Col md={6}>
+                        <label>Category</label>
+                        <CreatableSelect
+                          isClearable
+                          isDisabled={isSubmitting}
+                          options={categoryOptions}
+                          value={
+                            values.category
+                              ? { label: values.category, value: values.category }
+                              : null
+                          }
+                          onChange={(selected) =>
+                            setFieldValue('category', selected ? selected.value : '')
+                          }
+                          placeholder="Select or create category"
+                          classNamePrefix="react-select"
+                        />
+
+                        <ErrorMessage name="category" component="div" className="text-danger" />
+                      </Col>
+                    </Row>
+                    <Row className="mt-3">
+                      <Col md={6}>
+                        <label>Bill Files</label>
+                        <input
+                          type="file"
+                          className="form-control"
+                          multiple
+                          accept="image/*,application/pdf"
+                          onChange={(e) => {
+                            setFieldValue('bill_files', e.currentTarget.files);
+                            previewFiles(e.currentTarget.files);
+                          }}
+                          disabled={isSubmitting}
+                        />
+                        <ErrorMessage name="bill_files" component="div" className="text-danger" />
+                        <div className="d-flex flex-wrap mt-2">
+                          {filePreviews.map((file, i) => (
+                            <div key={i} className="me-2">
+                              {file.type === 'image' ? <img src={file.src} alt={file.name} width="80" height="80" /> : <Badge bg="secondary">{file.name}</Badge>}
+                            </div>
+                          ))}
+                        </div>
+                      </Col>
+                    </Row>
+                  </Card>
+
+                  <Card body className="mb-4">
+                    <h5 className="mb-3">Item Details</h5>
+                    {values.items.map((item, index) => (
+                      <Row key={index} className="mb-3 align-items-start">
+                        <Col md={1} className="d-flex align-items-center justify-content-center pt-4">
+                          <Field type="checkbox" name={`items[${index}].completed`} className="form-check-input" disabled={isSubmitting} />
+                        </Col>
+
+                        <Col md={3}>
+                          <label>Item Name</label>
+                          <Field name={`items[${index}].item_name`} readOnly className="form-control" />
+                        </Col>
+
+                        <Col md={2}>
+                          <label>Quantity</label>
+                          <Field
+                            type="number"
+                            name={`items[${index}].item_quantity`}
+                            className="form-control"
+                            disabled={!item.completed || isSubmitting}
+                          />
+                          <ErrorMessage name={`items[${index}].item_quantity`} component="div" className="text-danger" />
+                        </Col>
+
+                        <Col md={2}>
+                          <label>Unit</label>
+                          <Field as="select" name={`items[${index}].unit`} className="form-control" disabled={!item.completed || isSubmitting} value={item.unit}>
+                            <option value="">Select</option>
+                            <option value="kg">kg</option>
+                            <option value="g">g</option>
+                            <option value="litre">litre</option>
+                            <option value="ml">ml</option>
+                            <option value="piece">piece</option>
+                          </Field>
+                          <ErrorMessage name={`items[${index}].unit`} component="div" className="text-danger" />
+                        </Col>
+
+                        <Col md={3}>
+                          <label>Price</label>
+                          <Field
+                            type="number"
+                            name={`items[${index}].item_price`}
+                            className="form-control"
+                            disabled={!item.completed || isSubmitting}
+                          />
+                          <ErrorMessage name={`items[${index}].item_price`} component="div" className="text-danger" />
+                        </Col>
+                      </Row>
+                    ))}
+                    {typeof errors.items === 'string' && <div className="text-danger">{errors.items}</div>}
+                    <Row className="mt-3">
+                      <Col md={4}>
+                        <label>Total Amount</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          value={values.total_amount}
+                          readOnly
+                        />
+                      </Col>
+                      <Col md={4}>
+                        <label>Paid Amount</label>
+                        <Field
+                          type="number"
+                          name="paid_amount"
+                          className="form-control"
+                          disabled={isSubmitting}
+                        />
+                        <ErrorMessage name="paid_amount" component="div" className="text-danger" />
+                      </Col>
+                      <Col md={4}>
+                        <label>Unpaid Amount</label>
+                        <input
+                          className="form-control"
+                          readOnly
+                          value={values.unpaid_amount}
+                        />
+                      </Col>
+                    </Row>
+                  </Card>
+                  <Button
+                    variant="success"
+                    type="submit"
+                    disabled={isSubmitting}
+                    style={{ minWidth: '150px' }}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Spinner
+                          as="span"
+                          animation="border"
+                          size="sm"
+                          role="status"
+                          aria-hidden="true"
+                          className="me-2"
+                        />
+                        Completing...
+                      </>
+                    ) : 'Complete Request'}
+                  </Button>
+                </Form>
+              )
+            }}
           </Formik>
 
           {submitting && (

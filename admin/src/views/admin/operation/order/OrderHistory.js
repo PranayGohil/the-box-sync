@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { Badge, Col, Row, Button, Spinner, Alert } from 'react-bootstrap';
-import { useTable, useSortBy } from 'react-table';
+import { Badge, Col, Form, Row, Button, Spinner, Alert, Card, Collapse } from 'react-bootstrap';
+import { useTable, useGlobalFilter, useSortBy } from 'react-table';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -15,7 +15,7 @@ import TablePagination from './components/TablePagination';
 
 const OrderHistory = () => {
   const title = 'Order History';
-  const description = 'Separate rows with edit, delete and add.';
+  const description = 'Order history with advanced filters.';
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
@@ -25,11 +25,9 @@ const OrderHistory = () => {
 
   const history = useHistory();
 
-  const isInitialMount = useRef(true);
   const [error, setError] = useState(null);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [printing, setPrinting] = useState({});
 
   // Server-side pagination state
@@ -41,14 +39,21 @@ const OrderHistory = () => {
   const [sortBy, setSortBy] = useState('updated_at');
   const [sortOrder, setSortOrder] = useState('desc');
 
+  // Filter states
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    orderSource: '',
+    orderStatus: '',
+    orderType: '',
+    tableArea: '',
+    fromDate: '',
+    toDate: '',
+  });
+
+  // Ref to prevent infinite loops
+  const fetchRef = useRef(false);
+
   const fetchOrders = useCallback(async () => {
-    console.log("Fetch Orders - Start");
-
-    // Create an abort controller to cancel previous requests
-    const controller = new AbortController();
-    const { signal } = controller;
-
-
     try {
       setLoading(true);
       setError(null);
@@ -64,6 +69,26 @@ const OrderHistory = () => {
         params.search = searchTerm;
       }
 
+      // Add filters to params
+      if (filters.orderSource) {
+        params.order_source = filters.orderSource;
+      }
+      if (filters.orderStatus) {
+        params.order_status = filters.orderStatus;
+      }
+      if (filters.orderType) {
+        params.order_type = filters.orderType;
+      }
+      if (filters.tableArea) {
+        params.table_area = filters.tableArea;
+      }
+      if (filters.fromDate) {
+        params.from = filters.fromDate;
+      }
+      if (filters.toDate) {
+        params.to = filters.toDate;
+      }
+
       const { data: resData } = await axios.get(
         `${process.env.REACT_APP_API}/order/get-orders`,
         {
@@ -72,10 +97,8 @@ const OrderHistory = () => {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
-          signal,
         }
       );
-
 
       if (resData.success) {
         const transformedOrders = resData.data.map(({ _id, ...rest }) => ({
@@ -94,93 +117,40 @@ const OrderHistory = () => {
         toast.error(resData.message);
       }
     } catch (err) {
-      if (axios.isCancel(err)) {
-        console.log('Request canceled:', err.message);
-      } else {
-        console.error('Fetch orders error:', err);
-        setError(err.message || 'Failed to fetch orders');
-        toast.error('Failed to fetch orders. Please try again.');
-      }
+      console.error('Fetch orders error:', err);
+      setError(err.message || 'Failed to fetch orders');
+      toast.error('Failed to fetch orders. Please try again.');
     } finally {
       setLoading(false);
-      setRefreshing(false);
+      fetchRef.current = false;
     }
-
-    return () => {
-      controller.abort('Request canceled due to new request');
-    };
-  }, [pageIndex, pageSize, searchTerm, sortBy, sortOrder]);
+  }, [pageIndex, pageSize, searchTerm, sortBy, sortOrder, filters]);
 
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
+    if (!fetchRef.current) {
+      fetchRef.current = true;
+      fetchOrders();
     }
-
-    console.log("Fetch Orders triggered by dependencies");
-    fetchOrders();
-  }, [pageIndex, pageSize, searchTerm, sortBy, sortOrder]);
-
-  useEffect(() => {
-    console.log("Initial Fetch Orders");
-    fetchOrders();
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    let isMounted = true;
-
-    const loadData = async () => {
-      if (isMounted) {
-        await fetchOrders();
-      }
-    };
-
-    loadData();
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-    };
   }, [fetchOrders]);
-
-  useEffect(() => {
-    if (pageIndex >= totalPages && totalPages > 0) {
-      console.log("Total Pages or Page Index Changes");
-      setPageIndex(totalPages - 1);
-    }
-  }, [totalPages, pageIndex]);
-
-  const refreshData = () => {
-    console.log("Refresh");
-    setRefreshing(true);
-    fetchOrders();
-  };
-
   const handlePageChange = (newPageIndex) => {
-    console.log("Page Change to:", newPageIndex);
     if (newPageIndex !== pageIndex) {
       setPageIndex(newPageIndex);
     }
   };
 
   const handlePageSizeChange = (newPageSize) => {
-    console.log("Page Size Change")
     setPageSize(newPageSize);
     setPageIndex(0);
   };
 
-  const handleSearch = (value) => {
-    console.log("Search Trigger with value:", value);
-
+  const handleSearch = useCallback((value) => {
     if (value !== searchTerm) {
       setSearchTerm(value);
       setPageIndex(0);
     }
-  };
+  }, [searchTerm]);
 
   const handleSort = (columnId) => {
-    console.log("Sort Chnage")
     if (sortBy === columnId) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -188,6 +158,39 @@ const OrderHistory = () => {
       setSortOrder('desc');
     }
     setPageIndex(0);
+  };
+
+  const handleFilterChange = (filterName, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterName]: value,
+    }));
+    setPageIndex(0);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      orderSource: '',
+      orderStatus: '',
+      orderType: '',
+      tableArea: '',
+      fromDate: '',
+      toDate: '',
+    });
+    setSearchTerm('');
+    setPageIndex(0);
+  };
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (filters.orderSource) count++;
+    if (filters.orderStatus) count++;
+    if (filters.orderType) count++;
+    if (filters.tableArea) count++;
+    if (filters.fromDate) count++;
+    if (filters.toDate) count++;
+    if (searchTerm) count++;
+    return count;
   };
 
   const handlePrint = async (orderId) => {
@@ -225,12 +228,12 @@ const OrderHistory = () => {
            </div>
            <hr style="border: 0.5px dashed #ccc;" />
            <p></p>
-           <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
+            <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
              <tr>
                <td style="width: 50%; height: 30px;">
                  <strong> Name: </strong> ${order?.customer_name || "(M: 1234567890)"} 
                </td>
-               <td style="text-align: right;">
+                <td style="text-align: right;">
                   <strong>${order.order_type}</strong>
                </td>
              </tr>
@@ -238,12 +241,12 @@ const OrderHistory = () => {
                <td style="width: 50%; height: 30px;">
                  <strong>Date:</strong> ${new Date(order.order_date).toLocaleString()}
                </td>
-               <td style="text-align: right;">
+              <td style="text-align: right;">
                    ${order.table_no ? ` <strong>Table No: </strong> <span style="margin-left: 5px; font-size: 16px;"> ${order.table_no} </span>` : order.token ? ` <strong>Token No: </strong> <span style="margin-left: 5px; font-size: 16px;"> ${order.token} </span>` : ''} </span>
                </td>
              </tr>
              <tr>
-               <td colspan="2"><strong>Bill No:</strong> ${order._id}</td>
+               <td colspan="2"><strong>Bill No:</strong> ${order.order_no || order._id}</td>
              </tr>
            </table>
            <hr style="border: 0.5px dashed #ccc;" />
@@ -317,6 +320,7 @@ const OrderHistory = () => {
       printWindow.close();
 
       document.body.removeChild(printDiv);
+      toast.success('Invoice printed successfully!');
     } catch (err) {
       console.error("Error fetching order or user data:", err);
       toast.error('Failed to print invoice. Please try again.');
@@ -327,6 +331,12 @@ const OrderHistory = () => {
 
   const columns = React.useMemo(
     () => [
+      {
+        Header: 'Order Number',
+        accessor: 'order_no',
+        id: 'order_no',
+        headerClassName: 'text-muted text-small text-uppercase w-15',
+      },
       {
         Header: 'Order Date',
         accessor: 'order_date',
@@ -353,22 +363,22 @@ const OrderHistory = () => {
         isSorted: sortBy === 'customer_name',
         isSortedDesc: sortBy === 'customer_name' && sortOrder === 'desc',
       },
-      {
-        Header: 'Table No',
-        accessor: 'table_no',
-        headerClassName: 'text-muted text-small text-uppercase w-10',
-        sortable: true,
-        isSorted: sortBy === 'table_no',
-        isSortedDesc: sortBy === 'table_no' && sortOrder === 'desc',
-      },
-      {
-        Header: 'Table Area',
-        accessor: 'table_area',
-        headerClassName: 'text-muted text-small text-uppercase w-10',
-        sortable: true,
-        isSorted: sortBy === 'table_area',
-        isSortedDesc: sortBy === 'table_area' && sortOrder === 'desc',
-      },
+      // {
+      //   Header: 'Table No',
+      //   accessor: 'table_no',
+      //   headerClassName: 'text-muted text-small text-uppercase w-10',
+      //   sortable: true,
+      //   isSorted: sortBy === 'table_no',
+      //   isSortedDesc: sortBy === 'table_no' && sortOrder === 'desc',
+      // },
+      // {
+      //   Header: 'Table Area',
+      //   accessor: 'table_area',
+      //   headerClassName: 'text-muted text-small text-uppercase w-10',
+      //   sortable: true,
+      //   isSorted: sortBy === 'table_area',
+      //   isSortedDesc: sortBy === 'table_area' && sortOrder === 'desc',
+      // },
       {
         Header: 'Order Type',
         accessor: 'order_type',
@@ -381,6 +391,23 @@ const OrderHistory = () => {
             value === 'Dine In' ? 'primary' :
               value === 'Takeaway' ? 'warning' :
                 value === 'Delivery' ? 'success' : 'secondary'
+          }>
+            {value}
+          </Badge>
+        ),
+      },
+      {
+        Header: 'Order Source',
+        accessor: 'order_source',
+        headerClassName: 'text-muted text-small text-uppercase w-10',
+        sortable: true,
+        isSorted: sortBy === 'order_source',
+        isSortedDesc: sortBy === 'order_source' && sortOrder === 'desc',
+        Cell: ({ value }) => (
+          <Badge bg={
+            value === 'Manager' ? 'info' :
+              value === 'Captain' ? 'primary' :
+                value === 'QSR' ? 'secondary' : 'dark'
           }>
             {value}
           </Badge>
@@ -425,7 +452,6 @@ const OrderHistory = () => {
               title="View"
               className="btn-icon btn-icon-only"
               onClick={() => history.push(`/operations/order-details/${row.original.id}`)}
-              disabled={refreshing}
             >
               <CsLineIcons icon="eye" />
             </Button>
@@ -435,7 +461,7 @@ const OrderHistory = () => {
               title="Print"
               className="btn-icon btn-icon-only"
               onClick={() => handlePrint(row.original.id)}
-              disabled={refreshing || printing[row.original.id]}
+              disabled={printing[row.original.id]}
             >
               {printing[row.original.id] ? (
                 <Spinner animation="border" size="sm" />
@@ -447,10 +473,9 @@ const OrderHistory = () => {
         ),
       },
     ],
-    [history, refreshing, printing, sortBy, sortOrder]
+    [history, printing, sortBy, sortOrder]
   );
 
-  // Modified table instance for manual pagination
   const tableInstance = useTable(
     {
       columns,
@@ -458,18 +483,14 @@ const OrderHistory = () => {
       manualPagination: true,
       manualSortBy: true,
       pageCount: totalPages,
-      state: {
-        pageIndex,
-        pageSize,
-      },
       autoResetPage: false,
       autoResetSortBy: false,
+      autoResetGlobalFilter: false,
     },
+    useGlobalFilter,
     useSortBy
   );
 
-
-  // Custom pagination handlers
   const paginationProps = {
     canPreviousPage: pageIndex > 0,
     canNextPage: pageIndex < totalPages - 1,
@@ -480,7 +501,7 @@ const OrderHistory = () => {
     previousPage: () => handlePageChange(pageIndex - 1),
   };
 
-  if (loading && !refreshing) {
+  if (loading && pageIndex === 0) {
     return (
       <>
         <HtmlHead title={title} description={description} />
@@ -517,33 +538,6 @@ const OrderHistory = () => {
                 <h1 className="mb-0 pb-0 display-4">{title}</h1>
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
-              <Col xs="12" md="5" className="text-end">
-                <Button
-                  variant="outline-primary"
-                  onClick={refreshData}
-                  disabled={refreshing}
-                  className="me-2"
-                >
-                  {refreshing ? (
-                    <>
-                      <Spinner
-                        as="span"
-                        animation="border"
-                        size="sm"
-                        role="status"
-                        aria-hidden="true"
-                        className="me-2"
-                      />
-                      Refreshing...
-                    </>
-                  ) : (
-                    <>
-                      <CsLineIcons icon="refresh" className="me-2" />
-                      Refresh
-                    </>
-                  )}
-                </Button>
-              </Col>
             </Row>
           </div>
 
@@ -554,32 +548,147 @@ const OrderHistory = () => {
             </Alert>
           )}
 
-          {refreshing && (
-            <Alert variant="info" className="mb-4">
-              <div className="d-flex align-items-center">
-                <Spinner animation="border" size="sm" className="me-2" />
-                Refreshing order data...
+          {/* Filter Section */}
+          <Card className="mb-3">
+            <Card.Body>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <Button
+                  variant="link"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="p-0 text-decoration-none"
+                >
+                  <CsLineIcons icon="filter" className="me-2" />
+                  <strong>Filters</strong>
+                  {getActiveFilterCount() > 0 && (
+                    <Badge bg="primary" className="ms-2">
+                      {getActiveFilterCount()}
+                    </Badge>
+                  )}
+                  <CsLineIcons
+                    icon={showFilters ? 'chevron-top' : 'chevron-bottom'}
+                    className="ms-2"
+                  />
+                </Button>
+                {getActiveFilterCount() > 0 && (
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={handleClearFilters}
+                  >
+                    <CsLineIcons icon="close" className="me-1" />
+                    Clear All
+                  </Button>
+                )}
               </div>
-            </Alert>
-          )}
 
+              <Collapse in={showFilters}>
+                <div>
+                  <Row>
+                    {/* Order Source Filter */}
+                    <Col md={2} className="mb-3">
+                      <Form.Label className="small text-muted">Order Source</Form.Label>
+                      <Form.Select
+                        size="sm"
+                        value={filters.orderSource}
+                        onChange={(e) => handleFilterChange('orderSource', e.target.value)}
+                      >
+                        <option value="">All</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Captain">Captain</option>
+                        <option value="QSR">QSR</option>
+                        <option value="Restaurant Website">Restaurant Website</option>
+                      </Form.Select>
+                    </Col>
 
+                    {/* Date Range Filter */}
+                    <Col md={2} className="mb-3">
+                      <Form.Label className="small text-muted">From Date</Form.Label>
+                      <Form.Control
+                        type="date"
+                        size="sm"
+                        value={filters.fromDate}
+                        onChange={(e) => handleFilterChange('fromDate', e.target.value)}
+                      />
+                    </Col>
+                    <Col md={2} className="mb-3">
+                      <Form.Label className="small text-muted">To Date</Form.Label>
+                      <Form.Control
+                        type="date"
+                        size="sm"
+                        value={filters.toDate}
+                        onChange={(e) => handleFilterChange('toDate', e.target.value)}
+                      />
+                    </Col>
+
+                    {/* Order Status Filter */}
+                    <Col md={3} className="mb-3">
+                      <Form.Label className="small text-muted">Order Status</Form.Label>
+                      <Form.Select
+                        size="sm"
+                        value={filters.orderStatus}
+                        onChange={(e) => handleFilterChange('orderStatus', e.target.value)}
+                      >
+                        <option value="">All</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Save">Save</option>
+                        <option value="KOT">KOT</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </Form.Select>
+                    </Col>
+
+                    {/* Order Type Filter */}
+                    <Col md={3} className="mb-3">
+                      <Form.Label className="small text-muted">Order Type</Form.Label>
+                      <Form.Select
+                        size="sm"
+                        value={filters.orderType}
+                        onChange={(e) => handleFilterChange('orderType', e.target.value)}
+                      >
+                        <option value="">All</option>
+                        <option value="Dine In">Dine In</option>
+                        <option value="Takeaway">Takeaway</option>
+                        <option value="Delivery">Delivery</option>
+                      </Form.Select>
+                    </Col>
+
+                    {/* Table Area Filter */}
+                    {/* <Col md={2} className="mb-3">
+                      <Form.Label className="small text-muted">Table Area</Form.Label>
+                      <Form.Control
+                        type="text"
+                        size="sm"
+                        placeholder="Table Area"
+                        value={filters.tableArea}
+                        onChange={(e) => handleFilterChange('tableArea', e.target.value)}
+                      />
+                    </Col> */}
+                  </Row>
+                </div>
+              </Collapse>
+            </Card.Body>
+          </Card>
+
+          {/* Search and Controls */}
           <div>
             <Row className="mb-3">
               <Col sm="12" md="5" lg="3" xxl="2">
                 <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
-                  <ControlsSearch onSearch={handleSearch} initialValue={searchTerm} />
+                  <ControlsSearch onSearch={handleSearch} />
                 </div>
               </Col>
               <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
                 <div className="d-inline-block me-2 text-muted">
-                  Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0} to {Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords} entries
+                  {loading ? (
+                    'Loading...'
+                  ) : (
+                    <>
+                      Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0} to{' '}
+                      {Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords} entries
+                    </>
+                  )}
                 </div>
                 <div className="d-inline-block">
-                  <ControlsPageSize
-                    pageSize={pageSize}
-                    onPageSizeChange={handlePageSizeChange}
-                  />
+                  <ControlsPageSize pageSize={pageSize} onPageSizeChange={handlePageSizeChange} />
                 </div>
               </Col>
             </Row>
@@ -588,17 +697,16 @@ const OrderHistory = () => {
             {data.length === 0 && !loading ? (
               <Alert variant="info" className="text-center">
                 <CsLineIcons icon="inbox" size={24} className="me-2" />
-                No orders found. {searchTerm ? 'Try a different search term.' : 'Orders will appear here once created.'}
+                No orders found.{' '}
+                {searchTerm || getActiveFilterCount() > 0
+                  ? 'Try adjusting your search or filters.'
+                  : 'Orders will appear here once created.'}
               </Alert>
             ) : (
               <>
                 <Row>
                   <Col xs="12">
-                    <Table
-                      className="react-table rows"
-                      tableInstance={tableInstance}
-                      onSort={handleSort}
-                    />
+                    <Table className="react-table rows" tableInstance={tableInstance} onSort={handleSort} />
                   </Col>
                   <Col xs="12">
                     <TablePagination paginationProps={paginationProps} />
