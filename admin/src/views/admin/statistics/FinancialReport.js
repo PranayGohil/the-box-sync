@@ -219,6 +219,15 @@ const FinancialReport = () => {
         doc.save(`Financial_Report_${startDate}_to_${endDate}.pdf`);
     };
 
+    const sortedDailyFinancials = reportData
+        ? [...reportData.dailyFinancials].sort((a, b) => {
+            const dateA = new Date(a.date.year, a.date.month - 1, a.date.day);
+            const dateB = new Date(b.date.year, b.date.month - 1, b.date.day);
+            return dateB - dateA; // latest first
+        })
+        : [];
+
+
     if (loading && !reportData) {
         return (
             <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
@@ -297,7 +306,7 @@ const FinancialReport = () => {
                     {/* Key Financial Metrics */}
                     <Row className="mb-4">
                         <Col lg={3} md={6} className="mb-3">
-                            <Card className="sh-13 border-primary">
+                            <Card className="border-primary">
                                 <Card.Body>
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div>
@@ -314,7 +323,7 @@ const FinancialReport = () => {
                         </Col>
 
                         <Col lg={3} md={6} className="mb-3">
-                            <Card className="sh-13 border-success">
+                            <Card className="border-success">
                                 <Card.Body>
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div>
@@ -331,7 +340,7 @@ const FinancialReport = () => {
                         </Col>
 
                         <Col lg={3} md={6} className="mb-3">
-                            <Card className="sh-13 border-danger">
+                            <Card className="border-danger">
                                 <Card.Body>
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div>
@@ -352,7 +361,7 @@ const FinancialReport = () => {
                         </Col>
 
                         <Col lg={3} md={6} className="mb-3">
-                            <Card className="sh-13 border-warning">
+                            <Card className="border-warning">
                                 <Card.Body>
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div>
@@ -363,7 +372,7 @@ const FinancialReport = () => {
                                             </div>
                                         </div>
                                         <div className="sh-5 sw-5 bg-warning rounded-xl d-flex justify-content-center align-items-center">
-                                            <CsLineIcons icon="calculator" className="text-white" />
+                                            <CsLineIcons icon="dollar" className="text-white" />
                                         </div>
                                     </div>
                                 </Card.Body>
@@ -599,7 +608,7 @@ const FinancialReport = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {reportData.dailyFinancials.map((day, idx) => {
+                                        {sortedDailyFinancials.map((day, idx) => {
                                             const avgOrder = day.orders > 0 ? day.netRevenue / day.orders : 0;
 
                                             return (
@@ -607,7 +616,7 @@ const FinancialReport = () => {
                                                     <td className="font-weight-bold">
                                                         {format(
                                                             new Date(day.date.year, day.date.month - 1, day.date.day),
-                                                            'MMM dd, yyyy'
+                                                            'dd-MM-yyyy'
                                                         )}
                                                     </td>
                                                     <td className="text-end">{formatCurrency(day.grossRevenue)}</td>
@@ -665,7 +674,7 @@ const FinancialReport = () => {
                                 <Col md={6}>
                                     <Alert variant="info">
                                         <Alert.Heading className="h6">
-                                            <CsLineIcons icon="calculator" className="me-2" />
+                                            <CsLineIcons icon="dollar" className="me-2" />
                                             Tax Compliance
                                         </Alert.Heading>
                                         <p className="mb-0 text-small">

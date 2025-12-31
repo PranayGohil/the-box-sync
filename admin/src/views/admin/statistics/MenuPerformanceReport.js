@@ -335,7 +335,7 @@ const MenuPerformanceReport = () => {
           {/* Summary Cards */}
           <Row className="mb-4">
             <Col lg={3} md={6} className="mb-3">
-              <Card className="sh-13">
+              <Card>
                 <Card.Body>
                   <div className="text-muted text-small mb-1">Total Dishes</div>
                   <div className="text-primary h3 mb-0">{reportData.summary.totalDishes}</div>
@@ -344,7 +344,7 @@ const MenuPerformanceReport = () => {
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
-              <Card className="sh-13">
+              <Card>
                 <Card.Body>
                   <div className="text-muted text-small mb-1">Total Revenue</div>
                   <div className="text-success h3 mb-0">{formatCurrency(reportData.summary.totalRevenue)}</div>
@@ -353,7 +353,7 @@ const MenuPerformanceReport = () => {
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
-              <Card className="sh-13">
+              <Card>
                 <Card.Body>
                   <div className="text-muted text-small mb-1">Categories</div>
                   <div className="text-info h3 mb-0">{reportData.summary.totalCategories}</div>
@@ -362,7 +362,7 @@ const MenuPerformanceReport = () => {
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
-              <Card className="sh-13">
+              <Card>
                 <Card.Body>
                   <div className="text-muted text-small mb-1">Avg Revenue/Dish</div>
                   <div className="text-warning h3 mb-0">{formatCurrency(reportData.summary.totalRevenue / reportData.summary.totalDishes)}</div>

@@ -115,6 +115,7 @@ const getRevenueStats = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -232,6 +233,7 @@ const getOrderStats = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -411,6 +413,7 @@ const getCategoryStats = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -660,6 +663,7 @@ const getPeakHours = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -705,6 +709,7 @@ const getDayOfWeekStats = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -782,6 +787,7 @@ const getComparison = async (req, res) => {
         {
           $match: {
             user_id: restaurantId,
+            order_status: { $in: ["Paid", "Completed"] },
             order_date: { $gte: start, $lte: end },
           },
         },
@@ -871,6 +877,7 @@ const getOverview = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -891,6 +898,7 @@ const getOverview = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -908,6 +916,7 @@ const getOverview = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -932,6 +941,7 @@ const getOverview = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
           payment_type: { $exists: true, $ne: null },
         },
@@ -989,6 +999,7 @@ const getWaiterPerformance = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
           waiter: { $exists: true, $ne: null, $ne: "" },
         },
@@ -1037,6 +1048,7 @@ const getTablePerformance = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
           table_no: { $exists: true, $ne: null, $ne: "" },
         },
@@ -1115,6 +1127,7 @@ const getLowPerformingDishes = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -1332,6 +1345,7 @@ const getMenuPerformanceReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -1422,6 +1436,7 @@ const getMenuPerformanceReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -1499,6 +1514,7 @@ const getMenuPerformanceReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -1603,6 +1619,7 @@ const getCustomerInsightsReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
           customer_id: { $exists: true, $ne: null, $ne: "" },
         },
@@ -1641,6 +1658,7 @@ const getCustomerInsightsReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
           customer_id: { $exists: true, $ne: null, $ne: "" },
         },
@@ -1714,6 +1732,7 @@ const getCustomerInsightsReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
           customer_id: { $exists: true, $ne: null, $ne: "" },
         },
@@ -1737,6 +1756,7 @@ const getCustomerInsightsReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           customer_id: { $exists: true, $ne: null, $ne: "" },
         },
       },
@@ -1791,6 +1811,7 @@ const getOperationalReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
           waiter: { $exists: true, $ne: null, $ne: "" },
         },
@@ -1827,6 +1848,7 @@ const getOperationalReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
           table_no: { $exists: true, $ne: null, $ne: "" },
         },
@@ -1887,6 +1909,7 @@ const getOperationalReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -1915,6 +1938,7 @@ const getOperationalReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -1957,6 +1981,7 @@ const getOperationalReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
           table_area: { $exists: true, $ne: null, $ne: "" },
         },
@@ -2027,6 +2052,7 @@ const getFinancialReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -2060,6 +2086,7 @@ const getFinancialReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },
@@ -2106,6 +2133,7 @@ const getFinancialReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
           payment_type: { $exists: true, $ne: null },
         },
@@ -2135,6 +2163,7 @@ const getFinancialReport = async (req, res) => {
       {
         $match: {
           user_id: restaurantId,
+          order_status: { $in: ["Paid", "Completed"] },
           order_date: { $gte: startDate, $lte: endDate },
         },
       },

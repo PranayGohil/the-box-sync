@@ -259,7 +259,7 @@ const OperationalReport = () => {
           {/* Key Insights */}
           <Row className="mb-4">
             <Col lg={3} md={6} className="mb-3">
-              <Card className="sh-13">
+              <Card>
                 <Card.Body>
                   <div className="text-muted text-small mb-1">Total Staff</div>
                   <div className="text-primary h3 mb-0">{reportData.waiterPerformance?.length || 0}</div>
@@ -268,7 +268,7 @@ const OperationalReport = () => {
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
-              <Card className="sh-13">
+              <Card>
                 <Card.Body>
                   <div className="text-muted text-small mb-1">Busiest Hour</div>
                   <div className="text-primary h3 mb-0">{busiestHour ? `${busiestHour.hour}:00` : 'N/A'}</div>
@@ -277,7 +277,7 @@ const OperationalReport = () => {
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
-              <Card className="sh-13">
+              <Card>
                 <Card.Body>
                   <div className="text-muted text-small mb-1">Busiest Day</div>
                   <div className="text-primary h3 mb-0">{busiestDay ? busiestDay.dayName : 'N/A'}</div>
@@ -286,7 +286,7 @@ const OperationalReport = () => {
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
-              <Card className="sh-13">
+              <Card>
                 <Card.Body>
                   <div className="text-muted text-small mb-1">Active Tables</div>
                   <div className="text-primary h3 mb-0">{reportData.tablePerformance?.length || 0}</div>

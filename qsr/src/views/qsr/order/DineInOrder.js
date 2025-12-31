@@ -3,7 +3,6 @@ import { useHistory, useLocation, Prompt } from 'react-router-dom';
 import { Button, Row, Col, Card, Form, Badge, Table, Modal } from 'react-bootstrap';
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
-import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const DineInOrder = () => {
@@ -41,7 +40,7 @@ const DineInOrder = () => {
       comment: '',
     }
   });
-  const allowNavigationRef = useRef(false); 
+  const allowNavigationRef = useRef(false);
 
   const [tableInfo, setTableInfo] = useState({});
   const [orderItems, setOrderItems] = useState([]);
@@ -53,6 +52,8 @@ const DineInOrder = () => {
     waiter: '',
     comment: '',
   });
+
+  const [tokenNumber, setTokenNumber] = useState(null);
 
   // Menu filtering states
   const [searchText, setSearchText] = useState('');
@@ -123,6 +124,7 @@ const DineInOrder = () => {
       const order = response.data.data;
       setOrderItems(order.order_items || []);
       setOrderStatus(order.order_status);
+      setTokenNumber(order.token);
       setCustomerInfo({
         name: order.customer_name || '',
         total_persons: order.total_persons || '',
@@ -234,7 +236,7 @@ const DineInOrder = () => {
   }, [isDirty]);
 
   // 🔥 Protect against browser back/forward buttons
-  useEffect(() => { 
+  useEffect(() => {
     const unblock = history.block((loc) => {
       // ✅ Allow navigation if explicitly permitted
       if (allowNavigationRef.current) {
@@ -474,7 +476,7 @@ const DineInOrder = () => {
       });
 
       if (response.data.status === 'success') {
-         allowNavigationRef.current = true;  
+        allowNavigationRef.current = true;
         // 🔥 NEW: Update initial state after successful save
         initialStateRef.current = {
           orderItems: JSON.parse(JSON.stringify(orderItems)),
@@ -651,6 +653,11 @@ const DineInOrder = () => {
                 </Col>
                 <Col md="5" className="d-flex align-items-start justify-content-end">
                   <h5>Dine-In</h5>
+                  {tokenNumber && (
+                    <Badge bg="primary" className="ms-2">
+                      Token #{tokenNumber}
+                    </Badge>
+                  )}
                 </Col>
               </Row>
             </Card.Header>
@@ -783,7 +790,7 @@ const DineInOrder = () => {
                     </Button>
                   ) : (
                     orderStatus === 'KOT' && (
-                      <Button variant="success" onClick={() => setShowPaymentModal(true)}>
+                      <Button variant="success" onClick={handleOpenPaymentModal}>
                         Process Payment
                       </Button>
                     )
@@ -962,7 +969,7 @@ const DineInOrder = () => {
             variant="danger"
             onClick={() => {
               // Clear dirty flag and close modal
-              allowNavigationRef.current = true; 
+              allowNavigationRef.current = true;
               setIsDirty(false);
               setShowLeaveModal(false);
 
@@ -980,7 +987,7 @@ const DineInOrder = () => {
             <Button
               variant="secondary"
               onClick={async () => {
-                allowNavigationRef.current = true; 
+                allowNavigationRef.current = true;
                 await handleSaveOrder('Save');
                 setShowLeaveModal(false);
 
@@ -1000,7 +1007,7 @@ const DineInOrder = () => {
           <Button
             variant="primary"
             onClick={async () => {
-              allowNavigationRef.current = true; 
+              allowNavigationRef.current = true;
               await handleSaveOrder('KOT');
               setShowLeaveModal(false);
 

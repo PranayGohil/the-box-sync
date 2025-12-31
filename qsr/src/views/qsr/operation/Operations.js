@@ -20,7 +20,7 @@ const NavContent = () => {
     <Nav className="flex-column">
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/order-history" className="px-0">
-          <CsLineIcons icon="activity" className="me-2 sw-3" size="17" />
+          <CsLineIcons icon="handbag" className="me-2 sw-3" size="17" />
           <span className="align-middle">Order</span>
         </Nav.Link>
         <div>
@@ -33,7 +33,7 @@ const NavContent = () => {
 
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/manage-menu" className="px-0">
-          <CsLineIcons icon="shield" className="me-2 sw-3" size="17" />
+          <CsLineIcons icon="list" className="me-2 sw-3" size="17" />
           <span className="align-middle">Menu</span>
         </Nav.Link>
         <div>

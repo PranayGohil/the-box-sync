@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, ProgressBar } from 'react-bootstrap';
+import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, ProgressBar, CardSubtitle } from 'react-bootstrap';
 import axios from 'axios';
-import { format } from 'date-fns';
+import { format, isToday, isYesterday } from 'date-fns';
+import { enIN } from 'date-fns/locale';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -40,6 +41,17 @@ const CustomerInsightsReport = () => {
     }).format(amount || 0);
   };
 
+  const formatCustomerDate = (date) => {
+    if (!date) return '—';
+
+    const d = new Date(date);
+
+    if (isToday(d)) return 'Today';
+    if (isYesterday(d)) return 'Yesterday';
+
+    return format(d, 'dd-MM-yyyy', { locale: enIN });
+  };
+
   const fetchCustomerReport = async () => {
     setLoading(true);
     setError(null);
@@ -55,7 +67,6 @@ const CustomerInsightsReport = () => {
         ...getHeaders(),
         params,
       });
-
       setReportData(response.data);
     } catch (err) {
       console.error('Error fetching customer report:', err);
@@ -224,7 +235,7 @@ const CustomerInsightsReport = () => {
           {/* Summary Cards */}
           <Row className="mb-4">
             <Col lg={3} md={6} className="mb-3">
-              <Card className="sh-13">
+              <Card>
                 <Card.Body>
                   <div className="text-muted text-small mb-1">Total Customers</div>
                   <div className="text-primary h3 mb-0">{totalCustomers}</div>
@@ -233,7 +244,7 @@ const CustomerInsightsReport = () => {
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
-              <Card className="sh-13">
+              <Card>
                 <Card.Body>
                   <div className="text-muted text-small mb-1">Repeat Customers</div>
                   <div className="text-success h3 mb-0">{repeatCustomers}</div>
@@ -242,7 +253,7 @@ const CustomerInsightsReport = () => {
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
-              <Card className="sh-13">
+              <Card>
                 <Card.Body>
                   <div className="text-muted text-small mb-1">One-Time Customers</div>
                   <div className="text-warning h3 mb-0">{oneTimeCustomers}</div>
@@ -251,7 +262,7 @@ const CustomerInsightsReport = () => {
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
-              <Card className="sh-13">
+              <Card>
                 <Card.Body>
                   <div className="text-muted text-small mb-1">New Customers</div>
                   <div className="text-info h3 mb-0">{reportData.acquisitionTrend?.reduce((sum, item) => sum + item.newCustomers, 0) || 0}</div>
@@ -372,7 +383,7 @@ const CustomerInsightsReport = () => {
                           <td className="text-end font-weight-bold text-primary">{formatCurrency(customer.totalSpent)}</td>
                           <td className="text-end">{formatCurrency(customer.avgOrderValue)}</td>
                           <td className="text-end text-danger">{formatCurrency(customer.totalDiscount)}</td>
-                          <td>{format(new Date(customer.lastOrderDate), 'MMM dd, yyyy')}</td>
+                          <td>{formatCustomerDate(customer.lastOrderDate)}</td>
                           <td className="text-center">
                             <Badge bg={daysSinceLastOrder < 7 ? 'success' : daysSinceLastOrder < 30 ? 'warning' : 'danger'}>
                               {daysSinceLastOrder < 7 ? 'Active' : daysSinceLastOrder < 30 ? 'Recent' : 'Inactive'}
@@ -439,7 +450,7 @@ const CustomerInsightsReport = () => {
                     <tbody>
                       {reportData.acquisitionTrend.map((item, idx) => (
                         <tr key={idx}>
-                          <td>{`${item._id.year}-${String(item._id.month).padStart(2, '0')}-${String(item._id.day).padStart(2, '0')}`}</td>
+                          <td>{`${String(item._id.day).padStart(2, '0')}-${String(item._id.month).padStart(2, '0')}-${item._id.year}`}</td>
                           <td className="text-end font-weight-bold">{item.newCustomers}</td>
                         </tr>
                       ))}

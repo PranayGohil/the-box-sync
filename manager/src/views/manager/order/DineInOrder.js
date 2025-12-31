@@ -97,7 +97,7 @@ const DineInOrder = () => {
       }
     };
     fetchWaiters();
-  })
+  }, []);
 
   // 🔥 NEW: Function to check if there are actual changes
   const hasUnsavedChanges = () => {
@@ -442,9 +442,8 @@ const DineInOrder = () => {
       alert('Please add items to the order');
       return;
     }
-
-    setIsLoading(true);
     try {
+      setIsLoading(true);
       const orderData = {
         table_no: tableInfo.table_no,
         table_area: tableInfo.area,
