@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, Modal, ProgressBar, Toast, ToastContainer } from 'react-bootstrap';
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -9,6 +9,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format, isToday, isYesterday } from 'date-fns';
 import { enIN } from 'date-fns/locale';
+import { AuthContext } from 'contexts/AuthContext';
 
 const SalesReport = () => {
   const title = 'Sales Report';
@@ -24,6 +25,8 @@ const SalesReport = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [reportData, setReportData] = useState(null);
+
+  const { currentUser } = useContext(AuthContext);
 
   // Export states
   const [exporting, setExporting] = useState(false);
@@ -43,9 +46,6 @@ const SalesReport = () => {
     includeCharts: true,
   });
 
-  // Print preview modal
-  const [showPrintPreview, setShowPrintPreview] = useState(false);
-
   // Filters
   const [startDate, setStartDate] = useState(format(new Date().setDate(new Date().getDate() - 7), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -53,7 +53,7 @@ const SalesReport = () => {
   const [orderType, setOrderType] = useState('all');
 
   const API_BASE = process.env.REACT_APP_API;
-  const COMPANY_NAME = 'Your Restaurant Name'; // You can make this configurable
+  const COMPANY_NAME = `${currentUser?.name || 'TheBox'}`;
 
   const getHeaders = () => ({
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -179,9 +179,7 @@ const SalesReport = () => {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  const sortedRevenueData = reportData
-    ? [...reportData.revenue.data].sort((a, b) => getItemDate(b) - getItemDate(a))
-    : [];
+  const sortedRevenueData = reportData ? [...reportData.revenue.data].sort((a, b) => getItemDate(b) - getItemDate(a)) : [];
 
   // Generate chart data for Excel
   const generateRevenueChartData = () => {
@@ -189,7 +187,7 @@ const SalesReport = () => {
 
     const sortedData = [...reportData.revenue.data].sort((a, b) => getItemDate(a) - getItemDate(b));
 
-    return sortedData.map(item => ({
+    return sortedData.map((item) => ({
       date: formatTrendDate(item),
       revenue: item.value,
       orders: item.orderCount,
@@ -223,7 +221,11 @@ const SalesReport = () => {
           ['Total Revenue', reportData.revenue.summary.totalRevenue, ''],
           ['Total Orders', reportData.revenue.summary.totalOrders, ''],
           ['Average Order Value', reportData.revenue.summary.averageOrderValue, ''],
-          ['Peak Revenue Day', sortedRevenueData.length > 0 ? formatTrendDate(sortedRevenueData[0]) : 'N/A', sortedRevenueData.length > 0 ? sortedRevenueData[0].value : 0],
+          [
+            'Peak Revenue Day',
+            sortedRevenueData.length > 0 ? formatTrendDate(sortedRevenueData[0]) : 'N/A',
+            sortedRevenueData.length > 0 ? sortedRevenueData[0].value : 0,
+          ],
           [],
           ['TOP PERFORMERS'],
           ['Category', 'Value'],
@@ -239,11 +241,7 @@ const SalesReport = () => {
         const dashboardSheet = XLSX.utils.aoa_to_sheet(dashboardData);
 
         // Set column widths
-        dashboardSheet['!cols'] = [
-          { wch: 25 },
-          { wch: 30 },
-          { wch: 20 }
-        ];
+        dashboardSheet['!cols'] = [{ wch: 25 }, { wch: 30 }, { wch: 20 }];
 
         // Apply styles through cell formats
         const range = XLSX.utils.decode_range(dashboardSheet['!ref']);
@@ -256,8 +254,8 @@ const SalesReport = () => {
                 if (!dashboardSheet[cellAddress].s) dashboardSheet[cellAddress].s = {};
                 dashboardSheet[cellAddress].s = {
                   font: { bold: true, sz: 14 },
-                  fill: { fgColor: { rgb: "4472C4" } },
-                  alignment: { horizontal: "center" }
+                  fill: { fgColor: { rgb: '4472C4' } },
+                  alignment: { horizontal: 'center' },
                 };
               }
 
@@ -313,37 +311,20 @@ const SalesReport = () => {
         setExportProgress(45);
         const sortedData = [...reportData.revenue.data].sort((a, b) => getItemDate(a) - getItemDate(b));
 
-        const revenueData = [
-          ['REVENUE TREND ANALYSIS'],
-          [],
-          ['Date', 'Revenue', 'Orders', 'Avg Order Value', 'Performance'],
-        ];
+        const revenueData = [['REVENUE TREND ANALYSIS'], [], ['Date', 'Revenue', 'Orders', 'Avg Order Value', 'Performance']];
 
         sortedData.forEach((item, idx) => {
           const avgOrderValue = item.orderCount > 0 ? item.value / item.orderCount : 0;
-          const trend = idx > 0 && sortedData[idx - 1].value ?
-            `${((item.value - sortedData[idx - 1].value) / sortedData[idx - 1].value * 100).toFixed(1)}%` :
-            'N/A';
+          const trend =
+            idx > 0 && sortedData[idx - 1].value ? `${(((item.value - sortedData[idx - 1].value) / sortedData[idx - 1].value) * 100).toFixed(1)}%` : 'N/A';
 
-          revenueData.push([
-            formatTrendDate(item),
-            item.value,
-            item.orderCount,
-            avgOrderValue,
-            trend
-          ]);
+          revenueData.push([formatTrendDate(item), item.value, item.orderCount, avgOrderValue, trend]);
         });
 
         const revenueSheet = XLSX.utils.aoa_to_sheet(revenueData);
 
         // Set column widths
-        revenueSheet['!cols'] = [
-          { wch: 20 },
-          { wch: 15 },
-          { wch: 12 },
-          { wch: 18 },
-          { wch: 15 }
-        ];
+        revenueSheet['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 12 }, { wch: 18 }, { wch: 15 }];
 
         // Apply currency formatting and filters
         const range = XLSX.utils.decode_range(revenueSheet['!ref']);
@@ -384,23 +365,14 @@ const SalesReport = () => {
             dish.totalRevenue,
             dish.orderCount,
             dish.orderCount > 0 ? dish.totalRevenue / dish.orderCount : 0,
-            dish.isSpecial ? 'Yes' : 'No'
+            dish.isSpecial ? 'Yes' : 'No',
           ]);
         });
 
         const dishesSheet = XLSX.utils.aoa_to_sheet(dishesData);
 
         // Set column widths
-        dishesSheet['!cols'] = [
-          { wch: 8 },
-          { wch: 30 },
-          { wch: 15 },
-          { wch: 15 },
-          { wch: 15 },
-          { wch: 10 },
-          { wch: 18 },
-          { wch: 10 }
-        ];
+        dishesSheet['!cols'] = [{ wch: 8 }, { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 10 }, { wch: 18 }, { wch: 10 }];
 
         // Apply currency formatting
         const range = XLSX.utils.decode_range(dishesSheet['!ref']);
@@ -425,38 +397,27 @@ const SalesReport = () => {
       // Order Type Breakdown
       if (exportOptions.includeOrderTypes) {
         setExportProgress(75);
-        const orderTypeData = [
-          ['ORDER TYPE BREAKDOWN'],
-          [],
-          ['Order Type', 'Count', 'Revenue', 'Avg Order Value', '% of Total Revenue', '% of Total Orders'],
-        ];
+        const orderTypeData = [['ORDER TYPE BREAKDOWN'], [], ['Order Type', 'Count', 'Revenue', 'Avg Order Value', '% of Total Revenue', '% of Total Orders']];
 
-        const totalRevenue = reportData.revenue.summary.totalRevenue;
-        const totalOrders = reportData.revenue.summary.totalOrders;
+        const { totalRevenue } = reportData.revenue.summary;
+        const { totalOrders } = reportData.revenue.summary;
 
-        reportData.orders.data.forEach(order => {
+        reportData.orders.data.forEach((order) => {
           const { category, count, totalRevenue: orderRevenue, avgOrderValue } = order;
           orderTypeData.push([
             category,
             count,
             orderRevenue,
             avgOrderValue,
-            `${(orderRevenue / totalRevenue * 100).toFixed(2)}%`,
-            `${(count / totalOrders * 100).toFixed(2)}%`
+            `${((orderRevenue / totalRevenue) * 100).toFixed(2)}%`,
+            `${((count / totalOrders) * 100).toFixed(2)}%`,
           ]);
         });
 
         const orderTypeSheet = XLSX.utils.aoa_to_sheet(orderTypeData);
 
         // Set column widths
-        orderTypeSheet['!cols'] = [
-          { wch: 15 },
-          { wch: 12 },
-          { wch: 15 },
-          { wch: 18 },
-          { wch: 20 },
-          { wch: 20 }
-        ];
+        orderTypeSheet['!cols'] = [{ wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 20 }, { wch: 20 }];
 
         // Apply currency formatting
         const range = XLSX.utils.decode_range(orderTypeSheet['!ref']);
@@ -482,7 +443,6 @@ const SalesReport = () => {
 
       setExportProgress(100);
       showSuccessToast('Excel report exported successfully!');
-
     } catch (err) {
       console.error('Error exporting to Excel:', err);
       showSuccessToast('Error exporting Excel file');
@@ -556,7 +516,7 @@ const SalesReport = () => {
         ];
 
         metrics.forEach((metric, idx) => {
-          const xPos = 20 + (idx * 60);
+          const xPos = 20 + idx * 60;
 
           // Draw colored box
           doc.setFillColor(...metric.color);
@@ -596,10 +556,13 @@ const SalesReport = () => {
             `• Peak revenue day: ${formatTrendDate(peakDay)} with ${formatCurrencyPDF(peakDay.value)}`,
             `• Average daily revenue: ${formatCurrencyPDF(avgRevenue)}`,
             `• Top selling item: ${topDish.dishName} (${topDish.totalQuantity} units sold)`,
-            `• Most popular order type: ${reportData.orders.data[0].category} (${((reportData.orders.data[0].totalRevenue / reportData.revenue.summary.totalRevenue) * 100).toFixed(1)}% of revenue)`,
+            `• Most popular order type: ${reportData.orders.data[0].category} (${(
+              (reportData.orders.data[0].totalRevenue / reportData.revenue.summary.totalRevenue) *
+              100
+            ).toFixed(1)}% of revenue)`,
           ];
 
-          insights.forEach(insight => {
+          insights.forEach((insight) => {
             doc.text(insight, 20, yPosition);
             yPosition += 7;
           });
@@ -622,7 +585,7 @@ const SalesReport = () => {
         // Simple line chart representation using autoTable
         const chartData = sortedRevenueData.slice(0, 10).map((item, idx) => {
           const prevValue = idx > 0 ? sortedRevenueData[idx - 1].value : item.value;
-          const change = ((item.value - prevValue) / prevValue * 100).toFixed(1);
+          const change = (((item.value - prevValue) / prevValue) * 100).toFixed(1);
           const indicator = idx > 0 ? (item.value > prevValue ? '↑' : item.value < prevValue ? '↓' : '→') : '—';
 
           return [
@@ -630,7 +593,7 @@ const SalesReport = () => {
             formatCurrencyPDF(item.value),
             item.orderCount.toString(),
             formatCurrencyPDF(item.orderCount > 0 ? item.value / item.orderCount : 0),
-            idx > 0 ? `${indicator} ${change}%` : '—'
+            idx > 0 ? `${indicator} ${change}%` : '—',
           ];
         });
 
@@ -642,15 +605,15 @@ const SalesReport = () => {
           headStyles: {
             fillColor: [68, 114, 196],
             fontSize: 10,
-            fontStyle: 'bold'
+            fontStyle: 'bold',
           },
           styles: { fontSize: 9 },
           columnStyles: {
             1: { halign: 'right' },
             2: { halign: 'center' },
             3: { halign: 'right' },
-            4: { halign: 'center', textColor: [76, 175, 80] }
-          }
+            4: { halign: 'center', textColor: [76, 175, 80] },
+          },
         });
 
         yPosition = doc.lastAutoTable.finalY + 15;
@@ -683,13 +646,13 @@ const SalesReport = () => {
               dish.category || 'N/A',
               dish.totalQuantity.toString(),
               formatCurrencyPDF(dish.totalRevenue),
-              dish.isSpecial ? '★' : '—'
+              dish.isSpecial ? '★' : '—',
             ]),
           theme: 'grid',
           headStyles: {
             fillColor: [68, 114, 196],
             fontSize: 10,
-            fontStyle: 'bold'
+            fontStyle: 'bold',
           },
           styles: { fontSize: 9 },
           columnStyles: {
@@ -697,14 +660,14 @@ const SalesReport = () => {
             1: { cellWidth: 60 },
             3: { halign: 'center' },
             4: { halign: 'right' },
-            5: { halign: 'center' }
+            5: { halign: 'center' },
           },
           // Highlight top 3
           didParseCell(data) {
             if (data.row.index < 3 && data.section === 'body') {
               data.cell.styles.fillColor = [255, 243, 205]; // Light yellow
             }
-          }
+          },
         });
 
         yPosition = doc.lastAutoTable.finalY + 15;
@@ -726,22 +689,22 @@ const SalesReport = () => {
 
         // Create pie chart representation
         if (exportOptions.includeCharts) {
-          const totalRevenue = reportData.revenue.summary.totalRevenue;
+          const { totalRevenue } = reportData.revenue.summary;
           let currentAngle = 0;
           const centerX = 105;
           const centerY = yPosition + 30;
           const radius = 25;
 
           const colors = [
-            [76, 175, 80],   // Green
-            [33, 150, 243],  // Blue
-            [255, 152, 0],   // Orange
-            [156, 39, 176],  // Purple
+            [76, 175, 80], // Green
+            [33, 150, 243], // Blue
+            [255, 152, 0], // Orange
+            [156, 39, 176], // Purple
           ];
 
           reportData.orders.data.forEach((order, idx) => {
             const { totalRevenue: orderRevenue } = order;
-            const percentage = (orderRevenue / totalRevenue);
+            const percentage = orderRevenue / totalRevenue;
             const angle = percentage * 2 * Math.PI;
 
             // Draw pie slice
@@ -769,21 +732,21 @@ const SalesReport = () => {
             order.count.toString(),
             formatCurrencyPDF(order.totalRevenue),
             formatCurrencyPDF(order.avgOrderValue),
-            `${((order.totalRevenue / reportData.revenue.summary.totalRevenue) * 100).toFixed(1)}%`
+            `${((order.totalRevenue / reportData.revenue.summary.totalRevenue) * 100).toFixed(1)}%`,
           ]),
           theme: 'striped',
           headStyles: {
             fillColor: [68, 114, 196],
             fontSize: 10,
-            fontStyle: 'bold'
+            fontStyle: 'bold',
           },
           styles: { fontSize: 9 },
           columnStyles: {
             1: { halign: 'center' },
             2: { halign: 'right' },
             3: { halign: 'right' },
-            4: { halign: 'center' }
-          }
+            4: { halign: 'center' },
+          },
         });
 
         yPosition = doc.lastAutoTable.finalY;
@@ -795,18 +758,8 @@ const SalesReport = () => {
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(128, 128, 128);
-        doc.text(
-          `${COMPANY_NAME} | Sales Report | Page ${i} of ${pageCount}`,
-          105,
-          290,
-          { align: 'center' }
-        );
-        doc.text(
-          `Generated: ${format(new Date(), 'dd MMM yyyy HH:mm')}`,
-          105,
-          294,
-          { align: 'center' }
-        );
+        doc.text(`${COMPANY_NAME} | Sales Report | Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
+        doc.text(`Generated: ${format(new Date(), 'dd MMM yyyy HH:mm')}`, 105, 294, { align: 'center' });
       }
 
       setExportProgress(95);
@@ -815,7 +768,6 @@ const SalesReport = () => {
 
       setExportProgress(100);
       showSuccessToast('PDF report exported successfully!');
-
     } catch (err) {
       console.error('Error exporting to PDF:', err);
       showSuccessToast('Error exporting PDF file');
@@ -826,16 +778,6 @@ const SalesReport = () => {
         setExportType('');
       }, 500);
     }
-  };
-
-  // Print with preview
-  const handlePrintPreview = () => {
-    setShowPrintPreview(true);
-  };
-
-  const handlePrint = () => {
-    setShowPrintPreview(false);
-    window.print();
   };
 
   // Export with options
@@ -939,8 +881,8 @@ const SalesReport = () => {
         <h1>Sales Report</h1>
         <div className="company-name">{COMPANY_NAME}</div>
         <div className="report-info">
-          Period: {format(new Date(startDate), 'dd MMM yyyy')} to {format(new Date(endDate), 'dd MMM yyyy')} |
-          Generated: {format(new Date(), 'dd MMM yyyy HH:mm')}
+          Period: {format(new Date(startDate), 'dd MMM yyyy')} to {format(new Date(endDate), 'dd MMM yyyy')} | Generated:{' '}
+          {format(new Date(), 'dd MMM yyyy HH:mm')}
         </div>
       </div>
 
@@ -959,32 +901,17 @@ const SalesReport = () => {
           <Row className="g-3 align-items-end">
             <Col md={3}>
               <Form.Label>Start Date</Form.Label>
-              <Form.Control
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
+              <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
             </Col>
             <Col md={3}>
               <Form.Label>End Date</Form.Label>
-              <Form.Control
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
+              <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </Col>
             <Col md={2}>
               <Form.Label>Group By</Form.Label>
-              <Form.Select
-                value={groupBy}
-                onChange={(e) => setGroupBy(e.target.value)}
-              >
+              <Form.Select value={groupBy} onChange={(e) => setGroupBy(e.target.value)}>
                 {['hour', 'day', 'month'].map((option) => (
-                  <option
-                    key={option}
-                    value={option}
-                    disabled={!getAllowedGroupBy().includes(option)}
-                  >
+                  <option key={option} value={option} disabled={!getAllowedGroupBy().includes(option)}>
                     {option.charAt(0).toUpperCase() + option.slice(1)}
                     {!getAllowedGroupBy().includes(option) ? ' (Not available)' : ''}
                   </option>
@@ -998,10 +925,7 @@ const SalesReport = () => {
             </Col>
             <Col md={2}>
               <Form.Label>Order Type</Form.Label>
-              <Form.Select
-                value={orderType}
-                onChange={(e) => setOrderType(e.target.value)}
-              >
+              <Form.Select value={orderType} onChange={(e) => setOrderType(e.target.value)}>
                 <option value="all">All Types</option>
                 <option value="dine-in">Dine In</option>
                 <option value="takeaway">Takeaway</option>
@@ -1009,12 +933,7 @@ const SalesReport = () => {
               </Form.Select>
             </Col>
             <Col md={2}>
-              <Button
-                variant="primary"
-                className="w-100"
-                onClick={fetchSalesReport}
-                disabled={loading}
-              >
+              <Button variant="primary" className="w-100" onClick={fetchSalesReport} disabled={loading}>
                 <CsLineIcons icon="sync" className="me-2" />
                 {loading ? 'Loading...' : 'Generate'}
               </Button>
@@ -1035,29 +954,13 @@ const SalesReport = () => {
           <Card className="mb-4 no-print">
             <Card.Body>
               <div className="d-flex gap-2 align-items-center">
-                <Button
-                  variant="success"
-                  onClick={() => handleExportClick('Excel')}
-                  disabled={exporting}
-                >
+                <Button variant="success" onClick={() => handleExportClick('Excel')} disabled={exporting}>
                   <CsLineIcons icon="file-text" className="me-2" />
                   Export to Excel
                 </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => handleExportClick('PDF')}
-                  disabled={exporting}
-                >
+                <Button variant="danger" onClick={() => handleExportClick('PDF')} disabled={exporting}>
                   <CsLineIcons icon="file-pdf" className="me-2" />
                   Export to PDF
-                </Button>
-                <Button
-                  variant="info"
-                  onClick={handlePrintPreview}
-                  disabled={exporting}
-                >
-                  <CsLineIcons icon="print" className="me-2" />
-                  Print Report
                 </Button>
 
                 {exporting && (
@@ -1066,12 +969,7 @@ const SalesReport = () => {
                       <Spinner animation="border" size="sm" className="me-2" />
                       <span className="me-2">Generating {exportType}...</span>
                     </div>
-                    <ProgressBar
-                      now={exportProgress}
-                      label={`${exportProgress}%`}
-                      className="mt-2"
-                      style={{ height: '20px' }}
-                    />
+                    <ProgressBar now={exportProgress} label={`${exportProgress}%`} className="mt-2" style={{ height: '20px' }} />
                   </div>
                 )}
               </div>
@@ -1084,9 +982,7 @@ const SalesReport = () => {
               <Card className="sh-13">
                 <Card.Body>
                   <div className="text-muted text-small mb-1">Total Revenue</div>
-                  <div className="text-primary h3 mb-0">
-                    {formatCurrency(reportData.revenue.summary.totalRevenue)}
-                  </div>
+                  <div className="text-primary h3 mb-0">{formatCurrency(reportData.revenue.summary.totalRevenue)}</div>
                 </Card.Body>
               </Card>
             </Col>
@@ -1094,9 +990,7 @@ const SalesReport = () => {
               <Card className="sh-13">
                 <Card.Body>
                   <div className="text-muted text-small mb-1">Total Orders</div>
-                  <div className="text-primary h3 mb-0">
-                    {reportData.revenue.summary.totalOrders}
-                  </div>
+                  <div className="text-primary h3 mb-0">{reportData.revenue.summary.totalOrders}</div>
                 </Card.Body>
               </Card>
             </Col>
@@ -1104,9 +998,7 @@ const SalesReport = () => {
               <Card className="sh-13">
                 <Card.Body>
                   <div className="text-muted text-small mb-1">Average Order Value</div>
-                  <div className="text-primary h3 mb-0">
-                    {formatCurrency(reportData.revenue.summary.averageOrderValue)}
-                  </div>
+                  <div className="text-primary h3 mb-0">{formatCurrency(reportData.revenue.summary.averageOrderValue)}</div>
                 </Card.Body>
               </Card>
             </Col>
@@ -1140,13 +1032,9 @@ const SalesReport = () => {
                     {sortedRevenueData.map((item, idx) => (
                       <tr key={idx}>
                         <td>{formatTrendDate(item)}</td>
-                        <td className="text-end font-weight-bold">
-                          {formatCurrency(item.value)}
-                        </td>
+                        <td className="text-end font-weight-bold">{formatCurrency(item.value)}</td>
                         <td className="text-end">{item.orderCount}</td>
-                        <td className="text-end">
-                          {formatCurrency(item.orderCount > 0 ? item.value / item.orderCount : 0)}
-                        </td>
+                        <td className="text-end">{formatCurrency(item.orderCount > 0 ? item.value / item.orderCount : 0)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1181,13 +1069,9 @@ const SalesReport = () => {
                         <td className="font-weight-bold">{dish.dishName}</td>
                         <td>{dish.category || 'N/A'}</td>
                         <td className="text-end">{dish.totalQuantity}</td>
-                        <td className="text-end font-weight-bold text-primary">
-                          {formatCurrency(dish.totalRevenue)}
-                        </td>
+                        <td className="text-end font-weight-bold text-primary">{formatCurrency(dish.totalRevenue)}</td>
                         <td className="text-end">{dish.orderCount}</td>
-                        <td className="text-center">
-                          {dish.isSpecial ? <Badge bg="warning">★</Badge> : '-'}
-                        </td>
+                        <td className="text-center">{dish.isSpecial ? <Badge bg="warning">★</Badge> : '-'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1216,15 +1100,9 @@ const SalesReport = () => {
                       <tr key={idx}>
                         <td className="font-weight-bold">{order.category}</td>
                         <td className="text-end">{order.count}</td>
-                        <td className="text-end font-weight-bold text-primary">
-                          {formatCurrency(order.totalRevenue)}
-                        </td>
-                        <td className="text-end">
-                          {formatCurrency(order.avgOrderValue)}
-                        </td>
-                        <td className="text-end">
-                          {((order.totalRevenue / reportData.revenue.summary.totalRevenue) * 100).toFixed(1)}%
-                        </td>
+                        <td className="text-end font-weight-bold text-primary">{formatCurrency(order.totalRevenue)}</td>
+                        <td className="text-end">{formatCurrency(order.avgOrderValue)}</td>
+                        <td className="text-end">{((order.totalRevenue / reportData.revenue.summary.totalRevenue) * 100).toFixed(1)}%</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1236,18 +1114,12 @@ const SalesReport = () => {
       )}
 
       {/* Export Options Modal */}
-      <Modal
-        show={showExportModal}
-        onHide={() => setShowExportModal(false)}
-        size="lg"
-      >
+      <Modal show={showExportModal} onHide={() => setShowExportModal(false)} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>Export Options - {exportType}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p className="text-muted mb-4">
-            Select which sections to include in your {exportType} export
-          </p>
+          <p className="text-muted mb-4">Select which sections to include in your {exportType} export</p>
 
           <Form>
             <Form.Check
@@ -1255,10 +1127,12 @@ const SalesReport = () => {
               id="includeSummary"
               label="Summary Metrics"
               checked={exportOptions.includeSummary}
-              onChange={(e) => setExportOptions({
-                ...exportOptions,
-                includeSummary: e.target.checked
-              })}
+              onChange={(e) =>
+                setExportOptions({
+                  ...exportOptions,
+                  includeSummary: e.target.checked,
+                })
+              }
               className="mb-3"
             />
 
@@ -1267,10 +1141,12 @@ const SalesReport = () => {
               id="includeRevenueTrends"
               label="Revenue Trends"
               checked={exportOptions.includeRevenueTrends}
-              onChange={(e) => setExportOptions({
-                ...exportOptions,
-                includeRevenueTrends: e.target.checked
-              })}
+              onChange={(e) =>
+                setExportOptions({
+                  ...exportOptions,
+                  includeRevenueTrends: e.target.checked,
+                })
+              }
               className="mb-3"
             />
 
@@ -1280,20 +1156,24 @@ const SalesReport = () => {
                 id="includeTopDishes"
                 label="Top Dishes"
                 checked={exportOptions.includeTopDishes}
-                onChange={(e) => setExportOptions({
-                  ...exportOptions,
-                  includeTopDishes: e.target.checked
-                })}
+                onChange={(e) =>
+                  setExportOptions({
+                    ...exportOptions,
+                    includeTopDishes: e.target.checked,
+                  })
+                }
               />
               {exportOptions.includeTopDishes && (
                 <Form.Group className="mt-2 ms-4">
                   <Form.Label>Number of dishes to include:</Form.Label>
                   <Form.Select
                     value={exportOptions.topDishesLimit}
-                    onChange={(e) => setExportOptions({
-                      ...exportOptions,
-                      topDishesLimit: parseInt(e.target.value, 10)
-                    })}
+                    onChange={(e) =>
+                      setExportOptions({
+                        ...exportOptions,
+                        topDishesLimit: parseInt(e.target.value, 10),
+                      })
+                    }
                   >
                     <option value={10}>Top 10</option>
                     <option value={20}>Top 20</option>
@@ -1309,10 +1189,12 @@ const SalesReport = () => {
               id="includeOrderTypes"
               label="Order Type Breakdown"
               checked={exportOptions.includeOrderTypes}
-              onChange={(e) => setExportOptions({
-                ...exportOptions,
-                includeOrderTypes: e.target.checked
-              })}
+              onChange={(e) =>
+                setExportOptions({
+                  ...exportOptions,
+                  includeOrderTypes: e.target.checked,
+                })
+              }
               className="mb-3"
             />
 
@@ -1321,18 +1203,19 @@ const SalesReport = () => {
               id="includeCharts"
               label="Include Charts & Visualizations"
               checked={exportOptions.includeCharts}
-              onChange={(e) => setExportOptions({
-                ...exportOptions,
-                includeCharts: e.target.checked
-              })}
+              onChange={(e) =>
+                setExportOptions({
+                  ...exportOptions,
+                  includeCharts: e.target.checked,
+                })
+              }
               className="mb-3"
             />
           </Form>
 
           <Alert variant="info" className="mt-4">
             <CsLineIcons icon="info-circle" className="me-2" />
-            <strong>Tip:</strong> Including charts will make your {exportType} file larger but more
-            visually appealing and easier to understand.
+            <strong>Tip:</strong> Including charts will make your {exportType} file larger but more visually appealing and easier to understand.
           </Alert>
         </Modal.Body>
         <Modal.Footer>
@@ -1346,59 +1229,9 @@ const SalesReport = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* Print Preview Modal */}
-      <Modal
-        show={showPrintPreview}
-        onHide={() => setShowPrintPreview(false)}
-        size="xl"
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Print Preview</Modal.Title>
-        </Modal.Header>
-        <Modal.Body style={{ maxHeight: '70vh', overflow: 'auto' }}>
-          <Alert variant="info">
-            <CsLineIcons icon="info-circle" className="me-2" />
-            This is a preview of how your report will look when printed.
-            Filters and export buttons will be hidden in the printed version.
-          </Alert>
-
-          <div className="border rounded p-4 bg-white" style={{ minHeight: '400px' }}>
-            <div className="text-center mb-4 pb-3" style={{ borderBottom: '2px solid #4472C4' }}>
-              <h2 style={{ color: '#4472C4', marginBottom: '10px' }}>Sales Report</h2>
-              <h4 style={{ color: '#666' }}>{COMPANY_NAME}</h4>
-              <p style={{ color: '#888', fontSize: '14px' }}>
-                Period: {format(new Date(startDate), 'dd MMM yyyy')} to {format(new Date(endDate), 'dd MMM yyyy')}<br />
-                Generated: {format(new Date(), 'dd MMM yyyy HH:mm')}
-              </p>
-            </div>
-
-            <p className="text-muted">
-              The report will include all visible sections: Summary Cards, Revenue Trends,
-              Top Dishes, and Order Type Breakdown.
-            </p>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowPrintPreview(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handlePrint}>
-            <CsLineIcons icon="print" className="me-2" />
-            Print Now
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
       {/* Success Toast */}
       <ToastContainer position="top-end" className="p-3">
-        <Toast
-          show={showToast}
-          onClose={() => setShowToast(false)}
-          delay={3000}
-          autohide
-          bg="success"
-        >
+        <Toast show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide bg="success">
           <Toast.Header>
             <CsLineIcons icon="check-circle" className="me-2" />
             <strong className="me-auto">Success</strong>
