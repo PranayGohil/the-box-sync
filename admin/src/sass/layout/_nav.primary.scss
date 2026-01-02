@@ -1378,11 +1378,12 @@ html[data-navcolor="dark"] {
 }
 
 .logo-default {
-  width: 100px;
-  min-height: 35px;
+  width: 250px;
+  min-height: 50px;
   object-position: left;
   object-fit: cover;
   background-repeat: no-repeat;
+  background-size: contain;
 }
 
 // Setting logo path values manually because of Safari url and css variable bug
