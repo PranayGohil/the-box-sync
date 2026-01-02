@@ -13,6 +13,13 @@ const {
   getOverview,
   getWaiterPerformance,
   getTablePerformance,
+
+  getInventoryReport,
+  getVendorAnalysis,
+  getItemAnalysis,
+  getPaymentTracking,
+  getCategoryAnalysis,
+
   //   v2
   getSalesReport,
   getMenuPerformanceReport,
@@ -94,6 +101,12 @@ statisticsRouter.get(
   authMiddleware,
   getTablePerformance
 );
+
+statisticsRouter.get('/inventory', authMiddleware, getInventoryReport);
+statisticsRouter.get('/inventory/vendors', authMiddleware, getVendorAnalysis);
+statisticsRouter.get('/inventory/items', authMiddleware, getItemAnalysis);
+statisticsRouter.get('/inventory/payments', authMiddleware, getPaymentTracking);
+statisticsRouter.get('/inventory/categories', authMiddleware, getCategoryAnalysis);
 
 statisticsRouter.get("/sales/report", authMiddleware, getSalesReport);
 statisticsRouter.get("/menu/report", authMiddleware, getMenuPerformanceReport);

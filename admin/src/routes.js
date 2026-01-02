@@ -19,6 +19,7 @@ const report = {
   operational: lazy(() => import('views/admin/statistics/OperationalReport')),
   menu: lazy(() => import('views/admin/statistics/MenuPerformanceReport')),
   financial: lazy(() => import('views/admin/statistics/FinancialReport')),
+  inventory: lazy(() => import('views/admin/statistics/InventoryReport')),
 };
 
 const selectPlan = lazy(() => import('views/default/SelectPlan'));
@@ -69,6 +70,7 @@ const allRoutes = {
         { path: '/operational', label: 'Operational Report', component: report.operational },
         { path: '/menu', label: 'Menu Performance Report', component: report.menu },
         { path: '/financial', label: 'Financial Report', component: report.financial },
+        { path: '/inventory', label: 'Inventory Report', component: report.inventory },
       ],
     },
     {

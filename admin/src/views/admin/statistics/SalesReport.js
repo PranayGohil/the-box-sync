@@ -898,7 +898,7 @@ const SalesReport = () => {
       {/* Filters */}
       <Card className="mb-4 no-print">
         <Card.Body>
-          <Row className="g-3 align-items-end">
+          <Row className="g-3 align-items-start">
             <Col md={3}>
               <Form.Label>Start Date</Form.Label>
               <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
@@ -932,7 +932,8 @@ const SalesReport = () => {
                 <option value="delivery">Delivery</option>
               </Form.Select>
             </Col>
-            <Col md={2}>
+            <Col md={2} className='h-100' style={{ minHeight: '-webkit-fill-available' }}>
+              <Form.Label> &nbsp; </Form.Label>
               <Button variant="primary" className="w-100" onClick={fetchSalesReport} disabled={loading}>
                 <CsLineIcons icon="sync" className="me-2" />
                 {loading ? 'Loading...' : 'Generate'}

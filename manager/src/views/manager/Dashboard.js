@@ -80,7 +80,7 @@ const Dashboard = () => {
       <div className="page-title-container">
         <Row>
           <Col md="7">
-            <h1 className="mb-0 pb-0 display-4">Dine-In Tables</h1>
+            <h1 className="mb-0 pb-0 display-4">Dashboard</h1>
           </Col>
           <Col md="5" className="d-flex align-items-start justify-content-end gap-2">
             <Button variant="outline-primary" onClick={() => createNewOrder('takeaway')}>
@@ -94,7 +94,7 @@ const Dashboard = () => {
       </div>
 
       <Row>
-        <Col lg="6">
+        <Col lg="8">
           {tables.map((tableArea) => (
             <div className="gx-2" key={tableArea._id}>
               <h3 className="mb-3 text-primary">{tableArea.area}</h3>
@@ -193,8 +193,8 @@ const Dashboard = () => {
         </Col>
 
         {/* Active Orders Section */}
-        <Col lg="6">
-          <h3 className="mb-3 text-primary">Active Takeaways & Deliveries</h3>
+        <Col lg="4">
+          <h3 className="mb-3 text-primary small-title">Active Takeaways & Deliveries</h3>
           <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
             {activeTakeawaysAndDeliveries.length === 0 ? (
               <Card className="text-center p-4">

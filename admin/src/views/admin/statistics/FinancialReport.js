@@ -453,8 +453,7 @@ const FinancialReport = () => {
           const totalDeductions = reportData.summary.totalDiscount + reportData.summary.totalWaveOff;
 
           const insights = [
-            `• Discount Ratio: ${reportData.summary.discountPercentage}% ${
-              reportData.summary.discountPercentage > 15 ? '(High - Review policies)' : reportData.summary.discountPercentage > 10 ? '(Moderate)' : '(Healthy)'
+            `• Discount Ratio: ${reportData.summary.discountPercentage}% ${reportData.summary.discountPercentage > 15 ? '(High - Review policies)' : reportData.summary.discountPercentage > 10 ? '(Moderate)' : '(Healthy)'
             }`,
             `• Total Deductions: ${formatCurrencyPDF(totalDeductions)} (${((totalDeductions / reportData.summary.grossRevenue) * 100).toFixed(
               1
@@ -708,10 +707,10 @@ const FinancialReport = () => {
 
   const sortedDailyFinancials = reportData
     ? [...reportData.dailyFinancials].sort((a, b) => {
-        const dateA = new Date(a.date.year, a.date.month - 1, a.date.day);
-        const dateB = new Date(b.date.year, b.date.month - 1, b.date.day);
-        return dateB - dateA;
-      })
+      const dateA = new Date(a.date.year, a.date.month - 1, a.date.day);
+      const dateB = new Date(b.date.year, b.date.month - 1, b.date.day);
+      return dateB - dateA;
+    })
     : [];
 
   if (loading && !reportData) {
@@ -865,9 +864,9 @@ const FinancialReport = () => {
           {/* Revenue Flow Visualization */}
           <Card className="mb-4">
             <Card.Body>
-              <h5 className="mb-3">Revenue Flow Analysis</h5>
               <Row>
                 <Col md={6}>
+                  <h5 className="mb-3">Revenue Flow Analysis</h5>
                   <div className="mb-3">
                     <div className="d-flex justify-content-between mb-2">
                       <span className="font-weight-bold">Gross Revenue</span>
@@ -902,13 +901,13 @@ const FinancialReport = () => {
                 </Col>
 
                 <Col md={6}>
-                  <Card className="border">
-                    <Card.Body>
-                      <h6 className="mb-3">Financial Health Indicators</h6>
+                  <div>
+                    <div>
+                      <h5 className="mb-3">Financial Health Indicators</h5>
 
                       <div className="mb-3">
-                        <div className="d-flex justify-content-between text-small mb-1">
-                          <span>Discount Ratio</span>
+                        <div className="d-flex justify-content-between mb-1">
+                          <span className="font-weight-bold">Discount Ratio</span>
                           <Badge
                             bg={reportData.summary.discountPercentage > 15 ? 'danger' : reportData.summary.discountPercentage > 10 ? 'warning' : 'success'}
                           >
@@ -924,8 +923,8 @@ const FinancialReport = () => {
                       </div>
 
                       <div className="mb-3">
-                        <div className="d-flex justify-content-between text-small mb-1">
-                          <span>Tax Efficiency</span>
+                        <div className="d-flex justify-content-between mb-1">
+                          <span className="font-weight-bold">Tax Efficiency</span>
                           <Badge bg="info">{reportData.summary.taxPercentage}%</Badge>
                         </div>
                         <ProgressBar now={reportData.summary.taxPercentage} max={20} variant="info" />
@@ -933,15 +932,15 @@ const FinancialReport = () => {
                       </div>
 
                       <div>
-                        <div className="d-flex justify-content-between text-small mb-1">
-                          <span>Collection Rate</span>
+                        <div className="d-flex justify-content-between mb-1">
+                          <span className="font-weight-bold">Collection Rate</span>
                           <Badge bg="success">{((reportData.summary.totalPaid / reportData.summary.netRevenue) * 100).toFixed(1)}%</Badge>
                         </div>
                         <ProgressBar now={(reportData.summary.totalPaid / reportData.summary.netRevenue) * 100} variant="success" />
                         <small className="text-muted">Payment collected</small>
                       </div>
-                    </Card.Body>
-                  </Card>
+                    </div>
+                  </div>
                 </Col>
               </Row>
             </Card.Body>

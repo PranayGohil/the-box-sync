@@ -1,6 +1,7 @@
 const Order = require("../models/orderModel");
 const Menu = require("../models/menuModel");
 const Customer = require("../models/customerModel");
+const Inventory = require("../models/inventoryModel");
 
 // ============================================
 // UTILITY FUNCTIONS
@@ -298,6 +299,14 @@ const getTopDishes = async (req, res) => {
       { $match: matchStage },
       { $unwind: "$order_items" },
       {
+        $match: {
+          $or: [
+            { "order_items.special_notes": { $exists: false } },
+            { "order_items.special_notes": { $ne: "Parcel Charge" } }
+          ]
+        }
+      },
+      {
         $addFields: {
           normalizedDishName: {
             $toLower: { $trim: { input: "$order_items.dish_name" } },
@@ -418,6 +427,14 @@ const getCategoryStats = async (req, res) => {
         },
       },
       { $unwind: "$order_items" },
+      {
+        $match: {
+          $or: [
+            { "order_items.special_notes": { $exists: false } },
+            { "order_items.special_notes": { $ne: "Parcel Charge" } }
+          ]
+        }
+      },
       {
         $addFields: {
           normalizedDishName: {
@@ -922,6 +939,14 @@ const getOverview = async (req, res) => {
       },
       { $unwind: "$order_items" },
       {
+        $match: {
+          $or: [
+            { "order_items.special_notes": { $exists: false } },
+            { "order_items.special_notes": { $ne: "Parcel Charge" } }
+          ]
+        }
+      },
+      {
         $group: {
           _id: "$order_items.dish_name",
           quantity: { $sum: "$order_items.quantity" },
@@ -1132,6 +1157,14 @@ const getLowPerformingDishes = async (req, res) => {
         },
       },
       { $unwind: "$order_items" },
+      {
+        $match: {
+          $or: [
+            { "order_items.special_notes": { $exists: false } },
+            { "order_items.special_notes": { $ne: "Parcel Charge" } }
+          ]
+        }
+      },
       {
         $group: {
           _id: { $toLower: { $trim: { input: "$order_items.dish_name" } } },
@@ -1351,6 +1384,14 @@ const getMenuPerformanceReport = async (req, res) => {
       },
       { $unwind: "$order_items" },
       {
+        $match: {
+          $or: [
+            { "order_items.special_notes": { $exists: false } },
+            { "order_items.special_notes": { $ne: "Parcel Charge" } }
+          ]
+        }
+      },
+      {
         $addFields: {
           normalizedDishName: {
             $toLower: { $trim: { input: "$order_items.dish_name" } },
@@ -1442,6 +1483,14 @@ const getMenuPerformanceReport = async (req, res) => {
       },
       { $unwind: "$order_items" },
       {
+        $match: {
+          $or: [
+            { "order_items.special_notes": { $exists: false } },
+            { "order_items.special_notes": { $ne: "Parcel Charge" } }
+          ]
+        }
+      },
+      {
         $addFields: {
           normalizedDishName: {
             $toLower: { $trim: { input: "$order_items.dish_name" } },
@@ -1519,6 +1568,14 @@ const getMenuPerformanceReport = async (req, res) => {
         },
       },
       { $unwind: "$order_items" },
+      {
+        $match: {
+          $or: [
+            { "order_items.special_notes": { $exists: false } },
+            { "order_items.special_notes": { $ne: "Parcel Charge" } }
+          ]
+        }
+      },
       {
         $addFields: {
           normalizedDishName: {
@@ -2060,11 +2117,21 @@ const getFinancialReport = async (req, res) => {
         $group: {
           _id: null,
           grossRevenue: {
-            $sum: {
-              $add: ["$total_amount", "$discount_amount", "$waveoff_amount"],
-            },
+            $sum: "$sub_total"
           },
-          netRevenue: { $sum: "$total_amount" },
+          netRevenue: {
+            $sum: {
+              $subtract: [
+                "$sub_total",
+                {
+                  $add: [
+                    { $ifNull: ["$discount_amount", 0] },
+                    { $ifNull: ["$waveoff_amount", 0] }
+                  ]
+                }
+              ]
+            }
+          },
           totalDiscount: { $sum: "$discount_amount" },
           totalWaveOff: { $sum: "$waveoff_amount" },
           totalTax: {
@@ -2080,6 +2147,8 @@ const getFinancialReport = async (req, res) => {
         },
       },
     ]);
+
+    console.log(financialSummary);
 
     // Daily Financial Breakdown
     const dailyFinancials = await Order.aggregate([
@@ -2102,7 +2171,19 @@ const getFinancialReport = async (req, res) => {
               $add: ["$total_amount", "$discount_amount", "$waveoff_amount"],
             },
           },
-          netRevenue: { $sum: "$total_amount" },
+          netRevenue: {
+            $sum: {
+              $subtract: [
+                "$sub_total",
+                {
+                  $add: [
+                    { $ifNull: ["$discount_amount", 0] },
+                    { $ifNull: ["$waveoff_amount", 0] }
+                  ]
+                }
+              ]
+            }
+          },
           discount: { $sum: "$discount_amount" },
           waveOff: { $sum: "$waveoff_amount" },
           tax: {
@@ -2227,6 +2308,780 @@ const getFinancialReport = async (req, res) => {
 };
 
 // ============================================
+// INVENTORY OVERVIEW REPORT
+// ============================================
+
+const getInventoryReport = async (req, res) => {
+  try {
+    const restaurantId = req.user._id;
+    const {
+      period = "month",
+      start_date,
+      end_date,
+      status,
+      category,
+      vendor_name
+    } = req.query;
+
+    const { startDate, endDate } = getDateRange(period, start_date, end_date);
+
+    const matchStage = {
+      user_id: restaurantId,
+      request_date: { $gte: startDate, $lte: endDate },
+    };
+
+    if (status && status !== "all") {
+      matchStage.status = status;
+    }
+    if (category && category !== "all") {
+      matchStage.category = category;
+    }
+    if (vendor_name && vendor_name !== "all") {
+      matchStage.vendor_name = vendor_name;
+    }
+
+    // Summary Statistics
+    const summary = await Inventory.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: null,
+          totalPurchases: { $sum: 1 },
+          totalAmount: { $sum: "$total_amount" },
+          totalPaid: { $sum: "$paid_amount" },
+          totalUnpaid: { $sum: "$unpaid_amount" },
+          avgPurchaseValue: { $avg: "$total_amount" },
+        },
+      },
+    ]);
+
+    // Status Breakdown
+    const statusBreakdown = await Inventory.aggregate([
+      {
+        $match: {
+          user_id: restaurantId,
+          request_date: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+          totalAmount: { $sum: "$total_amount" },
+          paidAmount: { $sum: "$paid_amount" },
+          unpaidAmount: { $sum: "$unpaid_amount" },
+        },
+      },
+      {
+        $project: {
+          status: "$_id",
+          count: 1,
+          totalAmount: { $round: ["$totalAmount", 2] },
+          paidAmount: { $round: ["$paidAmount", 2] },
+          unpaidAmount: { $round: ["$unpaidAmount", 2] },
+          _id: 0,
+        },
+      },
+      { $sort: { count: -1 } },
+    ]);
+
+    // Category Performance
+    const categoryPerformance = await Inventory.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: "$category",
+          purchaseCount: { $sum: 1 },
+          totalAmount: { $sum: "$total_amount" },
+          paidAmount: { $sum: "$paid_amount" },
+          unpaidAmount: { $sum: "$unpaid_amount" },
+          avgPurchaseValue: { $avg: "$total_amount" },
+        },
+      },
+      {
+        $project: {
+          category: "$_id",
+          purchaseCount: 1,
+          totalAmount: { $round: ["$totalAmount", 2] },
+          paidAmount: { $round: ["$paidAmount", 2] },
+          unpaidAmount: { $round: ["$unpaidAmount", 2] },
+          avgPurchaseValue: { $round: ["$avgPurchaseValue", 2] },
+          _id: 0,
+        },
+      },
+      { $sort: { totalAmount: -1 } },
+    ]);
+
+    // Vendor Performance
+    const vendorPerformance = await Inventory.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: "$vendor_name",
+          purchaseCount: { $sum: 1 },
+          totalAmount: { $sum: "$total_amount" },
+          paidAmount: { $sum: "$paid_amount" },
+          unpaidAmount: { $sum: "$unpaid_amount" },
+          avgPurchaseValue: { $avg: "$total_amount" },
+        },
+      },
+      {
+        $project: {
+          vendorName: "$_id",
+          purchaseCount: 1,
+          totalAmount: { $round: ["$totalAmount", 2] },
+          paidAmount: { $round: ["$paidAmount", 2] },
+          unpaidAmount: { $round: ["$unpaidAmount", 2] },
+          avgPurchaseValue: { $round: ["$avgPurchaseValue", 2] },
+          paymentRate: {
+            $cond: [
+              { $gt: ["$totalAmount", 0] },
+              {
+                $round: [
+                  {
+                    $multiply: [
+                      { $divide: ["$paidAmount", "$totalAmount"] },
+                      100,
+                    ],
+                  },
+                  2,
+                ],
+              },
+              0,
+            ],
+          },
+          _id: 0,
+        },
+      },
+      { $sort: { totalAmount: -1 } },
+    ]);
+
+    // Daily Purchase Trend
+    const dailyTrend = await Inventory.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: {
+            day: { $dayOfMonth: "$request_date" },
+            month: { $month: "$request_date" },
+            year: { $year: "$request_date" },
+          },
+          purchaseCount: { $sum: 1 },
+          totalAmount: { $sum: "$total_amount" },
+          paidAmount: { $sum: "$paid_amount" },
+          unpaidAmount: { $sum: "$unpaid_amount" },
+        },
+      },
+      {
+        $project: {
+          date: "$_id",
+          purchaseCount: 1,
+          totalAmount: { $round: ["$totalAmount", 2] },
+          paidAmount: { $round: ["$paidAmount", 2] },
+          unpaidAmount: { $round: ["$unpaidAmount", 2] },
+          _id: 0,
+        },
+      },
+      { $sort: { "date.year": 1, "date.month": 1, "date.day": 1 } },
+    ]);
+
+    // Top Items by Quantity
+    const topItemsByQuantity = await Inventory.aggregate([
+      { $match: matchStage },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: {
+            itemName: "$items.item_name",
+            unit: "$items.unit",
+          },
+          totalQuantity: { $sum: "$items.item_quantity" },
+          totalValue: {
+            $sum: {
+              $multiply: ["$items.item_quantity", { $ifNull: ["$items.item_price", 0] }],
+            },
+          },
+          purchaseCount: { $sum: 1 },
+          avgPrice: { $avg: "$items.item_price" },
+        },
+      },
+      {
+        $project: {
+          itemName: "$_id.itemName",
+          unit: "$_id.unit",
+          totalQuantity: { $round: ["$totalQuantity", 2] },
+          totalValue: { $round: ["$totalValue", 2] },
+          purchaseCount: 1,
+          avgPrice: { $round: ["$avgPrice", 2] },
+          _id: 0,
+        },
+      },
+      { $sort: { totalQuantity: -1 } },
+      { $limit: 20 },
+    ]);
+
+    // Top Items by Value
+    const topItemsByValue = await Inventory.aggregate([
+      { $match: matchStage },
+      { $unwind: "$items" },
+      {
+        $match: {
+          "items.item_price": { $exists: true, $ne: null, $gt: 0 },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            itemName: "$items.item_name",
+            unit: "$items.unit",
+          },
+          totalQuantity: { $sum: "$items.item_quantity" },
+          totalValue: {
+            $sum: {
+              $multiply: ["$items.item_quantity", "$items.item_price"],
+            },
+          },
+          purchaseCount: { $sum: 1 },
+          avgPrice: { $avg: "$items.item_price" },
+        },
+      },
+      {
+        $project: {
+          itemName: "$_id.itemName",
+          unit: "$_id.unit",
+          totalQuantity: { $round: ["$totalQuantity", 2] },
+          totalValue: { $round: ["$totalValue", 2] },
+          purchaseCount: 1,
+          avgPrice: { $round: ["$avgPrice", 2] },
+          _id: 0,
+        },
+      },
+      { $sort: { totalValue: -1 } },
+      { $limit: 20 },
+    ]);
+
+    // Payment Status Analysis
+    const paymentAnalysis = await Inventory.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: null,
+          totalPurchases: { $sum: 1 },
+          fullyPaid: {
+            $sum: {
+              $cond: [{ $eq: ["$unpaid_amount", 0] }, 1, 0],
+            },
+          },
+          partiallyPaid: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $gt: ["$paid_amount", 0] },
+                    { $gt: ["$unpaid_amount", 0] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+          unpaid: {
+            $sum: {
+              $cond: [{ $gt: ["$unpaid_amount", 0] }, 1, 0],
+            },
+          },
+        },
+      },
+    ]);
+
+    const summaryData = summary[0] || {
+      totalPurchases: 0,
+      totalAmount: 0,
+      totalPaid: 0,
+      totalUnpaid: 0,
+      avgPurchaseValue: 0,
+    };
+
+    const paymentData = paymentAnalysis[0] || {
+      totalPurchases: 0,
+      fullyPaid: 0,
+      partiallyPaid: 0,
+      unpaid: 0,
+    };
+
+    res.status(200).json({
+      success: true,
+      period,
+      dateRange: { start: startDate, end: endDate },
+      summary: {
+        totalPurchases: summaryData.totalPurchases,
+        totalAmount: Math.round(summaryData.totalAmount * 100) / 100,
+        totalPaid: Math.round(summaryData.totalPaid * 100) / 100,
+        totalUnpaid: Math.round(summaryData.totalUnpaid * 100) / 100,
+        avgPurchaseValue: Math.round(summaryData.avgPurchaseValue * 100) / 100,
+        paymentRate:
+          summaryData.totalAmount > 0
+            ? Math.round(
+              (summaryData.totalPaid / summaryData.totalAmount) * 100 * 100
+            ) / 100
+            : 0,
+        fullyPaidCount: paymentData.fullyPaid,
+        partiallyPaidCount: paymentData.partiallyPaid,
+        unpaidCount: paymentData.unpaid,
+      },
+      statusBreakdown,
+      categoryPerformance,
+      vendorPerformance,
+      dailyTrend,
+      topItemsByQuantity,
+      topItemsByValue,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// ============================================
+// VENDOR ANALYSIS
+// ============================================
+
+const getVendorAnalysis = async (req, res) => {
+  try {
+    const restaurantId = req.user._id;
+    const { period = "month", start_date, end_date } = req.query;
+
+    const { startDate, endDate } = getDateRange(period, start_date, end_date);
+
+    const vendorDetails = await Inventory.aggregate([
+      {
+        $match: {
+          user_id: restaurantId,
+          request_date: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: "$vendor_name",
+          totalPurchases: { $sum: 1 },
+          totalAmount: { $sum: "$total_amount" },
+          paidAmount: { $sum: "$paid_amount" },
+          unpaidAmount: { $sum: "$unpaid_amount" },
+          avgPurchaseValue: { $avg: "$total_amount" },
+          categories: { $addToSet: "$category" },
+          lastPurchaseDate: { $max: "$request_date" },
+          firstPurchaseDate: { $min: "$request_date" },
+        },
+      },
+      {
+        $project: {
+          vendorName: "$_id",
+          totalPurchases: 1,
+          totalAmount: { $round: ["$totalAmount", 2] },
+          paidAmount: { $round: ["$paidAmount", 2] },
+          unpaidAmount: { $round: ["$unpaidAmount", 2] },
+          avgPurchaseValue: { $round: ["$avgPurchaseValue", 2] },
+          categoryCount: { $size: "$categories" },
+          categories: 1,
+          lastPurchaseDate: 1,
+          firstPurchaseDate: 1,
+          paymentRate: {
+            $cond: [
+              { $gt: ["$totalAmount", 0] },
+              {
+                $round: [
+                  {
+                    $multiply: [
+                      { $divide: ["$paidAmount", "$totalAmount"] },
+                      100,
+                    ],
+                  },
+                  2,
+                ],
+              },
+              0,
+            ],
+          },
+          _id: 0,
+        },
+      },
+      { $sort: { totalAmount: -1 } },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      period,
+      dateRange: { start: startDate, end: endDate },
+      data: vendorDetails,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// ============================================
+// ITEM ANALYSIS
+// ============================================
+
+const getItemAnalysis = async (req, res) => {
+  try {
+    const restaurantId = req.user._id;
+    const {
+      period = "month",
+      start_date,
+      end_date,
+      category,
+      sort_by = "quantity" // quantity or value
+    } = req.query;
+
+    const { startDate, endDate } = getDateRange(period, start_date, end_date);
+
+    const matchStage = {
+      user_id: restaurantId,
+      request_date: { $gte: startDate, $lte: endDate },
+    };
+
+    if (category && category !== "all") {
+      matchStage.category = category;
+    }
+
+    const itemDetails = await Inventory.aggregate([
+      { $match: matchStage },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: {
+            itemName: "$items.item_name",
+            unit: "$items.unit",
+          },
+          totalQuantity: { $sum: "$items.item_quantity" },
+          totalValue: {
+            $sum: {
+              $multiply: ["$items.item_quantity", { $ifNull: ["$items.item_price", 0] }],
+            },
+          },
+          purchaseCount: { $sum: 1 },
+          avgQuantityPerPurchase: { $avg: "$items.item_quantity" },
+          minPrice: { $min: "$items.item_price" },
+          maxPrice: { $max: "$items.item_price" },
+          avgPrice: { $avg: "$items.item_price" },
+          vendors: { $addToSet: "$vendor_name" },
+          categories: { $addToSet: "$category" },
+          lastPurchaseDate: { $max: "$request_date" },
+        },
+      },
+      {
+        $project: {
+          itemName: "$_id.itemName",
+          unit: "$_id.unit",
+          totalQuantity: { $round: ["$totalQuantity", 2] },
+          totalValue: { $round: ["$totalValue", 2] },
+          purchaseCount: 1,
+          avgQuantityPerPurchase: { $round: ["$avgQuantityPerPurchase", 2] },
+          minPrice: { $round: ["$minPrice", 2] },
+          maxPrice: { $round: ["$maxPrice", 2] },
+          avgPrice: { $round: ["$avgPrice", 2] },
+          vendorCount: { $size: "$vendors" },
+          vendors: 1,
+          categories: 1,
+          lastPurchaseDate: 1,
+          priceVariation: {
+            $cond: [
+              { $gt: ["$minPrice", 0] },
+              {
+                $round: [
+                  {
+                    $multiply: [
+                      {
+                        $divide: [
+                          { $subtract: ["$maxPrice", "$minPrice"] },
+                          "$minPrice",
+                        ],
+                      },
+                      100,
+                    ],
+                  },
+                  2,
+                ],
+              },
+              0,
+            ],
+          },
+          _id: 0,
+        },
+      },
+      {
+        $sort: sort_by === "value" ? { totalValue: -1 } : { totalQuantity: -1 }
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      period,
+      dateRange: { start: startDate, end: endDate },
+      sortBy: sort_by,
+      data: itemDetails,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// ============================================
+// PAYMENT TRACKING
+// ============================================
+
+const getPaymentTracking = async (req, res) => {
+  try {
+    const restaurantId = req.user._id;
+    const { period = "month", start_date, end_date } = req.query;
+
+    const { startDate, endDate } = getDateRange(period, start_date, end_date);
+
+    // Pending Payments by Vendor
+    const pendingPayments = await Inventory.aggregate([
+      {
+        $match: {
+          user_id: restaurantId,
+          unpaid_amount: { $gt: 0 },
+        },
+      },
+      {
+        $group: {
+          _id: "$vendor_name",
+          totalUnpaid: { $sum: "$unpaid_amount" },
+          purchaseCount: { $sum: 1 },
+          oldestBill: { $min: "$bill_date" },
+        },
+      },
+      {
+        $project: {
+          vendorName: "$_id",
+          totalUnpaid: { $round: ["$totalUnpaid", 2] },
+          purchaseCount: 1,
+          oldestBill: 1,
+          _id: 0,
+        },
+      },
+      { $sort: { totalUnpaid: -1 } },
+    ]);
+
+    // Daily Payment Trend
+    const paymentTrend = await Inventory.aggregate([
+      {
+        $match: {
+          user_id: restaurantId,
+          request_date: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            day: { $dayOfMonth: "$request_date" },
+            month: { $month: "$request_date" },
+            year: { $year: "$request_date" },
+          },
+          totalAmount: { $sum: "$total_amount" },
+          paidAmount: { $sum: "$paid_amount" },
+          unpaidAmount: { $sum: "$unpaid_amount" },
+          purchaseCount: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          date: "$_id",
+          totalAmount: { $round: ["$totalAmount", 2] },
+          paidAmount: { $round: ["$paidAmount", 2] },
+          unpaidAmount: { $round: ["$unpaidAmount", 2] },
+          purchaseCount: 1,
+          paymentRate: {
+            $cond: [
+              { $gt: ["$totalAmount", 0] },
+              {
+                $round: [
+                  {
+                    $multiply: [
+                      { $divide: ["$paidAmount", "$totalAmount"] },
+                      100,
+                    ],
+                  },
+                  2,
+                ],
+              },
+              0,
+            ],
+          },
+          _id: 0,
+        },
+      },
+      { $sort: { "date.year": 1, "date.month": 1, "date.day": 1 } },
+    ]);
+
+    // Overdue Payments (bills older than 30 days with unpaid amount)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const overduePayments = await Inventory.aggregate([
+      {
+        $match: {
+          user_id: restaurantId,
+          bill_date: { $lt: thirtyDaysAgo },
+          unpaid_amount: { $gt: 0 },
+        },
+      },
+      {
+        $project: {
+          vendorName: "$vendor_name",
+          billNumber: "$bill_number",
+          billDate: "$bill_date",
+          totalAmount: { $round: ["$total_amount", 2] },
+          paidAmount: { $round: ["$paid_amount", 2] },
+          unpaidAmount: { $round: ["$unpaid_amount", 2] },
+          category: 1,
+          daysOverdue: {
+            $ceil: {
+              $divide: [
+                { $subtract: [new Date(), "$bill_date"] },
+                1000 * 60 * 60 * 24,
+              ],
+            },
+          },
+        },
+      },
+      { $sort: { daysOverdue: -1 } },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      period,
+      dateRange: { start: startDate, end: endDate },
+      pendingPayments,
+      paymentTrend,
+      overduePayments,
+      overdueCount: overduePayments.length,
+      totalOverdueAmount:
+        Math.round(
+          overduePayments.reduce((sum, item) => sum + item.unpaidAmount, 0) *
+          100
+        ) / 100,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// ============================================
+// CATEGORY ANALYSIS
+// ============================================
+
+const getCategoryAnalysis = async (req, res) => {
+  try {
+    const restaurantId = req.user._id;
+    const { period = "month", start_date, end_date } = req.query;
+
+    const { startDate, endDate } = getDateRange(period, start_date, end_date);
+
+    const categoryDetails = await Inventory.aggregate([
+      {
+        $match: {
+          user_id: restaurantId,
+          request_date: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: "$category",
+          purchaseCount: { $sum: 1 },
+          totalAmount: { $sum: "$total_amount" },
+          paidAmount: { $sum: "$paid_amount" },
+          unpaidAmount: { $sum: "$unpaid_amount" },
+          avgPurchaseValue: { $avg: "$total_amount" },
+          vendors: { $addToSet: "$vendor_name" },
+        },
+      },
+      {
+        $project: {
+          category: "$_id",
+          purchaseCount: 1,
+          totalAmount: { $round: ["$totalAmount", 2] },
+          paidAmount: { $round: ["$paidAmount", 2] },
+          unpaidAmount: { $round: ["$unpaidAmount", 2] },
+          avgPurchaseValue: { $round: ["$avgPurchaseValue", 2] },
+          vendorCount: { $size: "$vendors" },
+          vendors: 1,
+          paymentRate: {
+            $cond: [
+              { $gt: ["$totalAmount", 0] },
+              {
+                $round: [
+                  {
+                    $multiply: [
+                      { $divide: ["$paidAmount", "$totalAmount"] },
+                      100,
+                    ],
+                  },
+                  2,
+                ],
+              },
+              0,
+            ],
+          },
+          _id: 0,
+        },
+      },
+      { $sort: { totalAmount: -1 } },
+    ]);
+
+    // Category trend over time
+    const categoryTrend = await Inventory.aggregate([
+      {
+        $match: {
+          user_id: restaurantId,
+          request_date: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            category: "$category",
+            month: { $month: "$request_date" },
+            year: { $year: "$request_date" },
+          },
+          amount: { $sum: "$total_amount" },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          category: "$_id.category",
+          month: "$_id.month",
+          year: "$_id.year",
+          amount: { $round: ["$amount", 2] },
+          count: 1,
+          _id: 0,
+        },
+      },
+      { $sort: { year: 1, month: 1, category: 1 } },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      period,
+      dateRange: { start: startDate, end: endDate },
+      categoryDetails,
+      categoryTrend,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// ============================================
 // EXPORT ALL FUNCTIONS
 // ============================================
 
@@ -2243,6 +3098,12 @@ module.exports = {
   getOverview,
   getWaiterPerformance,
   getTablePerformance,
+
+  getInventoryReport,
+  getVendorAnalysis,
+  getItemAnalysis,
+  getPaymentTracking,
+  getCategoryAnalysis,
 
   // Reports v2
   getSalesReport,
