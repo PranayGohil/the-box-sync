@@ -33,7 +33,7 @@ const DeliveryOrder = () => {
       comment: '',
     }
   });
-  const allowNavigationRef = useRef(false); 
+  const allowNavigationRef = useRef(false);
 
   const [orderItems, setOrderItems] = useState([]);
   const [menuData, setMenuData] = useState([]);
@@ -108,15 +108,21 @@ const DeliveryOrder = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       const order = response.data.data;
-      setOrderItems(order.order_items || []);
-      setOrderStatus(order.order_status);
-      setTokenNumber(order.token);
-      setCustomerInfo({
+      const items = order.order_items || [];
+      const custInfo = {
         name: order.customer_details.name || '',
         phone: order.customer_details.phone || '',
         address: order.customer_details.address || '',
         comment: order.comment || '',
-      });
+      };
+      setOrderItems(order.order_items || []);
+      setOrderStatus(order.order_status);
+      setTokenNumber(order.token);
+      setCustomerInfo(custInfo);
+      initialStateRef.current = {
+        orderItems: JSON.parse(JSON.stringify(items)),
+        customerInfo: JSON.parse(JSON.stringify(custInfo))
+      };
     } catch (error) {
       console.error('Error fetching order details:', error);
     }
@@ -222,7 +228,7 @@ const DeliveryOrder = () => {
   }, [isDirty]);
 
   // 🔥 Protect against browser back/forward buttons
-  useEffect(() => { 
+  useEffect(() => {
     const unblock = history.block((loc) => {
       // ✅ Allow navigation if explicitly permitted
       if (allowNavigationRef.current) {
@@ -483,7 +489,7 @@ const DeliveryOrder = () => {
       });
 
       if (response.data.status === 'success') {
-         allowNavigationRef.current = true;  
+        allowNavigationRef.current = true;
         // 🔥 NEW: Update initial state after successful save
         initialStateRef.current = {
           orderItems: JSON.parse(JSON.stringify(orderItems)),
@@ -614,7 +620,7 @@ const DeliveryOrder = () => {
                 </Row>
 
                 {/* MENU ITEMS */}
-                <div style={{ maxHeight: '500px', overflowY: 'auto', overflowX: 'hidden' }}>
+                <div style={{ maxHeight: '65vh', overflowY: 'auto', overflowX: 'hidden' }}>
                   {!showParcelCharge ? (
                     // Regular Menu Items
                     filteredMenuData.map((category) => (
@@ -1022,7 +1028,7 @@ const DeliveryOrder = () => {
             variant="danger"
             onClick={() => {
               // Clear dirty flag and close modal
-              allowNavigationRef.current = true; 
+              allowNavigationRef.current = true;
               setIsDirty(false);
               setShowLeaveModal(false);
 
@@ -1040,7 +1046,7 @@ const DeliveryOrder = () => {
             <Button
               variant="secondary"
               onClick={async () => {
-                allowNavigationRef.current = true; 
+                allowNavigationRef.current = true;
                 await handleSaveOrder('Save');
                 setShowLeaveModal(false);
 
@@ -1060,7 +1066,7 @@ const DeliveryOrder = () => {
           <Button
             variant="primary"
             onClick={async () => {
-              allowNavigationRef.current = true; 
+              allowNavigationRef.current = true;
               await handleSaveOrder('KOT');
               setShowLeaveModal(false);
 

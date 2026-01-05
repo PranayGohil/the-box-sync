@@ -79,7 +79,7 @@
     "yup": "^0.32.9"
   },
   "scripts": {
-    "start-js": "react-scripts start --dev",
+    "start-js": "react-scripts start",
     "start-css": "sass --style=compressed --watch src/sass/styles.scss:public/css/styles.css",
     "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider concurrently \"npm run start-js\" \"npm run start-css\"",
     "build-js": "NODE_OPTIONS=--openssl-legacy-provider react-scripts build --prod",

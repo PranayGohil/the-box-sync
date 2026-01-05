@@ -98,7 +98,7 @@ const DineInOrder = () => {
       }
     };
     fetchWaiters();
-  })
+  }, [])
 
   // 🔥 NEW: Function to check if there are actual changes
   const hasUnsavedChanges = () => {

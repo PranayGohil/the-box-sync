@@ -820,6 +820,12 @@ const deliveryController = async (req, res) => {
     orderInfo.order_no = await generateOrderNo(req.user);
 
     // ✅ 5. Handle new order creation
+    // Generate token for new takeaway orders
+    const token = await generateToken(req.user, orderInfo.order_source);
+    orderInfo.token = token;
+
+    orderInfo.order_no = await generateOrderNo(req.user);
+
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();
 

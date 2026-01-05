@@ -122,15 +122,21 @@ const DineInOrder = () => {
       });
       console.log(response.data.data);
       const order = response.data.data;
-      setOrderItems(order.order_items || []);
-      setOrderStatus(order.order_status);
-      setTokenNumber(order.token);
-      setCustomerInfo({
+      const items = order.order_items || [];
+      const custInfo = {
         name: order.customer_name || '',
         total_persons: order.total_persons || '',
         waiter: order.waiter || '',
         comment: order.comment || '',
-      });
+      };
+      setOrderItems(order.order_items || []);
+      setOrderStatus(order.order_status);
+      setTokenNumber(order.token);
+      setCustomerInfo(custInfo);
+      initialStateRef.current = {
+        orderItems: JSON.parse(JSON.stringify(items)),
+        customerInfo: JSON.parse(JSON.stringify(custInfo))
+      };
     } catch (error) {
       console.error('Error fetching order details:', error);
     }

@@ -200,7 +200,7 @@ const ViewKots = () => {
                           <h5 className="mb-1">{data.order_type}</h5>
                           <div className="text-muted small">{data.customer_name || 'Guest'}</div>
                         </div>
-                        {data.order_type === 'Takeaway' && (
+                        {(data.order_type === 'Takeaway' || data.order_type === 'Delivery') && (
                           <div className="text-end">
                             <h5 className="mb-1">Token</h5>
                             <div className="d-flex justify-content-end">
