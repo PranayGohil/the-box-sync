@@ -32,7 +32,8 @@ const ManageMenu = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({ meal_type: '', category: '' });
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [categoryOptions, setCategoryOptions] = useState([]);
+
 
   const starFillIcon = csInterfaceIcons.find((icon) => icon.c === 'cs-star-full');
 
@@ -58,13 +59,7 @@ const ManageMenu = () => {
       toast.error('Failed to fetch menu data. Please try again.');
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
-  };
-
-  const refreshData = () => {
-    setRefreshing(true);
-    fetchMenuData();
   };
 
   useEffect(() => {
@@ -101,8 +96,39 @@ const ManageMenu = () => {
     applyFilters({ ...filters, searchText: text });
   };
 
-  const handleFilter = (key, value) => {
+  const handleFilter = async (key, value) => {
     const newFilters = { ...filters, [key]: value };
+
+    // RESET category if meal_type changes
+    if (key === 'meal_type') {
+      newFilters.category = '';
+
+      if (value === '') {
+        // 🔹 ALL MEAL TYPES → SHOW ALL CATEGORIES
+        const allCategories = Array.from(
+          new Set(menuData.map((item) => item.category))
+        );
+        setCategoryOptions(allCategories);
+      } else {
+        // 🔹 FETCH CATEGORY BY MEAL TYPE
+        try {
+          const res = await axios.get(
+            `${process.env.REACT_APP_API}/menu/get-categories?meal_type=${value}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+            }
+          );
+          setCategoryOptions(res.data.data || []);
+        } catch (error) {
+          console.error('Error fetching categories:', error);
+          toast.error('Failed to load categories');
+          setCategoryOptions([]);
+        }
+      }
+    }
+
     setFilters(newFilters);
     applyFilters({ ...newFilters, searchText: searchTerm });
   };
@@ -140,24 +166,6 @@ const ManageMenu = () => {
               </Col>
               <Col xs="12" md="5" className="text-end">
                 <Button
-                  variant="outline-primary"
-                  onClick={refreshData}
-                  disabled={refreshing}
-                  className="me-2"
-                >
-                  {refreshing ? (
-                    <>
-                      <Spinner animation="border" size="sm" className="me-2" />
-                      Refreshing...
-                    </>
-                  ) : (
-                    <>
-                      <CsLineIcons icon="refresh" className="me-2" />
-                      Refresh
-                    </>
-                  )}
-                </Button>
-                <Button
                   variant="primary"
                   href="/operations/add-dish"
                 >
@@ -175,13 +183,11 @@ const ManageMenu = () => {
                   type="text"
                   placeholder="Search dishes..."
                   onChange={(e) => handleSearch(e.target.value)}
-                  disabled={refreshing}
                 />
               </Col>
               <Col md={3}>
                 <Form.Select
                   onChange={(e) => handleFilter('meal_type', e.target.value)}
-                  disabled={refreshing}
                 >
                   <option value="">All Meal Types</option>
                   <option value="veg">Veg</option>
@@ -191,11 +197,11 @@ const ManageMenu = () => {
               </Col>
               <Col md={3}>
                 <Form.Select
+                  value={filters.category}
                   onChange={(e) => handleFilter('category', e.target.value)}
-                  disabled={refreshing}
                 >
                   <option value="">All Categories</option>
-                  {Array.from(new Set(menuData.map((cat) => cat.category))).map((cat) => (
+                  {categoryOptions.map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
                     </option>
@@ -204,15 +210,6 @@ const ManageMenu = () => {
               </Col>
             </Row>
           </Form>
-
-          {refreshing && (
-            <Alert variant="info" className="mb-4">
-              <div className="d-flex align-items-center">
-                <Spinner animation="border" size="sm" className="me-2" />
-                Refreshing menu data...
-              </div>
-            </Alert>
-          )}
 
           {filteredMenuData.length === 0 ? (
             <Alert variant="info" className="text-center">
@@ -255,7 +252,6 @@ const ManageMenu = () => {
                             setSelectedDish(row.original);
                             setEditMenuModalShow(true);
                           }}
-                          disabled={refreshing}
                         >
                           <CsLineIcons icon="edit" />
                         </button>
@@ -266,7 +262,6 @@ const ManageMenu = () => {
                             setDishToDelete(row.original);
                             setDeleteDishModalShow(true);
                           }}
-                          disabled={refreshing}
                         >
                           <CsLineIcons icon="bin" />
                         </button>
@@ -286,7 +281,6 @@ const ManageMenu = () => {
                         category={category}
                         setEditCategoryModalShow={setEditCategoryModalShow}
                         setSelectedCategory={setSelectedCategory}
-                        refreshing={refreshing}
                       />
                     </Card>
                   </Col>
