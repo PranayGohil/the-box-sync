@@ -118,7 +118,7 @@ const getActiveOrders = async (req, res) => {
         order_source: source,
         order_type: "Dine In",
         $or: [
-          { order_status: { $ne: "Paid" } },
+          { order_status: { $nin: ["Paid", "Cancelled"] } },
           { "order_items.status": "Preparing" },
         ],
       }).sort({ "order_date": -1 }).lean();
@@ -130,7 +130,7 @@ const getActiveOrders = async (req, res) => {
       order_source: source,
       order_type: { $in: ["Takeaway", "Delivery"] },
       $or: [
-        { order_status: { $ne: "Paid" } },
+        { order_status: { $nin: ["Paid", "Cancelled"] } },
         { "order_items.status": "Preparing" },
       ],
     }).sort({ "order_date": -1 }).lean();
@@ -405,6 +405,17 @@ const dineInController = async (req, res) => {
         status: "Cancelled",
       }));
 
+      // 🔥 Reset all financial calculations to zero for cancelled orders
+      orderInfo.bill_amount = 0;
+      orderInfo.sub_total = 0;
+      orderInfo.cgst_amount = 0;
+      orderInfo.sgst_amount = 0;
+      orderInfo.vat_amount = 0;
+      orderInfo.discount_amount = 0;
+      orderInfo.waveoff_amount = 0;
+      orderInfo.total_amount = 0;
+      orderInfo.paid_amount = 0;
+
       if (orderId) {
         savedOrder = await Order.findByIdAndUpdate(orderId, orderInfo, {
           new: true,
@@ -587,6 +598,17 @@ const takeawayController = async (req, res) => {
         status: "Cancelled",
       }));
 
+      // 🔥 Reset all financial calculations to zero for cancelled orders
+      orderInfo.bill_amount = 0;
+      orderInfo.sub_total = 0;
+      orderInfo.cgst_amount = 0;
+      orderInfo.sgst_amount = 0;
+      orderInfo.vat_amount = 0;
+      orderInfo.discount_amount = 0;
+      orderInfo.waveoff_amount = 0;
+      orderInfo.total_amount = 0;
+      orderInfo.paid_amount = 0;
+
       if (orderId) {
         savedOrder = await Order.findByIdAndUpdate(orderId, orderInfo, {
           new: true,
@@ -757,6 +779,17 @@ const deliveryController = async (req, res) => {
         ...item,
         status: "Cancelled",
       }));
+
+      // 🔥 Reset all financial calculations to zero for cancelled orders
+      orderInfo.bill_amount = 0;
+      orderInfo.sub_total = 0;
+      orderInfo.cgst_amount = 0;
+      orderInfo.sgst_amount = 0;
+      orderInfo.vat_amount = 0;
+      orderInfo.discount_amount = 0;
+      orderInfo.waveoff_amount = 0;
+      orderInfo.total_amount = 0;
+      orderInfo.paid_amount = 0;
 
       if (orderId) {
         savedOrder = await Order.findByIdAndUpdate(orderId, orderInfo, {
@@ -938,6 +971,17 @@ const deliveryFromSiteController = async (req, res) => {
         ...item,
         status: "Cancelled",
       }));
+
+      // 🔥 Reset all financial calculations to zero for cancelled orders
+      orderInfo.bill_amount = 0;
+      orderInfo.sub_total = 0;
+      orderInfo.cgst_amount = 0;
+      orderInfo.sgst_amount = 0;
+      orderInfo.vat_amount = 0;
+      orderInfo.discount_amount = 0;
+      orderInfo.waveoff_amount = 0;
+      orderInfo.total_amount = 0;
+      orderInfo.paid_amount = 0;
 
       if (orderId) {
         savedOrder = await Order.findByIdAndUpdate(orderId, orderInfo, {

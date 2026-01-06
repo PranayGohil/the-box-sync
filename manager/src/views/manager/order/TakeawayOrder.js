@@ -4,16 +4,19 @@ import { Button, Row, Col, Card, Form, Badge, Table, Modal } from 'react-bootstr
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { useSocket } from 'contexts/SocketContext';
 
 const TakeawayOrder = () => {
   const history = useHistory();
   const location = useLocation();
+  const { socket } = useSocket();
 
   // Parse URL parameters
   const urlParams = new URLSearchParams(location.search);
   const orderId = urlParams.get('orderId');
   const mode = urlParams.get('mode'); // 'new' or 'edit'
   const [showCategories, setShowCategories] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const title = `${mode === 'new' ? 'New' : 'Edit'} Takeaway Order`;
   const description = 'Manage takeaway orders';
@@ -173,6 +176,27 @@ const TakeawayOrder = () => {
     fetchCategories();
     fetchTaxRatesAndContainerCharges();
   }, [orderId]);
+
+  useEffect(() => {
+    if (!socket) {
+      return undefined;
+    }
+
+    const handleDishStatusUpdate = ({ orderId: updatedOrderId, status }) => {
+      console.log("Dish status updated:", updatedOrderId, status);
+
+      // Refresh only if this order is currently open
+      if (updatedOrderId === orderId) {
+        fetchOrderDetails();
+      }
+    };
+
+    socket.on("dish_status_updated", handleDishStatusUpdate);
+
+    return () => {
+      socket.off("dish_status_updated", handleDishStatusUpdate);
+    };
+  }, [socket, orderId]);
 
   // Calculate totals when order items change
   useEffect(() => {
@@ -484,6 +508,45 @@ const TakeawayOrder = () => {
       }
     } catch (error) {
       console.error('Error saving order:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!orderId) {
+      alert('No order to cancel');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const payload = {
+        orderInfo: {
+          order_id: orderId,
+          order_status: 'Cancelled',
+          order_items: orderItems.map((item) => ({
+            ...item,
+            status: 'Cancelled',
+          })),
+        },
+      };
+
+      const response = await axios.post(`${process.env.REACT_APP_API}/order/dine-in`, payload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+
+      if (response.data.status === 'success') {
+        allowNavigationRef.current = true;
+        setIsDirty(false);
+        setShowCancelModal(false);
+
+        history.push('/dashboard');
+      }
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      alert('Error cancelling order. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -806,6 +869,13 @@ const TakeawayOrder = () => {
                   )}
                 </div>
                 <div>
+                  {/* 🔥 NEW: Cancel Order button - show only if order exists and not paid */}
+                  {orderId && orderStatus !== 'Paid' && (
+                    <Button variant="danger" onClick={() => setShowCancelModal(true)} disabled={isLoading}>
+                      Cancel Order
+                    </Button>
+                  )}
+
                   {/* Show Dashboard button if order is paid */}
                   {orderStatus === 'Paid' ? (
                     <Button variant="primary" onClick={() => history.push('/dashboard')}>
@@ -1046,6 +1116,33 @@ const TakeawayOrder = () => {
             disabled={isLoading}
           >
             Send to Kitchen
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* 🔥 NEW: Cancel Order Confirmation Modal */}
+      <Modal
+        show={showCancelModal}
+        onHide={() => setShowCancelModal(false)}
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Cancel Order</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Are you sure you want to cancel this order?</p>
+          <p className="text-danger mb-0">
+            <strong>Warning:</strong> This action cannot be undone.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowCancelModal(false)} disabled={isLoading}>
+            Keep
+          </Button>
+          <Button variant="danger" onClick={handleCancelOrder} disabled={isLoading}>
+            {isLoading ? 'Cancelling...' : 'Cancel'}
           </Button>
         </Modal.Footer>
       </Modal>

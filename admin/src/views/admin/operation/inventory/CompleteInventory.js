@@ -99,6 +99,7 @@ const CompleteInventory = () => {
 
         setInitialValues({
           ...data,
+          request_date: data.request_date,
           items: itemsWithDefaults,
           bill_files: [],
           unpaid_amount: data.total_amount - data.paid_amount || 0,
@@ -150,7 +151,7 @@ const CompleteInventory = () => {
         Number(item.item_quantity) > 0 &&
         Number(item.item_price) > 0
       ) {
-        return sum + item.item_quantity * item.item_price;
+        return sum + item.item_price;
       }
       return sum;
     }, 0);
@@ -201,6 +202,7 @@ const CompleteInventory = () => {
                 const formData = new FormData();
 
                 formData.append('_id', values._id);
+                formData.append('request_date', values.request_date);
                 formData.append('bill_date', values.bill_date);
                 formData.append('bill_number', values.bill_number);
                 formData.append('vendor_name', values.vendor_name);

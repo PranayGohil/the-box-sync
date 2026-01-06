@@ -5,10 +5,12 @@ import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import CreatableSelect from 'react-select/creatable';
+import { useSocket } from 'contexts/SocketContext';
 
 const DineInOrder = () => {
   const history = useHistory();
   const location = useLocation();
+  const { socket } = useSocket();
 
   // Parse URL parameters
   const urlParams = new URLSearchParams(location.search);
@@ -25,13 +27,14 @@ const DineInOrder = () => {
   const [nextLocation, setNextLocation] = useState(null);
   const [showCategories, setShowCategories] = useState(false);
   const [waiters, setWaiters] = useState([]);
+  const [showCancelModal, setShowCancelModal] = useState(false); // 🔥 NEW: Cancel modal state
 
   const waiterOptions = (waiters || []).map((waiter) => ({
     value: waiter.full_name,
     label: waiter.full_name
   }));
 
-  // 🔥 NEW: Store initial state to compare against
+  // 🔥 Store initial state to compare against
   const initialStateRef = useRef({
     orderItems: [],
     customerInfo: {
@@ -99,7 +102,7 @@ const DineInOrder = () => {
     fetchWaiters();
   }, []);
 
-  // 🔥 NEW: Function to check if there are actual changes
+  // 🔥 Function to check if there are actual changes
   const hasUnsavedChanges = () => {
     const initial = initialStateRef.current;
 
@@ -115,7 +118,7 @@ const DineInOrder = () => {
     return itemsChanged || customerInfoChanged;
   };
 
-  // 🔥 NEW: Update isDirty only when there are actual changes
+  // 🔥 Update isDirty only when there are actual changes
   useEffect(() => {
     setIsDirty(hasUnsavedChanges());
   }, [orderItems, customerInfo]);
@@ -150,7 +153,7 @@ const DineInOrder = () => {
       setOrderStatus(order.order_status);
       setCustomerInfo(custInfo);
 
-      // 🔥 NEW: Store initial state after fetching
+      // 🔥 Store initial state after fetching
       initialStateRef.current = {
         orderItems: JSON.parse(JSON.stringify(items)),
         customerInfo: JSON.parse(JSON.stringify(custInfo))
@@ -211,6 +214,27 @@ const DineInOrder = () => {
     fetchCategories();
     fetchTaxRates();
   }, [tableId, orderId]);
+
+  useEffect(() => {
+    if (!socket) {
+      return undefined;
+    }
+
+    const handleDishStatusUpdate = ({ orderId: updatedOrderId, status }) => {
+      console.log("Dish status updated:", updatedOrderId, status);
+
+      // Refresh only if this order is currently open
+      if (updatedOrderId === orderId) {
+        fetchOrderDetails();
+      }
+    };
+
+    socket.on("dish_status_updated", handleDishStatusUpdate);
+
+    return () => {
+      socket.off("dish_status_updated", handleDishStatusUpdate);
+    };
+  }, [socket, orderId]);
 
   // Calculate totals when order items change
   useEffect(() => {
@@ -500,7 +524,7 @@ const DineInOrder = () => {
       });
 
       if (response.data.status === 'success') {
-        // 🔥 NEW: Update initial state after successful save
+        // 🔥 Update initial state after successful save
         allowNavigationRef.current = true;
         initialStateRef.current = {
           orderItems: JSON.parse(JSON.stringify(orderItems)),
@@ -511,6 +535,48 @@ const DineInOrder = () => {
       }
     } catch (error) {
       console.error('Error saving order:', error);
+      alert('Error saving order. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 🔥 NEW: Handle Cancel Order
+  const handleCancelOrder = async () => {
+    if (!orderId) {
+      alert('No order to cancel');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const payload = {
+        orderInfo: {
+          order_id: orderId,
+          order_status: 'Cancelled',
+          order_items: orderItems.map((item) => ({
+            ...item,
+            status: 'Cancelled',
+          })),
+        },
+        tableId,
+      };
+
+      const response = await axios.post(`${process.env.REACT_APP_API}/order/dine-in`, payload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+
+      if (response.data.status === 'success') {
+        allowNavigationRef.current = true;
+        setIsDirty(false);
+        setShowCancelModal(false);
+
+        history.push('/dashboard');
+      }
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      alert('Error cancelling order. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -811,9 +877,15 @@ const DineInOrder = () => {
                     </>
                   )}
                 </div>
-                <div>
-                  {/* Show Dashboard button if order is paid */}
+                <div className="d-flex gap-2">
+                  {/* 🔥 NEW: Cancel Order button - show only if order exists and not paid */}
+                  {orderId && orderStatus !== 'Paid' && (
+                    <Button variant="danger" onClick={() => setShowCancelModal(true)} disabled={isLoading}>
+                      Cancel Order
+                    </Button>
+                  )}
 
+                  {/* Show Dashboard button if order is paid */}
                   {orderStatus === 'Paid' ? (
                     <Button variant="primary" onClick={() => history.push('/dashboard')}>
                       Go to Dashboard
@@ -979,7 +1051,7 @@ const DineInOrder = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* 🔥 IMPROVED: Leave Confirmation Modal */}
+      {/* 🔥 Leave Confirmation Modal */}
       <Modal
         show={showLeaveModal}
         onHide={() => {
@@ -987,8 +1059,8 @@ const DineInOrder = () => {
           setNextLocation(null);
         }}
         centered
-        backdrop="static" // Prevent closing by clicking outside
-        keyboard={false} // Prevent closing with ESC key
+        backdrop="static"
+        keyboard={false}
       >
         <Modal.Header closeButton>
           <Modal.Title>Unsaved Changes</Modal.Title>
@@ -1001,12 +1073,10 @@ const DineInOrder = () => {
           <Button
             variant="danger"
             onClick={() => {
-              // Clear dirty flag and close modal
               allowNavigationRef.current = true;
               setIsDirty(false);
               setShowLeaveModal(false);
 
-              // Navigate to next location if set
               if (nextLocation) {
                 setTimeout(() => {
                   history.push(nextLocation);
@@ -1024,7 +1094,6 @@ const DineInOrder = () => {
                 await handleSaveOrder('Save');
                 setShowLeaveModal(false);
 
-                // Navigate after save
                 if (nextLocation) {
                   setTimeout(() => {
                     history.push(nextLocation);
@@ -1044,7 +1113,6 @@ const DineInOrder = () => {
               await handleSaveOrder('KOT');
               setShowLeaveModal(false);
 
-              // Navigate after KOT
               if (nextLocation) {
                 setTimeout(() => {
                   history.push(nextLocation);
@@ -1054,6 +1122,33 @@ const DineInOrder = () => {
             disabled={isLoading}
           >
             Send to Kitchen
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* 🔥 NEW: Cancel Order Confirmation Modal */}
+      <Modal
+        show={showCancelModal}
+        onHide={() => setShowCancelModal(false)}
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Cancel Order</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Are you sure you want to cancel this order?</p>
+          <p className="text-danger mb-0">
+            <strong>Warning:</strong> This action cannot be undone.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowCancelModal(false)} disabled={isLoading}>
+            Keep
+          </Button>
+          <Button variant="danger" onClick={handleCancelOrder} disabled={isLoading}>
+            {isLoading ? 'Cancelling...' : 'Cancel'}
           </Button>
         </Modal.Footer>
       </Modal>

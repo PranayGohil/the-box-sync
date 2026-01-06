@@ -36,17 +36,18 @@ const ViewKots = () => {
   }, []);
 
   useEffect(() => {
+    console.log('Setting up socket listener for kot_update');
     if (!socket) return;
     socket.on('kot_update', () => {
       fetchOrderData();
     });
-  });
+  }, [socket]);
 
-  const updateDishStatus = async (orderId, dishId) => {
+  const updateDishStatus = async (orderSource, orderId, dishId) => {
     try {
       await axios.put(
         `${process.env.REACT_APP_API}/kot/dish/update-status`,
-        { orderId, dishId, status: 'Completed' },
+        { orderSource, orderId, dishId, status: 'Completed' },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       fetchOrderData();
@@ -55,11 +56,11 @@ const ViewKots = () => {
     }
   };
 
-  const updateAllDishStatus = async (orderId) => {
+  const updateAllDishStatus = async (orderSource, orderId) => {
     try {
       await axios.put(
         `${process.env.REACT_APP_API}/kot/dish/update-all-status`,
-        { orderId, status: 'Completed' },
+        { orderSource, orderId, status: 'Completed' },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       fetchOrderData();
@@ -172,7 +173,7 @@ const ViewKots = () => {
                                       size="sm"
                                       className="btn btn-sm btn-icon"
                                       variant="outline-success"
-                                      onClick={() => updateDishStatus(data._id, dish._id)}
+                                      onClick={() => updateDishStatus(data.order_source, data._id, dish._id)}
                                       title="Mark as Completed"
                                     >
                                       <CsLineIcons icon="check" />
@@ -199,7 +200,7 @@ const ViewKots = () => {
 
                     {!allDishesCompleted && (
                       <div className="text-end">
-                        <Button variant="primary" className="btn btn-sm btn-icon" size="sm" onClick={() => updateAllDishStatus(data._id)}>
+                        <Button variant="primary" className="btn btn-sm btn-icon" size="sm" onClick={() => updateAllDishStatus(data.order_source, data._id)}>
                           <CsLineIcons icon="check-square" /> Mark All Completed
                         </Button>
                       </div>

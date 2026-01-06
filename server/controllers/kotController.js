@@ -52,9 +52,9 @@ const showKOTs = async (req, res) => {
 
 const updateDishStatus = async (req, res) => {
   try {
-    const { orderId, dishId, status } = req.body;
-    if(!orderId || !dishId || !status) {
-      res.status(404).json({ success: false, message: "Something was Missing"});
+    const { orderSource, orderId, dishId, status } = req.body;
+    if (!orderSource || !orderId || !dishId || !status) {
+      res.status(404).json({ success: false, message: "Something was Missing" });
     }
     await Order.updateOne(
       {
@@ -63,7 +63,36 @@ const updateDishStatus = async (req, res) => {
       },
       {
         $set: { "order_items.$.status": status }
-      });
+      }
+    );
+
+    const io = req.app.get("io");
+    const connectedUsers = req.app.get("connectedUsers");
+
+    console.log("updateAllDishStatus: Emitting updates for orderSource:", orderSource);
+
+    if (orderSource === "Manager" || orderSource === "Captain") {
+      const keyManager = `${req.user._id}_Manager`;
+      if (io && connectedUsers && connectedUsers[keyManager]) {
+        io.to(connectedUsers[keyManager]).emit(
+          "dish_status_updated", { orderId, status }
+        );
+      }
+      const keyCaptain = `${req.user._id}_Captain`;
+      if (io && connectedUsers && connectedUsers[keyCaptain]) {
+        io.to(connectedUsers[keyCaptain]).emit(
+          "dish_status_updated", { orderId, status }
+        );
+      }
+    } else if (orderSource === "QSR") {
+      const key = `${req.user._id}_QSR`;
+      if (io && connectedUsers && connectedUsers[key]) {
+        io.to(connectedUsers[key]).emit(
+          "dish_status_updated", { orderId, status }
+        );
+      }
+    }
+
     res.status(200).json({ success: true, message: "Dish status updated." });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error updating dish status.", error });
@@ -73,7 +102,7 @@ const updateDishStatus = async (req, res) => {
 const updateAllDishStatus = async (req, res) => {
   try {
     const userId = req.user;
-    const { orderId, status, forOnlyPreparing = false } = req.body;
+    const { orderSource, orderId, status, forOnlyPreparing = false } = req.body;
 
     if (!isValidId(orderId) || !status) {
       return res.status(400).json({ success: false, message: "Invalid input" });
@@ -93,6 +122,33 @@ const updateAllDishStatus = async (req, res) => {
         return res.status(404).json({ success: false, message: "Order not found" });
       }
 
+      const io = req.app.get("io");
+      const connectedUsers = req.app.get("connectedUsers");
+
+      console.log("updateAllDishStatus: Emitting updates for orderSource:", orderSource);
+
+      if (orderSource === "Manager" || orderSource === "Captain") {
+        const keyManager = `${req.user._id}_Manager`;
+        if (io && connectedUsers && connectedUsers[keyManager]) {
+          io.to(connectedUsers[keyManager]).emit(
+            "dish_status_updated", { orderId, status }
+          );
+        }
+        const keyCaptain = `${req.user._id}_Captain`;
+        if (io && connectedUsers && connectedUsers[keyCaptain]) {
+          io.to(connectedUsers[keyCaptain]).emit(
+            "dish_status_updated", { orderId, status }
+          );
+        }
+      } else if (orderSource === "QSR") {
+        const key = `${req.user._id}_QSR`;
+        if (io && connectedUsers && connectedUsers[key]) {
+          io.to(connectedUsers[key]).emit(
+            "dish_status_updated", { orderId, status }
+          );
+        }
+      }
+
       return res.json({ success: true, message: "Preparing items updated", result });
     } else {
       // Update all items
@@ -103,6 +159,31 @@ const updateAllDishStatus = async (req, res) => {
 
       if (result.matchedCount === 0) {
         return res.status(404).json({ success: false, message: "Order not found" });
+      }
+
+      const io = req.app.get("io");
+      const connectedUsers = req.app.get("connectedUsers");
+
+      if (orderSource === "Manager" || orderSource === "Captain") {
+        const keyManager = `${req.user._id}_Manager`;
+        if (io && connectedUsers && connectedUsers[keyManager]) {
+          io.to(connectedUsers[keyManager]).emit(
+            "dish_status_updated", { orderId, status }
+          );
+        }
+        const keyCaptain = `${req.user._id}_Captain`;
+        if (io && connectedUsers && connectedUsers[keyCaptain]) {
+          io.to(connectedUsers[keyCaptain]).emit(
+            "dish_status_updated", { orderId, status }
+          );
+        }
+      } else if (orderSource === "QSR") {
+        const key = `${req.user._id}_QSR`;
+        if (io && connectedUsers && connectedUsers[key]) {
+          io.to(connectedUsers[key]).emit(
+            "dish_status_updated", { orderId, status }
+          );
+        }
       }
 
       return res.json({ success: true, message: "All item statuses updated", result });

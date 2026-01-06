@@ -5,10 +5,12 @@ import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import CreatableSelect from 'react-select/creatable';
+import { useSocket } from 'contexts/SocketContext';
 
 const DineInOrder = () => {
   const history = useHistory();
   const location = useLocation();
+  const { socket } = useSocket();
 
   // Parse URL parameters
   const urlParams = new URLSearchParams(location.search);
@@ -16,6 +18,7 @@ const DineInOrder = () => {
   const orderId = urlParams.get('orderId');
   const mode = urlParams.get('mode'); // 'new' or 'edit'
   const [showCategories, setShowCategories] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const title = `${mode === 'new' ? 'New' : 'Edit'} Dine-In Order`;
   const description = 'Manage dine-in orders';
@@ -139,14 +142,23 @@ const DineInOrder = () => {
       });
       console.log(response.data.data);
       const order = response.data.data;
-      setOrderItems(order.order_items || []);
-      setOrderStatus(order.order_status);
-      setCustomerInfo({
+      const items = order.order_items || [];
+      const custInfo = {
         name: order.customer_name || '',
         total_persons: order.total_persons || '',
         waiter: order.waiter || '',
         comment: order.comment || '',
-      });
+      };
+
+      setOrderItems(items);
+      setOrderStatus(order.order_status);
+      setCustomerInfo(custInfo);
+
+      // 🔥 Store initial state after fetching
+      initialStateRef.current = {
+        orderItems: JSON.parse(JSON.stringify(items)),
+        customerInfo: JSON.parse(JSON.stringify(custInfo))
+      };
     } catch (error) {
       console.error('Error fetching order details:', error);
     }
@@ -203,6 +215,27 @@ const DineInOrder = () => {
     fetchCategories();
     fetchTaxRates();
   }, [tableId, orderId]);
+
+  useEffect(() => {
+    if (!socket) {
+      return undefined;
+    }
+
+    const handleDishStatusUpdate = ({ orderId: updatedOrderId, status }) => {
+      console.log("Dish status updated:", updatedOrderId, status);
+
+      // Refresh only if this order is currently open
+      if (updatedOrderId === orderId) {
+        fetchOrderDetails();
+      }
+    };
+
+    socket.on("dish_status_updated", handleDishStatusUpdate);
+
+    return () => {
+      socket.off("dish_status_updated", handleDishStatusUpdate);
+    };
+  }, [socket, orderId]);
 
   // Calculate totals when order items change
   useEffect(() => {
@@ -514,6 +547,46 @@ const DineInOrder = () => {
     }
   };
 
+  const handleCancelOrder = async () => {
+    if (!orderId) {
+      alert('No order to cancel');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const payload = {
+        orderInfo: {
+          order_id: orderId,
+          order_status: 'Cancelled',
+          order_items: orderItems.map((item) => ({
+            ...item,
+            status: 'Cancelled',
+          })),
+        },
+        tableId,
+      };
+
+      const response = await axios.post(`${process.env.REACT_APP_API}/order/dine-in`, payload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+
+      if (response.data.status === 'success') {
+        allowNavigationRef.current = true;
+        setIsDirty(false);
+        setShowCancelModal(false);
+
+        history.push('/dashboard');
+      }
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      alert('Error cancelling order. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handlePayment = async () => {
     // Validate paid amount
     if (paymentData.paidAmount <= 0) {
@@ -810,8 +883,14 @@ const DineInOrder = () => {
                   )}
                 </div>
                 <div>
-                  {/* Show Dashboard button if order is paid */}
+                  {/* 🔥 NEW: Cancel Order button - show only if order exists and not paid */}
+                  {orderId && orderStatus !== 'Paid' && (
+                    <Button variant="danger" onClick={() => setShowCancelModal(true)} disabled={isLoading}>
+                      Cancel Order
+                    </Button>
+                  )}
 
+                  {/* Show Dashboard button if order is paid */}
                   {orderStatus === 'Paid' ? (
                     <Button variant="primary" onClick={() => history.push('/dashboard')}>
                       Go to Dashboard
@@ -1051,6 +1130,33 @@ const DineInOrder = () => {
             disabled={isLoading}
           >
             Send to Kitchen
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* 🔥 NEW: Cancel Order Confirmation Modal */}
+      <Modal
+        show={showCancelModal}
+        onHide={() => setShowCancelModal(false)}
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Cancel Order</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Are you sure you want to cancel this order?</p>
+          <p className="text-danger mb-0">
+            <strong>Warning:</strong> This action cannot be undone.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowCancelModal(false)} disabled={isLoading}>
+            Keep
+          </Button>
+          <Button variant="danger" onClick={handleCancelOrder} disabled={isLoading}>
+            {isLoading ? 'Cancelling...' : 'Cancel'}
           </Button>
         </Modal.Footer>
       </Modal>

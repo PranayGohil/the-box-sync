@@ -403,6 +403,7 @@ const completeInventoryRequest = async (req, res) => {
   try {
     const {
       _id,
+      request_date,
       bill_date,
       bill_number,
       vendor_name,
@@ -436,7 +437,7 @@ const completeInventoryRequest = async (req, res) => {
     }
 
     const completedItems = {
-      request_date: new Date(),
+      request_date,
       bill_date,
       bill_number,
       vendor_name,

@@ -130,15 +130,28 @@ const getMenuDataByResCode = async (req, res) => {
 
 const getMenuCategories = async (req, res) => {
   try {
+    const userId = req.user;
+    const { meal_type } = req.query;
+
+    if (!meal_type) {
+      return res.status(400).json({
+        success: false,
+        message: "meal_type query param is required",
+      });
+    }
+
     const categories = await Menu.distinct("category", {
-      user_id: req.user,
+      user_id: userId,
+      meal_type: meal_type, // 🔥 FILTER BY MEAL TYPE
     });
+
     res.json({ success: true, data: categories });
   } catch (error) {
     console.error("Error fetching categories:", error);
     res.status(500).json({ success: false, error: "Internal server error" });
   }
 };
+
 
 const getMenuSuggestions = async (req, res) => {
   try {
@@ -192,6 +205,38 @@ const getMenuSuggestions = async (req, res) => {
     });
   }
 };
+
+const getDishesByCategory = async (req, res) => {
+  try {
+    const userId = req.user;
+    const { category } = req.query;
+
+    if (!category) {
+      return res.status(400).json({
+        success: false,
+        message: "category query param is required",
+      });
+    }
+
+    const dishes = await Menu.distinct("dishes.dish_name", {
+      user_id: userId,
+      category: category,
+      "dishes.dish_name": { $nin: [null, ""] },
+    });
+
+    res.json({
+      success: true,
+      data: dishes.sort(),
+    });
+  } catch (error) {
+    console.error("Get dishes by category error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to load dishes",
+    });
+  }
+};
+
 
 const getMenuDataById = async (req, res) => {
   try {
@@ -370,6 +415,7 @@ module.exports = {
   getMenuDataByResCode,
   getMenuCategories,
   getMenuSuggestions,
+  getDishesByCategory,
   updateMenuCategoryAndMealType,
   updateMenu,
   deleteMenu,

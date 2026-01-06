@@ -56,27 +56,56 @@ const AddDishes = () => {
     ],
   };
 
-  const getMenuCategories = async () => {
+  const getMenuCategories = async (mealType) => {
     try {
       setLoadingCategories(true);
       const response = await axios.get(
-        `${process.env.REACT_APP_API}/menu/get-suggestions?types=category,dish`,
+        `${process.env.REACT_APP_API}/menu/get-categories?meal_type=${mealType}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }
       );
-      setSuggestions(response.data);
+
+      setSuggestions((prev) => ({
+        ...prev,
+        categories: response.data.data,
+        dishes: [], // 🔥 RESET DISHES
+      }));
     } catch (error) {
-      console.error('Error fetching menu categories:', error);
-      toast.error('Failed to load menu categories');
+      console.error('Error fetching categories:', error);
+      toast.error('Failed to load categories');
     } finally {
       setLoadingCategories(false);
     }
   };
 
   useEffect(() => {
-    getMenuCategories();
+    getMenuCategories('veg'); // 🔥 DEFAULT LOAD
   }, []);
+
+  const getDishesByCategory = async (category) => {
+    if (!category) {
+      setSuggestions((prev) => ({ ...prev, dishes: [] }));
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API}/menu/get-dishes-by-category?category=${category}`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }
+      );
+
+      setSuggestions((prev) => ({
+        ...prev,
+        dishes: response.data.data,
+      }));
+    } catch (error) {
+      console.error('Error fetching dishes:', error);
+      toast.error('Failed to load dishes');
+    }
+  };
 
   const validationSchema = Yup.object().shape({
     category: Yup.string().required('Category is required'),
@@ -175,12 +204,22 @@ const AddDishes = () => {
                                 ? { label: values.category, value: values.category }
                                 : null
                             }
-                            onChange={(selected) =>
-                              setFieldValue('category', selected ? selected.value : '')
-                            }
+                            onChange={(selected) => {
+                              const category = selected ? selected.value : '';
+                              setFieldValue('category', category);
+
+                              // 🔥 RESET dish names
+                              values.dishes.forEach((_, index) => {
+                                setFieldValue(`dishes[${index}].dish_name`, '');
+                              });
+
+                              // 🔥 FETCH dishes for selected category
+                              getDishesByCategory(category);
+                            }}
                             placeholder="Select or create category"
                             classNamePrefix="react-select"
                           />
+
                           <ErrorMessage
                             name="category"
                             component="div"
@@ -200,7 +239,24 @@ const AddDishes = () => {
                             type="radio"
                             id={`meal-${type}`}
                             checked={values.mealType === type}
-                            onChange={() => setFieldValue('mealType', type)}
+                            onChange={() => {
+                              setFieldValue('mealType', type);
+
+                              // 🔥 RESET category & dishes
+                              setFieldValue('category', '');
+                              setSuggestions((prev) => ({
+                                ...prev,
+                                categories: [],
+                                dishes: [],
+                              }));
+
+                              values.dishes.forEach((_, index) => {
+                                setFieldValue(`dishes[${index}].dish_name`, '');
+                              });
+
+                              // 🔥 FETCH categories BY MEAL TYPE
+                              getMenuCategories(type);
+                            }}
                             disabled={isSubmitting}
                           />
                         ))}

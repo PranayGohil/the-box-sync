@@ -48,12 +48,12 @@ const ViewKots = () => {
     fetchOrderData();
   }, []);
 
-  const updateDishStatus = async (orderId, dishId) => {
+  const updateDishStatus = async (orderSource, orderId, dishId) => {
     try {
       setUpdatingDishId(dishId);
       await axios.put(
         `${process.env.REACT_APP_API}/kot/dish/update-status`,
-        { orderId, dishId, status: 'Completed' },
+        { orderSource, orderId, dishId, status: 'Completed' },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       toast.success('Dish marked as completed!');
@@ -66,12 +66,12 @@ const ViewKots = () => {
     }
   };
 
-  const updateAllDishStatus = async (orderId) => {
+  const updateAllDishStatus = async (orderSource, orderId) => {
     try {
       setUpdatingOrderId(orderId);
       await axios.put(
         `${process.env.REACT_APP_API}/kot/dish/update-all-status`,
-        { orderId, status: 'Completed' },
+        { orderSource, orderId, status: 'Completed' },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       toast.success('All dishes marked as completed!');
@@ -242,7 +242,7 @@ const ViewKots = () => {
                                           size="sm"
                                           className="btn btn-sm btn-icon"
                                           variant="outline-success"
-                                          onClick={() => updateDishStatus(data._id, dish._id)}
+                                          onClick={() => updateDishStatus(data.order_source, data._id, dish._id)}
                                           title="Mark as Completed"
                                           disabled={updatingDishId === dish._id}
                                         >
@@ -279,7 +279,7 @@ const ViewKots = () => {
                             variant="primary"
                             className="btn btn-sm btn-icon"
                             size="sm"
-                            onClick={() => updateAllDishStatus(data._id)}
+                            onClick={() => updateAllDishStatus(data.order_source, data._id)}
                             disabled={updatingOrderId === data._id}
                           >
                             {updatingOrderId === data._id ? (

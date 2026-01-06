@@ -4,7 +4,7 @@ const {
   addMenu,
   getMenuData,
   getMenuCategories,
-  getMenuSuggestions,
+  getDishesByCategory,
   getMenuDataById,
   getMenuDataByResCode,
   updateMenuCategoryAndMealType,
@@ -26,7 +26,7 @@ menuRouter.route("/get").get(authMiddleware, getMenuData);
 menuRouter.route("/get/:id").get(authMiddleware, getMenuDataById);
 menuRouter.route("/get/rescode/:res_code").get(getMenuDataByResCode);
 menuRouter.route("/get-categories").get(authMiddleware, getMenuCategories);
-menuRouter.route("/get-suggestions").get(authMiddleware, getMenuSuggestions);
+menuRouter.route("/get-dishes-by-category").get(authMiddleware, getDishesByCategory);
 
 menuRouter
   .route("/update/category/:id")
