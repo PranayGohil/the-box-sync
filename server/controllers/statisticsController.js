@@ -2150,6 +2150,34 @@ const getFinancialReport = async (req, res) => {
 
     console.log(financialSummary);
 
+    // INVENTORY COST (COGS)
+    const inventoryCostResult = await Inventory.aggregate([
+      {
+        $match: {
+          user_id: restaurantId,
+          request_date: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalInventoryCost: { $sum: "$total_amount" },
+        },
+      },
+    ]);
+
+    const totalInventoryCost =
+      inventoryCostResult[0]?.totalInventoryCost || 0;
+    const grossProfit =
+      (financialSummary[0]?.netRevenue || 0) - totalInventoryCost;
+
+    const grossProfitMargin =
+      financialSummary[0]?.netRevenue > 0
+        ? Math.round(
+          (grossProfit / financialSummary[0].netRevenue) * 100 * 100
+        ) / 100
+        : 0;
+
     // Daily Financial Breakdown
     const dailyFinancials = await Order.aggregate([
       {
@@ -2277,6 +2305,12 @@ const getFinancialReport = async (req, res) => {
       summary: {
         grossRevenue: Math.round(summary.grossRevenue * 100) / 100,
         netRevenue: Math.round(summary.netRevenue * 100) / 100,
+
+        // NEW
+        inventoryCost: Math.round(totalInventoryCost * 100) / 100,
+        grossProfit: Math.round(grossProfit * 100) / 100,
+        grossProfitMargin,
+
         totalDiscount: Math.round(summary.totalDiscount * 100) / 100,
         totalWaveOff: Math.round(summary.totalWaveOff * 100) / 100,
         totalTax: Math.round(summary.totalTax * 100) / 100,
@@ -2285,16 +2319,19 @@ const getFinancialReport = async (req, res) => {
         vatAmount: Math.round(summary.vatAmount * 100) / 100,
         totalPaid: Math.round(summary.totalPaid * 100) / 100,
         totalOrders: summary.totalOrders || 0,
+
         discountPercentage:
           summary.grossRevenue > 0
             ? Math.round(
               (summary.totalDiscount / summary.grossRevenue) * 100 * 100
             ) / 100
             : 0,
+
         taxPercentage:
           summary.netRevenue > 0
-            ? Math.round((summary.totalTax / summary.netRevenue) * 100 * 100) /
-            100
+            ? Math.round(
+              (summary.totalTax / summary.netRevenue) * 100 * 100
+            ) / 100
             : 0,
       },
       dailyFinancials,
