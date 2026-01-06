@@ -22,6 +22,15 @@ const inventory = new Schema({
     type: [String],
     default: [],
   },
+  sub_total: {
+    type: Number,
+  },
+  tax: {
+    type: Number,
+  },
+  discount: {
+    type: Number,
+  },
   total_amount: {
     type: Number,
   },

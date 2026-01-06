@@ -660,7 +660,7 @@ const TakeawayOrder = () => {
                 </Row>
 
                 {/* MENU ITEMS */}
-                <div style={{ maxHeight: '500px', overflowY: 'auto', overflowX: 'hidden' }}>
+                <div style={{ maxHeight: '65vh', overflowY: 'auto', overflowX: 'hidden' }}>
                   {!showParcelCharge ? (
                     // Regular Menu Items
                     filteredMenuData.map((category) => (

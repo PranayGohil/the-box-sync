@@ -688,7 +688,7 @@ const DineInOrder = () => {
                 </Row>
 
                 {/* MENU ITEMS */}
-                <div style={{ maxHeight: '500px', overflowY: 'auto', overflowX: 'hidden' }}>
+                <div style={{ maxHeight: '65vh', overflowY: 'auto', overflowX: 'hidden' }}>
                   {filteredMenuData.map((category) => (
                     <div key={category._id} className="mb-4">
                       <h6 className="text-muted mb-3">{category.category}</h6>

@@ -14,7 +14,10 @@ const defaultValues = {
   bill_number: '',
   vendor_name: '',
   category: '',
-  total_amount: '',
+  sub_total: 0,
+  tax: 0,
+  discount: 0,
+  total_amount: 0,
   paid_amount: '',
   unpaid_amount: 0,
   bill_files: [],
@@ -29,6 +32,8 @@ const completeInventory = Yup.object().shape({
   bill_files: Yup.mixed().test('fileRequired', 'Bill files are required', (value) => {
     return value && value.length > 0;
   }),
+  tax: Yup.number().min(0, 'Tax cannot be negative'),
+  discount: Yup.number().min(0, 'Discount cannot be negative'),
   paid_amount: Yup.number().required('Paid amount is required').positive('Must be positive'),
   items: Yup.array()
     .of(
@@ -102,6 +107,10 @@ const CompleteInventory = () => {
           request_date: data.request_date,
           items: itemsWithDefaults,
           bill_files: [],
+          sub_total: 0,
+          tax: 0,
+          discount: 0,
+          total_amount: 0,
           unpaid_amount: data.total_amount - data.paid_amount || 0,
         });
       } catch (error) {
@@ -144,14 +153,14 @@ const CompleteInventory = () => {
     setFilePreviews(previews);
   };
 
-  const calculateTotalAmount = (items) => {
+  const calculateSubTotal = (items) => {
     return items.reduce((sum, item) => {
       if (
         item.completed &&
         Number(item.item_quantity) > 0 &&
         Number(item.item_price) > 0
       ) {
-        return sum + item.item_price;
+        return sum + (item.item_quantity * item.item_price);
       }
       return sum;
     }, 0);
@@ -207,6 +216,9 @@ const CompleteInventory = () => {
                 formData.append('bill_number', values.bill_number);
                 formData.append('vendor_name', values.vendor_name);
                 formData.append('category', values.category);
+                formData.append('sub_total', values.sub_total);
+                formData.append('tax', values.tax);
+                formData.append('discount', values.discount);
                 formData.append('total_amount', values.total_amount);
                 formData.append('paid_amount', values.paid_amount);
                 formData.append('unpaid_amount', values.unpaid_amount);
@@ -237,18 +249,22 @@ const CompleteInventory = () => {
             }}
           >
             {({ values, errors, handleChange, setFieldValue, isSubmitting }) => {
+              // 🔥 Calculate sub_total, total_amount, and unpaid_amount
               useEffect(() => {
-                const total = calculateTotalAmount(values.items);
-                setFieldValue('total_amount', total);
+                const subTotal = calculateSubTotal(values.items);
+                setFieldValue('sub_total', subTotal);
 
-                const unpaid =
-                  total - (Number(values.paid_amount) || 0);
+                const tax = Number(values.tax) || 0;
+                const discount = Number(values.discount) || 0;
 
-                setFieldValue(
-                  'unpaid_amount',
-                  unpaid >= 0 ? unpaid : 0
-                );
-              }, [values.items, values.paid_amount]);
+                // total_amount = sub_total + tax - discount
+                const totalAmount = subTotal + tax - discount;
+                setFieldValue('total_amount', Math.max(0, totalAmount));
+
+                const unpaid = totalAmount - (Number(values.paid_amount) || 0);
+                setFieldValue('unpaid_amount', unpaid >= 0 ? unpaid : 0);
+              }, [values.items, values.tax, values.discount, values.paid_amount]);
+
               return (
                 <Form>
                   <Card body className="mb-4">
@@ -384,15 +400,61 @@ const CompleteInventory = () => {
                       </Row>
                     ))}
                     {typeof errors.items === 'string' && <div className="text-danger">{errors.items}</div>}
+
+                    {/* 🔥 NEW: Financial Summary Section */}
+                    <Row className="mt-4">
+                      <Col md={12}>
+                        <h5 className="mb-3">Financial Summary</h5>
+                      </Col>
+                    </Row>
+
                     <Row className="mt-3">
                       <Col md={4}>
-                        <label>Total Amount</label>
+                        <label>Sub Total</label>
                         <input
                           type="number"
+                          className="form-control bg-light"
+                          value={values.sub_total}
+                          readOnly
+                        />
+                        <small className="text-muted">Sum of all completed item prices</small>
+                      </Col>
+                      <Col md={4}>
+                        <label>Tax Amount (₹)</label>
+                        <Field
+                          type="number"
+                          name="tax"
                           className="form-control"
+                          min="0"
+                          step="0.01"
+                          disabled={isSubmitting}
+                        />
+                        <ErrorMessage name="tax" component="div" className="text-danger" />
+                      </Col>
+                      <Col md={4}>
+                        <label>Discount (₹)</label>
+                        <Field
+                          type="number"
+                          name="discount"
+                          className="form-control"
+                          min="0"
+                          step="0.01"
+                          disabled={isSubmitting}
+                        />
+                        <ErrorMessage name="discount" component="div" className="text-danger" />
+                      </Col>
+                    </Row>
+
+                    <Row className="mt-3">
+                      <Col md={4}>
+                        <label><strong>Total Amount</strong></label>
+                        <input
+                          type="number"
+                          className="form-control bg-light fw-bold"
                           value={values.total_amount}
                           readOnly
                         />
+                        <small className="text-muted">Sub Total + Tax - Discount</small>
                       </Col>
                       <Col md={4}>
                         <label>Paid Amount</label>
@@ -407,13 +469,14 @@ const CompleteInventory = () => {
                       <Col md={4}>
                         <label>Unpaid Amount</label>
                         <input
-                          className="form-control"
+                          className="form-control bg-light"
                           readOnly
                           value={values.unpaid_amount}
                         />
                       </Col>
                     </Row>
                   </Card>
+
                   <Button
                     variant="success"
                     type="submit"

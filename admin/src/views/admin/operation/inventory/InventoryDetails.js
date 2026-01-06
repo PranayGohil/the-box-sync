@@ -135,7 +135,7 @@ const InventoryDetails = () => {
         </Card.Body>
       </Card>
 
-      {(inventory.bill_number || inventory.category || inventory.vendor_name || inventory.paid_amount || inventory.total_amount || inventory.unpaid_amount) && (
+      {(inventory.bill_number || inventory.category || inventory.vendor_name) && (
         <Card className="mb-4">
           <Card.Header>
             <h5>Purchase Details</h5>
@@ -147,19 +147,13 @@ const InventoryDetails = () => {
                   <th>Bill Number</th>
                   <th>Category</th>
                   <th>Vendor Name</th>
-                  <th>Paid Amount</th>
-                  <th>Total Amount</th>
-                  <th>Unpaid Amount</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>{inventory.bill_number}</td>
-                  <td>{inventory.category}</td>
-                  <td>{inventory.vendor_name}</td>
-                  <td>₹ {inventory.paid_amount}</td>
-                  <td>₹ {inventory.total_amount}</td>
-                  <td>₹ {inventory.unpaid_amount}</td>
+                  <td>{inventory.bill_number || 'N/A'}</td>
+                  <td>{inventory.category || 'N/A'}</td>
+                  <td>{inventory.vendor_name || 'N/A'}</td>
                 </tr>
               </tbody>
             </Table>
@@ -198,6 +192,52 @@ const InventoryDetails = () => {
           </Table>
         </Card.Body>
       </Card>
+
+      {/* 🔥 NEW: Financial Summary Card */}
+      {(inventory.sub_total || inventory.tax || inventory.discount || inventory.total_amount || inventory.paid_amount || inventory.unpaid_amount) && (
+        <Card className="mb-4">
+          <Card.Header>
+            <h5>Financial Summary</h5>
+          </Card.Header>
+          <Card.Body>
+            <Table bordered responsive>
+              <tbody>
+                <tr>
+                  <td className="fw-bold" style={{ width: '30%' }}>Sub Total</td>
+                  <td>₹ {Number(inventory.sub_total || 0).toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td className="fw-bold">Tax</td>
+                  <td>₹ {Number(inventory.tax || 0).toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td className="fw-bold">Discount</td>
+                  <td className="text-success">- ₹ {Number(inventory.discount || 0).toFixed(2)}</td>
+                </tr>
+                <tr className="table-primary">
+                  <td className="fw-bold">Total Amount</td>
+                  <td className="fw-bold">₹ {Number(inventory.total_amount || 0).toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td className="fw-bold">Paid Amount</td>
+                  <td className="text-success">₹ {Number(inventory.paid_amount || 0).toFixed(2)}</td>
+                </tr>
+                <tr className={Number(inventory.unpaid_amount || 0) > 0 ? 'table-warning' : ''}>
+                  <td className="fw-bold">Unpaid Amount</td>
+                  <td className={Number(inventory.unpaid_amount || 0) > 0 ? 'text-danger fw-bold' : ''}>
+                    ₹ {Number(inventory.unpaid_amount || 0).toFixed(2)}
+                  </td>
+                </tr>
+              </tbody>
+            </Table>
+            <div className="mt-2">
+              <small className="text-muted">
+                <strong>Calculation:</strong> Total Amount = Sub Total + Tax - Discount
+              </small>
+            </div>
+          </Card.Body>
+        </Card>
+      )}
 
       {inventory.bill_files && inventory.bill_files.length > 0 && (
         <Card className="mb-4">

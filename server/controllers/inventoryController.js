@@ -251,6 +251,13 @@ const addInventory = async (req, res) => {
       user_id: userId,
       bill_files: fileNames,
       items,
+      // Ensure numeric fields are properly converted
+      sub_total: Number(req.body.sub_total) || 0,
+      tax: Number(req.body.tax) || 0,
+      discount: Number(req.body.discount) || 0,
+      total_amount: Number(req.body.total_amount) || 0,
+      paid_amount: Number(req.body.paid_amount) || 0,
+      unpaid_amount: Number(req.body.unpaid_amount) || 0,
     };
 
     const data = await Inventory.create(inventoryData);
@@ -330,12 +337,15 @@ const updateInventory = async (req, res) => {
       );
     }
 
-    // Only allow these fields to be updated
+    // 🔥 NEW: Added sub_total, tax, and discount to allowed fields
     const allowedFields = [
       "bill_date",
       "bill_number",
       "vendor_name",
       "category",
+      "sub_total",
+      "tax",
+      "discount",
       "total_amount",
       "paid_amount",
       "unpaid_amount",
@@ -347,7 +357,12 @@ const updateInventory = async (req, res) => {
     const safeUpdate = {};
     allowedFields.forEach((field) => {
       if (updatedData[field] !== undefined) {
-        safeUpdate[field] = updatedData[field];
+        // 🔥 Ensure numeric fields are properly converted
+        if (["sub_total", "tax", "discount", "total_amount", "paid_amount", "unpaid_amount"].includes(field)) {
+          safeUpdate[field] = Number(updatedData[field]) || 0;
+        } else {
+          safeUpdate[field] = updatedData[field];
+        }
       }
     });
 
@@ -408,6 +423,9 @@ const completeInventoryRequest = async (req, res) => {
       bill_number,
       vendor_name,
       category,
+      sub_total,
+      tax,
+      discount,
       total_amount,
       paid_amount,
       unpaid_amount,
@@ -443,9 +461,12 @@ const completeInventoryRequest = async (req, res) => {
       vendor_name,
       category,
       bill_files,
-      total_amount,
-      paid_amount,
-      unpaid_amount,
+      sub_total: Number(sub_total) || 0,
+      tax: Number(tax) || 0,
+      discount: Number(discount) || 0,
+      total_amount: Number(total_amount) || 0,
+      paid_amount: Number(paid_amount) || 0,
+      unpaid_amount: Number(unpaid_amount) || 0,
       items,
       status: "Completed",
       user_id: inventory.user_id,

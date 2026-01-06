@@ -15,6 +15,9 @@ const validationSchema = Yup.object().shape({
   vendor_name: Yup.string().required('Vendor name is required'),
   category: Yup.string().required('Category is required'),
   bill_files: Yup.mixed().required('Bill files are required'),
+  sub_total: Yup.number().min(0),
+  tax: Yup.number().min(0, 'Tax cannot be negative'),
+  discount: Yup.number().min(0, 'Discount cannot be negative'),
   total_amount: Yup.number().min(0),
   paid_amount: Yup.number()
     .required('Paid amount is required')
@@ -82,7 +85,7 @@ const AddInventory = () => {
     getSuggestions();
   }, []);
 
-  const calculateTotalAmount = (items) => {
+  const calculateSubTotal = (items) => {
     return items.reduce((sum, item) => {
       const qty = Number(item.item_quantity) || 0;
       const price = Number(item.item_price) || 0;
@@ -96,7 +99,10 @@ const AddInventory = () => {
       bill_number: '',
       vendor_name: '',
       category: '',
-      total_amount: '',
+      sub_total: 0,
+      tax: 0,
+      discount: 0,
+      total_amount: 0,
       paid_amount: '',
       unpaid_amount: '',
       bill_files: [],
@@ -141,17 +147,21 @@ const AddInventory = () => {
 
   const { values, handleChange, handleSubmit, setFieldValue, errors, touched } = formik;
 
+  // 🔥 Calculate sub_total, total_amount, and unpaid_amount
   useEffect(() => {
-    const total = calculateTotalAmount(values.items);
+    const subTotal = calculateSubTotal(values.items);
+    setFieldValue('sub_total', subTotal.toFixed(2));
 
-    setFieldValue('total_amount', total.toFixed(2));
+    const tax = Number(values.tax) || 0;
+    const discount = Number(values.discount) || 0;
 
-    const unpaid = total - (Number(values.paid_amount) || 0);
-    setFieldValue(
-      'unpaid_amount',
-      unpaid >= 0 ? unpaid.toFixed(2) : '0.00'
-    );
-  }, [values.items, values.paid_amount]);
+    // total_amount = sub_total + tax - discount
+    const totalAmount = subTotal + tax - discount;
+    setFieldValue('total_amount', Math.max(0, totalAmount).toFixed(2));
+
+    const unpaid = totalAmount - (Number(values.paid_amount) || 0);
+    setFieldValue('unpaid_amount', unpaid >= 0 ? unpaid.toFixed(2) : '0.00');
+  }, [values.items, values.tax, values.discount, values.paid_amount]);
 
   const handleItemChange = (index, field, value) => {
     const updatedItems = [...values.items];
@@ -412,17 +422,78 @@ const AddInventory = () => {
               <Button variant="primary" onClick={addItem} disabled={isSubmitting}>
                 + Add Item
               </Button>
+
+              {/* 🔥 NEW: Financial Summary Section */}
+              <Row className="mt-4">
+                <Col md={12}>
+                  <h5 className="mb-3">Financial Summary</h5>
+                </Col>
+              </Row>
+
               <Row className="mt-3">
                 <Col md={4}>
                   <Form.Group>
-                    <Form.Label>Total Amount</Form.Label>
+                    <Form.Label>Sub Total</Form.Label>
+                    <Form.Control
+                      type="number"
+                      value={values.sub_total}
+                      readOnly
+                      className="bg-light"
+                    />
+                    <Form.Text className="text-muted">
+                      Sum of all item prices
+                    </Form.Text>
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label>Tax Amount (₹)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="tax"
+                      value={values.tax}
+                      onChange={handleChange}
+                      isInvalid={touched.tax && errors.tax}
+                      disabled={isSubmitting}
+                      min="0"
+                      step="0.01"
+                    />
+                    <Form.Control.Feedback type="invalid">{errors.tax}</Form.Control.Feedback>
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label>Discount (₹)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="discount"
+                      value={values.discount}
+                      onChange={handleChange}
+                      isInvalid={touched.discount && errors.discount}
+                      disabled={isSubmitting}
+                      min="0"
+                      step="0.01"
+                    />
+                    <Form.Control.Feedback type="invalid">{errors.discount}</Form.Control.Feedback>
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              <Row className="mt-3">
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label>
+                      <strong>Total Amount</strong>
+                    </Form.Label>
                     <Form.Control
                       type="number"
                       value={values.total_amount}
                       readOnly
-                      className="bg-light"
+                      className="bg-light fw-bold"
                     />
-                    <Form.Control.Feedback type="invalid">{errors.total_amount}</Form.Control.Feedback>
+                    <Form.Text className="text-muted">
+                      Sub Total + Tax - Discount
+                    </Form.Text>
                   </Form.Group>
                 </Col>
                 <Col md={4}>
@@ -485,7 +556,7 @@ const AddInventory = () => {
             </Button>
           </Form>
 
-          {/* Full page loader overlay (optional) */}
+          {/* Full page loader overlay */}
           {isSubmitting && (
             <div
               className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
