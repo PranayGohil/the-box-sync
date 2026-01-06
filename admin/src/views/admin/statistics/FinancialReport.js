@@ -898,6 +898,46 @@ const FinancialReport = () => {
                     </div>
                     <ProgressBar now={(reportData.summary.netRevenue / reportData.summary.grossRevenue) * 100} variant="success" />
                   </div>
+
+                  {/* Inventory Cost */}
+                  <div className="mb-3 ms-3">
+                    <div className="d-flex justify-content-between mb-2">
+                      <span className="text-danger">- Inventory Cost (COGS)</span>
+                      <span className="text-danger">
+                        {formatCurrency(reportData.summary.inventoryCost)}
+                      </span>
+                    </div>
+                    <ProgressBar
+                      now={
+                        reportData.summary.netRevenue > 0
+                          ? (reportData.summary.inventoryCost / reportData.summary.netRevenue) * 100
+                          : 0
+                      }
+                      variant="danger"
+                    />
+                  </div>
+
+                  {/* Gross Profit */}
+                  <div className="mb-3">
+                    <div className="d-flex justify-content-between mb-2">
+                      <span className="font-weight-bold">Gross Profit</span>
+                      <span className="font-weight-bold text-success">
+                        {formatCurrency(reportData.summary.grossProfit)}
+                      </span>
+                    </div>
+                    <ProgressBar
+                      now={
+                        reportData.summary.netRevenue > 0
+                          ? (reportData.summary.grossProfit / reportData.summary.netRevenue) * 100
+                          : 0
+                      }
+                      variant="success"
+                    />
+                    <small className="text-muted">
+                      Margin: {reportData.summary.grossProfitMargin}%
+                    </small>
+                  </div>
+
                 </Col>
 
                 <Col md={6}>

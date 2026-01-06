@@ -32,6 +32,8 @@ const ManageMenu = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({ meal_type: '', category: '' });
   const [loading, setLoading] = useState(true);
+  const [categoryOptions, setCategoryOptions] = useState([]);
+
 
   const starFillIcon = csInterfaceIcons.find((icon) => icon.c === 'cs-star-full');
 
@@ -94,8 +96,39 @@ const ManageMenu = () => {
     applyFilters({ ...filters, searchText: text });
   };
 
-  const handleFilter = (key, value) => {
+  const handleFilter = async (key, value) => {
     const newFilters = { ...filters, [key]: value };
+
+    // RESET category if meal_type changes
+    if (key === 'meal_type') {
+      newFilters.category = '';
+
+      if (value === '') {
+        // 🔹 ALL MEAL TYPES → SHOW ALL CATEGORIES
+        const allCategories = Array.from(
+          new Set(menuData.map((item) => item.category))
+        );
+        setCategoryOptions(allCategories);
+      } else {
+        // 🔹 FETCH CATEGORY BY MEAL TYPE
+        try {
+          const res = await axios.get(
+            `${process.env.REACT_APP_API}/menu/get-categories?meal_type=${value}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+            }
+          );
+          setCategoryOptions(res.data.data || []);
+        } catch (error) {
+          console.error('Error fetching categories:', error);
+          toast.error('Failed to load categories');
+          setCategoryOptions([]);
+        }
+      }
+    }
+
     setFilters(newFilters);
     applyFilters({ ...newFilters, searchText: searchTerm });
   };
@@ -164,10 +197,11 @@ const ManageMenu = () => {
               </Col>
               <Col md={3}>
                 <Form.Select
+                  value={filters.category}
                   onChange={(e) => handleFilter('category', e.target.value)}
                 >
                   <option value="">All Categories</option>
-                  {Array.from(new Set(menuData.map((cat) => cat.category))).map((cat) => (
+                  {categoryOptions.map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
                     </option>
