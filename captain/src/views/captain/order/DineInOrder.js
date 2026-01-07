@@ -885,7 +885,7 @@ const DineInOrder = () => {
                 <div>
                   {/* 🔥 NEW: Cancel Order button - show only if order exists and not paid */}
                   {orderId && orderStatus !== 'Paid' && (
-                    <Button variant="danger" onClick={() => setShowCancelModal(true)} disabled={isLoading}>
+                    <Button variant="danger" className='mx-2' onClick={() => setShowCancelModal(true)} disabled={isLoading}>
                       Cancel Order
                     </Button>
                   )}
