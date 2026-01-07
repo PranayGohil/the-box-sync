@@ -41,7 +41,7 @@ const DineInOrder = () => {
       total_persons: '',
       waiter: '',
       comment: '',
-    }
+    },
   });
   const allowNavigationRef = useRef(false);
 
@@ -91,8 +91,8 @@ const DineInOrder = () => {
     const initial = initialStateRef.current;
 
     // Compare order items (only check items that are not completed)
-    const currentEditableItems = orderItems.filter(item => item.status !== 'Completed');
-    const initialEditableItems = initial.orderItems.filter(item => item.status !== 'Completed');
+    const currentEditableItems = orderItems.filter((item) => item.status !== 'Completed');
+    const initialEditableItems = initial.orderItems.filter((item) => item.status !== 'Completed');
 
     const itemsChanged = JSON.stringify(currentEditableItems) !== JSON.stringify(initialEditableItems);
 
@@ -138,7 +138,7 @@ const DineInOrder = () => {
       setCustomerInfo(custInfo);
       initialStateRef.current = {
         orderItems: JSON.parse(JSON.stringify(items)),
-        customerInfo: JSON.parse(JSON.stringify(custInfo))
+        customerInfo: JSON.parse(JSON.stringify(custInfo)),
       };
     } catch (error) {
       console.error('Error fetching order details:', error);
@@ -198,25 +198,25 @@ const DineInOrder = () => {
   }, [tableId, orderId]);
 
   useEffect(() => {
-      if (!socket) {
-        return undefined;
+    if (!socket) {
+      return undefined;
+    }
+
+    const handleDishStatusUpdate = ({ orderId: updatedOrderId, status }) => {
+      console.log('Dish status updated:', updatedOrderId, status);
+
+      // Refresh only if this order is currently open
+      if (updatedOrderId === orderId) {
+        fetchOrderDetails();
       }
-  
-      const handleDishStatusUpdate = ({ orderId: updatedOrderId, status }) => {
-        console.log("Dish status updated:", updatedOrderId, status);
-  
-        // Refresh only if this order is currently open
-        if (updatedOrderId === orderId) {
-          fetchOrderDetails();
-        }
-      };
-  
-      socket.on("dish_status_updated", handleDishStatusUpdate);
-  
-      return () => {
-        socket.off("dish_status_updated", handleDishStatusUpdate);
-      };
-    }, [socket, orderId]);
+    };
+
+    socket.on('dish_status_updated', handleDishStatusUpdate);
+
+    return () => {
+      socket.off('dish_status_updated', handleDishStatusUpdate);
+    };
+  }, [socket, orderId]);
 
   // Calculate totals when order items change
   useEffect(() => {
@@ -314,17 +314,11 @@ const DineInOrder = () => {
     setOrderItems((prevItems) => {
       // ONLY merge with non-completed items
       const existingItemIndex = prevItems.findIndex(
-        (orderItem) =>
-          orderItem.dish_name === item.dish_name &&
-          (orderItem.status === 'Pending' || orderItem.status === 'Preparing')
+        (orderItem) => orderItem.dish_name === item.dish_name && (orderItem.status === 'Pending' || orderItem.status === 'Preparing')
       );
 
       if (existingItemIndex > -1) {
-        return prevItems.map((orderItem, index) =>
-          index === existingItemIndex
-            ? { ...orderItem, quantity: orderItem.quantity + 1 }
-            : orderItem
-        );
+        return prevItems.map((orderItem, index) => (index === existingItemIndex ? { ...orderItem, quantity: orderItem.quantity + 1 } : orderItem));
       }
 
       // ✅ Always add NEW item if completed already
@@ -465,8 +459,8 @@ const DineInOrder = () => {
                 ? 'Preparing'
                 : item.status // keep Completed as-is
               : status === 'Save'
-                ? item.status || 'Pending'
-                : item.status,
+              ? item.status || 'Pending'
+              : item.status,
         })),
         order_status: status,
         customer_name: customerInfo.name,
@@ -510,7 +504,7 @@ const DineInOrder = () => {
         // 🔥 NEW: Update initial state after successful save
         initialStateRef.current = {
           orderItems: JSON.parse(JSON.stringify(orderItems)),
-          customerInfo: JSON.parse(JSON.stringify(customerInfo))
+          customerInfo: JSON.parse(JSON.stringify(customerInfo)),
         };
         setIsDirty(false);
         history.push('/dashboard');
@@ -557,7 +551,7 @@ const DineInOrder = () => {
         allowNavigationRef.current = true;
         setIsDirty(false);
         setShowCancelModal(false);
-        
+
         history.push('/dashboard');
       }
     } catch (error) {
@@ -685,8 +679,9 @@ const DineInOrder = () => {
                               </Card.Body>
                               <Badge
                                 variant="outline"
-                                className={`text-white mb-2 ${category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
-                                  }`}
+                                className={`text-white mb-2 ${
+                                  category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
+                                }`}
                                 style={{ position: 'absolute', top: '3px', right: '5px' }}
                               >
                                 {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
@@ -721,24 +716,22 @@ const DineInOrder = () => {
                     )}
                   </h5>
                 </Col>
-                <Col md="5" className="d-flex align-items-start justify-content-end">
-                  <h5>Dine-In</h5>
-                  {tokenNumber && (
-                    <Badge bg="primary" className="ms-2">
-                      Token #{tokenNumber}
-                    </Badge>
-                  )}
+                <Col md="5" className="d-flex flex-column align-items-end justify-content-start">
+                  <div className="d-flex align-items-center">
+                    <h5>Dine-In</h5>
+                    {tokenNumber && (
+                      <Badge bg="primary" className="ms-2">
+                        Token #{tokenNumber}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="d-flex justify-content-center align-items-center">
+                    <div className="mx-1">Date: </div>
+                    <div className="fw-bold">{new Date().toLocaleDateString('en-IN')}</div>
+                  </div>
                 </Col>
               </Row>
             </Card.Header>
-            <Row className="mt-1">
-              <Col md="12">
-                <div className="d-flex justify-content-center align-items-center">
-                  <div className="mx-1">Date: </div>
-                  <div className="fw-bold">{new Date().toLocaleDateString('en-IN')}</div>
-                </div>
-              </Col>
-            </Row>
             <Card.Body>
               {/* Customer Info */}
               <Row className="mb-3">
@@ -790,7 +783,12 @@ const DineInOrder = () => {
                         <td>{item.dish_name}</td>
                         <td className="text-center">
                           <div className="d-flex align-items-center justify-content-center gap-1">
-                            <Button variant="outline-secondary" size="sm" onClick={() => updateItemQuantity(index, -1)} disabled={item.quantity <= 1 || item.status === 'Completed'}>
+                            <Button
+                              variant="outline-secondary"
+                              size="sm"
+                              onClick={() => updateItemQuantity(index, -1)}
+                              disabled={item.quantity <= 1 || item.status === 'Completed'}
+                            >
                               -
                             </Button>
                             <span className="mx-2">{item.quantity}</span>
@@ -854,7 +852,7 @@ const DineInOrder = () => {
                 <div>
                   {/* 🔥 NEW: Cancel Order button - show only if order exists and not paid */}
                   {orderId && orderStatus !== 'Paid' && (
-                    <Button variant="danger" className='mx-2' onClick={() => setShowCancelModal(true)} disabled={isLoading}>
+                    <Button variant="danger" className="mx-2" onClick={() => setShowCancelModal(true)} disabled={isLoading}>
                       Cancel Order
                     </Button>
                   )}
@@ -1038,7 +1036,15 @@ const DineInOrder = () => {
         </Modal.Header>
         <Modal.Body>
           <p>You have unsaved changes in this order.</p>
-          <p>Please {orderStatus === 'Save' && (<><strong>Save</strong> or</>)} <strong>Send to Kitchen</strong> before leaving.</p>
+          <p>
+            Please{' '}
+            {orderStatus === 'Save' && (
+              <>
+                <strong>Save</strong> or
+              </>
+            )}{' '}
+            <strong>Send to Kitchen</strong> before leaving.
+          </p>
         </Modal.Body>
         <Modal.Footer>
           <Button
@@ -1102,20 +1108,14 @@ const DineInOrder = () => {
       </Modal>
 
       {/* 🔥 NEW: Cancel Order Confirmation Modal */}
-      <Modal
-        show={showCancelModal}
-        onHide={() => setShowCancelModal(false)}
-        centered
-        backdrop="static"
-        keyboard={false}
-      >
+      <Modal show={showCancelModal} onHide={() => setShowCancelModal(false)} centered backdrop="static" keyboard={false}>
         <Modal.Header closeButton>
           <Modal.Title>Cancel Order</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>Are you sure you want to cancel this order?</p>
           <p className="text-danger mb-0">
-            <strong>Warning:</strong> This action cannot be undone. 
+            <strong>Warning:</strong> This action cannot be undone.
           </p>
         </Modal.Body>
         <Modal.Footer>
