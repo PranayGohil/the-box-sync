@@ -44,10 +44,6 @@ const DeleteTableModal = ({ show, handleClose, data, onDeleteSuccess }) => {
           <strong>Dining Area: {data?.area}</strong>
           <strong>Table Number: {data?.table_no}</strong>
         </div>
-        <Alert variant="warning" className="mt-3">
-          <CsLineIcons icon="warning" className="me-2" />
-          This action cannot be undone.
-        </Alert>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={handleClose} disabled={isDeleting}>

@@ -245,26 +245,32 @@ const ManageMenu = () => {
                     headerClassName: 'text-muted text-small text-uppercase w-20',
                     Cell: ({ row }) => (
                       <div className="d-flex gap-2">
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-icon btn-outline-primary"
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          className="btn-icon btn-icon-only"
                           onClick={() => {
                             setSelectedDish(row.original);
                             setEditMenuModalShow(true);
                           }}
+                          title="Edit"
+                          disabled={loading}
                         >
                           <CsLineIcons icon="edit" />
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-icon btn-outline-danger"
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          className="btn-icon btn-icon-only"
                           onClick={() => {
                             setDishToDelete(row.original);
                             setDeleteDishModalShow(true);
                           }}
+                          title="Delete"
+                          disabled={loading}
                         >
                           <CsLineIcons icon="bin" />
-                        </button>
+                        </Button>
                       </div>
                     ),
                   },

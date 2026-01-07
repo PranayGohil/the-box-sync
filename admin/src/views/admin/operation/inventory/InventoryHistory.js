@@ -104,7 +104,7 @@ const InventoryHistory = () => {
 
   const fetchCompletedInventory = useCallback(async () => {
     try {
-      setLoading(prev => ({ ...prev, completed: true }));
+      setLoading((prev) => ({ ...prev, completed: true }));
 
       const params = {
         page: completedPageIndex + 1,
@@ -131,15 +131,12 @@ const InventoryHistory = () => {
         params.bill_to = completedFilters.billToDate;
       }
 
-      const res = await axios.get(
-        `${process.env.REACT_APP_API}/inventory/get-by-status/Completed`,
-        {
-          params,
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
+      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Completed`, {
+        params,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
 
       if (res.data.success) {
         const completedInventory = res.data.data.map((item) => ({
@@ -171,14 +168,14 @@ const InventoryHistory = () => {
       console.error('Error fetching completed inventory:', error);
       toast.error('Failed to fetch completed inventory. Please try again.');
     } finally {
-      setLoading(prev => ({ ...prev, completed: false }));
+      setLoading((prev) => ({ ...prev, completed: false }));
       completedFetchRef.current = false;
     }
   }, [completedPageIndex, completedPageSize, completedSearchTerm, completedFilters]);
 
   const fetchRejectedInventory = useCallback(async () => {
     try {
-      setLoading(prev => ({ ...prev, rejected: true }));
+      setLoading((prev) => ({ ...prev, rejected: true }));
 
       const params = {
         page: rejectedPageIndex + 1,
@@ -205,15 +202,12 @@ const InventoryHistory = () => {
         params.bill_to = rejectedFilters.billToDate;
       }
 
-      const res = await axios.get(
-        `${process.env.REACT_APP_API}/inventory/get-by-status/Rejected`,
-        {
-          params,
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
+      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Rejected`, {
+        params,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
 
       if (res.data.success) {
         const rejectedInventory = res.data.data.map((item) => ({
@@ -245,7 +239,7 @@ const InventoryHistory = () => {
       console.error('Error fetching rejected inventory:', error);
       toast.error('Failed to fetch rejected inventory. Please try again.');
     } finally {
-      setLoading(prev => ({ ...prev, rejected: false }));
+      setLoading((prev) => ({ ...prev, rejected: false }));
       rejectedFetchRef.current = false;
     }
   }, [rejectedPageIndex, rejectedPageSize, rejectedSearchTerm, rejectedFilters]);
@@ -279,7 +273,7 @@ const InventoryHistory = () => {
   }, []);
 
   const handleCompletedFilterChange = (filterName, value) => {
-    setCompletedFilters(prev => ({
+    setCompletedFilters((prev) => ({
       ...prev,
       [filterName]: value,
     }));
@@ -312,7 +306,7 @@ const InventoryHistory = () => {
   }, []);
 
   const handleRejectedFilterChange = (filterName, value) => {
-    setRejectedFilters(prev => ({
+    setRejectedFilters((prev) => ({
       ...prev,
       [filterName]: value,
     }));
@@ -346,6 +340,7 @@ const InventoryHistory = () => {
               variant="outline-primary"
               size="sm"
               title="View"
+              className="btn-icon btn-icon-only"
               onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}
             >
               <CsLineIcons icon="eye" />
@@ -354,6 +349,7 @@ const InventoryHistory = () => {
               variant="outline-warning"
               size="sm"
               title="Edit"
+              className="btn-icon btn-icon-only"
               onClick={() => history.push(`/operations/edit-inventory/${row.original._id}`)}
             >
               <CsLineIcons icon="edit" />
@@ -362,7 +358,8 @@ const InventoryHistory = () => {
               variant="outline-danger"
               size="sm"
               title="Delete"
-              onClick={() => handleShow(row.original)}
+              className="btn-icon btn-icon-only"
+               onClick={() => handleShow(row.original)}
               disabled={isDeleting}
             >
               <CsLineIcons icon="bin" />
@@ -426,21 +423,10 @@ const InventoryHistory = () => {
         Header: 'Actions',
         Cell: ({ row }) => (
           <div className="d-flex gap-2">
-            <Button
-              variant="outline-primary"
-              size="sm"
-              title="View"
-              onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}
-            >
+            <Button variant="outline-primary" size="sm" title="View" className="btn-icon btn-icon-only" onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}>
               <CsLineIcons icon="eye" />
             </Button>
-            <Button
-              variant="outline-danger"
-              size="sm"
-              title="Delete"
-              onClick={() => handleShow(row.original)}
-              disabled={isDeleting}
-            >
+            <Button variant="outline-danger" size="sm" title="Delete" className="btn-icon btn-icon-only" onClick={() => handleShow(row.original)} disabled={isDeleting}>
               <CsLineIcons icon="bin" />
             </Button>
           </div>
@@ -554,11 +540,7 @@ const InventoryHistory = () => {
           <Card className="mb-3">
             <Card.Body>
               <div className="d-flex justify-content-between align-items-center">
-                <Button
-                  variant="link"
-                  onClick={() => setShowCompletedFilters(!showCompletedFilters)}
-                  className="p-0 text-decoration-none"
-                >
+                <Button variant="link" onClick={() => setShowCompletedFilters(!showCompletedFilters)} className="p-0 text-decoration-none">
                   <CsLineIcons icon="filter" className="me-2" />
                   <strong>Filters</strong>
                   {getCompletedActiveFilterCount() > 0 && (
@@ -566,17 +548,10 @@ const InventoryHistory = () => {
                       {getCompletedActiveFilterCount()}
                     </Badge>
                   )}
-                  <CsLineIcons
-                    icon={showCompletedFilters ? 'chevron-top' : 'chevron-bottom'}
-                    className="ms-2"
-                  />
+                  <CsLineIcons icon={showCompletedFilters ? 'chevron-top' : 'chevron-bottom'} className="ms-2" />
                 </Button>
                 {getCompletedActiveFilterCount() > 0 && (
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    onClick={handleClearCompletedFilters}
-                  >
+                  <Button variant="outline-danger" size="sm" onClick={handleClearCompletedFilters}>
                     <CsLineIcons icon="close" className="me-1" />
                     Clear All
                   </Button>
@@ -655,16 +630,12 @@ const InventoryHistory = () => {
                 ) : (
                   <>
                     Showing {completedData.length > 0 ? completedPageIndex * completedPageSize + 1 : 0} to{' '}
-                    {Math.min((completedPageIndex + 1) * completedPageSize, completedTotalRecords)} of{' '}
-                    {completedTotalRecords} entries
+                    {Math.min((completedPageIndex + 1) * completedPageSize, completedTotalRecords)} of {completedTotalRecords} entries
                   </>
                 )}
               </div>
               <div className="d-inline-block">
-                <ControlsPageSize
-                  pageSize={completedPageSize}
-                  onPageSizeChange={handleCompletedPageSizeChange}
-                />
+                <ControlsPageSize pageSize={completedPageSize} onPageSizeChange={handleCompletedPageSizeChange} />
               </div>
             </Col>
           </Row>
@@ -700,11 +671,7 @@ const InventoryHistory = () => {
           <Card className="mb-3">
             <Card.Body>
               <div className="d-flex justify-content-between align-items-center">
-                <Button
-                  variant="link"
-                  onClick={() => setShowRejectedFilters(!showRejectedFilters)}
-                  className="p-0 text-decoration-none"
-                >
+                <Button variant="link" onClick={() => setShowRejectedFilters(!showRejectedFilters)} className="p-0 text-decoration-none">
                   <CsLineIcons icon="filter" className="me-2" />
                   <strong>Filters</strong>
                   {getRejectedActiveFilterCount() > 0 && (
@@ -712,17 +679,10 @@ const InventoryHistory = () => {
                       {getRejectedActiveFilterCount()}
                     </Badge>
                   )}
-                  <CsLineIcons
-                    icon={showRejectedFilters ? 'chevron-top' : 'chevron-bottom'}
-                    className="ms-2"
-                  />
+                  <CsLineIcons icon={showRejectedFilters ? 'chevron-top' : 'chevron-bottom'} className="ms-2" />
                 </Button>
                 {getRejectedActiveFilterCount() > 0 && (
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    onClick={handleClearRejectedFilters}
-                  >
+                  <Button variant="outline-danger" size="sm" onClick={handleClearRejectedFilters}>
                     <CsLineIcons icon="close" className="me-1" />
                     Clear All
                   </Button>
@@ -801,16 +761,12 @@ const InventoryHistory = () => {
                 ) : (
                   <>
                     Showing {rejectedData.length > 0 ? rejectedPageIndex * rejectedPageSize + 1 : 0} to{' '}
-                    {Math.min((rejectedPageIndex + 1) * rejectedPageSize, rejectedTotalRecords)} of{' '}
-                    {rejectedTotalRecords} entries
+                    {Math.min((rejectedPageIndex + 1) * rejectedPageSize, rejectedTotalRecords)} of {rejectedTotalRecords} entries
                   </>
                 )}
               </div>
               <div className="d-inline-block">
-                <ControlsPageSize
-                  pageSize={rejectedPageSize}
-                  onPageSizeChange={handleRejectedPageSizeChange}
-                />
+                <ControlsPageSize pageSize={rejectedPageSize} onPageSizeChange={handleRejectedPageSizeChange} />
               </div>
             </Col>
           </Row>
@@ -863,14 +819,7 @@ const InventoryHistory = () => {
           <Button variant="danger" onClick={handleDelete} disabled={isDeleting}>
             {isDeleting ? (
               <>
-                <Spinner
-                  as="span"
-                  animation="border"
-                  size="sm"
-                  role="status"
-                  aria-hidden="true"
-                  className="me-2"
-                />
+                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
                 Deleting...
               </>
             ) : (

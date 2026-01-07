@@ -298,8 +298,8 @@ const Subscription = () => {
                 <Button
                   variant="outline-primary"
                   size="sm"
+                  className="btn-icon btn-icon-only"
                   onClick={() => handleEditPanel(original.plan_name)}
-                  style={{ height: 'auto' }}
                   disabled={loading || actionLoading.renew}
                 >
                   <CsLineIcons icon="edit" />
@@ -307,8 +307,8 @@ const Subscription = () => {
                 <Button
                   variant="outline-danger"
                   size="sm"
+                  className="btn-icon btn-icon-only"
                   onClick={() => openDeletePanelModal(original.plan_name)}
-                  style={{ height: 'auto' }}
                   disabled={loading}
                 >
                   <CsLineIcons icon="bin" />
@@ -317,8 +317,8 @@ const Subscription = () => {
                   <Button
                     variant="outline-primary"
                     size="sm"
+                    className="btn-icon btn-icon-only"
                     onClick={() => handleRedirect(original.plan_name)}
-                    style={{ height: 'auto' }}
                     disabled={loading || actionLoading.redirect}
                   >
                     <CsLineIcons icon="eye" />
@@ -330,8 +330,8 @@ const Subscription = () => {
                 <Button
                   variant="outline-success"
                   size="sm"
+                  className="btn-icon btn-icon-only"
                   onClick={() => handleAddPanel(original.plan_name)}
-                  style={{ height: 'auto' }}
                   disabled={loading}
                 >
                   <CsLineIcons icon="plus" />
@@ -340,8 +340,8 @@ const Subscription = () => {
                   <Button
                     variant="outline-primary"
                     size="sm"
+                    className="btn-icon btn-icon-only"
                     onClick={() => handleRedirect(original.plan_name)}
-                    style={{ height: 'auto' }}
                     disabled={loading || actionLoading.redirect}
                   >
                     <CsLineIcons icon="eye" />
@@ -354,8 +354,8 @@ const Subscription = () => {
               <Button
                 variant="outline-primary"
                 size="sm"
+                className="btn-icon btn-icon-only"
                 onClick={() => handleRedirect(original.plan_name)}
-                style={{ height: 'auto' }}
                 disabled={loading || actionLoading.redirect}
               >
                 <CsLineIcons icon="eye" />
@@ -367,8 +367,8 @@ const Subscription = () => {
                 variant="outline-success"
                 size="sm"
                 title="Renew"
+                className="btn-icon btn-icon-only"
                 onClick={() => handleRenew(original._id)}
-                style={{ height: 'auto' }}
                 disabled={loading || actionLoading.renew}
               >
                 {actionLoading.renew ? (
@@ -384,8 +384,8 @@ const Subscription = () => {
                 <Button
                   variant="outline-warning"
                   size="sm"
+                  className="btn-icon btn-icon-only"
                   title="Already Inquiry Raised"
-                  style={{ height: 'auto' }}
                   disabled
                 >
                   <CsLineIcons icon="hourglass" />
@@ -396,9 +396,9 @@ const Subscription = () => {
                 <Button
                   variant="outline-danger"
                   size="sm"
+                  className="btn-icon btn-icon-only"
                   title="Raise Inquiry"
                   onClick={() => handleRaiseInquiry(original.plan_name)}
-                  style={{ height: 'auto' }}
                   disabled={loading}
                 >
                   <CsLineIcons icon="send" />

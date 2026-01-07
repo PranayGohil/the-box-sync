@@ -128,16 +128,13 @@ const OrderHistory = () => {
         params.to = filters.toDate;
       }
 
-      const { data: resData } = await axios.get(
-        `${API_BASE}/order/get-orders`,
-        {
-          params,
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
+      const { data: resData } = await axios.get(`${API_BASE}/order/get-orders`, {
+        params,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
 
       if (resData.success) {
         const transformedOrders = resData.data.map(({ _id, ...rest }) => ({
@@ -183,12 +180,15 @@ const OrderHistory = () => {
     setPageIndex(0);
   };
 
-  const handleSearch = useCallback((value) => {
-    if (value !== searchTerm) {
-      setSearchTerm(value);
-      setPageIndex(0);
-    }
-  }, [searchTerm]);
+  const handleSearch = useCallback(
+    (value) => {
+      if (value !== searchTerm) {
+        setSearchTerm(value);
+        setPageIndex(0);
+      }
+    },
+    [searchTerm]
+  );
 
   const handleSort = (columnId) => {
     if (sortBy === columnId) {
@@ -201,7 +201,7 @@ const OrderHistory = () => {
   };
 
   const handleFilterChange = (filterName, value) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       [filterName]: value,
     }));
@@ -234,24 +234,18 @@ const OrderHistory = () => {
   };
 
   const handlePrint = async (orderId) => {
-    setPrinting(prev => ({ ...prev, [orderId]: true }));
+    setPrinting((prev) => ({ ...prev, [orderId]: true }));
     try {
-      const orderResponse = await axios.get(
-        `${API_BASE}/order/get/${orderId}`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
+      const orderResponse = await axios.get(`${API_BASE}/order/get/${orderId}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
-      const userResponse = await axios.get(
-        `${API_BASE}/user/get`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
+      const userResponse = await axios.get(`${API_BASE}/user/get`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
       const order = orderResponse.data.data;
       const userData = userResponse.data;
 
-      const printDiv = document.createElement("div");
-      printDiv.id = "printable-invoice";
-      printDiv.style.display = "none";
+      const printDiv = document.createElement('div');
+      printDiv.id = 'printable-invoice';
+      printDiv.style.display = 'none';
       document.body.appendChild(printDiv);
 
       printDiv.innerHTML = `
@@ -263,7 +257,11 @@ const OrderHistory = () => {
                ${userData.city}, ${userData.state} - ${userData.pincode}
              </p>
              <p style="margin: 10px; font-size: 12px;"><strong>Ph.: </strong> ${userData.mobile}</p>
-             ${userData.fssai_no && userData.fssai_no !== 'null' ? `<p style="margin: 10px; font-size: 12px;"><strong>FSSAI No:</strong> ${userData.fssai_no}</p>` : ''}
+             ${
+               userData.fssai_no && userData.fssai_no !== 'null'
+                 ? `<p style="margin: 10px; font-size: 12px;"><strong>FSSAI No:</strong> ${userData.fssai_no}</p>`
+                 : ''
+             }
              <p style="margin: 10px; font-size: 12px;"><strong>GST No:</strong> ${userData.gst_no}</p>
            </div>
            <hr style="border: 0.5px dashed #ccc;" />
@@ -271,7 +269,7 @@ const OrderHistory = () => {
             <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
              <tr>
                <td style="width: 50%; height: 30px;">
-                 <strong> Name: </strong> ${order?.customer_name || "(M: 1234567890)"} 
+                 <strong> Name: </strong> ${order?.customer_name || '(M: 1234567890)'} 
                </td>
                 <td style="text-align: right;">
                   <strong>${order.order_type}</strong>
@@ -282,7 +280,13 @@ const OrderHistory = () => {
                  <strong>Date:</strong> ${new Date(order.order_date).toLocaleString()}
                </td>
               <td style="text-align: right;">
-                   ${order.table_no ? ` <strong>Table No: </strong> <span style="margin-left: 5px; font-size: 16px;"> ${order.table_no} </span>` : order.token ? ` <strong>Token No: </strong> <span style="margin-left: 5px; font-size: 16px;"> ${order.token} </span>` : ''} </span>
+                   ${
+                     order.table_no
+                       ? ` <strong>Table No: </strong> <span style="margin-left: 5px; font-size: 16px;"> ${order.table_no} </span>`
+                       : order.token
+                       ? ` <strong>Token No: </strong> <span style="margin-left: 5px; font-size: 16px;"> ${order.token} </span>`
+                       : ''
+                   } </span>
                </td>
              </tr>
              <tr>
@@ -300,38 +304,58 @@ const OrderHistory = () => {
                </tr>
              </thead>
              <tbody>
-               ${order.order_items.map(item => `
+               ${order.order_items
+                 .map(
+                   (item) => `
                  <tr>
                    <td>${item.dish_name}</td>
                    <td style="text-align: center;">${item.quantity}</td>
                    <td style="text-align: center;">${item.dish_price}</td>
                    <td style="text-align: right;">₹ ${item.dish_price * item.quantity}</td>
                  </tr>
-               `).join("")}
+               `
+                 )
+                 .join('')}
                <tr>
                  <td colspan="3" style="text-align: right; border-top: 1px dashed #ccc"><strong>Sub Total: </strong></td>
                  <td style="text-align: right; border-top: 1px dashed #ccc">₹ ${order.sub_total}</td>
                </tr>
-               ${order.cgst_amount > 0 ? `
+               ${
+                 order.cgst_amount > 0
+                   ? `
                  <tr>
                    <td colspan="3" style="text-align: right;"><strong>CGST (${order.cgst_percent || 0} %):</strong></td>
                    <td style="text-align: right;">₹ ${order.cgst_amount || 0}</td> 
-                 </tr>` : ""}
-               ${order.sgst_amount > 0 ? `
+                 </tr>`
+                   : ''
+               }
+               ${
+                 order.sgst_amount > 0
+                   ? `
                  <tr>
                    <td colspan="3" style="text-align: right;"><strong>SGST (${order.sgst_percent || 0} %):</strong></td>
                    <td style="text-align: right;">₹ ${order.sgst_amount || 0}</td>
-                 </tr>` : ""}
-               ${order.vat_amount > 0 ? `
+                 </tr>`
+                   : ''
+               }
+               ${
+                 order.vat_amount > 0
+                   ? `
                  <tr>
                    <td colspan="3" style="text-align: right;"><strong>VAT (${order.vat_percent || 0} %):</strong></td>
                    <td style="text-align: right;">₹ ${order.vat_amount || 0}</td>
-                 </tr>` : ""}
-               ${order.discount_amount > 0 ? `
+                 </tr>`
+                   : ''
+               }
+               ${
+                 order.discount_amount > 0
+                   ? `
                  <tr>
                    <td colspan="3" style="text-align: right;"><strong>Discount: </strong></td>
                    <td style="text-align: right;">- ₹ ${order.discount_amount || 0}</td>
-                 </tr>` : ""}
+                 </tr>`
+                   : ''
+               }
                <tr>
                  <td colspan="3" style="text-align: right;"><strong>Total: </strong></td>
                  <td style="text-align: right;">₹ ${order.total_amount}</td>
@@ -340,11 +364,15 @@ const OrderHistory = () => {
                  <td colspan="3" style="text-align: right; border-top: 1px dashed #ccc"><strong>Paid Amount: </strong></td>
                  <td style="text-align: right; border-top: 1px dashed #ccc">₹ ${order.paid_amount || order.bill_amount || 0}</td>
                </tr>
-               ${order.waveoff_amount !== null && order.waveoff_amount !== undefined && order.waveoff_amount !== 0 ? `
+               ${
+                 order.waveoff_amount !== null && order.waveoff_amount !== undefined && order.waveoff_amount !== 0
+                   ? `
                  <tr>
                    <td colspan="3" style="text-align: right;"><strong>Waveoff Amount: </strong></td>
                    <td style="text-align: right;"> ₹ ${order.waveoff_amount || 0}</td>
-                 </tr>` : ""}
+                 </tr>`
+                   : ''
+               }
              </tbody>
            </table>
            <div style="text-align: center; font-size: 12px;">
@@ -353,7 +381,7 @@ const OrderHistory = () => {
          </div>
        `;
 
-      const printWindow = window.open("", "_blank");
+      const printWindow = window.open('', '_blank');
       printWindow.document.write(printDiv.innerHTML);
       printWindow.document.close();
       printWindow.print();
@@ -362,10 +390,10 @@ const OrderHistory = () => {
       document.body.removeChild(printDiv);
       toast.success('Invoice printed successfully!');
     } catch (err) {
-      console.error("Error fetching order or user data:", err);
+      console.error('Error fetching order or user data:', err);
       toast.error('Failed to print invoice. Please try again.');
     } finally {
-      setPrinting(prev => ({ ...prev, [orderId]: false }));
+      setPrinting((prev) => ({ ...prev, [orderId]: false }));
     }
   };
 
@@ -402,16 +430,13 @@ const OrderHistory = () => {
         params.payment_type = exportFilters.paymentType;
       }
 
-      const { data: resData } = await axios.get(
-        `${API_BASE}/order/get-orders`,
-        {
-          params,
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
+      const { data: resData } = await axios.get(`${API_BASE}/order/get-orders`, {
+        params,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
 
       if (resData.success) {
         return resData.data;
@@ -455,8 +480,9 @@ const OrderHistory = () => {
       if (exportFilters.fromDate || exportFilters.toDate) {
         summaryData.push([
           'Date Range',
-          `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
-          }`
+          `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${
+            exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
+          }`,
         ]);
       }
       if (exportFilters.orderSource) {
@@ -496,7 +522,7 @@ const OrderHistory = () => {
         ['Order No', 'Order Date', 'Order Time', 'Customer Name', 'Table No', 'Order Type', 'Order Source', 'Payment Type', 'Total Amount', 'Status'],
       ];
 
-      orders.forEach(order => {
+      orders.forEach((order) => {
         const orderDate = new Date(order.order_date);
         ordersData.push([
           order.order_no || order._id || '',
@@ -508,25 +534,14 @@ const OrderHistory = () => {
           order.order_source || 'N/A',
           order.payment_type || 'N/A',
           order.total_amount || 0,
-          order.order_status || 'N/A'
+          order.order_status || 'N/A',
         ]);
       });
 
       const ordersSheet = XLSX.utils.aoa_to_sheet(ordersData);
 
       // Set column widths
-      ordersSheet['!cols'] = [
-        { wch: 20 },
-        { wch: 12 },
-        { wch: 12 },
-        { wch: 25 },
-        { wch: 12 },
-        { wch: 15 },
-        { wch: 15 },
-        { wch: 15 },
-        { wch: 15 },
-        { wch: 12 }
-      ];
+      ordersSheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 25 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 12 }];
 
       // Apply currency formatting to Total Amount column (column I, index 8)
       const range = XLSX.utils.decode_range(ordersSheet['!ref']);
@@ -616,8 +631,14 @@ const OrderHistory = () => {
       yPosition += 8;
 
       // Filters Applied
-      if (exportFilters.fromDate || exportFilters.toDate || exportFilters.orderSource ||
-        exportFilters.orderStatus || exportFilters.orderType || exportFilters.paymentType) {
+      if (
+        exportFilters.fromDate ||
+        exportFilters.toDate ||
+        exportFilters.orderSource ||
+        exportFilters.orderStatus ||
+        exportFilters.orderType ||
+        exportFilters.paymentType
+      ) {
         doc.setFontSize(10);
         doc.setFont(undefined, 'bold');
         doc.text('Filters Applied:', 15, yPosition);
@@ -628,7 +649,8 @@ const OrderHistory = () => {
 
         if (exportFilters.fromDate || exportFilters.toDate) {
           doc.text(
-            `Date Range: ${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
+            `Date Range: ${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${
+              exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
             }`,
             20,
             yPosition
@@ -682,7 +704,7 @@ const OrderHistory = () => {
       autoTable(doc, {
         startY: yPosition,
         head: [['Order No', 'Date', 'Customer', 'Type', 'Amount', 'Status']],
-        body: orders.map(order => {
+        body: orders.map((order) => {
           const orderDate = new Date(order.order_date);
           return [
             (order.order_no || order._id || '').substring(0, 15),
@@ -690,7 +712,7 @@ const OrderHistory = () => {
             (order.customer_name || 'Guest').substring(0, 20),
             (order.order_type || 'N/A').substring(0, 8),
             formatCurrencyPDF(order.total_amount),
-            (order.order_status || 'N/A').substring(0, 8)
+            (order.order_status || 'N/A').substring(0, 8),
           ];
         }),
         theme: 'grid',
@@ -698,13 +720,13 @@ const OrderHistory = () => {
           fillColor: [68, 114, 196],
           fontSize: 8,
           fontStyle: 'bold',
-          halign: 'center'
+          halign: 'center',
         },
         styles: {
           fontSize: 7,
           cellPadding: 1.5,
           lineColor: [200, 200, 200],
-          lineWidth: 0.1
+          lineWidth: 0.1,
         },
         columnStyles: {
           0: { cellWidth: 28 },
@@ -712,9 +734,9 @@ const OrderHistory = () => {
           2: { cellWidth: 35 },
           3: { cellWidth: 18, halign: 'center' },
           4: { cellWidth: 25, halign: 'right', fontStyle: 'bold' },
-          5: { cellWidth: 18, halign: 'center' }
+          5: { cellWidth: 18, halign: 'center' },
         },
-        margin: { left: 10, right: 10, top: yPosition }
+        margin: { left: 10, right: 10, top: yPosition },
       });
 
       setExportProgress(90);
@@ -725,18 +747,8 @@ const OrderHistory = () => {
         doc.setPage(i);
         doc.setFontSize(7);
         doc.setTextColor(128, 128, 128);
-        doc.text(
-          `${COMPANY_NAME} | Order History | Page ${i} of ${pageCount}`,
-          105,
-          285,
-          { align: 'center' }
-        );
-        doc.text(
-          `Generated: ${format(new Date(), 'dd MMM yyyy HH:mm')}`,
-          105,
-          289,
-          { align: 'center' }
-        );
+        doc.text(`${COMPANY_NAME} | Order History | Page ${i} of ${pageCount}`, 105, 285, { align: 'center' });
+        doc.text(`Generated: ${format(new Date(), 'dd MMM yyyy HH:mm')}`, 105, 289, { align: 'center' });
       }
 
       setExportProgress(95);
@@ -826,13 +838,7 @@ const OrderHistory = () => {
         isSorted: sortBy === 'order_type',
         isSortedDesc: sortBy === 'order_type' && sortOrder === 'desc',
         Cell: ({ value }) => (
-          <Badge bg={
-            value === 'Dine In' ? 'primary' :
-              value === 'Takeaway' ? 'warning' :
-                value === 'Delivery' ? 'success' : 'secondary'
-          }>
-            {value}
-          </Badge>
+          <Badge bg={value === 'Dine In' ? 'primary' : value === 'Takeaway' ? 'warning' : value === 'Delivery' ? 'success' : 'secondary'}>{value}</Badge>
         ),
       },
       {
@@ -843,13 +849,7 @@ const OrderHistory = () => {
         isSorted: sortBy === 'order_source',
         isSortedDesc: sortBy === 'order_source' && sortOrder === 'desc',
         Cell: ({ value }) => (
-          <Badge bg={
-            value === 'Manager' ? 'info' :
-              value === 'Captain' ? 'primary' :
-                value === 'QSR' ? 'secondary' : 'dark'
-          }>
-            {value}
-          </Badge>
+          <Badge bg={value === 'Manager' ? 'info' : value === 'Captain' ? 'primary' : value === 'QSR' ? 'secondary' : 'dark'}>{value}</Badge>
         ),
       },
       {
@@ -869,11 +869,7 @@ const OrderHistory = () => {
         isSorted: sortBy === 'order_status',
         isSortedDesc: sortBy === 'order_status' && sortOrder === 'desc',
         Cell: ({ value }) => (
-          <Badge bg={
-            value === 'Paid' || value === 'Save' ? 'success' :
-              value === 'KOT' ? 'warning' :
-                value === 'Cancelled' ? 'danger' : 'secondary'
-          }>
+          <Badge bg={value === 'Paid' || value === 'Save' ? 'success' : value === 'KOT' ? 'warning' : value === 'Cancelled' ? 'danger' : 'secondary'}>
             {value}
           </Badge>
         ),
@@ -902,11 +898,7 @@ const OrderHistory = () => {
               onClick={() => handlePrint(row.original.id)}
               disabled={printing[row.original.id]}
             >
-              {printing[row.original.id] ? (
-                <Spinner animation="border" size="sm" />
-              ) : (
-                <CsLineIcons icon="print" />
-              )}
+              {printing[row.original.id] ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="print" />}
             </Button>
           </div>
         ),
@@ -978,11 +970,7 @@ const OrderHistory = () => {
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
               <Col xs="12" md="5" className="text-end mt-2 mt-md-0">
-                <Button
-                  variant="primary"
-                  onClick={handleExportClick}
-                  disabled={totalRecords === 0}
-                >
+                <Button variant="primary" onClick={handleExportClick} disabled={totalRecords === 0}>
                   <CsLineIcons icon="download" className="me-2" />
                   Export
                 </Button>
@@ -998,119 +986,30 @@ const OrderHistory = () => {
           )}
 
           {/* Filter Section */}
-          <Card className="mb-3">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <Button
-                  variant="link"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="p-0 text-decoration-none"
-                >
-                  <CsLineIcons icon="filter" className="me-2" />
-                  <strong>Filter</strong>
-                  {getActiveFilterCount() > 0 && (
-                    <Badge bg="primary" className="ms-2">
-                      {getActiveFilterCount()}
-                    </Badge>
-                  )}
-                  <CsLineIcons
-                    icon={showFilters ? 'chevron-top' : 'chevron-bottom'}
-                    className="ms-2"
-                  />
-                </Button>
-                {getActiveFilterCount() > 0 && (
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    onClick={handleClearFilters}
-                  >
-                    <CsLineIcons icon="close" className="me-1" />
-                    Clear All
-                  </Button>
-                )}
-              </div>
-
-              <Collapse in={showFilters}>
-                <div>
-                  <Row>
-                    {/* Order Source Filter */}
-                    <Col md={2} className="mb-3">
-                      <Form.Label className="small">Source</Form.Label>
-                      <Form.Select
-                        size="sm"
-                        value={filters.orderSource}
-                        onChange={(e) => handleFilterChange('orderSource', e.target.value)}
-                      >
-                        <option value="">All</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Captain">Captain</option>
-                        <option value="QSR">QSR</option>
-                        <option value="Restaurant Website">Restaurant Website</option>
-                      </Form.Select>
-                    </Col>
-
-                    {/* Date Range Filter */}
-                    <Col md={2} className="mb-3">
-                      <Form.Label className="small">From</Form.Label>
-                      <Form.Control
-                        type="date"
-                        size="sm"
-                        value={filters.fromDate}
-                        onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-                      />
-                    </Col>
-                    <Col md={2} className="mb-3">
-                      <Form.Label className="small">To</Form.Label>
-                      <Form.Control
-                        type="date"
-                        size="sm"
-                        value={filters.toDate}
-                        onChange={(e) => handleFilterChange('toDate', e.target.value)}
-                      />
-                    </Col>
-
-                    {/* Order Status Filter */}
-                    <Col md={3} className="mb-3">
-                      <Form.Label className="small">Status</Form.Label>
-                      <Form.Select
-                        size="sm"
-                        value={filters.orderStatus}
-                        onChange={(e) => handleFilterChange('orderStatus', e.target.value)}
-                      >
-                        <option value="">All</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Save">Save</option>
-                        <option value="KOT">KOT</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </Form.Select>
-                    </Col>
-
-                    {/* Order Type Filter */}
-                    <Col md={3} className="mb-3">
-                      <Form.Label className="small">Type</Form.Label>
-                      <Form.Select
-                        size="sm"
-                        value={filters.orderType}
-                        onChange={(e) => handleFilterChange('orderType', e.target.value)}
-                      >
-                        <option value="">All</option>
-                        <option value="Dine In">Dine In</option>
-                        <option value="Takeaway">Takeaway</option>
-                        <option value="Delivery">Delivery</option>
-                      </Form.Select>
-                    </Col>
-                  </Row>
-                </div>
-              </Collapse>
-            </Card.Body>
-          </Card>
 
           {/* Search and Controls */}
           <div>
             <Row className="mb-3">
               <Col sm="12" md="5" lg="3" xxl="2">
-                <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
-                  <ControlsSearch onSearch={handleSearch} />
+                <div className="d-flex gap-2">
+                  <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
+                    <ControlsSearch onSearch={handleSearch} />
+                  </div>
+                  <Button
+                    variant={`${showFilters ? 'secondary' : 'outline-secondary'}`}
+                    size="sm"
+                    className="btn-icon btn-icon-only position-relative"
+                    onClick={() => setShowFilters(!showFilters)}
+                    title="Filters"
+                    disabled={loading}
+                  >
+                    <CsLineIcons icon={`${showFilters ? 'close' : 'filter'}`} />
+                    {getActiveFilterCount() > 0 && (
+                      <Badge bg="primary" className="position-absolute top-0 start-100 translate-middle">
+                        {getActiveFilterCount()}
+                      </Badge>
+                    )}
+                  </Button>
                 </div>
               </Col>
               <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
@@ -1119,8 +1018,7 @@ const OrderHistory = () => {
                     'Loading...'
                   ) : (
                     <>
-                      Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0} to{' '}
-                      {Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords} entries
+                      Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0} to {Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords} entries
                     </>
                   )}
                 </div>
@@ -1129,15 +1027,78 @@ const OrderHistory = () => {
                 </div>
               </Col>
             </Row>
+            <Collapse in={showFilters}>
+              <Card className="mb-3">
+                <Card.Body>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <Button variant="link" onClick={() => setShowFilters(!showFilters)} className="p-0 text-decoration-none">
+                      <strong>Filters</strong>
+                    </Button>
+                    {getActiveFilterCount() > 0 && (
+                      <Button variant="outline-danger" size="sm" onClick={handleClearFilters}>
+                        <CsLineIcons icon="close" className="me-1" />
+                        Clear
+                      </Button>
+                    )}
+                  </div>
+
+                  <div>
+                    <Row>
+                      {/* Order Source Filter */}
+                      <Col md={2} className="mb-3">
+                        <Form.Label className="small">Source</Form.Label>
+                        <Form.Select size="sm" value={filters.orderSource} onChange={(e) => handleFilterChange('orderSource', e.target.value)}>
+                          <option value="">All</option>
+                          <option value="Manager">Manager</option>
+                          <option value="Captain">Captain</option>
+                          <option value="QSR">QSR</option>
+                          <option value="Restaurant Website">Restaurant Website</option>
+                        </Form.Select>
+                      </Col>
+
+                      {/* Date Range Filter */}
+                      <Col md={2} className="mb-3">
+                        <Form.Label className="small">From</Form.Label>
+                        <Form.Control type="date" size="sm" value={filters.fromDate} onChange={(e) => handleFilterChange('fromDate', e.target.value)} />
+                      </Col>
+                      <Col md={2} className="mb-3">
+                        <Form.Label className="small">To</Form.Label>
+                        <Form.Control type="date" size="sm" value={filters.toDate} onChange={(e) => handleFilterChange('toDate', e.target.value)} />
+                      </Col>
+
+                      {/* Order Status Filter */}
+                      <Col md={3} className="mb-3">
+                        <Form.Label className="small">Status</Form.Label>
+                        <Form.Select size="sm" value={filters.orderStatus} onChange={(e) => handleFilterChange('orderStatus', e.target.value)}>
+                          <option value="">All</option>
+                          <option value="Paid">Paid</option>
+                          <option value="Save">Save</option>
+                          <option value="KOT">KOT</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </Form.Select>
+                      </Col>
+
+                      {/* Order Type Filter */}
+                      <Col md={3} className="mb-3">
+                        <Form.Label className="small">Type</Form.Label>
+                        <Form.Select size="sm" value={filters.orderType} onChange={(e) => handleFilterChange('orderType', e.target.value)}>
+                          <option value="">All</option>
+                          <option value="Dine In">Dine In</option>
+                          <option value="Takeaway">Takeaway</option>
+                          <option value="Delivery">Delivery</option>
+                        </Form.Select>
+                      </Col>
+                    </Row>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Collapse>
 
             {/* Show table or "no data" message */}
             {data.length === 0 && !loading ? (
               <Alert variant="info" className="text-center">
                 <CsLineIcons icon="inbox" size={24} className="me-2" />
-                No orders found.{' '}
-                {searchTerm || getActiveFilterCount() > 0
-                  ? 'Try adjusting your search or filters.'
-                  : 'Orders will appear here once created.'}
+                No orders found. {searchTerm || getActiveFilterCount() > 0 ? 'Try adjusting your search or filters.' : 'Orders will appear here once created.'}
               </Alert>
             ) : (
               <>
@@ -1163,9 +1124,7 @@ const OrderHistory = () => {
         <Modal.Body>
           {!exporting ? (
             <>
-              <p className="text-muted mb-4">
-                Export your order data by selecting filters and a file format.
-              </p>
+              <p className="text-muted mb-4">Export your order data by selecting filters and a file format.</p>
 
               <Form>
                 {/* Export Format Selection */}
@@ -1263,11 +1222,7 @@ const OrderHistory = () => {
 
                   <Col md={6} className="mb-3">
                     <Form.Label className="small">Type</Form.Label>
-                    <Form.Select
-                      size="sm"
-                      value={exportFilters.orderType}
-                      onChange={(e) => setExportFilters({ ...exportFilters, orderType: e.target.value })}
-                    >
+                    <Form.Select size="sm" value={exportFilters.orderType} onChange={(e) => setExportFilters({ ...exportFilters, orderType: e.target.value })}>
                       <option value="">All Types</option>
                       <option value="Dine In">Dine In</option>
                       <option value="Takeaway">Takeaway</option>
@@ -1313,12 +1268,7 @@ const OrderHistory = () => {
               <Spinner animation="border" variant="primary" className="mb-3" />
               <h5>Exporting Orders...</h5>
               <p className="text-muted mb-3">Please wait while we prepare your {exportFormat === 'excel' ? 'Excel' : 'PDF'} file</p>
-              <ProgressBar
-                now={exportProgress}
-                label={`${exportProgress}%`}
-                className="mb-2"
-                style={{ height: '25px' }}
-              />
+              <ProgressBar now={exportProgress} label={`${exportProgress}%`} className="mb-2" style={{ height: '25px' }} />
             </div>
           )}
         </Modal.Body>
