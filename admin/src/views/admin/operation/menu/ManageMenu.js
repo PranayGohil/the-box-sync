@@ -170,7 +170,7 @@ const ManageMenu = () => {
                   href="/operations/add-dish"
                 >
                   <CsLineIcons icon="plus" className="me-2" />
-                  Add New Dish
+                  Add New
                 </Button>
               </Col>
             </Row>

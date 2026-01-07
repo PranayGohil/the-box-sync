@@ -99,7 +99,7 @@ const ManageTable = () => {
                   href="/operations/add-table"
                 >
                   <CsLineIcons icon="plus" className="me-2" />
-                  Add New Table
+                  Add New
                 </Button>
               </Col>
             </Row>

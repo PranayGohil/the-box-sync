@@ -152,10 +152,15 @@ const Dashboard = () => {
           <Col md="5" className="d-flex justify-content-end align-items-center">
             {/* Period Selector */}
             <Dropdown className="d-inline-block">
-              <Dropdown.Toggle variant="outline-primary" size="sm">
+              <Dropdown.Toggle
+                variant="outline-primary"
+                size="sm"
+                className="d-flex align-items-center justify-content-center"
+              >
                 <CsLineIcons icon="calendar" className="me-2" />
                 {periodOptions.find(p => p.value === selectedPeriod)?.label || 'Today'}
               </Dropdown.Toggle>
+
               <Dropdown.Menu>
                 {periodOptions.map((period) => (
                   <Dropdown.Item
@@ -184,10 +189,10 @@ const Dashboard = () => {
               <div className="ms-3 d-flex align-items-center">
                 <CsLineIcons
                   icon={comparison.trend === 'up' ? 'arrow-top' : comparison.trend === 'down' ? 'arrow-bottom' : 'minus'}
-                  className={`me-1 ${comparison.trend === 'up' ? 'text-success' : comparison.trend === 'down' ? 'text-danger' : 'text-muted'}`}
-                  size="14"
+                  className={`me-1 mb-3 ${comparison.trend === 'up' ? 'text-success' : comparison.trend === 'down' ? 'text-danger' : 'text-muted'}`}
+                  size="15px"
                 />
-                <span className={`text-small ${comparison.trend === 'up' ? 'text-success' : comparison.trend === 'down' ? 'text-danger' : 'text-muted'}`}>
+                <span className={`mb-3 text-small ${comparison.trend === 'up' ? 'text-success' : comparison.trend === 'down' ? 'text-danger' : 'text-muted'}`}>
                   {Math.abs(comparison.change)}%
                 </span>
               </div>
@@ -209,13 +214,13 @@ const Dashboard = () => {
                       <Col>
                         <Row className="gx-2 d-flex align-content-center">
                           <Col xs="12" className="col-12 d-flex">
-                            <div className="d-flex align-items-center lh-1-25">Total Orders</div>
+                            <div className="d-flex align-items-center lh-1-25" style={{ fontSize: '14px' }}>Total Orders</div>
                           </Col>
                           <Col xl="auto" className="col-12">
-                            <div className="cta-2 text-primary">{getTotalOrders()}</div>
+                            <div className="cta-2 text-primary" style={{ fontSize: '14px' }}>{getTotalOrders()}</div>
                           </Col>
                           <Col xs="12" className="col-12">
-                            <div className="text-muted text-small">
+                            <div className="text-muted" style={{ fontSize: '12px' }}>
                               Revenue: {formatCurrency(overview?.summary?.totalRevenue)}
                             </div>
                           </Col>
@@ -239,15 +244,15 @@ const Dashboard = () => {
                       <Col>
                         <Row className="gx-2 d-flex align-content-center">
                           <Col xs="12" className="col-12 d-flex">
-                            <div className="d-flex align-items-center lh-1-25">Dine-In</div>
+                            <div className="d-flex align-items-center lh-1-25" style={{ fontSize: '14px' }}>Dine-In</div>
                           </Col>
                           <Col xl="auto" className="col-12">
-                            <div className="cta-2 text-primary">
+                            <div className="cta-2 text-primary" style={{ fontSize: '14px' }}>
                               {getOrderCountByType('Dine-In') || getOrderCountByType('Dine In')}
                             </div>
                           </Col>
                           <Col xs="12" className="col-12">
-                            <div className="text-muted text-small">
+                            <div className="text-muted" style={{ fontSize: '12px' }}>
                               {orderStats.find(item =>
                                 item.category?.toLowerCase().includes('dine')
                               ) ? formatCurrency(orderStats.find(item =>
@@ -275,15 +280,15 @@ const Dashboard = () => {
                       <Col>
                         <Row className="gx-2 d-flex align-content-center">
                           <Col xs="12" className="col-12 d-flex">
-                            <div className="d-flex align-items-center lh-1-25">Takeaway</div>
+                            <div className="d-flex align-items-center lh-1-25" style={{ fontSize: '14px' }}>Takeaway</div>
                           </Col>
                           <Col xl="auto" className="col-12">
-                            <div className="cta-2 text-primary">
+                            <div className="cta-2 text-primary" style={{ fontSize: '14px' }}>
                               {getOrderCountByType('Takeaway') || getOrderCountByType('Take Away')}
                             </div>
                           </Col>
                           <Col xs="12" className="col-12">
-                            <div className="text-muted text-small">
+                            <div className="text-muted" style={{ fontSize: '12px' }}>
                               {orderStats.find(item =>
                                 item.category?.toLowerCase().includes('take')
                               ) ? formatCurrency(orderStats.find(item =>
@@ -311,15 +316,15 @@ const Dashboard = () => {
                       <Col>
                         <Row className="gx-2 d-flex align-content-center">
                           <Col xs="12" className="col-12 d-flex">
-                            <div className="d-flex align-items-center lh-1-25">Delivery</div>
+                            <div className="d-flex align-items-center lh-1-25" style={{ fontSize: '14px' }}>Delivery</div>
                           </Col>
                           <Col xl="auto" className="col-12">
-                            <div className="cta-2 text-primary">
+                            <div className="cta-2 text-primary" style={{ fontSize: '14px' }}>
                               {getOrderCountByType('Delivery')}
                             </div>
                           </Col>
                           <Col xs="12" className="col-12">
-                            <div className="text-muted text-small">
+                            <div className="text-muted" style={{ fontSize: '12px' }}>
                               {orderStats.find(item =>
                                 item.category?.toLowerCase() === 'delivery'
                               ) ? formatCurrency(orderStats.find(item =>
@@ -346,10 +351,10 @@ const Dashboard = () => {
                   <Card.Body className="h-100 py-3">
                     <div className="d-flex flex-column justify-content-between h-100">
                       <div className="d-flex justify-content-between align-items-start">
-                        <div className="text-muted text-small">Average Order Value</div>
+                        <div className="text-muted" style={{ fontSize: '14px' }}>Average Order Value</div>
                         <CsLineIcons icon="trending-up" className="text-primary" size="17" />
                       </div>
-                      <div className="cta-3 text-primary mt-2">
+                      <div className="cta-3 text-primary mt-2" style={{ fontSize: '12px' }}>
                         {formatCurrency(overview?.summary?.avgOrderValue)}
                       </div>
                     </div>
@@ -361,10 +366,10 @@ const Dashboard = () => {
                   <Card.Body className="h-100 py-3">
                     <div className="d-flex flex-column justify-content-between h-100">
                       <div className="d-flex justify-content-between align-items-start">
-                        <div className="text-muted text-small">Total Discount</div>
+                        <div className="text-muted" style={{ fontSize: '14px' }}>Total Discount</div>
                         <CsLineIcons icon="tag" className="text-danger" size="17" />
                       </div>
-                      <div className="cta-3 text-danger mt-2">
+                      <div className="cta-3 text-danger mt-2" style={{ fontSize: '12px' }}>
                         {formatCurrency(overview?.summary?.totalDiscount)}
                       </div>
                     </div>
@@ -401,7 +406,7 @@ const Dashboard = () => {
               as={NavLink}
               to="/dashboards/statistics"
             >
-              <span className="align-bottom">View More</span>
+              <span className="align-bottom" style={{ fontSize: '14px' }}>View More</span>
               <CsLineIcons icon="chevron-right" className="align-middle" size="12" />
             </Button>
           </div>
@@ -419,22 +424,22 @@ const Dashboard = () => {
                       </Col>
                       <Col md="5" className="d-flex align-items-center mb-2 mb-md-0 ps-2">
                         <div>
-                          <div className="body-link text-truncate font-weight-bold">
+                          <div className="body-link text-truncate font-weight-bold" style={{ fontSize: '14px' }}>
                             {dish.dishName}
                           </div>
-                          <div className="text-muted text-small">
+                          <div className="text-muted" style={{ fontSize: '12px' }}>
                             {dish.category || 'N/A'}
                           </div>
                         </div>
                       </Col>
-                      <Col md="3" className="d-flex align-items-center text-muted text-small mb-1 mb-md-0">
-                        <Badge bg={dish.isSpecial ? 'primary' : 'outline-secondary'} className="me-1">
+                      <Col md="3" className="d-flex align-items-center text-muted mb-1 mb-md-0">
+                        <Badge bg={dish.isSpecial ? 'primary' : 'outline-secondary'} className="me-1" style={{ fontSize: '10px' }}>
                           {dish.isSpecial ? '⭐ Special' : 'Regular'}
                         </Badge>
                       </Col>
                       <Col md="3" className="d-flex flex-column align-items-end justify-content-center text-muted text-small">
-                        <div className="text-primary font-weight-bold">{dish.totalQuantity} sold</div>
-                        <div className="text-muted text-small">{formatCurrency(dish.totalRevenue)}</div>
+                        <div className="text-primary font-weight-bold" style={{ fontSize: '14px' }}>{dish.totalQuantity} sold</div>
+                        <div className="text-muted" style={{ fontSize: '12px' }}>{formatCurrency(dish.totalRevenue)}</div>
                       </Col>
                     </Row>
                   </Card.Body>
@@ -444,7 +449,7 @@ const Dashboard = () => {
           ) : (
             <Card className="sh-40">
               <Card.Body className="d-flex justify-content-center align-items-center">
-                <span className="text-muted">No dishes data available</span>
+                <span className="text-muted">No data available</span>
               </Card.Body>
             </Card>
           )}
@@ -463,7 +468,7 @@ const Dashboard = () => {
                           <Row className="g-0 align-items-center">
                             <Col xs="7">
                               <div className="d-flex align-items-center">
-                                <div className="sw-3 sh-3 me-3 rounded-xl d-flex justify-content-center align-items-center bg-gradient-light">
+                                <div className="sw-3 sh-3 me-3 rounded-xl d-flex justify-content-center align-items-center bg-gradient-light" style={{ fontSize: '14px' }}>
                                   <CsLineIcons
                                     icon={payment._id === 'Cash' ? 'wallet' : payment._id === 'Card' ? 'credit-card' : 'mobile'}
                                     size="17"
@@ -471,14 +476,14 @@ const Dashboard = () => {
                                   />
                                 </div>
                                 <div>
-                                  <div className="font-weight-bold">{payment._id || 'Unknown'}</div>
-                                  <div className="text-muted text-small">{payment.count} transactions</div>
+                                  <div className="font-weight-bold" style={{ fontSize: '12px' }}>{payment._id || 'Unknown'}</div>
+                                  <div className="text-muted" style={{ fontSize: '12px' }}>{payment.count} transactions</div>
                                 </div>
                               </div>
                             </Col>
                             <Col xs="5" className="text-end">
-                              <div className="text-primary font-weight-bold">{formatCurrency(payment.amount)}</div>
-                              <div className="text-muted text-small">
+                              <div className="text-primary font-weight-bold" style={{ fontSize: '14px' }}>{formatCurrency(payment.amount)}</div>
+                              <div className="text-muted" style={{ fontSize: '12px' }}>
                                 {overview.summary?.totalRevenue > 0
                                   ? `${((payment.amount / overview.summary.totalRevenue) * 100).toFixed(1)}%`
                                   : '0%'
@@ -491,7 +496,7 @@ const Dashboard = () => {
                     ))}
                   </Row>
                 ) : (
-                  <div className="text-center text-muted py-3">No payment data available</div>
+                  <div className="text-center text-muted py-3">No data available</div>
                 )}
               </Card.Body>
             </Card>
