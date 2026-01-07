@@ -787,41 +787,41 @@ const OrderHistory = () => {
   const columns = React.useMemo(
     () => [
       {
-        Header: 'Order Number',
+        Header: 'Order No.',
         accessor: 'order_no',
         id: 'order_no',
-        headerClassName: 'text-muted text-small text-uppercase w-15',
+        headerClassName: 'text-small text-uppercase w-15',
       },
       {
-        Header: 'Order Date',
+        Header: 'Date',
         accessor: 'order_date',
         id: 'order_date',
-        headerClassName: 'text-muted text-small text-uppercase w-15',
+        headerClassName: 'text-small text-uppercase w-15',
         sortable: true,
         isSorted: sortBy === 'order_date',
         isSortedDesc: sortBy === 'order_date' && sortOrder === 'desc',
         Cell: ({ value }) => new Date(value).toLocaleDateString('en-IN'),
       },
       {
-        Header: 'Order Time',
+        Header: 'Time',
         accessor: 'order_date',
         id: 'order_time',
-        headerClassName: 'text-muted text-small text-uppercase w-15',
+        headerClassName: 'text-small text-uppercase w-15',
         disableSortBy: true,
         Cell: ({ value }) => new Date(value).toLocaleTimeString(),
       },
       {
-        Header: 'Customer Name',
+        Header: 'Name',
         accessor: 'customer_name',
-        headerClassName: 'text-muted text-small text-uppercase w-15',
+        headerClassName: 'text-small text-uppercase w-15',
         sortable: true,
         isSorted: sortBy === 'customer_name',
         isSortedDesc: sortBy === 'customer_name' && sortOrder === 'desc',
       },
       {
-        Header: 'Order Type',
+        Header: 'Type',
         accessor: 'order_type',
-        headerClassName: 'text-muted text-small text-uppercase w-10',
+        headerClassName: 'text-small text-uppercase w-15',
         sortable: true,
         isSorted: sortBy === 'order_type',
         isSortedDesc: sortBy === 'order_type' && sortOrder === 'desc',
@@ -836,9 +836,9 @@ const OrderHistory = () => {
         ),
       },
       {
-        Header: 'Order Source',
+        Header: 'Source',
         accessor: 'order_source',
-        headerClassName: 'text-muted text-small text-uppercase w-10',
+        headerClassName: 'text-small text-uppercase w-15',
         sortable: true,
         isSorted: sortBy === 'order_source',
         isSortedDesc: sortBy === 'order_source' && sortOrder === 'desc',
@@ -853,9 +853,9 @@ const OrderHistory = () => {
         ),
       },
       {
-        Header: 'Total Amount',
+        Header: 'Amount',
         accessor: 'total_amount',
-        headerClassName: 'text-muted text-small text-uppercase w-15',
+        headerClassName: 'text-small text-uppercase w-15',
         sortable: true,
         isSorted: sortBy === 'total_amount',
         isSortedDesc: sortBy === 'total_amount' && sortOrder === 'desc',
@@ -864,7 +864,7 @@ const OrderHistory = () => {
       {
         Header: 'Status',
         accessor: 'order_status',
-        headerClassName: 'text-muted text-small text-uppercase w-10',
+        headerClassName: 'text-small text-uppercase w-10',
         sortable: true,
         isSorted: sortBy === 'order_status',
         isSortedDesc: sortBy === 'order_status' && sortOrder === 'desc',
@@ -881,7 +881,7 @@ const OrderHistory = () => {
       {
         Header: 'Action',
         id: 'action',
-        headerClassName: 'text-muted text-small text-uppercase w-10 text-center',
+        headerClassName: 'text-small text-uppercase w-10 text-center',
         disableSortBy: true,
         Cell: ({ row }) => (
           <div className="d-flex justify-content-center gap-2">
@@ -984,7 +984,7 @@ const OrderHistory = () => {
                   disabled={totalRecords === 0}
                 >
                   <CsLineIcons icon="download" className="me-2" />
-                  Export Orders
+                  Export
                 </Button>
               </Col>
             </Row>
@@ -1007,7 +1007,7 @@ const OrderHistory = () => {
                   className="p-0 text-decoration-none"
                 >
                   <CsLineIcons icon="filter" className="me-2" />
-                  <strong>Filters</strong>
+                  <strong>Filter</strong>
                   {getActiveFilterCount() > 0 && (
                     <Badge bg="primary" className="ms-2">
                       {getActiveFilterCount()}
@@ -1035,7 +1035,7 @@ const OrderHistory = () => {
                   <Row>
                     {/* Order Source Filter */}
                     <Col md={2} className="mb-3">
-                      <Form.Label className="small text-muted">Order Source</Form.Label>
+                      <Form.Label className="small">Source</Form.Label>
                       <Form.Select
                         size="sm"
                         value={filters.orderSource}
@@ -1051,7 +1051,7 @@ const OrderHistory = () => {
 
                     {/* Date Range Filter */}
                     <Col md={2} className="mb-3">
-                      <Form.Label className="small text-muted">From Date</Form.Label>
+                      <Form.Label className="small">From</Form.Label>
                       <Form.Control
                         type="date"
                         size="sm"
@@ -1060,7 +1060,7 @@ const OrderHistory = () => {
                       />
                     </Col>
                     <Col md={2} className="mb-3">
-                      <Form.Label className="small text-muted">To Date</Form.Label>
+                      <Form.Label className="small">To</Form.Label>
                       <Form.Control
                         type="date"
                         size="sm"
@@ -1071,7 +1071,7 @@ const OrderHistory = () => {
 
                     {/* Order Status Filter */}
                     <Col md={3} className="mb-3">
-                      <Form.Label className="small text-muted">Order Status</Form.Label>
+                      <Form.Label className="small">Status</Form.Label>
                       <Form.Select
                         size="sm"
                         value={filters.orderStatus}
@@ -1087,7 +1087,7 @@ const OrderHistory = () => {
 
                     {/* Order Type Filter */}
                     <Col md={3} className="mb-3">
-                      <Form.Label className="small text-muted">Order Type</Form.Label>
+                      <Form.Label className="small">Type</Form.Label>
                       <Form.Select
                         size="sm"
                         value={filters.orderType}
@@ -1164,7 +1164,7 @@ const OrderHistory = () => {
           {!exporting ? (
             <>
               <p className="text-muted mb-4">
-                Select filters and export format to download order history
+                Export your order data by selecting filters and a file format.
               </p>
 
               <Form>
@@ -1178,7 +1178,7 @@ const OrderHistory = () => {
                       label={
                         <div className="d-flex align-items-center">
                           <CsLineIcons icon="file-text" className="me-2 text-success" />
-                          <span>Excel (.xlsx)</span>
+                          <span>EXCEL (.xlsx)</span>
                         </div>
                       }
                       name="exportFormat"
@@ -1191,7 +1191,7 @@ const OrderHistory = () => {
                       id="format-pdf"
                       label={
                         <div className="d-flex align-items-center">
-                          <CsLineIcons icon="file-pdf" className="me-2 text-danger" />
+                          <CsLineIcons icon="file-text" className="me-2 text-danger" />
                           <span>PDF (.pdf)</span>
                         </div>
                       }
@@ -1208,7 +1208,7 @@ const OrderHistory = () => {
 
                 <Row>
                   <Col md={6} className="mb-3">
-                    <Form.Label className="small">Date Range</Form.Label>
+                    <Form.Label className="small">Date</Form.Label>
                     <Row>
                       <Col>
                         <Form.Control
@@ -1232,7 +1232,7 @@ const OrderHistory = () => {
                   </Col>
 
                   <Col md={6} className="mb-3">
-                    <Form.Label className="small">Order Source</Form.Label>
+                    <Form.Label className="small">Source</Form.Label>
                     <Form.Select
                       size="sm"
                       value={exportFilters.orderSource}
@@ -1247,7 +1247,7 @@ const OrderHistory = () => {
                   </Col>
 
                   <Col md={6} className="mb-3">
-                    <Form.Label className="small">Order Status</Form.Label>
+                    <Form.Label className="small">Status</Form.Label>
                     <Form.Select
                       size="sm"
                       value={exportFilters.orderStatus}
@@ -1262,7 +1262,7 @@ const OrderHistory = () => {
                   </Col>
 
                   <Col md={6} className="mb-3">
-                    <Form.Label className="small">Order Type</Form.Label>
+                    <Form.Label className="small">Type</Form.Label>
                     <Form.Select
                       size="sm"
                       value={exportFilters.orderType}
@@ -1305,8 +1305,7 @@ const OrderHistory = () => {
 
               <Alert variant="info" className="mt-3">
                 <CsLineIcons icon="info-circle" className="me-2" />
-                <strong>Note:</strong> Export will include all orders matching the selected filters.
-                Leave filters empty to export all orders.
+                <strong>Note:</strong> Apply filters to export specific orders, or leave empty to export all.
               </Alert>
             </>
           ) : (

@@ -239,7 +239,7 @@ const AddTable = () => {
                   <hr />
 
                   {formik.values.tables.map((table, index) => (
-                    <Row className="align-items-start mb-3" key={index}>
+                    <Row className="align-items-center mb-3" key={index}>
                       <Col md="4">
                         <Form.Label>Table No.</Form.Label>
                         <Form.Control
@@ -281,7 +281,7 @@ const AddTable = () => {
                           {formik.errors.tables?.[index]?.maxPerson}
                         </Form.Control.Feedback>
                       </Col>
-                      <Col md="4">
+                      <Col md="4" className="mt-4">
                         <Button
                           variant="outline-danger"
                           onClick={() => removeTable(index)}
@@ -309,7 +309,7 @@ const AddTable = () => {
                       disabled={isSubmitting}
                     >
                       <CsLineIcons icon="plus" className="me-1" />
-                      Add More
+                      Add 
                     </Button>
                     <Button
                       type="submit"

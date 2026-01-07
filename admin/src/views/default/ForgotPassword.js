@@ -65,7 +65,7 @@ const ForgotPassword = () => {
 
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError('Password do not match.');
       setSuccess('');
       setIsLoading(false);
       return;
@@ -86,6 +86,21 @@ const ForgotPassword = () => {
     }
   };
 
+  const stepHeader = {
+    1: {
+      title: 'Forgot your password?',
+      subtitle: 'No worries — we’ll help you reset it.',
+    },
+    2: {
+      title: 'Verify your OTP',
+      subtitle: 'Almost there — let’s confirm it’s you.',
+    },
+    3: {
+      title: 'Reset your Password',
+      subtitle: 'Create a new password to secure your account.',
+    },
+  };
+
   const leftSide = (
     <div className="min-h-100 d-flex align-items-center">
       <div className="w-100 w-lg-75 w-xxl-50" />
@@ -94,136 +109,133 @@ const ForgotPassword = () => {
 
   const rightSide = (
     <div className="sw-lg-70 min-h-100 bg-foreground d-flex justify-content-center align-items-center shadow-deep py-5 full-page-content-right-border">
-      <div className="sw-lg-50 px-5">
-        <div className="sh-11">
-          <NavLink to="/">
-            <div className="logo-default" />
-          </NavLink>
+      <div className="sw-lg-50 px-5 d-flex flex-column min-h-100 mx-auto">
+
+        {/* CENTER CONTENT */}
+        <div className="my-auto">
+
+          {/* HEADER — CHANGES BASED ON STEP */}
+          <div className="mb-4">
+            <h2 className="cta-1 mb-0 text-primary">
+              {stepHeader[step].title}
+            </h2>
+            <p className="h6 mt-2">
+              {stepHeader[step].subtitle}
+            </p>
+          </div>
+
+
+          {/* STEP 1 */}
+          {step === 1 && (
+            <form onSubmit={handleSendOtp}>
+              <div className="mb-3 filled form-group tooltip-end-top">
+                <CsLineIcons icon="email" />
+                <Form.Control
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  disabled={isLoading}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+
+              {error && <div className="text-danger mb-2">{error}</div>}
+              {success && <div className="text-success mb-2">{success}</div>}
+
+              <div className="d-flex justify-content-between align-items-center">
+                <Button size="lg" type="submit" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Spinner size="sm" className="me-2" />
+                      Sending...
+                    </>
+                  ) : (
+                    'Send OTP'
+                  )}
+                </Button>
+                <NavLink to="/login" className="justify-content-left" >
+                  <Button size="lg" type="submit" className="btn btn-primary">
+                    Login
+                  </Button>
+                </NavLink>
+              </div>
+            </form>
+          )}
+
+          {/* STEP 2 */}
+
+          {step === 2 && (
+            <form onSubmit={handleVerifyOtp}>
+              <div className="mb-3 filled form-group tooltip-end-top">
+                <CsLineIcons icon="key" />
+                <Form.Control
+                  type="text"
+                  placeholder="Enter OTP"
+                  value={otp}
+                  disabled={isLoading}
+                  onChange={(e) => setOtp(e.target.value)}
+                />
+              </div>
+
+              {error && <div className="text-danger mb-2">{error}</div>}
+
+              <div className="d-flex justify-content-between align-items-center">
+                <Button size="lg" type="submit" disabled={isLoading}>
+                  {isLoading ? 'Verifying...' : 'Verify OTP'}
+                </Button>
+
+                <Button className="btn btn-primary" onClick={() => setStep(1)}>
+                  Back
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {/* STEP 3 */}
+          {step === 3 && (
+            <form onSubmit={handleResetPassword}>
+              <div className="mb-3 filled form-group tooltip-end-top">
+                <CsLineIcons icon="lock-off" />
+                <Form.Control
+                  type="password"
+                  placeholder="New Password"
+                  value={newPassword}
+                  disabled={isLoading}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </div>
+
+              <div className="mb-3 filled form-group tooltip-end-top">
+                <CsLineIcons icon="lock-off" />
+                <Form.Control
+                  type="password"
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  disabled={isLoading}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </div>
+
+              {error && <div className="text-danger mb-2">{error}</div>}
+
+              <div className="d-flex justify-content-between align-items-center">
+                <Button size="lg" type="submit" disabled={isLoading}>
+                  {isLoading ? 'Resetting...' : 'Reset Password'}
+                </Button>
+
+                <Button className="btn btn-primary" onClick={() => setStep(2)}>
+                  Back
+                </Button>
+              </div>
+            </form>
+          )}
         </div>
-        <div className="mb-5">
-          <h2 className="cta-1 mb-0 text-primary">Password is gone?</h2>
-          <h2 className="cta-1 text-primary">Let's reset it!</h2>
-        </div>
-        <div>
-          <Card className="mb-5">
-            <Card.Header>
-              <Card.Title className="mb-0">
-                {step === 1 && 'Enter Your Email'}
-                {step === 2 && 'Verify OTP'}
-                {step === 3 && 'Reset Password'}
-              </Card.Title>
-            </Card.Header>
-            <Card.Body>
-              {/* <p className="text-muted mb-4">
-                {step === 1 && "Enter your email address to receive a verification OTP."}
-                {step === 2 && "Check your email for the OTP and enter it below."}
-                {step === 3 && "Enter your new password and confirm it."}
-              </p> */}
 
-              {error && <Alert variant="danger">{error}</Alert>}
-              {success && <Alert variant="success">{success}</Alert>}
-
-              {step === 1 && (
-                <Form onSubmit={handleSendOtp}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Email Address</Form.Label>
-                    <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="Enter your email" />
-                  </Form.Group>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <Button variant="primary" type="submit" disabled={isLoading}>
-                      {isLoading ? (
-                        <>
-                          <Spinner animation="border" size="sm" className="me-2" />
-                          Sending...
-                        </>
-                      ) : (
-                        <>
-                          <CsLineIcons icon="send" className="me-2" />
-                          Send OTP
-                        </>
-                      )}
-                    </Button>
-                    <Link to="/login" className="text-muted">
-                      <CsLineIcons icon="arrow-left" className="me-1" />
-                      Back to Login
-                    </Link>
-                  </div>
-                </Form>
-              )}
-
-              {step === 2 && (
-                <Form onSubmit={handleVerifyOtp}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Verification OTP</Form.Label>
-                    <Form.Control type="text" value={otp} onChange={(e) => setOtp(e.target.value)} required placeholder="Enter the OTP sent to your email" />
-                  </Form.Group>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <Button variant="primary" type="submit" disabled={isLoading}>
-                      {isLoading ? (
-                        <>
-                          <Spinner animation="border" size="sm" className="me-2" />
-                          Verifying...
-                        </>
-                      ) : (
-                        <>
-                          <CsLineIcons icon="check" className="me-2" />
-                          Verify OTP
-                        </>
-                      )}
-                    </Button>
-                    <Button variant="outline-secondary mx-3" onClick={() => setStep(1)}>
-                      <CsLineIcons icon="arrow-left" className="me-1" />
-                      Change Email
-                    </Button>
-                  </div>
-                </Form>
-              )}
-
-              {step === 3 && (
-                <Form onSubmit={handleResetPassword}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>New Password</Form.Label>
-                    <Form.Control
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                      placeholder="Enter your new password"
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-4">
-                    <Form.Label>Confirm New Password</Form.Label>
-                    <Form.Control
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      placeholder="Confirm your new password"
-                    />
-                  </Form.Group>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <Button variant="primary" type="submit" disabled={isLoading}>
-                      {isLoading ? (
-                        <>
-                          <Spinner animation="border" size="sm" className="me-2" />
-                          Resetting...
-                        </>
-                      ) : (
-                        <>
-                          <CsLineIcons icon="lock" className="me-2" />
-                          Reset Password
-                        </>
-                      )}
-                    </Button>
-                    <Button variant="outline-secondary mx-3" onClick={() => setStep(2)}>
-                      <CsLineIcons icon="arrow-left" className="me-1" />
-                      Back to OTP
-                    </Button>
-                  </div>
-                </Form>
-              )}
-            </Card.Body>
-          </Card>
+        {/* FOOTER */}
+        <div className="mt-auto text-center pt-4">
+          <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
+            Powered by <strong>TheBoxSync</strong>
+          </p>
         </div>
       </div>
     </div>

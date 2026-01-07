@@ -226,7 +226,6 @@ const AddDishes = () => {
                             className="text-danger mt-1"
                           />
                         </BForm.Group>
-
                       </Col>
                       <Col md={8}>
                         <BForm.Label className="d-block">Meal Type</BForm.Label>
@@ -300,7 +299,7 @@ const AddDishes = () => {
                                     <ErrorMessage name={`dishes[${index}].dish_price`} component="div" className="text-danger" />
                                   </BForm.Group>
                                 </Col>
-                                <Col md={4} className="d-flex align-items-start">
+                                <Col md={4} className="d-flex align-items-start mt-4">
                                   <Button
                                     variant="outline-danger"
                                     onClick={() => remove(index)}
@@ -412,7 +411,7 @@ const AddDishes = () => {
                               disabled={isSubmitting}
                             >
                               <CsLineIcons icon="plus" className="me-1" />
-                              Add More
+                              Add
                             </Button>
                           </div>
                         </>
@@ -441,7 +440,7 @@ const AddDishes = () => {
                         ) : (
                           <>
                             <CsLineIcons icon="save" className="me-2" />
-                            Save Menu
+                            Save
                           </>
                         )}
                       </Button>

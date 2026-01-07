@@ -320,7 +320,7 @@ const OrderDetails = () => {
               ) : (
                 <>
                   <CsLineIcons icon="print" className="me-2" />
-                  Print Invoice
+                  Print
                 </>
               )}
             </Button>
@@ -331,8 +331,7 @@ const OrderDetails = () => {
       <Card className="mb-4">
         <Card.Header>
           <h4 className="mb-0">
-            <CsLineIcons icon="user" className="me-2" />
-            Customer & Order Information
+            Order Information
           </h4>
         </Card.Header>
         <Card.Body>
@@ -416,13 +415,13 @@ const OrderDetails = () => {
           <Table striped bordered hover responsive>
             <thead>
               <tr>
-                <th>#</th>
+                <th>No.</th>
                 <th>Dish</th>
                 <th>Quantity</th>
                 <th>Price</th>
                 <th>Amount</th>
                 <th>Status</th>
-                <th>Notes</th>
+                <th>Note</th>
               </tr>
             </thead>
             <tbody>

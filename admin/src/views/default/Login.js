@@ -72,26 +72,11 @@ const Login = () => {
   const rightSide = (
     <div className="sw-lg-70 min-h-100 bg-foreground d-flex justify-content-center align-items-center shadow-deep py-5 full-page-content-right-border">
       <div className="sw-lg-50 px-5">
-        <div className="sh-11">
-          <div className="logo-default" />
+        <div className="mb-3">
+          <h2 className="cta-1 mb-0 text-primary">Admin Login</h2>
         </div>
-        <div className="mb-5">
-          <h2 className="cta-1 mb-0 text-primary">Welcome, Admin
-          </h2>
-          <h2 className="cta-1 text-primary">let's get started!</h2>
-        </div>
-        <div className="mb-5">
-          <p className="h6">Please use your credentials to login.</p>
-          <p className="h6">
-            If you are not a member, please{' '}
-            <NavLink
-              to="/register"
-              style={{ color: "blue", textDecoration: "underline" }}
-              className={isLoading ? 'disabled-link' : ''}
-            >
-              register
-            </NavLink>.
-          </p>
+        <div className="mb-3">
+          <p className="h6">Secure access to your control panel.</p>
         </div>
         <div>
           <form id="loginForm" className="tooltip-end-bottom" onSubmit={handleSubmit}>
@@ -129,7 +114,7 @@ const Login = () => {
                     <div
                       className='t-2 e-3 text-end cursor-pointer position-absolute right-3'
                       onClick={() => setShowPassword(false)}
-                      style={{ top: '50%', transform: 'translateY(-50%)' }}
+                      style={{ top: '50%', transform: 'translateY(-50%)', marginTop: '14px' }}
                     >
                       <CsLineIcons icon="eye-off" />
                     </div>
@@ -137,7 +122,7 @@ const Login = () => {
                     <div
                       className='t-2 e-3 text-end cursor-pointer position-absolute right-3'
                       onClick={() => setShowPassword(true)}
-                      style={{ top: '50%', transform: 'translateY(-50%)' }}
+                      style={{ top: '50%', transform: 'translateY(-50%)', marginTop: '14px', }}
                     >
                       <CsLineIcons icon="eye" />
                     </div>
@@ -185,14 +170,19 @@ const Login = () => {
               </Button>
 
               <NavLink
-                className={`text-small t-3 e-3 ${isLoading ? 'disabled-link' : ''}`}
-                to="/forgot-password"
+                className={`t-3 e-3 ${isLoading ? 'disabled-link' : ''}`}
+                to="/forgot-password" style={{ fontSize: '12px' }}
                 onClick={(e) => isLoading && e.preventDefault()}
               >
-                Forgot Password?
+                Forgot Password ?
               </NavLink>
             </div>
           </form>
+        </div>
+         <div className="mt-auto text-center pt-4">
+          <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
+            Powered by <strong>TheBoxSync</strong>
+          </p>
         </div>
       </div>
     </div>
