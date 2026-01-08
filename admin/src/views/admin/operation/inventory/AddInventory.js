@@ -385,7 +385,7 @@ const AddInventory = () => {
               })}
 
               <Button variant="primary" onClick={addItem} disabled={isSubmitting}>
-                + Add
+                <CsLineIcons icon="plus" className="me-1" /> Add
               </Button>
 
               {/* 🔥 NEW: Financial Summary Section */}

@@ -29,7 +29,7 @@ const AddTable = () => {
   const [loadingAreas, setLoadingAreas] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkingTable, setCheckingTable] = useState({});
-  const diningAreasOptions = diningAreas.map(cat => ({
+  const diningAreasOptions = diningAreas.map((cat) => ({
     label: cat,
     value: cat,
   }));
@@ -41,10 +41,9 @@ const AddTable = () => {
     const fetchDiningAreas = async () => {
       try {
         setLoadingAreas(true);
-        const res = await axios.get(
-          `${process.env.REACT_APP_API}/table/get/dining-areas`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
+        const res = await axios.get(`${process.env.REACT_APP_API}/table/get/dining-areas`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
         if (res.data.success) {
           setDiningAreas(res.data.data);
         } else {
@@ -90,9 +89,7 @@ const AddTable = () => {
         if (!area || !tableNo) return false;
 
         const trimmedNo = tableNo.trim();
-        const duplicateIndex = values.tables.findIndex(
-          (t, i) => t.tableNo.trim() === trimmedNo && i !== index
-        );
+        const duplicateIndex = values.tables.findIndex((t, i) => t.tableNo.trim() === trimmedNo && i !== index);
 
         if (duplicateIndex !== -1) {
           setTableErrors((prev) => ({
@@ -108,16 +105,13 @@ const AddTable = () => {
           return updated;
         });
 
-        setCheckingTable(prev => ({ ...prev, [index]: true }));
+        setCheckingTable((prev) => ({ ...prev, [index]: true }));
 
         try {
-          const response = await axios.get(
-            `${process.env.REACT_APP_API}/table/check-table`,
-            {
-              params: { area, table_no: tableNo },
-              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-            }
-          );
+          const response = await axios.get(`${process.env.REACT_APP_API}/table/check-table`, {
+            params: { area, table_no: tableNo },
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          });
 
           if (response.data.exists) {
             setTableErrors((prev) => ({
@@ -139,15 +133,11 @@ const AddTable = () => {
           toast.error('Failed to check table existence');
           return true;
         } finally {
-          setCheckingTable(prev => ({ ...prev, [index]: false }));
+          setCheckingTable((prev) => ({ ...prev, [index]: false }));
         }
       };
 
-      const results = await Promise.all(
-        values.tables.map((table, index) =>
-          checkTableExists(values.area, table.tableNo, index)
-        )
-      );
+      const results = await Promise.all(values.tables.map((table, index) => checkTableExists(values.area, table.tableNo, index)));
 
       const hasErrors = results.includes(true);
       if (hasErrors) {
@@ -156,11 +146,9 @@ const AddTable = () => {
       }
 
       try {
-        const response = await axios.post(
-          `${process.env.REACT_APP_API}/table/add`,
-          values,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
+        const response = await axios.post(`${process.env.REACT_APP_API}/table/add`, values, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
         toast.success('Tables added successfully!');
         history.push('/operations/manage-table');
       } catch (err) {
@@ -217,11 +205,7 @@ const AddTable = () => {
                         isClearable
                         isDisabled={isSubmitting || loadingAreas || isFromManageTable}
                         options={diningAreasOptions}
-                        value={
-                          formik.values.area
-                            ? { label: formik.values.area, value: formik.values.area }
-                            : null
-                        }
+                        value={formik.values.area ? { label: formik.values.area, value: formik.values.area } : null}
                         onChange={(selected) => {
                           formik.setFieldValue('area', selected ? selected.value : '');
                         }}
@@ -230,16 +214,14 @@ const AddTable = () => {
                         classNamePrefix="react-select"
                       />
 
-                      {formik.touched.area && formik.errors.area && (
-                        <div className="text-danger mt-1">{formik.errors.area}</div>
-                      )}
+                      {formik.touched.area && formik.errors.area && <div className="text-danger mt-1">{formik.errors.area}</div>}
                     </Col>
                   </Row>
 
                   <hr />
 
                   {formik.values.tables.map((table, index) => (
-                    <Row className="align-items-start mb-3" key={index}>
+                    <Row className="align-items-center mb-3" key={index}>
                       <Col md="4">
                         <Form.Label>Table No.</Form.Label>
                         <Form.Control
@@ -249,19 +231,14 @@ const AddTable = () => {
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
                           disabled={isSubmitting}
-                          isInvalid={
-                            formik.touched.tables?.[index]?.tableNo &&
-                            (!!formik.errors.tables?.[index]?.tableNo || !!tableErrors[index])
-                          }
+                          isInvalid={formik.touched.tables?.[index]?.tableNo && (!!formik.errors.tables?.[index]?.tableNo || !!tableErrors[index])}
                         />
                         {checkingTable[index] && (
                           <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
                             <Spinner animation="border" size="sm" />
                           </div>
                         )}
-                        <Form.Control.Feedback type="invalid">
-                          {formik.errors.tables?.[index]?.tableNo || tableErrors[index]}
-                        </Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">{formik.errors.tables?.[index]?.tableNo || tableErrors[index]}</Form.Control.Feedback>
                       </Col>
                       <Col md="4">
                         <Form.Label>Max Person</Form.Label>
@@ -272,21 +249,12 @@ const AddTable = () => {
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
                           disabled={isSubmitting}
-                          isInvalid={
-                            formik.touched.tables?.[index]?.maxPerson &&
-                            !!formik.errors.tables?.[index]?.maxPerson
-                          }
+                          isInvalid={formik.touched.tables?.[index]?.maxPerson && !!formik.errors.tables?.[index]?.maxPerson}
                         />
-                        <Form.Control.Feedback type="invalid">
-                          {formik.errors.tables?.[index]?.maxPerson}
-                        </Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">{formik.errors.tables?.[index]?.maxPerson}</Form.Control.Feedback>
                       </Col>
-                      <Col md="4">
-                        <Button
-                          variant="outline-danger"
-                          onClick={() => removeTable(index)}
-                          disabled={isSubmitting || formik.values.tables.length === 1}
-                        >
+                      <Col md="4" className="mt-4">
+                        <Button variant="outline-danger" onClick={() => removeTable(index)} disabled={isSubmitting || formik.values.tables.length === 1}>
                           <CsLineIcons icon="bin" className="me-1" />
                           Delete
                         </Button>
@@ -302,38 +270,21 @@ const AddTable = () => {
                   )}
 
                   <div className="mt-4">
-                    <Button
-                      variant="secondary"
-                      onClick={addMoreTable}
-                      className="me-2"
-                      disabled={isSubmitting}
-                    >
+                    <Button variant="secondary" onClick={addMoreTable} className="me-2" disabled={isSubmitting}>
                       <CsLineIcons icon="plus" className="me-1" />
-                      Add More
+                      Add
                     </Button>
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      disabled={isSubmitting}
-                      style={{ minWidth: '100px' }}
-                    >
+                    <Button type="submit" variant="primary" disabled={isSubmitting} style={{ minWidth: '100px' }}>
                       {isSubmitting ? (
                         <>
-                          <Spinner
-                            as="span"
-                            animation="border"
-                            size="sm"
-                            role="status"
-                            aria-hidden="true"
-                            className="me-2"
-                          />
+                          <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
                           Submitting...
                         </>
                       ) : (
-                        <>
+                        <div className="d-flex align-items-center">
                           <CsLineIcons icon="save" className="me-1" />
                           Submit
-                        </>
+                        </div>
                       )}
                     </Button>
                   </div>

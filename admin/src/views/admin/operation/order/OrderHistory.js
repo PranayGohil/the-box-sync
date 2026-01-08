@@ -1031,9 +1031,7 @@ const OrderHistory = () => {
               <Card className="mb-3">
                 <Card.Body>
                   <div className="d-flex justify-content-between align-items-center mb-3">
-                    <Button variant="link" onClick={() => setShowFilters(!showFilters)} className="p-0 text-decoration-none">
-                      <strong>Filters</strong>
-                    </Button>
+                    <h5>Filters</h5>
                     {getActiveFilterCount() > 0 && (
                       <Button variant="outline-danger" size="sm" onClick={handleClearFilters}>
                         <CsLineIcons icon="close" className="me-1" />

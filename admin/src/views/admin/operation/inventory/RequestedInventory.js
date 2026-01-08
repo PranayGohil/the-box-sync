@@ -74,15 +74,12 @@ const RequestedInventory = () => {
         params.request_to = filters.requestToDate;
       }
 
-      const res = await axios.get(
-        `${process.env.REACT_APP_API}/inventory/get-by-status/Requested`,
-        {
-          params,
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
+      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Requested`, {
+        params,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
 
       if (res.data.success) {
         const requestedInventory = res.data.data.map((item) => ({
@@ -137,7 +134,7 @@ const RequestedInventory = () => {
   }, []);
 
   const handleFilterChange = (filterName, value) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       [filterName]: value,
     }));
@@ -277,40 +274,59 @@ const RequestedInventory = () => {
             </Row>
           </div>
 
-          {/* Filter Section */}
-          <Card className="mb-3">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center">
+          {/* Search and controls - Always visible */}
+          <Row className="mb-3">
+            <Col sm="12" md="5" lg="3" xxl="2">
+              <div className="d-flex gap-2">
+                <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
+                  <ControlsSearch onSearch={handleSearch} />
+                </div>
                 <Button
-                  variant="link"
+                  variant={`${showFilters ? 'secondary' : 'outline-secondary'}`}
+                  size="sm"
+                  className="btn-icon btn-icon-only position-relative"
                   onClick={() => setShowFilters(!showFilters)}
-                  className="p-0 text-decoration-none"
+                  title="Filters"
                 >
-                  <CsLineIcons icon="filter" className="me-2" />
-                  <strong>Filters</strong>
+                  <CsLineIcons icon={`${showFilters ? 'close' : 'filter'}`} />
                   {getActiveFilterCount() > 0 && (
-                    <Badge bg="primary" className="ms-2">
+                    <Badge bg="primary" className="position-absolute top-0 start-100 translate-middle">
                       {getActiveFilterCount()}
                     </Badge>
                   )}
-                  <CsLineIcons
-                    icon={showFilters ? 'chevron-top' : 'chevron-bottom'}
-                    className="ms-2"
-                  />
                 </Button>
-                {getActiveFilterCount() > 0 && (
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    onClick={handleClearFilters}
-                  >
-                    <CsLineIcons icon="close" className="me-1" />
-                    Clear All
-                  </Button>
+              </div>
+            </Col>
+            <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
+              <div className="d-inline-block me-2 text-muted">
+                {loading ? (
+                  'Loading...'
+                ) : (
+                  <>
+                    Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0} to {Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords} entries
+                  </>
                 )}
               </div>
+              <div className="d-inline-block">
+                <ControlsPageSize pageSize={pageSize} onPageSizeChange={handlePageSizeChange} />
+              </div>
+            </Col>
+          </Row>
 
-              <Collapse in={showFilters}>
+          {/* Filter Section */}
+          <Collapse in={showFilters}>
+            <Card className="mb-3">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center">
+                  <h5>Filters</h5>
+                  {getActiveFilterCount() > 0 && (
+                    <Button variant="outline-danger" size="sm" onClick={handleClearFilters}>
+                      <CsLineIcons icon="close" className="me-1" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
+
                 <div className="mt-2">
                   <Row>
                     {/* Request Date Range */}
@@ -339,34 +355,9 @@ const RequestedInventory = () => {
                     </Col>
                   </Row>
                 </div>
-              </Collapse>
-            </Card.Body>
-          </Card>
-
-          {/* Search and controls - Always visible */}
-          <Row className="mb-3">
-            <Col sm="12" md="5" lg="3" xxl="2">
-              <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
-                <ControlsSearch onSearch={handleSearch} />
-              </div>
-            </Col>
-            <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
-              <div className="d-inline-block me-2 text-muted">
-                {loading ? (
-                  'Loading...'
-                ) : (
-                  <>
-                    Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0} to{' '}
-                    {Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords} entries
-                  </>
-                )}
-              </div>
-              <div className="d-inline-block">
-                <ControlsPageSize pageSize={pageSize} onPageSizeChange={handlePageSizeChange} />
-              </div>
-            </Col>
-          </Row>
-
+              </Card.Body>
+            </Card>
+          </Collapse>
           {loading ? (
             <Row className="justify-content-center my-5">
               <Col xs={12} className="text-center">
@@ -377,9 +368,7 @@ const RequestedInventory = () => {
           ) : data.length === 0 ? (
             <Alert variant="info" className="mb-4">
               <CsLineIcons icon="inbox" className="me-2" />
-              {searchTerm || getActiveFilterCount() > 0
-                ? 'No results found. Try adjusting your search or filters.'
-                : 'No requested inventory found.'}
+              {searchTerm || getActiveFilterCount() > 0 ? 'No results found. Try adjusting your search or filters.' : 'No requested inventory found.'}
             </Alert>
           ) : (
             <>
@@ -453,14 +442,7 @@ const RequestedInventory = () => {
           <Button variant="danger" onClick={() => rejectInventory(selectedItem?._id)} disabled={rejecting}>
             {rejecting ? (
               <>
-                <Spinner
-                  as="span"
-                  animation="border"
-                  size="sm"
-                  role="status"
-                  aria-hidden="true"
-                  className="me-2"
-                />
+                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
                 Rejecting...
               </>
             ) : (

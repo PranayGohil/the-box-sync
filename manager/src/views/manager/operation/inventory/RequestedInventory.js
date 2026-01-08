@@ -55,7 +55,7 @@ const RequestedInventory = () => {
 
   const fetchRequestedInventory = useCallback(async () => {
     try {
-      setLoading(prev => ({ ...prev, data: true }));
+      setLoading((prev) => ({ ...prev, data: true }));
       setError('');
 
       const params = {
@@ -75,15 +75,12 @@ const RequestedInventory = () => {
         params.request_to = filters.requestToDate;
       }
 
-      const res = await axios.get(
-        `${process.env.REACT_APP_API}/inventory/get-by-status/Requested`,
-        {
-          params,
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
+      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Requested`, {
+        params,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
 
       if (res.data.success) {
         const requestedInventory = res.data.data.map((item) => ({
@@ -112,7 +109,7 @@ const RequestedInventory = () => {
       setError('Failed to load requested inventory. Please try again.');
       toast.error('Failed to fetch requested inventory.');
     } finally {
-      setLoading(prev => ({ ...prev, data: false }));
+      setLoading((prev) => ({ ...prev, data: false }));
       fetchRef.current = false;
     }
   }, [pageIndex, pageSize, searchTerm, filters]);
@@ -139,7 +136,7 @@ const RequestedInventory = () => {
   }, []);
 
   const handleFilterChange = (filterName, value) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       [filterName]: value,
     }));
@@ -155,20 +152,14 @@ const RequestedInventory = () => {
     setPageIndex(0);
   };
 
-  const handleRefresh = () => {
-    fetchRef.current = true;
-    fetchRequestedInventory();
-  };
-
   const deleteInventory = async () => {
     if (!inventoryToDelete) return;
 
-    setLoading(prev => ({ ...prev, deleting: true }));
+    setLoading((prev) => ({ ...prev, deleting: true }));
     try {
-      await axios.delete(
-        `${process.env.REACT_APP_API}/inventory/delete/${inventoryToDelete._id}`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
+      await axios.delete(`${process.env.REACT_APP_API}/inventory/delete/${inventoryToDelete._id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
 
       toast.success('Inventory request deleted successfully!');
       setDeleteInventoryModal(false);
@@ -179,7 +170,7 @@ const RequestedInventory = () => {
       console.error('Error deleting inventory:', err);
       toast.error(err.response?.data?.message || 'Failed to delete inventory.');
     } finally {
-      setLoading(prev => ({ ...prev, deleting: false }));
+      setLoading((prev) => ({ ...prev, deleting: false }));
     }
   };
 
@@ -189,7 +180,11 @@ const RequestedInventory = () => {
         Header: 'Requested Date',
         accessor: 'formatted_date',
         headerClassName: 'text-muted text-small text-uppercase w-20',
-        Cell: ({ cell }) => <div className="text-truncate" title={cell.value}>{cell.value}</div>,
+        Cell: ({ cell }) => (
+          <div className="text-truncate" title={cell.value}>
+            {cell.value}
+          </div>
+        ),
       },
       {
         Header: 'Items',
@@ -205,9 +200,7 @@ const RequestedInventory = () => {
                 {item.item_name}
               </div>
             ))}
-            {cell.value.length > 3 && (
-              <small className="text-muted">+{cell.value.length - 3} more items</small>
-            )}
+            {cell.value.length > 3 && <small className="text-muted">+{cell.value.length - 3} more items</small>}
           </div>
         ),
       },
@@ -222,17 +215,21 @@ const RequestedInventory = () => {
         headerClassName: 'text-muted text-small text-uppercase w-25 text-center',
         Cell: ({ row }) => (
           <div className="d-flex align-items-center justify-content-center gap-2">
-            <Link
-              to={`/operations/edit-inventory/${row.original._id}`}
-              className="btn btn-outline-primary btn-sm"
+            <Button
+              variant="outline-primary"
+              size="sm"
               title="Edit"
+              as={Link}
+              className="btn-icon btn-icon-only"
+              to={`/operations/edit-inventory/${row.original._id}`}
             >
               <CsLineIcons icon="edit-square" />
-            </Link>
+            </Button>
             <Button
               variant="outline-danger"
               size="sm"
               title="Delete"
+              className="btn-icon btn-icon-only"
               onClick={() => {
                 setInventoryToDelete(row.original);
                 setDeleteInventoryModal(true);
@@ -308,15 +305,6 @@ const RequestedInventory = () => {
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
               <Col xs="12" md="5" className="text-md-end mt-2 mt-md-0">
-                <Button
-                  variant="outline-primary"
-                  onClick={handleRefresh}
-                  disabled={loading.data}
-                  className="me-2"
-                >
-                  <CsLineIcons icon="refresh" className="me-2" />
-                  Refresh
-                </Button>
                 <Link to="/operations/add-inventory" className="btn btn-primary">
                   <CsLineIcons icon="plus" className="me-2" />
                   Add Request
@@ -325,40 +313,59 @@ const RequestedInventory = () => {
             </Row>
           </div>
 
-          {/* Filter Section */}
-          <Card className="mb-3">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center">
+          {/* Search and controls - Always visible */}
+          <Row className="mb-3">
+            <Col sm="12" md="5" lg="3" xxl="2">
+              <div className="d-flex gap-2">
+                <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
+                  <ControlsSearch onSearch={handleSearch} />
+                </div>
                 <Button
-                  variant="link"
+                  variant={`${showFilters ? 'secondary' : 'outline-secondary'}`}
+                  size="sm"
+                  className="btn-icon btn-icon-only position-relative"
                   onClick={() => setShowFilters(!showFilters)}
-                  className="p-0 text-decoration-none"
+                  title="Filters"
                 >
-                  <CsLineIcons icon="filter" className="me-2" />
-                  <strong>Filters</strong>
+                  <CsLineIcons icon={`${showFilters ? 'close' : 'filter'}`} />
                   {getActiveFilterCount() > 0 && (
-                    <Badge bg="primary" className="ms-2">
+                    <Badge bg="primary" className="position-absolute top-0 start-100 translate-middle">
                       {getActiveFilterCount()}
                     </Badge>
                   )}
-                  <CsLineIcons
-                    icon={showFilters ? 'chevron-top' : 'chevron-bottom'}
-                    className="ms-2"
-                  />
                 </Button>
-                {getActiveFilterCount() > 0 && (
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    onClick={handleClearFilters}
-                  >
-                    <CsLineIcons icon="close" className="me-1" />
-                    Clear All
-                  </Button>
+              </div>
+            </Col>
+            <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
+              <div className="d-inline-block me-3">
+                {loading.data ? (
+                  <span className="text-muted">Loading...</span>
+                ) : (
+                  <>
+                    <span className="text-muted me-2">
+                      Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0} to {Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords} entries
+                    </span>
+                    <ControlsPageSize pageSize={pageSize} onPageSizeChange={handlePageSizeChange} />
+                  </>
                 )}
               </div>
+            </Col>
+          </Row>
 
-              <Collapse in={showFilters}>
+          {/* Filter Section */}
+          <Collapse in={showFilters}>
+            <Card className="mb-3">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center">
+                  <h5>Filters</h5>
+                  {getActiveFilterCount() > 0 && (
+                    <Button variant="outline-danger" size="sm" onClick={handleClearFilters}>
+                      <CsLineIcons icon="close" className="me-1" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
+
                 <div className="mt-2">
                   <Row>
                     {/* Request Date Range */}
@@ -387,37 +394,9 @@ const RequestedInventory = () => {
                     </Col>
                   </Row>
                 </div>
-              </Collapse>
-            </Card.Body>
-          </Card>
-
-          {/* Search and controls - Always visible */}
-          <Row className="mb-3">
-            <Col sm="12" md="5" lg="3" xxl="2">
-              <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
-                <ControlsSearch onSearch={handleSearch} />
-              </div>
-            </Col>
-            <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
-              <div className="d-inline-block me-3">
-                {loading.data ? (
-                  <span className="text-muted">Loading...</span>
-                ) : (
-                  <>
-                    <span className="text-muted me-2">
-                      Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0} to{' '}
-                      {Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords} entries
-                    </span>
-                    <ControlsPageSize pageSize={pageSize} onPageSizeChange={handlePageSizeChange} />
-                  </>
-                )}
-              </div>
-              <Badge bg="light" text="dark" className="p-2">
-                <CsLineIcons icon="list" className="me-1" />
-                {totalRecords} request{totalRecords !== 1 ? 's' : ''}
-              </Badge>
-            </Col>
-          </Row>
+              </Card.Body>
+            </Card>
+          </Collapse>
 
           {error ? (
             <Alert variant="danger" className="my-4">
@@ -446,11 +425,7 @@ const RequestedInventory = () => {
             <Alert variant="info" className="my-4">
               <div className="text-center py-4">
                 <CsLineIcons icon="inbox" size="48" className="text-muted mb-3" />
-                <h5>
-                  {searchTerm || getActiveFilterCount() > 0
-                    ? 'No results found. Try adjusting your search or filters.'
-                    : 'No Inventory Requests Found'}
-                </h5>
+                <h5>{searchTerm || getActiveFilterCount() > 0 ? 'No results found. Try adjusting your search or filters.' : 'No Inventory Requests Found'}</h5>
                 {!searchTerm && getActiveFilterCount() === 0 && (
                   <>
                     <p className="text-muted mb-4">Get started by creating your first inventory request</p>
@@ -478,12 +453,7 @@ const RequestedInventory = () => {
       </Row>
 
       {/* Delete Inventory Modal */}
-      <Modal
-        className="modal-close-out"
-        show={deleteInventoryModal}
-        onHide={() => setDeleteInventoryModal(false)}
-        centered
-      >
+      <Modal className="modal-close-out" show={deleteInventoryModal} onHide={() => setDeleteInventoryModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>
             <CsLineIcons icon="warning" className="text-danger me-2" />
@@ -492,8 +462,7 @@ const RequestedInventory = () => {
         </Modal.Header>
         <Modal.Body>
           <p>
-            Are you sure you want to delete the request for{' '}
-            <strong>{inventoryToDelete?.items?.length || 0} items</strong>?
+            Are you sure you want to delete the request for <strong>{inventoryToDelete?.items?.length || 0} items</strong>?
           </p>
           <Alert variant="warning" className="mt-3">
             <CsLineIcons icon="alert" className="me-2" />
@@ -501,29 +470,13 @@ const RequestedInventory = () => {
           </Alert>
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={() => setDeleteInventoryModal(false)}
-            disabled={loading.deleting}
-          >
+          <Button variant="secondary" onClick={() => setDeleteInventoryModal(false)} disabled={loading.deleting}>
             Cancel
           </Button>
-          <Button
-            variant="danger"
-            onClick={deleteInventory}
-            disabled={loading.deleting}
-            style={{ minWidth: '100px' }}
-          >
+          <Button variant="danger" onClick={deleteInventory} disabled={loading.deleting} style={{ minWidth: '100px' }}>
             {loading.deleting ? (
               <>
-                <Spinner
-                  as="span"
-                  animation="border"
-                  size="sm"
-                  role="status"
-                  aria-hidden="true"
-                  className="me-2"
-                />
+                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
                 Deleting...
               </>
             ) : (
@@ -545,12 +498,7 @@ const RequestedInventory = () => {
         >
           <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
             <Card.Body className="text-center p-4">
-              <Spinner
-                animation="border"
-                variant="danger"
-                className="mb-3"
-                style={{ width: '3rem', height: '3rem' }}
-              />
+              <Spinner animation="border" variant="danger" className="mb-3" style={{ width: '3rem', height: '3rem' }} />
               <h5 className="mb-0">Deleting Inventory Request...</h5>
               <small className="text-muted">Please wait a moment</small>
             </Card.Body>

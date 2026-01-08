@@ -34,7 +34,6 @@ const ManageMenu = () => {
   const [loading, setLoading] = useState(true);
   const [categoryOptions, setCategoryOptions] = useState([]);
 
-
   const starFillIcon = csInterfaceIcons.find((icon) => icon.c === 'cs-star-full');
 
   const fetchMenuData = async () => {
@@ -81,9 +80,7 @@ const ManageMenu = () => {
       filtered = filtered
         .map((item) => ({
           ...item,
-          dishes: item.dishes.filter((dish) =>
-            dish.dish_name.toLowerCase().includes(searchText.toLowerCase())
-          ),
+          dishes: item.dishes.filter((dish) => dish.dish_name.toLowerCase().includes(searchText.toLowerCase())),
         }))
         .filter((item) => item.dishes.length > 0);
     }
@@ -105,21 +102,16 @@ const ManageMenu = () => {
 
       if (value === '') {
         // 🔹 ALL MEAL TYPES → SHOW ALL CATEGORIES
-        const allCategories = Array.from(
-          new Set(menuData.map((item) => item.category))
-        );
+        const allCategories = Array.from(new Set(menuData.map((item) => item.category)));
         setCategoryOptions(allCategories);
       } else {
         // 🔹 FETCH CATEGORY BY MEAL TYPE
         try {
-          const res = await axios.get(
-            `${process.env.REACT_APP_API}/menu/get-categories?meal_type=${value}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
-              },
-            }
-          );
+          const res = await axios.get(`${process.env.REACT_APP_API}/menu/get-categories?meal_type=${value}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          });
           setCategoryOptions(res.data.data || []);
         } catch (error) {
           console.error('Error fetching categories:', error);
@@ -165,12 +157,9 @@ const ManageMenu = () => {
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
               <Col xs="12" md="5" className="text-end">
-                <Button
-                  variant="primary"
-                  href="/operations/add-dish"
-                >
+                <Button variant="primary" href="/operations/add-dish">
                   <CsLineIcons icon="plus" className="me-2" />
-                  Add New Dish
+                  Add New
                 </Button>
               </Col>
             </Row>
@@ -179,16 +168,10 @@ const ManageMenu = () => {
           <Form className="mb-4">
             <Row>
               <Col md={4}>
-                <Form.Control
-                  type="text"
-                  placeholder="Search dishes..."
-                  onChange={(e) => handleSearch(e.target.value)}
-                />
+                <Form.Control type="text" placeholder="Search dishes..." onChange={(e) => handleSearch(e.target.value)} />
               </Col>
               <Col md={3}>
-                <Form.Select
-                  onChange={(e) => handleFilter('meal_type', e.target.value)}
-                >
+                <Form.Select onChange={(e) => handleFilter('meal_type', e.target.value)}>
                   <option value="">All Meal Types</option>
                   <option value="veg">Veg</option>
                   <option value="non-veg">Non-Veg</option>
@@ -196,10 +179,7 @@ const ManageMenu = () => {
                 </Form.Select>
               </Col>
               <Col md={3}>
-                <Form.Select
-                  value={filters.category}
-                  onChange={(e) => handleFilter('category', e.target.value)}
-                >
+                <Form.Select value={filters.category} onChange={(e) => handleFilter('category', e.target.value)}>
                   <option value="">All Categories</option>
                   {categoryOptions.map((cat) => (
                     <option key={cat} value={cat}>
@@ -245,26 +225,32 @@ const ManageMenu = () => {
                     headerClassName: 'text-muted text-small text-uppercase w-20',
                     Cell: ({ row }) => (
                       <div className="d-flex gap-2">
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-icon btn-outline-primary"
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          className="btn-icon btn-icon-only"
                           onClick={() => {
                             setSelectedDish(row.original);
                             setEditMenuModalShow(true);
                           }}
+                          title="Edit"
+                          disabled={loading}
                         >
                           <CsLineIcons icon="edit" />
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-icon btn-outline-danger"
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          className="btn-icon btn-icon-only"
                           onClick={() => {
                             setDishToDelete(row.original);
                             setDeleteDishModalShow(true);
                           }}
+                          title="Delete"
+                          disabled={loading}
                         >
                           <CsLineIcons icon="bin" />
-                        </button>
+                        </Button>
                       </div>
                     ),
                   },
@@ -290,12 +276,7 @@ const ManageMenu = () => {
           )}
 
           {selectedDish && (
-            <EditDishModal
-              show={editMenuModalShow}
-              handleClose={() => setEditMenuModalShow(false)}
-              data={selectedDish}
-              fetchMenuData={fetchMenuData}
-            />
+            <EditDishModal show={editMenuModalShow} handleClose={() => setEditMenuModalShow(false)} data={selectedDish} fetchMenuData={fetchMenuData} />
           )}
 
           {selectedCategory && (
@@ -308,12 +289,7 @@ const ManageMenu = () => {
           )}
 
           {dishToDelete && (
-            <DeleteDishModal
-              show={deleteDishModalShow}
-              handleClose={() => setDeleteDishModalShow(false)}
-              data={dishToDelete}
-              fetchMenuData={fetchMenuData}
-            />
+            <DeleteDishModal show={deleteDishModalShow} handleClose={() => setDeleteDishModalShow(false)} data={dishToDelete} fetchMenuData={fetchMenuData} />
           )}
         </Col>
       </Row>

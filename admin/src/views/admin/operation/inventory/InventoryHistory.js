@@ -359,7 +359,7 @@ const InventoryHistory = () => {
               size="sm"
               title="Delete"
               className="btn-icon btn-icon-only"
-               onClick={() => handleShow(row.original)}
+              onClick={() => handleShow(row.original)}
               disabled={isDeleting}
             >
               <CsLineIcons icon="bin" />
@@ -423,10 +423,23 @@ const InventoryHistory = () => {
         Header: 'Actions',
         Cell: ({ row }) => (
           <div className="d-flex gap-2">
-            <Button variant="outline-primary" size="sm" title="View" className="btn-icon btn-icon-only" onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}>
+            <Button
+              variant="outline-primary"
+              size="sm"
+              title="View"
+              className="btn-icon btn-icon-only"
+              onClick={() => history.push(`/operations/inventory-details/${row.original._id}`)}
+            >
               <CsLineIcons icon="eye" />
             </Button>
-            <Button variant="outline-danger" size="sm" title="Delete" className="btn-icon btn-icon-only" onClick={() => handleShow(row.original)} disabled={isDeleting}>
+            <Button
+              variant="outline-danger"
+              size="sm"
+              title="Delete"
+              className="btn-icon btn-icon-only"
+              onClick={() => handleShow(row.original)}
+              disabled={isDeleting}
+            >
               <CsLineIcons icon="bin" />
             </Button>
           </div>
@@ -536,29 +549,60 @@ const InventoryHistory = () => {
             <span className="text-muted ms-2">({completedTotalRecords})</span>
           </h4>
 
-          {/* Completed Filters */}
-          <Card className="mb-3">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center">
-                <Button variant="link" onClick={() => setShowCompletedFilters(!showCompletedFilters)} className="p-0 text-decoration-none">
-                  <CsLineIcons icon="filter" className="me-2" />
-                  <strong>Filters</strong>
+          {/* Search and controls - Always visible */}
+          <Row className="mb-3">
+            <Col sm="12" md="5" lg="3" xxl="2">
+              <div className="d-flex gap-2">
+                <div className="search-input-container w-100 shadow bg-foreground">
+                  <ControlsSearch onSearch={handleCompletedSearch} />
+                </div>
+                <Button
+                  variant={`${showCompletedFilters ? 'secondary' : 'outline-secondary'}`}
+                  size="sm"
+                  className="btn-icon btn-icon-only position-relative"
+                  onClick={() => setShowCompletedFilters(!showCompletedFilters)}
+                  title="Filters"
+                >
+                  <CsLineIcons icon={`${showCompletedFilters ? 'close' : 'filter'}`} />
                   {getCompletedActiveFilterCount() > 0 && (
-                    <Badge bg="primary" className="ms-2">
+                    <Badge bg="primary" className="position-absolute top-0 start-100 translate-middle">
                       {getCompletedActiveFilterCount()}
                     </Badge>
                   )}
-                  <CsLineIcons icon={showCompletedFilters ? 'chevron-top' : 'chevron-bottom'} className="ms-2" />
                 </Button>
-                {getCompletedActiveFilterCount() > 0 && (
-                  <Button variant="outline-danger" size="sm" onClick={handleClearCompletedFilters}>
-                    <CsLineIcons icon="close" className="me-1" />
-                    Clear All
-                  </Button>
+              </div>
+            </Col>
+            <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
+              <div className="d-inline-block me-2 text-muted">
+                {loading.completed ? (
+                  'Loading...'
+                ) : (
+                  <>
+                    Showing {completedData.length > 0 ? completedPageIndex * completedPageSize + 1 : 0} to{' '}
+                    {Math.min((completedPageIndex + 1) * completedPageSize, completedTotalRecords)} of {completedTotalRecords} entries
+                  </>
                 )}
               </div>
+              <div className="d-inline-block">
+                <ControlsPageSize pageSize={completedPageSize} onPageSizeChange={handleCompletedPageSizeChange} />
+              </div>
+            </Col>
+          </Row>
 
-              <Collapse in={showCompletedFilters}>
+          {/* Completed Filters */}
+          <Collapse in={showCompletedFilters}>
+            <Card className="mb-3">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center">
+                  <h5>Filters</h5>
+                  {getCompletedActiveFilterCount() > 0 && (
+                    <Button variant="outline-danger" size="sm" onClick={handleClearCompletedFilters}>
+                      <CsLineIcons icon="close" className="me-1" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
+
                 <div className="mt-2">
                   <Row>
                     {/* Request Date Range */}
@@ -612,33 +656,9 @@ const InventoryHistory = () => {
                     </Col>
                   </Row>
                 </div>
-              </Collapse>
-            </Card.Body>
-          </Card>
-
-          {/* Search and controls - Always visible */}
-          <Row className="mb-3">
-            <Col sm="12" md="5" lg="3" xxl="2">
-              <div className="search-input-container w-100 shadow bg-foreground">
-                <ControlsSearch onSearch={handleCompletedSearch} />
-              </div>
-            </Col>
-            <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
-              <div className="d-inline-block me-2 text-muted">
-                {loading.completed ? (
-                  'Loading...'
-                ) : (
-                  <>
-                    Showing {completedData.length > 0 ? completedPageIndex * completedPageSize + 1 : 0} to{' '}
-                    {Math.min((completedPageIndex + 1) * completedPageSize, completedTotalRecords)} of {completedTotalRecords} entries
-                  </>
-                )}
-              </div>
-              <div className="d-inline-block">
-                <ControlsPageSize pageSize={completedPageSize} onPageSizeChange={handleCompletedPageSizeChange} />
-              </div>
-            </Col>
-          </Row>
+              </Card.Body>
+            </Card>
+          </Collapse>
 
           {loading.completed ? (
             <Row className="justify-content-center my-5">
@@ -667,29 +687,60 @@ const InventoryHistory = () => {
             <span className="text-muted ms-2">({rejectedTotalRecords})</span>
           </h4>
 
-          {/* Rejected Filters */}
-          <Card className="mb-3">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center">
-                <Button variant="link" onClick={() => setShowRejectedFilters(!showRejectedFilters)} className="p-0 text-decoration-none">
-                  <CsLineIcons icon="filter" className="me-2" />
-                  <strong>Filters</strong>
+          {/* Search and controls - Always visible */}
+          <Row className="mb-3">
+            <Col sm="12" md="5" lg="3" xxl="2">
+              <div className="d-flex gap-2">
+                <div className="search-input-container w-100 shadow bg-foreground">
+                  <ControlsSearch onSearch={handleRejectedSearch} />
+                </div>
+                <Button
+                  variant={`${showRejectedFilters ? 'secondary' : 'outline-secondary'}`}
+                  size="sm"
+                  className="btn-icon btn-icon-only position-relative"
+                  onClick={() => setShowRejectedFilters(!showRejectedFilters)}
+                  title="Filters"
+                >
+                  <CsLineIcons icon={`${showRejectedFilters ? 'close' : 'filter'}`} />
                   {getRejectedActiveFilterCount() > 0 && (
-                    <Badge bg="primary" className="ms-2">
+                    <Badge bg="primary" className="position-absolute top-0 start-100 translate-middle">
                       {getRejectedActiveFilterCount()}
                     </Badge>
                   )}
-                  <CsLineIcons icon={showRejectedFilters ? 'chevron-top' : 'chevron-bottom'} className="ms-2" />
                 </Button>
-                {getRejectedActiveFilterCount() > 0 && (
-                  <Button variant="outline-danger" size="sm" onClick={handleClearRejectedFilters}>
-                    <CsLineIcons icon="close" className="me-1" />
-                    Clear All
-                  </Button>
+              </div>
+            </Col>
+            <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
+              <div className="d-inline-block me-2 text-muted">
+                {loading.rejected ? (
+                  'Loading...'
+                ) : (
+                  <>
+                    Showing {rejectedData.length > 0 ? rejectedPageIndex * rejectedPageSize + 1 : 0} to{' '}
+                    {Math.min((rejectedPageIndex + 1) * rejectedPageSize, rejectedTotalRecords)} of {rejectedTotalRecords} entries
+                  </>
                 )}
               </div>
+              <div className="d-inline-block">
+                <ControlsPageSize pageSize={rejectedPageSize} onPageSizeChange={handleRejectedPageSizeChange} />
+              </div>
+            </Col>
+          </Row>
 
-              <Collapse in={showRejectedFilters}>
+          {/* Rejected Filters */}
+          <Collapse in={showRejectedFilters}>
+            <Card className="mb-3">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center">
+                  <h5>Filters</h5>
+                  {getRejectedActiveFilterCount() > 0 && (
+                    <Button variant="outline-danger" size="sm" onClick={handleClearRejectedFilters}>
+                      <CsLineIcons icon="close" className="me-1" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
+
                 <div className="mt-2">
                   <Row>
                     {/* Request Date Range */}
@@ -743,33 +794,9 @@ const InventoryHistory = () => {
                     </Col>
                   </Row>
                 </div>
-              </Collapse>
-            </Card.Body>
-          </Card>
-
-          {/* Search and controls - Always visible */}
-          <Row className="mb-3">
-            <Col sm="12" md="5" lg="3" xxl="2">
-              <div className="search-input-container w-100 shadow bg-foreground">
-                <ControlsSearch onSearch={handleRejectedSearch} />
-              </div>
-            </Col>
-            <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
-              <div className="d-inline-block me-2 text-muted">
-                {loading.rejected ? (
-                  'Loading...'
-                ) : (
-                  <>
-                    Showing {rejectedData.length > 0 ? rejectedPageIndex * rejectedPageSize + 1 : 0} to{' '}
-                    {Math.min((rejectedPageIndex + 1) * rejectedPageSize, rejectedTotalRecords)} of {rejectedTotalRecords} entries
-                  </>
-                )}
-              </div>
-              <div className="d-inline-block">
-                <ControlsPageSize pageSize={rejectedPageSize} onPageSizeChange={handleRejectedPageSizeChange} />
-              </div>
-            </Col>
-          </Row>
+              </Card.Body>
+            </Card>
+          </Collapse>
 
           {loading.rejected ? (
             <Row className="justify-content-center my-5">
