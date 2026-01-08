@@ -945,7 +945,7 @@ const EditStaff = () => {
                                 ) : (
                                     <>
                                         <CsLineIcons icon="check" className="me-2" />
-                                        Submit Changes
+                                        Submit
                                     </>
                                 )}
                             </Button>

@@ -125,7 +125,7 @@ function RaiseInquiryModal({ show, handleClose, subscriptionName, fetchData }) {
                                 />
                                 Sending...
                             </>
-                        ) : 'Send Inquiry'}
+                        ) : 'Send'}
                     </Button>
                 </Modal.Footer>
             </Modal>

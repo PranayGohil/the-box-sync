@@ -222,8 +222,7 @@ const Address = () => {
             </div>
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading Address Information...</h5>
-              <p className="text-muted">Please wait while we fetch your address details</p>
+              <h5>Loading...</h5>
             </div>
           </Col>
         </Row>
@@ -433,8 +432,7 @@ const Address = () => {
                               </>
                             ) : (
                               <>
-                                <CsLineIcons icon="save" className="me-2" />
-                                Save
+                                Submit
                               </>
                             )}
                           </Button>

@@ -432,8 +432,7 @@ const Subscription = () => {
             </div>
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading Subscription Plans...</h5>
-              <p className="text-muted">Please wait while we fetch your subscription information</p>
+              <h5>Loading...</h5>
             </div>
           </Col>
         </Row>
@@ -572,7 +571,7 @@ const Subscription = () => {
                         />
                         Buying...
                       </>
-                    ) : 'Buy Plan'}
+                    ) : 'Buy'}
                   </Button>
                 </div>
               </div>

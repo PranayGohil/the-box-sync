@@ -845,7 +845,7 @@ const MenuPerformanceReport = () => {
               </Form.Select>
             </Col>
             <Col md={2}>
-              <Button variant="primary" className="w-100" onClick={fetchMenuReport} disabled={loading}>
+              <Button variant="primary" className="w-100" style={{maxWidth: '150px'}} onClick={fetchMenuReport} disabled={loading}>
                 <CsLineIcons icon="sync" className="me-2" />
                 {loading ? 'Loading...' : 'Generate'}
               </Button>
@@ -868,11 +868,11 @@ const MenuPerformanceReport = () => {
               <div className="d-flex gap-2 align-items-center">
                 <Button variant="success" onClick={() => handleExportClick('Excel')} disabled={exporting}>
                   <CsLineIcons icon="file-text" className="me-2" />
-                  Export to Excel
+                  Excel
                 </Button>
                 <Button variant="danger" onClick={() => handleExportClick('PDF')} disabled={exporting}>
-                  <CsLineIcons icon="file-pdf" className="me-2" />
-                  Export to PDF
+                  <CsLineIcons icon="file-text" className="me-2" />
+                  PDF
                 </Button>
 
                 {exporting && (
@@ -893,36 +893,36 @@ const MenuPerformanceReport = () => {
             <Col lg={3} md={6} className="mb-3">
               <Card>
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">Total Dishes</div>
+                  <div className="text-muted mb-1">Total Dishes</div>
                   <div className="text-primary h3 mb-0">{reportData.summary.totalDishes}</div>
-                  <div className="text-small text-muted mt-1">Active in menu</div>
+                  <div className="text-muted mt-1" style={{fontSize: '12px'}}>Active in menu</div>
                 </Card.Body>
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
               <Card>
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">Total Revenue</div>
+                  <div className="text-muted mb-1">Total Revenue</div>
                   <div className="text-success h3 mb-0">{formatCurrency(reportData.summary.totalRevenue)}</div>
-                  <div className="text-small text-muted mt-1">From all dishes</div>
+                  <div className="text-muted mt-1" style={{fontSize: '12px'}}>From all dishes</div>
                 </Card.Body>
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
               <Card>
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">Categories</div>
+                  <div className="text-muted mb-1">Categories</div>
                   <div className="text-info h3 mb-0">{reportData.summary.totalCategories}</div>
-                  <div className="text-small text-muted mt-1">Menu categories</div>
+                  <div className="text-muted mt-1" style={{fontSize: '12px'}}>Menu categories</div>
                 </Card.Body>
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
               <Card>
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">Avg Revenue/Dish</div>
+                  <div className="text-muted mb-1">Avg Revenue/Dish</div>
                   <div className="text-warning h3 mb-0">{formatCurrency(reportData.summary.totalRevenue / reportData.summary.totalDishes)}</div>
-                  <div className="text-small text-muted mt-1">Per dish average</div>
+                  <div className="text-muted mt-1" style={{fontSize: '12px'}}>Per dish average</div>
                 </Card.Body>
               </Card>
             </Col>
@@ -940,24 +940,24 @@ const MenuPerformanceReport = () => {
                         <div className="d-flex justify-content-between align-items-start mb-2">
                           <div>
                             <h6 className="mb-1">{category.category}</h6>
-                            <div className="text-muted text-small">{category.uniqueDishCount} dishes</div>
+                            <div className="text-muted" style={{fontSize: '12px'}}>{category.uniqueDishCount} dishes</div>
                           </div>
-                          <Badge bg="primary">{category.orderCount} orders</Badge>
+                          <Badge bg="primary" style={{fontSize: '12px'}}>{category.orderCount} orders</Badge>
                         </div>
 
                         <div className="mb-2">
-                          <div className="d-flex justify-content-between text-small mb-1">
+                          <div className="d-flex justify-content-between mb-1" style={{fontSize: '12px'}}>
                             <span>Revenue</span>
                             <span className="font-weight-bold text-primary">{formatCurrency(category.totalRevenue)}</span>
                           </div>
                           <ProgressBar now={(category.totalRevenue / reportData.summary.totalRevenue) * 100} variant="success" />
                         </div>
 
-                        <div className="d-flex justify-content-between text-small">
+                        <div className="d-flex justify-content-between" style={{fontSize: '12px'}}>
                           <span>Quantity Sold:</span>
                           <span className="font-weight-bold">{category.totalQuantity}</span>
                         </div>
-                        <div className="d-flex justify-content-between text-small">
+                        <div className="d-flex justify-content-between" style={{fontSize: '12px'}}>
                           <span>Avg Revenue/Dish:</span>
                           <span className="font-weight-bold">{formatCurrency(category.avgRevenuePerDish)}</span>
                         </div>
@@ -1045,7 +1045,7 @@ const MenuPerformanceReport = () => {
                           <td className="text-center">{dish.isSpecial ? <Badge bg="warning">⭐</Badge> : <span className="text-muted">-</span>}</td>
                           <td className="text-center">
                             <Badge bg={performance === 'excellent' ? 'success' : performance === 'good' ? 'info' : 'danger'}>
-                              {performance === 'excellent' ? '🔥 Top Seller' : performance === 'good' ? '👍 Good' : '📉 Low'}
+                              {performance === 'excellent' ? 'Top Seller' : performance === 'good' ? 'Good' : 'Low'}
                             </Badge>
                           </td>
                         </tr>
@@ -1070,7 +1070,7 @@ const MenuPerformanceReport = () => {
                           <CsLineIcons icon="trend-up" className="text-white" size="20" />
                         </div>
                         <div>
-                          <div className="text-muted text-small">Top Performers</div>
+                          <div className="text-muted">Top Performers</div>
                           <div className="h4 mb-0">{reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'excellent').length}</div>
                         </div>
                       </div>
@@ -1085,7 +1085,7 @@ const MenuPerformanceReport = () => {
                           <CsLineIcons icon="activity" className="text-white" size="20" />
                         </div>
                         <div>
-                          <div className="text-muted text-small">Average Performers</div>
+                          <div className="text-muted">Average Performers</div>
                           <div className="h4 mb-0">{reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'good').length}</div>
                         </div>
                       </div>
@@ -1100,7 +1100,7 @@ const MenuPerformanceReport = () => {
                           <CsLineIcons icon="trend-down" className="text-white" size="20" />
                         </div>
                         <div>
-                          <div className="text-muted text-small">Low Performers</div>
+                          <div className="text-muted">Low Performers</div>
                           <div className="h4 mb-0">{reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'poor').length}</div>
                         </div>
                       </div>
@@ -1111,7 +1111,7 @@ const MenuPerformanceReport = () => {
 
               <Alert variant="info" className="mt-3">
                 <Alert.Heading className="h6">Performance Insights</Alert.Heading>
-                <p className="mb-0 text-small">
+                <p className="mb-0" style={{fontSize: '12px'}}>
                   Top performers generate 150% or more of average revenue. Consider promoting low performers or removing them from the menu. Special dishes
                   should ideally be top performers to justify their premium positioning.
                 </p>

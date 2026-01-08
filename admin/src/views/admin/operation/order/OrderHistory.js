@@ -948,8 +948,7 @@ const OrderHistory = () => {
             </div>
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading Order History...</h5>
-              <p className="text-muted">Please wait while we fetch your orders</p>
+              <h5>Loading...</h5>
             </div>
           </Col>
         </Row>

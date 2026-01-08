@@ -72,8 +72,7 @@ const StaffProfile = () => {
             </div>
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading Staff Profile...</h5>
-              <p className="text-muted">Please wait while we fetch staff details</p>
+              <h5>Loading...</h5>
             </div>
           </Col>
         </Row>

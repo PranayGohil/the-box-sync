@@ -186,8 +186,7 @@ const Profile = () => {
             </div>
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading Profile Information...</h5>
-              <p className="text-muted">Please wait while we fetch your profile details</p>
+              <h5>Loading...</h5>
             </div>
           </Col>
         </Row>
@@ -370,7 +369,6 @@ const Profile = () => {
                               </>
                             ) : (
                               <>
-                                <CsLineIcons icon="save" className="me-2" />
                                 Submit
                               </>
                             )}

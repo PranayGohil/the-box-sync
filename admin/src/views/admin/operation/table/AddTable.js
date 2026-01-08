@@ -205,7 +205,7 @@ const AddTable = () => {
               {loadingAreas ? (
                 <div className="text-center py-5">
                   <Spinner animation="border" variant="primary" className="mb-3" />
-                  <p>Loading dining areas...</p>
+                  <p>Loading...</p>
                 </div>
               ) : (
                 <Form onSubmit={formik.handleSubmit}>

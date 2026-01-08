@@ -813,9 +813,9 @@ const OperationalReport = () => {
               <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </Col>
             <Col md={4}>
-              <Button variant="primary" className="w-100" onClick={fetchOperationalReport} disabled={loading}>
+              <Button variant="primary" className="w-100" style={{ maxWidth: '150px' }} onClick={fetchOperationalReport} disabled={loading}>
                 <CsLineIcons icon="sync" className="me-2" />
-                {loading ? 'Loading...' : 'Generate Report'}
+                {loading ? 'Loading...' : 'Generate'}
               </Button>
             </Col>
           </Row>
@@ -836,11 +836,11 @@ const OperationalReport = () => {
               <div className="d-flex gap-2 align-items-center">
                 <Button variant="success" onClick={() => handleExportClick('Excel')} disabled={exporting}>
                   <CsLineIcons icon="file-text" className="me-2" />
-                  Export to Excel
+                  Excel
                 </Button>
                 <Button variant="danger" onClick={() => handleExportClick('PDF')} disabled={exporting}>
-                  <CsLineIcons icon="file-pdf" className="me-2" />
-                  Export to PDF
+                  <CsLineIcons icon="file-text" className="me-2" />
+                  PDF
                 </Button>
 
                 {exporting && (
@@ -861,36 +861,36 @@ const OperationalReport = () => {
             <Col lg={3} md={6} className="mb-3">
               <Card>
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">Total Staff</div>
+                  <div className="text-muted mb-1">Total Staff</div>
                   <div className="text-primary h3 mb-0">{reportData.waiterPerformance?.length || 0}</div>
-                  <div className="text-small text-muted">Active waiters</div>
+                  <div className="text-muted" style={{fontSize: '12px'}}>Active waiters</div>
                 </Card.Body>
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
               <Card>
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">Busiest Hour</div>
+                  <div className="text-muted mb-1">Busiest Hour</div>
                   <div className="text-primary h3 mb-0">{busiestHour ? `${busiestHour.hour}:00` : 'N/A'}</div>
-                  <div className="text-small text-muted">{busiestHour ? `${busiestHour.orderCount} orders` : ''}</div>
+                  <div className="text-muted" style={{fontSize: '12px'}}>{busiestHour ? `${busiestHour.orderCount} orders` : ''}</div>
                 </Card.Body>
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
               <Card>
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">Busiest Day</div>
+                  <div className="text-muted mb-1">Busiest Day</div>
                   <div className="text-primary h3 mb-0">{busiestDay ? busiestDay.dayName : 'N/A'}</div>
-                  <div className="text-small text-muted">{busiestDay ? `${busiestDay.orderCount} orders` : ''}</div>
+                  <div className="text-muted" style={{fontSize: '12px'}}>{busiestDay ? `${busiestDay.orderCount} orders` : ''}</div>
                 </Card.Body>
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
               <Card>
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">Active Tables</div>
+                  <div className="text-muted mb-1">Active Tables</div>
                   <div className="text-primary h3 mb-0">{reportData.tablePerformance?.length || 0}</div>
-                  <div className="text-small text-muted">Tables used</div>
+                  <div className="text-muted" style={{fontSize: '12px'}}>Tables used</div>
                 </Card.Body>
               </Card>
             </Col>

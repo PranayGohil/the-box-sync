@@ -26,10 +26,10 @@ const DeleteFeedbackModal = ({ show, handleClose, data, fetchFeedbacks }) => {
     return (
         <Modal className="modal-close-out" show={show} onHide={handleClose} centered>
             <Modal.Header closeButton>
-                <Modal.Title>Delete Feedback</Modal.Title>
+                <Modal.Title>Delete Feedback?</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <p>Are you sure you want to delete this feedback from {data?.customer_name}?</p>
+                <p>Are you sure you want to delete this feedback?</p>
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="secondary" onClick={handleClose} disabled={isDeleting}>

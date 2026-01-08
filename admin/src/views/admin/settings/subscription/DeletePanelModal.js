@@ -33,19 +33,13 @@ const DeletePanelModal = ({ show, handleClose, planName, fetchData }) => {
     <Modal className="modal-close-out" show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
         <Modal.Title>
-          <CsLineIcons icon="warning-hexagon" className="text-danger me-2" />
-          Delete Panel
+          Delete Panel?
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <p>
-          Are you sure you want to delete the <strong>{planName}</strong> panel user?
+          This Panel will be permanently deleted from your Account.
         </p>
-        <Alert variant="warning" className="mt-3">
-          <CsLineIcons icon="warning-hexagon" className="me-2" />
-          This action cannot be undone.
-        </Alert>
-
         {error && (
           <Alert variant="danger" className="mt-3">
             <CsLineIcons icon="error" className="me-2" />
