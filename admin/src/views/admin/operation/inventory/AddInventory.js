@@ -3,6 +3,7 @@ import { useHistory } from 'react-router-dom';
 import { Row, Col, Card, Button, Form, Spinner } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -19,10 +20,7 @@ const validationSchema = Yup.object().shape({
   tax: Yup.number().min(0, 'Tax cannot be negative'),
   discount: Yup.number().min(0, 'Discount cannot be negative'),
   total_amount: Yup.number().min(0),
-  paid_amount: Yup.number()
-    .required('Paid amount is required')
-    .min(0)
-    .max(Yup.ref('total_amount'), 'Paid amount cannot exceed total'),
+  paid_amount: Yup.number().required('Paid amount is required').min(0).max(Yup.ref('total_amount'), 'Paid amount cannot exceed total'),
   items: Yup.array().of(
     Yup.object().shape({
       item_name: Yup.string().required('Item name is required'),
@@ -52,17 +50,17 @@ const AddInventory = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
 
-  const vendorOptions = (suggestions.vendors || []).map(v => ({
+  const vendorOptions = (suggestions.vendors || []).map((v) => ({
     label: v,
     value: v,
   }));
 
-  const categoryOptions = (suggestions.categories || []).map(c => ({
+  const categoryOptions = (suggestions.categories || []).map((c) => ({
     label: c,
     value: c,
   }));
 
-  const itemOptions = (suggestions.items || []).map(i => ({
+  const itemOptions = (suggestions.items || []).map((i) => ({
     label: i,
     value: i,
   }));
@@ -249,21 +247,13 @@ const AddInventory = () => {
                       isClearable
                       isDisabled={isSubmitting}
                       options={vendorOptions}
-                      value={
-                        values.vendor_name
-                          ? { label: values.vendor_name, value: values.vendor_name }
-                          : null
-                      }
-                      onChange={(selected) =>
-                        setFieldValue('vendor_name', selected ? selected.value : '')
-                      }
+                      value={values.vendor_name ? { label: values.vendor_name, value: values.vendor_name } : null}
+                      onChange={(selected) => setFieldValue('vendor_name', selected ? selected.value : '')}
                       placeholder="Select or create vendor"
                       classNamePrefix="react-select"
                     />
 
-                    {touched.vendor_name && errors.vendor_name && (
-                      <div className="text-danger mt-1">{errors.vendor_name}</div>
-                    )}
+                    {touched.vendor_name && errors.vendor_name && <div className="text-danger mt-1">{errors.vendor_name}</div>}
 
                     <Form.Control.Feedback type="invalid">{errors.vendor_name}</Form.Control.Feedback>
                   </Form.Group>
@@ -275,21 +265,13 @@ const AddInventory = () => {
                       isClearable
                       isDisabled={isSubmitting}
                       options={categoryOptions}
-                      value={
-                        values.category
-                          ? { label: values.category, value: values.category }
-                          : null
-                      }
-                      onChange={(selected) =>
-                        setFieldValue('category', selected ? selected.value : '')
-                      }
+                      value={values.category ? { label: values.category, value: values.category } : null}
+                      onChange={(selected) => setFieldValue('category', selected ? selected.value : '')}
                       placeholder="Select or create category"
                       classNamePrefix="react-select"
                     />
 
-                    {touched.category && errors.category && (
-                      <div className="text-danger mt-1">{errors.category}</div>
-                    )}
+                    {touched.category && errors.category && <div className="text-danger mt-1">{errors.category}</div>}
 
                     <Form.Control.Feedback type="invalid">{errors.category}</Form.Control.Feedback>
                   </Form.Group>
@@ -338,25 +320,13 @@ const AddInventory = () => {
                           isClearable
                           isDisabled={isSubmitting}
                           options={itemOptions}
-                          value={
-                            item.item_name
-                              ? { label: item.item_name, value: item.item_name }
-                              : null
-                          }
-                          onChange={(selected) =>
-                            handleItemChange(
-                              index,
-                              'item_name',
-                              selected ? selected.value : ''
-                            )
-                          }
+                          value={item.item_name ? { label: item.item_name, value: item.item_name } : null}
+                          onChange={(selected) => handleItemChange(index, 'item_name', selected ? selected.value : '')}
                           placeholder="Select or create item"
                           classNamePrefix="react-select"
                         />
 
-                        {itemTouched.item_name && itemErrors.item_name && (
-                          <div className="text-danger mt-1">{itemErrors.item_name}</div>
-                        )}
+                        {itemTouched.item_name && itemErrors.item_name && <div className="text-danger mt-1">{itemErrors.item_name}</div>}
 
                         <Form.Control.Feedback type="invalid">{itemErrors.item_name}</Form.Control.Feedback>
                       </Form.Group>
@@ -406,12 +376,7 @@ const AddInventory = () => {
                       </Form.Group>
                     </Col>
                     <Col md={2} className="d-flex align-items-center">
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => removeItem(index)}
-                        disabled={isSubmitting || values.items.length === 1}
-                      >
+                      <Button variant="outline-danger" size="sm" onClick={() => removeItem(index)} disabled={isSubmitting || values.items.length === 1}>
                         Remove
                       </Button>
                     </Col>
@@ -420,7 +385,7 @@ const AddInventory = () => {
               })}
 
               <Button variant="primary" onClick={addItem} disabled={isSubmitting}>
-                + Add Item
+                + Add
               </Button>
 
               {/* 🔥 NEW: Financial Summary Section */}
@@ -434,15 +399,8 @@ const AddInventory = () => {
                 <Col md={4}>
                   <Form.Group>
                     <Form.Label>Sub Total</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={values.sub_total}
-                      readOnly
-                      className="bg-light"
-                    />
-                    <Form.Text className="text-muted">
-                      Sum of all item prices
-                    </Form.Text>
+                    <Form.Control type="number" value={values.sub_total} readOnly className="bg-light" />
+                    <Form.Text className="text-muted">Sum of all item prices</Form.Text>
                   </Form.Group>
                 </Col>
                 <Col md={4}>
@@ -485,15 +443,8 @@ const AddInventory = () => {
                     <Form.Label>
                       <strong>Total Amount</strong>
                     </Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={values.total_amount}
-                      readOnly
-                      className="bg-light fw-bold"
-                    />
-                    <Form.Text className="text-muted">
-                      Sub Total + Tax - Discount
-                    </Form.Text>
+                    <Form.Control type="number" value={values.total_amount} readOnly className="bg-light fw-bold" />
+                    <Form.Text className="text-muted">Sub Total + Tax - Discount</Form.Text>
                   </Form.Group>
                 </Col>
                 <Col md={4}>
@@ -514,12 +465,7 @@ const AddInventory = () => {
                   <Form.Group>
                     <Form.Label>Unpaid Amount</Form.Label>
                     <div className="position-relative">
-                      <Form.Control
-                        type="number"
-                        value={values.unpaid_amount}
-                        readOnly
-                        className="bg-light"
-                      />
+                      <Form.Control type="number" value={values.unpaid_amount} readOnly className="bg-light" />
                       {isCalculating && (
                         <Spinner
                           animation="border"
@@ -532,28 +478,20 @@ const AddInventory = () => {
                   </Form.Group>
                 </Col>
               </Row>
+              <Button type="submit" variant="primary" className="mt-3" disabled={isSubmitting} style={{ minWidth: '120px' }}>
+                {isSubmitting ? (
+                  <>
+                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                    Saving...
+                  </>
+                ) : (
+                  <div className="d-flex align-items-center">
+                    <CsLineIcons icon="save" className="me-1" />
+                    Submit
+                  </div>
+                )}
+              </Button>
             </Card>
-
-            <Button
-              variant="success"
-              type="submit"
-              disabled={isSubmitting}
-              style={{ minWidth: '150px' }}
-            >
-              {isSubmitting ? (
-                <>
-                  <Spinner
-                    as="span"
-                    animation="border"
-                    size="sm"
-                    role="status"
-                    aria-hidden="true"
-                    className="me-2"
-                  />
-                  Saving...
-                </>
-              ) : 'Save Inventory'}
-            </Button>
           </Form>
 
           {/* Full page loader overlay */}
@@ -563,17 +501,12 @@ const AddInventory = () => {
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.7)',
                 zIndex: 9999,
-                backdropFilter: 'blur(2px)'
+                backdropFilter: 'blur(2px)',
               }}
             >
               <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
                 <Card.Body className="text-center p-4">
-                  <Spinner
-                    animation="border"
-                    variant="primary"
-                    className="mb-3"
-                    style={{ width: '3rem', height: '3rem' }}
-                  />
+                  <Spinner animation="border" variant="primary" className="mb-3" style={{ width: '3rem', height: '3rem' }} />
                   <h5 className="mb-0">Adding Inventory...</h5>
                   <small className="text-muted">Please wait a moment</small>
                 </Card.Body>

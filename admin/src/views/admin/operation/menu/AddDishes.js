@@ -27,11 +27,11 @@ const AddDishes = () => {
   const [imagePreviews, setImagePreviews] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
-  const categoryOptions = (suggestions.categories || []).map(c => ({
+  const categoryOptions = (suggestions.categories || []).map((c) => ({
     label: c,
     value: c,
   }));
-  const dishOptions = (suggestions.dishes || []).map(d => ({
+  const dishOptions = (suggestions.dishes || []).map((d) => ({
     label: d,
     value: d,
   }));
@@ -59,12 +59,9 @@ const AddDishes = () => {
   const getMenuCategories = async (mealType) => {
     try {
       setLoadingCategories(true);
-      const response = await axios.get(
-        `${process.env.REACT_APP_API}/menu/get-categories?meal_type=${mealType}`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
-      );
+      const response = await axios.get(`${process.env.REACT_APP_API}/menu/get-categories?meal_type=${mealType}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
 
       setSuggestions((prev) => ({
         ...prev,
@@ -90,12 +87,9 @@ const AddDishes = () => {
     }
 
     try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_API}/menu/get-dishes-by-category?category=${category}`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
-      );
+      const response = await axios.get(`${process.env.REACT_APP_API}/menu/get-dishes-by-category?category=${category}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
 
       setSuggestions((prev) => ({
         ...prev,
@@ -165,7 +159,7 @@ const AddDishes = () => {
     if (file) {
       setFieldValue(`dishes[${index}].dish_img`, file);
       const previewUrl = URL.createObjectURL(file);
-      setImagePreviews(prev => ({ ...prev, [index]: previewUrl }));
+      setImagePreviews((prev) => ({ ...prev, [index]: previewUrl }));
     }
   };
 
@@ -183,12 +177,7 @@ const AddDishes = () => {
 
           <section className="scroll-section" id="formRow">
             <Card body className="mb-5">
-              <Formik
-                initialValues={initialValues}
-                validationSchema={validationSchema}
-                onSubmit={handleSubmit}
-                enableReinitialize
-              >
+              <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit} enableReinitialize>
                 {({ values, handleChange, setFieldValue }) => (
                   <Form>
                     <Row className="mb-3">
@@ -199,11 +188,7 @@ const AddDishes = () => {
                             isClearable
                             isDisabled={isSubmitting || loadingCategories || isFromManageMenu}
                             options={categoryOptions}
-                            value={
-                              values.category
-                                ? { label: values.category, value: values.category }
-                                : null
-                            }
+                            value={values.category ? { label: values.category, value: values.category } : null}
                             onChange={(selected) => {
                               const category = selected ? selected.value : '';
                               setFieldValue('category', category);
@@ -220,11 +205,7 @@ const AddDishes = () => {
                             classNamePrefix="react-select"
                           />
 
-                          <ErrorMessage
-                            name="category"
-                            component="div"
-                            className="text-danger mt-1"
-                          />
+                          <ErrorMessage name="category" component="div" className="text-danger mt-1" />
                         </BForm.Group>
                       </Col>
                       <Col md={8}>
@@ -274,14 +255,8 @@ const AddDishes = () => {
                                       isClearable
                                       isDisabled={isSubmitting}
                                       options={dishOptions}
-                                      value={
-                                        dish.dish_name
-                                          ? { label: dish.dish_name, value: dish.dish_name }
-                                          : null
-                                      }
-                                      onChange={(selected) =>
-                                        setFieldValue(`dishes[${index}].dish_name`, selected ? selected.value : '')
-                                      }
+                                      value={dish.dish_name ? { label: dish.dish_name, value: dish.dish_name } : null}
+                                      onChange={(selected) => setFieldValue(`dishes[${index}].dish_name`, selected ? selected.value : '')}
                                       placeholder="Select or create dish name"
                                       classNamePrefix="react-select"
                                     />
@@ -291,21 +266,13 @@ const AddDishes = () => {
                                 <Col md={4}>
                                   <BForm.Group>
                                     <BForm.Label>Price</BForm.Label>
-                                    <Field
-                                      name={`dishes[${index}].dish_price`}
-                                      className="form-control"
-                                      disabled={isSubmitting}
-                                    />
+                                    <Field name={`dishes[${index}].dish_price`} className="form-control" disabled={isSubmitting} />
                                     <ErrorMessage name={`dishes[${index}].dish_price`} component="div" className="text-danger" />
                                   </BForm.Group>
                                 </Col>
                                 <Col md={4} className="d-flex align-items-start mt-4">
-                                  <Button
-                                    variant="outline-danger"
-                                    onClick={() => remove(index)}
-                                    disabled={isSubmitting || values.dishes.length === 1}
-                                  >
-                                    <CsLineIcons icon="bin" className='me-1' />
+                                  <Button variant="outline-danger" onClick={() => remove(index)} disabled={isSubmitting || values.dishes.length === 1}>
+                                    <CsLineIcons icon="bin" className="me-1" />
                                     Remove
                                   </Button>
                                 </Col>
@@ -338,13 +305,7 @@ const AddDishes = () => {
                                 <Col md={8}>
                                   <BForm.Group>
                                     <BForm.Label>Description</BForm.Label>
-                                    <Field
-                                      as="textarea"
-                                      rows={2}
-                                      name={`dishes[${index}].description`}
-                                      className="form-control"
-                                      disabled={isSubmitting}
-                                    />
+                                    <Field as="textarea" rows={2} name={`dishes[${index}].description`} className="form-control" disabled={isSubmitting} />
                                   </BForm.Group>
                                 </Col>
                               </Row>
@@ -363,22 +324,13 @@ const AddDishes = () => {
                                   <Col md={6}>
                                     <BForm.Group>
                                       <BForm.Label>Quantity</BForm.Label>
-                                      <Field
-                                        name={`dishes[${index}].quantity`}
-                                        className="form-control"
-                                        disabled={isSubmitting}
-                                      />
+                                      <Field name={`dishes[${index}].quantity`} className="form-control" disabled={isSubmitting} />
                                     </BForm.Group>
                                   </Col>
                                   <Col md={6}>
                                     <BForm.Group>
                                       <BForm.Label>Unit</BForm.Label>
-                                      <Field
-                                        as="select"
-                                        name={`dishes[${index}].unit`}
-                                        className="form-select"
-                                        disabled={isSubmitting}
-                                      >
+                                      <Field as="select" name={`dishes[${index}].unit`} className="form-select" disabled={isSubmitting}>
                                         <option value="">Select unit</option>
                                         <option value="kg">kg</option>
                                         <option value="g">g</option>
@@ -392,56 +344,47 @@ const AddDishes = () => {
                               )}
                             </Card>
                           ))}
-
-                          <div className="d-flex gap-2 mt-3">
-                            <Button
-                              type="button"
-                              variant="primary"
-                              onClick={() =>
-                                push({
-                                  dish_name: '',
-                                  dish_price: '',
-                                  dish_img: null,
-                                  description: '',
-                                  quantity: '',
-                                  unit: '',
-                                  showAdvancedOptions: false,
-                                })
-                              }
-                              disabled={isSubmitting}
-                            >
-                              <CsLineIcons icon="plus" className="me-1" />
-                              Add
-                            </Button>
-                          </div>
                         </>
                       )}
                     </FieldArray>
-
-                    <div className="mt-4">
+                    <div className="mt-4 d-flex">
+                      {/* ADD BUTTON */}
                       <Button
-                        type="submit"
-                        variant="success"
+                        type="button"
+                        variant="secondary"
+                        className="me-2"
+                        onClick={() =>
+                          setFieldValue('dishes', [
+                            ...values.dishes,
+                            {
+                              dish_name: '',
+                              dish_price: '',
+                              dish_img: null,
+                              description: '',
+                              quantity: '',
+                              unit: '',
+                              showAdvancedOptions: false,
+                            },
+                          ])
+                        }
                         disabled={isSubmitting}
-                        style={{ minWidth: '120px' }}
                       >
+                        <CsLineIcons icon="plus" className="me-1" />
+                        Add
+                      </Button>
+
+                      {/* SUBMIT BUTTON */}
+                      <Button type="submit" variant="primary" disabled={isSubmitting} style={{ minWidth: '120px' }}>
                         {isSubmitting ? (
                           <>
-                            <Spinner
-                              as="span"
-                              animation="border"
-                              size="sm"
-                              role="status"
-                              aria-hidden="true"
-                              className="me-2"
-                            />
+                            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
                             Saving...
                           </>
                         ) : (
-                          <>
-                            <CsLineIcons icon="save" className="me-2" />
-                            Save
-                          </>
+                          <div className="d-flex align-items-center">
+                            <CsLineIcons icon="save" className="me-1" />
+                            Submit
+                          </div>
                         )}
                       </Button>
                     </div>
@@ -457,17 +400,12 @@ const AddDishes = () => {
                 style={{
                   backgroundColor: 'rgba(255, 255, 255, 0.7)',
                   zIndex: 9999,
-                  backdropFilter: 'blur(2px)'
+                  backdropFilter: 'blur(2px)',
                 }}
               >
                 <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
                   <Card.Body className="text-center p-4">
-                    <Spinner
-                      animation="border"
-                      variant="success"
-                      className="mb-3"
-                      style={{ width: '3rem', height: '3rem' }}
-                    />
+                    <Spinner animation="border" variant="success" className="mb-3" style={{ width: '3rem', height: '3rem' }} />
                     <h5 className="mb-0">Saving Dishes...</h5>
                     <small className="text-muted">Please wait a moment</small>
                   </Card.Body>

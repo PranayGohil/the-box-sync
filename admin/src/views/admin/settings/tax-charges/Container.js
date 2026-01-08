@@ -213,11 +213,7 @@ const Container = () => {
                     </Col>
                     <Col md={3} className="d-flex align-items-end">
                       {isEditing && (
-                        <Button
-                          variant="outline-danger"
-                          onClick={() => removeContainer(index)}
-                          disabled={saving}
-                        >
+                        <Button variant="outline-danger" onClick={() => removeContainer(index)} disabled={saving}>
                           Delete
                         </Button>
                       )}
@@ -227,52 +223,44 @@ const Container = () => {
 
                 <div className="mt-4">
                   {isEditing ? (
-                    <>
-                      <Button
-                        variant="secondary"
-                        onClick={addContainer}
-                        className="me-2"
-                        disabled={saving}
-                      >
-                        Add Container
-                      </Button>
-                      <Button
-                        type="submit"
-                        variant="primary"
-                        disabled={saving}
-                        style={{ minWidth: '100px' }}
-                      >
-                        {saving ? (
-                          <>
-                            <Spinner
-                              as="span"
-                              animation="border"
-                              size="sm"
-                              role="status"
-                              aria-hidden="true"
-                              className="me-2"
-                            />
-                            Saving...
-                          </>
-                        ) : 'Save Changes'}
-                      </Button>
-                      <Button
-                        variant="outline-secondary"
-                        onClick={() => {
-                          setIsEditing(false);
-                          setServerError('');
-                          setSuccessMessage('');
-                        }}
-                        className="ms-2"
-                        disabled={saving}
-                      >
-                        Cancel
-                      </Button>
-                    </>
+                    <div>
+                      <div>
+                        <Button variant="secondary" onClick={addContainer} disabled={saving}>
+                          <CsLineIcons icon="plus" className="me-1" />
+                          Add
+                        </Button>
+                      </div>
+                      <div className='mt-3'>
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            setIsEditing(false);
+                            setServerError('');
+                            setSuccessMessage('');
+                          }}
+                          disabled={saving}
+                        >
+                          Cancel
+                        </Button>
+                        <Button type="submit" variant="primary" className="ms-2" disabled={saving} style={{ minWidth: '100px' }}>
+                          {saving ? (
+                            <>
+                              <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <CsLineIcons icon="save" className="me-2" />
+                              Submit
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <Button variant="outline-primary" onClick={() => setIsEditing(true)}>
                       <CsLineIcons icon="edit" className="me-2" />
-                      Edit Charges
+                      Edit
                     </Button>
                   )}
                 </div>
@@ -300,17 +288,12 @@ const Container = () => {
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.7)',
                 zIndex: 9999,
-                backdropFilter: 'blur(2px)'
+                backdropFilter: 'blur(2px)',
               }}
             >
               <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
                 <Card.Body className="text-center p-4">
-                  <Spinner
-                    animation="border"
-                    variant="primary"
-                    className="mb-3"
-                    style={{ width: '3rem', height: '3rem' }}
-                  />
+                  <Spinner animation="border" variant="primary" className="mb-3" style={{ width: '3rem', height: '3rem' }} />
                   <h5 className="mb-0">Updating Container Charges...</h5>
                   <small className="text-muted">Please wait a moment</small>
                 </Card.Body>

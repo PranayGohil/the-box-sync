@@ -34,10 +34,7 @@ const Gst = () => {
   const validationSchema = Yup.object().shape({
     gst_no: Yup.string()
       .required('GST number is required')
-      .matches(
-        /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
-        'GST number format is invalid (e.g., 22AAAAA0000A1Z5)'
-      )
+      .matches(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, 'GST number format is invalid (e.g., 22AAAAA0000A1Z5)')
       .length(15, 'GST number must be exactly 15 characters'),
     cgst: Yup.number()
       .required('CGST is required')
@@ -193,16 +190,7 @@ const Gst = () => {
                 onSubmit={handleEditSubmit}
                 enableReinitialize
               >
-                {({
-                  values,
-                  errors,
-                  touched,
-                  handleChange,
-                  handleBlur,
-                  handleSubmit,
-                  isSubmitting,
-                  resetForm,
-                }) => (
+                {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting, resetForm }) => (
                   <Form onSubmit={handleSubmit}>
                     <Row className="mb-3">
                       <Col md="6" className="mb-3">
@@ -232,12 +220,8 @@ const Gst = () => {
                             maxLength={15}
                             style={{ textTransform: 'uppercase' }}
                           />
-                          <Form.Control.Feedback type="invalid">
-                            {errors.gst_no}
-                          </Form.Control.Feedback>
-                          <Form.Text className="text-muted">
-                            Format: 2 digits + 5 letters + 4 digits + 1 letter + 1 alphanumeric + Z + 1 alphanumeric
-                          </Form.Text>
+                          <Form.Control.Feedback type="invalid">{errors.gst_no}</Form.Control.Feedback>
+                          <Form.Text className="text-muted">Format: 2 digits + 5 letters + 4 digits + 1 letter + 1 alphanumeric + Z + 1 alphanumeric</Form.Text>
                         </Form.Group>
                       </Col>
                     </Row>
@@ -262,9 +246,7 @@ const Gst = () => {
                             step="0.01"
                             placeholder="0.00"
                           />
-                          <Form.Control.Feedback type="invalid">
-                            {errors.cgst}
-                          </Form.Control.Feedback>
+                          <Form.Control.Feedback type="invalid">{errors.cgst}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
 
@@ -287,9 +269,7 @@ const Gst = () => {
                             step="0.01"
                             placeholder="0.00"
                           />
-                          <Form.Control.Feedback type="invalid">
-                            {errors.sgst}
-                          </Form.Control.Feedback>
+                          <Form.Control.Feedback type="invalid">{errors.sgst}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
 
@@ -312,9 +292,7 @@ const Gst = () => {
                             step="0.01"
                             placeholder="0.00"
                           />
-                          <Form.Control.Feedback type="invalid">
-                            {errors.vat}
-                          </Form.Control.Feedback>
+                          <Form.Control.Feedback type="invalid">{errors.vat}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
                     </Row>
@@ -325,7 +303,8 @@ const Gst = () => {
                         <Col md="12">
                           <Alert variant="info" className="mb-0">
                             <CsLineIcons icon="info-circle" className="me-2" />
-                            <strong>Tax Summary:</strong> Total Tax = {(parseFloat(values.cgst || 0) + parseFloat(values.sgst || 0) + parseFloat(values.vat || 0)).toFixed(2)}%
+                            <strong>Tax Summary:</strong> Total Tax ={' '}
+                            {(parseFloat(values.cgst || 0) + parseFloat(values.sgst || 0) + parseFloat(values.vat || 0)).toFixed(2)}%
                           </Alert>
                         </Col>
                       </Row>
@@ -342,32 +321,6 @@ const Gst = () => {
                       {editMode ? (
                         <>
                           <Button
-                            variant="primary"
-                            type="submit"
-                            className="me-2"
-                            disabled={saving || isSubmitting}
-                            style={{ minWidth: '100px' }}
-                          >
-                            {saving || isSubmitting ? (
-                              <>
-                                <Spinner
-                                  as="span"
-                                  animation="border"
-                                  size="sm"
-                                  role="status"
-                                  aria-hidden="true"
-                                  className="me-2"
-                                />
-                                Saving...
-                              </>
-                            ) : (
-                              <>
-                                <CsLineIcons icon="save" className="me-2" />
-                                Save
-                              </>
-                            )}
-                          </Button>
-                          <Button
                             variant="secondary"
                             type="button"
                             onClick={(e) => {
@@ -378,6 +331,19 @@ const Gst = () => {
                             disabled={saving || isSubmitting}
                           >
                             Cancel
+                          </Button>
+                          <Button variant="primary" type="submit" className="ms-2" disabled={saving || isSubmitting} style={{ minWidth: '100px' }}>
+                            {saving || isSubmitting ? (
+                              <>
+                                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <CsLineIcons icon="save" className="me-2" />
+                                Submit
+                              </>
+                            )}
                           </Button>
                         </>
                       ) : (
@@ -406,17 +372,12 @@ const Gst = () => {
                   style={{
                     backgroundColor: 'rgba(255, 255, 255, 0.7)',
                     zIndex: 9999,
-                    backdropFilter: 'blur(2px)'
+                    backdropFilter: 'blur(2px)',
                   }}
                 >
                   <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
                     <Card.Body className="text-center p-4">
-                      <Spinner
-                        animation="border"
-                        variant="primary"
-                        className="mb-3"
-                        style={{ width: '3rem', height: '3rem' }}
-                      />
+                      <Spinner animation="border" variant="primary" className="mb-3" style={{ width: '3rem', height: '3rem' }} />
                       <h5 className="mb-0">Updating Tax Information...</h5>
                       <small className="text-muted">Please wait a moment</small>
                     </Card.Body>

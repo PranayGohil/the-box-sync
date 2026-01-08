@@ -330,10 +330,10 @@ const AddTable = () => {
                           Submitting...
                         </>
                       ) : (
-                        <>
+                        <div className='d-flex align-items-center'>
                           <CsLineIcons icon="save" className="me-1" />
                           Submit
-                        </>
+                        </div>
                       )}
                     </Button>
                   </div>

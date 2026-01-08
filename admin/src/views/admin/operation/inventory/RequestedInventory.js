@@ -212,6 +212,7 @@ const RequestedInventory = () => {
               size="sm"
               title="Complete"
               as={Link}
+              className="btn-icon btn-icon-only"
               to={`/operations/complete-inventory/${row.original._id}`}
             >
               <CsLineIcons icon="check" />
@@ -220,6 +221,7 @@ const RequestedInventory = () => {
               variant="outline-danger"
               size="sm"
               title="Reject"
+              className="btn-icon btn-icon-only"
               onClick={() => {
                 setSelectedItem(row.original);
                 setRejectInventoryModal(true);
@@ -422,10 +424,6 @@ const RequestedInventory = () => {
               ))}
             </Alert>
           )}
-          <Alert variant="warning" className="mt-3">
-            <CsLineIcons icon="warning" className="me-2" />
-            This action will move the inventory to rejected section.
-          </Alert>
           <Form.Group>
             <Form.Control
               as="textarea"

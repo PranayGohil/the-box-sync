@@ -11,7 +11,6 @@ import EditTableModal from './EditTableModal';
 import EditTableAreaModal from './EditTableAreaModal';
 import DeleteTableModal from './DeleteTableModal';
 
-
 const ManageTable = () => {
   const title = 'Manage Tables';
   const description = 'React Table responsive boxed variations with search.';
@@ -94,10 +93,7 @@ const ManageTable = () => {
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
               <Col xs="12" md="5" className="text-end">
-                <Button
-                  variant="primary"
-                  href="/operations/add-table"
-                >
+                <Button variant="primary" href="/operations/add-table">
                   <CsLineIcons icon="plus" className="me-2" />
                   Add New
                 </Button>
@@ -142,26 +138,32 @@ const ManageTable = () => {
                     id: 'actions',
                     Cell: ({ row }) => (
                       <div className="d-flex gap-2">
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-icon btn-outline-primary"
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          className="btn-icon btn-icon-only"
                           onClick={() => {
                             setSelectedTable(row.original);
                             setEditTableModalShow(true);
                           }}
+                          title="Edit"
+                          disabled={loading}
                         >
                           <CsLineIcons icon="edit" />
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-icon btn-outline-danger"
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          className="btn-icon btn-icon-only"
                           onClick={() => {
                             setTableToDelete({ ...row.original, area: table.area });
                             setDeleteTableModalShow(true);
                           }}
+                          title="Delete"
+                          disabled={loading}
                         >
                           <CsLineIcons icon="bin" />
-                        </button>
+                        </Button>
                       </div>
                     ),
                   },
@@ -179,46 +181,35 @@ const ManageTable = () => {
                       />
                     </Card>
                   </Col>
-                )
+                );
               })}
             </Row>
           )}
         </Col>
-      </Row >
+      </Row>
 
       {/* Edit Modal */}
-      {
-        selectedTable && (
-          <EditTableModal
-            show={editTableModalShow}
-            handleClose={() => setEditTableModalShow(false)}
-            data={selectedTable}
-            onUpdateSuccess={fetchTableData}
-          />
-        )
-      }
+      {selectedTable && (
+        <EditTableModal show={editTableModalShow} handleClose={() => setEditTableModalShow(false)} data={selectedTable} onUpdateSuccess={fetchTableData} />
+      )}
 
-      {
-        selectedTableArea && (
-          <EditTableAreaModal
-            show={editTableAreaModalShow}
-            handleClose={() => setEditTableAreaModalShow(false)}
-            data={selectedTableArea}
-            onUpdateSuccess={fetchTableData}
-          />
-        )
-      }
+      {selectedTableArea && (
+        <EditTableAreaModal
+          show={editTableAreaModalShow}
+          handleClose={() => setEditTableAreaModalShow(false)}
+          data={selectedTableArea}
+          onUpdateSuccess={fetchTableData}
+        />
+      )}
 
-      {
-        tableToDelete && (
-          <DeleteTableModal
-            show={deleteTableModalShow}
-            handleClose={() => setDeleteTableModalShow(false)}
-            data={tableToDelete}
-            onDeleteSuccess={fetchTableData}
-          />
-        )
-      }
+      {tableToDelete && (
+        <DeleteTableModal
+          show={deleteTableModalShow}
+          handleClose={() => setDeleteTableModalShow(false)}
+          data={tableToDelete}
+          onDeleteSuccess={fetchTableData}
+        />
+      )}
     </>
   );
 };
