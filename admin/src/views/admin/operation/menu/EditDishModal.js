@@ -74,7 +74,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
       <Modal show={show} onHide={handleClose} centered>
         <Modal.Body className="text-center py-5">
           <Spinner animation="border" variant="primary" />
-          <p className="mt-3">Loading dish data...</p>
+          <p className="mt-3">Loading...</p>
         </Modal.Body>
       </Modal>
     );

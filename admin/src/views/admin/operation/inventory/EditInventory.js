@@ -197,7 +197,7 @@ const EditInventory = () => {
       <Row className="justify-content-center align-items-center min-vh-100">
         <Col xs={12} className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
-          <h5>Loading inventory data...</h5>
+          <h5>Loading...</h5>
         </Col>
       </Row>
     );
@@ -389,7 +389,7 @@ const EditInventory = () => {
               })}
 
               <Button variant="primary" onClick={addItem} disabled={isSubmitting}>
-                + Add Item
+                + Add
               </Button>
 
               {/* 🔥 NEW: Financial Summary Section */}
@@ -521,7 +521,7 @@ const EditInventory = () => {
                   />
                   Updating...
                 </>
-              ) : 'Update Inventory'}
+              ) : 'Update'}
             </Button>
           </Form>
 

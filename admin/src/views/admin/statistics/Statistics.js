@@ -203,8 +203,8 @@ const Statistics = () => {
             <Card.Body className="h-100 d-flex flex-column justify-content-between">
               <div className="h-100 d-flex justify-content-between align-items-center">
                 <div>
-                  <div className="text-muted text-small mb-1">Total Revenue</div>
-                  <div className="text-primary cta-4">{formatCurrency(overview?.summary?.totalRevenue)}</div>
+                  <div className="text-muted mb-1">Total Revenue</div>
+                  <div className="text-primary cta-4 mb-2">{formatCurrency(overview?.summary?.totalRevenue)}</div>
                   {comparison && (
                     <div className="d-flex align-items-center">
                       <CsLineIcons
@@ -212,7 +212,7 @@ const Statistics = () => {
                         className={`me-1 ${comparison.trend === 'up' ? 'text-success' : comparison.trend === 'down' ? 'text-danger' : 'text-muted'}`}
                         size="14"
                       />
-                      <span className={`text-small ${comparison.trend === 'up' ? 'text-success' : comparison.trend === 'down' ? 'text-danger' : 'text-muted'}`}>
+                      <span className={`${comparison.trend === 'up' ? 'text-success' : comparison.trend === 'down' ? 'text-danger' : 'text-muted'}`} style={{fontSize: '12px'}}>
                         {Math.abs(comparison.change)}% vs last period
                       </span>
                     </div>
@@ -232,9 +232,9 @@ const Statistics = () => {
             <Card.Body className="h-100 d-flex flex-column justify-content-between">
               <div className="h-100 d-flex justify-content-between align-items-center">
                 <div>
-                  <div className="text-muted text-small mb-1">Total Orders</div>
-                  <div className="text-primary cta-4">{overview?.summary?.totalOrders || 0}</div>
-                  <div className="text-small text-muted">
+                  <div className="text-muted mb-1">Total Orders</div>
+                  <div className="text-primary cta-4 mb-2">{overview?.summary?.totalOrders || 0}</div>
+                  <div className="text-muted" style={{fontSize: '12px'}}>
                     Avg: {formatCurrency(overview?.summary?.avgOrderValue)}
                   </div>
                 </div>
@@ -251,9 +251,9 @@ const Statistics = () => {
             <Card.Body className="h-100 d-flex flex-column justify-content-between">
               <div className="h-100 d-flex justify-content-between align-items-center">
                 <div>
-                  <div className="text-muted text-small mb-1">Discounts Given</div>
-                  <div className="text-danger cta-4">{formatCurrency(overview?.summary?.totalDiscount)}</div>
-                  <div className="text-small text-muted">
+                  <div className="text-muted mb-1">Discounts Given</div>
+                  <div className="text-danger cta-4 mb-2">{formatCurrency(overview?.summary?.totalDiscount)}</div>
+                  <div className="text-muted" style={{fontSize: '12px'}}>
                     Wave Off: {formatCurrency(overview?.summary?.totalWaveOff)}
                   </div>
                 </div>
@@ -271,9 +271,9 @@ const Statistics = () => {
               <div className="h-100 
               d-flex justify-content-between align-items-center">
                 <div>
-                  <div className="text-muted text-small mb-1">Average Order</div>
-                  <div className="text-primary cta-4">{formatCurrency(overview?.summary?.avgOrderValue)}</div>
-                  <div className="text-small text-muted">
+                  <div className="text-muted mb-1">Average Order</div>
+                  <div className="text-primary cta-4 mb-2 ">{formatCurrency(overview?.summary?.avgOrderValue)}</div>
+                  <div className="text-muted" style={{fontSize: '12px'}}>
                     Per order value
                   </div>
                 </div>
@@ -376,7 +376,7 @@ const Statistics = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center text-muted py-5">No payment data available</div>
+                <div className="text-center text-muted py-5">No data available</div>
               )}
             </Card.Body>
           </Card>
@@ -430,7 +430,7 @@ const Statistics = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center text-muted py-5">No dishes data available</div>
+                <div className="text-center text-muted py-5">No data available</div>
               )}
             </Card.Body>
           </Card>
@@ -470,7 +470,7 @@ const Statistics = () => {
                   ))
                 ) : (
                   <Col xs="12" className="text-center text-muted py-5">
-                    No order type data available
+                    No data available
                   </Col>
                 )}
               </Row>

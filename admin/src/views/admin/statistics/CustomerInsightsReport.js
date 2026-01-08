@@ -730,9 +730,9 @@ const CustomerInsightsReport = () => {
               <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </Col>
             <Col md={4}>
-              <Button variant="primary" className="w-100" onClick={fetchCustomerReport} disabled={loading}>
+              <Button variant="primary" className="w-100" style={{ maxWidth: '150px' }} onClick={fetchCustomerReport} disabled={loading} >
                 <CsLineIcons icon="sync" className="me-2" />
-                {loading ? 'Loading...' : 'Generate Report'}
+                {loading ? 'Loading...' : 'Generate'}
               </Button>
             </Col>
           </Row>
@@ -753,11 +753,11 @@ const CustomerInsightsReport = () => {
               <div className="d-flex gap-2 align-items-center">
                 <Button variant="success" onClick={() => handleExportClick('Excel')} disabled={exporting}>
                   <CsLineIcons icon="file-text" className="me-2" />
-                  Export to Excel
+                  Export
                 </Button>
                 <Button variant="danger" onClick={() => handleExportClick('PDF')} disabled={exporting}>
-                  <CsLineIcons icon="file-pdf" className="me-2" />
-                  Export to PDF
+                  <CsLineIcons icon="file-text" className="me-2" />
+                  Export
                 </Button>
 
                 {exporting && (
@@ -778,36 +778,36 @@ const CustomerInsightsReport = () => {
             <Col lg={3} md={6} className="mb-3">
               <Card>
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">Total Customers</div>
+                  <div className="text-muted mb-1">Total Customers</div>
                   <div className="text-primary h3 mb-0">{totalCustomers}</div>
-                  <div className="text-small text-muted mt-1">In selected period</div>
+                  <div className="text-small mt-1" style={{fontSize: '12px'}}>In selected period</div>
                 </Card.Body>
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
               <Card>
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">Repeat Customers</div>
+                  <div className="text-muted mb-1">Repeat Customers</div>
                   <div className="text-success h3 mb-0">{repeatCustomers}</div>
-                  <div className="text-small text-muted mt-1">{repeatRate}% repeat rate</div>
+                  <div className="text-muted mt-1" style={{fontSize: '12px'}}>{repeatRate}% repeat rate</div>
                 </Card.Body>
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
               <Card>
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">One-Time Customers</div>
+                  <div className="text-muted mb-1">One-Time Customers</div>
                   <div className="text-warning h3 mb-0">{oneTimeCustomers}</div>
-                  <div className="text-small text-muted mt-1">{totalCustomers > 0 ? ((oneTimeCustomers / totalCustomers) * 100).toFixed(1) : 0}% of total</div>
+                  <div className="text-muted mt-1" style={{fontSize: '12px'}}>{totalCustomers > 0 ? ((oneTimeCustomers / totalCustomers) * 100).toFixed(1) : 0}% of total</div>
                 </Card.Body>
               </Card>
             </Col>
             <Col lg={3} md={6} className="mb-3">
               <Card>
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">New Customers</div>
+                  <div className="text-muted mb-1">New Customers</div>
                   <div className="text-info h3 mb-0">{reportData.acquisitionTrend?.reduce((sum, item) => sum + item.newCustomers, 0) || 0}</div>
-                  <div className="text-small text-muted mt-1">First-time visitors</div>
+                  <div className="text-muted mt-1" style={{fontSize: '12px'}}>First-time visitors</div>
                 </Card.Body>
               </Card>
             </Col>
@@ -839,14 +839,14 @@ const CustomerInsightsReport = () => {
                   </div>
                 </Col>
                 <Col md={6}>
-                  <div className="border rounded p-3">
+                  <div>
                     <h6 className="mb-3">Customer Retention Insights</h6>
                     <div className="text-small">
-                      <p className="mb-2">
+                      <p className="mb-2" style={{fontSize: '12px'}}>
                         <strong>{repeatRate}%</strong> of customers made repeat purchases, showing{' '}
                         {repeatRate > 40 ? 'excellent' : repeatRate > 25 ? 'good' : 'moderate'} customer loyalty.
                       </p>
-                      <p className="mb-0">
+                      <p className="mb-0" style={{fontSize: '12px'}}>
                         Focus on converting {oneTimeCustomers} one-time customers into repeat visitors through loyalty programs and personalized offers.
                       </p>
                     </div>

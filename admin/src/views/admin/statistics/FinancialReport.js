@@ -747,9 +747,9 @@ const FinancialReport = () => {
               <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </Col>
             <Col md={4}>
-              <Button variant="primary" className="w-100" onClick={fetchFinancialReport} disabled={loading}>
+              <Button variant="primary" className="w-100" style={{ maxWidth: '150px' }} onClick={fetchFinancialReport} disabled={loading}>
                 <CsLineIcons icon="sync" className="me-2" />
-                {loading ? 'Loading...' : 'Generate Report'}
+                {loading ? 'Loading...' : 'Generate'}
               </Button>
             </Col>
           </Row>
@@ -770,11 +770,11 @@ const FinancialReport = () => {
               <div className="d-flex gap-2 align-items-center">
                 <Button variant="success" onClick={() => handleExportClick('Excel')} disabled={exporting}>
                   <CsLineIcons icon="file-text" className="me-2" />
-                  Export to Excel
+                  Excel
                 </Button>
                 <Button variant="danger" onClick={() => handleExportClick('PDF')} disabled={exporting}>
-                  <CsLineIcons icon="file-pdf" className="me-2" />
-                  Export to PDF
+                  <CsLineIcons icon="file-text" className="me-2" />
+                  PDF
                 </Button>
 
                 {exporting && (
@@ -797,9 +797,9 @@ const FinancialReport = () => {
                 <Card.Body>
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="text-muted text-small mb-1">Gross Revenue</div>
+                      <div className="text-muted mb-1">Gross Revenue</div>
                       <div className="text-primary h4 mb-0">{formatCurrency(reportData.summary.grossRevenue)}</div>
-                      <div className="text-small text-muted mt-1">Before deductions</div>
+                      <div className="text-muted mt-1" style={{fontSize: '12px'}}>Before deductions</div>
                     </div>
                     <div className="sh-5 sw-5 bg-primary rounded-xl d-flex justify-content-center align-items-center">
                       <CsLineIcons icon="wallet" className="text-white" />
@@ -814,9 +814,9 @@ const FinancialReport = () => {
                 <Card.Body>
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="text-muted text-small mb-1">Net Revenue</div>
+                      <div className="text-muted mb-1">Net Revenue</div>
                       <div className="text-success h4 mb-0">{formatCurrency(reportData.summary.netRevenue)}</div>
-                      <div className="text-small text-muted mt-1">After deductions</div>
+                      <div className="text-muted mt-1" style={{fontSize: '12px'}}>After deductions</div>
                     </div>
                     <div className="sh-5 sw-5 bg-success rounded-xl d-flex justify-content-center align-items-center">
                       <CsLineIcons icon="money" className="text-white" />
@@ -831,9 +831,9 @@ const FinancialReport = () => {
                 <Card.Body>
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="text-muted text-small mb-1">Total Deductions</div>
+                      <div className="text-muted mb-1">Total Deductions</div>
                       <div className="text-danger h4 mb-0">{formatCurrency(reportData.summary.totalDiscount + reportData.summary.totalWaveOff)}</div>
-                      <div className="text-small text-muted mt-1">{reportData.summary.discountPercentage}% of gross</div>
+                      <div className="text-muted mt-1" style={{fontSize: '12px'}}>{reportData.summary.discountPercentage}% of gross</div>
                     </div>
                     <div className="sh-5 sw-5 bg-danger rounded-xl d-flex justify-content-center align-items-center">
                       <CsLineIcons icon="tag" className="text-white" />
@@ -848,9 +848,9 @@ const FinancialReport = () => {
                 <Card.Body>
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="text-muted text-small mb-1">Total Tax</div>
+                      <div className="text-muted mb-1">Total Tax</div>
                       <div className="text-warning h4 mb-0">{formatCurrency(reportData.summary.totalTax)}</div>
-                      <div className="text-small text-muted mt-1">{reportData.summary.taxPercentage}% of net revenue</div>
+                      <div className="text-muted mt-1" style={{fontSize: '12px'}}>{reportData.summary.taxPercentage}% of net revenue</div>
                     </div>
                     <div className="sh-5 sw-5 bg-warning rounded-xl d-flex justify-content-center align-items-center">
                       <CsLineIcons icon="dollar" className="text-white" />
@@ -959,7 +959,7 @@ const FinancialReport = () => {
                           max={20}
                           variant={reportData.summary.discountPercentage > 15 ? 'danger' : reportData.summary.discountPercentage > 10 ? 'warning' : 'success'}
                         />
-                        <small className="text-muted">Ideal: Under 10%</small>
+                        <small className="text-muted" style={{fontSize: '12px'}}>Ideal: Under 10%</small>
                       </div>
 
                       <div className="mb-3">
@@ -968,7 +968,7 @@ const FinancialReport = () => {
                           <Badge bg="info">{reportData.summary.taxPercentage}%</Badge>
                         </div>
                         <ProgressBar now={reportData.summary.taxPercentage} max={20} variant="info" />
-                        <small className="text-muted">Of net revenue</small>
+                        <small className="text-muted" style={{fontSize: '12px'}}>Of net revenue</small>
                       </div>
 
                       <div>
@@ -994,7 +994,7 @@ const FinancialReport = () => {
                   <h6 className="mb-3">CGST (Central GST)</h6>
                   <div className="text-primary h3 mb-2">{formatCurrency(reportData.summary.cgstAmount)}</div>
                   <ProgressBar now={(reportData.summary.cgstAmount / reportData.summary.totalTax) * 100} variant="primary" className="mb-2" />
-                  <div className="text-small text-muted">{((reportData.summary.cgstAmount / reportData.summary.totalTax) * 100).toFixed(1)}% of total tax</div>
+                  <div className="text-muted" style={{fontSize: '12px'}}>{((reportData.summary.cgstAmount / reportData.summary.totalTax) * 100).toFixed(1)}% of total tax</div>
                 </Card.Body>
               </Card>
             </Col>
@@ -1005,7 +1005,7 @@ const FinancialReport = () => {
                   <h6 className="mb-3">SGST (State GST)</h6>
                   <div className="text-success h3 mb-2">{formatCurrency(reportData.summary.sgstAmount)}</div>
                   <ProgressBar now={(reportData.summary.sgstAmount / reportData.summary.totalTax) * 100} variant="success" className="mb-2" />
-                  <div className="text-small text-muted">{((reportData.summary.sgstAmount / reportData.summary.totalTax) * 100).toFixed(1)}% of total tax</div>
+                  <div className="text-muted" style={{fontSize: '12px'}}>{((reportData.summary.sgstAmount / reportData.summary.totalTax) * 100).toFixed(1)}% of total tax</div>
                 </Card.Body>
               </Card>
             </Col>
@@ -1016,7 +1016,7 @@ const FinancialReport = () => {
                   <h6 className="mb-3">VAT (Value Added Tax)</h6>
                   <div className="text-info h3 mb-2">{formatCurrency(reportData.summary.vatAmount)}</div>
                   <ProgressBar now={(reportData.summary.vatAmount / reportData.summary.totalTax) * 100} variant="info" className="mb-2" />
-                  <div className="text-small text-muted">{((reportData.summary.vatAmount / reportData.summary.totalTax) * 100).toFixed(1)}% of total tax</div>
+                  <div className="text-muted" style={{fontSize: '12px'}}>{((reportData.summary.vatAmount / reportData.summary.totalTax) * 100).toFixed(1)}% of total tax</div>
                 </Card.Body>
               </Card>
             </Col>
@@ -1034,7 +1034,7 @@ const FinancialReport = () => {
                         <div className="d-flex justify-content-between align-items-start mb-2">
                           <div>
                             <h6 className="mb-1">{payment.paymentMethod}</h6>
-                            <div className="text-muted text-small">{payment.orderCount} orders</div>
+                            <div className="text-muted">{payment.orderCount} orders</div>
                           </div>
                           <div className="sh-4 sw-4 bg-gradient-light rounded-xl d-flex justify-content-center align-items-center">
                             <CsLineIcons
@@ -1046,18 +1046,18 @@ const FinancialReport = () => {
                         </div>
 
                         <div className="mb-2">
-                          <div className="d-flex justify-content-between text-small mb-1">
+                          <div className="d-flex justify-content-between mb-1" style={{fontSize: '12px'}}>
                             <span>Total Amount</span>
                             <span className="font-weight-bold text-primary">{formatCurrency(payment.totalAmount)}</span>
                           </div>
                           <ProgressBar now={(payment.totalAmount / reportData.summary.netRevenue) * 100} variant="primary" />
                         </div>
 
-                        <div className="d-flex justify-content-between text-small">
+                        <div className="d-flex justify-content-between" style={{fontSize: '12px'}}>
                           <span>Paid Amount:</span>
                           <span className="font-weight-bold text-success">{formatCurrency(payment.paidAmount)}</span>
                         </div>
-                        <div className="d-flex justify-content-between text-small">
+                        <div className="d-flex justify-content-between" style={{fontSize: '12px'}}>
                           <span>% of Total:</span>
                           <span className="font-weight-bold">{((payment.totalAmount / reportData.summary.netRevenue) * 100).toFixed(1)}%</span>
                         </div>
@@ -1133,7 +1133,7 @@ const FinancialReport = () => {
                       <CsLineIcons icon="tag" className="me-2" />
                       Discount Analysis
                     </Alert.Heading>
-                    <p className="mb-0 text-small">
+                    <p className="mb-0" style={{ fontSize: '12px' }}>
                       Your discount rate is {reportData.summary.discountPercentage}%.
                       {reportData.summary.discountPercentage > 15 && ' This is high and may impact profitability. Consider reviewing discount policies.'}
                       {reportData.summary.discountPercentage > 10 &&
@@ -1150,7 +1150,7 @@ const FinancialReport = () => {
                       <CsLineIcons icon="dollar" className="me-2" />
                       Tax Compliance
                     </Alert.Heading>
-                    <p className="mb-0 text-small">
+                    <p className="mb-0" style={{ fontSize: '12px' }}>
                       Total tax collected: {formatCurrency(reportData.summary.totalTax)} ({reportData.summary.taxPercentage}% of net revenue). Ensure timely
                       filing and remittance of CGST ({formatCurrency(reportData.summary.cgstAmount)}), SGST ({formatCurrency(reportData.summary.sgstAmount)}),
                       and VAT ({formatCurrency(reportData.summary.vatAmount)}).
@@ -1164,7 +1164,7 @@ const FinancialReport = () => {
                       <CsLineIcons icon="trend-up" className="me-2" />
                       Revenue Health
                     </Alert.Heading>
-                    <p className="mb-0 text-small">
+                    <p className="mb-0" style={{ fontSize: '12px' }}>
                       Net revenue of {formatCurrency(reportData.summary.netRevenue)} from {reportData.summary.totalOrders} orders. Average order value:{' '}
                       {formatCurrency(reportData.summary.netRevenue / reportData.summary.totalOrders)}. Collection rate:{' '}
                       {((reportData.summary.totalPaid / reportData.summary.netRevenue) * 100).toFixed(1)}%.
@@ -1178,7 +1178,7 @@ const FinancialReport = () => {
                       <CsLineIcons icon="shield" className="me-2" />
                       Payment Methods
                     </Alert.Heading>
-                    <p className="mb-0 text-small">
+                    <p className="mb-0" style={{ fontSize: '12px' }}>
                       {reportData.paymentMethodFinancials.length} payment methods in use. Most used: {reportData.paymentMethodFinancials[0]?.paymentMethod}(
                       {((reportData.paymentMethodFinancials[0]?.totalAmount / reportData.summary.netRevenue) * 100).toFixed(1)}% of revenue). Diversify payment
                       options for customer convenience.

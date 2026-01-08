@@ -126,8 +126,7 @@ const Container = () => {
             </section>
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading Container Charges...</h5>
-              <p className="text-muted">Please wait while we fetch your container information</p>
+              <h5>Loading...</h5>
             </div>
           </Col>
         </Row>
@@ -250,7 +249,6 @@ const Container = () => {
                             </>
                           ) : (
                             <>
-                              <CsLineIcons icon="save" className="me-2" />
                               Submit
                             </>
                           )}
