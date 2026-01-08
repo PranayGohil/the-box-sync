@@ -13,6 +13,8 @@ import { AuthContext } from 'contexts/AuthContext';
 import OrderHistory from './order/OrderHistory';
 import OrderDetails from './order/OrderDetails';
 
+import ManageWaiters from './waiter/ManageWaiters';
+
 import ManageTable from './table/ManageTable';
 import AddTable from './table/AddTable';
 
@@ -44,6 +46,19 @@ const NavContent = () => {
           <Nav.Link as={NavLink} to="/operations/order-history" className="px-0 pt-1">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Order History</span>
+          </Nav.Link>
+        </div>
+      </div>
+
+      <div className="mb-2">
+        <Nav.Link as={NavLink} to="/operations/manage-waiters" className="px-0">
+          <CsLineIcons icon="main-course" className="me-2 sw-3" size="17" />
+          <span className="align-middle">Waiter</span>
+        </Nav.Link>
+        <div>
+          <Nav.Link as={NavLink} to="/operations/manage-waiters" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Manage Waiters</span>
           </Nav.Link>
         </div>
       </div>
@@ -173,23 +188,29 @@ const Operations = () => {
         <Col>
           <Switch>
             <Route exact path="/operations" render={() => <Redirect to="/operations/order-history" />} />
-            <Route exact path="/operations/order-history" render={() => <OrderHistory />}
-            />
+            <Route exact path="/operations/order-history" render={() => <OrderHistory />} />
             <Route exact path="/operations/order-details/:id" render={() => <OrderDetails />} />
+
+            <Route exact path="/operations/manage-waiters" render={() => <ManageWaiters />} />
 
             <Route exact path="/operations/manage-table" render={() => <ManageTable />} />
             <Route exact path="/operations/add-table" render={() => <AddTable />} />
 
             <Route exact path="/operations/manage-menu" render={() => <ManageMenu />} />
             <Route exact path="/operations/add-dish" render={() => <AddDishes />} />
-            <Route exact path="/operations/qr-for-menu" render={() => <>
-              {
-                activePlans.includes("Scan For Menu") ?
-                  <QRforMenu /> :
-                  <div className="text-center">You need to buy or renew to Scan For Menu plan to access this page.</div>
-              }
-            </>
-            } />
+            <Route
+              exact
+              path="/operations/qr-for-menu"
+              render={() => (
+                <>
+                  {activePlans.includes('Scan For Menu') ? (
+                    <QRforMenu />
+                  ) : (
+                    <div className="text-center">You need to buy or renew to Scan For Menu plan to access this page.</div>
+                  )}
+                </>
+              )}
+            />
 
             <Route exact path="/operations/requested-inventory" render={() => <RequestedInventory />} />
             <Route exact path="/operations/inventory-history" render={() => <InventoryHistory />} />
@@ -198,23 +219,33 @@ const Operations = () => {
             <Route exact path="/operations/complete-inventory/:id" render={() => <CompleteInventory />} />
             <Route exact path="/operations/inventory-details/:id" render={() => <InventoryDetails />} />
 
-            <Route exact path="/operations/feedback"
-              render={() => <>
-                {
-                  activePlans.includes("Feedback") ?
-                    <Feedback /> :
+            <Route
+              exact
+              path="/operations/feedback"
+              render={() => (
+                <>
+                  {activePlans.includes('Feedback') ? (
+                    <Feedback />
+                  ) : (
                     <div className="text-center">You need to buy or renew to Feedback plan to access this page.</div>
-                }</>}
+                  )}
+                </>
+              )}
             />
-            <Route exact path="/operations/qr-for-feedback"
-              render={() => <>
-                {
-                  activePlans.includes("Feedback") ?
-                    <QRforFeedback /> :
+            <Route
+              exact
+              path="/operations/qr-for-feedback"
+              render={() => (
+                <>
+                  {activePlans.includes('Feedback') ? (
+                    <QRforFeedback />
+                  ) : (
                     <div className="text-center">You need to buy or renew to Feedback plan to access this page.</div>
-                }</>} />
+                  )}
+                </>
+              )}
+            />
             {/* <Route exact path="/operations/add-feedback" component={AddFeedback} /> */}
-
           </Switch>
         </Col>
       </Row>
