@@ -37,15 +37,13 @@ const DeleteStaffModal = ({ show, handleClose, data, onDeleteSuccess }) => {
         <Modal.Header closeButton>
           <Modal.Title>
             <CsLineIcons icon="warning" className="text-danger me-2" />
-            Delete Staff
+            Delete Staff?
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>
-            Are you sure you want to delete <strong>{`${data.f_name} ${data.l_name}`}</strong>?
+            This Member will be permanently deleted from your Staff.
           </p>
-          <p>This action cannot be undone and all associated data will be permanently removed.</p>
-
           {error && (
             <Alert variant="danger" className="mt-3">
               <CsLineIcons icon="error" className="me-2" />

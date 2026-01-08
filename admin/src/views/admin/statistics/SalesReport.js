@@ -932,7 +932,7 @@ const SalesReport = () => {
                 <option value="delivery">Delivery</option>
               </Form.Select>
             </Col>
-            <Col md={2} className='h-100' style={{ minHeight: '-webkit-fill-available' }}>
+            <Col md={1} className="h-100" style={{ minHeight: '-webkit-fill-available' }}>
               <Form.Label> &nbsp; </Form.Label>
               <Button variant="primary" className="w-100" onClick={fetchSalesReport} disabled={loading}>
                 <CsLineIcons icon="sync" className="me-2" />
@@ -957,11 +957,11 @@ const SalesReport = () => {
               <div className="d-flex gap-2 align-items-center">
                 <Button variant="success" onClick={() => handleExportClick('Excel')} disabled={exporting}>
                   <CsLineIcons icon="file-text" className="me-2" />
-                  Export to Excel
+                  Excel
                 </Button>
                 <Button variant="danger" onClick={() => handleExportClick('PDF')} disabled={exporting}>
-                  <CsLineIcons icon="file-pdf" className="me-2" />
-                  Export to PDF
+                  <CsLineIcons icon="file-text" className="me-2" />
+                  PDF
                 </Button>
 
                 {exporting && (
@@ -982,7 +982,7 @@ const SalesReport = () => {
             <Col lg={3} md={6} className="mb-3">
               <Card className="sh-13">
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">Total Revenue</div>
+                  <div className="text-muted mb-1">Total Revenue</div>
                   <div className="text-primary h3 mb-0">{formatCurrency(reportData.revenue.summary.totalRevenue)}</div>
                 </Card.Body>
               </Card>
@@ -990,7 +990,7 @@ const SalesReport = () => {
             <Col lg={3} md={6} className="mb-3">
               <Card className="sh-13">
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">Total Orders</div>
+                  <div className="text-muted mb-1">Total Orders</div>
                   <div className="text-primary h3 mb-0">{reportData.revenue.summary.totalOrders}</div>
                 </Card.Body>
               </Card>
@@ -998,7 +998,7 @@ const SalesReport = () => {
             <Col lg={3} md={6} className="mb-3">
               <Card className="sh-13">
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">Average Order Value</div>
+                  <div className="text-muted mb-1">Average Order Value</div>
                   <div className="text-primary h3 mb-0">{formatCurrency(reportData.revenue.summary.averageOrderValue)}</div>
                 </Card.Body>
               </Card>
@@ -1006,7 +1006,7 @@ const SalesReport = () => {
             <Col lg={3} md={6} className="mb-3">
               <Card className="sh-13">
                 <Card.Body>
-                  <div className="text-muted text-small mb-1">Report Period</div>
+                  <div className="text-muted mb-1">Report Period</div>
                   <div className="text-primary h5 mb-0">
                     {format(new Date(startDate), 'MMM dd')} - {format(new Date(endDate), 'MMM dd')}
                   </div>

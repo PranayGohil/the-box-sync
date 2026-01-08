@@ -298,7 +298,7 @@ const ManageWebsite = () => {
                   Saving...
                 </>
               ) : (
-                'Update Settings'
+                'Update'
               )}
             </Button>
           </Form>

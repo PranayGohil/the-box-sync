@@ -226,8 +226,7 @@ const OrderDetails = () => {
         <Row className="justify-content-center py-5">
           <Col xs={12} className="text-center">
             <Spinner animation="border" variant="primary" className="mb-3" />
-            <h5>Loading Order Details...</h5>
-            <p className="text-muted">Please wait while we fetch order information</p>
+            <h5>Loading...</h5>
           </Col>
         </Row>
       </>

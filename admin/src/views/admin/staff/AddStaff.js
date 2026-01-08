@@ -242,8 +242,7 @@ const AddStaff = () => {
             </div>
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading Add Staff Form...</h5>
-              <p className="text-muted">Please wait while we prepare the form</p>
+              <h5>Loading...</h5>
             </div>
           </Col>
         </Row>
@@ -694,7 +693,7 @@ const AddStaff = () => {
                     Adding...
                   </>
                 ) : (
-                  'Add Staff'
+                  'Add'
                 )}
               </Button>
             </div>

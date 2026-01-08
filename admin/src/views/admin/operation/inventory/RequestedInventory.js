@@ -362,7 +362,7 @@ const RequestedInventory = () => {
             <Row className="justify-content-center my-5">
               <Col xs={12} className="text-center">
                 <Spinner animation="border" variant="warning" className="mb-3" />
-                <p>Loading requested inventory...</p>
+                <p>Loading...</p>
               </Col>
             </Row>
           ) : data.length === 0 ? (
@@ -398,21 +398,11 @@ const RequestedInventory = () => {
         <Modal.Header closeButton>
           <Modal.Title>
             <CsLineIcons icon="alert" className="text-warning me-2" />
-            Reject Request
+            Request Reject? 
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>Are you sure you want to reject this inventory request?</p>
-          {selectedItem && (
-            <Alert variant="light" className="mt-3">
-              <strong>Items:</strong>
-              {selectedItem.items.map((item, i) => (
-                <div key={i} className="ms-2">
-                  • {item.item_name} - {item.item_quantity} {item.unit}
-                </div>
-              ))}
-            </Alert>
-          )}
+          <p>Are you sure you want to reject this request for inventory?</p>
           <Form.Group>
             <Form.Control
               as="textarea"
@@ -422,7 +412,7 @@ const RequestedInventory = () => {
               onChange={(e) => {
                 setRejectReason(e.target.value);
               }}
-              placeholder="Enter reason for rejecting..."
+              placeholder="Enter reason for reject..."
               disabled={rejecting}
               className={rejecting ? 'bg-light' : ''}
             />
@@ -446,7 +436,7 @@ const RequestedInventory = () => {
                 Rejecting...
               </>
             ) : (
-              'Reject Request'
+              'Reject'
             )}
           </Button>
         </Modal.Footer>

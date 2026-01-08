@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { Card, Table, Row, Col, Spinner, Button, Alert } from 'react-bootstrap';
+import { Card, Table, Row, Col, Spinner, Button, Alert, Modal } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import { toast } from 'react-toastify';
@@ -32,7 +32,7 @@ const InventoryDetails = () => {
         const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get/${id}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
-          }
+          },
         });
         setInventory(res.data);
       } catch (err) {
@@ -67,7 +67,7 @@ const InventoryDetails = () => {
       <Row className="justify-content-center align-items-center min-vh-100">
         <Col xs={12} className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
-          <h5>Loading inventory details...</h5>
+          <h5>Loading...</h5>
         </Col>
       </Row>
     );
@@ -119,19 +119,19 @@ const InventoryDetails = () => {
               </>
             )}
             <Col md={3}>
-              <strong>Status:</strong> <span className={`badge bg-${inventory.status === 'Completed' ? 'success' : inventory.status === 'Rejected' ? 'danger' : 'warning'}`}>
+              <strong>Status:</strong>{' '}
+              <span className={`badge bg-${inventory.status === 'Completed' ? 'success' : inventory.status === 'Rejected' ? 'danger' : 'warning'}`}>
                 {inventory.status}
               </span>
             </Col>
           </Row>
-          {inventory?.reject_reason &&
-            <Row className='mt-3'>
+          {inventory?.reject_reason && (
+            <Row className="mt-3">
               <Col md={12}>
                 <strong>Reason for Rejected:</strong> {inventory?.reject_reason}
               </Col>
             </Row>
-          }
-
+          )}
         </Card.Body>
       </Card>
 
@@ -203,7 +203,9 @@ const InventoryDetails = () => {
             <Table bordered responsive>
               <tbody>
                 <tr>
-                  <td className="fw-bold" style={{ width: '30%' }}>Sub Total</td>
+                  <td className="fw-bold" style={{ width: '30%' }}>
+                    Sub Total
+                  </td>
                   <td>₹ {Number(inventory.sub_total || 0).toFixed(2)}</td>
                 </tr>
                 <tr>
@@ -224,9 +226,7 @@ const InventoryDetails = () => {
                 </tr>
                 <tr className={Number(inventory.unpaid_amount || 0) > 0 ? 'table-warning' : ''}>
                   <td className="fw-bold">Unpaid Amount</td>
-                  <td className={Number(inventory.unpaid_amount || 0) > 0 ? 'text-danger fw-bold' : ''}>
-                    ₹ {Number(inventory.unpaid_amount || 0).toFixed(2)}
-                  </td>
+                  <td className={Number(inventory.unpaid_amount || 0) > 0 ? 'text-danger fw-bold' : ''}>₹ {Number(inventory.unpaid_amount || 0).toFixed(2)}</td>
                 </tr>
               </tbody>
             </Table>
@@ -262,9 +262,8 @@ const InventoryDetails = () => {
                       <div className="mt-2">
                         <small className="text-muted d-block text-truncate">{file}</small>
                         <a href={fileUrl} target="_blank" rel="noreferrer">
-                          <Button variant="outline-primary" size="sm" className="mt-1">
-                            <CsLineIcons icon="download" className="me-1" />
-                            Download
+                          <Button variant="outline-primary" size="sm" title="View" className="btn-icon btn-icon-only">
+                            <CsLineIcons icon="download" />
                           </Button>
                         </a>
                       </div>
@@ -281,64 +280,50 @@ const InventoryDetails = () => {
         <Col className="text-end">
           <Button variant="secondary" onClick={() => history.push('/operations/inventory-history')} className="me-2">
             <CsLineIcons icon="arrow-left" className="me-1" />
-            Back to Inventory
+            Back
           </Button>
           <Button variant="warning" onClick={() => history.push(`/operations/edit-inventory/${id}`)} className="me-2">
             <CsLineIcons icon="edit" className="me-1" />
-            Edit Inventory
+            Edit
           </Button>
-          <Button
-            variant="danger"
-            onClick={() => setShowDeleteModal(true)}
-            disabled={deleting}
-          >
-            {deleting ? (
-              <Spinner animation="border" size="sm" className="me-1" />
-            ) : (
-              <CsLineIcons icon="bin" className="me-1" />
-            )}
-            Delete Inventory
+          <Button variant="danger" onClick={() => setShowDeleteModal(true)} disabled={deleting}>
+            {deleting ? <Spinner animation="border" size="sm" className="me-1" /> : <CsLineIcons icon="bin" className="me-1" />}
+            Delete
           </Button>
         </Col>
       </Row>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div
-          className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
-          style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 9999,
-          }}
-        >
-          <Card className="shadow-lg" style={{ maxWidth: '400px' }}>
-            <Card.Header className="bg-danger text-white">
-              <h5 className="mb-0">
-                <CsLineIcons icon="warning" className="me-2" />
-                Delete Inventory
-              </h5>
-            </Card.Header>
-            <Card.Body>
-              <p>Are you sure you want to delete this inventory?</p>
-              <p><strong>Bill Number: {inventory.bill_number}</strong></p>
-              <p className="text-muted">This action cannot be undone.</p>
-            </Card.Body>
-            <Card.Footer>
-              <Button variant="secondary" onClick={() => setShowDeleteModal(false)} disabled={deleting}>
-                Cancel
-              </Button>
-              <Button variant="danger" onClick={handleDelete} disabled={deleting} className="ms-2">
-                {deleting ? (
-                  <>
-                    <Spinner animation="border" size="sm" className="me-2" />
-                    Deleting...
-                  </>
-                ) : 'Delete'}
-              </Button>
-            </Card.Footer>
-          </Card>
-        </div>
-      )}
+      <Modal className="modal-close-out" show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <CsLineIcons icon="warning" className="text-warning me-2" />
+            Delete Inventory?
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <p>Delete this inventory item permanently?</p>
+          <small className="text-muted">This action cannot be undone.</small>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)} disabled={deleting}>
+            Cancel
+          </Button>
+
+          <Button variant="danger" onClick={handleDelete} disabled={deleting}>
+            {deleting ? (
+              <>
+                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                Deleting...
+              </>
+            ) : (
+              'Delete'
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 };

@@ -157,7 +157,7 @@ function ForgotPassword() {
                     </Button>
                     <Link to="/login" className="text-muted text-decoration-none">
                       <CsLineIcons icon="arrow-left" className="me-1" />
-                      Back to Login
+                      Back
                     </Link>
                   </div>
                 </Form>
@@ -189,13 +189,13 @@ function ForgotPassword() {
                       ) : (
                         <>
                           <CsLineIcons icon="check" className="me-2" />
-                          Verify OTP
+                          Verify
                         </>
                       )}
                     </Button>
                     <Button variant="outline-secondary" onClick={() => setStep(1)} disabled={isLoading}>
                       <CsLineIcons icon="arrow-left" className="me-1" />
-                      Change Email
+                      Back
                     </Button>
                   </div>
                 </Form>
@@ -235,13 +235,13 @@ function ForgotPassword() {
                       ) : (
                         <>
                           <CsLineIcons icon="lock" className="me-2" />
-                          Reset Password
+                          Reset
                         </>
                       )}
                     </Button>
                     <Button variant="outline-secondary" onClick={() => setStep(2)} disabled={isLoading}>
                       <CsLineIcons icon="arrow-left" className="me-1" />
-                      Back to OTP
+                      Back
                     </Button>
                   </div>
                 </Form>

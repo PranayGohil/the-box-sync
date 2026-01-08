@@ -822,7 +822,7 @@ const InventoryReport = () => {
                             </Form.Select>
                         </Col>
                         <Col md={2}>
-                            <Button variant="primary" className="w-100" onClick={fetchInventoryReport} disabled={loading}>
+                            <Button variant="primary" className="w-100" style={{maxWidth: '150px'}} onClick={fetchInventoryReport} disabled={loading}>
                                 <CsLineIcons icon="sync" className="me-2" />
                                 {loading ? 'Loading...' : 'Generate'}
                             </Button>
@@ -849,15 +849,15 @@ const InventoryReport = () => {
                                     disabled={exporting}
                                 >
                                     <CsLineIcons icon="file-text" className="me-2" />
-                                    Export to Excel
+                                    Excel
                                 </Button>
                                 <Button
                                     variant="danger"
                                     onClick={() => handleExportClick('PDF')}
                                     disabled={exporting}
                                 >
-                                    <CsLineIcons icon="file-pdf" className="me-2" />
-                                    Export to PDF
+                                    <CsLineIcons icon="file-text" className="me-2" />
+                                    PDF
                                 </Button>
 
                                 {exporting && (
@@ -885,9 +885,9 @@ const InventoryReport = () => {
                                 <Card.Body>
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div>
-                                            <div className="text-muted text-small mb-1">Total Purchases</div>
+                                            <div className="text-muted mb-1">Total Purchases</div>
                                             <div className="text-primary h3 mb-0">{reportData.summary.totalPurchases}</div>
-                                            <div className="text-small text-muted mt-1">Purchase orders</div>
+                                            <div className="text-muted mt-1" style={{fontSize: '12px'}}>Purchase orders</div>
                                         </div>
                                         <div className="sh-5 sw-5 bg-primary rounded-xl d-flex justify-content-center align-items-center">
                                             <CsLineIcons icon="shopping-bag" className="text-white" />
@@ -902,9 +902,9 @@ const InventoryReport = () => {
                                 <Card.Body>
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div>
-                                            <div className="text-muted text-small mb-1">Total Amount</div>
+                                            <div className="text-muted mb-1">Total Amount</div>
                                             <div className="text-success h3 mb-0">{formatCurrency(reportData.summary.totalAmount)}</div>
-                                            <div className="text-small text-muted mt-1">Purchase value</div>
+                                            <div className="text-muted mt-1" style={{fontSize: '12px'}}>Purchase value</div>
                                         </div>
                                         <div className="sh-5 sw-5 bg-success rounded-xl d-flex justify-content-center align-items-center">
                                             <CsLineIcons icon="wallet" className="text-white" />
@@ -919,9 +919,9 @@ const InventoryReport = () => {
                                 <Card.Body>
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div>
-                                            <div className="text-muted text-small mb-1">Unpaid Amount</div>
+                                            <div className="text-muted mb-1">Unpaid Amount</div>
                                             <div className="text-danger h3 mb-0">{formatCurrency(reportData.summary.totalUnpaid)}</div>
-                                            <div className="text-small text-muted mt-1">Outstanding</div>
+                                            <div className="text-muted mt-1" style={{fontSize: '12px'}}>Outstanding</div>
                                         </div>
                                         <div className="sh-5 sw-5 bg-danger rounded-xl d-flex justify-content-center align-items-center">
                                             <CsLineIcons icon="credit-card" className="text-white" />
@@ -936,9 +936,9 @@ const InventoryReport = () => {
                                 <Card.Body>
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div>
-                                            <div className="text-muted text-small mb-1">Payment Rate</div>
+                                            <div className="text-muted mb-1">Payment Rate</div>
                                             <div className="text-warning h3 mb-0">{reportData.summary.paymentRate}%</div>
-                                            <div className="text-small text-muted mt-1">Collection efficiency</div>
+                                            <div className="text-muted mt-1" style={{fontSize: '12px'}}>Collection efficiency</div>
                                         </div>
                                         <div className="sh-5 sw-5 bg-warning rounded-xl d-flex justify-content-center align-items-center">
                                             <CsLineIcons icon="check-circle" className="text-white" />
@@ -962,7 +962,7 @@ const InventoryReport = () => {
                                                     <CsLineIcons icon="check" className="text-white" size="20" />
                                                 </div>
                                                 <div>
-                                                    <div className="text-muted text-small">Fully Paid</div>
+                                                    <div className="text-muted">Fully Paid</div>
                                                     <div className="h4 mb-0">{reportData.summary.fullyPaidCount}</div>
                                                 </div>
                                             </div>
@@ -977,7 +977,7 @@ const InventoryReport = () => {
                                                     <CsLineIcons icon="clock" className="text-white" size="20" />
                                                 </div>
                                                 <div>
-                                                    <div className="text-muted text-small">Partially Paid</div>
+                                                    <div className="text-muted">Partially Paid</div>
                                                     <div className="h4 mb-0">{reportData.summary.partiallyPaidCount}</div>
                                                 </div>
                                             </div>
@@ -992,7 +992,7 @@ const InventoryReport = () => {
                                                     <CsLineIcons icon="close" className="text-white" size="20" />
                                                 </div>
                                                 <div>
-                                                    <div className="text-muted text-small">Unpaid</div>
+                                                    <div className="text-muted">Unpaid</div>
                                                     <div className="h4 mb-0">{reportData.summary.unpaidCount}</div>
                                                 </div>
                                             </div>
@@ -1058,13 +1058,13 @@ const InventoryReport = () => {
                                                 <div className="d-flex justify-content-between align-items-start mb-2">
                                                     <div>
                                                         <h6 className="mb-1">{category.category}</h6>
-                                                        <div className="text-muted text-small">{category.purchaseCount} purchases</div>
+                                                        <div className="text-muted" style={{fontSize: '12px'}}>{category.purchaseCount} purchases</div>
                                                     </div>
                                                     <Badge bg="primary">{formatCurrency(category.totalAmount)}</Badge>
                                                 </div>
 
                                                 <div className="mb-2">
-                                                    <div className="d-flex justify-content-between text-small mb-1">
+                                                    <div className="d-flex justify-content-between mb-1" style={{fontSize: '12px'}}>
                                                         <span>Paid</span>
                                                         <span className="font-weight-bold text-success">{formatCurrency(category.paidAmount)}</span>
                                                     </div>
@@ -1074,11 +1074,11 @@ const InventoryReport = () => {
                                                     />
                                                 </div>
 
-                                                <div className="d-flex justify-content-between text-small">
+                                                <div className="d-flex justify-content-between" style={{fontSize: '12px'}}>
                                                     <span>Unpaid:</span>
                                                     <span className="font-weight-bold text-danger">{formatCurrency(category.unpaidAmount)}</span>
                                                 </div>
-                                                <div className="d-flex justify-content-between text-small">
+                                                <div className="d-flex justify-content-between" style={{fontSize: '12px'}}>
                                                     <span>Avg Purchase:</span>
                                                     <span className="font-weight-bold">{formatCurrency(category.avgPurchaseValue)}</span>
                                                 </div>
@@ -1178,7 +1178,7 @@ const InventoryReport = () => {
                                             <CsLineIcons icon="shield" className="me-2" />
                                             Vendor Management
                                         </Alert.Heading>
-                                        <p className="mb-0 text-small">
+                                        <p className="mb-0" style={{fontSize: '12px'}}>
                                             Working with {reportData.vendorPerformance.length} vendors.
                                             Top vendor contributes {reportData.vendorPerformance.length > 0 ?
                                                 ((reportData.vendorPerformance[0].totalAmount / reportData.summary.totalAmount) * 100).toFixed(1) : 0}%
@@ -1193,7 +1193,7 @@ const InventoryReport = () => {
                                             <CsLineIcons icon="credit-card" className="me-2" />
                                             Payment Management
                                         </Alert.Heading>
-                                        <p className="mb-0 text-small">
+                                        <p className="mb-0" style={{fontSize: '12px'}}>
                                             Payment rate: {reportData.summary.paymentRate}%.
                                             {reportData.summary.unpaidCount > 0 &&
                                                 ` ${reportData.summary.unpaidCount} purchases pending payment worth ${formatCurrency(reportData.summary.totalUnpaid)}.`}
@@ -1208,7 +1208,7 @@ const InventoryReport = () => {
                                             <CsLineIcons icon="trend-up" className="me-2" />
                                             Purchase Analysis
                                         </Alert.Heading>
-                                        <p className="mb-0 text-small">
+                                        <p className="mb-0" style={{fontSize: '12px'}}>
                                             Average purchase value: {formatCurrency(reportData.summary.avgPurchaseValue)}.
                                             Total of {reportData.summary.totalPurchases} purchases across {reportData.categoryPerformance.length} categories.
                                             Most active category: {reportData.categoryPerformance[0]?.category || 'N/A'}.
@@ -1222,7 +1222,7 @@ const InventoryReport = () => {
                                             <CsLineIcons icon="tag" className="me-2" />
                                             Top Items
                                         </Alert.Heading>
-                                        <p className="mb-0 text-small">
+                                        <p className="mb-0" style={{fontSize: '12px'}}>
                                             Most purchased item: {reportData.topItemsByQuantity[0]?.itemName || 'N/A'}
                                             ({reportData.topItemsByQuantity[0]?.totalQuantity || 0} units).
                                             Monitor stock levels and optimize reorder points for frequently purchased items.

@@ -171,7 +171,7 @@ const CompleteInventory = () => {
       <Row className="justify-content-center align-items-center min-vh-100">
         <Col xs={12} className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
-          <h5>Loading inventory data...</h5>
+          <h5>Loading...</h5>
         </Col>
       </Row>
     );
@@ -495,7 +495,7 @@ const CompleteInventory = () => {
                         />
                         Completing...
                       </>
-                    ) : 'Complete Request'}
+                    ) : 'Complete'}
                   </Button>
                 </Form>
               )

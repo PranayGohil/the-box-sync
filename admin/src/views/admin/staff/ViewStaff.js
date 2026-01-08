@@ -62,13 +62,9 @@ const ViewStaff = () => {
         return;
       }
 
-      await axios.post(
-        `${process.env.REACT_APP_API}/waiter/add`,
-        waiterFormData,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
-      );
+      await axios.post(`${process.env.REACT_APP_API}/waiter/add`, waiterFormData, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
       toast.success('Waiter added successfully');
       setShowWaiterModal(false);
       setWaiterFormData({ full_name: '' });
@@ -86,13 +82,9 @@ const ViewStaff = () => {
         return;
       }
 
-      await axios.put(
-        `${process.env.REACT_APP_API}/waiter/edit/${editingWaiter._id}`,
-        waiterFormData,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
-      );
+      await axios.put(`${process.env.REACT_APP_API}/waiter/edit/${editingWaiter._id}`, waiterFormData, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
       toast.success('Waiter updated successfully');
       setShowWaiterModal(false);
       setEditingWaiter(null);
@@ -176,8 +168,7 @@ const ViewStaff = () => {
       <Row className="justify-content-center my-5">
         <Col xs={12} className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
-          <h5>Loading Staff Members...</h5>
-          <p className="text-muted">Please wait while we fetch staff information</p>
+          <h5>Loading...</h5>
         </Col>
       </Row>
     );
@@ -208,19 +199,10 @@ const ViewStaff = () => {
           <h1 className="display-5 fw-bold">Manage Staff</h1>
         </Col>
         <Col className="text-end">
-          <Button
-            variant="outline-primary"
-            onClick={() => history.push('/staff/add')}
-            className="me-2"
-            disabled={loading}
-          >
+          <Button variant="outline-primary" onClick={() => history.push('/staff/add')} className="me-2" disabled={loading}>
             <CsLineIcons icon="plus" className="me-2" /> Add Staff
           </Button>
-          <Button
-            variant="outline-primary"
-            onClick={() => history.push('/staff/attendance')}
-            disabled={loading}
-          >
+          <Button variant="outline-primary" onClick={() => history.push('/staff/attendance')} disabled={loading}>
             <CsLineIcons icon="calendar" className="me-2" />
             Manage Attendance
           </Button>
@@ -235,17 +217,14 @@ const ViewStaff = () => {
             Waiter Management
           </h5>
           <div>
-            <CsLineIcons
-              icon={showWaiterSection ? "chevron-top" : "chevron-bottom"}
-              size="20"
-            />
+            <CsLineIcons icon={showWaiterSection ? 'chevron-top' : 'chevron-bottom'} size="20" />
           </div>
         </Card.Header>
 
         {showWaiterSection && (
           <Card.Body>
             <div className="d-flex justify-content-between align-items-center mb-3">
-              <div className='d-flex'>
+              <div className="d-flex">
                 <h6 className="mb-0">Waiters List</h6>
                 <span className="badge bg-primary ms-2">{waiters.length}</span>
               </div>
@@ -275,19 +254,10 @@ const ViewStaff = () => {
                       <td>{index + 1}</td>
                       <td>{waiter.full_name}</td>
                       <td className="text-end">
-                        <Button
-                          variant="outline-primary"
-                          size="sm"
-                          className="me-2"
-                          onClick={() => openEditWaiterModal(waiter)}
-                        >
+                        <Button variant="outline-primary" size="sm" className="me-2" onClick={() => openEditWaiterModal(waiter)}>
                           <CsLineIcons icon="edit" size="14" />
                         </Button>
-                        <Button
-                          variant="outline-danger"
-                          size="sm"
-                          onClick={() => openDeleteModal(waiter)}
-                        >
+                        <Button variant="outline-danger" size="sm" onClick={() => openDeleteModal(waiter)}>
                           <CsLineIcons icon="bin" size="14" />
                         </Button>
                       </td>
@@ -311,7 +281,9 @@ const ViewStaff = () => {
           <div key={position} className="mb-5">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h4 className="fw-bold mb-0">{position}</h4>
-              <span className="text-muted">{members.length} staff member{members.length !== 1 ? 's' : ''}</span>
+              <span className="text-muted">
+                {members.length} staff member{members.length !== 1 ? 's' : ''}
+              </span>
             </div>
             <Glide
               options={{
@@ -333,9 +305,7 @@ const ViewStaff = () => {
               {members.map((staffMember) => (
                 <Link to={`/staff/profile/${staffMember._id}`} key={staffMember._id} className="my-3">
                   <Glide.Item className="my-3">
-                    <Card
-                      className="sh-20 hover-shadow hover-border-primary cursor-pointer position-relative"
-                    >
+                    <Card className="sh-20 hover-shadow hover-border-primary cursor-pointer position-relative">
                       <Card.Body className="p-3 text-center d-flex flex-column align-items-center justify-content-between">
                         <div className="position-relative sh-8 sw-8 bg-gradient-light rounded-xl overflow-hidden mb-2">
                           {!staffMember.photo ? (
@@ -385,11 +355,7 @@ const ViewStaff = () => {
               <CsLineIcons icon="inbox" size="48" className="text-muted mb-3" />
               <h5>No Staff Members Found</h5>
               <p className="text-muted mb-4">Get started by adding your first staff member</p>
-              <Button
-                variant="primary"
-                onClick={() => history.push('/staff/add')}
-                size="lg"
-              >
+              <Button variant="primary" onClick={() => history.push('/staff/add')} size="lg">
                 <CsLineIcons icon="plus" className="me-2" />
                 Add First Staff
               </Button>
@@ -421,11 +387,8 @@ const ViewStaff = () => {
           <Button variant="secondary" onClick={handleModalClose}>
             Cancel
           </Button>
-          <Button
-            variant="primary"
-            onClick={editingWaiter ? handleEditWaiter : handleAddWaiter}
-          >
-            <CsLineIcons icon={editingWaiter ? "save" : "plus"} className="me-1" size="14" />
+          <Button variant="primary" onClick={editingWaiter ? handleEditWaiter : handleAddWaiter}>
+            <CsLineIcons icon={editingWaiter ? 'save' : 'plus'} className="me-1" size="14" />
             {editingWaiter ? 'Update' : 'Add'}
           </Button>
         </Modal.Footer>
@@ -435,37 +398,24 @@ const ViewStaff = () => {
       <Modal show={showDeleteModal} onHide={handleDeleteModalClose} centered>
         <Modal.Header closeButton>
           <Modal.Title>
-            <CsLineIcons icon="warning-hexagon" className="me-2 text-danger" size="24" />
-            Confirm Delete
+            <CsLineIcons icon="warning" className="text-danger me-2" />
+            Delete Staff?
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <div className="text-center py-3">
-            <div className="mb-3">
-              <CsLineIcons icon="bin" size="48" className="text-danger" />
-            </div>
-            <h5>Are you sure you want to delete this waiter?</h5>
-            {deletingWaiter && (
-              <p className="text-muted mb-0">
-                <strong>{deletingWaiter.full_name}</strong> will be permanently removed from the system.
-              </p>
-            )}
-            <Alert variant="warning" className="mt-3 mb-0 text-start">
-              <small>
-                <strong>Warning:</strong> This action cannot be undone.
-              </small>
+          <p>This Member will be permanently deleted from your Staff.</p>
+          {error && (
+            <Alert variant="danger" className="mt-3">
+              <CsLineIcons icon="error" className="me-2" />
+              {error}
             </Alert>
-          </div>
+          )}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleDeleteModalClose} disabled={isDeleting}>
             Cancel
           </Button>
-          <Button
-            variant="danger"
-            onClick={handleDeleteWaiter}
-            disabled={isDeleting}
-          >
+          <Button variant="danger" onClick={handleDeleteWaiter} disabled={isDeleting}>
             {isDeleting ? (
               <>
                 <Spinner animation="border" size="sm" className="me-2" />

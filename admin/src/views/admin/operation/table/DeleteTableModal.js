@@ -35,15 +35,11 @@ const DeleteTableModal = ({ show, handleClose, data, onDeleteSuccess }) => {
       <Modal.Header closeButton>
         <Modal.Title>
           <CsLineIcons icon="bin" className="text-danger me-2" />
-          Delete Table
+          Delete Table?
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <p>Are you sure you want to delete this table?</p>
-        <div className="d-flex flex-column">
-          <strong>Dining Area: {data?.area}</strong>
-          <strong>Table Number: {data?.table_no}</strong>
-        </div>
+        <p>This will permanently remove the table from your restaurant layout.</p>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={handleClose} disabled={isDeleting}>

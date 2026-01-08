@@ -390,7 +390,7 @@ const InventoryHistory = () => {
         Cell: ({ cell }) => <Badge bg="danger">{cell.value}</Badge>,
       },
       {
-        Header: 'Reject Reason',
+        Header: 'Reason',
         accessor: 'reject_reason',
         Cell: ({ cell }) => {
           const text = cell.value || '';
@@ -802,7 +802,7 @@ const InventoryHistory = () => {
             <Row className="justify-content-center my-5">
               <Col xs={12} className="text-center">
                 <Spinner animation="border" variant="danger" className="mb-3" />
-                <p>Loading rejected inventory...</p>
+                <p>Loading...</p>
               </Col>
             </Row>
           ) : rejectedData.length === 0 ? (
@@ -826,18 +826,11 @@ const InventoryHistory = () => {
         <Modal.Header closeButton>
           <Modal.Title>
             <CsLineIcons icon="warning" className="text-warning me-2" />
-            Delete Inventory
+            Delete Inventory?
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>Are you sure you want to delete this inventory?</p>
-          <p>
-            <strong>{data?.bill_number}</strong> - {data?.vendor_name}
-          </p>
-          <Alert variant="warning" className="mt-3">
-            <CsLineIcons icon="alert" className="me-2" />
-            This action cannot be undone.
-          </Alert>
+          <p>Delete this inventory item permanently?</p>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose} disabled={isDeleting}>

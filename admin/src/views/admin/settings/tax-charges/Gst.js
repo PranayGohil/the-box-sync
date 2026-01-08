@@ -156,8 +156,7 @@ const Gst = () => {
             </div>
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading Tax Information...</h5>
-              <p className="text-muted">Please wait while we fetch your tax details</p>
+              <h5>Loading...</h5>
             </div>
           </Col>
         </Row>
@@ -221,7 +220,6 @@ const Gst = () => {
                             style={{ textTransform: 'uppercase' }}
                           />
                           <Form.Control.Feedback type="invalid">{errors.gst_no}</Form.Control.Feedback>
-                          <Form.Text className="text-muted">Format: 2 digits + 5 letters + 4 digits + 1 letter + 1 alphanumeric + Z + 1 alphanumeric</Form.Text>
                         </Form.Group>
                       </Col>
                     </Row>
@@ -340,7 +338,6 @@ const Gst = () => {
                               </>
                             ) : (
                               <>
-                                <CsLineIcons icon="save" className="me-2" />
                                 Submit
                               </>
                             )}
