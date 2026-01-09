@@ -286,7 +286,6 @@ const ManageWaiters = () => {
       <Modal className="modal-right large" show={showWaiterModal} onHide={handleModalClose} backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>
-            <CsLineIcons icon={editingWaiter ? 'edit' : 'user-plus'} className="me-2" />
             {editingWaiter ? 'Edit Waiter' : 'Add Waiter'}
           </Modal.Title>
         </Modal.Header>
@@ -306,7 +305,7 @@ const ManageWaiters = () => {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleModalClose} disabled={isSubmitting}>
+          <Button variant="dark" onClick={handleModalClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button variant="primary" onClick={editingWaiter ? handleEditWaiter : handleAddWaiter} disabled={isSubmitting || !waiterFormData.full_name.trim()}>
@@ -328,18 +327,17 @@ const ManageWaiters = () => {
       {/* Delete Confirmation Modal */}
       <Modal show={showDeleteModal} onHide={handleDeleteModalClose} backdrop="static" centered>
         <Modal.Header closeButton>
-          <Modal.Title>
-            <CsLineIcons icon="warning" className="text-danger me-2" />
+          <Modal.Title> 
             Delete Waiter?
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>
-            Are you sure you want to delete waiter <strong>{deletingWaiter?.full_name}</strong>? This action cannot be undone.
+            This Waiter(<strong>{deletingWaiter?.full_name}</strong>) was permanently deleted from your waiter list.
           </p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleDeleteModalClose} disabled={isDeleting}>
+          <Button variant="dark" onClick={handleDeleteModalClose} disabled={isDeleting}>
             Cancel
           </Button>
           <Button variant="danger" onClick={handleDeleteWaiter} disabled={isDeleting}>

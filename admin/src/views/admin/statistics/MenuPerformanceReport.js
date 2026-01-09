@@ -1242,7 +1242,7 @@ const MenuPerformanceReport = () => {
           </Alert>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowExportModal(false)}>
+          <Button variant="dark" onClick={() => setShowExportModal(false)}>
             Cancel
           </Button>
           <Button variant="primary" onClick={handleExportConfirm}>

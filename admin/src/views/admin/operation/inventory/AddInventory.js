@@ -3,7 +3,6 @@ import { useHistory } from 'react-router-dom';
 import { Row, Col, Card, Button, Form, Spinner } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
-import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -384,8 +383,8 @@ const AddInventory = () => {
                 );
               })}
 
-              <Button variant="primary" onClick={addItem} disabled={isSubmitting}>
-                <CsLineIcons icon="plus" className="me-1" /> Add
+              <Button variant="secondary" onClick={addItem} disabled={isSubmitting}>
+               Add
               </Button>
 
               {/* 🔥 NEW: Financial Summary Section */}
@@ -478,7 +477,7 @@ const AddInventory = () => {
                   </Form.Group>
                 </Col>
               </Row>
-              <Button type="submit" variant="primary" className="mt-3" disabled={isSubmitting} style={{ minWidth: '120px' }}>
+              <Button type="submit" variant="primary" className="mt-3" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
@@ -486,7 +485,6 @@ const AddInventory = () => {
                   </>
                 ) : (
                   <div className="d-flex align-items-center">
-                    <CsLineIcons icon="save" className="me-1" />
                     Submit
                   </div>
                 )}

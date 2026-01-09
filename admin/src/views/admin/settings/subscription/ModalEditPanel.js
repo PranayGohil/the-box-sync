@@ -128,7 +128,6 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
       <Modal className="modal-right large fade" show={show} onHide={handleClose} backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>
-            <CsLineIcons icon={isAddMode ? "plus" : "edit"} className="me-2" />
             {isAddMode ? 'Add' : 'Edit'} {planName}
           </Modal.Title>
         </Modal.Header>
@@ -258,7 +257,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="outline-primary" onClick={handleClose} disabled={isLoading}>
+          <Button variant="dark" onClick={handleClose} disabled={isLoading}>
             Cancel
           </Button>
           <Button

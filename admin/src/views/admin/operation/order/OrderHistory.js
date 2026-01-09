@@ -388,7 +388,6 @@ const OrderHistory = () => {
       printWindow.close();
 
       document.body.removeChild(printDiv);
-      toast.success('Invoice printed successfully!');
     } catch (err) {
       console.error('Error fetching order or user data:', err);
       toast.error('Failed to print invoice. Please try again.');
@@ -456,7 +455,6 @@ const OrderHistory = () => {
       const orders = await fetchAllOrdersForExport();
 
       if (!orders || orders.length === 0) {
-        toast.warning('No orders found with the selected filters');
         setExporting(false);
         return;
       }
@@ -568,7 +566,6 @@ const OrderHistory = () => {
       XLSX.writeFile(wb, filename);
 
       setExportProgress(100);
-      toast.success(`${orders.length} orders exported successfully!`);
     } catch (err) {
       console.error('Export error:', err);
       toast.error(err.message || 'Failed to export orders');
@@ -590,7 +587,6 @@ const OrderHistory = () => {
       const orders = await fetchAllOrdersForExport();
 
       if (!orders || orders.length === 0) {
-        toast.warning('No orders found with the selected filters');
         setExporting(false);
         return;
       }
@@ -761,7 +757,6 @@ const OrderHistory = () => {
       doc.save(filename);
 
       setExportProgress(100);
-      toast.success(`${orders.length} orders exported successfully!`);
     } catch (err) {
       console.error('Export error:', err);
       toast.error(err.message || 'Failed to export orders');
@@ -1270,7 +1265,7 @@ const OrderHistory = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowExportModal(false)} disabled={exporting}>
+          <Button variant="dark" onClick={() => setShowExportModal(false)} disabled={exporting}>
             Cancel
           </Button>
           <Button variant="primary" onClick={handleExportConfirm} disabled={exporting}>

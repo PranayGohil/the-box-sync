@@ -488,7 +488,7 @@ export default function ManageAttendance() {
                     )}
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowActionModal(false)}>
+                    <Button variant="dark" onClick={() => setShowActionModal(false)}>
                         Cancel
                     </Button>
                     <Button variant="primary" onClick={confirmAction}>

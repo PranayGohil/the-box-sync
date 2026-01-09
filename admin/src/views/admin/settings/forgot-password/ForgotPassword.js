@@ -142,7 +142,7 @@ function ForgotPassword() {
                     />
                   </Form.Group>
                   <div className="d-flex justify-content-between align-items-center">
-                    <Button variant="primary" type="submit" disabled={isLoading} style={{ minWidth: '120px' }}>
+                    <Button variant="primary" type="submit" disabled={isLoading}>
                       {isLoading ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />
@@ -150,7 +150,6 @@ function ForgotPassword() {
                         </>
                       ) : (
                         <>
-                          <CsLineIcons icon="send" className="me-2" />
                           Send OTP
                         </>
                       )}

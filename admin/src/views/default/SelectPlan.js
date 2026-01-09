@@ -324,7 +324,6 @@ const SelectPlan = () => {
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>
-            <CsLineIcons icon="info" className="me-2" />
             Confirm Plan Selection
           </Modal.Title>
         </Modal.Header>
@@ -338,7 +337,7 @@ const SelectPlan = () => {
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+          <Button variant="dark" onClick={() => setShowModal(false)}>
             Cancel
           </Button>
           <Button variant="primary" onClick={handleConfirm}>

@@ -9,6 +9,7 @@ import axios from 'axios';
 import { Country, State, City } from 'country-state-city';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import CreatableSelect from 'react-select/creatable';
 
 const AddStaff = () => {
   const title = 'Add Staff';
@@ -24,7 +25,7 @@ const AddStaff = () => {
   const [loading, setLoading] = useState({
     initial: true,
     positions: false,
-    submitting: false
+    submitting: false,
   });
   const [fileUploadError, setFileUploadError] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -37,8 +38,40 @@ const AddStaff = () => {
   const [uploadingFiles, setUploadingFiles] = useState({
     photo: false,
     front_image: false,
-    back_image: false
+    back_image: false,
   });
+
+  // Common restaurant staff positions
+  const commonPositions = [
+    'Manager',
+    'Assistant Manager',
+    'Head Chef',
+    'Sous Chef',
+    'Line Cook',
+    'Prep Cook',
+    'Pastry Chef',
+    'Waiter',
+    'Waitress',
+    'Server',
+    'Host/Hostess',
+    'Bartender',
+    'Barista',
+    'Busser',
+    'Dishwasher',
+    'Kitchen Helper',
+    'Food Runner',
+    'Cashier',
+    'Supervisor',
+    'Shift Leader',
+    'Delivery Driver',
+    'Receptionist',
+    'Accountant',
+    'HR Manager',
+    'Marketing Manager',
+    'Maintenance Staff',
+    'Security Guard',
+    'Cleaning Staff',
+  ];
 
   const addStaff = Yup.object().shape({
     staff_id: Yup.string()
@@ -75,7 +108,11 @@ const AddStaff = () => {
     photo: Yup.mixed()
       .required('Photo is required')
       .test('fileSize', 'File size is too large (max 2MB)', (value) => !value || (value && value.size <= 2 * 1024 * 1024))
-      .test('fileType', 'Unsupported file format (JPEG, PNG, JPG, WebP only)', (value) => !value || (value && ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(value.type))),
+      .test(
+        'fileType',
+        'Unsupported file format (JPEG, PNG, JPG, WebP only)',
+        (value) => !value || (value && ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(value.type))
+      ),
 
     document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Pan Card', 'Voter Card'], 'Invalid document type'),
 
@@ -101,7 +138,11 @@ const AddStaff = () => {
     front_image: Yup.mixed()
       .required('Front ID image is required')
       .test('fileSize', 'File size is too large (max 2MB)', (value) => !value || (value && value.size <= 2 * 1024 * 1024))
-      .test('fileType', 'Unsupported file format (JPEG, PNG, JPG, WebP only)', (value) => !value || (value && ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(value.type))),
+      .test(
+        'fileType',
+        'Unsupported file format (JPEG, PNG, JPG, WebP only)',
+        (value) => !value || (value && ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(value.type))
+      ),
 
     back_image: Yup.mixed()
       .when('document_type', (docType, schema) => {
@@ -111,7 +152,11 @@ const AddStaff = () => {
         return schema.notRequired();
       })
       .test('fileSize', 'File size is too large (max 2MB)', (value) => !value || (value && value.size <= 2 * 1024 * 1024))
-      .test('fileType', 'Unsupported file format (JPEG, PNG, JPG, WebP only)', (value) => !value || (value && ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(value.type))),
+      .test(
+        'fileType',
+        'Unsupported file format (JPEG, PNG, JPG, WebP only)',
+        (value) => !value || (value && ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(value.type))
+      ),
   });
 
   const formik = useFormik({
@@ -137,7 +182,7 @@ const AddStaff = () => {
     },
     validationSchema: addStaff,
     onSubmit: async (values, { setSubmitting }) => {
-      setLoading(prev => ({ ...prev, submitting: true }));
+      setLoading((prev) => ({ ...prev, submitting: true }));
       setFileUploadError(null);
       try {
         const formData = new FormData();
@@ -167,7 +212,7 @@ const AddStaff = () => {
         setFileUploadError(err.response?.data?.message || 'Staff submission failed. Please try again.');
         toast.error('Add staff failed.');
       } finally {
-        setLoading(prev => ({ ...prev, submitting: false }));
+        setLoading((prev) => ({ ...prev, submitting: false }));
         setSubmitting(false);
       }
     },
@@ -178,7 +223,7 @@ const AddStaff = () => {
   useEffect(() => {
     const initializeData = async () => {
       try {
-        setLoading(prev => ({ ...prev, initial: true }));
+        setLoading((prev) => ({ ...prev, initial: true }));
         setCountries(Country.getAllCountries());
 
         const response = await axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
@@ -189,11 +234,18 @@ const AddStaff = () => {
         console.error('Error fetching positions:', error);
         toast.error('Failed to fetch positions.');
       } finally {
-        setLoading(prev => ({ ...prev, initial: false }));
+        setLoading((prev) => ({ ...prev, initial: false }));
       }
     };
     initializeData();
   }, []);
+
+  // Combine API positions with common positions and remove duplicates
+  const allPositions = [...new Set([...commonPositions, ...positions])].sort();
+  const positionOptions = allPositions.map((pos) => ({
+    label: pos,
+    value: pos,
+  }));
 
   const handleCountryChange = (event) => {
     const countryName = event.target.value;
@@ -217,17 +269,17 @@ const AddStaff = () => {
   };
 
   const handleFileChange = async (fieldName, file, setPreview) => {
-    setUploadingFiles(prev => ({ ...prev, [fieldName]: true }));
+    setUploadingFiles((prev) => ({ ...prev, [fieldName]: true }));
 
     // Simulate file processing delay for better UX
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     setFieldValue(fieldName, file);
     if (file) {
       setPreview(URL.createObjectURL(file));
     }
 
-    setUploadingFiles(prev => ({ ...prev, [fieldName]: false }));
+    setUploadingFiles((prev) => ({ ...prev, [fieldName]: false }));
   };
 
   if (loading.initial) {
@@ -480,27 +532,23 @@ const AddStaff = () => {
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label>Position</Form.Label>
-                    <div className="position-relative">
-                      <Form.Control
-                        list="positions"
-                        name="position"
-                        value={values.position}
-                        onChange={handleChange}
-                        isInvalid={touched.position && errors.position}
-                        disabled={loading.submitting || loading.positions}
-                      />
-                      <datalist id="positions">
-                        {positions.map((pos, index) => (
-                          <option key={index} value={pos} />
-                        ))}
-                      </datalist>
-                      {loading.positions && (
-                        <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
-                          <Spinner animation="border" size="sm" />
-                        </div>
-                      )}
-                      <Form.Control.Feedback type="invalid">{errors.position}</Form.Control.Feedback>
-                    </div>
+                    <CreatableSelect
+                      isClearable
+                      isDisabled={loading.submitting || loading.positions}
+                      options={positionOptions}
+                      value={values.position ? { label: values.position, value: values.position } : null}
+                      onChange={(selected) => {
+                        setFieldValue('position', selected ? selected.value : '');
+                      }}
+                      onBlur={() => formik.setFieldTouched('position', true)}
+                      placeholder="Select or create position"
+                      classNamePrefix="react-select"
+                    />
+                    {touched.position && errors.position && (
+                      <div className="text-danger mt-1" style={{ fontSize: '0.875rem' }}>
+                        {errors.position}
+                      </div>
+                    )}
                   </Form.Group>
                 </Col>
                 <Col md={6}>
@@ -588,10 +636,10 @@ const AddStaff = () => {
                         values.document_type === 'National Identity Card'
                           ? 'XXXX XXXX XXXX'
                           : values.document_type === 'Pan Card'
-                            ? 'ABCDE1234F'
-                            : values.document_type === 'Voter Card'
-                              ? 'ABC1234567'
-                              : 'Enter ID number'
+                          ? 'ABCDE1234F'
+                          : values.document_type === 'Voter Card'
+                          ? 'ABC1234567'
+                          : 'Enter ID number'
                       }
                       disabled={loading.submitting}
                     />
@@ -660,7 +708,9 @@ const AddStaff = () => {
                         </div>
                       )}
                       <Form.Control.Feedback type="invalid">{errors.back_image}</Form.Control.Feedback>
-                      {values.document_type === 'National Identity Card' && <Form.Text className="text-muted">Back image is required for Aadhar card</Form.Text>}
+                      {values.document_type === 'National Identity Card' && (
+                        <Form.Text className="text-muted">Back image is required for Aadhar card</Form.Text>
+                      )}
                       {backImagePreview && (
                         <div className="mt-2">
                           <img src={backImagePreview} alt="Back Image Preview" className="img-thumbnail" style={{ maxWidth: '150px', maxHeight: '150px' }} />
@@ -673,27 +723,17 @@ const AddStaff = () => {
             </Card>
 
             <div className="d-flex justify-content-start">
-              <Button
-                variant="success"
-                type="submit"
-                className="mx-2 px-4"
-                disabled={loading.submitting}
-                style={{ minWidth: '150px' }}
-              >
+              <Button variant="primary" type="submit" className="mx-2 px-4" disabled={loading.submitting} style={{ minWidth: '100px' }}>
                 {loading.submitting ? (
                   <>
-                    <Spinner
-                      as="span"
-                      animation="border"
-                      size="sm"
-                      role="status"
-                      aria-hidden="true"
-                      className="me-2"
-                    />
-                    Adding...
+                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                    Submitting...
                   </>
                 ) : (
-                  'Add'
+                  <div className="d-flex align-items-center">
+                    <CsLineIcons icon="save" className="me-1" />
+                    Submit
+                  </div>
                 )}
               </Button>
             </div>
@@ -706,17 +746,12 @@ const AddStaff = () => {
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.7)',
                 zIndex: 9999,
-                backdropFilter: 'blur(2px)'
+                backdropFilter: 'blur(2px)',
               }}
             >
               <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
                 <Card.Body className="text-center p-4">
-                  <Spinner
-                    animation="border"
-                    variant="success"
-                    className="mb-3"
-                    style={{ width: '3rem', height: '3rem' }}
-                  />
+                  <Spinner animation="border" variant="success" className="mb-3" style={{ width: '3rem', height: '3rem' }} />
                   <h5 className="mb-0">Adding Staff Member...</h5>
                   <small className="text-muted">Please wait a moment</small>
                 </Card.Body>

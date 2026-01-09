@@ -276,7 +276,7 @@ const Feedback = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowReplyModal(false)} disabled={sendingReply}>
+          <Button variant="dark" onClick={() => setShowReplyModal(false)} disabled={sendingReply}>
             Cancel
           </Button>
           <Button variant="primary" onClick={handleSendReply} disabled={sendingReply || !replyMessage.trim()}>

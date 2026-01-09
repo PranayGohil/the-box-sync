@@ -351,7 +351,7 @@ const Profile = () => {
                         <>
                           <Button
                             type="button"
-                            variant="secondary"
+                            variant="dark"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
@@ -361,7 +361,7 @@ const Profile = () => {
                           >
                             Cancel
                           </Button>
-                          <Button variant="primary" type="submit" className="ms-2" disabled={saving || isSubmitting} style={{ minWidth: '100px' }}>
+                          <Button variant="primary" type="submit" className="ms-2" disabled={saving || isSubmitting}>
                             {saving || isSubmitting ? (
                               <>
                                 <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />

@@ -289,7 +289,6 @@ const AddFeedback = () => {
         <Modal show={showModal} onHide={() => setShowModal(false)} centered>
           <Modal.Header>
             <Modal.Title>
-              <CsLineIcons icon="check-circle" className="text-success me-2" />
               Thank You!
             </Modal.Title>
             <button

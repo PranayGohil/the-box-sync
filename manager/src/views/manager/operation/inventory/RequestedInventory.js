@@ -179,42 +179,34 @@ const RequestedInventory = () => {
       {
         Header: 'Requested Date',
         accessor: 'formatted_date',
-        headerClassName: 'text-muted text-small text-uppercase w-20',
-        Cell: ({ cell }) => (
-          <div className="text-truncate" title={cell.value}>
-            {cell.value}
-          </div>
-        ),
+        Cell: ({ cell }) => <span>{cell.value}</span>,
       },
       {
         Header: 'Items',
         accessor: 'items',
-        headerClassName: 'text-muted text-small text-uppercase w-40',
         Cell: ({ cell }) => (
-          <div>
-            {cell.value.slice(0, 3).map((item, i) => (
-              <div key={i} className="text-truncate" style={{ maxWidth: '300px' }}>
-                <Badge bg="info" className="me-2">
-                  {item.item_quantity} {item.unit}
-                </Badge>
-                {item.item_name}
+          <>
+            {cell.value.map((item, i) => (
+              <div key={i} className="mb-1">
+                {item.item_name} - {item.item_quantity} {item.unit}
               </div>
             ))}
-            {cell.value.length > 3 && <small className="text-muted">+{cell.value.length - 3} more items</small>}
-          </div>
+          </>
         ),
       },
       {
         Header: 'Status',
         accessor: 'status',
-        headerClassName: 'text-muted text-small text-uppercase w-15 text-center',
-        Cell: ({ cell }) => <Badge bg="warning">{cell.value}</Badge>,
+        Cell: ({ cell }) => (
+          <Badge bg="warning" text="dark">
+            {cell.value}
+          </Badge>
+        ),
       },
       {
         Header: 'Actions',
-        headerClassName: 'text-muted text-small text-uppercase w-25 text-center',
         Cell: ({ row }) => (
-          <div className="d-flex align-items-center justify-content-center gap-2">
+          <div className="d-flex gap-2">
             <Button
               variant="outline-primary"
               size="sm"

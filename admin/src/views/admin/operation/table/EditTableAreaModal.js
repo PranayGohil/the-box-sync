@@ -44,7 +44,6 @@ const EditTableAreaModal = ({ show, handleClose, data, onUpdateSuccess }) => {
     <Modal className="modal-right large" show={show} onHide={handleClose} backdrop="static">
       <Modal.Header closeButton>
         <Modal.Title>
-          <CsLineIcons icon="edit" className="me-2" />
           Edit Table Area
         </Modal.Title>
       </Modal.Header>
@@ -66,7 +65,7 @@ const EditTableAreaModal = ({ show, handleClose, data, onUpdateSuccess }) => {
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose} disabled={isSubmitting}>
+        <Button variant="dark" onClick={handleClose} disabled={isSubmitting}>
           Cancel
         </Button>
         <Button

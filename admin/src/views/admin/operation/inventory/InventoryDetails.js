@@ -294,21 +294,19 @@ const InventoryDetails = () => {
       </Row>
 
       {/* Delete Confirmation Modal */}
-      <Modal className="modal-close-out" show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>
-            <CsLineIcons icon="warning" className="text-warning me-2" />
             Delete Inventory?
           </Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
-          <p>Delete this inventory item permanently?</p>
-          <small className="text-muted">This action cannot be undone.</small>
+          <p>Delete this inventory item permanently</p>
         </Modal.Body>
 
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)} disabled={deleting}>
+          <Button variant="dark" onClick={() => setShowDeleteModal(false)} disabled={deleting}>
             Cancel
           </Button>
 

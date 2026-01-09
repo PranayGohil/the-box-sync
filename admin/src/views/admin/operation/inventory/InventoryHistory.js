@@ -822,18 +822,17 @@ const InventoryHistory = () => {
       </Row>
 
       {/* Delete Inventory Modal */}
-      <Modal className="modal-close-out" show={show} onHide={handleClose} centered>
+      <Modal show={show} onHide={handleClose} centered>
         <Modal.Header closeButton>
           <Modal.Title>
-            <CsLineIcons icon="warning" className="text-warning me-2" />
             Delete Inventory?
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>Delete this inventory item permanently?</p>
+          <p>Delete this inventory item permanently</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose} disabled={isDeleting}>
+          <Button variant="dark" onClick={handleClose} disabled={isDeleting}>
             Cancel
           </Button>
           <Button variant="danger" onClick={handleDelete} disabled={isDeleting}>
@@ -853,7 +852,6 @@ const InventoryHistory = () => {
       <Modal show={showRejectReasonModal} onHide={() => setShowRejectReasonModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>
-            <CsLineIcons icon="warning" className="text-danger me-2" />
             Reject Reason
           </Modal.Title>
         </Modal.Header>

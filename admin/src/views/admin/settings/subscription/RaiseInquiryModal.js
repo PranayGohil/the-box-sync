@@ -73,7 +73,6 @@ function RaiseInquiryModal({ show, handleClose, subscriptionName, fetchData }) {
             <Modal className="modal-right large fade" show={show} onHide={handleClose} backdrop="static">
                 <Modal.Header closeButton>
                     <Modal.Title>
-                        <CsLineIcons icon="send" className="me-2" />
                         Raise Inquiry
                     </Modal.Title>
                 </Modal.Header>
@@ -104,7 +103,7 @@ function RaiseInquiryModal({ show, handleClose, subscriptionName, fetchData }) {
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="outline-primary" onClick={handleClose} disabled={isLoading}>
+                    <Button variant="dark" onClick={handleClose} disabled={isLoading}>
                         Cancel
                     </Button>
                     <Button

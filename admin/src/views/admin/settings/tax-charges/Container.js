@@ -231,7 +231,7 @@ const Container = () => {
                       </div>
                       <div className='mt-3'>
                         <Button
-                          variant="secondary"
+                          variant="dark"
                           onClick={() => {
                             setIsEditing(false);
                             setServerError('');

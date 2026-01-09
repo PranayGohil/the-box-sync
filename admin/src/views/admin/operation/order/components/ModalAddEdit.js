@@ -132,7 +132,7 @@ const ModalAddEdit = ({ tableInstance }) => {
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="outline-primary" onClick={() => setIsOpenAddEditModal(false)}>
+        <Button variant="dark" onClick={() => setIsOpenAddEditModal(false)}>
           Cancel
         </Button>
         <Button variant="primary" onClick={saveItem}>

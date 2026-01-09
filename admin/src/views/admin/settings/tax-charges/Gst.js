@@ -319,7 +319,7 @@ const Gst = () => {
                       {editMode ? (
                         <>
                           <Button
-                            variant="secondary"
+                            variant="dark"
                             type="button"
                             onClick={(e) => {
                               e.preventDefault();

@@ -93,7 +93,7 @@ const NavContent = () => {
           </Nav.Link>
           <Nav.Link as={NavLink} to="/operations/add-dish" className="px-0 pt-1">
             <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Add Dishes</span>
+            <span className="align-middle">Add Dish</span>
           </Nav.Link>
           <Nav.Link as={NavLink} to="/operations/qr-for-menu" className="px-0 pt-1">
             <i className="me-2 sw-3 d-inline-block" />

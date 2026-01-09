@@ -92,6 +92,7 @@ const DineInOrder = () => {
         const response = await axios.get(`${process.env.REACT_APP_API}/waiter/get`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
+        console.log('Fetched waiters:', response.data);
         setWaiters(response.data.data);
       } catch (err) {
         console.error('Error fetching waiters:', err);

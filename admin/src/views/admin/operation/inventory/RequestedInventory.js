@@ -387,7 +387,6 @@ const RequestedInventory = () => {
 
       {/* Reject Confirmation Modal */}
       <Modal
-        className="modal-close-out"
         show={rejectInventoryModal}
         onHide={() => {
           setRejectInventoryModal(false);
@@ -397,7 +396,6 @@ const RequestedInventory = () => {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            <CsLineIcons icon="alert" className="text-warning me-2" />
             Request Reject? 
           </Modal.Title>
         </Modal.Header>
@@ -420,7 +418,7 @@ const RequestedInventory = () => {
         </Modal.Body>
         <Modal.Footer>
           <Button
-            variant="secondary"
+            variant="dark"
             onClick={() => {
               setRejectInventoryModal(false);
               setRejectReason('');
