@@ -139,7 +139,7 @@ function EditInventory() {
             </div>
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" className="mb-3" style={{ width: '3rem', height: '3rem' }} />
-              <h5>Loading Inventory Details...</h5>
+              <h5>Loading...</h5>
               <p className="text-muted">Please wait while we fetch inventory information</p>
             </div>
           </Col>

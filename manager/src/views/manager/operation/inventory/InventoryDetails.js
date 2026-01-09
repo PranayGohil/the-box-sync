@@ -60,7 +60,7 @@ const InventoryDetails = () => {
                         </div>
                         <div className="text-center py-5">
                             <Spinner animation="border" variant="primary" className="mb-3" />
-                            <h5>Loading Inventory Details...</h5>
+                            <h5>Loading...</h5>
                             <p className="text-muted">Please wait while we fetch inventory information</p>
                         </div>
                     </Col>
@@ -297,14 +297,12 @@ const InventoryDetails = () => {
                                                 <div className="d-flex justify-content-center gap-2">
                                                     <a href={fileUrl} target="_blank" rel="noreferrer" className="text-decoration-none">
                                                         <Button variant="outline-primary" size="sm">
-                                                            <CsLineIcons icon="eye" className="me-1" />
-                                                            View
+                                                            <CsLineIcons icon="eye"/>
                                                         </Button>
                                                     </a>
                                                     <a href={fileUrl} download className="text-decoration-none">
                                                         <Button variant="outline-success" size="sm">
-                                                            <CsLineIcons icon="download" className="me-1" />
-                                                            Download
+                                                            <CsLineIcons icon="download"/>
                                                         </Button>
                                                     </a>
                                                 </div>
@@ -322,7 +320,7 @@ const InventoryDetails = () => {
                 <Col className="text-end">
                     <Button variant="secondary" onClick={() => history.push('/operations/inventory-history')} className="me-2">
                         <CsLineIcons icon="arrow-left" className="me-2" />
-                        Back to Inventory
+                        Back
                     </Button>
                     {inventory.status === "Requested" && (
                         <Button variant="primary" onClick={() => history.push(`/operations/edit-inventory/${id}`)}>

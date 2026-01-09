@@ -48,8 +48,7 @@ const ViewStaff = () => {
       <Row className="justify-content-center my-5">
         <Col xs={12} className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
-          <h5>Loading Staff Members...</h5>
-          <p className="text-muted">Please wait while we fetch staff information</p>
+          <h5>Loading...</h5>
         </Col>
       </Row>
     );

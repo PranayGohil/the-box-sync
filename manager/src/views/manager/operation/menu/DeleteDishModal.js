@@ -27,22 +27,14 @@ const DeleteDishModal = ({ show, handleClose, data, fetchMenuData }) => {
   };
 
   return (
-    <Modal className="modal-close-out" show={show} onHide={handleClose} centered>
+    <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
         <Modal.Title>
-          <CsLineIcons icon="bin" className="text-danger me-2" />
-          Delete Dish
+          Delete Dish?
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <p>Are you sure you want to delete this dish?</p>
-        <p>
-          <strong>{data?.dish_name}</strong>
-        </p>
-        <div className="alert alert-warning mt-3">
-          <CsLineIcons icon="warning" className="me-2" />
-          This action cannot be undone.
-        </div>
+        <p>This dish will be permanently deleted from your menu.</p>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={handleClose} disabled={isDeleting}>
