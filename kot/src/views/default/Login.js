@@ -102,9 +102,6 @@ const Login = () => {
           <div className="mb-3 filled form-group tooltip-end-top">
             <CsLineIcons icon="lock-off" />
             <Form.Control type="password" name="password" placeholder="Password" value={values.password} onChange={handleChange} />
-            <NavLink className="text-small position-absolute t-3 e-3" to="/forgot-password">
-              Forgot?
-            </NavLink>
             {errors.password && touched.password && <div className="d-block invalid-tooltip">{errors.password}</div>}
           </div>
 

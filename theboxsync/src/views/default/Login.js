@@ -167,12 +167,6 @@ const Login = () => {
               value={values.password}
               onChange={handleChange}
             />
-            <NavLink
-              className="text-small position-absolute t-3 e-3"
-              to="/forgot-password"
-            >
-              Forgot?
-            </NavLink>
             {errors.password && touched.password && (
               <div className="d-block invalid-tooltip">{errors.password}</div>
             )}
