@@ -66,7 +66,7 @@ const AddDishes = () => {
       setSuggestions((prev) => ({
         ...prev,
         categories: response.data.data,
-        dishes: [], // 🔥 RESET DISHES
+        dishes: [], 
       }));
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -77,7 +77,7 @@ const AddDishes = () => {
   };
 
   useEffect(() => {
-    getMenuCategories('veg'); // 🔥 DEFAULT LOAD
+    getMenuCategories('veg'); 
   }, []);
 
   const getDishesByCategory = async (category) => {

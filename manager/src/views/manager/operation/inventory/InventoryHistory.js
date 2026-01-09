@@ -642,8 +642,7 @@ const InventoryHistory = () => {
               <Row className="justify-content-center my-5">
                 <Col xs={12} className="text-center">
                   <Spinner animation="border" variant="success" className="mb-3" />
-                  <h5>Loading Completed Inventory...</h5>
-                  <p className="text-muted">Please wait while we fetch completed requests</p>
+                  <h5>Loading...</h5>
                 </Col>
               </Row>
             ) : error.completed ? (
@@ -778,8 +777,7 @@ const InventoryHistory = () => {
               <Row className="justify-content-center my-5">
                 <Col xs={12} className="text-center">
                   <Spinner animation="border" variant="danger" className="mb-3" />
-                  <h5>Loading Rejected Inventory...</h5>
-                  <p className="text-muted">Please wait while we fetch rejected requests</p>
+                  <h5>Loading...</h5>
                 </Col>
               </Row>
             ) : error.rejected ? (

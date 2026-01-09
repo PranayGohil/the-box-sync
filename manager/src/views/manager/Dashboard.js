@@ -223,7 +223,7 @@ const Dashboard = () => {
                       </div>
                       <div className="d-flex flex-wrap gap-1">
                         {order.order_items.slice(0, 3).map((item, i) => (
-                          <small key={i} className="badge bg-light text-dark">
+                          <small key={i} className="badge bg-light text-dark" style={{fontSize:'12px'}}>
                             {item.dish_name} x{item.quantity}
                           </small>
                         ))}

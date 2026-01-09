@@ -31,23 +31,14 @@ const DeleteTableModal = ({ show, handleClose, data, onDeleteSuccess }) => {
   };
 
   return (
-    <Modal className="modal-close-out" show={show} onHide={handleClose} centered>
+    <Modal  show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
         <Modal.Title>
-          <CsLineIcons icon="bin" className="text-danger me-2" />
-          Delete Table
+          Delete Table?
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <p>Are you sure you want to delete this table?</p>
-        <div className="d-flex flex-column">
-          <strong>Dining Area: {data?.area}</strong>
-          <strong>Table Number: {data?.table_no}</strong>
-        </div>
-        <Alert variant="warning" className="mt-3">
-          <CsLineIcons icon="warning" className="me-2" />
-          This action cannot be undone.
-        </Alert>
+        <p>This will permanently remove the table from your restaurant layout.</p>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={handleClose} disabled={isDeleting}>

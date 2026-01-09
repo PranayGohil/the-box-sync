@@ -283,8 +283,7 @@ const RequestedInventory = () => {
             </div>
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading Requested Inventory...</h5>
-              <p className="text-muted">Please wait while we fetch inventory requests</p>
+              <h5>Loading...</h5>
             </div>
           </Col>
         </Row>
@@ -453,21 +452,17 @@ const RequestedInventory = () => {
       </Row>
 
       {/* Delete Inventory Modal */}
-      <Modal className="modal-close-out" show={deleteInventoryModal} onHide={() => setDeleteInventoryModal(false)} centered>
+      <Modal  show={deleteInventoryModal} onHide={() => setDeleteInventoryModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>
             <CsLineIcons icon="warning" className="text-danger me-2" />
-            Delete Inventory Request
+            Delete Inventory Request?
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>
-            Are you sure you want to delete the request for <strong>{inventoryToDelete?.items?.length || 0} items</strong>?
+            Delete this requested inventory permanently?
           </p>
-          <Alert variant="warning" className="mt-3">
-            <CsLineIcons icon="alert" className="me-2" />
-            This action cannot be undone. All associated data will be permanently removed.
-          </Alert>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setDeleteInventoryModal(false)} disabled={loading.deleting}>
