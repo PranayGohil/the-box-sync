@@ -10,7 +10,7 @@ const DeleteConfirmModal = ({ tableInstance, deleteItem }) => {
   };
 
   return (
-    <Modal centered className="modal-close-out" show={isOpenDeleteConfirmModal} onHide={() => setIsOpenDeleteConfirmModal(false)}>
+    <Modal centered  show={isOpenDeleteConfirmModal} onHide={() => setIsOpenDeleteConfirmModal(false)}>
       <Modal.Header closeButton>
         <Modal.Title>Confirmation</Modal.Title>
       </Modal.Header>

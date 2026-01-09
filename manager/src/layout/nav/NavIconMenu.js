@@ -56,7 +56,7 @@ const NavIconMenu = () => {
       </ul>
       <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 
-      <Modal className="modal-close-out" show={showLogoutModal} onHide={() => setShowLogoutModal(false)} centered>
+      <Modal  show={showLogoutModal} onHide={() => setShowLogoutModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Logout</Modal.Title>
         </Modal.Header>

@@ -89,7 +89,7 @@ const QRforFeedback = () => {
       <Row className="justify-content-center align-items-center min-vh-100">
         <Col xs={12} className="text-center">
           <Spinner animation="border" variant="primary" className="mb-3" />
-          <h5>Loading QR Code Generator...</h5>
+          <h5>Loading...</h5>
         </Col>
       </Row>
     );
@@ -128,7 +128,7 @@ const QRforFeedback = () => {
                 <div className="d-flex justify-content-center gap-2 mb-4">
                   <Button variant="outline-primary" onClick={printQRCode} disabled={generating}>
                     <CsLineIcons icon="print" className="me-2" />
-                    Print QR Code
+                    Print
                   </Button>
 
                   <Button
@@ -150,8 +150,8 @@ const QRforFeedback = () => {
                       </>
                     ) : (
                       <>
-                        <CsLineIcons icon="copy" className="me-2" />
-                        Copy URL
+                        <CsLineIcons icon="note" className="me-2" />
+                        Copy
                       </>
                     )}
                   </Button>
@@ -159,7 +159,7 @@ const QRforFeedback = () => {
               </>
             ) : (
               <Alert variant="info" className="mb-4">
-                <CsLineIcons icon="info" className="me-2" />
+                <CsLineIcons icon="info" className="me-2" style={{ fontSize: '12px' }} />
                 No feedback QR code generated yet. Click the button below to create one.
               </Alert>
             )}
@@ -188,7 +188,7 @@ const QRforFeedback = () => {
               ) : (
                 <>
                   <CsLineIcons icon="qr-code" className="me-2" />
-                  {feedbackToken ? 'Generate New QR Code' : 'Create Feedback QR Code'}
+                  {feedbackToken ? 'Generate New QR' : 'Create Feedback QR Code'}
                 </>
               )}
             </Button>
@@ -198,7 +198,7 @@ const QRforFeedback = () => {
               <div className="mt-3">
                 <Alert variant="light" className="d-inline-flex align-items-center">
                   <Spinner animation="border" size="sm" className="me-2" />
-                  <small>Please wait while we generate your QR code...</small>
+                  <small>Loading...</small>
                 </Alert>
               </div>
             )}

@@ -75,11 +75,11 @@ const Login = () => {
   const rightSide = (
     <div className="sw-lg-70 min-h-100 bg-foreground d-flex justify-content-center align-items-center shadow-deep py-5 full-page-content-right-border">
       <div className="sw-lg-50 px-5">
-        <div className="sh-11">
-          <div className="logo-default" />
+        <div className="mb-3">
+          <h2 className="cta-1 mb-0 text-primary">Manager Login</h2>
         </div>
-        <div className="mb-5">
-          <h2 className="cta-1 mb-0 text-primary">Manager, Login!</h2>
+        <div className="mb-3">
+          <p className="h6">Secure access to your control panel.</p>
         </div>
 
         {/* ✅ Login Form */}
@@ -117,6 +117,11 @@ const Login = () => {
             </div>
           )}
         </form>
+        <div className="mt-auto text-center pt-4">
+          <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
+            Powered by <strong>TheBoxSync</strong>
+          </p>
+        </div>
       </div>
     </div>
   );

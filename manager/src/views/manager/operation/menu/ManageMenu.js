@@ -137,7 +137,7 @@ const ManageMenu = () => {
             </div>
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" className="mb-3" />
-              <p>Loading menu data...</p>
+              <p>Loading...</p>
             </div>
           </Col>
         </Row>

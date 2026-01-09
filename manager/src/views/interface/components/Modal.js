@@ -106,7 +106,7 @@ const ModalPage = () => {
               <Button variant="outline-primary" onClick={() => setCloseButtonOutExample(true)}>
                 Launch demo modal
               </Button>
-              <Modal className="modal-close-out" show={closeButtonOutExample} onHide={() => setCloseButtonOutExample(false)}>
+              <Modal  show={closeButtonOutExample} onHide={() => setCloseButtonOutExample(false)}>
                 <Modal.Header closeButton>
                   <Modal.Title>Modal title</Modal.Title>
                 </Modal.Header>
@@ -780,7 +780,7 @@ const ModalPage = () => {
               </Button>
 
               {/* Vertically centered modal */}
-              <Modal className="modal-close-out" show={verticallyCenteredExample} onHide={() => setVerticallyCenteredExample(false)} centered>
+              <Modal  show={verticallyCenteredExample} onHide={() => setVerticallyCenteredExample(false)} centered>
                 <Modal.Header closeButton>
                   <Modal.Title>Modal title</Modal.Title>
                 </Modal.Header>

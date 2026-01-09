@@ -209,7 +209,7 @@ const Feedback = () => {
             <Row className="justify-content-center my-5">
               <Col xs={12} className="text-center">
                 <Spinner animation="border" variant="primary" className="mb-3" />
-                <p>Loading feedback data...</p>
+                <p>Loading...</p>
               </Col>
             </Row>
           )}
