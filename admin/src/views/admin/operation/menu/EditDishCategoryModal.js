@@ -117,7 +117,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                     Cancel
                 </Button>
                 <Button
-                    variant="dark"
+                    variant="primary"
                     type="submit"
                     form="edit_category_form"
                     disabled={isSubmitting}
@@ -135,7 +135,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                             Updating...
                         </>
                     ) : (
-                        'Update Category'
+                        'Update'
                     )}
                 </Button>
             </Modal.Footer>

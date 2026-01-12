@@ -29,7 +29,7 @@ const BoxedVariationsStripe = ({ columns, data, category, setEditCategoryModalSh
             >
               {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
             </Badge>
-            <div className='d-flex gap-2'>
+            <div className="d-flex gap-2">
               <Button
                 variant="outline-primary"
                 size="sm"

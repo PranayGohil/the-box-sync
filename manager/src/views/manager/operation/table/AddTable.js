@@ -193,7 +193,7 @@ const AddTable = () => {
               {loadingAreas ? (
                 <div className="text-center py-5">
                   <Spinner animation="border" variant="primary" className="mb-3" />
-                  <p>Loading dining areas...</p>
+                  <p>Loading...</p>
                 </div>
               ) : (
                 <Form onSubmit={formik.handleSubmit}>
@@ -256,7 +256,7 @@ const AddTable = () => {
                       <Col md="4" className="mt-4">
                         <Button variant="outline-danger" onClick={() => removeTable(index)} disabled={isSubmitting || formik.values.tables.length === 1}>
                           <CsLineIcons icon="bin" className="me-1" />
-                          Delete
+                          Remove
                         </Button>
                       </Col>
                     </Row>
@@ -271,7 +271,7 @@ const AddTable = () => {
 
                   <div className="mt-4">
                     <Button variant="secondary" onClick={addMoreTable} className="me-2" disabled={isSubmitting}>
-                      <CsLineIcons icon="plus" className="me-1" />
+                      <CsLineIcons icon="plus" className="me-1" /> 
                       Add
                     </Button>
                     <Button type="submit" variant="primary" disabled={isSubmitting} style={{ minWidth: '100px' }}>

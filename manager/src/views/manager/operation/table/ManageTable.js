@@ -72,7 +72,7 @@ const ManageTable = () => {
             </div>
             <div className="text-center py-5">
               <Alert variant="info" className="d-inline-flex align-items-center">
-                Loading table data...
+                Loading...
               </Alert>
             </div>
           </Col>
@@ -111,7 +111,7 @@ const ManageTable = () => {
           {tableData.length === 0 ? (
             <Alert variant="info" className="text-center">
               <CsLineIcons icon="inbox" size={24} className="me-2" />
-              No tables found. Add some tables to get started.
+              No tables found.
             </Alert>
           ) : (
             <Row>

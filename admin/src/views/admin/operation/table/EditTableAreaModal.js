@@ -69,7 +69,7 @@ const EditTableAreaModal = ({ show, handleClose, data, onUpdateSuccess }) => {
           Cancel
         </Button>
         <Button
-          variant="dark"
+          variant="primary"
           type="submit"
           form="edit_table_form"
           disabled={isSubmitting}

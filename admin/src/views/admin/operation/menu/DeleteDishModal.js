@@ -37,7 +37,7 @@ const DeleteDishModal = ({ show, handleClose, data, fetchMenuData }) => {
         <p>This dish will be permanently deleted from your menu.</p>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="dark" onClick={handleClose} disabled={isDeleting}>
+        <Button variant="secondary" onClick={handleClose} disabled={isDeleting}>
           Cancel
         </Button>
         <Button variant="danger" onClick={handleDelete} disabled={isDeleting}>

@@ -84,6 +84,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
     <Modal className="modal-right large" show={show} onHide={handleClose} backdrop="static">
       <Modal.Header closeButton>
         <Modal.Title>
+          <CsLineIcons icon="edit" className="me-2" />
           Edit Dish
         </Modal.Title>
       </Modal.Header>
@@ -199,7 +200,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
           Cancel
         </Button>
         <Button
-          variant="secondary"
+          variant="primary"
           type="submit"
           form="edit_dish_form"
           disabled={isSubmitting}
@@ -217,7 +218,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
               Updating...
             </>
           ) : (
-            'Update Dish'
+            'Update'
           )}
         </Button>
       </Modal.Footer>

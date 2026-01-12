@@ -113,11 +113,11 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
             </Modal.Body>
 
             <Modal.Footer>
-                <Button variant="secondary" onClick={handleClose} disabled={isSubmitting}>
+                <Button variant="dark" onClick={handleClose} disabled={isSubmitting}>
                     Cancel
                 </Button>
                 <Button
-                    variant="dark"
+                    variant="primary"
                     type="submit"
                     form="edit_category_form"
                     disabled={isSubmitting}

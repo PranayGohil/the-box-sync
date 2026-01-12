@@ -2,6 +2,7 @@ import React, { useState, useContext, useRef, useEffect } from 'react';
 import { AuthContext } from 'contexts/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button, Card, Row, Col, Alert, Spinner } from 'react-bootstrap';
+import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
 
