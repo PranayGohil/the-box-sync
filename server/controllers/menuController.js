@@ -110,7 +110,7 @@ const getMenuDataByResCode = async (req, res) => {
     const restaurant_code = req.params.res_code;
 
     const restaurant = await User.findOne({ restaurant_code })
-      .select("_id")
+      .select("_id, name")
       .lean();
     if (!restaurant) {
       return res
@@ -118,10 +118,11 @@ const getMenuDataByResCode = async (req, res) => {
         .json({ success: false, error: "Restaurant not found" });
     }
     const user_id = restaurant._id;
+    const restaurant_name = restaurant.name;
 
     const menuData = await Menu.find({ user_id }).lean();
 
-    res.json({ success: true, data: menuData });
+    res.json({ success: true, data: menuData, restaurant_name });
   } catch (error) {
     console.error("Error fetching menu data:", error);
     res.status(500).json({ success: false, error: "Internal server error" });

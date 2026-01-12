@@ -50,7 +50,7 @@ const QRforMenu = ({ setSection }) => {
     newWindow.close();
   };
 
-  const menuLink = `${process.env.REACT_APP_HOME_URL}/${restaurant_code}`;
+  const menuLink = `${process.env.REACT_APP_HOME_URL}/menu/${restaurant_code}`;
 
   const copyToClipboard = async () => {
     setCopying(true);
@@ -72,8 +72,7 @@ const QRforMenu = ({ setSection }) => {
           <Card className="mb-5">
             <Card.Body className="text-center py-5">
               <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading Menu QR Code...</h5>
-              <p className="text-muted">Please wait a moment</p>
+              <h5>Loading...</h5>
             </Card.Body>
           </Card>
         </Col>

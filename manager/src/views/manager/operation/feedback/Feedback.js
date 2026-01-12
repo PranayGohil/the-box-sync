@@ -125,7 +125,7 @@ const Feedback = () => {
       },
       {
         Header: 'Date',
-        accessor: 'createdAt',
+        accessor: 'date',
         headerClassName: 'text-muted text-small text-uppercase w-15',
         Cell: ({ value }) => (value ? new Date(value).toLocaleDateString('en-IN') : 'N/A'),
       },
@@ -209,7 +209,7 @@ const Feedback = () => {
             <Row className="justify-content-center my-5">
               <Col xs={12} className="text-center">
                 <Spinner animation="border" variant="primary" className="mb-3" />
-                <p>Loading...</p>
+                <p>Loading feedback data...</p>
               </Col>
             </Row>
           )}
@@ -276,7 +276,7 @@ const Feedback = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowReplyModal(false)} disabled={sendingReply}>
+          <Button variant="dark" onClick={() => setShowReplyModal(false)} disabled={sendingReply}>
             Cancel
           </Button>
           <Button variant="primary" onClick={handleSendReply} disabled={sendingReply || !replyMessage.trim()}>

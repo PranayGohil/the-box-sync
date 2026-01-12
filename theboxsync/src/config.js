@@ -21,6 +21,8 @@ export const DEFAULT_PATHS = {
   NOTFOUND: '/page-not-found',
   UNAUTHORIZED: '/unauthorized',
   INVALID_ACCESS: '/invalid-access',
+  SHOW_MENU: '/menu/:res_code',
+  ADD_FEEDBACK: '/feedback/:token',
 };
 
 export const DEFAULT_SETTINGS = {

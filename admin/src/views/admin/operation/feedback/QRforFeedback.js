@@ -122,7 +122,7 @@ const QRforFeedback = () => {
                   <div ref={qrCodeRef} className="mb-3">
                     <QRCodeSVG size={250} value={`${process.env.REACT_APP_URL}/feedback/${feedbackToken}`} className="border rounded" />
                   </div>
-                  <div className="small text-muted mb-3">Feedback URL: {`${process.env.REACT_APP_URL}/feedback/${feedbackToken}`}</div>
+                  <div className="small text-muted mb-3">Feedback URL: {`${process.env.REACT_APP_HOME_URL}/feedback/${feedbackToken}`}</div>
                 </div>
 
                 <div className="d-flex justify-content-center gap-2 mb-4">

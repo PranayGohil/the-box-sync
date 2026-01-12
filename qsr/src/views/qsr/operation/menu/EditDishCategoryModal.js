@@ -57,7 +57,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
             <Modal show={show} onHide={handleClose} centered>
                 <Modal.Body className="text-center py-5">
                     <Spinner animation="border" variant="primary" />
-                    <p className="mt-3">Loading category data...</p>
+                    <p className="mt-3">Loading...</p>
                 </Modal.Body>
             </Modal>
         );
@@ -113,7 +113,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
             </Modal.Body>
 
             <Modal.Footer>
-                <Button variant="secondary" onClick={handleClose} disabled={isSubmitting}>
+                <Button variant="dark" onClick={handleClose} disabled={isSubmitting}>
                     Cancel
                 </Button>
                 <Button

@@ -8,6 +8,8 @@ const Register = lazy(() => import('views/default/Register'));
 const ResetPassword = lazy(() => import('views/default/ResetPassword'));
 const Unauthorized = lazy(() => import('views/default/Unauthorized'));
 const InvalidAccess = lazy(() => import('views/default/InvalidAccess'));
+const ShowMenu = lazy(() => import('views/default/showMenu'));
+const AddFeedback = lazy(() => import('views/default/addFeedback'));
 const App = lazy(() => import('App.js'));
 const Home = lazy(() => import('views/default/Home'));
 
@@ -26,6 +28,8 @@ const defaultRoutes = [
   { path: DEFAULT_PATHS.RESET_PASSWORD, exact: true, component: ResetPassword },
   { path: DEFAULT_PATHS.UNAUTHORIZED, exact: true, component: Unauthorized },
   { path: DEFAULT_PATHS.INVALID_ACCESS, exact: true, component: InvalidAccess },
+  { path: DEFAULT_PATHS.SHOW_MENU, exact: true, component: ShowMenu },
+  { path: DEFAULT_PATHS.ADD_FEEDBACK, exact: true, component: AddFeedback },
   { path: DEFAULT_PATHS.APP, component: App },
   { path: '/', exact: true, component: Home },
 ];

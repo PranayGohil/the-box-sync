@@ -31,7 +31,6 @@ import InventoryDetails from './inventory/InventoryDetails';
 
 import Feedback from './feedback/Feedback';
 import QRforFeedback from './feedback/QRforFeedback';
-import AddFeedback from './feedback/AddFeedback';
 
 const NavContent = () => {
   const { activePlans } = useContext(AuthContext);
@@ -245,7 +244,6 @@ const Operations = () => {
                 </>
               )}
             />
-            {/* <Route exact path="/operations/add-feedback" component={AddFeedback} /> */}
           </Switch>
         </Col>
       </Row>

@@ -50,7 +50,7 @@ const QRforMenu = ({ setSection }) => {
     newWindow.close();
   };
 
-  const menuLink = `${process.env.REACT_APP_HOME_URL}/${restaurant_code}`;
+  const menuLink = `${process.env.REACT_APP_HOME_URL}/menu/${restaurant_code}`;
 
   const copyToClipboard = async () => {
     setCopying(true);

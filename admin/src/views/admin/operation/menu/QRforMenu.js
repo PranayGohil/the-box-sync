@@ -2,7 +2,6 @@ import React, { useState, useContext, useRef, useEffect } from 'react';
 import { AuthContext } from 'contexts/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button, Card, Row, Col, Alert, Spinner } from 'react-bootstrap';
-import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
 
@@ -50,7 +49,7 @@ const QRforMenu = ({ setSection }) => {
     newWindow.close();
   };
 
-  const menuLink = `${process.env.REACT_APP_HOME_URL}/${restaurant_code}`;
+  const menuLink = `${process.env.REACT_APP_HOME_URL}/menu/${restaurant_code}`;
 
   const copyToClipboard = async () => {
     setCopying(true);

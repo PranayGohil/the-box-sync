@@ -71,52 +71,49 @@ const Login = () => {
     </div>
   );
 
-  // Right Side (integrated with login fields)
   const rightSide = (
     <div className="sw-lg-70 min-h-100 bg-foreground d-flex justify-content-center align-items-center shadow-deep py-5 full-page-content-right-border">
       <div className="sw-lg-50 px-5">
-        <div className="sh-11">
-          <div className="logo-default" />
-        </div>
-        <div className="mb-5">
+        <div className="mb-3">
           <h2 className="cta-1 mb-0 text-primary">Attendance Panel, Login!</h2>
         </div>
-
-        {/* ✅ Login Form */}
+        <div className="mb-3">
+          <p className="h6">Secure access to your control panel.</p>
+        </div>
         <form id="loginForm" className="tooltip-end-bottom" onSubmit={handleSubmit}>
-          {/* Restaurant Code */}
           <div className="mb-3 filled form-group tooltip-end-top">
             <CsLineIcons icon="building" />
             <Form.Control type="text" name="restaurant_code" placeholder="Restaurant Code" value={values.restaurant_code} onChange={handleChange} />
             {errors.restaurant_code && touched.restaurant_code && <div className="d-block invalid-tooltip">{errors.restaurant_code}</div>}
           </div>
 
-          {/* Username */}
           <div className="mb-3 filled form-group tooltip-end-top">
             <CsLineIcons icon="user" />
             <Form.Control type="text" name="username" placeholder="Username" value={values.username} onChange={handleChange} />
             {errors.username && touched.username && <div className="d-block invalid-tooltip">{errors.username}</div>}
           </div>
 
-          {/* Password */}
           <div className="mb-3 filled form-group tooltip-end-top">
             <CsLineIcons icon="lock-off" />
             <Form.Control type="password" name="password" placeholder="Password" value={values.password} onChange={handleChange} />
             {errors.password && touched.password && <div className="d-block invalid-tooltip">{errors.password}</div>}
           </div>
 
-          {/* Submit */}
           <Button size="lg" type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Logging in...' : 'Login'}
           </Button>
 
-          {/* Wrong Message */}
           {wrongMsg && (
             <div className="text-danger mt-3">
               <b>{wrongMsg}</b>
             </div>
           )}
         </form>
+        <div className="mt-auto text-center pt-4">
+          <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
+            Powered by <strong>TheBoxSync</strong>
+          </p>
+        </div>
       </div>
     </div>
   );

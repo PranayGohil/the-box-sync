@@ -374,7 +374,7 @@ const AddDishes = () => {
                       </Button>
 
                       {/* SUBMIT BUTTON */}
-                      <Button type="submit" variant="primary" disabled={isSubmitting} style={{ minWidth: '120px' }}>
+                      <Button type="submit" variant="primary" disabled={isSubmitting}>
                         {isSubmitting ? (
                           <>
                             <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />

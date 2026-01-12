@@ -115,10 +115,6 @@ const NavContent = () => {
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Feedback QR</span>
           </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/add-feedback" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Add Feedback</span>
-          </Nav.Link>
         </div>
       </div>
     </Nav>

@@ -43,10 +43,9 @@ const Login = () => {
         setError(res.data.message);
         setIsLoading(false);
       }
-
     } catch (err) {
-      console.log("Login Error:", err.response?.data?.message);
-      const errorMessage = err.response?.data?.message || "Something went wrong";
+      console.log('Login Error:', err.response?.data?.message);
+      const errorMessage = err.response?.data?.message || 'Something went wrong';
       setError(errorMessage);
       toast.error(errorMessage);
       setIsLoading(false);
@@ -56,16 +55,14 @@ const Login = () => {
   const formik = useFormik({
     initialValues,
     validationSchema,
-    onSubmit
+    onSubmit,
   });
 
   const { handleSubmit, handleChange, values, touched, errors } = formik;
 
   const leftSide = (
     <div className="min-h-100 d-flex align-items-center">
-      <div className="w-100 w-lg-75 w-xxl-50">
-        {/* Optional content */}
-      </div>
+      <div className="w-100 w-lg-75 w-xxl-50">{/* Optional content */}</div>
     </div>
   );
 
@@ -91,9 +88,7 @@ const Login = () => {
                 disabled={isLoading}
                 className={isLoading ? 'bg-light' : ''}
               />
-              {errors.email && touched.email && (
-                <div className="d-block invalid-tooltip">{errors.email}</div>
-              )}
+              {errors.email && touched.email && <div className="d-block invalid-tooltip">{errors.email}</div>}
             </div>
 
             <div className="mb-3 filled form-group tooltip-end-top position-relative">
@@ -112,7 +107,7 @@ const Login = () => {
                 <>
                   {showPassword ? (
                     <div
-                      className='t-2 e-3 text-end cursor-pointer position-absolute right-3'
+                      className="t-2 e-3 text-end cursor-pointer position-absolute right-3"
                       onClick={() => setShowPassword(false)}
                       style={{ top: '50%', transform: 'translateY(-50%)', marginTop: '14px' }}
                     >
@@ -120,9 +115,9 @@ const Login = () => {
                     </div>
                   ) : (
                     <div
-                      className='t-2 e-3 text-end cursor-pointer position-absolute right-3'
+                      className="t-2 e-3 text-end cursor-pointer position-absolute right-3"
                       onClick={() => setShowPassword(true)}
-                      style={{ top: '50%', transform: 'translateY(-50%)', marginTop: '14px', }}
+                      style={{ top: '50%', transform: 'translateY(-50%)', marginTop: '14px' }}
                     >
                       <CsLineIcons icon="eye" />
                     </div>
@@ -130,12 +125,10 @@ const Login = () => {
                 </>
               )}
 
-              {errors.password && touched.password && (
-                <div className="d-block invalid-tooltip">{errors.password}</div>
-              )}
+              {errors.password && touched.password && <div className="d-block invalid-tooltip">{errors.password}</div>}
             </div>
 
-            <div className='mb-3 mx-2'>
+            <div className="mb-3 mx-2">
               {error && (
                 <div className="text-danger text-medium d-flex align-items-center">
                   <CsLineIcons icon="warning" className="me-1" />
@@ -144,24 +137,11 @@ const Login = () => {
               )}
             </div>
 
-            <div className='d-flex justify-content-between align-items-center'>
-              <Button
-                size="lg"
-                type="submit"
-                disabled={isLoading}
-                className="position-relative"
-                style={{ minWidth: '100px' }}
-              >
+            <div className="d-flex justify-content-between align-items-center">
+              <Button size="lg" type="submit" disabled={isLoading} className="position-relative" style={{ minWidth: '100px' }}>
                 {isLoading ? (
                   <>
-                    <Spinner
-                      as="span"
-                      animation="border"
-                      size="sm"
-                      role="status"
-                      aria-hidden="true"
-                      className="me-2"
-                    />
+                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
                     Logging in...
                   </>
                 ) : (
@@ -171,7 +151,8 @@ const Login = () => {
 
               <NavLink
                 className={`t-3 e-3 ${isLoading ? 'disabled-link' : ''}`}
-                to="/forgot-password" style={{ fontSize: '12px' }}
+                to="/forgot-password"
+                style={{ fontSize: '12px' }}
                 onClick={(e) => isLoading && e.preventDefault()}
               >
                 Forgot Password ?
@@ -179,7 +160,7 @@ const Login = () => {
             </div>
           </form>
         </div>
-         <div className="mt-auto text-center pt-4">
+        <div className="mt-auto text-center pt-4">
           <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
             Powered by <strong>TheBoxSync</strong>
           </p>

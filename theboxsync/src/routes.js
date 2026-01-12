@@ -5,19 +5,14 @@ import { DEFAULT_PATHS } from 'config.js';
 
 const manager = {
   dashboard: lazy(() => import('views/theboxsync/Dashboard')),
-  addFeedback: lazy(() => import('views/theboxsync/Feedback/addFeedback')),
-  showMenu: lazy(() => import('views/theboxsync/Menu/showMenu')),
 };
 
 const order = {
   dinein: lazy(() => import('views/theboxsync/order/DineInOrder')),
 };
-const dashboards = {
-  index: lazy(() => import('views/dashboards/Dashboards')),
-  default: lazy(() => import('views/dashboards/DashboardsDefault')),
-  visual: lazy(() => import('views/dashboards/DashboardsVisual')),
-  analytic: lazy(() => import('views/dashboards/DashboardsAnalytic')),
-};
+
+const showMenu = lazy(() => import('views/default/showMenu'));
+const addFeedback = lazy(() => import('views/default/addFeedback'));
 
 const appRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
 
@@ -41,11 +36,11 @@ const allRoutes = {
     },
     {
       path: `${appRoot}/feedback/:token`,
-      component: manager.addFeedback,
+      component: addFeedback,
     },
     {
       path: `${appRoot}/menu/:res_code`,
-      component: manager.showMenu,
+      component: showMenu,
     },
   ],
   sidebarItems: [

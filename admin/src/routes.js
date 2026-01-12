@@ -75,7 +75,6 @@ const allRoutes = {
     },
     {
       path: `${appRoot}/select-plan`,
-
       component: selectPlan,
     },
   ],
