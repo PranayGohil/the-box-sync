@@ -140,7 +140,7 @@ const EditableRows = () => {
               </Col>
             </Row>
             <Row>
-              <Col xs="12">
+              <Col xs="12" style={{ overflow: 'auto' }}>
                 <Table className="react-table rows" tableInstance={tableInstance} />
               </Col>
               <Col xs="12">

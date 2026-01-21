@@ -163,3 +163,13 @@ Table of Contents
 @import 'layout/footer';
 @import 'layout/print';
 @import 'layout/settings';
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+.layout-container,
+.layout-content {
+  overflow-x: hidden;
+}

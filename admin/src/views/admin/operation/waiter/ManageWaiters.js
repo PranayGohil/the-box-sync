@@ -270,10 +270,14 @@ const ManageWaiters = () => {
                       No waiters found. Add your first waiter to get started.
                     </Alert>
                   ) : (
-                    <>
-                      <Table className="react-table rows" tableInstance={tableInstance} />
-                      <TablePagination tableInstance={tableInstance} />
-                    </>
+                    <Row>
+                      <Col xs="12" style={{ overflow: 'auto' }}>
+                        <Table className="react-table rows" tableInstance={tableInstance} />
+                      </Col>
+                      <Col xs="12">
+                        <TablePagination tableInstance={tableInstance} />
+                      </Col>
+                    </Row>
                   )}
                 </Col>
               </Row>
@@ -285,9 +289,7 @@ const ManageWaiters = () => {
       {/* Waiter Add/Edit Modal */}
       <Modal className="modal-right large" show={showWaiterModal} onHide={handleModalClose} backdrop="static">
         <Modal.Header closeButton>
-          <Modal.Title>
-            {editingWaiter ? 'Edit Waiter' : 'Add Waiter'}
-          </Modal.Title>
+          <Modal.Title>{editingWaiter ? 'Edit Waiter' : 'Add Waiter'}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -327,9 +329,7 @@ const ManageWaiters = () => {
       {/* Delete Confirmation Modal */}
       <Modal show={showDeleteModal} onHide={handleDeleteModalClose} backdrop="static" centered>
         <Modal.Header closeButton>
-          <Modal.Title> 
-            Delete Waiter?
-          </Modal.Title>
+          <Modal.Title>Delete Waiter?</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>

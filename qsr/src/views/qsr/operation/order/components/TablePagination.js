@@ -20,7 +20,7 @@ const TablePagination = ({ paginationProps }) => {
   // Helper function to generate page numbers with ellipsis
   const getPageNumbers = () => {
     const pages = [];
-    const maxPagesToShow = 5;
+    const maxPagesToShow = 4;
 
     if (pageCount <= maxPagesToShow) {
       // Show all pages if total is less than max
@@ -33,16 +33,16 @@ const TablePagination = ({ paginationProps }) => {
     // Show first page, last page, current page and surrounding pages
     if (pageIndex < 3) {
       // Near the beginning
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 3; i++) {
         pages.push(i);
       }
       pages.push('ellipsis');
       pages.push(pageCount - 1);
-    } else if (pageIndex > pageCount - 4) {
+    } else if (pageIndex > pageCount - 3) {
       // Near the end
       pages.push(0);
       pages.push('ellipsis');
-      for (let i = pageCount - 4; i < pageCount; i++) {
+      for (let i = pageCount - 3; i < pageCount; i++) {
         pages.push(i);
       }
     } else {

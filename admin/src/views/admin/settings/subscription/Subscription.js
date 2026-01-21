@@ -51,7 +51,7 @@ const Subscription = () => {
   const [actionLoading, setActionLoading] = useState({
     renew: false,
     buy: false,
-    redirect: false
+    redirect: false,
   });
 
   const fetchData = async () => {
@@ -59,7 +59,7 @@ const Subscription = () => {
       setLoading(true);
       const [plansRes, userRes] = await Promise.all([
         axios.get(`${process.env.REACT_APP_API}/subscription/get-plans`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }),
         axios.get(`${process.env.REACT_APP_API}/subscription/get`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -149,7 +149,7 @@ const Subscription = () => {
   }, []);
 
   const handleRenew = async (subscriptionId) => {
-    setActionLoading(prev => ({ ...prev, renew: true }));
+    setActionLoading((prev) => ({ ...prev, renew: true }));
     try {
       await axios.post(
         `${process.env.REACT_APP_API}/subscription/renew`,
@@ -162,12 +162,12 @@ const Subscription = () => {
       console.error('Renew failed:', err);
       toast.error(err.response?.data?.message || 'Renew failed.');
     } finally {
-      setActionLoading(prev => ({ ...prev, renew: false }));
+      setActionLoading((prev) => ({ ...prev, renew: false }));
     }
   };
 
   const handleBuyPlan = async (planId) => {
-    setActionLoading(prev => ({ ...prev, buy: true }));
+    setActionLoading((prev) => ({ ...prev, buy: true }));
     try {
       await axios.post(`${process.env.REACT_APP_API}/subscription/buy/${planId}`, null, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -178,7 +178,7 @@ const Subscription = () => {
       console.error('Error purchasing plan:', err);
       toast.error(err.response?.data?.message || 'Failed to purchase plan.');
     } finally {
-      setActionLoading(prev => ({ ...prev, buy: false }));
+      setActionLoading((prev) => ({ ...prev, buy: false }));
     }
   };
 
@@ -227,7 +227,7 @@ const Subscription = () => {
   };
 
   const handleRedirect = (planName) => {
-    setActionLoading(prev => ({ ...prev, redirect: true }));
+    setActionLoading((prev) => ({ ...prev, redirect: true }));
     try {
       if (planName === 'Staff Management') {
         history.push('/staff');
@@ -249,7 +249,7 @@ const Subscription = () => {
         toast.error('Invalid Plan');
       }
     } finally {
-      setActionLoading(prev => ({ ...prev, redirect: false }));
+      setActionLoading((prev) => ({ ...prev, redirect: false }));
     }
   };
 
@@ -371,23 +371,13 @@ const Subscription = () => {
                 onClick={() => handleRenew(original._id)}
                 disabled={loading || actionLoading.renew}
               >
-                {actionLoading.renew ? (
-                  <Spinner animation="border" size="sm" />
-                ) : (
-                  <CsLineIcons icon="refresh-horizontal" />
-                )}
+                {actionLoading.renew ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="refresh-horizontal" />}
               </Button>
             );
           } else if (isBlocked) {
             if (isBlockedWithQuery) {
               actionButtons = (
-                <Button
-                  variant="outline-warning"
-                  size="sm"
-                  className="btn-icon btn-icon-only"
-                  title="Already Inquiry Raised"
-                  disabled
-                >
+                <Button variant="outline-warning" size="sm" className="btn-icon btn-icon-only" title="Already Inquiry Raised" disabled>
                   <CsLineIcons icon="hourglass" />
                 </Button>
               );
@@ -414,11 +404,16 @@ const Subscription = () => {
     [existingQueries, loading, actionLoading]
   );
 
-  const tableInstance = useTable({
-    columns,
-    data: userSubscription,
-    initialState: { pageIndex: 0 }
-  }, useGlobalFilter, useSortBy, usePagination);
+  const tableInstance = useTable(
+    {
+      columns,
+      data: userSubscription,
+      initialState: { pageIndex: 0 },
+    },
+    useGlobalFilter,
+    useSortBy,
+    usePagination
+  );
 
   if (loading) {
     return (
@@ -476,10 +471,14 @@ const Subscription = () => {
                   No subscriptions found.
                 </Alert>
               ) : (
-                <>
-                  <Table className="react-table rows" tableInstance={tableInstance} />
-                  <TablePagination tableInstance={tableInstance} />
-                </>
+                <Row>
+                  <Col xs="12" style={{ overflow: 'auto' }}>
+                    <Table className="react-table rows" tableInstance={tableInstance} />
+                  </Col>
+                  <Col xs="12">
+                    <TablePagination tableInstance={tableInstance} />
+                  </Col>
+                </Row>
               )}
             </Col>
           </Row>
@@ -503,25 +502,15 @@ const Subscription = () => {
                     Expired on: {sub.formatted_end}
                   </p>
 
-                  <Button
-                    variant="success"
-                    onClick={() => handleRenew(sub._id)}
-                    disabled={actionLoading.renew}
-                    style={{ minWidth: '100px' }}
-                  >
+                  <Button variant="success" onClick={() => handleRenew(sub._id)} disabled={actionLoading.renew} style={{ minWidth: '100px' }}>
                     {actionLoading.renew ? (
                       <>
-                        <Spinner
-                          as="span"
-                          animation="border"
-                          size="sm"
-                          role="status"
-                          aria-hidden="true"
-                          className="me-2"
-                        />
+                        <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
                         Renewing...
                       </>
-                    ) : 'Renew Plan'}
+                    ) : (
+                      'Renew Plan'
+                    )}
                   </Button>
                 </div>
               </div>
@@ -553,25 +542,15 @@ const Subscription = () => {
                       </>
                     )}
                   </p>
-                  <Button
-                    variant="primary"
-                    onClick={() => handleBuyPlan(plan._id)}
-                    disabled={actionLoading.buy}
-                    style={{ minWidth: '100px' }}
-                  >
+                  <Button variant="primary" onClick={() => handleBuyPlan(plan._id)} disabled={actionLoading.buy} style={{ minWidth: '100px' }}>
                     {actionLoading.buy ? (
                       <>
-                        <Spinner
-                          as="span"
-                          animation="border"
-                          size="sm"
-                          role="status"
-                          aria-hidden="true"
-                          className="me-2"
-                        />
+                        <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
                         Buying...
                       </>
-                    ) : 'Buy'}
+                    ) : (
+                      'Buy'
+                    )}
                   </Button>
                 </div>
               </div>
@@ -591,21 +570,11 @@ const Subscription = () => {
       )}
 
       {showDeletePanelModal && (
-        <DeletePanelModal
-          show={showDeletePanelModal}
-          handleClose={() => setShowDeletePanelModal(false)}
-          planName={deletePlanName}
-          fetchData={fetchData}
-        />
+        <DeletePanelModal show={showDeletePanelModal} handleClose={() => setShowDeletePanelModal(false)} planName={deletePlanName} fetchData={fetchData} />
       )}
 
       {showInquiryModal && (
-        <RaiseInquiryModal
-          show={showInquiryModal}
-          handleClose={() => setShowInquiryModal(false)}
-          subscriptionName={inquirySubName}
-          fetchData={fetchData}
-        />
+        <RaiseInquiryModal show={showInquiryModal} handleClose={() => setShowInquiryModal(false)} subscriptionName={inquirySubName} fetchData={fetchData} />
       )}
 
       {/* Global loading overlay for actions */}
@@ -615,17 +584,12 @@ const Subscription = () => {
           style={{
             backgroundColor: 'rgba(255, 255, 255, 0.7)',
             zIndex: 9999,
-            backdropFilter: 'blur(2px)'
+            backdropFilter: 'blur(2px)',
           }}
         >
           <div className="card shadow-lg border-0" style={{ minWidth: '200px' }}>
             <div className="card-body text-center p-4">
-              <Spinner
-                animation="border"
-                variant="primary"
-                className="mb-3"
-                style={{ width: '3rem', height: '3rem' }}
-              />
+              <Spinner animation="border" variant="primary" className="mb-3" style={{ width: '3rem', height: '3rem' }} />
               <h5 className="mb-0">
                 {actionLoading.renew && 'Renewing Subscription...'}
                 {actionLoading.buy && 'Processing Purchase...'}

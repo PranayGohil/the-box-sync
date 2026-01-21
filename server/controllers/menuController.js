@@ -133,18 +133,13 @@ const getMenuCategories = async (req, res) => {
   try {
     const userId = req.user;
     const { meal_type } = req.query;
+    const filter = { user_id: userId };
 
-    if (!meal_type) {
-      return res.status(400).json({
-        success: false,
-        message: "meal_type query param is required",
-      });
+    if (meal_type) {
+      filter.meal_type = meal_type;
     }
 
-    const categories = await Menu.distinct("category", {
-      user_id: userId,
-      meal_type: meal_type, // 🔥 FILTER BY MEAL TYPE
-    });
+    const categories = await Menu.distinct("category", filter);
 
     res.json({ success: true, data: categories });
   } catch (error) {
@@ -152,7 +147,6 @@ const getMenuCategories = async (req, res) => {
     res.status(500).json({ success: false, error: "Internal server error" });
   }
 };
-
 
 const getMenuSuggestions = async (req, res) => {
   try {
@@ -179,7 +173,7 @@ const getMenuSuggestions = async (req, res) => {
           category: { $nin: [null, ""] },
         }).then((data) => {
           result.categories = data.sort();
-        })
+        }),
       );
     }
 
@@ -191,7 +185,7 @@ const getMenuSuggestions = async (req, res) => {
           "dishes.dish_name": { $nin: [null, ""] },
         }).then((data) => {
           result.dishes = data.sort();
-        })
+        }),
       );
     }
 
@@ -238,7 +232,6 @@ const getDishesByCategory = async (req, res) => {
   }
 };
 
-
 const getMenuDataById = async (req, res) => {
   try {
     const dishId = req.params.id;
@@ -246,7 +239,7 @@ const getMenuDataById = async (req, res) => {
 
     const menu = await Menu.findOne(
       { user_id: userId, "dishes._id": dishId },
-      { "dishes.$": 1 } // only the matched dish
+      { "dishes.$": 1 }, // only the matched dish
     ).lean();
 
     if (!menu || !menu.dishes || menu.dishes.length === 0) {
@@ -271,7 +264,7 @@ const updateMenuCategoryAndMealType = async (req, res) => {
     const updatedMenu = await Menu.findOneAndUpdate(
       { user_id: userId, _id: id },
       { category, meal_type },
-      { new: true }
+      { new: true },
     );
 
     res.json({ success: true, data: updatedMenu });
@@ -279,7 +272,7 @@ const updateMenuCategoryAndMealType = async (req, res) => {
     console.error(error);
     res.status(500).json({ success: false, message: "Server error" });
   }
-}
+};
 
 const updateMenu = async (req, res) => {
   try {
@@ -319,12 +312,12 @@ const updateMenu = async (req, res) => {
     }
 
     Object.keys(updateFields).forEach(
-      (key) => updateFields[key] === undefined && delete updateFields[key]
+      (key) => updateFields[key] === undefined && delete updateFields[key],
     );
 
     const result = await Menu.updateOne(
       { user_id: userId, "dishes._id": _id },
-      { $set: updateFields }
+      { $set: updateFields },
     );
 
     if (result.matchedCount === 0) {
@@ -347,7 +340,7 @@ const deleteMenu = async (req, res) => {
 
     const menu = await Menu.findOne(
       { user_id: userId, "dishes._id": dishId },
-      { category: 1, meal_type: 1, dishes: 1 } // projection
+      { category: 1, meal_type: 1, dishes: 1 }, // projection
     );
 
     if (!menu) {
@@ -355,7 +348,7 @@ const deleteMenu = async (req, res) => {
     }
 
     const dishToDelete = menu.dishes.find(
-      (dish) => dish._id.toString() === dishId
+      (dish) => dish._id.toString() === dishId,
     );
     if (!dishToDelete) {
       return res.status(404).json({ message: "Dish not found" });
@@ -368,7 +361,7 @@ const deleteMenu = async (req, res) => {
       const imagePath = path.join(
         __dirname,
         "../uploads/menu/dishes",
-        filename
+        filename,
       );
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
@@ -378,7 +371,7 @@ const deleteMenu = async (req, res) => {
 
     const updateResult = await Menu.updateOne(
       { user_id: userId, "dishes._id": dishId },
-      { $pull: { dishes: { _id: dishId } } }
+      { $pull: { dishes: { _id: dishId } } },
     );
 
     if (updateResult.modifiedCount === 0) {

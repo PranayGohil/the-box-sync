@@ -398,7 +398,7 @@ const Dashboard = () => {
         <Col lg="6" className="mb-5">
           {/* Top Selling Dishes Start */}
           <div className="d-flex justify-content-between mb-2">
-            <h2 className="small-title">Top Selling Dishes</h2>
+            <h2 className="small-title">Top Selling Dish</h2>
             <Button
               variant="background-alternate"
               size="xs"

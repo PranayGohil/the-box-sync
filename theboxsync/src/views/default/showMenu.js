@@ -342,13 +342,12 @@ const ShowMenu = () => {
 
             <div className="d-flex gap-2">
               {searchTerm && (
-                <Badge bg="light" text="dark" className="px-3 py-2">
-                  <CsLineIcons icon="search" className="me-1" />"{searchTerm}"
+                <Badge bg="dark" text="light" className="px-3 py-2">
+                  {searchTerm}
                 </Badge>
               )}
               {filters.meal_type && (
                 <Badge bg={filters.meal_type === 'veg' ? 'success' : filters.meal_type === 'non-veg' ? 'danger' : 'primary'} className="px-3 py-2">
-                  <CsLineIcons icon={filters.meal_type === 'veg' ? 'leaf' : filters.meal_type === 'non-veg' ? 'steak' : 'egg'} className="me-1" />
                   {filters.meal_type}
                 </Badge>
               )}

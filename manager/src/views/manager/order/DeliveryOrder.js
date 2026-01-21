@@ -752,7 +752,7 @@ const DeliveryOrder = () => {
                   </h5>
                 </Col>
                 <Col md="5" className="d-flex flex-column align-items-end justify-content-start">
-                  <div className='d-flex align-items-center'>
+                  <div className="d-flex align-items-center">
                     <h5>Delivery</h5>
                     {tokenNumber && (
                       <Badge bg="primary" className="ms-2">
@@ -1163,16 +1163,13 @@ const DeliveryOrder = () => {
       {/* 🔥 NEW: Cancel Order Confirmation Modal */}
       <Modal show={showCancelModal} onHide={() => setShowCancelModal(false)} centered backdrop="static" keyboard={false}>
         <Modal.Header closeButton>
-          <Modal.Title>Cancel Order</Modal.Title>
+          <Modal.Title>Cancel Order?</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>Are you sure you want to cancel this order?</p>
-          <p className="text-danger mb-0">
-            <strong>Warning:</strong> This action cannot be undone.
-          </p>
+          <p>This order will permanently cancel.</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowCancelModal(false)} disabled={isLoading}>
+          <Button variant="dark" onClick={() => setShowCancelModal(false)} disabled={isLoading}>
             Keep
           </Button>
           <Button variant="danger" onClick={handleCancelOrder} disabled={isLoading}>

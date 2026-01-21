@@ -397,7 +397,7 @@ const InventoryHistory = () => {
           const isLong = text.split(' ').length > 8;
 
           return (
-            <div>
+            <div style={{ minWidth: '200px' }}>
               <span>{truncateWords(text, 8)}</span>
               {isLong && (
                 <>
@@ -675,10 +675,14 @@ const InventoryHistory = () => {
                 : 'No completed inventory found.'}
             </Alert>
           ) : (
-            <>
-              <Table className="react-table rows" tableInstance={completedTable} />
-              <TablePagination paginationProps={completedPaginationProps} />
-            </>
+            <Row>
+              <Col xs="12" style={{ overflow: 'auto' }}>
+                <Table className="react-table rows" tableInstance={completedTable} />
+              </Col>
+              <Col xs="12">
+                <TablePagination paginationProps={completedPaginationProps} />
+              </Col>
+            </Row>
           )}
 
           {/* Rejected Requests */}
@@ -813,10 +817,14 @@ const InventoryHistory = () => {
                 : 'No rejected inventory found.'}
             </Alert>
           ) : (
-            <>
-              <Table className="react-table rows" tableInstance={rejectedTable} />
-              <TablePagination paginationProps={rejectedPaginationProps} />
-            </>
+            <Row>
+              <Col xs="12" style={{ overflow: 'auto' }}>
+                <Table className="react-table rows" tableInstance={rejectedTable} />
+              </Col>
+              <Col xs="12">
+                <TablePagination paginationProps={rejectedPaginationProps} />
+              </Col>
+            </Row>
           )}
         </Col>
       </Row>
@@ -824,9 +832,7 @@ const InventoryHistory = () => {
       {/* Delete Inventory Modal */}
       <Modal show={show} onHide={handleClose} centered>
         <Modal.Header closeButton>
-          <Modal.Title>
-            Delete Inventory?
-          </Modal.Title>
+          <Modal.Title>Delete Inventory?</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>Delete this inventory item permanently</p>
@@ -851,9 +857,7 @@ const InventoryHistory = () => {
       {/* Reject Reason Modal */}
       <Modal show={showRejectReasonModal} onHide={() => setShowRejectReasonModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>
-            Reject Reason
-          </Modal.Title>
+          <Modal.Title>Reject Reason</Modal.Title>
         </Modal.Header>
 
         <Modal.Body style={{ maxHeight: '300px', overflowY: 'auto' }}>

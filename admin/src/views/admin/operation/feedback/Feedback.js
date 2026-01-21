@@ -193,11 +193,7 @@ const Feedback = () => {
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
               <Col xs="12" md="5" className="d-flex align-items-start justify-content-end">
-                <Button
-                  variant="primary"
-                  onClick={() => history.push('/operations/qr-for-feedback')}
-                  disabled={loading}
-                >
+                <Button variant="primary" onClick={() => history.push('/operations/qr-for-feedback')} disabled={loading}>
                   <CsLineIcons icon="qr-code" className="me-2" /> Feedback QR
                 </Button>
               </Col>
@@ -237,10 +233,14 @@ const Feedback = () => {
                       No feedback found.
                     </Alert>
                   ) : (
-                    <>
-                      <Table className="react-table rows" tableInstance={tableInstance} />
-                      <TablePagination tableInstance={tableInstance} />
-                    </>
+                    <Row>
+                      <Col xs="12" style={{ overflow: 'auto' }}>
+                        <Table className="react-table rows" tableInstance={tableInstance} />
+                      </Col>
+                      <Col xs="12">
+                        <TablePagination tableInstance={tableInstance} />
+                      </Col>
+                    </Row>
                   )}
                 </Col>
               </Row>
@@ -282,17 +282,12 @@ const Feedback = () => {
           <Button variant="primary" onClick={handleSendReply} disabled={sendingReply || !replyMessage.trim()}>
             {sendingReply ? (
               <>
-                <Spinner
-                  as="span"
-                  animation="border"
-                  size="sm"
-                  role="status"
-                  aria-hidden="true"
-                  className="me-2"
-                />
+                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
                 Sending...
               </>
-            ) : 'Send Reply'}
+            ) : (
+              'Send Reply'
+            )}
           </Button>
         </Modal.Footer>
       </Modal>

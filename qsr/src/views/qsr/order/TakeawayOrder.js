@@ -1129,16 +1129,13 @@ const TakeawayOrder = () => {
       {/* 🔥 NEW: Cancel Order Confirmation Modal */}
       <Modal show={showCancelModal} onHide={() => setShowCancelModal(false)} centered backdrop="static" keyboard={false}>
         <Modal.Header closeButton>
-          <Modal.Title>Cancel Order</Modal.Title>
+          <Modal.Title>Cancel Order?</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>Are you sure you want to cancel this order?</p>
-          <p className="text-danger mb-0">
-            <strong>Warning:</strong> This action cannot be undone.
-          </p>
+          <p>This order will permanently cancel.</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowCancelModal(false)} disabled={isLoading}>
+          <Button variant="dark" onClick={() => setShowCancelModal(false)} disabled={isLoading}>
             Keep
           </Button>
           <Button variant="danger" onClick={handleCancelOrder} disabled={isLoading}>

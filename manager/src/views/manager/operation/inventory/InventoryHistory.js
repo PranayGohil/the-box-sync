@@ -669,10 +669,14 @@ const InventoryHistory = () => {
                   : 'No completed inventory found.'}
               </Alert>
             ) : (
-              <>
-                <Table className="react-table rows" tableInstance={completedTable} />
-                <TablePagination paginationProps={completedPaginationProps} />
-              </>
+              <Row>
+                <Col xs="12" style={{ overflow: 'auto' }}>
+                  <Table className="react-table rows" tableInstance={completedTable} />
+                </Col>
+                <Col xs="12">
+                  <TablePagination paginationProps={completedPaginationProps} />
+                </Col>
+              </Row>
             )}
           </div>
 
@@ -804,10 +808,14 @@ const InventoryHistory = () => {
                   : 'No rejected inventory found.'}
               </Alert>
             ) : (
-              <>
-                <Table className="react-table rows" tableInstance={rejectedTable} />
-                <TablePagination paginationProps={rejectedPaginationProps} />
-              </>
+              <Row>
+                <Col xs="12" style={{ overflow: 'auto' }}>
+                  <Table className="react-table rows" tableInstance={rejectedTable} />
+                </Col>
+                <Col xs="12">
+                  <TablePagination paginationProps={rejectedPaginationProps} />
+                </Col>
+              </Row>
             )}
           </div>
         </Col>

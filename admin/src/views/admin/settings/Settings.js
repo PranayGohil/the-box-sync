@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Row, Col, Nav } from 'react-bootstrap';
+import { Row, Col, Nav, Dropdown } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { LAYOUT } from 'constants.js';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -104,6 +104,71 @@ const NavContent = () => {
   );
 };
 
+const mobileNavItems = [
+  {
+    label: 'Account',
+    icon: 'user',
+    items: [
+      { label: 'Profile', to: '/settings/profile' },
+      { label: 'Address', to: '/settings/address' },
+    ],
+  },
+  {
+    label: 'Tax & Charges',
+    icon: 'dollar',
+    items: [
+      { label: 'GST', to: '/settings/gst' },
+      { label: 'Container Charges', to: '/settings/container-charge' },
+    ],
+  },
+  {
+    label: 'Subscription',
+    icon: 'star',
+    items: [{ label: 'Subscription', to: '/settings/subscription' }],
+  },
+  {
+    label: 'Manage Website',
+    icon: 'web-page',
+    items: [{ label: 'Manage Website', to: '/settings/manage-website' }],
+  },
+  {
+    label: 'Forgot Password',
+    icon: 'key',
+    items: [{ label: 'Forgot Password', to: '/settings/forgot-password' }],
+  },
+];
+
+const MobileNavbar = () => {
+  return (
+    <div className="d-flex gap-2 overflow-auto pb-2">
+      {mobileNavItems.map((nav) => (
+        <Dropdown key={nav.label} container="body" className="position-static">
+          <Dropdown.Toggle variant="outline-primary" size="sm" className="d-flex align-items-center gap-1">
+            <CsLineIcons icon={nav.icon} size="16" />
+            {nav.label}
+          </Dropdown.Toggle>
+
+          <Dropdown.Menu
+            style={{
+              position: 'absolute',
+              minWidth: '150px',
+              maxHeight: '300px',
+              overflowY: 'auto',
+              marginTop: '5px',
+            }}
+          >
+            {nav.items.map((item) => (
+              <Dropdown.Item as={NavLink} key={item.to} to={item.to}>
+                {item.label}
+              </Dropdown.Item>
+            ))}
+          </Dropdown.Menu>
+        </Dropdown>
+      ))}
+    </div>
+  );
+};
+
 const Settings = () => {
   useCustomLayout({ layout: LAYOUT.Boxed });
   const { width } = useWindowSize();
@@ -114,11 +179,17 @@ const Settings = () => {
   const { activePlans } = useContext(AuthContext);
 
   return (
-    <>
-      <Row>
+    <div className="position-relative">
+      {/* ✅ MOBILE NAVBAR — OUTSIDE SCROLL */}
+      {width && width < lgBreakpoint && (
+        <div className="position-absolute top-0 start-0 end-0 d-lg-none">
+          <MobileNavbar />
+        </div>
+      )}
+      <Row className="pt-7">
         {width && width >= lgBreakpoint && (
           <Col xs="auto" className="d-none d-lg-flex">
-            <div className="nav flex-column sw-25 mt-n2">
+            <div className="nav flex-column sw-25 mt-2">
               <NavContent />
             </div>
           </Col>
@@ -131,19 +202,24 @@ const Settings = () => {
             <Route exact path="/settings/gst" render={() => <Gst />} />
             <Route exact path="/settings/container-charge" render={() => <Container />} />
             <Route exact path="/settings/subscription" render={() => <Subscription />} />
-            <Route exact path="/settings/manage-website"
-              render={() => <>
-                {
-                  activePlans.includes("Restaurant Website") ?
-                    <ManageWebsite /> :
+            <Route
+              exact
+              path="/settings/manage-website"
+              render={() => (
+                <>
+                  {activePlans.includes('Restaurant Website') ? (
+                    <ManageWebsite />
+                  ) : (
                     <div className="text-center">You need to buy or renew to Restaurant Website plan to access this page.</div>
-                }</>}
+                  )}
+                </>
+              )}
             />
             <Route exact path="/settings/forgot-password" render={() => <ForgotPassword />} />
           </Switch>
         </Col>
       </Row>
-    </>
+    </div>
   );
 };
 
