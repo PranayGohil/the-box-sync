@@ -96,7 +96,24 @@ const Login = () => {
 
           <div className="mb-3 filled form-group tooltip-end-top">
             <CsLineIcons icon="lock-off" />
-            <Form.Control type="password" name="password" placeholder="Password" value={values.password} onChange={handleChange} />
+            <Form.Control type={showPassword ? 'text' : 'password'} name="password" placeholder="Password" value={values.password} onChange={handleChange} />
+            {showPassword ? (
+              <div
+                className="t-2 e-3 text-end cursor-pointer position-absolute right-3"
+                onClick={() => setShowPassword(false)}
+                style={{ top: '50%', transform: 'translateY(-50%)', marginTop: '14px' }}
+              >
+                <CsLineIcons icon="eye-off" />
+              </div>
+            ) : (
+              <div
+                className="t-2 e-3 text-end cursor-pointer position-absolute right-3"
+                onClick={() => setShowPassword(true)}
+                style={{ top: '50%', transform: 'translateY(-50%)', marginTop: '14px' }}
+              >
+                <CsLineIcons icon="eye" />
+              </div>
+            )}
             {errors.password && touched.password && <div className="d-block invalid-tooltip">{errors.password}</div>}
           </div>
 

@@ -275,6 +275,7 @@ const EditStaff = () => {
         setFaceDescriptor(descriptorArray);
         setCaptureStatus('success');
         setCaptureErrorMessage('');
+        setShowFaceModal(false);
         toast.success('Face captured successfully!');
       } else {
         setCaptureStatus('error');
@@ -761,7 +762,7 @@ const EditStaff = () => {
               <h5 className="mb-3">ID Proof & Documents</h5>
 
               <Row>
-                <Col md={6}>
+                <Col md={12}>
                   <Form.Group>
                     <Form.Label>Photo</Form.Label>
                     <div className="position-relative">
@@ -789,6 +790,9 @@ const EditStaff = () => {
                     </div>
                   </Form.Group>
                 </Col>
+              </Row>
+
+              <Row className="mt-3">
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label>ID Card Type</Form.Label>
@@ -807,10 +811,7 @@ const EditStaff = () => {
                     <Form.Control.Feedback type="invalid">{errors.document_type}</Form.Control.Feedback>
                   </Form.Group>
                 </Col>
-              </Row>
-
-              <Row className="mt-3">
-                <Col md={12}>
+                <Col md={6}>
                   <Form.Group>
                     <Form.Label>ID Card Number</Form.Label>
                     <Form.Control
@@ -841,7 +842,7 @@ const EditStaff = () => {
                   </Form.Group>
                 </Col>
               </Row>
-              
+
               <Row className="mt-3">
                 <Col md={6}>
                   <Form.Group>

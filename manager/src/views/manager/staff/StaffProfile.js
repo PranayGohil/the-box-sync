@@ -8,6 +8,8 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import useCustomLayout from 'hooks/useCustomLayout';
 import { LAYOUT } from 'constants.js';
 import axios from 'axios';
+import { format } from 'date-fns';
+import { enIN } from 'date-fns/locale';
 
 const StaffProfile = () => {
   const { id } = useParams();
@@ -27,6 +29,12 @@ const StaffProfile = () => {
   ];
 
   useCustomLayout({ layout: LAYOUT.Boxed });
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '—';
+    const d = new Date(dateString);
+    return format(d, 'dd-MM-yyyy', { locale: enIN });
+  };
 
   const fetchStaff = async () => {
     try {
@@ -50,7 +58,6 @@ const StaffProfile = () => {
   useEffect(() => {
     fetchStaff();
   }, [id]);
-
 
   if (loading) {
     return (
@@ -203,10 +210,10 @@ const StaffProfile = () => {
                     </Row>
                     <Row className="mb-3">
                       <Col md={6}>
-                        <strong>Birth Date:</strong> {staff.birth_date}
+                        <strong>Birth Date:</strong> {formatDate(staff.birth_date)}
                       </Col>
                       <Col md={6}>
-                        <strong>Joining Date:</strong> {staff.joining_date}
+                        <strong>Joining Date:</strong> {formatDate(staff.joining_date)}
                       </Col>
                     </Row>
                     <Row className="mb-3">

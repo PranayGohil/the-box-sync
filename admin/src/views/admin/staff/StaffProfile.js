@@ -8,6 +8,8 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import useCustomLayout from 'hooks/useCustomLayout';
 import { LAYOUT } from 'constants.js';
 import axios from 'axios';
+import { format } from 'date-fns';
+import { enIN } from 'date-fns/locale';
 
 import DeleteStaffModal from './DeleteStaffModal';
 
@@ -32,6 +34,12 @@ const StaffProfile = () => {
   ];
 
   useCustomLayout({ layout: LAYOUT.Boxed });
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '—';
+    const d = new Date(dateString);
+    return format(d, 'dd-MM-yyyy', { locale: enIN });
+  };
 
   const fetchStaff = async () => {
     try {
@@ -146,12 +154,7 @@ const StaffProfile = () => {
             <BreadcrumbList items={breadcrumbs} />
           </Col>
           <Col md="5" className="d-flex align-items-start justify-content-end">
-            <Button
-              variant="outline-primary"
-              className="btn-icon btn-icon-start btn-icon w-100 w-md-auto ms-1"
-              as={NavLink}
-              to={`/staff/edit/${id}`}
-            >
+            <Button variant="outline-primary" className="btn-icon btn-icon-start btn-icon w-100 w-md-auto ms-1" as={NavLink} to={`/staff/edit/${id}`}>
               <CsLineIcons icon="edit-square" /> <span>Edit</span>
             </Button>
             <Button
@@ -231,10 +234,10 @@ const StaffProfile = () => {
                     </Row>
                     <Row className="mb-3">
                       <Col md={6}>
-                        <strong>Birth Date:</strong> {staff.birth_date}
+                        <strong>Birth Date:</strong> {formatDate(staff.birth_date)}
                       </Col>
                       <Col md={6}>
-                        <strong>Joining Date:</strong> {staff.joining_date}
+                        <strong>Joining Date:</strong> {formatDate(staff.joining_date)}
                       </Col>
                     </Row>
                     <Row className="mb-3">
