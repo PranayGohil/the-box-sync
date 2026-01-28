@@ -809,6 +809,7 @@ const DeliveryOrder = () => {
                       <th className="text-center">Qty</th>
                       <th className="text-center">Price</th>
                       <th className="text-center">Total</th>
+                      <th className="text-center">Status</th>
                       <th className="text-center">Actions</th>
                     </tr>
                   </thead>
@@ -848,11 +849,18 @@ const DeliveryOrder = () => {
                         <td className="text-center">
                           {item.status === 'Completed' ? (
                             <Badge bg="success">Completed</Badge>
+                          ) : item.status === 'Preparing' ? (
+                            <Badge bg="primary">Preparing</Badge>
+                          ) : item.status === 'Pending' ? (
+                            <Badge bg="dark">Pending</Badge>
                           ) : (
-                            <Button variant="outline-danger" size="sm" onClick={() => removeItem(index)}>
-                              <CsLineIcons icon="bin" />
-                            </Button>
+                            <></>
                           )}
+                        </td>
+                        <td className="text-center">
+                          <Button variant="outline-danger" size="sm" onClick={() => removeItem(index)}>
+                            <CsLineIcons icon="bin" />
+                          </Button>
                         </td>
                       </tr>
                     ))}
@@ -880,19 +888,15 @@ const DeliveryOrder = () => {
               {/* Action Buttons */}
               <div className="d-flex justify-content-between">
                 <div>
-                  {orderItems.length > 0 && isDirty && (
-                    <>
-                      {orderStatus === 'Save' && (
-                        <Button variant="secondary" className="me-2" onClick={() => handleSaveOrder('Save')} disabled={isLoading}>
-                          Save Order
-                        </Button>
-                      )}
-                      {orderStatus !== 'Paid' && (
-                        <Button variant="primary" onClick={() => handleSaveOrder('KOT')} disabled={isLoading}>
-                          Send to Kitchen
-                        </Button>
-                      )}
-                    </>
+                  {orderItems.length > 0 && isDirty && orderStatus === 'Save' && (
+                    <Button variant="secondary" className="me-2" onClick={() => handleSaveOrder('Save')} disabled={isLoading}>
+                      Save Order
+                    </Button>
+                  )}
+                  {(orderStatus === 'Save' || (orderStatus !== 'Paid' && isDirty)) && orderItems.length > 0 && (
+                    <Button variant="primary" onClick={() => handleSaveOrder('KOT')} disabled={isLoading}>
+                      Send to Kitchen
+                    </Button>
                   )}
                 </div>
                 <div>

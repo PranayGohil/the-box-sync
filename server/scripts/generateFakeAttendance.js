@@ -4,60 +4,93 @@ const Staff = require("../models/staffModel");
 
 mongoose.connect(process.env.MONGODB_URI);
 
+// 24-hour time generator
 function randomTime(startHour, endHour) {
   const hour = Math.floor(Math.random() * (endHour - startHour)) + startHour;
   const minute = Math.floor(Math.random() * 60);
-  const ampm = hour >= 12 ? "PM" : "AM";
-  const hr = hour % 12 === 0 ? 12 : hour % 12;
-  return `${String(hr).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${ampm}`;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
-function getRandomPastDate(daysBack = 60) {
-  const d = new Date();
-  d.setDate(d.getDate() - Math.floor(Math.random() * daysBack) - 1);
-  return d.toISOString().split("T")[0];
+// Night shift helpers
+function randomNightInTime() {
+  // 18:00 – 22:59
+  return randomTime(18, 23);
 }
 
-async function generateFakeAttendance(staffId, records = 30) {
-  const staff = await Staff.findOne({ staff_id: staffId });
+function randomNightOutTime() {
+  // 02:00 – 08:59 (next day)
+  return randomTime(2, 9);
+}
+
+function getPastDates(daysBack = 60) {
+  const dates = [];
+  for (let i = 1; i <= daysBack; i++) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - i);
+    dates.push(d.toISOString());
+  }
+  return dates;
+}
+
+async function generateFakeAttendance(staffId, records = 30, daysBack = 60) {
+  const staff = await Staff.findById(staffId);
   if (!staff) {
     console.log("❌ Staff not found");
     return;
   }
 
-  // 🔹 Existing dates in DB
   const existingDates = new Set(
-    staff.attandance.map(a => a.date)
+    staff.attandance.map((a) => new Date(a.date).toDateString()),
   );
 
-  const newAttendance = [];
-  const usedDates = new Set();
+  const allDates = getPastDates(daysBack).filter((d) => {
+    return !existingDates.has(new Date(d).toDateString());
+  });
 
-  while (newAttendance.length < records) {
-    const date = getRandomPastDate();
+  if (allDates.length === 0) {
+    console.log("⚠️ No available dates to insert");
+    return;
+  }
 
-    // ❌ Skip if already exists in DB or this run
-    if (existingDates.has(date) || usedDates.has(date)) continue;
+  allDates.sort(() => Math.random() - 0.5);
 
-    usedDates.add(date);
+  const selectedDates = allDates.slice(0, Math.min(records, allDates.length));
 
+  const NIGHT_SHIFT_PROBABILITY = 0.25; // 25% night shifts
+
+  const attendance = selectedDates.map((date) => {
     const status = Math.random() > 0.2 ? "present" : "absent";
 
-    newAttendance.push({
-      date,
+    if (status === "absent") {
+      return {
+        date: date.split("T")[0],
+        status,
+        in_time: null,
+        out_time: null,
+      };
+    }
+
+    const isNightShift = Math.random() < NIGHT_SHIFT_PROBABILITY;
+
+    return {
+      date: date.split("T")[0],
       status,
-      in_time: status === "present" ? randomTime(8, 11) : "",
-      out_time: status === "present" ? randomTime(17, 22) : "",
-    });
-  }
+      in_time: isNightShift ? randomNightInTime() : randomTime(8, 11),
+      out_time: isNightShift ? randomNightOutTime() : randomTime(17, 22),
+    };
+  });
 
   await Staff.updateOne(
     { _id: staff._id },
-    { $push: { attandance: { $each: newAttendance } } }
+    { $push: { attandance: { $each: attendance } } },
   );
 
-  console.log(`✅ ${newAttendance.length} unique attendance records added`);
+  console.log(
+    `✅ Added ${attendance.length} attendance records (with night shifts)`,
+  );
 }
 
-generateFakeAttendance("68948bcc5a51df0d5eb8eefe", 45)
-  .then(() => mongoose.disconnect());
+generateFakeAttendance("6937f8c3f45bc0d16bde5236", 45, 60).then(() =>
+  mongoose.disconnect(),
+);

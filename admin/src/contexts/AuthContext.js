@@ -69,6 +69,7 @@ export const AuthProvider = ({ children }) => {
                 })
                 .finally(() => setLoading(false));
         } else {
+            console.log("No Token Found");
             history.push("/login");
             setLoading(false);
         }

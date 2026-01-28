@@ -98,6 +98,7 @@ module.exports = {
     'no-plusplus': 'off',
     'jsx-a11y/media-has-caption': 'off',
     'no-new': 'off',
+    'prefer-const': 'off',
   },
   globals: {
     window: true,

@@ -14,6 +14,7 @@ const Login = () => {
   const description = 'Login Page';
 
   const { login } = useContext(AuthContext);
+  const [showPassword, setShowPassword] = useState(false);
   const [wrongMsg, setWrongMsg] = useState('');
 
   // ✅ Validation Schema

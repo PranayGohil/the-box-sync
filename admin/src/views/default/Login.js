@@ -162,6 +162,11 @@ const Login = () => {
         </div>
         <div className="mt-auto text-center pt-4">
           <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
+            Don't have an account? <NavLink to="/register">Register</NavLink>
+          </p>
+        </div>
+        <div className="mt-auto text-center pt-4">
+          <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
             Powered by <strong>TheBoxSync</strong>
           </p>
         </div>

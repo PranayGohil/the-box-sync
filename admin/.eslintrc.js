@@ -82,7 +82,7 @@ module.exports = {
         endOfLine: 'auto',
       },
     ],
-    'camelcase': 'off',
+    camelcase: 'off',
     'no-console': 'off',
     'no-param-reassign': 0,
     'import/no-unresolved': 0,
@@ -98,6 +98,7 @@ module.exports = {
     'no-plusplus': 'off',
     'jsx-a11y/media-has-caption': 'off',
     'no-new': 'off',
+    'prefer-const': 'off',
   },
   globals: {
     window: true,
