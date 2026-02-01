@@ -221,13 +221,13 @@ const MobileNavbar = () => {
             {nav.label}
           </Dropdown.Toggle>
 
-          <Dropdown.Menu style={{ 
+          <Dropdown.Menu style={{
             position: 'absolute',
-            minWidth: '150px', 
-            maxHeight: '300px', 
+            minWidth: '150px',
+            maxHeight: '300px',
             overflowY: 'auto',
-            marginTop: '5px', 
-            }}>
+            marginTop: '5px',
+          }}>
             {nav.items.map((item) => (
               <Dropdown.Item as={NavLink} key={item.to} to={item.to}>
                 {item.label}
@@ -257,14 +257,14 @@ const Operations = () => {
           <MobileNavbar />
         </div>
       )}
-      <Row className="pt-7">
-        {width && width >= lgBreakpoint && (
+      <Row>
+        {(width && width >= lgBreakpoint) ? (
           <Col xs="auto" className="d-none d-lg-flex">
             <div className="nav flex-column sw-25 mt-2">
               <NavContent />
             </div>
           </Col>
-        )}
+        ) : (<div className="pt-7" />)}
         <Col>
           <Switch>
             <Route exact path="/operations" render={() => <Redirect to="/operations/order-history" />} />

@@ -15,7 +15,7 @@ const DeliveryOrder = () => {
   const urlParams = new URLSearchParams(location.search);
   const orderId = urlParams.get('orderId');
   const mode = urlParams.get('mode'); // 'new' or 'edit'
-  const [showCategories, setShowCategories] = useState(false);
+  const [showCategories, setShowCategories] = useState(true);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
   const title = `${mode === 'new' ? 'New' : 'Edit'} Delivery Order`;

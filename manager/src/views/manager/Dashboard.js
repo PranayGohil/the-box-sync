@@ -84,10 +84,13 @@ const Dashboard = () => {
           </Col>
           <Col md="5" className="d-flex align-items-start justify-content-end gap-2">
             <Button variant="outline-primary" onClick={() => createNewOrder('takeaway')}>
-              + New Takeaway
+              + Takeaway
             </Button>
             <Button variant="outline-primary" onClick={() => createNewOrder('delivery')}>
-              + New Delivery
+              + Delivery
+            </Button>
+            <Button variant="outline-primary" onClick={() => history.push('/order/delivery-partners')}>
+              Delivery Partners
             </Button>
           </Col>
         </Row>
@@ -211,7 +214,7 @@ const Dashboard = () => {
                         <div>
                           <h5 className="mb-1">
                             {order.order_type}
-                            {order.token && <span className="text-muted"> #{order.token}</span>}
+                            {order.token && <span className="text-info fs-5"> #{order.token}</span>}
                           </h5>
                           <p className="mb-0 text-muted">
                             {order.order_type === 'Takeaway' ? `Token: ${order.token}` : `Customer: ${order.customer_name || 'N/A'}`}

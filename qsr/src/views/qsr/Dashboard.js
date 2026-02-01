@@ -138,10 +138,13 @@ const Dashboard = () => {
 
             <div className="d-flex gap-2 mx-2">
               <Button variant="outline-primary" onClick={() => createNewOrder('takeaway')}>
-                + New Takeaway
+                + Takeaway
               </Button>
               <Button variant="outline-primary" onClick={() => createNewOrder('delivery')}>
-                + New Delivery
+                + Delivery
+              </Button>
+              <Button variant="outline-primary" onClick={() => history.push('/order/delivery-partners')}>
+                Delivery Partners
               </Button>
             </div>
           </div>

@@ -13,6 +13,7 @@ const order = {
   dinein: lazy(() => import('views/qsr/order/DineInOrder')),
   takeaway: lazy(() => import('views/qsr/order/TakeawayOrder')),
   delivery: lazy(() => import('views/qsr/order/DeliveryOrder')),
+  deliveryPartner: lazy(() => import('views/qsr/order/DeliveryPartners')),
 }
 const dashboards = {
   index: lazy(() => import('views/dashboards/Dashboards')),
@@ -55,6 +56,7 @@ const allRoutes = {
         { path: '/dine-in', label: 'Dine In', component: order.dinein },
         { path: '/takeaway', label: 'Take Away', component: order.takeaway },
         { path: '/delivery', label: 'Delivery', component: order.delivery },
+        { path: '/delivery-partners', label: 'Delivery Partners', component: order.deliveryPartner },
       ]
     },
   ],

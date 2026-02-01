@@ -120,13 +120,13 @@ const ProfileSettings = () => {
       <HtmlHead title={title} description={description} />
 
       <Row>
-        {width && width >= lgBreakpoint && (
+        {(width && width >= lgBreakpoint) ? (
           <Col xs="auto" className="d-none d-lg-flex">
-            <div className="nav flex-column sw-25 mt-n2">
+            <div className="nav flex-column sw-25 mt-2">
               <NavContent />
             </div>
           </Col>
-        )}
+        ) : (<div className="pt-7" />)}
 
         <Col>
           {/* Title and Top Buttons Start */}

@@ -21,7 +21,7 @@ const Layout = ({ children }) => {
     <>
       <Nav />
       <main>
-        <Container>
+        <Container fluid>
           <Row className="h-100">
             <SidebarMenu />
             <Col className="h-100" id="contentArea">

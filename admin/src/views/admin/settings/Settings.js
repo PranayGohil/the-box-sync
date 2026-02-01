@@ -186,14 +186,14 @@ const Settings = () => {
           <MobileNavbar />
         </div>
       )}
-      <Row className="pt-7">
-        {width && width >= lgBreakpoint && (
+      <Row>
+        {(width && width >= lgBreakpoint) ? (
           <Col xs="auto" className="d-none d-lg-flex">
             <div className="nav flex-column sw-25 mt-2">
               <NavContent />
             </div>
           </Col>
-        )}
+        ) : (<div className="pt-7" />)}
         <Col>
           <Switch>
             <Route exact path="/settings" render={() => <Redirect to="/settings/profile" />} />

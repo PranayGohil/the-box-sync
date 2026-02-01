@@ -25,7 +25,7 @@ const DineInOrder = () => {
   const [isDirty, setIsDirty] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [nextLocation, setNextLocation] = useState(null);
-  const [showCategories, setShowCategories] = useState(false);
+  const [showCategories, setShowCategories] = useState(true);
   const [waiters, setWaiters] = useState([]);
   const [showCancelModal, setShowCancelModal] = useState(false); // 🔥 NEW: Cancel modal state
 
