@@ -4,6 +4,7 @@ const Customer = require("../models/customerModel");
 const WebCustomer = require("../models/webCustomerModel");
 const TokenCounter = require("../models/TokenCounter");
 const Table = require("../models/tableModel");
+const Menu = require("../models/menuModel");
 const Notification = require("../models/notificationModel");
 const OrderCounter = require("../models/orderCounterModel");
 
@@ -336,6 +337,28 @@ const orderController = async (req, res) => {
   }
 };
 
+// Add this helper at top of controller file
+const assignCountersToItems = async (userId, orderItems) => {
+  // Fetch all menus for this user
+  const menus = await Menu.find({ user_id: userId });
+
+  // Build dish_name → counter map
+  const dishCounterMap = {};
+  menus.forEach(menu => {
+    const counter = menu.counter || "Default";
+    menu.dishes.forEach(dish => {
+      dishCounterMap[dish.dish_name] = counter;
+    });
+  });
+
+  // Inject counter into each order item
+  return orderItems.map(item => ({
+    ...item,
+    counter: item.counter || dishCounterMap[item.dish_name] || "Default"
+    // item.counter check → preserves existing value on update (don't overwrite old orders)
+  }));
+};
+
 const dineInController = async (req, res) => {
   try {
     let { orderInfo, tableId, customerInfo } = req.body;
@@ -397,6 +420,8 @@ const dineInController = async (req, res) => {
         status: item.status === "Pending" ? "Preparing" : item.status,
       }));
     }
+    // assign counters to items (only if menu exists, safe fallback)
+    orderInfo.order_items = await assignCountersToItems(req.user, orderInfo.order_items);
 
     // ✅ 3. Handle order cancellation
     if (orderInfo.order_status === "Cancelled") {

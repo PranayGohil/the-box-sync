@@ -10,6 +10,7 @@ const menu = new Schema({
   meal_type: {
     type: String,
   },
+  counter: { type: String, default: null },
   dishes: [
     {
       dish_name: {

@@ -2,11 +2,12 @@ const fs = require("fs");
 const path = require("path");
 const Menu = require("../models/menuModel");
 const User = require("../models/userModel");
+const { count } = require("console");
 
 const addMenu = async (req, res) => {
   try {
     const user_id = req.user;
-    let { category, meal_type, dishes } = req.body;
+    let { category, meal_type, counter, dishes } = req.body;
 
     let parsedDishes;
 
@@ -57,7 +58,7 @@ const addMenu = async (req, res) => {
           : undefined,
     }));
 
-    const filter = { user_id, category, meal_type };
+    const filter = { user_id, category, counter, meal_type };
 
     const update = {
       $push: { dishes: { $each: parsedDishes } },
@@ -92,6 +93,7 @@ const getMenuData = async (req, res) => {
     const projection = {
       category: 1,
       meal_type: 1,
+      counter: 1,
       dishes: 1,
       show_on_website: 1,
     };
@@ -144,6 +146,22 @@ const getMenuCategories = async (req, res) => {
     res.json({ success: true, data: categories });
   } catch (error) {
     console.error("Error fetching categories:", error);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+};
+
+const getMenuCounterOptions = async (req, res) => {
+  try {
+    const userId = req.user;
+
+    const counters = await Menu.distinct("counter", {
+      user_id: userId,
+      counter: { $nin: [null, ""] },
+    });
+
+    res.json({ success: true, data: counters });
+  } catch (error) {
+    console.error("Error fetching counters:", error);
     res.status(500).json({ success: false, error: "Internal server error" });
   }
 };
@@ -258,12 +276,16 @@ const getMenuDataById = async (req, res) => {
 const updateMenuCategoryAndMealType = async (req, res) => {
   try {
     const id = req.params.id;
-    const { category, meal_type } = req.body;
+    const { category, meal_type, counter } = req.body;
     const userId = req.user;
+
+    if (counter === "") {
+      counter = null;
+    }
 
     const updatedMenu = await Menu.findOneAndUpdate(
       { user_id: userId, _id: id },
-      { category, meal_type },
+      { category, meal_type, counter },
       { new: true },
     );
 
@@ -408,6 +430,7 @@ module.exports = {
   getMenuDataById,
   getMenuDataByResCode,
   getMenuCategories,
+  getMenuCounterOptions,
   getMenuSuggestions,
   getDishesByCategory,
   updateMenuCategoryAndMealType,

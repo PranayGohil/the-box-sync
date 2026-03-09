@@ -50,6 +50,7 @@ const BoxedVariationsStripe = ({ columns, data, category, setEditCategoryModalSh
                   history.push('/operations/add-dish', {
                     category: category.category,
                     mealType: category.meal_type,
+                    counter: category.counter || 'Default',
                     fromManageMenu: true, // flag to lock fields
                   });
                 }}

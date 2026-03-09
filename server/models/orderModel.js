@@ -30,6 +30,7 @@ const orderSchema = new Schema({
       dish_price: {
         type: Number,
       },
+      counter: { type: String, default: "Default" },
       special_notes: {
         type: String,
       },
