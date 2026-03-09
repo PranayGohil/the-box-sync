@@ -605,7 +605,7 @@ const DeliveryOrder = () => {
 
                 <Col className="d-flex justify-content-end">
                   <Button variant="outline-secondary" size="sm" onClick={() => handleNavigation('/dashboard')}>
-                    <CsLineIcons icon="arrow-left" /> Back
+                    <CsLineIcons icon="arrow-left" className='pb-1' /> Back
                   </Button>
                 </Col>
               </Row>
@@ -628,7 +628,6 @@ const DeliveryOrder = () => {
                   <div
                     onClick={() => {
                       setSelectedCategory('');
-                      setShowCategories(false);
                     }}
                     className={`py-2 px-2 mb-1 rounded ${selectedCategory === '' ? 'bg-primary text-white' : 'bg-white'}`}
                     style={{ cursor: 'pointer', fontSize: '13px' }}
@@ -641,7 +640,6 @@ const DeliveryOrder = () => {
                       key={category}
                       onClick={() => {
                         setSelectedCategory(category);
-                        setShowCategories(false);
                       }}
                       className={`py-2 px-2 mb-1 rounded ${selectedCategory === category ? 'bg-primary text-white' : 'bg-white'}`}
                       style={{ cursor: 'pointer', fontSize: '13px' }}

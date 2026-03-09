@@ -3,6 +3,7 @@ import { useHistory, Switch, Route } from 'react-router-dom';
 import { Button, Row, Col, Card, Badge } from 'react-bootstrap';
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 import DineInOrder from './order/DineInOrder';
 import TakeawayOrder from './order/TakeawayOrder';
@@ -216,7 +217,7 @@ const Dashboard = () => {
                             {order.order_type}
                             {order.token && <span className="text-info fs-5"> #{order.token}</span>}
                           </h5>
-                          <p className="mb-0 text-muted">
+                          <p className="mb-0 px-2">
                             {order.order_type === 'Takeaway' ? `Token: ${order.token}` : `Customer: ${order.customer_name || 'N/A'}`}
                           </p>
                         </div>

@@ -89,9 +89,9 @@ const Dashboard = () => {
                         <div>
                           <h5 className="mb-1">
                             {order.order_type}
-                            {order.token && <span className="text-muted"> #{order.token}</span>}
+                            {order.token && <span className="text-info fs-5"> #{order.token}</span>}
                           </h5>
-                          <p className="mb-0 text-muted">Token: {order.token}</p>
+                          <p className="mb-0 px-2">Token: {order.token}</p>
                         </div>
                         <div className="d-flex gap-2">
                           {order.order_status === 'Save' && (
@@ -164,9 +164,9 @@ const Dashboard = () => {
                         <div>
                           <h5 className="mb-1">
                             {order.order_type}
-                            {order.token && <span className="text-muted"> #{order.token}</span>}
+                            {order.token && <span className="text-info fs-5"> #{order.token}</span>}
                           </h5>
-                          <p className="mb-0 text-muted">
+                          <p className="mb-0 px-2">
                             {order.order_type === 'Takeaway' ? `Token: ${order.token}` : `Customer: ${order.customer_name || 'N/A'}`}
                           </p>
                         </div>
