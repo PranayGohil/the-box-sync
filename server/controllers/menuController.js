@@ -7,7 +7,7 @@ const { count } = require("console");
 const addMenu = async (req, res) => {
   try {
     const user_id = req.user;
-    let { category, meal_type, counter, dishes } = req.body;
+    let { category, meal_type, counter, hide_on_kot, dishes } = req.body;
 
     let parsedDishes;
 
@@ -58,7 +58,7 @@ const addMenu = async (req, res) => {
           : undefined,
     }));
 
-    const filter = { user_id, category, counter, meal_type };
+    const filter = { user_id, category, counter, hide_on_kot, meal_type };
 
     const update = {
       $push: { dishes: { $each: parsedDishes } },
@@ -94,6 +94,7 @@ const getMenuData = async (req, res) => {
       category: 1,
       meal_type: 1,
       counter: 1,
+      hide_on_kot: 1,
       dishes: 1,
       show_on_website: 1,
     };
@@ -276,16 +277,20 @@ const getMenuDataById = async (req, res) => {
 const updateMenuCategoryAndMealType = async (req, res) => {
   try {
     const id = req.params.id;
-    const { category, meal_type, counter } = req.body;
+    const { category, meal_type, counter, hide_on_kot } = req.body;
     const userId = req.user;
 
     if (counter === "") {
       counter = null;
     }
 
+    if(!hide_on_kot) {
+      hide_on_kot = false;
+    }
+
     const updatedMenu = await Menu.findOneAndUpdate(
       { user_id: userId, _id: id },
-      { category, meal_type, counter },
+      { category, meal_type, counter, hide_on_kot },
       { new: true },
     );
 

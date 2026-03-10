@@ -38,6 +38,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
         initialValues: {
             category: data?.category || '',
             counter: data?.counter || '',
+            hide_on_kot: data?.hide_on_kot || false,
             meal_type: data?.meal_type || 'veg',
         },
         enableReinitialize: true,
@@ -47,6 +48,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                 const payload = {
                     category: values.category,
                     counter: values.counter,
+                    hide_on_kot: values.hide_on_kot,
                     meal_type: values.meal_type,
                 };
 
@@ -149,7 +151,15 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                             isDisabled={isSubmitting}
                         />
                     </Form.Group>
-
+                    <Form.Group className="mb-3">
+                        <Form.Check
+                            type="checkbox"
+                            label="Hide on KOT"
+                            checked={formik.values.hide_on_kot}
+                            onChange={() => formik.setFieldValue('hide_on_kot', !formik.values.hide_on_kot)}
+                            disabled={isSubmitting}
+                        />
+                    </Form.Group>
                 </Form>
             </Modal.Body>
 

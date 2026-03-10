@@ -41,6 +41,10 @@ const menu = new Schema({
       },
     },
   ],
+  hide_on_kot: {
+    type: Boolean,
+    default: false,
+  },
   show_on_website: {
     type: Boolean,
     default: false,

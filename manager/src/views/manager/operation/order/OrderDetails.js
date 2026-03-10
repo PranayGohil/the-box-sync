@@ -64,87 +64,87 @@ const OrderDetails = () => {
 
   const printCounterBill = (ord, userData, counterName, items, subTotal) => {
     return `
-  <div style="page-break-after: always; font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 10px;">
-    
-    <!-- Restaurant Header -->
-    <div style="text-align: center; margin-bottom: 10px;">
-      <h3 style="margin: 5px;">${userData.name}</h3>
-      <p style="margin: 0; font-size: 12px;">${userData.address}</p>
-      <p style="margin: 0; font-size: 12px;">${userData.city}, ${userData.state} - ${userData.pincode}</p>
-      <p style="margin: 5px; font-size: 12px;"><strong>Ph:</strong> ${userData.mobile}</p>
-      ${userData.gst_no ? `<p style="font-size: 12px;"><strong>GST:</strong> ${userData.gst_no}</p>` : ''}
-    </div>
+      <div style="page-break-after: always; font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 10px; border: 1px solid #ccc;">
+        
+        <!-- Restaurant Header -->
+        <div style="text-align: center; margin-bottom: 10px;">
+          <h3 style="margin: 5px;">${userData.name}</h3>
+          <p style="margin: 0; font-size: 12px;">${userData.address}</p>
+          <p style="margin: 0; font-size: 12px;">${userData.city}, ${userData.state} - ${userData.pincode}</p>
+          <p style="margin: 5px; font-size: 12px;"><strong>Ph:</strong> ${userData.mobile}</p>
+          ${userData.gst_no ? `<p style="font-size: 12px;"><strong>GST:</strong> ${userData.gst_no}</p>` : ''}
+        </div>
 
-    <hr style="border: 0.5px dashed #ccc;" />
+        <hr style="border: 0.5px dashed #ccc;" />
 
-    <!-- Counter Badge -->
-    <div style="text-align: center; margin: 8px 0;">
-      <span style="background: #000; color: #fff; padding: 4px 16px; border-radius: 4px; font-size: 14px; font-weight: bold;">
-        ${counterName} Counter
-      </span>
-    </div>
+        <!-- Counter Badge -->
+        <div style="text-align: center; margin: 8px 0;">
+          <span style="background: #000; color: #fff; padding: 4px 16px; border-radius: 4px; font-size: 14px; font-weight: bold;">
+            ${counterName} Counter
+          </span>
+        </div>
 
-    <hr style="border: 0.5px dashed #ccc;" />
+        <hr style="border: 0.5px dashed #ccc;" />
 
-    <!-- Order Info -->
-    <table style="width: 100%; font-size: 12px; margin-bottom: 8px;">
-      <tr>
-        <td><strong>Bill No:</strong> ${ord.order_no || ord._id}</td>
-        <td style="text-align: right;"><strong>${ord.order_type}</strong></td>
-      </tr>
-      <tr>
-        <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
-        <td style="text-align: right;">
-          ${ord.table_no
-        ? `<strong>Table:</strong> ${ord.table_no}`
-        : ord.token
-          ? `<strong>Token:</strong> ${ord.token}`
-          : ''}
-        </td>
-      </tr>
-      ${ord.customer_name
-        ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
-        : ''}
-    </table>
-
-    <hr style="border: 0.5px dashed #ccc;" />
-
-    <!-- Items Table -->
-    <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
-      <thead>
-        <tr>
-          <th style="text-align: left; border-bottom: 1px dashed #ccc;">Item</th>
-          <th style="text-align: center; border-bottom: 1px dashed #ccc;">Qty</th>
-          <th style="text-align: center; border-bottom: 1px dashed #ccc;">Price</th>
-          <th style="text-align: right; border-bottom: 1px dashed #ccc;">Amount</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${items.map(item => `
+        <!-- Order Info -->
+        <table style="width: 100%; font-size: 12px; margin-bottom: 8px;">
           <tr>
-            <td>${item.dish_name}</td>
-            <td style="text-align: center;">${item.quantity}</td>
-            <td style="text-align: center;">₹${item.dish_price}</td>
-            <td style="text-align: right;">₹${(item.dish_price * item.quantity).toFixed(2)}</td>
+            <td><strong>Bill No:</strong> ${ord.order_no || ord._id}</td>
+            <td style="text-align: right;"><strong>${ord.order_type}</strong></td>
           </tr>
-        `).join('')}
+          <tr>
+            <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
+            <td style="text-align: right;">
+              ${ord.table_no
+            ? `<strong>Table:</strong> ${ord.table_no}`
+            : ord.token
+              ? `<strong>Token:</strong> ${ord.token}`
+              : ''}
+            </td>
+          </tr>
+          ${ord.customer_name
+            ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
+            : ''}
+        </table>
 
-        <tr>
-          <td colspan="3" style="text-align: right; border-top: 1px dashed #ccc; padding-top: 5px;">
-            <strong>Sub Total:</strong>
-          </td>
-          <td style="text-align: right; border-top: 1px dashed #ccc; padding-top: 5px;">
-            <strong>₹${subTotal.toFixed(2)}</strong>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+        <hr style="border: 0.5px dashed #ccc;" />
 
-    <hr style="border: 0.5px dashed #ccc;" />
-    <p style="text-align: center; font-size: 12px;"><strong>Thanks, Visit Again</strong></p>
+        <!-- Items Table -->
+        <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
+          <thead>
+            <tr>
+              <th style="text-align: left; border-bottom: 1px dashed #ccc;">Item</th>
+              <th style="text-align: center; border-bottom: 1px dashed #ccc;">Qty</th>
+              <th style="text-align: center; border-bottom: 1px dashed #ccc;">Price</th>
+              <th style="text-align: right; border-bottom: 1px dashed #ccc;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(item => `
+              <tr>
+                <td>${item.dish_name}</td>
+                <td style="text-align: center;">${item.quantity}</td>
+                <td style="text-align: center;">₹${item.dish_price}</td>
+                <td style="text-align: right;">₹${(item.dish_price * item.quantity).toFixed(2)}</td>
+              </tr>
+            `).join('')}
 
-  </div>
-  `;
+            <tr>
+              <td colspan="3" style="text-align: right; border-top: 1px dashed #ccc; padding-top: 5px;">
+                <strong>Sub Total:</strong>
+              </td>
+              <td style="text-align: right; border-top: 1px dashed #ccc; padding-top: 5px;">
+                <strong>₹${subTotal.toFixed(2)}</strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <hr style="border: 0.5px dashed #ccc;" />
+        <p style="text-align: center; font-size: 12px;"><strong>Thanks, Visit Again</strong></p>
+
+      </div>
+    `;
   };
 
   const handlePrint = async () => {

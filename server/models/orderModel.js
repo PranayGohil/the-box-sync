@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { showKOTs } = require("../controllers/kotController");
 const Schema = mongoose.Schema;
 const orderSchema = new Schema({
   user_id: {
@@ -30,7 +31,14 @@ const orderSchema = new Schema({
       dish_price: {
         type: Number,
       },
-      counter: { type: String, default: "Default" },
+      counter: {
+        type: String,
+        default: "Default"
+      },
+      hide_on_kot: {
+        type: Boolean,
+        default: false,
+      },
       special_notes: {
         type: String,
       },

@@ -41,11 +41,13 @@ const AddDishes = () => {
   const prefilledCategory = isFromManageMenu ? location.state?.category || '' : '';
   const prefilledMealType = isFromManageMenu ? location.state?.mealType || 'veg' : 'veg';
   const prefilledCounter = isFromManageMenu ? location.state?.counter || '' : '';
+  const prefilledHideOnKot = isFromManageMenu ? location.state?.hide_on_kot || false : false;
 
   const initialValues = {
     category: prefilledCategory,
     mealType: prefilledMealType,
     counter: prefilledCounter,
+    hideOnKot: prefilledHideOnKot,
     dishes: [
       {
         dish_name: '',
@@ -128,6 +130,7 @@ const AddDishes = () => {
     category: Yup.string().required('Category is required'),
     mealType: Yup.string().required('Meal type is required'),
     counter: Yup.string(),
+    hideOnKot: Yup.boolean(),
     dishes: Yup.array().of(
       Yup.object().shape({
         dish_name: Yup.string().required('Dish name is required'),
@@ -146,6 +149,7 @@ const AddDishes = () => {
       formData.append('category', values.category);
       formData.append('meal_type', values.mealType);
       formData.append('counter', values.counter);
+      formData.append('hide_on_kot', values.hideOnKot);
 
       const dishData = values.dishes.map((dish, i) => {
         if (dish.dish_img) {
@@ -281,9 +285,17 @@ const AddDishes = () => {
                             placeholder="Select or create counter"
                             classNamePrefix="react-select"
                           />
-
                           <ErrorMessage name="counter" component="div" className="text-danger mt-1" />
                         </BForm.Group>
+                      </Col>
+                      <Col md={4} className="mt-3">
+                        <BForm.Check
+                          type="checkbox"
+                          label="Hide on KOT"
+                          checked={values.hideOnKot}
+                          onChange={() => setFieldValue('hideOnKot', !values.hideOnKot)}
+                          disabled={isSubmitting}
+                        />
                       </Col>
                     </Row>
                     <FieldArray name="dishes">

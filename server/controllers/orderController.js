@@ -359,6 +359,26 @@ const assignCountersToItems = async (userId, orderItems) => {
   }));
 };
 
+const addKotsFlag = async (userId, orderItems) => {
+  // Fetch all menus for this user
+  const menus = await Menu.find({ user_id: userId });
+
+  // Build dish_name → hide_on_kot map
+  const hideOnKOTsDishSet = {};
+  menus.forEach(menu => {
+    const hideOnKot = menu.hide_on_kot || false;
+    menu.dishes.forEach(dish => {
+      hideOnKOTsDishSet[dish.dish_name] = hideOnKot;
+    });
+  });
+
+  // Inject hide_on_kot flag into each order item
+  return orderItems.map(item => ({
+    ...item,
+    hide_on_kot: hideOnKOTsDishSet[item.dish_name] || item.hide_on_kot || false
+  }));
+};
+
 const dineInController = async (req, res) => {
   try {
     let { orderInfo, tableId, customerInfo } = req.body;
@@ -422,6 +442,7 @@ const dineInController = async (req, res) => {
     }
     // assign counters to items (only if menu exists, safe fallback)
     orderInfo.order_items = await assignCountersToItems(req.user, orderInfo.order_items);
+    orderInfo.order_items = await addKotsFlag(req.user, orderInfo.order_items);
 
     // ✅ 3. Handle order cancellation
     if (orderInfo.order_status === "Cancelled") {
@@ -616,6 +637,10 @@ const takeawayController = async (req, res) => {
       }));
     }
 
+    // assign counters to items (only if menu exists, safe fallback)
+    orderInfo.order_items = await assignCountersToItems(req.user, orderInfo.order_items);
+    orderInfo.order_items = await addKotsFlag(req.user, orderInfo.order_items);
+
     // ✅ 3. Handle order cancellation
     if (orderInfo.order_status === "Cancelled") {
       orderInfo.order_items = orderInfo.order_items.map((item) => ({
@@ -797,6 +822,10 @@ const deliveryController = async (req, res) => {
         status: item.status === "Pending" ? "Preparing" : item.status,
       }));
     }
+
+    // assign counters to items (only if menu exists, safe fallback)
+    orderInfo.order_items = await assignCountersToItems(req.user, orderInfo.order_items);
+    orderInfo.order_items = await addKotsFlag(req.user, orderInfo.order_items);
 
     // ✅ 3. Handle order cancellation
     if (orderInfo.order_status === "Cancelled") {

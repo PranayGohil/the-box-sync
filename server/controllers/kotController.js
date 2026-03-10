@@ -7,13 +7,12 @@ const isValidId = (id) => !!id && typeof id === "string" && id.length >= 12;
 
 const showKOTs = async (req, res) => {
   try {
-    const userId = req.user._id; // keep same shape you use elsewhere
+    const userId = req.user._id;
     const {
-      order_source,                // optional query param
-      sort = "-order_date"         // default newest first
+      order_source,
+      sort = "-order_date"
     } = req.query;
 
-    // Build match filter
     const match = {
       user_id: userId,
       $or: [
@@ -32,11 +31,38 @@ const showKOTs = async (req, res) => {
       match.order_source = sources.length > 1 ? { $in: sources } : sources[0];
     }
 
-    // Pipeline returns only necessary fields and filters order_items to only relevant ones
+    const sortField = sort.replace("-", "");
+    const sortOrder = sort.startsWith("-") ? -1 : 1;
+
     const pipeline = [
       { $match: match },
-      // Optionally filter order_items to only items not Completed (so kitchen only sees pending)
-      { $sort: { [sort.replace('-', '')]: sort.startsWith('-') ? -1 : 1 } }, // basic sort parse
+      {
+        $addFields: {
+          order_items: {
+            $filter: {
+              input: "$order_items",
+              as: "item",
+              cond: {
+                $and: [
+                  {
+                    $or: [
+                      { $eq: ["$$item.hide_on_kot", false] },
+                      { $not: ["$$item.hide_on_kot"] } // field missing or false
+                    ]
+                  },
+                  { $ne: ["$$item.status", "Completed"] } // optional
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          "order_items.0": { $exists: true },
+        },
+      },
+      { $sort: { [sortField]: sortOrder } },
     ];
     const orders = await Order.aggregate(pipeline).exec();
 
