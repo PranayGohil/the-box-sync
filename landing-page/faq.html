@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zxx">
+<!--<< Header Area >>-->
+
+<head>
+    <!-- ========== Meta Tags ========== -->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Gramentheme">
+    <meta name="description" content="TheBox">
+    <!-- ======== Page title ============ -->
+    <title>TheBox</title>
+    <!--<< Favcion >>-->
+    <link rel="shortcut icon" href="assets/images/favicon.png">
+    <!--<< Bootstrap min.css >>-->
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <!--<< All Min Css >>-->
+    <link rel="stylesheet" href="assets/css/all.min.css">
+    <!--<< Animate.css >>-->
+    <link rel="stylesheet" href="assets/css/animate.css">
+    <!--<< Magnific popup.css >>-->
+    <link rel="stylesheet" href="assets/css/magnific-popup.css">
+    <!--<< MeanMenu.css >>-->
+    <link rel="stylesheet" href="assets/css/meanmenu.css">
+    <!--<< Swiper Bundle.css >>-->
+    <link rel="stylesheet" href="assets/css/swiper-bundle.min.css">
+    <!--<< NiceSelect.css >>-->
+    <link rel="stylesheet" href="assets/css/nice-select.css">
+    <!--<< Main.css >>-->
+    <link rel="stylesheet" href="assets/css/main.css">
+</head>
+
+<body>
+
+    <!-- Preloader Start -->
+    <div id="preloader" class="preloader">
+        <div class="animation-preloader">
+            <div class="spinner">
+            </div>
+            <div class="txt-loading">
+                <span data-text-preloader="T" class="letters-loading">
+                    T
+                </span>
+                <span data-text-preloader="H" class="letters-loading">
+                    H
+                </span>
+                <span data-text-preloader="E" class="letters-loading">
+                    E
+                </span>
+                <span data-text-preloader="B" class="letters-loading">
+                    B
+                </span>
+                <span data-text-preloader="O" class="letters-loading">
+                    O
+                </span>
+                <span data-text-preloader="X" class="letters-loading">
+                    X
+                </span>
+            </div>
+            <p class="text-center">Loading</p>
+        </div>
+        <div class="loader">
+            <div class="row">
+                <div class="col-3 loader-section section-left">
+                    <div class="bg"></div>
+                </div>
+                <div class="col-3 loader-section section-left">
+                    <div class="bg"></div>
+                </div>
+                <div class="col-3 loader-section section-right">
+                    <div class="bg"></div>
+                </div>
+                <div class="col-3 loader-section section-right">
+                    <div class="bg"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mouse Cursor Start -->
+    <div class="mouse-cursor cursor-outer"></div>
+    <div class="mouse-cursor cursor-inner"></div>
+    
+    <!-- Back To Top Start -->
+    <button id="back-top" class="back-to-top">
+        <i class="fa-solid fa-chevron-up"></i>
+    </button>
+    
+    <!-- Offcanvas Area Start -->
+    <div class="fix-area">
+        <div class="offcanvas__info">
+            <div class="offcanvas__wrapper">
+                <div class="offcanvas__content">
+                    <div class="offcanvas__top mb-5 d-flex justify-content-between align-items-center">
+                        <div class="offcanvas__logo">
+                            <a href="index.html">
+                                <img src="assets/images/logo/logo-blue.svg" alt="logo-img">
+                            </a>
+                        </div>
+                        <div class="offcanvas__close">
+                            <button>
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text d-none d-xl-block">
+                        Nullam dignissim, ante scelerisque the is euismod fermentum odio sem semper the is erat, a
+                        feugiat leo urna eget eros. Duis Aenean a imperdiet risus.
+                    </p>
+                    <div class="mobile-menu fix mb-3"></div>
+                    <div class="offcanvas__contact">
+                        <h4>Contact Info</h4>
+                        <ul>
+                            <li class="d-flex align-items-center">
+                                <div class="offcanvas__contact-icon">
+                                    <i class="fal fa-map-marker-alt"></i>
+                                </div>
+                                <div class="offcanvas__contact-text">
+                                    <a target="_blank" href="#">Main Street, Melbourne, Australia</a>
+                                </div>
+                            </li>
+                            <li class="d-flex align-items-center">
+                                <div class="offcanvas__contact-icon mr-15">
+                                    <i class="fal fa-envelope"></i>
+                                </div>
+                                <div class="offcanvas__contact-text">
+                                    <a href="mailto:info@example.com"><span
+                                            class="mailto:info@example.com">info@example.com</span></a>
+                                </div>
+                            </li>
+                            <li class="d-flex align-items-center">
+                                <div class="offcanvas__contact-icon mr-15">
+                                    <i class="fal fa-clock"></i>
+                                </div>
+                                <div class="offcanvas__contact-text">
+                                    <a target="_blank" href="#">Mod-friday, 09am -05pm</a>
+                                </div>
+                            </li>
+                            <li class="d-flex align-items-center">
+                                <div class="offcanvas__contact-icon mr-15">
+                                    <i class="far fa-phone"></i>
+                                </div>
+                                <div class="offcanvas__contact-text">
+                                    <a href="tel:+11002345909">+11002345909</a>
+                                </div>
+                            </li>
+                        </ul>
+                        <div class="header-button mt-4">
+                            <a href="contact.html" class="theme-btn text-center">
+                                <span>Get A Quote<i class="fa-solid fa-arrow-right-long"></i></span>
+                            </a>
+                        </div>
+                        <div class="social-icon d-flex align-items-center">
+                            <a href="#"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#"><i class="fab fa-twitter"></i></a>
+                            <a href="#"><i class="fab fa-youtube"></i></a>
+                            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="offcanvas__overlay"></div>
+    
+    <!-- Header Section Start -->
+    <header class="header-section-1">
+        <div id="header-sticky" class="header-1">
+            <div class="container">
+                <div class="mega-menu-wrapper">
+                    <div class="header-main">
+                        <div class="header-left">
+                            <div class="logo">
+                                <a href="index.html" class="header-logo">
+                                    <img src="assets/images/logo/logo-blue.svg" alt="logo-img">
+                                </a>
+                            </div>
+                        </div>
+                        <div class="header-middle">
+                            <div class="mean__menu-wrapper">
+                                <div class="main-menu">
+                                    <nav id="mobile-menu">
+                                        <ul>
+                                            <li class="has-dropdown active menu-thumb">
+                                                <a href="index.html">
+                                                    Home
+                                                </a>
+                                            </li>
+                                            <li class="has-dropdown active d-xl-none">
+                                                <a href="index.html" class="border-none">
+                                                    Home
+                                                </a>
+                                            </li>
+                                            <!-- <li>
+                                                    <a href="about.html">About Us</a>
+                                                </li> -->
+                                            <li>
+                                                <a href="#">
+                                                    Our Products
+                                                    <i class="fas fa-angle-down"></i>
+                                                </a>
+                                                <ul class="submenu">
+                                                    
+                                                    <li><a href="restaurant-management.html">Restaurant Management</a></li>
+                                                    <li><a href="hotel-management.html">Hotel Management</a></li>
+                                                </ul>
+                                            </li>
+                                            <li class="has-dropdown">
+                                                <a href="#">
+                                                    Outlet types
+                                                    <i class="fas fa-angle-down"></i>
+                                                </a>
+                                                <ul class="submenu">
+                                                    <li class="has-dropdown">
+                                                        <a href="finedine.html">
+                                                            Fine dine
+                                                        </a>
+    
+                                                    </li>
+                                                    <li class="has-dropdown">
+                                                        <a href="qsr.html">
+                                                            QSR
+                                                        </a>
+                                                    </li>
+                                                    <li><a href="cafe.html">Cafe</a></li>
+                                                    <li><a href="food-court.html">Food court</a></li>
+                                                    <li><a href="cloud-kitchen.html">Cloud kitchen</a></li>
+                                                    <li><a href="icecream-dessert.html">Ice cream &amp; desserts</a></li>
+                                                    <li><a href="bakery.html">Bakery</a></li>
+                                                    <li><a href="brewery.html">brewery</a></li>
+                                                    <li><a href="pizzeria.html">Pizzeria</a></li>
+                                                    <!-- <li><a href="large-chain.html">Large chain</a></li> -->
+                                                </ul>
+                                            </li>
+                                            <li>
+                                                <a href="pricing.html">
+                                                    Pricing
+                                                </a>
+                                            </li>
+    
+                                            <li>
+                                                <a href="#">
+                                                    Resources
+                                                    <i class="fas fa-angle-down"></i>
+                                                </a>
+                                                <ul class="submenu">
+                                                    <li><a href="about.html">About us</a></li>
+                                                    <li><a href="careers.html">Careers</a></li>
+                                                    <li><a href="support.html">Support</a></li>
+                                                </ul>
+                                            </li>
+                                            <li>
+                                                <a href="contact.html">Contact Us</a>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="header-right d-flex justify-content-end align-items-center">
+                            
+    
+                            <div class="header-button ms-4">
+                                <a href="contact.html" class="theme-btn">
+                                    <span>
+                                        Book a Demo
+                                        <i class="fa-solid fa-arrow-right-long"></i>
+                                    </span>
+                                </a>
+                            </div>
+                            <div class="header__hamburger d-block d-xl-none my-auto">
+                                <div class="sidebar__toggle">
+                                    <i class="fas fa-bars"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+
+    <!-- Search Area Start -->
+    <div class="search-wrap">
+        <div class="search-inner">
+            <i class="fas fa-times search-close" id="search-close"></i>
+            <div class="search-cell">
+                <form method="get">
+                    <div class="search-field-holder">
+                        <input type="search" class="main-search-input" placeholder="Search...">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breadcumb Section S T A R T -->
+    <div class="breadcumb-section fix">
+        <div class="breadcumb-container-wrapper" data-bg-src="assets/images/bg/breadcumgBg.png">
+            <div class="container">
+                <div class="shape1"><img src="assets/images/shape/breadCumbShape1_1.png" alt="shape"></div>
+                <div class="shape2"><img src="assets/images/shape/breadCumbShape1_2.png" alt="shape"></div>
+                <div class="breadcumb-wrapper">
+                    <div class="page-heading">
+                        <h1>FAQ’s</h1>
+                        <div class="links">
+                            <a href="index.html">Home<span class="slash">/</span></a> FAQ’s
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Faq Section S T A R T -->
+    <section class="faq-section section-padding fix">
+        <div class="faq-container-wrapper style2">
+            <div class="container">
+                <div class="faq-wrapper style2">
+                    <div class="row gy-5 gx-100">
+                        <div class="col-xl-6">
+                            <div class="faq-thumb">
+                                <img src="assets/images/faq/faqThumb3_1.png" alt="thumb">
+                            </div>
+                        </div>
+                        <div class="col-xl-6">
+                        <div class="faq-content style1 mt-0">
+                           
+                            <div class="faq-accordion">
+                                <div class="accordion" id="accordion">
+                                    <div class="accordion-item mb-3 wow fadeInUp" data-wow-delay=".3s">
+                                        <h5 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true"
+                                                aria-controls="faq1">
+                                                Can this system help track inventory and reduce waste?
+                                            </button>
+                                        </h5>
+                                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#accordion">
+                                            <div class="accordion-body">
+                                                Yes, our system tracks inventory in real-time, optimizing stock levels and usage. This minimizes waste, streamlines
+                                                operations, and contributes to efficient resource management for cost-effective outcomes.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="accordion-item mb-3 wow fadeInUp" data-wow-delay=".5s">
+                                        <h5 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false"
+                                                aria-controls="faq2">
+                                                What analytics are available to enhance decision-making?
+                                            </button>
+                                        </h5>
+                                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#accordion">
+                                            <div class="accordion-body">
+                                                <strong>This is the second item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the
+                                                appropriate classes that we use to style each element. These classes control the overall appearance, as well as the
+                                                showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables.
+                                                It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition
+                                                does limit overflow.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="accordion-item mb-3 wow fadeInUp" data-wow-delay=".7s">
+                                        <h5 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">
+                                                Is your system customizable to fit our restaurant's unique needs?
+                                            </button>
+                                        </h5>
+                                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#accordion">
+                                            <div class="accordion-body">
+                                                <strong>This is the third item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the
+                                                appropriate classes that we use to style each element. These classes control the overall appearance, as well as the
+                                                showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables.
+                                                It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition
+                                                does limit overflow.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="accordion-item mb-3 wow fadeInUp" data-wow-delay=".7s">
+                                        <h5 class="accordion-header">
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq4"
+                                                aria-expanded="false" aria-controls="faq4">
+                                                Is your system customizable to fit our restaurant's unique needs?
+                                            </button>
+                                        </h5>
+                                        <div id="faq4" class="accordion-collapse show" data-bs-parent="#accordion">
+                                            <div class="accordion-body">
+                                                <strong>This is the third item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the
+                                                appropriate classes that we use to style each element. These classes control the overall appearance, as well as the
+                                                showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables.
+                                                It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition
+                                                does limit overflow.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+   <!-- Footer Section    S T A R T -->
+    <footer class="footer-section position-relative">
+        <div class="footer-widgets-wrapper style1 fix">
+            <div class="shape1"><img src="assets/images/shape/footerShape1_1.png" alt="shape"></div>
+            <div class="shape2"><img src="assets/images/shape/footerShape1_2.png" alt="shape"></div>
+            <div class="shape3"><img src="assets/images/shape/footerShape1_3.png" alt="shape"></div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-xl-4 col-lg-4 col-md-6 wow fadeInUp" data-wow-delay=".2s">
+                        <div class="single-footer-widget">
+                            <div class="widget-head">
+                                <a href="index.html">
+                                    <img src="assets/images/logo/logo-blue.svg" alt="logo-img">
+                                </a>
+                            </div>
+                            <div class="footer-content">
+                                <p>
+                                    It is a long established fact that from will be distracted by the readable from when
+                                    looking.
+                                </p>
+                                <div class="store-links">
+                                    
+                                        <a class="playstore" href="https://play.google.com/store"><img src="assets/images/cta/ctaplayStore1_1.png" alt="img"></a>
+                                   
+                                    
+                                       <a href="https://www.apple.com/store"><img src="assets/images/cta/ctaAppleStore1_1.png" alt="img"></a>
+                                    
+                                </div>
+                                
+                            </div>
+                            
+                        </div>
+                        <div class="social-icon">
+                            <div class="footer-wrapper d-flex align-items-center justify-content-between">
+                                <ul class="social-links" data-wow-delay=".5s">
+                                    <li> <a href="#"><i class="fa-brands fa-facebook-f"></i></a> </li>
+                                    <li> <a href="#"><i class="fa-brands fa-twitter"></i></a> </li>
+                                    <li> <a href="#"><i class="fa-brands fa-linkedin-in"></i></a> </li>
+                                    <li> <a href="#"><i class="fa-brands fa-instagram"></i></a> </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-lg-4 col-md-6 ps-lg-5 wow fadeInUp" data-wow-delay=".4s">
+                        <div class="single-footer-widget">
+                            <div class="widget-head">
+                                <h3> Support </h3>
+                            </div>
+                            <ul class="list-area">
+                                <li>
+                                    <a href="privacy-policy.html">
+                                        Privacy Policy
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="refund-policy.html">
+                                        Refund Policy
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="terms-and-conditions.html">
+                                        Terms & Conditions
+                                    </a>
+                                </li>
+                                
+                                <li>
+                                    <a href="disclaimer.html">
+                                       Disclaimer
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-lg-4 col-md-6 wow fadeInUp" data-wow-delay=".8s">
+                        <div class="single-footer-widget">
+                            <div class="widget-head">
+                                <h3> Resources </h3>
+                            </div>
+                            <ul class="list-area">
+                                
+                                <li>
+                                    <a href="about.html">
+                                        About Us
+                                    </a>
+                                </li>
+                               
+                                <li>
+                                    <a href="careers.html">
+                                        Careers
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="faq.html"  class="active">
+                                        FAQ
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="support.html">
+                                        Support
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-xl-4 col-lg-4 col-md-6">
+                        <div class="single-footer-widget">
+                            <div class="contact-box">
+                                <div class="subtitle">Address</div>
+                                <div class="widget-head">Ready to get started?</div>
+                                <div class="text">It is a long established fact that a reader will be distracted layout.
+                                </div>
+                                <div class="info">
+                                    <div class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="23"
+                                            viewBox="0 0 22 23" fill="none">
+                                            <path
+                                                d="M3.66671 4.16699H18.3334C19.3417 4.16699 20.1667 4.99199 20.1667 6.00033V17.0003C20.1667 18.0087 19.3417 18.8337 18.3334 18.8337H3.66671C2.65837 18.8337 1.83337 18.0087 1.83337 17.0003V6.00033C1.83337 4.99199 2.65837 4.16699 3.66671 4.16699Z"
+                                                stroke="#1ea8e7" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                            <path d="M20.1667 6L11 12.4167L1.83337 6" stroke="#1ea8e7" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </div>
+                                    <div class="link">
+                                        <a href="mailto:contact.tech@gmail.com">contact.tech@gmail.com</a> <br>
+                                        <a href="mailto:info@TheBox.com">info@TheBox.com</a>
+                                    </div>
+                                </div>
+                                <div class="info">
+                                    <div class="icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="23"
+                                            viewBox="0 0 22 23" fill="none">
+                                            <g clip-path="url(#clip0_2011_91)">
+                                                <path
+                                                    d="M13.7959 5.08366C14.6912 5.25834 15.514 5.69623 16.1591 6.34127C16.8041 6.9863 17.242 7.80915 17.4167 8.70449L13.7959 5.08366ZM13.7959 1.41699C15.656 1.62364 17.3906 2.45665 18.7149 3.77925C20.0392 5.10185 20.8744 6.83542 21.0834 8.69533L13.7959 1.41699ZM20.1667 16.0103V18.7603C20.1677 19.0156 20.1154 19.2683 20.0132 19.5022C19.9109 19.7361 19.7609 19.9461 19.5728 20.1187C19.3846 20.2913 19.1625 20.4227 18.9207 20.5045C18.6789 20.5863 18.4226 20.6166 18.1684 20.5937C15.3476 20.2872 12.6381 19.3233 10.2575 17.7795C8.0427 16.3721 6.16491 14.4943 4.75752 12.2795C3.20833 9.8881 2.24424 7.1654 1.94335 4.33199C1.92045 4.0785 1.95057 3.82302 2.03181 3.58181C2.11305 3.34061 2.24363 3.11896 2.41522 2.93098C2.58682 2.743 2.79567 2.59281 3.0285 2.48997C3.26132 2.38713 3.513 2.3339 3.76752 2.33366H6.51752C6.96238 2.32928 7.39366 2.48681 7.73097 2.7769C8.06827 3.06698 8.28859 3.46982 8.35085 3.91033C8.46692 4.79039 8.68218 5.65449 8.99252 6.48616C9.11585 6.81426 9.14254 7.17083 9.06943 7.51363C8.99632 7.85643 8.82648 8.17109 8.58002 8.42033L7.41585 9.58449C8.72078 11.8794 10.6209 13.7796 12.9159 15.0845L14.08 13.9203C14.3293 13.6739 14.6439 13.504 14.9867 13.4309C15.3295 13.3578 15.6861 13.3845 16.0142 13.5078C16.8459 13.8182 17.71 14.0334 18.59 14.1495C19.0353 14.2123 19.442 14.4366 19.7327 14.7797C20.0234 15.1228 20.1778 15.5608 20.1667 16.0103Z"
+                                                    stroke="#1ea8e7" stroke-width="2" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_2011_91">
+                                                    <rect width="22" height="22" fill="white"
+                                                        transform="translate(0 0.5)" />
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+                                    </div>
+                                    <div class="link">
+                                        <a href="tel:21314234323543">+880 123 654 789 00</a> <br>
+                                        <a href="tel:35234523452345">+001 6520 698 00</a>
+                                    </div>
+                                    
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom style1">
+            <div class="container">
+                <div class="footer-wrapper text-center ">
+                    <p class="wow fadeInLeft " data-wow-delay=".3s">
+                        Copyright © TheBox All rights
+                    </p>
+                  
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+
+
+
+    <!--<< All JS Plugins >>-->
+    <script src="assets/js/jquery-3.7.1.min.js"></script>
+    <!--<< Bootstrap Js >>-->
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <!--<< Waypoints Js >>-->
+    <script src="assets/js/jquery.waypoints.js"></script>
+    <!--<< Counterup Js >>-->
+    <script src="assets/js/jquery.counterup.min.js"></script>
+    <!--<< Viewport Js >>-->
+    <script src="assets/js/viewport.jquery.js"></script>
+    <!--<< Tilt Js >>-->
+    <script src="assets/js/tilt.min.js"></script>
+    <!--<< Swiper Slider Js >>-->
+    <script src="assets/js/swiper-bundle.min.js"></script>
+    <!--<< MeanMenu Js >>-->
+    <script src="assets/js/jquery.meanmenu.min.js"></script>
+    <!--<< Magnific popup Js >>-->
+    <script src="assets/js/magnific-popup.min.js"></script>
+    <!--<< Wow Animation Js >>-->
+    <script src="assets/js/wow.min.js"></script>
+    <!--<< NIce Select Js >>-->
+    <script src="assets/js/nice-select.min.js"></script>
+    <!--<< Main.js >>-->
+    <script src="assets/js/main.js"></script>
+</body>
+
+</html>
