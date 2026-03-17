@@ -4,14 +4,41 @@ import { useFormik } from 'formik';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import CreatableSelect from 'react-select/creatable';
 
 const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [counterOptions, setCounterOptions] = useState([]);
+
+    useEffect(() => {
+        // Fetch existing counters for the dropdown
+        const fetchCounters = async () => {
+            try {
+                const response = await axios.get(`${process.env.REACT_APP_API}/menu/get-counter-options`, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token')}`,
+                    },
+                });
+                const options = response.data.data.map((counter) => ({
+                    value: counter,
+                    label: counter,
+                }));
+                setCounterOptions(options);
+            } catch (err) {
+                console.error('Error fetching counters:', err);
+                toast.error('Failed to load counters.');
+            }
+        };
+
+        fetchCounters();
+    }, []);
 
     const formik = useFormik({
         initialValues: {
             category: data?.category || '',
+            counter: data?.counter || '',
+            hide_on_kot: data?.hide_on_kot || false,
             meal_type: data?.meal_type || 'veg',
         },
         enableReinitialize: true,
@@ -20,6 +47,8 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
             try {
                 const payload = {
                     category: values.category,
+                    counter: values.counter,
+                    hide_on_kot: values.hide_on_kot,
                     meal_type: values.meal_type,
                 };
 
@@ -80,18 +109,6 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
             <Modal.Body>
                 <Form id="edit_category_form" onSubmit={formik.handleSubmit}>
                     <Form.Group className="mb-3">
-                        <Form.Label>Dish Category</Form.Label>
-                        <Form.Control
-                            type="text"
-                            name="category"
-                            value={formik.values.category}
-                            onChange={formik.handleChange}
-                            placeholder="Enter category name"
-                            disabled={isSubmitting}
-                        />
-                    </Form.Group>
-
-                    <Form.Group className="mb-3">
                         <Form.Label>Meal Type</Form.Label>
                         <div className="d-flex gap-3">
                             {['veg', 'egg', 'non-veg'].map((type) => (
@@ -108,6 +125,40 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                                 />
                             ))}
                         </div>
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Dish Category</Form.Label>
+                        <Form.Control
+                            type="text"
+                            name="category"
+                            value={formik.values.category}
+                            onChange={formik.handleChange}
+                            placeholder="Enter category name"
+                            disabled={isSubmitting}
+                        />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Counter</Form.Label>
+                        <CreatableSelect
+                            isClearable
+                            onChange={(selected) => {
+                                const counter = selected ? selected.value : '';
+                                formik.setFieldValue('counter', counter);
+                            }}
+                            options={counterOptions}
+                            value={counterOptions.find((option) => option.value === formik.values.counter) || null}
+                            placeholder="Select or create a counter"
+                            isDisabled={isSubmitting}
+                        />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Check
+                            type="checkbox"
+                            label="Hide on KOT"
+                            checked={formik.values.hide_on_kot}
+                            onChange={() => formik.setFieldValue('hide_on_kot', !formik.values.hide_on_kot)}
+                            disabled={isSubmitting}
+                        />
                     </Form.Group>
                 </Form>
             </Modal.Body>

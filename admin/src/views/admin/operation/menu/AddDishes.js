@@ -35,14 +35,19 @@ const AddDishes = () => {
     label: d,
     value: d,
   }));
+  const [counterOptions, setCounterOptions] = useState([]);
 
   const isFromManageMenu = location.state?.fromManageMenu || false;
   const prefilledCategory = isFromManageMenu ? location.state?.category || '' : '';
   const prefilledMealType = isFromManageMenu ? location.state?.mealType || 'veg' : 'veg';
+  const prefilledCounter = isFromManageMenu ? location.state?.counter || '' : '';
+  const prefilledHideOnKot = isFromManageMenu ? location.state?.hide_on_kot || false : false;
 
   const initialValues = {
     category: prefilledCategory,
     mealType: prefilledMealType,
+    counter: prefilledCounter,
+    hideOnKot: prefilledHideOnKot,
     dishes: [
       {
         dish_name: '',
@@ -66,7 +71,7 @@ const AddDishes = () => {
       setSuggestions((prev) => ({
         ...prev,
         categories: response.data.data,
-        dishes: [], 
+        dishes: [],
       }));
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -76,8 +81,28 @@ const AddDishes = () => {
     }
   };
 
+  // Fetch existing counters for the dropdown
+  const getCounters = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API}/menu/get-counter-options`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const options = response.data.data.map((counter) => ({
+        value: counter,
+        label: counter,
+      }));
+      setCounterOptions(options);
+    } catch (err) {
+      console.error('Error fetching counters:', err);
+      toast.error('Failed to load counters.');
+    }
+  };
+
   useEffect(() => {
-    getMenuCategories('veg'); 
+    getMenuCategories('veg');
+    getCounters();
   }, []);
 
   const getDishesByCategory = async (category) => {
@@ -104,6 +129,8 @@ const AddDishes = () => {
   const validationSchema = Yup.object().shape({
     category: Yup.string().required('Category is required'),
     mealType: Yup.string().required('Meal type is required'),
+    counter: Yup.string(),
+    hideOnKot: Yup.boolean(),
     dishes: Yup.array().of(
       Yup.object().shape({
         dish_name: Yup.string().required('Dish name is required'),
@@ -121,6 +148,8 @@ const AddDishes = () => {
       const formData = new FormData();
       formData.append('category', values.category);
       formData.append('meal_type', values.mealType);
+      formData.append('counter', values.counter);
+      formData.append('hide_on_kot', values.hideOnKot);
 
       const dishData = values.dishes.map((dish, i) => {
         if (dish.dish_img) {
@@ -182,33 +211,6 @@ const AddDishes = () => {
                   <Form>
                     <Row className="mb-3">
                       <Col md={4}>
-                        <BForm.Group>
-                          <BForm.Label>Dish Category</BForm.Label>
-                          <CreatableSelect
-                            isClearable
-                            isDisabled={isSubmitting || loadingCategories || isFromManageMenu}
-                            options={categoryOptions}
-                            value={values.category ? { label: values.category, value: values.category } : null}
-                            onChange={(selected) => {
-                              const category = selected ? selected.value : '';
-                              setFieldValue('category', category);
-
-                              // 🔥 RESET dish names
-                              values.dishes.forEach((_, index) => {
-                                setFieldValue(`dishes[${index}].dish_name`, '');
-                              });
-
-                              // 🔥 FETCH dishes for selected category
-                              getDishesByCategory(category);
-                            }}
-                            placeholder="Select or create category"
-                            classNamePrefix="react-select"
-                          />
-
-                          <ErrorMessage name="category" component="div" className="text-danger mt-1" />
-                        </BForm.Group>
-                      </Col>
-                      <Col md={8}>
                         <BForm.Label className="d-block">Meal Type</BForm.Label>
                         {['veg', 'egg', 'non-veg'].map((type) => (
                           <BForm.Check
@@ -240,6 +242,60 @@ const AddDishes = () => {
                             disabled={isSubmitting}
                           />
                         ))}
+                      </Col>
+                      <Col md={4}>
+                        <BForm.Group>
+                          <BForm.Label>Dish Category</BForm.Label>
+                          <CreatableSelect
+                            isClearable
+                            isDisabled={isSubmitting || loadingCategories || isFromManageMenu}
+                            options={categoryOptions}
+                            value={values.category ? { label: values.category, value: values.category } : null}
+                            onChange={(selected) => {
+                              const category = selected ? selected.value : '';
+                              setFieldValue('category', category);
+
+                              // 🔥 RESET dish names
+                              values.dishes.forEach((_, index) => {
+                                setFieldValue(`dishes[${index}].dish_name`, '');
+                              });
+
+                              // 🔥 FETCH dishes for selected category
+                              getDishesByCategory(category);
+                            }}
+                            placeholder="Select or create category"
+                            classNamePrefix="react-select"
+                          />
+
+                          <ErrorMessage name="category" component="div" className="text-danger mt-1" />
+                        </BForm.Group>
+                      </Col>
+                      <Col md={4}>
+                        <BForm.Group>
+                          <BForm.Label>Counter</BForm.Label>
+                          <CreatableSelect
+                            isClearable
+                            isDisabled={isSubmitting || isFromManageMenu}
+                            options={counterOptions}
+                            value={values.counter ? { label: values.counter, value: values.counter } : null}
+                            onChange={(selected) => {
+                              const counter = selected ? selected.value : '';
+                              setFieldValue('counter', counter);
+                            }}
+                            placeholder="Select or create counter"
+                            classNamePrefix="react-select"
+                          />
+                          <ErrorMessage name="counter" component="div" className="text-danger mt-1" />
+                        </BForm.Group>
+                      </Col>
+                      <Col md={4} className="mt-3">
+                        <BForm.Check
+                          type="checkbox"
+                          label="Hide on KOT"
+                          checked={values.hideOnKot}
+                          onChange={() => setFieldValue('hideOnKot', !values.hideOnKot)}
+                          disabled={isSubmitting}
+                        />
                       </Col>
                     </Row>
                     <FieldArray name="dishes">
