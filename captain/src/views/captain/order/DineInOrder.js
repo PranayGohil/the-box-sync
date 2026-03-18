@@ -795,13 +795,13 @@ const DineInOrder = () => {
           customerInfo: JSON.parse(JSON.stringify(customerInfo)),
         };
         setIsDirty(false);
-        history.push('/dashboard');
-        // if (status === 'Paid') {
-        //   fetchOrderDetails();
-        //   setShowPaymentModal(false);
-        // } else {
-        //   history.push('/dashboard');
-        // }
+        setShowPaymentModal(false);
+        if (orderData.order_status !== 'Paid') {
+          history.push('/dashboard');
+        } else {
+          fetchOrderDetails();
+          toast.success('Order saved and marked as Paid!');
+        }
       }
     } catch (error) {
       console.error('Error saving order:', error);
@@ -1357,13 +1357,6 @@ const DineInOrder = () => {
               // Clear dirty flag and close modal
               allowNavigationRef.current = true;
               setIsDirty(false);
-              setShowPaymentModal(false);
-              if (orderData.order_status !== 'Paid') {
-                history.push('/dashboard');
-              } else {
-                fetchOrderDetails();
-                toast.success('Order saved and marked as Paid!');
-              }
             }}
           >
             Discard & Leave
