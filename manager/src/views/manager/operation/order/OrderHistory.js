@@ -28,7 +28,7 @@ const OrderHistory = () => {
   const [error, setError] = useState(null);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [printing, setPrinting] = useState({});
+  const [printing, setPrinting] = useState(false);
 
   // Server-side pagination state
   const [pageIndex, setPageIndex] = useState(0);
