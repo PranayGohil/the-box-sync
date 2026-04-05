@@ -21,6 +21,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
       setShowAdvancedOptions(false);
     }
     setLoading(false);
+    console.log('EditDishModal data:', data);
   }, [data]);
 
   const formik = useFormik({
@@ -31,7 +32,8 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
       quantity: data?.quantity || '',
       unit: data?.unit || '',
       dish_img: null,
-      is_special: data?.is_special || false,
+      is_special: data?.is_special ?? false,
+      is_available: data?.is_available ?? true,
     },
     enableReinitialize: true,
     onSubmit: async (values) => {
@@ -45,6 +47,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
         formData.append('quantity', values.quantity);
         formData.append('unit', values.unit);
         formData.append('is_special', values.is_special);
+        formData.append('is_available', values.is_available);
 
         if (values.dish_img) {
           formData.append('dish_img', values.dish_img);
@@ -189,6 +192,15 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
             label="Special Dish"
             checked={formik.values.is_special}
             onChange={(e) => formik.setFieldValue('is_special', e.target.checked)}
+            className="mb-3"
+            disabled={isSubmitting}
+          />
+
+          <Form.Check
+            type="checkbox"
+            label="Available"
+            checked={formik.values.is_available}
+            onChange={(e) => formik.setFieldValue('is_available', e.target.checked)}
             className="mb-3"
             disabled={isSubmitting}
           />

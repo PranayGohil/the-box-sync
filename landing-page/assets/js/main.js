@@ -43,6 +43,25 @@ JS TABLE OF CONTENTS
             meanScreenWidth: "1199",
             meanExpand: ['<i class="far fa-plus"></i>'],
         });
+      $(document).ready(function () {
+        $(".mean-container .mean-nav ul li").on("click", function (e) {
+          // If user clicks on the "+" expand button, let MeanMenu handle it
+          if ($(e.target).closest(".mean-expand").length) {
+            return;
+          }
+
+          const link = $(this).children("a").attr("href");
+
+          // If this item has a dropdown, trigger submenu toggle
+          if ($(this).hasClass("has-dropdown")) {
+            $(this).children(".mean-expand").trigger("click");
+          }
+          // If it's a normal menu item, navigate to the link
+          else if (link && link !== "#") {
+            window.location.href = link;
+          }
+        });
+      });
 
 
 
@@ -158,7 +177,7 @@ JS TABLE OF CONTENTS
 
             var paginationStyle = sliderOptions['paginationType'] || 'bullets';
             var autoplaySettings = sliderOptions['autoplay'] || {
-                delay: 6000,
+                delay: 1000,
                 disableOnInteraction: false
             };
 
@@ -166,7 +185,7 @@ JS TABLE OF CONTENTS
                 slidesPerView: 1,
                 spaceBetween: sliderOptions['spaceBetween'] || 24,
                 loop: sliderOptions['loop'] !== false,
-                speed: sliderOptions['speed'] || 1000,
+                speed: sliderOptions['speed'] || 600,
                 initialSlide: sliderOptions['initialSlide'] || 0,
                 centeredSlides: !!sliderOptions['centeredSlides'],
                 effect: sliderOptions['effect'] || 'slide',
@@ -395,13 +414,16 @@ JS TABLE OF CONTENTS
             $navSearch.add($searchClose).removeClass("open");
         }
 
-        $(document.body).on("click", function (e) {
-            closeSearch();
-        });
+        // $(document.body).on("click", function (e) {
+        //     closeSearch();
+        // });
 
-        $(".search-trigger, .main-search-input").on("click", function (e) {
+        $(".search-trigger, .main-search-input, .main-search-textarea").on(
+          "click",
+          function (e) {
             e.stopPropagation();
-        });
+          },
+        );
 
 
 

@@ -1,6 +1,8 @@
 const express = require("express");
 const authMiddleware = require("../middlewares/auth-middlewares");
 const {
+  contactEmail,
+  sendEnquiry,
   emailCheck,
   register,
   login,
@@ -20,6 +22,8 @@ const upload = require("../middlewares/upload");
 
 const userRouter = express.Router();
 
+userRouter.route("/contact").post(contactEmail);
+userRouter.route("/enquiry").post(sendEnquiry);
 userRouter.route("/check-email").post(emailCheck);
 userRouter.route("/register").post(upload.single('logo'), register);
 userRouter.route("/login").post(login);

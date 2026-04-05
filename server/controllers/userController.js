@@ -1,6 +1,188 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
-const { sendEmail } = require("../utils/emailService");
+const { sendEmail, sendSupportEmail } = require("../utils/emailService");
+
+
+const contactEmail = async (req, res) => {
+  const { name, email2, phone, message } = req.body;
+  console.log("Contact form submission:", { name, email2, phone, message }); // Debug log
+
+  // Basic validation
+  if (!name || !email2 || !phone || !message) {
+    return res.status(400).json({ success: false, message: 'All fields are required.' });
+  }
+
+  try {
+    // 1. Notification email → goes to YOUR inbox
+    await sendSupportEmail({
+      to: process.env.SMTP_SUPPORT_USER, // e.g. support@theboxsync.com
+      subject: `New Contact Form Submission from ${name}`,
+      replyTo: email2,
+      text: `Name: ${name}\nEmail: ${email2}\nPhone: ${phone}\nMessage: ${message}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <div style="background: #7444FD; padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+            <h2 style="color: #fff; margin: 0;">New Contact Form Submission</h2>
+          </div>
+          <div style="padding: 24px; background: #fafafa;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 10px 0; font-weight: bold; color: #555; width: 100px;">Name</td>
+                <td style="padding: 10px 0; color: #222;">${name}</td>
+              </tr>
+              <tr style="border-top: 1px solid #eee;">
+                <td style="padding: 10px 0; font-weight: bold; color: #555;">Email</td>
+                <td style="padding: 10px 0; color: #222;"><a href="mailto:${email2}" style="color: #7444FD;">${email2}</a></td>
+              </tr>
+              <tr style="border-top: 1px solid #eee;">
+                <td style="padding: 10px 0; font-weight: bold; color: #555;">Phone</td>
+                <td style="padding: 10px 0; color: #222;"><a href="tel:${phone}" style="color: #7444FD;">${phone}</a></td>
+              </tr>
+              <tr style="border-top: 1px solid #eee;">
+                <td style="padding: 10px 0; font-weight: bold; color: #555; vertical-align: top;">Message</td>
+                <td style="padding: 10px 0; color: #222; white-space: pre-line;">${message}</td>
+              </tr>
+            </table>
+          </div>
+          <div style="padding: 12px 24px; background: #f0f0f0; border-radius: 0 0 6px 6px; text-align: center; font-size: 12px; color: #999;">
+            Sent via TheBox Contact Form
+          </div>
+        </div>
+      `,
+    });
+
+    // 2. Auto-reply → goes to the USER who submitted the form
+    await sendSupportEmail({
+      to: email2,
+      subject: 'Thanks for contacting TheBox!',
+      replyTo: process.env.CONTACT_RECEIVER_EMAIL,
+      text: `Hi ${name},\n\nThank you for reaching out to us. We have received your message and will get back to you shortly.\n\nBest regards,\nThe TheBox Team`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <div style="background: #7444FD; padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+            <h2 style="color: #fff; margin: 0;">Thank you for contacting us!</h2>
+          </div>
+          <div style="padding: 24px; background: #fafafa;">
+            <p style="color: #333; font-size: 16px;">Hi <strong>${name}</strong>,</p>
+            <p style="color: #555;">Thank you for reaching out to <strong>TheBox</strong>. We have received your message and our team will get back to you as soon as possible.</p>
+            <p style="color: #555; margin-top: 24px;">Best regards,<br><strong>The TheBox Team</strong></p>
+          </div>
+          <div style="padding: 12px 24px; background: #f0f0f0; border-radius: 0 0 6px 6px; text-align: center; font-size: 12px; color: #999;">
+            © TheBox | <a href="mailto:support@theboxsync.com" style="color: #7444FD;">support@theboxsync.com</a>
+          </div>
+        </div>
+      `,
+    });
+
+    return res.status(200).json({ success: true, message: 'Message sent successfully!' });
+
+  } catch (error) {
+    console.error('Contact form email error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to send message. Please try again.' });
+  }
+};
+
+const sendEnquiry = async (req, res) => {
+  const { name, email2, phone, message, plan } = req.body;
+
+  console.log('Enquiry form submission:', { name, email2, phone, message, plan });
+
+  // Basic validation
+  if (!name || !email2 || !phone || !message) {
+    return res.status(400).json({ success: false, message: 'All fields are required.' });
+  }
+
+  try {
+    // 1. Notification email → goes to YOUR inbox
+    await sendSupportEmail({
+      to: process.env.SMTP_SUPPORT_USER,
+      subject: `New Enquiry${plan ? ` for ${plan} Plan` : ''} from ${name}`,
+      replyTo: email2,
+      text: `Plan: ${plan || 'N/A'}\nName: ${name}\nEmail: ${email2}\nPhone: ${phone}\nMessage: ${message}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <div style="background: #7444FD; padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+            <h2 style="color: #fff; margin: 0;">New Plan Enquiry</h2>
+          </div>
+          <div style="padding: 24px; background: #fafafa;">
+            <table style="width: 100%; border-collapse: collapse;">
+              ${plan ? `
+              <tr>
+                <td style="padding: 10px 0; font-weight: bold; color: #555; width: 100px;">Plan</td>
+                <td style="padding: 10px 0;">
+                  <span style="background: #7444FD; color: #fff; padding: 3px 12px; border-radius: 20px; font-size: 13px;">${plan}</span>
+                </td>
+              </tr>` : ''}
+              <tr style="border-top: 1px solid #eee;">
+                <td style="padding: 10px 0; font-weight: bold; color: #555;">Name</td>
+                <td style="padding: 10px 0; color: #222;">${name}</td>
+              </tr>
+              <tr style="border-top: 1px solid #eee;">
+                <td style="padding: 10px 0; font-weight: bold; color: #555;">Email</td>
+                <td style="padding: 10px 0; color: #222;">
+                  <a href="mailto:${email2}" style="color: #7444FD;">${email2}</a>
+                </td>
+              </tr>
+              <tr style="border-top: 1px solid #eee;">
+                <td style="padding: 10px 0; font-weight: bold; color: #555;">Phone</td>
+                <td style="padding: 10px 0; color: #222;">
+                  <a href="tel:${phone}" style="color: #7444FD;">${phone}</a>
+                </td>
+              </tr>
+              <tr style="border-top: 1px solid #eee;">
+                <td style="padding: 10px 0; font-weight: bold; color: #555; vertical-align: top;">Message</td>
+                <td style="padding: 10px 0; color: #222; white-space: pre-line;">${message}</td>
+              </tr>
+            </table>
+          </div>
+          <div style="padding: 12px 24px; background: #f0f0f0; border-radius: 0 0 6px 6px; text-align: center; font-size: 12px; color: #999;">
+            Sent via TheBox Pricing Page
+          </div>
+        </div>
+      `,
+    });
+
+    // 2. Auto-reply → goes to the USER
+    await sendSupportEmail({
+      to: email2,
+      subject: `Thanks for your enquiry${plan ? ` about the ${plan} Plan` : ''}!`,
+      replyTo: process.env.SMTP_SUPPORT_USER,
+      text: `Hi ${name},\n\nThank you for your enquiry${plan ? ` about our ${plan} plan` : ''}. We have received your message and our team will get back to you shortly.\n\nBest regards,\nThe TheBox Team`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <div style="background: #7444FD; padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+            <h2 style="color: #fff; margin: 0;">Thank you for your enquiry!</h2>
+          </div>
+          <div style="padding: 24px; background: #fafafa;">
+            <p style="color: #333; font-size: 16px;">Hi <strong>${name}</strong>,</p>
+            ${plan ? `
+            <p style="color: #555;">
+              We've received your enquiry about our 
+              <strong style="color: #7444FD;">${plan} Plan</strong>. 
+              Our team will review your requirements and get back to you with the best options.
+            </p>` : `
+            <p style="color: #555;">
+              We've received your enquiry. Our team will review your requirements and get back to you shortly.
+            </p>`}
+            <p style="color: #555; margin-top: 24px;">
+              Best regards,<br><strong>The TheBox Team</strong>
+            </p>
+          </div>
+          <div style="padding: 12px 24px; background: #f0f0f0; border-radius: 0 0 6px 6px; text-align: center; font-size: 12px; color: #999;">
+            © TheBox | <a href="mailto:support@theboxsync.com" style="color: #7444FD;">support@theboxsync.com</a>
+          </div>
+        </div>
+      `,
+    });
+
+    return res.status(200).json({ success: true, message: 'Enquiry sent successfully!' });
+
+  } catch (error) {
+    console.error('Enquiry form email error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to send enquiry. Please try again.' });
+  }
+};
+
 
 const emailCheck = async (req, res) => {
   try {
@@ -487,6 +669,8 @@ const getAllUsers = async (req, res) => {
 };
 
 module.exports = {
+  contactEmail,
+  sendEnquiry,
   emailCheck,
   register,
   login,
