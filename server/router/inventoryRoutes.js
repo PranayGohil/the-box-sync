@@ -11,6 +11,10 @@ const {
   deleteInventory,
   completeInventoryRequest,
   rejectInventoryRequest,
+  useInventory,
+  exportInventory,
+  importInventory,
+  getCurrentStock,
 } = require("../controllers/inventoryController");
 const adminAuth = require("../middlewares/adminAuth");
 const upload = require("../middlewares/upload");
@@ -45,5 +49,10 @@ inventoryRouter
 inventoryRouter
   .route("/reject-request/:id")
   .post(authMiddleware, adminAuth, rejectInventoryRequest);
+
+inventoryRouter.route("/use").post(authMiddleware, useInventory);
+inventoryRouter.route("/export").get(authMiddleware, exportInventory);
+inventoryRouter.route("/stock").get(authMiddleware, getCurrentStock);
+inventoryRouter.route("/import").post(authMiddleware, upload.single("inventory_excel"), importInventory);
 
 module.exports = inventoryRouter;

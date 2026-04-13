@@ -1,5 +1,7 @@
 const Inventory = require("../models/inventoryModel");
 const Notification = require("../models/notificationModel");
+const XLSX = require("xlsx");
+const StockUsageLog = require("../models/stockUsageLogModel");
 
 const getInventoryData = async (req, res) => {
   try {
@@ -513,6 +515,160 @@ const rejectInventoryRequest = async (req, res) => {
   }
 };
 
+const useInventory = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user;
+    const { item_name, quantity_used, comment } = req.body;
+    
+    if (!item_name || !quantity_used) {
+        return res.status(400).json({ success: false, message: "item_name and quantity_used are required" });
+    }
+
+    const inventories = await Inventory.find({ 
+      user_id: userId, 
+      status: "Completed",
+      "items.item_name": item_name,
+      "items.currentStock": { $gt: 0 }
+    }).sort({ request_date: 1 });
+
+    let remainingToDeduct = Number(quantity_used);
+    
+    for (let inv of inventories) {
+      if (remainingToDeduct <= 0) break;
+      for (let item of inv.items) {
+        if (item.item_name === item_name && item.currentStock > 0) {
+           const deductAmount = Math.min(item.currentStock, remainingToDeduct);
+           item.currentStock -= deductAmount;
+           remainingToDeduct -= deductAmount;
+           if (remainingToDeduct <= 0) break;
+        }
+      }
+      await inv.save();
+    }
+
+    await StockUsageLog.create({
+       user_id: userId,
+       item_name,
+       quantity_used: Number(quantity_used),
+       comment
+    });
+
+    res.json({ success: true, message: "Stock deducted successfully" });
+  } catch (error) {
+     console.error(error);
+     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+const exportInventory = async (req, res) => {
+  try {
+     const userId = req.user._id || req.user;
+     const stockData = await Inventory.aggregate([
+       { $match: { user_id: userId, status: "Completed" } },
+       { $unwind: "$items" },
+       { $group: {
+           _id: "$items.item_name",
+           totalStock: { $sum: "$items.currentStock" },
+           unit: { $first: "$items.unit" }
+       }}
+     ]);
+
+     const excelData = stockData.map(item => ({
+       'Item Name': item._id,
+       'Current Stock': item.totalStock,
+       'Unit': item.unit
+     }));
+
+     const ws = XLSX.utils.json_to_sheet(excelData.length ? excelData : [{ 'Item Name': 'No Data', 'Current Stock': 0, 'Unit': '' }]);
+     const wb = XLSX.utils.book_new();
+     XLSX.utils.book_append_sheet(wb, ws, "Inventory Stock");
+
+     const excelBuffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+
+     res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="Inventory_Stock.xlsx"'
+     );
+     res.setHeader(
+       "Content-Type",
+       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+     );
+
+     res.send(excelBuffer);
+  } catch (error) {
+     console.error(error);
+     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+const importInventory = async (req, res) => {
+  try {
+     const userId = req.user._id || req.user;
+     
+     if (!req.file) {
+        return res.status(400).json({ success: false, message: "Excel file is required" });
+     }
+
+     const workbook = XLSX.readFile(req.file.path);
+     const sheetName = workbook.SheetNames[0];
+     const worksheet = workbook.Sheets[sheetName];
+     const data = XLSX.utils.sheet_to_json(worksheet);
+
+     const itemsToUpdate = data.filter(r => r['Item Name']).map(row => row['Item Name']);
+     if (itemsToUpdate.length > 0) {
+        await Inventory.updateMany(
+           { user_id: userId, status: "Completed" },
+           { $set: { "items.$[elem].currentStock": 0 } },
+           { arrayFilters: [ { "elem.item_name": { $in: itemsToUpdate } } ], multi: true }
+        );
+        
+        const mappedItems = data.filter(r => r['Item Name']).map(row => ({
+           item_name: row['Item Name'],
+           unit: row['Unit'] || 'unit',
+           item_quantity: Number(row['Current Stock']) || 0,
+           currentStock: Number(row['Current Stock']) || 0,
+        }));
+
+        await Inventory.create({
+           user_id: userId,
+           request_date: new Date(),
+           bill_date: new Date(),
+           bill_number: "IMPORT-" + Date.now(),
+           vendor_name: "Excel Import",
+           category: "System Adjustment",
+           status: "Completed",
+           items: mappedItems
+        });
+     }
+     
+     res.json({ success: true, message: "Inventory imported successfully" });
+
+  } catch (error) {
+     console.error(error);
+     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+const getCurrentStock = async (req, res) => {
+  try {
+     const userId = req.user._id || req.user;
+     const stockData = await Inventory.aggregate([
+       { $match: { user_id: userId, status: "Completed" } },
+       { $unwind: "$items" },
+       { $group: {
+           _id: "$items.item_name",
+           totalStock: { $sum: "$items.currentStock" },
+           unit: { $first: "$items.unit" }
+       }},
+       { $sort: { "_id": 1 } }
+     ]);
+     res.json({ success: true, data: stockData });
+  } catch (error) {
+     console.error(error);
+     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 module.exports = {
   getInventoryData,
   getInventoryDataByStatus,
@@ -524,4 +680,8 @@ module.exports = {
   deleteInventory,
   completeInventoryRequest,
   rejectInventoryRequest,
+  useInventory,
+  exportInventory,
+  importInventory,
+  getCurrentStock,
 };

@@ -55,6 +55,10 @@ const inventory = new Schema({
         type: Number,
         default: null,
       },
+      currentStock: {
+        type: Number,
+        default: 0,
+      },
     },
   ],
   status: {

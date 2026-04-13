@@ -26,6 +26,7 @@ import AddInventory from './inventory/AddInventory';
 import EditInventory from './inventory/EditInventory';
 import InventoryHistory from './inventory/InventoryHistory';
 import InventoryDetails from './inventory/InventoryDetails';
+import StockManagement from './inventory/StockManagement';
 
 import Feedback from './feedback/Feedback';
 import QRforFeedback from './feedback/QRforFeedback';
@@ -123,6 +124,10 @@ const NavContent = () => {
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Add Inventory</span>
           </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/stock-management" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Stock Management</span>
+          </Nav.Link>
         </div>
       </div>
 
@@ -185,6 +190,7 @@ const mobileNavItems = [
       { to: '/operations/requested-inventory', label: 'Requested Inventory' },
       { to: '/operations/inventory-history', label: 'Inventory History' },
       { to: '/operations/add-inventory', label: 'Add Inventory' },
+      { to: '/operations/stock-management', label: 'Stock Management' },
     ],
   },
   {
@@ -273,6 +279,7 @@ const Operations = () => {
             <Route path="/operations/add-inventory" component={AddInventory} />
             <Route path="/operations/edit-inventory/:id" component={EditInventory} />
             <Route path="/operations/inventory-details/:id" component={InventoryDetails} />
+            <Route path="/operations/stock-management" component={StockManagement} />
 
             <Route path="/operations/feedback" component={Feedback} />
             <Route path="/operations/qr-for-feedback" component={QRforFeedback} />
