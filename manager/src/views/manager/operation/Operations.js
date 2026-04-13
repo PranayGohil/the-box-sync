@@ -10,6 +10,10 @@ import { Switch, Route, Redirect, NavLink } from 'react-router-dom';
 import OrderHistory from './order/OrderHistory';
 import OrderDetails from './order/OrderDetails';
 
+import ReservationForm from './reservation/ReservationForm';
+import ManageReservations from './reservation/ManageReservations';
+import QRforReservation from './reservation/QRforReservation';
+
 import ManageTable from './table/ManageTable';
 import AddTable from './table/AddTable';
 
@@ -38,6 +42,27 @@ const NavContent = () => {
           <Nav.Link as={NavLink} to="/operations/order-history" className="px-0 pt-1">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Order History</span>
+          </Nav.Link>
+        </div>
+      </div>
+
+      <div className="mb-2">
+        <Nav.Link as={NavLink} to="/operations/manage-reservations" className="px-0">
+          <CsLineIcons icon="calendar" className="me-2 sw-3" size="17" />
+          <span className="align-middle">Reservation</span>
+        </Nav.Link>
+        <div>
+          <Nav.Link as={NavLink} to="/operations/manage-reservations" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Manage Reservations</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/reservation-form" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Reservation Form</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/qr-for-reservation" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">QR for Reservation</span>
           </Nav.Link>
         </div>
       </div>
@@ -126,6 +151,15 @@ const mobileNavItems = [
     label: 'Order',
     icon: 'handbag',
     items: [{ to: '/operations/order-history', label: 'Order History' }],
+  },
+  {
+    label: 'Reservation',
+    icon: 'calendar',
+    items: [
+      { to: '/operations/manage-reservations', label: 'Manage Reservations' },
+      { to: '/operations/reservation-form', label: 'Reservation Form' },
+      { to: '/operations/qr-for-reservation', label: 'QR for Reservation' }
+    ],
   },
   {
     label: 'Table',
@@ -222,6 +256,10 @@ const Operations = () => {
             <Route exact path="/operations" render={() => <Redirect to="/operations/order-history" />} />
             <Route path="/operations/order-history" component={OrderHistory} />
             <Route path="/operations/order-details/:id" component={OrderDetails} />
+
+            <Route path="/operations/manage-reservations" component={ManageReservations} />
+            <Route path="/operations/reservation-form" component={ReservationForm} />
+            <Route path="/operations/qr-for-reservation" component={QRforReservation} />
 
             <Route path="/operations/manage-table" component={ManageTable} />
             <Route path="/operations/add-table" component={AddTable} />

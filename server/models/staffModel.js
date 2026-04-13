@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+
 const addStaff = new Schema({
   staff_id: {
     type: String,
@@ -40,6 +41,10 @@ const addStaff = new Schema({
   salary: {
     type: Number,
   },
+  overtime_rate: {
+    type: Number,
+    default: 0,
+  },
   photo: {
     type: String,
   },
@@ -56,7 +61,7 @@ const addStaff = new Schema({
     type: String,
   },
   face_encoding: {
-    type: [Number], 
+    type: [Number],
     default: [],
   },
   face_embeddings: {
@@ -66,32 +71,13 @@ const addStaff = new Schema({
   user_id: {
     type: String,
   },
-  attandance: [
-    {
-      date: {
-        type: String,
-      },
-      status: {
-        type: String,
-      },
-      in_time: {
-        type: String,
-      },
-      out_time: {
-        type: String,
-      },
-    },
-  ],
+  // NOTE: attandance array removed — now lives in the Attendance collection
 });
 
-// positions per user
+// Indexes
 addStaff.index({ user_id: 1, position: 1 });
-
-// quick lookup by email / staff_id if you ever need it
 addStaff.index({ user_id: 1, email: 1 }, { sparse: true });
 addStaff.index({ user_id: 1, staff_id: 1 }, { sparse: true });
-
-// for face encodings query (mostly filter by user_id)
 addStaff.index({ user_id: 1 });
 
 const Staff = mongoose.model("staff", addStaff);

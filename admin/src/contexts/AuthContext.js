@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }) => {
                     },
                 }
             );
+            console.log(response.data.data);
             if (response.data.data.length > 0) {
                 const fetchActivePlans = response.data.data.filter(
                     (plan) => plan.status === "active"

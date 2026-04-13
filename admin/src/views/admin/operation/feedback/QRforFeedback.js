@@ -16,8 +16,8 @@ const QRforFeedback = () => {
   const { currentUser, userSubscriptions, activePlans } = useContext(AuthContext);
 
   useEffect(() => {
-    if (currentUser.feedbackToken) {
-      setFeedbackToken(currentUser.feedbackToken);
+    if (currentUser.restaurant_token) {
+      setFeedbackToken(currentUser.restaurant_token);
     }
   }, [currentUser]);
 
@@ -34,7 +34,7 @@ const QRforFeedback = () => {
         {},
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-      setFeedbackToken(response.data.feedbackToken);
+      setFeedbackToken(response.data.restaurant_token);
       toast.success('QR Code generated successfully!');
     } catch (error) {
       console.error('Error generating feedback token:', error);

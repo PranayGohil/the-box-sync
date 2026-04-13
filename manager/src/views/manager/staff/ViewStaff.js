@@ -78,7 +78,7 @@ const ViewStaff = () => {
         <Col>
           <h1 className="display-5 fw-bold">Manage Staff</h1>
         </Col>
-        <Col className="text-end">
+        <Col className="text-end d-flex gap-2 justify-content-end">
           <Button
             variant="outline-primary"
             onClick={() => history.push('/staff/attendance')}
@@ -86,6 +86,14 @@ const ViewStaff = () => {
           >
             <CsLineIcons icon="calendar" className="me-2" />
             Manage Attendance
+          </Button>
+          <Button
+            variant="outline-primary"
+            onClick={() => history.push('/staff/payroll')}
+            disabled={loading}
+          >
+            <CsLineIcons icon="wallet" className="me-2" />
+            Manage Payroll
           </Button>
         </Col>
       </Row>

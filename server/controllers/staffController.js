@@ -2,6 +2,7 @@ const Staff = require("../models/staffModel");
 const fs = require("fs");
 const path = require("path");
 
+// ── GET /staff/get-positions ──────────────────────────────────────────────────
 const getStaffPositions = async (req, res) => {
   try {
     const positions = await Staff.distinct("position", { user_id: req.user });
@@ -12,6 +13,7 @@ const getStaffPositions = async (req, res) => {
   }
 };
 
+// ── GET /staff/get-all ────────────────────────────────────────────────────────
 const getStaffData = async (req, res) => {
   try {
     const userId = req.user;
@@ -29,8 +31,7 @@ const getStaffData = async (req, res) => {
       salary: 1,
       photo: 1,
       joining_date: 1,
-      attandance: 1,
-      // do NOT include face_encoding, face_embeddings, attandance by default
+      // attandance removed — now in Attendance collection
     };
 
     const [data, total] = await Promise.all([
@@ -59,6 +60,7 @@ const getStaffData = async (req, res) => {
   }
 };
 
+// ── GET /staff/get/:id ────────────────────────────────────────────────────────
 const getStaffDataById = async (req, res) => {
   try {
     const staffId = req.params.id;
@@ -67,9 +69,7 @@ const getStaffDataById = async (req, res) => {
     const staff = await Staff.findOne({ _id: staffId, user_id: userId }).lean();
 
     if (!staff) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Staff member not found" });
+      return res.status(404).json({ success: false, message: "Staff member not found" });
     }
 
     res.json({ success: true, data: staff });
@@ -79,6 +79,7 @@ const getStaffDataById = async (req, res) => {
   }
 };
 
+// ── POST /staff/add ───────────────────────────────────────────────────────────
 const addStaff = async (req, res) => {
   try {
     const staffData = {
@@ -97,7 +98,6 @@ const addStaff = async (req, res) => {
     }
 
     const staff = await Staff.create(staffData);
-
     res.json({ success: true, data: staff });
   } catch (error) {
     console.error("Error adding staff:", error);
@@ -105,6 +105,7 @@ const addStaff = async (req, res) => {
   }
 };
 
+// ── PUT /staff/edit/:id ───────────────────────────────────────────────────────
 const updateStaff = async (req, res) => {
   try {
     const { id } = req.params;
@@ -115,28 +116,17 @@ const updateStaff = async (req, res) => {
       return res.status(404).json({ error: "Staff member not found" });
     }
 
-    const staffData = {
-      ...req.body,
-    };
+    const staffData = { ...req.body };
 
     const removeFile = (relativePath) => {
       if (!relativePath) return;
-
-      // relativePath stored like "/staff/profile/filename.jpg"
       const filename = path.basename(relativePath);
       let folder = "";
-
-      if (relativePath.includes("/staff/profile")) {
-        folder = "staff/profile";
-      } else if (relativePath.includes("/staff/id_cards")) {
-        folder = "staff/id_cards";
-      }
-
+      if (relativePath.includes("/staff/profile")) folder = "staff/profile";
+      else if (relativePath.includes("/staff/id_cards")) folder = "staff/id_cards";
       const fullPath = path.join(__dirname, "..", "uploads", folder, filename);
       fs.unlink(fullPath, (err) => {
-        if (err) {
-          console.error(`Error deleting file: ${fullPath}`, err);
-        }
+        if (err) console.error(`Error deleting file: ${fullPath}`, err);
       });
     };
 
@@ -168,24 +158,20 @@ const updateStaff = async (req, res) => {
       { new: true, runValidators: true }
     );
 
-    res.json({
-      success: true,
-      message: "Staff updated successfully",
-      staff: updatedStaff,
-    });
+    res.json({ success: true, message: "Staff updated successfully", staff: updatedStaff });
   } catch (error) {
     console.error("Error updating staff:", error);
     res.status(500).json({ success: false, error: "Server error" });
   }
 };
 
+// ── DELETE /staff/delete/:id ──────────────────────────────────────────────────
 const deleteStaff = async (req, res) => {
   try {
     const staffId = req.params.id;
     const userId = req.user;
 
     const staffData = await Staff.findOne({ _id: staffId, user_id: userId });
-
     if (!staffData) {
       return res.status(404).json({ message: "Staff not found" });
     }
@@ -194,9 +180,7 @@ const deleteStaff = async (req, res) => {
       if (!relativePath) return;
       const filename = path.basename(relativePath);
       const fullPath = path.join(__dirname, "..", "uploads", folder, filename);
-      if (fs.existsSync(fullPath)) {
-        fs.unlinkSync(fullPath);
-      }
+      if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
     };
 
     deleteIfExists(staffData.photo, "staff/profile");
@@ -205,128 +189,31 @@ const deleteStaff = async (req, res) => {
 
     await Staff.deleteOne({ _id: staffId, user_id: userId });
 
+    // NOTE: You may also want to delete the staff's attendance records:
+    // const Attendance = require("../models/attendanceModel");
+    // await Attendance.deleteMany({ staff_id: staffId });
+
     res.json({ success: true, message: "Staff deleted successfully" });
   } catch (error) {
-    console.log(error);
-    res.status(500).send({ success: false, message: "An error occurred" });
+    console.error(error);
+    res.status(500).json({ success: false, message: "An error occurred" });
   }
 };
 
-const checkIn = async (req, res) => {
-  const { staff_id, date, in_time } = req.body;
-  try {
-    const staff = await Staff.findById(staff_id);
-
-    if (!staff) {
-      return res.status(404).json({ message: "Staff not found" });
-    }
-
-    // Check if attendance for today already exists
-    const todayAttendance = staff.attandance.find((a) => a.date === date);
-
-    if (todayAttendance) {
-      todayAttendance.in_time = in_time;
-      todayAttendance.status = "present";
-    } else {
-      staff.attandance.push({
-        date,
-        in_time,
-        status: "present",
-      });
-    }
-
-    await staff.save();
-    res.status(200).json({ message: "Check-in successful" });
-  } catch (error) {
-    console.error("Error in Check-In:", error);
-    res.status(500).json({ message: "Server Error" });
-  }
-};
-
-// Handle Check-Out
-const checkOut = async (req, res) => {
-  const { staff_id, date, out_time } = req.body;
-  try {
-    const staff = await Staff.findById(staff_id);
-
-    if (!staff) {
-      return res.status(404).json({ message: "Staff not found" });
-    }
-
-    const todayAttendance = staff.attandance.find((a) => a.date === date);
-
-    if (todayAttendance) {
-      todayAttendance.out_time = out_time;
-    } else {
-      // If somehow check-in was missed, create entry with only out_time
-      staff.attandance.push({
-        date,
-        out_time,
-        status: "present",
-      });
-    }
-
-    await staff.save();
-    res.status(200).json({ message: "Check-out successful" });
-  } catch (error) {
-    console.error("Error in Check-Out:", error);
-    res.status(500).json({ message: "Server Error" });
-  }
-};
-
-// Handle Mark Absent
-const markAbsent = async (req, res) => {
-  const { staff_id, date } = req.body;
-  try {
-    const staff = await Staff.findById(staff_id);
-
-    if (!staff) {
-      return res.status(404).json({ message: "Staff not found" });
-    }
-
-    // Check if already marked
-    const todayAttendance = staff.attandance.find((a) => a.date === date);
-
-    if (todayAttendance) {
-      todayAttendance.status = "absent";
-      todayAttendance.in_time = null;
-      todayAttendance.out_time = null;
-    } else {
-      staff.attandance.push({
-        date,
-        status: "absent",
-      });
-    }
-
-    await staff.save();
-    res.status(200).json({ message: "Marked Absent successfully" });
-  } catch (error) {
-    console.error("Error in Mark Absent:", error);
-    res.status(500).json({ message: "Server Error" });
-  }
-};
-
+// ── GET /staff/face-data ──────────────────────────────────────────────────────
 const getAllFaceEncodings = async (req, res) => {
   try {
     const staff = await Staff.find({
       user_id: req.user,
-      face_encoding: {
-        $exists: true,
-        $ne: null,
-        $not: { $size: 0 },
-      },
+      face_encoding: { $exists: true, $ne: null, $not: { $size: 0 } },
     })
-      .select(
-        "_id staff_id f_name l_name email position face_encoding"
-      )
+      .select("_id staff_id f_name l_name email position face_encoding")
       .lean();
 
     res.json({ success: true, data: staff });
   } catch (err) {
     console.error("Error fetching encodings:", err);
-    res
-      .status(500)
-      .json({ success: false, error: "Failed to fetch face encodings" });
+    res.status(500).json({ success: false, error: "Failed to fetch face encodings" });
   }
 };
 
@@ -337,8 +224,5 @@ module.exports = {
   addStaff,
   updateStaff,
   deleteStaff,
-  checkIn,
-  checkOut,
-  markAbsent,
   getAllFaceEncodings,
 };

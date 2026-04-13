@@ -5,7 +5,7 @@ const { sendEmail } = require("../utils/emailService");
 const addFeedback = async (req, res) => {
   try {
     const {
-      feedbackToken,
+      restaurant_token,
       customer_name,
       customer_email,
       customer_phone,
@@ -13,7 +13,7 @@ const addFeedback = async (req, res) => {
       feedback,
     } = req.body;
 
-    if (!feedbackToken || !customer_name || !rating || !feedback) {
+    if (!restaurant_token || !customer_name || !rating || !feedback) {
       return res
         .status(400)
         .json({ success: false, message: "Missing required fields." });
@@ -29,7 +29,7 @@ const addFeedback = async (req, res) => {
     };
 
     const result = await User.updateOne(
-      { feedbackToken }, // uses index
+      { restaurant_token }, // uses index
       { $push: { feedbacks: newFeedback } }
     );
 
@@ -192,10 +192,10 @@ const generateFeedbackToken = async (req, res) => {
     }
 
     const token = crypto.randomBytes(16).toString("hex");
-    user.feedbackToken = token;
+    user.restaurant_token = token;
     await user.save();
 
-    return res.json({ success: true, feedbackToken: user.feedbackToken });
+    return res.json({ success: true, restaurant_token: user.restaurant_token });
   } catch (error) {
     console.error("Error generating feedback token:", error);
     return res.status(500).json({ success: false, message: "Server error" });

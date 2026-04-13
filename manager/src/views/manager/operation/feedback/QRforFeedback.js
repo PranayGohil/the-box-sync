@@ -14,8 +14,8 @@ const QRforFeedback = () => {
   const { currentUser, userSubscriptions, activePlans } = useContext(AuthContext);
 
   useEffect(() => {
-    if (currentUser.feedbackToken) {
-      setFeedbackToken(currentUser.feedbackToken);
+    if (currentUser.restaurant_token) {
+      setFeedbackToken(currentUser.restaurant_token);
     }
   }, [currentUser]);
 
