@@ -66,4 +66,18 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage, fileFilter });
 
+const excelFilter = (req, file, cb) => {
+  const allowedTypes = [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel",
+  ];
+  if (allowedTypes.includes(file.mimetype) && file.originalname.match(/\.(xlsx|xls)$/)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Invalid file type. Only Excel files are allowed."));
+  }
+};
+
+upload.excel = multer({ storage, fileFilter: excelFilter });
+
 module.exports = upload;

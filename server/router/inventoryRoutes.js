@@ -53,6 +53,6 @@ inventoryRouter
 inventoryRouter.route("/use").post(authMiddleware, useInventory);
 inventoryRouter.route("/export").get(authMiddleware, exportInventory);
 inventoryRouter.route("/stock").get(authMiddleware, getCurrentStock);
-inventoryRouter.route("/import").post(authMiddleware, upload.single("inventory_excel"), importInventory);
+inventoryRouter.route("/import").post(authMiddleware, upload.excel.single("inventory_excel"), importInventory);
 
 module.exports = inventoryRouter;
