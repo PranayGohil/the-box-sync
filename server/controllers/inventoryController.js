@@ -545,32 +545,76 @@ const useInventory = async (req, res) => {
         return res.status(400).json({ success: false, message: "item_name and quantity_used are required" });
     }
 
-    const inventories = await Inventory.find({ 
-      user_id: userId, 
-      status: "Completed",
-      "items.item_name": item_name,
-      "items.currentStock": { $gt: 0 }
-    }).sort({ request_date: 1 });
+    const requestedAmount = Number(quantity_used);
 
-    let remainingToDeduct = Number(quantity_used);
-    
-    for (let inv of inventories) {
-      if (remainingToDeduct <= 0) break;
-      for (let item of inv.items) {
-        if (item.item_name === item_name && item.currentStock > 0) {
-           const deductAmount = Math.min(item.currentStock, remainingToDeduct);
-           item.currentStock -= deductAmount;
-           remainingToDeduct -= deductAmount;
-           if (remainingToDeduct <= 0) break;
-        }
-      }
-      await inv.save();
+    // 1. Pre-flight check: total available stock
+    const stockAvailable = await Inventory.aggregate([
+      { $match: { user_id: userId, status: "Completed", "items.item_name": item_name } },
+      { $unwind: "$items" },
+      { $match: { "items.item_name": item_name } },
+      { $group: { _id: null, totalStock: { $sum: "$items.currentStock" } } }
+    ]);
+
+    const totalAvailable = stockAvailable.length > 0 ? stockAvailable[0].totalStock : 0;
+    if (totalAvailable < requestedAmount) {
+       return res.status(400).json({ success: false, message: `Insufficient stock. Only ${totalAvailable} available.` });
     }
 
+    let remainingToDeduct = requestedAmount;
+
+    // 2. Atomic Loop Deduction
+    while (remainingToDeduct > 0) {
+      const inv = await Inventory.findOne({ 
+        user_id: userId, 
+        status: "Completed",
+        "items": { $elemMatch: { item_name: item_name, currentStock: { $gt: 0 } } }
+      }).sort({ request_date: 1 });
+
+      if (!inv) break;
+
+      let deductAmount = 0;
+      let targetIndex = -1;
+      
+      for (let i = 0; i < inv.items.length; i++) {
+        let item = inv.items[i];
+        if (item.item_name === item_name && item.currentStock > 0) {
+           deductAmount = Math.min(item.currentStock, remainingToDeduct);
+           targetIndex = i;
+           break;
+        }
+      }
+
+      if (targetIndex === -1 || deductAmount === 0) break;
+
+      // Make the specific element deduction atomically
+      const updatedInv = await Inventory.findOneAndUpdate(
+        {
+          _id: inv._id,
+          [`items.${targetIndex}.item_name`]: item_name,
+          [`items.${targetIndex}.currentStock`]: { $gte: deductAmount }
+        },
+        {
+          $inc: { [`items.${targetIndex}.currentStock`]: -deductAmount }
+        },
+        { new: true }
+      );
+
+      // Successfully updated; commit the deduction from running total
+      if (updatedInv) {
+        remainingToDeduct -= deductAmount;
+      }
+    }
+
+    // 3. Ensure full requested deduction happened
+    if (remainingToDeduct > 0) {
+       return res.status(400).json({ success: false, message: "Concurrent modification resulted in insufficient stock during processing. Transaction aborted." });
+    }
+
+    // 4. Record stock usage exactly once all atomic actions succeed
     await StockUsageLog.create({
        user_id: userId,
        item_name,
-       quantity_used: Number(quantity_used),
+       quantity_used: requestedAmount,
        comment
     });
 

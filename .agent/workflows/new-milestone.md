@@ -1,6 +1,5 @@
 ---
 description: Create a new milestone with phases
-argument-hint: "<milestone-name>"
 ---
 
 # /new-milestone Workflow
@@ -101,8 +100,10 @@ If DECISIONS.md or JOURNAL.md contain entries from a previous milestone, reset t
 
 **PowerShell:**
 ```powershell
-# Only reset if files are non-empty and no archive exists yet
-if ((Test-Path ".gsd/DECISIONS.md") -and (Get-Content ".gsd/DECISIONS.md" | Measure-Object -Line).Lines -gt 5) {
+# Only reset if files are non-empty AND archive for previous milestone exists
+if ((Test-Path ".gsd/DECISIONS.md") -and
+    (Get-Content ".gsd/DECISIONS.md" | Measure-Object -Line).Lines -gt 5 -and
+    (Test-Path ".gsd/milestones")) {
     Set-Content ".gsd/DECISIONS.md" "# Decisions`n`n---`n"
 }
 if ((Test-Path ".gsd/JOURNAL.md") -and (Get-Content ".gsd/JOURNAL.md" | Measure-Object -Line).Lines -gt 5) {

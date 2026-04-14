@@ -17,6 +17,9 @@ const stockUsageLog = new Schema({
   unitType: {
     type: String,
   },
+  comment: {
+    type: String,
+  },
   usage_date: {
     type: Date,
     default: Date.now,
