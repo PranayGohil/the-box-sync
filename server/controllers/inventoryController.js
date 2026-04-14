@@ -248,6 +248,13 @@ const addInventory = async (req, res) => {
       }
     }
 
+    if (Array.isArray(items)) {
+       items = items.map(item => ({
+           ...item,
+           currentStock: item.currentStock !== undefined ? Number(item.currentStock) : (Number(item.item_quantity) || 0)
+       }));
+    }
+
     const inventoryData = {
       ...req.body,
       user_id: userId,
@@ -331,6 +338,13 @@ const updateInventory = async (req, res) => {
   try {
     if (typeof updatedData.items === "string") {
       updatedData.items = JSON.parse(updatedData.items);
+    }
+
+    if (Array.isArray(updatedData.items)) {
+       updatedData.items = updatedData.items.map(item => ({
+           ...item,
+           currentStock: item.currentStock !== undefined ? Number(item.currentStock) : (Number(item.item_quantity) || 0)
+       }));
     }
 
     if (req.files && req.files.length > 0) {
@@ -439,6 +453,13 @@ const completeInventoryRequest = async (req, res) => {
     if (typeof items === "string") items = JSON.parse(items);
     if (typeof remainingItems === "string")
       remainingItems = JSON.parse(remainingItems);
+
+    if (Array.isArray(items)) {
+       items = items.map(item => ({
+           ...item,
+           currentStock: item.currentStock !== undefined ? Number(item.currentStock) : (Number(item.item_quantity) || 0)
+       }));
+    }
 
     const bill_files = (req.files || []).map(
       (file) => `/inventory/bills/${file.filename}`
