@@ -1,113 +1,92 @@
 ---
-phase: 1
+phase: 3
 plan: 1
 wave: 1
 gap_closure: false
 ---
 
-# Plan 1.1: Advanced Inventory Management System
+# Plan 3.1: Admin Portal Payroll Integration
 
 ## Objective
-Upgrade the existing inventory system for admin and manager portals to allow real-time stock tracking, manual stock deduction, and bulk Excel import/export functionality.
+
+Port the newly developed statutory payroll system from the Manager frontend into the Admin frontend. This involves copying the API utilities, React pages, and wiring them into the Admin's routing and navigation systems.
 
 ## Context
+
 Load these files for context:
-- .gsd/ARCHITECTURE.md
-- server/models/Inventory.js
-- server/routes/inventory.js
+
+- admin/src/routes.js (or equivalent routing file)
+- admin/src/layout/nav/Menu.js (or equivalent sidebar navigation file)
 
 ## Tasks
 
 <task type="auto">
-  <name>Setup Backend Data and Dependencies</name>
-  <files>
-    server/package.json
-    server/models/Inventory.js
-    server/models/StockUsageLog.js
-  </files>
-  <action>
-    Steps:
-    1. Install `multer` and `xlsx` in the /server directory.
-    2. Update the Inventory schema to include `currentStock` (Number) in items.
-    3. Create a new StockUsageLog schema to track inventory deductions (linked to user_id and item).
-    
-    AVOID: Modifying other schemas. 
-    USE: Multi-tenant structure ensuring all schemas require `user_id`.
-  </action>
-  <verify>
-    Check package.json for multer/xlsx and verify schema files exist and compile without syntax errors.
-  </verify>
-  <done>
-    Dependencies installed and DB schemas are ready for data.
-  </done>
-</task>
-
-<task type="auto">
-  <name>Build Express API Routes</name>
-  <files>
-    server/routes/inventory.js
-    server/controllers/inventoryController.js
-  </files>
-  <action>
-    Steps:
-    1. Create POST `/api/inventory/use` to deduct stock and log usage.
-    2. Create GET `/api/inventory/export` to generate an Excel buffer of current stock using `xlsx`.
-    3. Create POST `/api/inventory/import` using `multer` to accept Excel uploads and execute bulk updates on the db.
-    
-    AVOID: Forgetting to filter DB queries by the authenticated user's `user_id`.
-  </action>
-  <verify>
-    Ensure routes are properly mounted in the main Express app file.
-  </verify>
-  <done>
-    Endpoints are created and correctly handling Excel parsing/generation.
-  </done>
-</task>
-
-<task type="auto">
-  <name>Update Frontend State and API layer</name>
+  <name>Port API Utilities to Admin</name>
   <files>
     admin/src/api/inventory.js
-    manager/src/api/inventory.js
   </files>
   <action>
     Steps:
-    1. Add axios calls for `/api/inventory/use`, `/export`, and `/import`.
-    2. Ensure the export function correctly handles blob/buffer responses to trigger a browser file download.
+    1. Read `manager/src/api/payrollConfig.js` and copy its exact contents into a new file at `admin/src/api/payrollConfig.js`.
+    2. Read any existing payroll API utility in the manager folder (e.g., `manager/src/api/payroll.js`) and ensure a matching file exists in `admin/src/api/` with the exact same functions.
   </action>
   <verify>
-    Syntax check the API utility files.
+    Verify the new files exist in the `admin/src/api` directory and contain valid Axios calls.
   </verify>
   <done>
-    Frontend is ready to communicate with the new Express routes.
+    Admin portal has the necessary functions to call the backend payroll routes.
   </done>
 </task>
 
-<task type="checkpoint:human-verify">
-  <name>Build Frontend React UI</name>
+<task type="auto">
+  <name>Port React Pages to Admin</name>
   <files>
-    admin/src/pages/Inventory.jsx
-    manager/src/pages/Inventory.jsx
+    admin/src/pages/PayrollSettings.jsx
+    admin/src/pages/ManagePayroll.jsx
+    admin/src/pages/GeneratePayroll.jsx
+    admin/src/pages/ViewStaffPayroll.jsx
   </files>
   <action>
     Steps:
-    1. Build a data table displaying current stock levels.
-    2. Add a "Mark as Used" modal/form for stock deduction.
-    3. Add an "Export Excel" button and an "Import Excel" file dropzone.
+    1. Copy the following files exactly from `manager/src/pages/` into `admin/src/pages/`:
+       - `PayrollSettings.jsx`
+       - `ManagePayroll.jsx`
+       - `GeneratePayroll.jsx`
+       - `ViewStaffPayroll.jsx`
+    2. If `StaffProfile.jsx` or `AddStaff.jsx` was modified in the Manager portal to include the Salary Structure inputs, duplicate those specific UI changes into the equivalent Staff files in the Admin portal.
+    
+    AVOID: Blindly replacing the Admin's `StaffProfile.jsx` entirely, as the Admin might have super-admin-specific fields the manager doesn't. Only merge the payroll configuration UI.
   </action>
   <verify>
-    Start the React dev server and visually inspect the new UI components.
+    Ensure all necessary React components exist in the admin pages directory.
   </verify>
   <done>
-    User interface is fully functional and connected to the API layer.
+    All visual UI components are securely ported to the admin workspace.
   </done>
 </task>
 
-## Must-Haves
-After all tasks complete, verify:
-- [ ] Excel files can be successfully downloaded and re-uploaded.
-- [ ] Stock quantities update correctly based on Excel imports.
+<task type="auto">
+  <name>Wire Up Admin Routing and Navigation</name>
+  <files>
+    admin/src/routes.js
+    admin/src/layout/nav/Menu.js
+  </files>
+  <action>
+    Steps:
+    1. Open the primary routing file for the Admin portal. Import the 4 newly copied payroll pages.
+    2. Add exact route definitions for them (e.g., `/payroll/settings`, `/payroll/:month?/:year?`, `/payroll/generate`, `/payroll/view/:staffId`).
+    3. Open the Admin sidebar/menu navigation file. Add a new section or links for "Payroll" and "Payroll Settings" so the user can navigate to them.
+  </action>
+  <verify>
+    Syntax check the routing and menu files.
+  </verify>
+  <done>
+    Admin users can click the sidebar and load the copied payroll views.
+  </done>
+</task>
 
 ## Success Criteria
-- [ ] All tasks verified passing
-- [ ] No regressions in existing inventory features
+
+- [ ] Admin portal successfully compiles.
+- [ ] Admin sidebar contains working links to Payroll.
+- [ ] Admin can generate and view payroll exactly like the Manager.

@@ -1,28 +1,61 @@
 const StaffPayroll = require("../models/staffPayrollModel");
 const Staff = require("../models/staffModel");
 const StaffAttendance = require("../models/staffAttendanceModel");
+const PayrollConfig = require("../models/PayrollConfig");
 
 // ── Helper: calculate net salary ──────────────────────────────────────────────
 const calculateSalary = ({
+    salary_structure,
+    globalConfig,
     base_salary,
     working_days_in_month,
     present_days,
     overtime_hours,
     overtime_rate,
     bonus,
-    deductions,
+    manual_deductions,
 }) => {
     const safeDays = working_days_in_month > 0 ? working_days_in_month : 1;
-    const earned_salary = parseFloat(
-        ((base_salary / safeDays) * present_days).toFixed(2)
-    );
-    const overtime_pay = parseFloat(
-        (overtime_hours * overtime_rate).toFixed(2)
-    );
+    let earned_breakdown = { basic: 0, hra: 0, conveyance: 0, medical: 0, special: 0, other: 0, total_gross: 0 };
+    let deduction_breakdown = { pf: 0, esi: 0, pt: 0, total_statutory: 0 };
+
+    if (salary_structure && salary_structure.earnings) {
+        const e = salary_structure.earnings;
+        earned_breakdown.basic = parseFloat(((e.basic / safeDays) * present_days).toFixed(2));
+        earned_breakdown.hra = parseFloat(((e.hra / safeDays) * present_days).toFixed(2));
+        earned_breakdown.conveyance = parseFloat(((e.conveyance / safeDays) * present_days).toFixed(2));
+        earned_breakdown.medical = parseFloat(((e.medical / safeDays) * present_days).toFixed(2));
+        earned_breakdown.special = parseFloat(((e.special / safeDays) * present_days).toFixed(2));
+        earned_breakdown.other = parseFloat(((e.other / safeDays) * present_days).toFixed(2));
+    } else {
+        earned_breakdown.basic = parseFloat(((base_salary / safeDays) * present_days).toFixed(2));
+    }
+
+    earned_breakdown.total_gross = parseFloat((
+        earned_breakdown.basic + earned_breakdown.hra + earned_breakdown.conveyance +
+        earned_breakdown.medical + earned_breakdown.special + earned_breakdown.other
+    ).toFixed(2));
+
+    const staffD = (salary_structure && salary_structure.deductions) ? salary_structure.deductions : {};
+    const globalD = globalConfig?.statutory_deductions || { pf_percentage: 12, esi_percentage: 0.75, pt_amount: 200 };
+
+    const pf_perc = staffD.pf_percentage !== undefined ? staffD.pf_percentage : globalD.pf_percentage;
+    const esi_perc = staffD.esi_percentage !== undefined ? staffD.esi_percentage : globalD.esi_percentage;
+    const pt_amount = staffD.pt !== undefined ? staffD.pt : globalD.pt_amount;
+
+    deduction_breakdown.pf = parseFloat((earned_breakdown.basic * (pf_perc / 100)).toFixed(2));
+    deduction_breakdown.esi = parseFloat((earned_breakdown.total_gross * (esi_perc / 100)).toFixed(2));
+    deduction_breakdown.pt = parseFloat((pt_amount || 0).toFixed(2));
+    
+    deduction_breakdown.total_statutory = parseFloat((deduction_breakdown.pf + deduction_breakdown.esi + deduction_breakdown.pt).toFixed(2));
+
+    const overtime_pay = parseFloat((overtime_hours * overtime_rate).toFixed(2));
+    
     const net_salary = parseFloat(
-        (earned_salary + overtime_pay + (bonus || 0) - (deductions || 0)).toFixed(2)
+        (earned_breakdown.total_gross + overtime_pay + (bonus || 0) - deduction_breakdown.total_statutory - (manual_deductions || 0)).toFixed(2)
     );
-    return { earned_salary, overtime_pay, net_salary };
+
+    return { earned_breakdown, deduction_breakdown, overtime_pay, net_salary };
 };
 
 // ── Helper: get attendance counts for a staff in a month/year ─────────────────
@@ -80,12 +113,18 @@ const generatePayroll = async (req, res) => {
             staffList = [staff];
         } else {
             staffList = await Staff.find({ user_id })
-                .select("_id staff_id f_name l_name salary overtime_rate position")
+                .select("_id staff_id f_name l_name salary salary_structure overtime_rate position")
                 .lean();
         }
 
         if (staffList.length === 0) {
             return res.status(404).json({ success: false, message: "No staff found" });
+        }
+
+        // Fetch Global Payroll Config
+        let globalConfig = await PayrollConfig.findOne({ user_id });
+        if (!globalConfig) {
+             globalConfig = await PayrollConfig.create({ user_id });
         }
 
         const results = {
@@ -128,14 +167,16 @@ const generatePayroll = async (req, res) => {
 
                 const overtime_rate = staff.overtime_rate || 0;
 
-                const { earned_salary, overtime_pay, net_salary } = calculateSalary({
+                const { earned_breakdown, deduction_breakdown, overtime_pay, net_salary } = calculateSalary({
+                    salary_structure: staff.salary_structure,
+                    globalConfig,
                     base_salary: staff.salary || 0,
                     working_days_in_month,
                     present_days,
                     overtime_hours,
                     overtime_rate,
                     bonus,
-                    deductions,
+                    manual_deductions: deductions,
                 });
 
                 const payrollData = {
@@ -143,7 +184,6 @@ const generatePayroll = async (req, res) => {
                     user_id,
                     month,
                     year,
-                    base_salary: staff.salary || 0,
                     working_days_in_month,
                     present_days,
                     absent_days,
@@ -153,10 +193,10 @@ const generatePayroll = async (req, res) => {
                     bonus,
                     deductions,
                     deduction_reason,
-                    earned_salary,
+                    earned_breakdown,
+                    deduction_breakdown,
                     net_salary,
                     notes,
-                    // Reset status to unpaid when regenerating
                     status: "unpaid",
                     paid_date: null,
                 };
@@ -227,7 +267,7 @@ const getMonthlyPayrollSummary = async (req, res) => {
 
         // Also get all staff to show who has NO payroll yet
         const allStaff = await Staff.find({ user_id })
-            .select("_id staff_id f_name l_name position photo salary overtime_rate")
+            .select("_id staff_id f_name l_name position photo salary salary_structure overtime_rate")
             .lean();
 
         // Build payroll map by staff_id
@@ -269,7 +309,7 @@ const getPayrollByStaff = async (req, res) => {
         const user_id = req.user;
 
         const staff = await Staff.findOne({ _id: staffId, user_id })
-            .select("staff_id f_name l_name position photo salary overtime_rate joining_date")
+            .select("staff_id f_name l_name position photo salary salary_structure overtime_rate joining_date")
             .lean();
 
         if (!staff) {
@@ -340,17 +380,22 @@ const updatePayroll = async (req, res) => {
         if (working_days_in_month !== undefined) payroll.working_days_in_month = parseInt(working_days_in_month);
 
         // Recalculate
-        const { earned_salary, overtime_pay, net_salary } = calculateSalary({
-            base_salary: payroll.base_salary,
+        const staff = await Staff.findOne({ _id: payroll.staff_id, user_id }).lean();
+        const globalConfig = await PayrollConfig.findOne({ user_id }) || { statutory_deductions: { pf_percentage: 12, esi_percentage: 0.75, pt_amount: 200 } };
+        const { earned_breakdown, deduction_breakdown, overtime_pay, net_salary } = calculateSalary({
+            salary_structure: staff?.salary_structure,
+            globalConfig,
+            base_salary: staff?.salary || 0,
             working_days_in_month: payroll.working_days_in_month,
             present_days: payroll.present_days,
             overtime_hours: payroll.overtime_hours,
             overtime_rate: payroll.overtime_rate,
             bonus: payroll.bonus,
-            deductions: payroll.deductions,
+            manual_deductions: payroll.deductions,
         });
 
-        payroll.earned_salary = earned_salary;
+        payroll.earned_breakdown = earned_breakdown;
+        payroll.deduction_breakdown = deduction_breakdown;
         payroll.overtime_pay = overtime_pay;
         payroll.net_salary = net_salary;
 
@@ -458,7 +503,7 @@ const previewPayroll = async (req, res) => {
             staffList = [staff];
         } else {
             staffList = await Staff.find({ user_id })
-                .select("_id staff_id f_name l_name salary overtime_rate position photo")
+                .select("_id staff_id f_name l_name salary salary_structure overtime_rate position photo")
                 .lean();
         }
 
@@ -471,14 +516,15 @@ const previewPayroll = async (req, res) => {
                 );
 
                 const overtime_rate = staff.overtime_rate || 0;
-                const { earned_salary, overtime_pay, net_salary } = calculateSalary({
+                const { earned_breakdown, deduction_breakdown, overtime_pay, net_salary } = calculateSalary({
+                    salary_structure: staff.salary_structure,
                     base_salary: staff.salary || 0,
                     working_days_in_month: parseInt(working_days_in_month),
                     present_days,
-                    overtime_hours: 0, // default 0 in preview — user adjusts before saving
+                    overtime_hours: 0,
                     overtime_rate,
                     bonus: 0,
-                    deductions: 0,
+                    manual_deductions: 0,
                 });
 
                 // Check if payroll already exists for this month
@@ -500,7 +546,8 @@ const previewPayroll = async (req, res) => {
                     present_days,
                     absent_days,
                     working_days_in_month: parseInt(working_days_in_month),
-                    earned_salary,
+                    earned_breakdown,
+                    deduction_breakdown,
                     overtime_hours: 0,
                     overtime_pay: 0,
                     bonus: 0,

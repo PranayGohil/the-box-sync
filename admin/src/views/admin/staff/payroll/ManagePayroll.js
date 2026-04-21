@@ -224,11 +224,11 @@ export default function ManagePayroll() {
                                 <BreadcrumbList items={breadcrumbs} />
                             </Col>
                             <Col xs="12" md="5" className="d-flex justify-content-end gap-2">
-                                <Button variant="primary" as={Link} to="/staff/payroll/generate" className="btn-icon btn-icon-start w-100 w-md-auto">
+                                <Button variant="primary" as={Link} to="/staff/payroll/generate" className="btn-icon">
                                     <CsLineIcons icon="plus" className="me-2" />
                                     Generate Payroll
                                 </Button>
-                                <Button variant="primary" as={Link} to="/staff/payroll/settings" className="btn-icon btn-icon-start w-100 w-md-auto">
+                                <Button variant="primary" as={Link} to="/staff/payroll/settings" className="btn-icon">
                                     <CsLineIcons icon="gear" className="me-2" />
                                     Settings
                                 </Button>
@@ -294,8 +294,8 @@ export default function ManagePayroll() {
                             <Button
                                 variant="success"
                                 size="sm"
-                                className='btn-icon'
                                 onClick={() => handleMarkPaid(selectedIds)}
+                                className='btn-icon'
                                 disabled={isMarkingPaid}
                             >
                                 {isMarkingPaid
@@ -305,8 +305,8 @@ export default function ManagePayroll() {
                             <Button
                                 variant="warning"
                                 size="sm"
-                                className='btn-icon'
                                 onClick={() => handleMarkUnpaid(selectedIds)}
+                                className='btn-icon'
                                 disabled={isMarkingPaid}
                             >
                                 <CsLineIcons icon="rotate-left" className="me-1" />Mark Unpaid
@@ -314,8 +314,8 @@ export default function ManagePayroll() {
                             <Button
                                 variant="outline-secondary"
                                 size="sm"
-                                className='btn-icon'
                                 onClick={() => setSelectedIds(new Set())}
+                                className='btn-icon'
                             >
                                 Clear
                             </Button>
@@ -485,10 +485,10 @@ export default function ManagePayroll() {
                                                                 <Button
                                                                     variant="outline-primary"
                                                                     size="sm"
-                                                                    className='btn-icon'
                                                                     onClick={() =>
                                                                         history.push(`/staff/payroll/generate?staff_id=${staff._id}&month=${month}&year=${year}`)
                                                                     }
+                                                                    className='btn-icon'
                                                                 >
                                                                     <CsLineIcons icon="plus" className="me-1" />Generate
                                                                 </Button>

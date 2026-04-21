@@ -41,6 +41,21 @@ const addStaff = new Schema({
   salary: {
     type: Number,
   },
+  salary_structure: {
+    earnings: {
+      basic: { type: Number, default: 0 },
+      hra: { type: Number, default: 0 },
+      conveyance: { type: Number, default: 0 },
+      medical: { type: Number, default: 0 },
+      special: { type: Number, default: 0 },
+      other: { type: Number, default: 0 }
+    },
+    deductions: {
+      pf_percentage: { type: Number, default: 12 },
+      esi_percentage: { type: Number, default: 0 },
+      pt: { type: Number, default: 200 }
+    }
+  },
   overtime_rate: {
     type: Number,
     default: 0,
@@ -71,7 +86,6 @@ const addStaff = new Schema({
   user_id: {
     type: String,
   },
-  // NOTE: attandance array removed — now lives in the Attendance collection
 });
 
 // Indexes

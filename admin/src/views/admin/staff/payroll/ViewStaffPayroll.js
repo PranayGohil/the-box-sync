@@ -714,8 +714,8 @@ export default function ViewStaffPayroll() {
                                     <div>
                                         <div className="text-muted small">Payment Status</div>
                                         {selectedPayroll.status === 'paid'
-                                            ? <Badge bg="success" className="px-3 py-2"><CsLineIcons icon="check" className="me-1" />Paid</Badge>
-                                            : <Badge bg="warning" className="px-3 py-2"><CsLineIcons icon="clock" className="me-1" />Unpaid</Badge>}
+                                            ? <Badge bg="success" className="px-2 py-2"><CsLineIcons icon="check" size="15" className="me-1" />Paid</Badge>
+                                            : <Badge bg="warning" className="px-2 py-2"><CsLineIcons icon="clock" size="15" className="me-1" />Unpaid</Badge>}
                                     </div>
                                     {selectedPayroll.paid_date && (
                                         <div>

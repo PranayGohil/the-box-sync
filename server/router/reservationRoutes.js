@@ -292,12 +292,12 @@ router.post("/create", async (req, res) => {
             status: { $in: ["approved", "reserved", "seated"] }
         });
 
-        if (existing.length >= totalTables) {
-            return res.status(400).json({
-                success: false,
-                message: "No tables available for selected slot."
-            });
-        }
+        // if (existing.length >= totalTables) {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: "No tables available for selected slot."
+        //     });
+        // }
 
         const reservation = await Reservation.create({
             customer_name, customer_phone,

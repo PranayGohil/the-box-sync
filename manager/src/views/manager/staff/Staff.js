@@ -7,6 +7,7 @@ import ViewAttendance from './attandance/ViewAttendance';
 import ViewStaffPayroll from './payroll/ViewStaffPayroll';
 import ManagePayroll from './payroll/ManagePayroll';
 import GeneratePayroll from './payroll/GeneratePayroll';
+import PayrollSettings from './payroll/PayrollSettings';
 
 const Staff = () => {
   return (
@@ -20,6 +21,7 @@ const Staff = () => {
         <Route exact path="/staff/attendance/view/:id" render={() => <ViewAttendance />} />
 
         <Route exact path="/staff/payroll/generate" render={() => <GeneratePayroll />} />
+        <Route exact path="/staff/payroll/settings" render={() => <PayrollSettings />} />
         <Route exact path="/staff/payroll/view/:staffId" render={() => <ViewStaffPayroll />} />
         <Route exact path="/staff/payroll/:month?/:year?" render={() => <ManagePayroll />} />
       </Switch>

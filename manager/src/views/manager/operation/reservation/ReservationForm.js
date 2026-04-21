@@ -41,7 +41,7 @@ const GroupedSlotPicker = ({ groups, selectedGroupId, selectedSlots, onGroupSele
                             variant={selectedGroupId === g.group_id ? 'primary' : 'outline-secondary'}
                             onClick={() => onGroupSelect(g.group_id)}
                             style={selectedGroupId === g.group_id ? { background: g.color, borderColor: g.color } : {}}
-                            className="d-flex align-items-center gap-1"
+                            className="btn-icon d-flex align-items-center gap-1"
                         >
                             <span style={{ width: 8, height: 8, borderRadius: '50%', background: selectedGroupId === g.group_id ? '#fff' : g.color, display: 'inline-block', flexShrink: 0 }} />
                             {g.name}
@@ -91,7 +91,7 @@ const GroupedSlotPicker = ({ groups, selectedGroupId, selectedSlots, onGroupSele
                                         opacity: disabled ? 0.4 : 1,
                                         ...(isSelected ? { background: activeGroup.color, borderColor: activeGroup.color } : {}),
                                     }}
-                                    className="d-flex flex-column align-items-center"
+                                    className="btn-icon d-flex flex-column align-items-center"
                                 >
                                     <span className="fw-semibold" style={{ fontSize: 13 }}>{s.slot_start}</span>
                                     <span style={{ fontSize: 10, opacity: 0.8 }}>–{s.slot_end}</span>
@@ -115,7 +115,7 @@ const GroupedSlotPicker = ({ groups, selectedGroupId, selectedSlots, onGroupSele
                                 </strong>
                                 &nbsp;· {selectedSlots.length * activeGroup.slot_duration} minutes · {activeGroup.name}
                             </span>
-                            <Button variant="link" size="sm" className="ms-auto p-0 text-muted" onClick={() => onSlotToggle(null, activeGroup)}>
+                            <Button variant="link" size="sm" className="btn-icon ms-auto p-0 text-muted" onClick={() => onSlotToggle(null, activeGroup)}>
                                 Clear
                             </Button>
                         </Alert>
@@ -245,14 +245,14 @@ const ReservationForm = ({ restaurantUserId }) => {
                             </p>
                             <p className="small text-muted mb-1">Your Reservation ID</p>
                             <Alert variant="light" className="border font-monospace text-break mb-3">{reservationId}</Alert>
-                            <Button variant="outline-primary" size="sm" onClick={() => { navigator.clipboard.writeText(reservationId); toast.info('Copied!'); }}>
+                            <Button variant="outline-primary" size="sm" className='btn-icon' onClick={() => { navigator.clipboard.writeText(reservationId); toast.info('Copied!'); }}>
                                 <CsLineIcons icon="copy" className="me-1" /> Copy ID
                             </Button>
                             <hr className="my-4" />
                             <Form onSubmit={handleLookup}>
                                 <Row className="g-2">
                                     <Col><Form.Control size="sm" placeholder="Paste Reservation ID" value={lookupId} onChange={(e) => setLookupId(e.target.value)} /></Col>
-                                    <Col xs="auto"><Button size="sm" type="submit" disabled={lookupLoading}>{lookupLoading ? '…' : 'Check Status'}</Button></Col>
+                                    <Col xs="auto"><Button size="sm" type="submit" className='btn-icon' disabled={lookupLoading}>{lookupLoading ? '…' : 'Check Status'}</Button></Col>
                                 </Row>
                             </Form>
                             {lookupError && <Alert variant="danger" className="mt-2 mb-0 py-2"><small>{lookupError}</small></Alert>}
@@ -268,7 +268,7 @@ const ReservationForm = ({ restaurantUserId }) => {
                                     {statusData.manager_notes && <small className="text-muted d-block">Note: {statusData.manager_notes}</small>}
                                 </Alert>
                             )}
-                            <Button variant="link" size="sm" className="mt-4" onClick={() => { setSubmitted(false); setStep(1); setSelectedSlots([]); setForm({ customer_name: '', customer_phone: '', customer_email: '', notes: '' }); }}>
+                            <Button variant="link" size="sm" className="btn-icon mt-4" onClick={() => { setSubmitted(false); setStep(1); setSelectedSlots([]); setForm({ customer_name: '', customer_phone: '', customer_email: '', notes: '' }); }}>
                                 Make another reservation
                             </Button>
                         </Card.Body>
@@ -345,7 +345,7 @@ const ReservationForm = ({ restaurantUserId }) => {
                                             </small>
                                         </Alert>
                                     )}
-                                    <Button variant="primary" className="w-100" disabled={!date || !numPersons || slotsLoading} onClick={() => setStep(2)}>
+                                    <Button variant="primary" className="btn-icon w-100" disabled={!date || !numPersons || slotsLoading} onClick={() => setStep(2)}>
                                         Choose Time <CsLineIcons icon="chevron-right" className="ms-1" />
                                     </Button>
                                 </>
@@ -356,7 +356,7 @@ const ReservationForm = ({ restaurantUserId }) => {
                                 <>
                                     <div className="mb-3 d-flex justify-content-between align-items-center">
                                         <span className="fw-semibold">{fmtDate(date)} · {numPersons} guest{numPersons > 1 ? 's' : ''}</span>
-                                        <Button variant="link" size="sm" className="p-0" onClick={() => setStep(1)}><CsLineIcons icon="edit" size={14} className="me-1" />Edit</Button>
+                                        <Button variant="link" size="sm" className="btn-icon p-0" onClick={() => setStep(1)}><CsLineIcons icon="edit" size={14} className="me-1" />Edit</Button>
                                     </div>
                                     {slotsLoading ? (
                                         <div className="text-center py-4"><Spinner /> Loading slots…</div>
@@ -372,8 +372,8 @@ const ReservationForm = ({ restaurantUserId }) => {
                                         />
                                     )}
                                     <div className="d-flex gap-2 mt-4">
-                                        <Button variant="outline-secondary" onClick={() => setStep(1)}><CsLineIcons icon="chevron-left" className="me-1" />Back</Button>
-                                        <Button variant="primary" className="flex-grow-1" disabled={selectedSlots.length === 0} onClick={() => setStep(3)}>
+                                        <Button variant="outline-secondary" className='btn-icon' onClick={() => setStep(1)}><CsLineIcons icon="chevron-left" className="me-1" />Back</Button>
+                                        <Button variant="primary" className="btn-icon flex-grow-1" disabled={selectedSlots.length === 0} onClick={() => setStep(3)}>
                                             Continue <CsLineIcons icon="chevron-right" className="ms-1" />
                                         </Button>
                                     </div>
@@ -391,7 +391,7 @@ const ReservationForm = ({ restaurantUserId }) => {
                                                 · {numPersons} guest{numPersons > 1 ? 's' : ''}
                                             </span>
                                         </div>
-                                        <Button variant="link" size="sm" className="p-0" onClick={() => setStep(2)}><CsLineIcons icon="edit" size={14} className="me-1" />Edit</Button>
+                                        <Button variant="link" size="sm" className="btn-icon p-0" onClick={() => setStep(2)}><CsLineIcons icon="edit" size={14} className="me-1" />Edit</Button>
                                     </div>
 
                                     <Form onSubmit={handleSubmit} noValidate>
@@ -428,8 +428,8 @@ const ReservationForm = ({ restaurantUserId }) => {
                                                 value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
                                         </Form.Group>
                                         <div className="d-flex gap-2">
-                                            <Button variant="outline-secondary" type="button" onClick={() => setStep(2)}><CsLineIcons icon="chevron-left" className="me-1" />Back</Button>
-                                            <Button variant="primary" type="submit" className="flex-grow-1" disabled={submitting}>
+                                            <Button variant="outline-secondary" className='btn-icon' type="button" onClick={() => setStep(2)}><CsLineIcons icon="chevron-left" className="me-1" />Back</Button>
+                                            <Button variant="primary" className='btn-icon flex-grow-1' type="submit" disabled={submitting}>
                                                 {submitting ? 'Submitting…' : <><CsLineIcons icon="send" className="me-2" />Request Reservation</>}
                                             </Button>
                                         </div>

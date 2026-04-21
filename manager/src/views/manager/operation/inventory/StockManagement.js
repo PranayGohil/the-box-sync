@@ -75,7 +75,7 @@ const StockManagement = () => {
   const handleExport = async () => {
     try {
       const res = await exportInventoryExcel();
-      
+
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -94,8 +94,8 @@ const StockManagement = () => {
     if (!file) return;
 
     if (!file.name.match(/\.(xlsx|xls)$/)) {
-        toast.error('Please upload a valid Excel file (.xlsx or .xls)');
-        return;
+      toast.error('Please upload a valid Excel file (.xlsx or .xls)');
+      return;
     }
 
     try {
@@ -124,22 +124,22 @@ const StockManagement = () => {
             <BreadcrumbList items={breadcrumbs} />
           </Col>
           <Col xs="auto" className="d-flex align-items-end justify-content-end mb-2 mb-sm-0 order-sm-3 gap-2">
-            <Button variant="outline-primary" className="btn-icon btn-icon-start text-nowrap" onClick={handleExport}>
-              <CsLineIcons icon="download" /> <span>Export</span>
-            </Button>
             <div className="d-inline-block position-relative">
-               <input
-                 type="file"
-                 accept=".xlsx,.xls"
-                 key={fileInputKey}
-                 style={{ opacity: 0, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 10, cursor: 'pointer' }}
-                 onChange={handleImport}
-                 disabled={isSubmitting}
-               />
-               <Button variant="primary" className="btn-icon btn-icon-start py-2">
-                 <CsLineIcons icon="upload" /> <span>Import</span>
-               </Button>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                key={fileInputKey}
+                style={{ opacity: 0, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 10, cursor: 'pointer' }}
+                onChange={handleImport}
+                disabled={isSubmitting}
+              />
+              <Button variant="primary" className="btn-icon btn-icon-start py-2">
+                <CsLineIcons icon="download" /> <span>Import</span>
+              </Button>
             </div>
+            <Button variant="outline-primary" className="btn-icon btn-icon-start text-nowrap" onClick={handleExport}>
+              <CsLineIcons icon="upload" /> <span>Export</span>
+            </Button>
           </Col>
         </Row>
       </div>
@@ -174,11 +174,11 @@ const StockManagement = () => {
                           <span className="text-muted text-small">{item.unit}</span>
                         </td>
                         <td className="text-end align-middle">
-                          <Button 
-                             size="sm" 
-                             variant="outline-warning" 
-                             disabled={item.totalStock <= 0}
-                             onClick={() => { setSelectedItem(item); setShowUseModal(true); }}
+                          <Button
+                            size="sm"
+                            variant="outline-warning"
+                            disabled={item.totalStock <= 0}
+                            onClick={() => { setSelectedItem(item); setShowUseModal(true); }}
                           >
                             Mark as Used
                           </Button>
@@ -200,43 +200,43 @@ const StockManagement = () => {
         </Modal.Header>
         <Modal.Body>
           {selectedItem && (
-             <Form onSubmit={handleUseSubmit}>
-               <div className="mb-3">
-                 <strong>Item:</strong> {selectedItem._id}
-               </div>
-               <div className="mb-3">
-                 <strong>Available Stock:</strong> {selectedItem.totalStock} {selectedItem.unit}
-               </div>
-               <Form.Group className="mb-3">
-                 <Form.Label>Quantity to Deduct ({selectedItem.unit})</Form.Label>
-                 <Form.Control 
-                    type="number" 
-                    step="0.01"
-                    min="0.01"
-                    max={selectedItem.totalStock}
-                    value={quantityUsed} 
-                    onChange={e => setQuantityUsed(e.target.value)} 
-                    required 
-                 />
-               </Form.Group>
-               <Form.Group className="mb-3">
-                 <Form.Label>Comments / Reason</Form.Label>
-                 <Form.Control 
-                    as="textarea" 
-                    rows={2} 
-                    value={useComment}
-                    onChange={e => setUseComment(e.target.value)}
-                 />
-               </Form.Group>
-               <div className="text-end">
-                 <Button variant="outline-secondary" className="me-2" onClick={() => setShowUseModal(false)} disabled={isSubmitting}>
-                   Cancel
-                 </Button>
-                 <Button variant="primary" type="submit" disabled={isSubmitting}>
-                   {isSubmitting ? <Spinner animation="border" size="sm" /> : 'Confirm Deduction'}
-                 </Button>
-               </div>
-             </Form>
+            <Form onSubmit={handleUseSubmit}>
+              <div className="mb-3">
+                <strong>Item:</strong> {selectedItem._id}
+              </div>
+              <div className="mb-3">
+                <strong>Available Stock:</strong> {selectedItem.totalStock} {selectedItem.unit}
+              </div>
+              <Form.Group className="mb-3">
+                <Form.Label>Quantity to Deduct ({selectedItem.unit})</Form.Label>
+                <Form.Control
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max={selectedItem.totalStock}
+                  value={quantityUsed}
+                  onChange={e => setQuantityUsed(e.target.value)}
+                  required
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Comments / Reason</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={2}
+                  value={useComment}
+                  onChange={e => setUseComment(e.target.value)}
+                />
+              </Form.Group>
+              <div className="text-end">
+                <Button variant="outline-secondary" className="me-2" onClick={() => setShowUseModal(false)} disabled={isSubmitting}>
+                  Cancel
+                </Button>
+                <Button variant="primary" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? <Spinner animation="border" size="sm" /> : 'Confirm Deduction'}
+                </Button>
+              </div>
+            </Form>
           )}
         </Modal.Body>
       </Modal>

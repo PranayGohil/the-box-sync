@@ -1431,13 +1431,30 @@
                     tab.style.color = '';
                 }
             });
+            // Multiple Slots
+            // Multiple Slots
+            // qs('slotHint').textContent =
+            //     `Select up to ${activeGroupData.max_slots_per_booking} consecutive slots ` +
+            //     `(${activeGroupData.max_slots_per_booking * activeGroupData.slot_duration} min max). ` +
+            //     `Tap a slot to select, tap adjacent slots to extend.`;
 
+            // Single Slot
             qs('slotHint').textContent =
-                `Select up to ${activeGroupData.max_slots_per_booking} consecutive slots ` +
-                `(${activeGroupData.max_slots_per_booking * activeGroupData.slot_duration} min max). ` +
-                `Tap a slot to select, tap adjacent slots to extend.`;
+                `Select one time slot for your reservation (${activeGroupData.slot_duration} min).`;
 
             renderSlots();
+        }
+
+        function formatTime12h(timeStr) {
+            const [hour, minute] = timeStr.split(':');
+            const date = new Date();
+            date.setHours(hour, minute);
+
+            return date.toLocaleTimeString('en-IN', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
         }
 
         // ── RENDER SLOTS ────────────────────────────────────────────────────────
@@ -1452,15 +1469,22 @@
 
                 // Decide if this slot can be added (must be adjacent to current selection)
                 let canAdd = false;
+
+                // Multiple Slots
+                // if (!isSelected) {
+                //     if (selectedSlots.length === 0) {
+                //         canAdd = s.bookable;
+                //     } else if (selectedSlots.length < activeGroupData.max_slots_per_booking) {
+                //         const allStarts = activeGroupData.slots.map(sl => sl.slot_start);
+                //         const selIdx = selectedSlots.map(ss => allStarts.indexOf(ss));
+                //         const thisIdx = allStarts.indexOf(s.slot_start);
+                //         canAdd = (thisIdx === Math.min(...selIdx) - 1 || thisIdx === Math.max(...selIdx) + 1) && s.bookable;
+                //     }
+                // }
+
+                // Single Slot
                 if (!isSelected) {
-                    if (selectedSlots.length === 0) {
-                        canAdd = s.bookable;
-                    } else if (selectedSlots.length < activeGroupData.max_slots_per_booking) {
-                        const allStarts = activeGroupData.slots.map(sl => sl.slot_start);
-                        const selIdx = selectedSlots.map(ss => allStarts.indexOf(ss));
-                        const thisIdx = allStarts.indexOf(s.slot_start);
-                        canAdd = (thisIdx === Math.min(...selIdx) - 1 || thisIdx === Math.max(...selIdx) + 1) && s.bookable;
-                    }
+                    canAdd = selectedSlots.length === 0 && s.bookable;
                 }
 
                 const btn = document.createElement('button');
@@ -1475,8 +1499,8 @@
                 const label = s.is_past ? 'Past' : s.is_blocked ? 'Blocked' : !s.bookable ? 'Full' : '';
 
                 btn.innerHTML = `
-                <span class="slot-time">${s.slot_start}</span>
-                <span class="slot-end">–${s.slot_end}</span>
+                <span class="slot-time">${formatTime12h(s.slot_start)}</span>
+<span class="slot-end"></span>
                 ${label ? `<span class="slot-tag">${label}</span>` : ''}
             `;
 
@@ -1486,13 +1510,21 @@
         }
 
         function toggleSlot(slotStart) {
+            // Multiple Slots
+            // if (selectedSlots.includes(slotStart)) {
+            //     // Only allow deselecting from ends
+            //     if (slotStart === selectedSlots[0] || slotStart === selectedSlots[selectedSlots.length - 1]) {
+            //         selectedSlots = selectedSlots.filter(s => s !== slotStart);
+            //     }
+            // } else {
+            //     selectedSlots = [...selectedSlots, slotStart].sort();
+            // }
+
+            // Single slot only — deselect if same, replace if different
             if (selectedSlots.includes(slotStart)) {
-                // Only allow deselecting from ends
-                if (slotStart === selectedSlots[0] || slotStart === selectedSlots[selectedSlots.length - 1]) {
-                    selectedSlots = selectedSlots.filter(s => s !== slotStart);
-                }
+                selectedSlots = [];
             } else {
-                selectedSlots = [...selectedSlots, slotStart].sort();
+                selectedSlots = [slotStart];
             }
 
             renderSlots();
@@ -1509,7 +1541,7 @@
             const mins = selectedSlots.length * activeGroupData.slot_duration;
 
             qs('slotSummaryText').textContent =
-                `${first} – ${endTime}  ·  ${mins} minutes  ·  ${activeGroupData.name}`;
+                `${formatTime12h(first)} – ${formatTime12h(endTime)} · ${mins} minutes · ${activeGroupData.name}`;
             qs('slotSummary').style.display = 'flex';
             if (activeGroupData.color) {
                 qs('slotSummary').style.borderColor = activeGroupData.color;
@@ -1537,7 +1569,7 @@
             const lastSlot = activeGroupData.slots.find(s => s.slot_start === last);
 
             qs('step3Summary').querySelector('strong').textContent =
-                `${fmtDate(date)} · ${activeGroupData.name} · ${selectedSlots[0]}–${lastSlot?.slot_end} · ${persons} guest${persons > 1 ? 's' : ''}`;
+                `${fmtDate(date)} · ${activeGroupData.name} · ${formatTime12h(selectedSlots[0])}–${formatTime12h(lastSlot?.slot_end)} · ${persons} guest${persons > 1 ? 's' : ''}`;
 
             goToStep(3);
         }
