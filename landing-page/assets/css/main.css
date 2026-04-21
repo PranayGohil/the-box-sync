@@ -3688,11 +3688,17 @@ rgb(232,246,253);
   .search-wrap .search-field-holder {
     width: 70%;
   }
+     .search-wrap .search-cell {
+       right: 25% !important;
+     }
 }
 @media (max-width: 575px) {
   .search-wrap .search-field-holder {
     width: 80%;
   }
+     .search-wrap .search-cell {
+       right: 25% !important;
+     }
 }
 .search-wrap .main-search-input {
   width: 100%;

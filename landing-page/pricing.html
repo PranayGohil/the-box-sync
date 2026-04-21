@@ -34,13 +34,21 @@
   <!--<< Main.css >>-->
   <link rel="stylesheet" href="assets/css/main.css" />
   <style>
-    p {
-      font-size: 14px;
-    }
-
-    .section-title .title {
-      font-size: 30px;
-    }
+   p{
+        font-size: 14px;
+      }
+      .section-title .title{
+        font-size: 30px;
+      }
+      @media screen and (max-width: 767px){
+        .section-title .title{
+        font-size: 25px !important;
+      }
+      p{
+        font-size: 13px;
+        line-height: normal;
+      }
+      }
   </style>
 </head>
 
@@ -212,45 +220,56 @@
     </div>
   </header>
 
-  <!-- Search Area Start -->
-  <div class="search-wrap">
-    <div class="search-inner">
-      <i class="fas fa-times search-close" id="search-close"></i>
-      <div class="search-cell m-5 p-5 w-50">
-        <form action="" id="" method="POST" class="contact-form-items">
-          <div class="row g-4">
-            <h2 class="title wow fadeInDown">Quick Enquiry</h2>
-            <div class="col-lg-6 wow fadeInUp">
-              <div class="form-clt">
-                <input type="text" class="main-search-input" name="name" id="name" placeholder="Your Name" />
+    <!-- Search Area Start -->
+    <div class="search-wrap">
+      <div class="search-inner">
+        <i class="fas fa-times search-close" id="search-close"></i>
+        <div class="search-cell m-xl-5 p-xl-5 w-50 ">
+          <form action="" id="" method="POST" class="contact-form-items">
+            <div class="row g-xl-4">
+              <h2 class="title wow fadeInDown mb-xl-1 mb-3">Quick Enquiry</h2>
+              <div class="col-lg-6 wow fadeInUp">
+                <div class="form-clt">
+                  <input type="text" class="main-search-input" name="name" id="name" placeholder="Your Name" />
+                </div>
+              </div>
+              <div
+                class="col-lg-6 wow fadeInUp"
+                data-wow-delay=".5s"
+                style="visibility: visible; animation-delay: 0.5s; animation-name: fadeInUp;"
+              >
+                <div class="form-clt">
+                  <input type="text" class="main-search-input" name="email2" id="email2" placeholder="Your Email" />
+                </div>
+              </div>
+              <div
+                class="col-lg-12 wow fadeInUp"
+                data-wow-delay=".7s"
+                style="visibility: visible; animation-delay: 0.7s; animation-name: fadeInUp;"
+              >
+                <div class="form-clt">
+                  <input type="text" class="main-search-input" name="phone" id="phone" placeholder="Your Number" />
+                </div>
+              </div>
+              <div
+                class="col-lg-12 wow fadeInUp"
+                data-wow-delay=".7s"
+                style="visibility: visible; animation-delay: 0.7s; animation-name: fadeInUp;"
+              >
+                <div class="form-clt"><textarea name="message" class="main-search-input" id="message"></textarea></div>
+              </div>
+              <div
+                class="col-lg-7 wow fadeInUp py-xl-1 py-3"
+                data-wow-delay=".9s"
+                style="visibility: visible; animation-delay: 0.9s; animation-name: fadeInUp;"
+              >
+                <button type="submit" class="theme-btn ">Send Message <i class="fa-solid fa-arrow-right-long ms-1"></i></button>
               </div>
             </div>
-            <div class="col-lg-6 wow fadeInUp" data-wow-delay=".5s"
-              style="visibility: visible; animation-delay: 0.5s; animation-name: fadeInUp;">
-              <div class="form-clt">
-                <input type="text" class="main-search-input" name="email2" id="email2" placeholder="Your Email" />
-              </div>
-            </div>
-            <div class="col-lg-12 wow fadeInUp" data-wow-delay=".7s"
-              style="visibility: visible; animation-delay: 0.7s; animation-name: fadeInUp;">
-              <div class="form-clt">
-                <input type="text" class="main-search-input" name="phone" id="phone" placeholder="Your Number" />
-              </div>
-            </div>
-            <div class="col-lg-12 wow fadeInUp" data-wow-delay=".7s"
-              style="visibility: visible; animation-delay: 0.7s; animation-name: fadeInUp;">
-              <div class="form-clt"><textarea name="message" class="main-search-input" id="message"></textarea></div>
-            </div>
-            <div class="col-lg-7 wow fadeInUp" data-wow-delay=".9s"
-              style="visibility: visible; animation-delay: 0.9s; animation-name: fadeInUp;">
-              <button type="submit" class="theme-btn">Send Message <i
-                  class="fa-solid fa-arrow-right-long ms-1"></i></button>
-            </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
-  </div>
 
   <!-- Breadcumb Section S T A R T -->
   <div class="breadcumb-section fix">
