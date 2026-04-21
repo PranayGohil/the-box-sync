@@ -87,6 +87,14 @@ const addStaff = async (req, res) => {
       user_id: req.user,
     };
 
+    if (staffData.salary_structure && typeof staffData.salary_structure === "string") {
+      try {
+        staffData.salary_structure = JSON.parse(staffData.salary_structure);
+      } catch (e) {
+        console.error("Invalid salary_structure JSON");
+      }
+    }
+
     if (req.files?.photo?.[0]) {
       staffData.photo = `/staff/profile/${req.files.photo[0].filename}`;
     }
@@ -149,6 +157,14 @@ const updateStaff = async (req, res) => {
       } catch (error) {
         console.error("Error parsing face_encoding:", error);
         return res.status(400).json({ error: "Invalid face encoding data" });
+      }
+    }
+
+    if (staffData.salary_structure && typeof staffData.salary_structure === "string") {
+      try {
+        staffData.salary_structure = JSON.parse(staffData.salary_structure);
+      } catch (e) {
+        console.error("Invalid salary_structure JSON");
       }
     }
 

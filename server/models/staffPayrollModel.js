@@ -24,10 +24,21 @@ const staffPayrollSchema = new Schema(
     },
 
     // ── Salary Inputs ─────────────────────────────────────────────────────────
-    base_salary: {
-      type: Number,
-      required: true,
-      default: 0,
+    // ── Salary Breakdowns ─────────────────────────────────────────────────────
+    earned_breakdown: {
+      basic: { type: Number, default: 0 },
+      hra: { type: Number, default: 0 },
+      conveyance: { type: Number, default: 0 },
+      medical: { type: Number, default: 0 },
+      special: { type: Number, default: 0 },
+      other: { type: Number, default: 0 },
+      total_gross: { type: Number, default: 0 }
+    },
+    deduction_breakdown: {
+      pf: { type: Number, default: 0 },
+      esi: { type: Number, default: 0 },
+      pt: { type: Number, default: 200 },
+      total_statutory: { type: Number, default: 0 }
     },
     working_days_in_month: {
       type: Number, // total working days defined for that month (e.g. 26)
@@ -74,11 +85,7 @@ const staffPayrollSchema = new Schema(
     },
 
     // ── Calculated ────────────────────────────────────────────────────────────
-    // earned_salary = base_salary / working_days_in_month * present_days
-    earned_salary: {
-      type: Number,
-      default: 0,
-    },
+    // net_salary = earned_breakdown.total_gross + overtime_pay + bonus - total_statutory - manual_deductions
     // net_salary = earned_salary + overtime_pay + bonus - deductions
     net_salary: {
       type: Number,

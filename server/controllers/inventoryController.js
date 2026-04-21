@@ -455,12 +455,15 @@ const completeInventoryRequest = async (req, res) => {
     if (typeof remainingItems === "string")
       remainingItems = JSON.parse(remainingItems);
 
+    console.log("items", items);
+
     if (Array.isArray(items)) {
       items = items.map(item => ({
         ...item,
-        currentStock: item.currentStock !== undefined ? Number(item.currentStock) : (Number(item.item_quantity) || 0)
+        currentStock: item.currentStock !== undefined ? Number(item.currentStock) : (Number(item.item_quantity))
       }));
     }
+
 
     const bill_files = (req.files || []).map(
       (file) => `/inventory/bills/${file.filename}`
@@ -476,6 +479,20 @@ const completeInventoryRequest = async (req, res) => {
     } else {
       inventory.items = remainingItems;
       await inventory.save();
+    }
+
+    // Explicitly update all other Completed records to increment the stock of the incoming items
+    if (Array.isArray(items)) {
+      for (const item of items) {
+        const qtyToAdd = Number(item.item_quantity) || 0;
+        if (qtyToAdd > 0) {
+          await Inventory.updateMany(
+            { user_id: inventory.user_id, status: "Completed" },
+            { $inc: { "items.$[elem].currentStock": qtyToAdd } },
+            { arrayFilters: [{ "elem.item_name": item.item_name }] }
+          );
+        }
+      }
     }
 
     const completedItems = {
@@ -684,13 +701,13 @@ const importInventory = async (req, res) => {
     const buffer = Buffer.alloc(8);
     fs.readSync(fd, buffer, 0, 8, 0);
     fs.closeSync(fd);
-    
+
     const hex = buffer.toString('hex').toUpperCase();
     const isXlsx = hex.startsWith('504B0304');
     const isXls = hex.startsWith('D0CF11E0A1B11AE1');
 
     if (!isXlsx && !isXls) {
-       return res.status(400).json({ success: false, message: "Invalid file signature. File is not a genuine Excel document." });
+      return res.status(400).json({ success: false, message: "Invalid file signature. File is not a genuine Excel document." });
     }
 
     const workbook = XLSX.readFile(req.file.path);

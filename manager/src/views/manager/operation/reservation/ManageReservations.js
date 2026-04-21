@@ -10,37 +10,37 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import SlotConfigPanel from './SlotConfigPanel';
 
-const API    = process.env.REACT_APP_API;
-const auth   = () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` });
+const API = process.env.REACT_APP_API;
+const auth = () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` });
 const fmtDate = (str) => new Date(`${str}T00:00:00`).toLocaleDateString('en-IN', { dateStyle: 'medium' });
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
 const STATUS_META = {
-  pending:   { label: 'Pending',   variant: 'warning',   icon: 'clock'        },
-  approved:  { label: 'Approved',  variant: 'success',   icon: 'check-circle' },
-  rejected:  { label: 'Rejected',  variant: 'danger',    icon: 'close-circle' },
-  reserved:  { label: 'Reserved',  variant: 'info',      icon: 'bookmark'     },
-  seated:    { label: 'Seated',    variant: 'primary',   icon: 'user-check'   },
+  pending: { label: 'Pending', variant: 'warning', icon: 'clock' },
+  approved: { label: 'Approved', variant: 'success', icon: 'check-circle' },
+  rejected: { label: 'Rejected', variant: 'danger', icon: 'close-circle' },
+  reserved: { label: 'Reserved', variant: 'info', icon: 'bookmark' },
+  seated: { label: 'Seated', variant: 'primary', icon: 'user-check' },
   completed: { label: 'Completed', variant: 'secondary', icon: 'check-square' },
-  cancelled: { label: 'Cancelled', variant: 'dark',      icon: 'ban'          },
-  no_show:   { label: 'No-Show',   variant: 'danger',    icon: 'user-x'       },
+  cancelled: { label: 'Cancelled', variant: 'dark', icon: 'ban' },
+  no_show: { label: 'No-Show', variant: 'danger', icon: 'user-x' },
 };
 
 const STATUS_COLORS = {
-  pending:  '#ffc107',
+  pending: '#ffc107',
   approved: '#198754',
   reserved: '#0dcaf0',
-  seated:   '#0d6efd',
+  seated: '#0d6efd',
 };
 
 // ─── Approve Modal ─────────────────────────────────────────────────────────
 const ApproveModal = ({ show, reservation, onClose, onSuccess }) => {
-  const [areas, setAreas]               = useState([]);
-  const [selectedTables, setSelected]   = useState([]);
-  const [managerNotes, setNotes]        = useState('');
-  const [loading, setLoading]           = useState(false);
-  const [fetching, setFetching]         = useState(false);
-  const [slotLabel, setSlotLabel]       = useState('');
+  const [areas, setAreas] = useState([]);
+  const [selectedTables, setSelected] = useState([]);
+  const [managerNotes, setNotes] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const [slotLabel, setSlotLabel] = useState('');
 
   useEffect(() => {
     if (!show || !reservation) return;
@@ -60,7 +60,7 @@ const ApproveModal = ({ show, reservation, onClose, onSuccess }) => {
   };
 
   const isSelected = (tbl) => !!selectedTables.find((t) => t.table_id === tbl.table_id.toString());
-  const capacity   = selectedTables.reduce((s, t) => s + t.max_person, 0);
+  const capacity = selectedTables.reduce((s, t) => s + t.max_person, 0);
 
   const handleApprove = async () => {
     if (!selectedTables.length) { toast.warning('Select at least one table.'); return; }
@@ -106,6 +106,7 @@ const ApproveModal = ({ show, reservation, onClose, onSuccess }) => {
                   <Button key={tbl.table_id} size="sm"
                     variant={isSelected(tbl) ? 'primary' : 'outline-secondary'}
                     onClick={() => toggle(area, tbl)}
+                    className='btn-icon'
                   >
                     <CsLineIcons icon="grid-1" className="me-1" />
                     Table {tbl.table_no}
@@ -144,7 +145,7 @@ const ApproveModal = ({ show, reservation, onClose, onSuccess }) => {
 
 // ─── Reject Modal ──────────────────────────────────────────────────────────
 const RejectModal = ({ show, reservation, onClose, onSuccess }) => {
-  const [note, setNote]       = useState('');
+  const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleReject = async () => {
@@ -178,7 +179,7 @@ const RejectModal = ({ show, reservation, onClose, onSuccess }) => {
 
 // ─── Timeline Grid ─────────────────────────────────────────────────────────
 const TimelineGrid = ({ date }) => {
-  const [data, setData]       = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeGroup, setActiveGroup] = useState(null); // selected period tab
 
@@ -200,7 +201,7 @@ const TimelineGrid = ({ date }) => {
   useEffect(() => { fetchTimeline(); }, [fetchTimeline]);
 
   if (loading) return <div className="text-center py-5"><Spinner /> Loading timeline…</div>;
-  if (!data)   return null;
+  if (!data) return null;
 
   const { groups, areas } = data;
 
@@ -224,7 +225,7 @@ const TimelineGrid = ({ date }) => {
             variant={activeGroup === g.group_id ? 'primary' : 'outline-secondary'}
             onClick={() => setActiveGroup(g.group_id)}
             style={activeGroup === g.group_id ? { background: g.color, borderColor: g.color } : {}}
-            className="d-flex align-items-center gap-1"
+            className="btn-icon d-flex align-items-center gap-1"
           >
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: activeGroup === g.group_id ? '#fff' : (g.color || '#6b7280'), display: 'inline-block' }} />
             {g.name}
@@ -343,15 +344,15 @@ const ManageReservations = () => {
   ];
 
   const [reservations, setReservations] = useState([]);
-  const [loading, setLoading]           = useState(true);
+  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('pending');
-  const [dateFilter, setDateFilter]     = useState(todayStr());
-  const [pagination, setPagination]     = useState({ total: 0, page: 1, pages: 1 });
+  const [dateFilter, setDateFilter] = useState(todayStr());
+  const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
   const [timelineDate, setTimelineDate] = useState(todayStr());
 
   const [approveTarget, setApproveTarget] = useState(null);
-  const [rejectTarget, setRejectTarget]   = useState(null);
-  const [activeTab, setActiveTab]         = useState('list');
+  const [rejectTarget, setRejectTarget] = useState(null);
+  const [activeTab, setActiveTab] = useState('list');
 
   const STATUS_FILTERS = ['pending', 'approved', 'reserved', 'seated', 'completed', 'rejected', 'cancelled', 'no_show', 'all'];
 
@@ -384,19 +385,19 @@ const ManageReservations = () => {
   const ActionButtons = ({ r }) => (
     <div className="d-flex gap-1 flex-wrap">
       {r.status === 'pending' && <>
-        <Button size="sm" variant="success" title="Approve" onClick={() => setApproveTarget(r)}><CsLineIcons icon="check" /></Button>
-        <Button size="sm" variant="outline-danger" title="Reject" onClick={() => setRejectTarget(r)}><CsLineIcons icon="close" /></Button>
+        <Button size="sm" variant="success" title="Approve" className='btn-icon' onClick={() => setApproveTarget(r)}><CsLineIcons icon="check" /></Button>
+        <Button size="sm" variant="outline-danger" title="Reject" className='btn-icon' onClick={() => setRejectTarget(r)}><CsLineIcons icon="close" /></Button>
       </>}
       {r.status === 'approved' && <>
-        <Button size="sm" variant="info" title="Activate (Reserve Tables)" onClick={() => quickAction('activate', r._id, 'Tables reserved!')}><CsLineIcons icon="bookmark" /></Button>
-        <Button size="sm" variant="outline-danger" title="Cancel" onClick={() => quickAction('cancel', r._id, 'Cancelled.')}><CsLineIcons icon="ban" /></Button>
+        <Button size="sm" variant="info" title="Activate (Reserve Tables)" className='btn-icon' onClick={() => quickAction('activate', r._id, 'Tables reserved!')}><CsLineIcons icon="bookmark" /></Button>
+        <Button size="sm" variant="outline-danger" title="Cancel" className='btn-icon' onClick={() => quickAction('cancel', r._id, 'Cancelled.')}><CsLineIcons icon="slash" /></Button>
       </>}
       {r.status === 'reserved' && <>
-        <Button size="sm" variant="primary" title="Seat" onClick={() => quickAction('seat', r._id, 'Customer seated!')}><CsLineIcons icon="user-check" /></Button>
-        <Button size="sm" variant="outline-secondary" title="No-Show" onClick={() => quickAction('no-show', r._id, 'Marked no-show.')}><CsLineIcons icon="user-x" /></Button>
+        <Button size="sm" variant="primary" title="Seat" className='btn-icon' onClick={() => quickAction('seat', r._id, 'Customer seated!')}><CsLineIcons icon="check-circle" /></Button>
+        <Button size="sm" variant="outline-secondary" title="No-Show" className='btn-icon' onClick={() => quickAction('no-show', r._id, 'Marked no-show.')}><CsLineIcons icon="close-circle" /></Button>
       </>}
       {r.status === 'seated' && (
-        <Button size="sm" variant="secondary" title="Complete" onClick={() => quickAction('complete', r._id, 'Completed!')}><CsLineIcons icon="check-square" /></Button>
+        <Button size="sm" variant="secondary" title="Complete" className='btn-icon' onClick={() => quickAction('complete', r._id, 'Completed!')}><CsLineIcons icon="check-square" /></Button>
       )}
     </div>
   );
@@ -415,8 +416,8 @@ const ManageReservations = () => {
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
               <Col xs="12" md="4" className="text-end">
-                <Button variant="outline-primary" size="sm" onClick={() => fetchReservations(pagination.page)}>
-                  <CsLineIcons icon="refresh" className="me-1" /> Refresh
+                <Button className='btn-icon' variant="outline-primary" size="sm" onClick={() => fetchReservations(pagination.page)}>
+                  <CsLineIcons icon="refresh-horizontal" className="me-1" /> Refresh
                 </Button>
               </Col>
             </Row>
@@ -430,7 +431,7 @@ const ManageReservations = () => {
                   <CsLineIcons icon="grid-1" className="me-1" />Timeline Grid
                 </Nav.Link>
               </Nav.Item>
-              <Nav.Item><Nav.Link eventKey="config"><CsLineIcons icon="settings" className="me-1" />Slot Settings</Nav.Link></Nav.Item>
+              <Nav.Item><Nav.Link eventKey="config"><CsLineIcons icon="settings-1" className="me-1" />Slot Settings</Nav.Link></Nav.Item>
             </Nav>
 
             <Tab.Content>
@@ -447,7 +448,7 @@ const ManageReservations = () => {
                           <Button key={s} size="sm"
                             variant={statusFilter === s ? 'primary' : 'outline-secondary'}
                             onClick={() => setStatusFilter(s)}
-                            className="position-relative"
+                            className="btn-icon position-relative"
                           >
                             {s === 'all' ? 'All' : STATUS_META[s]?.label || s}
                             {s === 'pending' && pendingCount > 0 && (
@@ -462,7 +463,7 @@ const ManageReservations = () => {
                       <Form.Control type="date" size="sm" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
                     </Col>
                     <Col xs={12} md={2}>
-                      <Button size="sm" variant="outline-secondary" className="w-100" onClick={() => { setDateFilter(''); setStatusFilter('pending'); }}>
+                      <Button size="sm" variant="outline-secondary" className="btn-icon w-100" onClick={() => { setDateFilter(''); setStatusFilter('pending'); }}>
                         Clear
                       </Button>
                     </Col>
@@ -542,9 +543,9 @@ const ManageReservations = () => {
 
                 {pagination.pages > 1 && (
                   <div className="d-flex justify-content-center gap-2 mb-4">
-                    <Button size="sm" variant="outline-secondary" disabled={pagination.page === 1} onClick={() => fetchReservations(pagination.page - 1)}>‹ Prev</Button>
+                    <Button size="sm" variant="outline-secondary" className='btn-icon' disabled={pagination.page === 1} onClick={() => fetchReservations(pagination.page - 1)}>‹ Prev</Button>
                     <span className="align-self-center small text-muted">Page {pagination.page} of {pagination.pages}</span>
-                    <Button size="sm" variant="outline-secondary" disabled={pagination.page === pagination.pages} onClick={() => fetchReservations(pagination.page + 1)}>Next ›</Button>
+                    <Button size="sm" variant="outline-secondary" className='btn-icon' disabled={pagination.page === pagination.pages} onClick={() => fetchReservations(pagination.page + 1)}>Next ›</Button>
                   </div>
                 )}
               </Tab.Pane>
@@ -574,7 +575,7 @@ const ManageReservations = () => {
               {/* ── CONFIG TAB ── */}
               <Tab.Pane eventKey="config">
                 <Card body>
-                  <h6 className="fw-semibold mb-3"><CsLineIcons icon="settings" className="me-2 text-primary" />Slot Configuration</h6>
+                  <h6 className="fw-semibold mb-3"><CsLineIcons icon="settings-1" className="me-2 text-primary" />Slot Configuration</h6>
                   <SlotConfigPanel onSaved={() => fetchReservations(1)} active={activeTab === 'config'} />
                 </Card>
               </Tab.Pane>
@@ -585,7 +586,7 @@ const ManageReservations = () => {
       </Row>
 
       <ApproveModal show={!!approveTarget} reservation={approveTarget} onClose={() => setApproveTarget(null)} onSuccess={() => fetchReservations(pagination.page)} />
-      <RejectModal  show={!!rejectTarget}  reservation={rejectTarget}  onClose={() => setRejectTarget(null)}  onSuccess={() => fetchReservations(pagination.page)} />
+      <RejectModal show={!!rejectTarget} reservation={rejectTarget} onClose={() => setRejectTarget(null)} onSuccess={() => fetchReservations(pagination.page)} />
     </>
   );
 };

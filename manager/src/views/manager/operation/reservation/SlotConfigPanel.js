@@ -4,16 +4,16 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-const API  = process.env.REACT_APP_API;
+const API = process.env.REACT_APP_API;
 const auth = () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` });
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const PRESET_ICONS = {
-    Breakfast:    { bg: '#fef3c7', text: '#92400e' },
-    Brunch:       { bg: '#ecfccb', text: '#365314' },
-    Lunch:        { bg: '#cffafe', text: '#164e63' },
-    Afternoon:    { bg: '#ede9fe', text: '#4c1d95' },
-    Dinner:       { bg: '#fee2e2', text: '#7f1d1d' },
+    Breakfast: { bg: '#fef3c7', text: '#92400e' },
+    Brunch: { bg: '#ecfccb', text: '#365314' },
+    Lunch: { bg: '#cffafe', text: '#164e63' },
+    Afternoon: { bg: '#ede9fe', text: '#4c1d95' },
+    Dinner: { bg: '#fee2e2', text: '#7f1d1d' },
     'Late Night': { bg: '#1e293b', text: '#f1f5f9' },
 };
 
@@ -34,9 +34,9 @@ const calcSlotCount = (open_time, close_time, slot_duration) => {
 
 // ─── GroupFormModal ─────────────────────────────────────────────────────────
 const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
-    const blank = { name: '', open_time: '12:00', close_time: '15:00', slot_duration: 30, max_slots_per_booking: 4, color: '#06b6d4', is_active: true };
-    const [form, setForm]       = useState(blank);
-    const [saving, setSaving]   = useState(false);
+    const blank = { name: '', open_time: '12:00', close_time: '15:00', slot_duration: 30, max_slots_per_booking: 1, color: '#06b6d4', is_active: true };
+    const [form, setForm] = useState(blank);
+    const [saving, setSaving] = useState(false);
     const [presets, setPresets] = useState([]);
     const [presetsLoading, setPresetsLoading] = useState(false);
 
@@ -53,15 +53,15 @@ const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
         setPresetsLoading(true);
         axios.get(`${API}/reservation/config`, { headers: auth() })
             .then((r) => setPresets(r.data.presets || []))
-            .catch(() => {}) // presets are optional, don't block
+            .catch(() => { }) // presets are optional, don't block
             .finally(() => setPresetsLoading(false));
     }, [show]); // eslint-disable-line
 
     const applyPreset = (p) => setForm((f) => ({ ...f, name: p.name, open_time: p.open_time, close_time: p.close_time, slot_duration: p.slot_duration, color: p.color }));
-    const set         = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+    const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
     const previewCount = calcSlotCount(form.open_time, form.close_time, form.slot_duration);
     const isOvernightPreview = (() => {
-        try { const toM = (t) => { const [h,m] = t.split(':').map(Number); return h*60+m; }; return toM(form.close_time) <= toM(form.open_time); } catch { return false; }
+        try { const toM = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; }; return toM(form.close_time) <= toM(form.open_time); } catch { return false; }
     })();
 
     const handleSave = async () => {
@@ -105,8 +105,16 @@ const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
                                     {presets.map((p) => {
                                         const meta = PRESET_ICONS[p.name] || { bg: '#f1f5f9', text: '#334155' };
                                         return (
-                                            <Button key={p.name} size="sm"
-                                                style={{ background: meta.bg, color: meta.text, border: 'none', fontWeight: 500 }}
+                                            <Button
+                                                key={p.name}
+                                                style={{
+                                                    background: meta.bg,
+                                                    border: 'none',
+                                                    fontWeight: 500,
+                                                    color: `${meta.text} !important`,
+                                                    '--bs-btn-color': meta.text,
+                                                    '--bs-btn-hover-color': meta.text,
+                                                }}
                                                 onClick={() => applyPreset(p)}
                                             >
                                                 {colorDot(p.color)}
@@ -157,14 +165,14 @@ const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
                             </Form.Select>
                         </Form.Group>
                     </Col>
-                    <Col>
+                    {/* <Col>
                         <Form.Group>
                             <Form.Label className="fw-semibold small">Max Slots / Booking</Form.Label>
                             <Form.Control type="number" min={1} max={12} value={form.max_slots_per_booking}
                                 onChange={(e) => set('max_slots_per_booking', Number(e.target.value))} />
                             <Form.Text className="text-muted">= max {form.max_slots_per_booking * form.slot_duration} min</Form.Text>
                         </Form.Group>
-                    </Col>
+                    </Col> */}
                 </Row>
 
                 <Row className="g-3 mb-3">
@@ -204,8 +212,8 @@ const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
                 )}
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="outline-secondary" onClick={onClose}>Cancel</Button>
-                <Button variant="primary" onClick={handleSave} disabled={saving}>
+                <Button className='btn-icon' variant="outline-secondary" onClick={onClose}>Cancel</Button>
+                <Button className='btn-icon' variant="primary" onClick={handleSave} disabled={saving}>
                     {saving ? 'Saving…' : <><CsLineIcons icon="save" className="me-1" />{isEdit ? 'Update' : 'Add Group'}</>}
                 </Button>
             </Modal.Footer>
@@ -218,14 +226,14 @@ const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
 // This solves the blank tab issue caused by React-Bootstrap not mounting
 // Tab.Pane content until first click, combined with useEffect firing on mount.
 const SlotConfigPanel = ({ onSaved, active }) => {
-    const [config, setConfig]     = useState(null);
-    const [loading, setLoading]   = useState(false);
-    const [error, setError]       = useState(null);
+    const [config, setConfig] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [openDays, setOpenDays] = useState([0, 1, 2, 3, 4, 5, 6]);
     const [savingDays, setSavingDays] = useState(false);
     const [hasFetched, setHasFetched] = useState(false);
 
-    const [showModal, setShowModal]   = useState(false);
+    const [showModal, setShowModal] = useState(false);
     const [editTarget, setEditTarget] = useState(null);
 
     const fetchConfig = () => {
@@ -252,7 +260,7 @@ const SlotConfigPanel = ({ onSaved, active }) => {
         }
     }, [active]); // eslint-disable-line
 
-    const toggleDay   = (d) => setOpenDays((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort());
+    const toggleDay = (d) => setOpenDays((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort());
 
     const handleSaveDays = async () => {
         setSavingDays(true);
@@ -295,9 +303,9 @@ const SlotConfigPanel = ({ onSaved, active }) => {
     if (error) {
         return (
             <Alert variant="danger" className="d-flex align-items-center gap-2">
-                <CsLineIcons icon="warning" />
+                <CsLineIcons icon="warning-hexagon" />
                 {error}
-                <Button size="sm" variant="outline-danger" className="ms-auto" onClick={fetchConfig}>
+                <Button size="sm" variant="outline-danger" className="btn-icon ms-auto" onClick={fetchConfig}>
                     Retry
                 </Button>
             </Alert>
@@ -319,7 +327,7 @@ const SlotConfigPanel = ({ onSaved, active }) => {
                         Define your Lunch, Dinner, Brunch sessions. Each generates its own bookable time slots.
                     </small>
                 </div>
-                <Button variant="primary" size="sm" onClick={() => { setEditTarget(null); setShowModal(true); }}>
+                <Button variant="primary" className='btn-icon' size="sm" onClick={() => { setEditTarget(null); setShowModal(true); }}>
                     <CsLineIcons icon="plus" className="me-1" /> Add Period
                 </Button>
             </div>
@@ -331,7 +339,7 @@ const SlotConfigPanel = ({ onSaved, active }) => {
                     <p className="text-muted small mb-3">
                         Add Lunch, Dinner or any custom period to start accepting reservations.
                     </p>
-                    <Button variant="primary" size="sm" onClick={() => { setEditTarget(null); setShowModal(true); }}>
+                    <Button variant="primary" className='btn-icon' size="sm" onClick={() => { setEditTarget(null); setShowModal(true); }}>
                         <CsLineIcons icon="plus" className="me-1" /> Add Your First Period
                     </Button>
                 </Alert>
@@ -372,18 +380,18 @@ const SlotConfigPanel = ({ onSaved, active }) => {
                                                 <CsLineIcons icon="grid-1" size={12} className="me-1" />
                                                 {slotCount} slots · {group.slot_duration} min each
                                             </small>
-                                            <small className="text-muted">
-                                                <CsLineIcons icon="layers" size={12} className="me-1" />
+                                            {/* <small className="text-muted">
+                                                <CsLineIcons icon="grid-1" size={12} className="me-1" />
                                                 Max {group.max_slots_per_booking} slots / booking ({group.max_slots_per_booking * group.slot_duration} min)
-                                            </small>
+                                            </small> */}
                                         </div>
 
                                         <div className="d-flex gap-2">
-                                            <Button size="sm" variant="outline-primary" className="flex-grow-1"
+                                            <Button size="sm" variant="outline-primary" className="btn-icon flex-grow-1"
                                                 onClick={() => { setEditTarget(group); setShowModal(true); }}>
                                                 <CsLineIcons icon="edit" size={13} className="me-1" /> Edit
                                             </Button>
-                                            <Button size="sm" variant="outline-danger"
+                                            <Button size="sm" variant="outline-danger" className='btn-icon'
                                                 onClick={() => handleDelete(group._id, group.name)}>
                                                 <CsLineIcons icon="bin" size={13} />
                                             </Button>
@@ -404,7 +412,7 @@ const SlotConfigPanel = ({ onSaved, active }) => {
                 </small>
                 <div className="d-flex flex-wrap gap-2 mb-3">
                     {DAYS.map((day, i) => (
-                        <Button key={i} size="sm"
+                        <Button key={i} size="sm" className='btn-icon'
                             variant={openDays.includes(i) ? 'primary' : 'outline-secondary'}
                             onClick={() => toggleDay(i)}
                             style={{ minWidth: 52 }}
@@ -413,7 +421,7 @@ const SlotConfigPanel = ({ onSaved, active }) => {
                         </Button>
                     ))}
                 </div>
-                <Button variant="primary" size="sm" onClick={handleSaveDays} disabled={savingDays}>
+                <Button variant="primary" className='btn-icon' size="sm" onClick={handleSaveDays} disabled={savingDays}>
                     {savingDays ? 'Saving…' : <><CsLineIcons icon="save" className="me-1" />Save Open Days</>}
                 </Button>
             </Card>

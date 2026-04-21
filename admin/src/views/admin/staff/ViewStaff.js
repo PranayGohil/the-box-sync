@@ -82,9 +82,17 @@ const ViewStaff = () => {
           <Button variant="outline-primary" onClick={() => history.push('/staff/add')} className="me-2" disabled={loading}>
             <CsLineIcons icon="plus" className="me-2" /> Add Staff
           </Button>
-          <Button variant="outline-primary" onClick={() => history.push('/staff/attendance')} disabled={loading}>
+          <Button variant="outline-primary" onClick={() => history.push('/staff/attendance')} className="me-2" disabled={loading}>
             <CsLineIcons icon="calendar" className="me-2" />
             Manage Attendance
+          </Button>
+          <Button
+            variant="outline-primary"
+            onClick={() => history.push('/staff/payroll')}
+            disabled={loading}
+          >
+            <CsLineIcons icon="wallet" className="me-2" />
+            Manage Payroll
           </Button>
         </Col>
       </Row>

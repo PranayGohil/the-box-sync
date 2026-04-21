@@ -1,14 +1,4 @@
-/**
- * QRforReservation.js
- *
- * Manager-facing component — lives in the same area as QRforFeedback.
- * Generates / displays the reservation QR code that points to the
- * public landing page: /reservation/:token
- *
- * Uses restaurant_token (one token for all public-facing pages).
- * If the user already has a feedbackToken, you can reuse it as
- * restaurant_token by running the migration query in userModelPatch.js.
- */
+
 import React, { useState, useRef, useContext } from 'react';
 import { Row, Col, Card, Button, Alert, Spinner, Badge } from 'react-bootstrap';
 import { QRCodeSVG } from 'qrcode.react';
@@ -30,7 +20,7 @@ const QRforReservation = () => {
     const [generating, setGenerating] = useState(false);
     const [copying, setCopying] = useState(false);
 
-    const reservationUrl = token ? `${LANDING_BASE}/reservation/${token}` : null;
+    const reservationUrl = token ? `${LANDING_BASE}/reservation.html?token=${token}` : null;
 
     // ── Generate / Regenerate token ─────────────────────────────────────────
     const handleGenerate = async () => {
@@ -124,7 +114,7 @@ const QRforReservation = () => {
                                     Generate a unique QR code that customers scan to book a table
                                     directly from your restaurant page.
                                 </p>
-                                <Button variant="primary" onClick={handleGenerate} disabled={generating}>
+                                <Button className='btn-icon' variant="primary" onClick={handleGenerate} disabled={generating}>
                                     {generating
                                         ? <><Spinner size="sm" className="me-2" />Generating…</>
                                         : <><CsLineIcons icon="lightning" className="me-2" />Generate QR Code</>
@@ -153,37 +143,34 @@ const QRforReservation = () => {
 
                                 {/* Actions */}
                                 <div className="d-flex justify-content-center flex-wrap gap-2 mb-4">
-                                    <Button variant="outline-primary" onClick={handlePrint}>
+                                    <Button className='btn-icon' variant="outline-primary" onClick={handlePrint}>
                                         <CsLineIcons icon="print" className="me-2" />
                                         Print QR Code
                                     </Button>
 
-                                    <Button variant="outline-secondary" onClick={handleCopy} disabled={copying}>
+                                    <Button className='btn-icon' variant="outline-secondary" onClick={handleCopy} disabled={copying}>
                                         {copying
                                             ? <><Spinner size="sm" className="me-2" />Copying…</>
-                                            : <><CsLineIcons icon="copy" className="me-2" />Copy URL</>
+                                            : <><CsLineIcons icon="duplicate" className="me-2" />Copy URL</>
                                         }
                                     </Button>
 
-                                    <Button variant="outline-danger" onClick={handleGenerate} disabled={generating}>
+                                    <Button className='btn-icon' variant="outline-danger" onClick={handleGenerate} disabled={generating}>
                                         {generating
                                             ? <><Spinner size="sm" className="me-2" />Regenerating…</>
-                                            : <><CsLineIcons icon="refresh" className="me-2" />Regenerate</>
+                                            : <><CsLineIcons icon="refresh-horizontal" className="me-2" />Regenerate</>
                                         }
                                     </Button>
                                 </div>
 
-                                <Alert variant="warning" className="text-start mx-auto" style={{ maxWidth: 480 }}>
-                                    <CsLineIcons icon="warning" className="me-2" />
-                                    <strong>Regenerating</strong> will invalidate this QR code and URL.
-                                    Update or reprint any physical QR codes after regenerating.
-                                </Alert>
-
-                                {/* Tip: same token works for feedback too */}
-                                <Alert variant="light" className="border text-start mx-auto mt-2" style={{ maxWidth: 480 }}>
-                                    <CsLineIcons icon="info-hexagon" className="me-2 text-primary" />
-                                    <strong>One token, multiple uses.</strong> The same token also powers your
-                                    Feedback QR at <code>/feedback/{token}</code>. No need for separate tokens.
+                                <Alert variant="warning" className="text-start mx-auto d-flex" style={{ maxWidth: 480 }}>
+                                    <div className="d-flex align-items-center">
+                                        <CsLineIcons icon="warning-hexagon" className="me-2" />
+                                    </div>
+                                    <small>
+                                        <strong>Regenerating</strong> will invalidate this QR code and URL.
+                                        Update or reprint any physical QR codes after regenerating.
+                                    </small>
                                 </Alert>
                             </>
                         )}
