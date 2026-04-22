@@ -770,16 +770,18 @@ const getCurrentStock = async (req, res) => {
   try {
     const userId = req.user._id || req.user;
     const stockData = await Inventory.aggregate([
-      { $match: { user_id: userId, status: "Completed" } },
+      { $match: { user_id: String(userId), status: "Completed" } },
       { $unwind: "$items" },
       {
         $group: {
           _id: "$items.item_name",
           totalStock: { $sum: "$items.currentStock" },
-          unit: { $first: "$items.unit" }
-        }
+          unit: { $first: "$items.unit" },
+          low_stock_threshold: { $max: "$items.low_stock_threshold" },
+          tracking_level: { $first: "$items.tracking_level" },
+        },
       },
-      { $sort: { "_id": 1 } }
+      { $sort: { _id: 1 } },
     ]);
     res.json({ success: true, data: stockData });
   } catch (error) {

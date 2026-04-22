@@ -27,6 +27,10 @@ import EditInventory from './inventory/EditInventory';
 import InventoryHistory from './inventory/InventoryHistory';
 import InventoryDetails from './inventory/InventoryDetails';
 import StockManagement from './inventory/StockManagement';
+import DailyOpeningStock from './inventory/DailyOpeningStock';
+import DailyClosingStock from './inventory/DailyClosingStock';
+import WastageLog from './inventory/WastageLog';
+import InventoryReport from './inventory/InventoryReport';
 
 import Feedback from './feedback/Feedback';
 import QRforFeedback from './feedback/QRforFeedback';
@@ -128,6 +132,22 @@ const NavContent = () => {
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Stock Management</span>
           </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/daily-opening-stock" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Opening Stock</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/daily-closing-stock" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Closing Stock</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/wastage-log" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Wastage Log</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/inventory-report" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Inventory Report</span>
+          </Nav.Link>
         </div>
       </div>
 
@@ -191,6 +211,10 @@ const mobileNavItems = [
       { to: '/operations/inventory-history', label: 'Inventory History' },
       { to: '/operations/add-inventory', label: 'Add Inventory' },
       { to: '/operations/stock-management', label: 'Stock Management' },
+      { to: '/operations/daily-opening-stock', label: '🌅 Opening Stock' },
+      { to: '/operations/daily-closing-stock', label: '🌙 Closing Stock' },
+      { to: '/operations/wastage-log', label: '🗑 Wastage Log' },
+      { to: '/operations/inventory-report', label: '📊 Inventory Report' },
     ],
   },
   {
@@ -280,6 +304,10 @@ const Operations = () => {
             <Route path="/operations/edit-inventory/:id" component={EditInventory} />
             <Route path="/operations/inventory-details/:id" component={InventoryDetails} />
             <Route path="/operations/stock-management" component={StockManagement} />
+            <Route path="/operations/daily-opening-stock" component={DailyOpeningStock} />
+            <Route path="/operations/daily-closing-stock" component={DailyClosingStock} />
+            <Route path="/operations/wastage-log" component={WastageLog} />
+            <Route path="/operations/inventory-report" component={InventoryReport} />
 
             <Route path="/operations/feedback" component={Feedback} />
             <Route path="/operations/qr-for-feedback" component={QRforFeedback} />

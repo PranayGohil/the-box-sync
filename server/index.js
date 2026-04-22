@@ -35,6 +35,7 @@ const webCustomerRouter = require("./router/webCustomerRoutes.js");
 const otpRouter = require("./router/otpRoutes.js");
 const waiterRouter = require("./router/waiterRoutes.js");
 const reservationRouter = require("./router/reservationRoutes.js");
+const dailyStockRouter = require("./router/dailyStockRoutes.js");
 
 const PORT = process.env.PORT;
 // const ORIGINS = process.env.ORIGINS ? process.env.ORIGINS.split(",") : [];
@@ -121,6 +122,7 @@ app.use("/api/web-customer", webCustomerRouter);
 app.use("/api/otp", otpRouter)
 app.use("/api/waiter", waiterRouter);
 app.use("/api/reservation", reservationRouter);
+app.use("/api/daily-stock", dailyStockRouter);
 
 connectDB().then(() => {
   server.listen(PORT, () => {

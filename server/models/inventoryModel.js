@@ -58,6 +58,15 @@ const inventory = new Schema({
       currentStock: {
         type: Number,
       },
+      low_stock_threshold: {
+        type: Number,
+        default: 0, // 0 = no alert set
+      },
+      tracking_level: {
+        type: String,
+        enum: ["daily_critical", "weekly", "monthly", "auto"],
+        default: "auto",
+      },
     },
   ],
   status: {
