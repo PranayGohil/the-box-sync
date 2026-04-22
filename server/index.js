@@ -1,5 +1,6 @@
 require("dotenv").config();
 require('./cron/reservationCron');
+require('./cron/dailyStockCron');
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
