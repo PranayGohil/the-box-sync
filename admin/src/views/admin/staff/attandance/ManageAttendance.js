@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Row, Col, Card, Button, Badge, Alert, Modal, Spinner } from 'react-bootstrap';
+import { Row, Col, Card, Button, Badge, Alert, Modal, Spinner, Form } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -11,6 +11,7 @@ import ControlsSearch from 'components/table/ControlsSearch';
 import Table from 'components/table/Table';
 import TablePagination from 'components/table/TablePagination';
 import { toast } from 'react-toastify';
+import { getLeavePolicy } from 'api/payrollConfig';
 
 export default function ManageAttendance() {
     const title = 'Manage Attendance';
@@ -27,9 +28,14 @@ export default function ManageAttendance() {
             checkin: false,
             checkout: false,
             absent: false,
+            leave: false,
         },
     });
     const [staffList, setStaffList] = useState([]);
+    const [leaveTypes, setLeaveTypes] = useState([]);
+    const [selectedLeaveType, setSelectedLeaveType] = useState('');
+    const [isHalfDay, setIsHalfDay] = useState(false);
+    
     const [showActionModal, setShowActionModal] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState(null);
     const [actionType, setActionType] = useState('');
@@ -60,8 +66,14 @@ export default function ManageAttendance() {
         try {
             setLoading((prev) => ({ ...prev, initial: true }));
             setError('');
-            const response = await axios.get(`${process.env.REACT_APP_API}/attendance/today`, authHeader());
-            setStaffList(response.data.data);
+            const [attRes, polRes] = await Promise.all([
+                axios.get(`${process.env.REACT_APP_API}/attendance/today`, authHeader()),
+                getLeavePolicy()
+            ]);
+            setStaffList(attRes.data.data);
+            if (polRes.success && polRes.data) {
+                setLeaveTypes(polRes.data.leave_types || []);
+            }
         } catch (err) {
             console.error('Error fetching attendance:', err);
             setError('Failed to load staff attendance data. Please try again.');
@@ -131,9 +143,32 @@ export default function ManageAttendance() {
         }
     };
 
+    const handleLeave = async (staffId, staffName) => {
+        setLoading((prev) => ({ ...prev, actions: { ...prev.actions, leave: true } }));
+        try {
+            await axios.post(
+                `${process.env.REACT_APP_API}/attendance/mark-leave`,
+                { staff_id: staffId, date: getTodayDate(), leave_type_id: selectedLeaveType, is_half_day: isHalfDay },
+                authHeader()
+            );
+            toast.success(`${staffName} marked on leave!`);
+            fetchTodayAttendance();
+        } catch (err) {
+            console.error('Error marking Leave:', err);
+            toast.error(err.response?.data?.message || 'Failed to mark leave.');
+        } finally {
+            setLoading((prev) => ({ ...prev, actions: { ...prev.actions, leave: false } }));
+        }
+    };
+
     const handleAction = (staff, type) => {
         setSelectedStaff(staff);
         setActionType(type);
+        // Reset leave form if opening leave modal
+        if (type === 'leave') {
+            setSelectedLeaveType(leaveTypes.length > 0 ? leaveTypes[0].leave_type_id : '');
+            setIsHalfDay(false);
+        }
         setShowActionModal(true);
     };
 
@@ -143,6 +178,7 @@ export default function ManageAttendance() {
         if (actionType === 'checkin') handleCheckIn(selectedStaff._id, fullName);
         if (actionType === 'checkout') handleCheckOut(selectedStaff._id, fullName);
         if (actionType === 'absent') handleAbsent(selectedStaff._id, fullName);
+        if (actionType === 'leave') handleLeave(selectedStaff._id, fullName);
         setShowActionModal(false);
     };
 
@@ -184,6 +220,14 @@ export default function ManageAttendance() {
                             status = 'Absent';
                             statusVariant = 'danger';
                             statusIcon = 'user-block';
+                        } else if (todayAttendance.status === 'leave') {
+                            status = `Leave (${todayAttendance.leave_type_id || 'Other'})`;
+                            statusVariant = 'info';
+                            statusIcon = 'calendar';
+                        } else if (todayAttendance.status === 'half_day') {
+                            status = `Half Day (${todayAttendance.leave_type_id || 'Other'})`;
+                            statusVariant = 'warning';
+                            statusIcon = 'clock';
                         } else if (todayAttendance.in_time && todayAttendance.out_time) {
                             status = 'Completed';
                             statusVariant = 'primary';
@@ -247,6 +291,16 @@ export default function ManageAttendance() {
                                         disabled={actionsDisabled}
                                     >
                                         <i className="bi-person-x-fill" />
+                                    </Button>
+                                    <Button
+                                        variant="outline-info"
+                                        size="sm"
+                                        className="btn-icon btn-icon-only me-1"
+                                        onClick={() => handleAction(row.original, 'leave')}
+                                        title="Mark Leave"
+                                        disabled={actionsDisabled}
+                                    >
+                                        <CsLineIcons icon="calendar" />
                                     </Button>
                                 </>
                             ) : todayAttendance.in_time && !todayAttendance.out_time ? (
@@ -455,6 +509,7 @@ export default function ManageAttendance() {
                         {actionType === 'checkin' && 'Confirm Check-In'}
                         {actionType === 'checkout' && 'Confirm Check-Out'}
                         {actionType === 'absent' && 'Confirm Absent'}
+                        {actionType === 'leave' && 'Mark Leave'}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -462,10 +517,10 @@ export default function ManageAttendance() {
                         <div>
                             <p>
                                 Are you sure you want to{' '}
-                                {actionType === 'checkin' ? 'check-in' : actionType === 'checkout' ? 'check-out' : 'mark as absent'}{' '}
+                                {actionType === 'checkin' ? 'check-in' : actionType === 'checkout' ? 'check-out' : actionType === 'leave' ? 'mark on leave' : 'mark as absent'}{' '}
                                 <strong>{selectedStaff.f_name} {selectedStaff.l_name}</strong>?
                             </p>
-                            {actionType !== 'absent' && (
+                            {actionType !== 'absent' && actionType !== 'leave' && (
                                 <p className="text-muted">
                                     <CsLineIcons icon="clock" className="me-1" />
                                     Time: {getCurrentTime()}
@@ -477,6 +532,33 @@ export default function ManageAttendance() {
                                     This will mark the staff as absent for today.
                                 </Alert>
                             )}
+                            {actionType === 'leave' && (
+                                <div className="mt-3">
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Leave Type</Form.Label>
+                                        <Form.Select
+                                            value={selectedLeaveType}
+                                            onChange={(e) => setSelectedLeaveType(e.target.value)}
+                                        >
+                                            {leaveTypes.map((lt) => (
+                                                <option key={lt.leave_type_id} value={lt.leave_type_id}>
+                                                    {lt.name} ({lt.short_code})
+                                                </option>
+                                            ))}
+                                            {leaveTypes.length === 0 && <option value="other">Other Leave</option>}
+                                        </Form.Select>
+                                    </Form.Group>
+                                    <Form.Group>
+                                        <Form.Check
+                                            type="switch"
+                                            id="half-day-switch"
+                                            label="Half Day Leave"
+                                            checked={isHalfDay}
+                                            onChange={(e) => setIsHalfDay(e.target.checked)}
+                                        />
+                                    </Form.Group>
+                                </div>
+                            )}
                         </div>
                     )}
                 </Modal.Body>
@@ -484,17 +566,17 @@ export default function ManageAttendance() {
                     <Button
                         variant="secondary"
                         onClick={() => setShowActionModal(false)}
-                        disabled={loading.actions.checkin || loading.actions.checkout || loading.actions.absent}
+                        disabled={loading.actions.checkin || loading.actions.checkout || loading.actions.absent || loading.actions.leave}
                     >
                         Cancel
                     </Button>
                     <Button
-                        variant={actionType === 'checkin' ? 'primary' : actionType === 'checkout' ? 'secondary' : 'danger'}
+                        variant={actionType === 'checkin' ? 'primary' : actionType === 'checkout' ? 'secondary' : actionType === 'leave' ? 'info' : 'danger'}
                         onClick={confirmAction}
-                        disabled={loading.actions.checkin || loading.actions.checkout || loading.actions.absent}
+                        disabled={loading.actions.checkin || loading.actions.checkout || loading.actions.absent || loading.actions.leave}
                         style={{ minWidth: '100px' }}
                     >
-                        {loading.actions.checkin || loading.actions.checkout || loading.actions.absent ? (
+                        {loading.actions.checkin || loading.actions.checkout || loading.actions.absent || loading.actions.leave ? (
                             <>
                                 <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
                                 Processing...
@@ -507,7 +589,7 @@ export default function ManageAttendance() {
             </Modal>
 
             {/* Action processing overlay */}
-            {(loading.actions.checkin || loading.actions.checkout || loading.actions.absent) && (
+            {(loading.actions.checkin || loading.actions.checkout || loading.actions.absent || loading.actions.leave) && (
                 <div
                     className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.7)', zIndex: 9999, backdropFilter: 'blur(2px)' }}
@@ -519,6 +601,7 @@ export default function ManageAttendance() {
                                 {loading.actions.checkin && 'Checking In...'}
                                 {loading.actions.checkout && 'Checking Out...'}
                                 {loading.actions.absent && 'Marking Absent...'}
+                                {loading.actions.leave && 'Marking Leave...'}
                             </h5>
                             <small className="text-muted">Please wait a moment</small>
                         </Card.Body>

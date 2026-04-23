@@ -86,6 +86,15 @@ const addStaff = new Schema({
   user_id: {
     type: String,
   },
+  // ── Compliance & Bank Details ──────────────────────────────────────────────
+  bank_account: {
+    account_number: { type: String, default: "" },
+    bank_name: { type: String, default: "" },
+    ifsc_code: { type: String, default: "" },
+    branch: { type: String, default: "" }
+  },
+  uan_number: { type: String, default: "" },    // EPF Universal Account Number
+  esi_ip_number: { type: String, default: "" }, // ESI Insurance Number
 });
 
 // Indexes

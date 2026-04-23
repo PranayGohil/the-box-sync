@@ -47,6 +47,14 @@ const staffPayrollSchema = new Schema(
     },
 
     // ── Attendance Derived ────────────────────────────────────────────────────
+    leave_summary: {
+      paid_leave_days: { type: Number, default: 0 },
+      lwp_days: { type: Number, default: 0 },
+      holiday_days: { type: Number, default: 0 },
+      week_off_days: { type: Number, default: 0 },
+      comp_off_days: { type: Number, default: 0 },
+      total_paid_days: { type: Number, default: 0 } // present + half_day + paid_leave + holidays + week_offs + comp_offs
+    },
     present_days: {
       type: Number,
       default: 0,
@@ -54,6 +62,20 @@ const staffPayrollSchema = new Schema(
     absent_days: {
       type: Number,
       default: 0,
+    },
+
+    // ── Deductions Extended ───────────────────────────────────────────────────
+    advance_deduction: {
+      type: Number,
+      default: 0
+    },
+    lwp_deduction: {
+      type: Number,
+      default: 0
+    },
+    tds: {
+      type: Number,
+      default: 0
     },
 
     // ── Overtime ──────────────────────────────────────────────────────────────

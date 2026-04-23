@@ -21,7 +21,7 @@ const getConfig = async (req, res) => {
 const updateConfig = async (req, res) => {
   try {
     const user_id = req.user;
-    const { active_earnings, statutory_deductions } = req.body;
+    const { active_earnings, statutory_config, org_rules } = req.body;
 
     let config = await PayrollConfig.findOne({ user_id });
 
@@ -30,14 +30,23 @@ const updateConfig = async (req, res) => {
     }
 
     if (active_earnings) config.active_earnings = active_earnings;
-    if (statutory_deductions) {
-      if (statutory_deductions.pf_percentage !== undefined) config.statutory_deductions.pf_percentage = statutory_deductions.pf_percentage;
-      if (statutory_deductions.esi_percentage !== undefined) config.statutory_deductions.esi_percentage = statutory_deductions.esi_percentage;
-      if (statutory_deductions.pt_amount !== undefined) config.statutory_deductions.pt_amount = statutory_deductions.pt_amount;
+    
+    if (statutory_config) {
+        config.statutory_config = {
+            ...config.statutory_config,
+            ...statutory_config
+        };
+    }
+    
+    if (org_rules) {
+        config.org_rules = {
+            ...config.org_rules,
+            ...org_rules
+        };
     }
 
     await config.save();
-    res.status(200).json({ success: true, data: config, message: "Config upated successfully" });
+    res.status(200).json({ success: true, data: config, message: "Config updated successfully" });
   } catch (error) {
     console.error("Error updating payroll config:", error);
     res.status(500).json({ success: false, message: "Server Error" });

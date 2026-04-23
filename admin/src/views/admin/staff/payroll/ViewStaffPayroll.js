@@ -167,7 +167,7 @@ export default function ViewStaffPayroll() {
         }
     };
 
-    // ── Export: PDF ──────────────────────────────────────────────────────────────
+    // ── Export: PDF (Report) ─────────────────────────────────────────────────────
     const exportToPDF = async () => {
         if (!staffData) return;
         setExporting(true); setExportProgress(10); setExportType('PDF');
@@ -250,6 +250,119 @@ export default function ViewStaffPayroll() {
             showSuccessToast('Error exporting PDF.');
         } finally {
             setTimeout(() => { setExporting(false); setExportProgress(0); setExportType(''); }, 500);
+        }
+    };
+
+    // ── Generate Salary Slip PDF ─────────────────────────────────────────────────
+    const downloadSalarySlip = (p) => {
+        try {
+            const doc = new jsPDF();
+            
+            // Header
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text('SALARY SLIP', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text(`For the month of ${MONTH_NAMES[p.month]} ${p.year}`, 105, 26, { align: 'center' });
+
+            // Employee Details Box
+            doc.rect(14, 32, 182, 30);
+            
+            doc.setFont(undefined, 'bold');
+            doc.text('Employee Name:', 18, 40);
+            doc.setFont(undefined, 'normal');
+            doc.text(`${staffData.f_name} ${staffData.l_name}`, 55, 40);
+
+            doc.setFont(undefined, 'bold');
+            doc.text('Employee ID:', 110, 40);
+            doc.setFont(undefined, 'normal');
+            doc.text(`${staffData.staff_id}`, 145, 40);
+
+            doc.setFont(undefined, 'bold');
+            doc.text('Designation:', 18, 48);
+            doc.setFont(undefined, 'normal');
+            doc.text(`${staffData.position}`, 55, 48);
+
+            doc.setFont(undefined, 'bold');
+            doc.text('Date of Joining:', 110, 48);
+            doc.setFont(undefined, 'normal');
+            doc.text(`${staffData.joining_date ? format(new Date(staffData.joining_date), 'dd-MMM-yyyy') : '-'}`, 145, 48);
+
+            doc.setFont(undefined, 'bold');
+            doc.text('UAN Number:', 18, 56);
+            doc.setFont(undefined, 'normal');
+            doc.text(`${staffData.uan_number || '-'}`, 55, 56);
+
+            doc.setFont(undefined, 'bold');
+            doc.text('Bank A/C No:', 110, 56);
+            doc.setFont(undefined, 'normal');
+            doc.text(`${staffData.bank_account?.account_number || '-'}`, 145, 56);
+
+            // Attendance summary
+            doc.rect(14, 66, 182, 12);
+            doc.setFontSize(9);
+            doc.text(`Total Days: ${p.working_days_in_month}   |   Paid Days: ${p.leave_summary?.total_paid_days || p.present_days}   |   LWP: ${p.leave_summary?.lwp_days || p.absent_days}`, 105, 74, { align: 'center' });
+
+            // Earnings & Deductions Tables side by side
+            const totalEarnings = (p.earned_breakdown?.total_gross || p.earned_salary || 0) + (p.overtime_pay || 0) + (p.bonus || 0);
+            const statDed = p.deduction_breakdown?.total_statutory || 0;
+            const manDed = p.deductions || 0;
+            const advDed = p.advance_deduction || 0;
+            const lwpDed = p.lwp_deduction || 0;
+            const totalDeductions = statDed + manDed + advDed + lwpDed;
+
+            autoTable(doc, {
+                startY: 85,
+                head: [['Earnings', 'Amount (Rs.)', 'Deductions', 'Amount (Rs.)']],
+                body: [
+                    ['Basic', (p.earned_breakdown?.basic || 0).toFixed(2), 'Provident Fund (PF)', (p.deduction_breakdown?.pf || 0).toFixed(2)],
+                    ['HRA', (p.earned_breakdown?.hra || 0).toFixed(2), 'ESI', (p.deduction_breakdown?.esi || 0).toFixed(2)],
+                    ['Conveyance', (p.earned_breakdown?.conveyance || 0).toFixed(2), 'Professional Tax (PT)', (p.deduction_breakdown?.pt || 0).toFixed(2)],
+                    ['Medical Allowance', (p.earned_breakdown?.medical || 0).toFixed(2), 'LWP Deduction', lwpDed.toFixed(2)],
+                    ['Special Allowance', (p.earned_breakdown?.special || 0).toFixed(2), 'Advance / Loan EMI', advDed.toFixed(2)],
+                    ['Overtime Pay', (p.overtime_pay || 0).toFixed(2), 'Other Deductions', manDed.toFixed(2)],
+                    ['Bonus', (p.bonus || 0).toFixed(2), '', ''],
+                    ['Other Earnings', (p.earned_breakdown?.other || 0).toFixed(2), '', '']
+                ],
+                theme: 'grid',
+                headStyles: { fillColor: [68, 114, 196], textColor: 255 },
+                columnStyles: {
+                    0: { cellWidth: 50 },
+                    1: { cellWidth: 41, halign: 'right' },
+                    2: { cellWidth: 50 },
+                    3: { cellWidth: 41, halign: 'right' }
+                }
+            });
+
+            // Totals Row
+            const finalY = doc.lastAutoTable.finalY;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(14, finalY, 182, 10, 'F');
+            doc.rect(14, finalY, 182, 10, 'S'); // border
+            doc.setFont(undefined, 'bold');
+            doc.text('Gross Earnings', 18, finalY + 6.5);
+            doc.text(`${totalEarnings.toFixed(2)}`, 95, finalY + 6.5, { align: 'right' });
+            
+            doc.text('Total Deductions', 109, finalY + 6.5);
+            doc.text(`${totalDeductions.toFixed(2)}`, 186, finalY + 6.5, { align: 'right' });
+
+            // Net Pay Box
+            doc.rect(14, finalY + 14, 182, 12, 'S');
+            doc.setFontSize(12);
+            doc.text('Net Payable:', 18, finalY + 22);
+            doc.text(`Rs. ${p.net_salary.toFixed(2)}`, 186, finalY + 22, { align: 'right' });
+
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.text('** This is a computer-generated document and does not require a signature.', 105, finalY + 40, { align: 'center' });
+
+            doc.save(`${staffData.staff_id}_SalarySlip_${MONTH_NAMES[p.month]}_${p.year}.pdf`);
+            showSuccessToast('Salary Slip Downloaded!');
+        } catch(e) {
+            console.error(e);
+            showSuccessToast('Error generating Salary Slip.');
         }
     };
 
@@ -539,14 +652,28 @@ export default function ViewStaffPayroll() {
                                                         : <Badge bg="warning"><CsLineIcons icon="clock" size={12} className="me-1" />Unpaid</Badge>}
                                                 </td>
                                                 <td className="text-center">
-                                                    <Button
-                                                        variant="outline-primary"
-                                                        size="sm"
-                                                        className='btn-icon'
-                                                        onClick={() => { setSelectedPayroll(p); setShowDetailModal(true); }}
-                                                    >
-                                                        <CsLineIcons icon="eye" />
-                                                    </Button>
+                                                    <div className="d-flex justify-content-center gap-1">
+                                                        <Button
+                                                            variant="outline-primary"
+                                                            size="sm"
+                                                            className='btn-icon'
+                                                            onClick={() => { setSelectedPayroll(p); setShowDetailModal(true); }}
+                                                            title="View Details"
+                                                        >
+                                                            <CsLineIcons icon="eye" />
+                                                        </Button>
+                                                        {p.status === 'paid' && (
+                                                            <Button
+                                                                variant="outline-success"
+                                                                size="sm"
+                                                                className='btn-icon'
+                                                                onClick={() => downloadSalarySlip(p)}
+                                                                title="Download Salary Slip"
+                                                            >
+                                                                <CsLineIcons icon="download" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}

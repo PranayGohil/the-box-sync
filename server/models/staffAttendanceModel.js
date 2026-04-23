@@ -20,7 +20,12 @@ const staffAttendanceSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["present", "absent"],
+      enum: ["present", "absent", "half_day", "leave", "holiday", "week_off", "comp_off"],
+      default: "present"
+    },
+    leave_type_id: {
+      type: String, // Reference if status === 'leave'
+      default: null
     },
     in_time: {
       type: String,
@@ -30,6 +35,22 @@ const staffAttendanceSchema = new Schema(
       type: String,
       default: null,
     },
+    late_by_minutes: {
+      type: Number,
+      default: 0
+    },
+    overtime_hours: {
+      type: Number,
+      default: 0
+    },
+    is_manual_entry: {
+      type: Boolean,
+      default: false
+    },
+    manual_entry_reason: {
+      type: String,
+      default: ""
+    }
   },
   {
     timestamps: true,

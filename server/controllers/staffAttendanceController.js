@@ -252,6 +252,41 @@ const markAbsent = async (req, res) => {
     }
 };
 
+// ── POST /attendance/mark-leave ──────────────────────────────────────────────
+const markLeave = async (req, res) => {
+    const { staff_id, date, leave_type_id, is_half_day } = req.body;
+
+    try {
+        const staff = await Staff.findById(staff_id).lean();
+        if (!staff) {
+            return res.status(404).json({ message: "Staff not found" });
+        }
+
+        await StaffAttendance.findOneAndUpdate(
+            { staff_id, date },
+            {
+                $set: {
+                    status: is_half_day ? "half_day" : "leave",
+                    leave_type_id: leave_type_id || null,
+                    in_time: null,
+                    out_time: null,
+                    user_id: staff.user_id,
+                },
+                $setOnInsert: {
+                    staff_id,
+                    date,
+                },
+            },
+            { upsert: true, new: true }
+        );
+
+        res.status(200).json({ success: true, message: "Marked on leave successfully" });
+    } catch (error) {
+        console.error("Error in Mark Leave:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
 module.exports = {
     getTodayAttendance,
     getAttendanceByStaff,
@@ -259,4 +294,5 @@ module.exports = {
     checkIn,
     checkOut,
     markAbsent,
+    markLeave,
 };

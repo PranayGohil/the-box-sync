@@ -124,6 +124,10 @@ app.use("/api/otp", otpRouter)
 app.use("/api/waiter", waiterRouter);
 app.use("/api/reservation", reservationRouter);
 app.use("/api/daily-stock", dailyStockRouter);
+app.use("/api/holidays", require("./router/holidayRouter"));
+app.use("/api/leave-policy", require("./router/leavePolicyRouter"));
+app.use("/api/leave", require("./router/leaveRouter"));
+app.use("/api/salary-advance", require("./router/salaryAdvanceRouter"));
 
 connectDB().then(() => {
   server.listen(PORT, () => {
