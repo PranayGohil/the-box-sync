@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="Gramentheme" />
+  <meta name="keywords"
+    content="restaurant POS software, menu management POS, food delivery integration, inventory management restaurant, billing software, cloud POS system, restaurant analytics, online order management" />
+  <meta name="description"
+    content="All-in-one POS solution for modern restaurants. Manage orders, menus, pricing, and delivery integrations with real-time control using TheBox." />
+  <title>TheBox - Menu</title>
+
+  <link rel="stylesheet" href="./assets/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="./assets/css/main.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet">
+
+  <style>
+    /* ── CSS Variables matching TheBox palette ── */
+    :root {
+      --thebox-primary: #1b3a6b;
+      --thebox-accent: #e8a020;
+      --thebox-accent2: #c8121c;
+      --thebox-light: #f5f7fa;
+      --thebox-card-bg: #ffffff;
+      --thebox-border: #e2e8f0;
+      --thebox-text: #1e293b;
+      --thebox-muted: #64748b;
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'DM Sans', sans-serif;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(27, 58, 107, 0.10);
+      --transition: all 0.28s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--thebox-text);
+    }
+
+    /* ── Loading / Error States (matches reservation.html) ── */
+    #tokenLoading,
+    #tokenError {
+      display: none;
+    }
+
+    #tokenLoading.show,
+    #tokenError.show {
+      display: flex;
+    }
+
+    .state-center {
+      justify-content: center;
+      align-items: center;
+      min-height: 300px;
+    }
+
+    .spin {
+      display: inline-block;
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(27, 58, 107, .2);
+      border-top-color: var(--thebox-primary);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ── Restaurant brand bar ── */
+    .restaurant-brand {
+      text-align: center;
+      padding: 28px 0 10px;
+    }
+
+    .restaurant-brand img {
+      height: 52px;
+      object-fit: contain;
+      margin: 0 auto 10px;
+      display: block;
+    }
+
+    .restaurant-brand h3 {
+      font-family: var(--font-display);
+      font-size: 26px;
+      color: var(--thebox-primary);
+      margin: 0 0 4px;
+    }
+
+    .restaurant-brand p {
+      font-size: 13px;
+      color: var(--thebox-muted);
+      margin: 0;
+    }
+
+    /* ── Menu section ── */
+    .menu-section {
+      padding: 40px 20px;
+    }
+
+    .menu-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .header-left h4 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      color: var(--thebox-primary);
+      margin: 0;
+    }
+
+    .header-left h6 {
+      font-size: 13px;
+      color: var(--thebox-muted);
+      margin: 4px 0 0;
+    }
+
+    .menu-title {
+      text-align: center;
+      font-size: 32px;
+      margin: 20px 0 24px;
+      font-weight: 600;
+      font-family: var(--font-display);
+      color: var(--thebox-primary);
+    }
+
+    /* ── Filter ── */
+    .menu-filter {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .filter-btn {
+      border: 2px solid var(--thebox-border);
+      padding: 9px 28px;
+      margin: 5px;
+      border-radius: 30px;
+      background: #fff;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 14px;
+      font-family: var(--font-body);
+      color: var(--thebox-muted);
+    }
+
+    .filter-btn.active,
+    .filter-btn:hover {
+      background: var(--thebox-primary);
+      border-color: var(--thebox-primary);
+      color: #fff;
+    }
+
+    /* ── Menu items ── */
+    .menu-category {
+      margin-bottom: 32px;
+    }
+
+    .menu-category h3 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--thebox-primary);
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--thebox-border);
+    }
+
+    .menu-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 18px;
+      background: #fff;
+      margin-bottom: 10px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--thebox-border);
+      transition: var(--transition);
+    }
+
+    .menu-item:hover {
+      transform: translateY(-2px);
+    }
+
+    .menu-item.hidden {
+      display: none;
+    }
+
+    .menu-left h4 {
+      margin: 0;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      font-weight: 500;
+    }
+
+    .menu-left p {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: var(--thebox-muted);
+    }
+
+    .menu-right {
+      font-weight: 600;
+      color: var(--thebox-primary);
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .badge-special {
+      font-size: 10px;
+      background: #fef3c7;
+      color: #92400e;
+      border-radius: 6px;
+      padding: 2px 7px;
+      margin-left: 8px;
+      font-weight: 500;
+    }
+
+    .badge-unavailable {
+      font-size: 10px;
+      background: #fee2e2;
+      color: #7f1d1d;
+      border-radius: 6px;
+      padding: 2px 7px;
+      margin-left: 8px;
+      font-weight: 500;
+    }
+
+    /* ── Veg / Non-veg icons ── */
+    .veg-icon,
+    .nonveg-icon {
+      width: 14px;
+      height: 14px;
+      border: 2px solid;
+      display: inline-block;
+      margin-right: 8px;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .veg-icon {
+      border-color: green;
+    }
+
+    .veg-icon::after {
+      content: "";
+      width: 7px;
+      height: 7px;
+      background: green;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+    }
+
+    .nonveg-icon {
+      border-color: red;
+    }
+
+    .nonveg-icon::after {
+      content: "";
+      width: 7px;
+      height: 7px;
+      background: red;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+    }
+
+    /* ── Dish image thumbnail ── */
+    .dish-img {
+      width: 54px;
+      height: 54px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-left: 12px;
+      flex-shrink: 0;
+      border: 1px solid var(--thebox-border);
+    }
+
+    /* ── Category modal ── */
+    .modal-backdrop.show {
+      opacity: 0.6;
+    }
+
+    #categorylist .modal-content {
+      border-radius: 20px;
+      padding: 20px;
+      border: none;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    #categorylist .modal-header {
+      border: none;
+      padding-bottom: 0;
+    }
+
+    #categorylist .btn-close {
+      background-color: #eef6ff;
+      border-radius: 50%;
+      padding: 10px;
+      opacity: 1;
+    }
+
+    .menu-modal-content h3 {
+      text-align: center;
+      font-weight: 600;
+      font-family: var(--font-display);
+      font-size: 20px;
+      color: var(--thebox-primary);
+      margin-bottom: 20px;
+    }
+
+    .menu-links {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .menu-links li {
+      margin-bottom: 10px;
+    }
+
+    .menu-links a {
+      display: block;
+      padding: 13px 16px;
+      border-radius: 12px;
+      background: #f5fbff;
+      color: #222;
+      font-weight: 500;
+      text-decoration: none;
+      transition: var(--transition);
+      border: 1px solid transparent;
+      font-family: var(--font-body);
+    }
+
+    .menu-links a:hover {
+      background: var(--thebox-primary);
+      color: #fff;
+    }
+
+    .menu-links a:active {
+      transform: scale(0.98);
+    }
+
+    .menu-links a::after {
+      content: "›";
+      float: right;
+      font-size: 18px;
+      opacity: 0.6;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--thebox-muted);
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.4;
+    }
+
+    .empty-state p {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    /* ── Info / error banners ── */
+    .info-banner {
+      background: #eff6ff;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #1e40af;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .error-banner {
+      background: #fee2e2;
+      border: 1.5px solid #fca5a5;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #7f1d1d;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    /* ── Skeleton loading ── */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f4f8 25%, #e2e8f0 50%, #f0f4f8 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 8px;
+      height: 64px;
+      margin-bottom: 10px;
+    }
+
+    @keyframes shimmer {
+      to {
+        background-position: -200% 0;
+      }
+    }
+
+    /* ── theme-btn ── */
+    .theme-btn {
+      background: var(--thebox-primary);
+      color: #fff;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .theme-btn:hover {
+      background: #142d57;
+    }
+
+    @media (max-width: 576px) {
+      .menu-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .theme-btn {
+        float: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── TOKEN LOADING ── -->
+  <div id="tokenLoading" class="state-center" style="justify-content:center; align-items:center; min-height:300px;">
+    <div class="text-center">
+      <div class="spin"></div>
+      <p style="color:var(--thebox-muted);">Loading restaurant details…</p>
+    </div>
+  </div>
+
+  <!-- ── TOKEN ERROR ── -->
+  <div id="tokenError" class="state-center" style="justify-content:center; align-items:center; min-height:300px;">
+    <div class="text-center" style="max-width:380px; margin:auto; padding:40px 20px;">
+      <div style="font-size:52px; color:#dc2626; margin-bottom:16px;">&#9888;</div>
+      <h4 style="color:var(--thebox-text); font-family:var(--font-display); margin-bottom:8px;">Menu Unavailable</h4>
+      <p style="color:var(--thebox-muted); font-size:14px;" id="tokenErrorMsg">
+        This link is invalid or has expired. Please contact the restaurant for a new link.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── MAIN CONTENT ── -->
+  <div id="mainContent" style="display:none;">
+
+    <!-- Restaurant brand -->
+    <div class="restaurant-brand" id="restaurantBrand">
+      <img id="restaurantLogo" src="" alt="" style="display:none;">
+      <h3 id="restaurantName"></h3>
+      <p id="restaurantCity"></p>
+    </div>
+
+    <section class="menu-section">
+      <div class="container">
+
+        <!-- Header row -->
+        <div class="menu-header">
+          <div class="header-left">
+            <h4 id="headerRestaurantName"></h4>
+            <h6 id="headerTableNo" style="display:none;"></h6>
+          </div>
+          <button class="theme-btn" data-bs-toggle="modal" data-bs-target="#categorylist">Menu</button>
+        </div>
+
+        <h2 class="menu-title">Our Menu</h2>
+
+        <!-- Filter -->
+        <div class="menu-filter">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="veg">
+            <span class="veg-icon"></span> Veg
+          </button>
+          <button class="filter-btn" data-filter="nonveg">
+            <span class="nonveg-icon"></span> Non-Veg
+          </button>
+          <button class="filter-btn" data-filter="egg">Egg</button>
+        </div>
+
+        <!-- Search bar (shown after menu loads) -->
+        <div id="menuSearchWrap" style="display:none; max-width:420px; margin:0 auto 28px; position:relative;">
+          <input type="text" id="menuSearch" placeholder="Search dishes…"
+            style="width:100%; padding:11px 40px 11px 16px; border:1.5px solid var(--thebox-border); border-radius:30px; font-family:var(--font-body); font-size:14px; color:var(--thebox-text); outline:none; background:#fff; transition:var(--transition);">
+          <button id="searchClear" title="Clear"
+            style="position:absolute; right:14px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--thebox-muted); font-size:18px; line-height:1; padding:0;">&#x2715;</button>
+        </div>
+
+        <!-- Skeleton loader -->
+        <div id="menuSkeleton" style="display:none;">
+          <div class="row">
+            <div class="col-lg-6">
+              <div class="skeleton"></div>
+              <div class="skeleton"></div>
+              <div class="skeleton"></div>
+            </div>
+            <div class="col-lg-6">
+              <div class="skeleton"></div>
+              <div class="skeleton"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Menu error -->
+        <div id="menuError" style="display:none;" class="error-banner">
+          <span>&#9888;</span>
+          <span id="menuErrorMsg">Failed to load menu. Please refresh.</span>
+        </div>
+
+        <!-- Empty state -->
+        <div id="menuEmpty" style="display:none;" class="empty-state">
+          <div class="icon">🍽️</div>
+          <p>No menu items available at the moment.</p>
+        </div>
+
+        <!-- Rendered menu categories -->
+        <div class="row menu-list" id="menuList"></div>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- ── CATEGORY MODAL ── -->
+  <div class="modal fade" id="categorylist" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header border-bottom-none">
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="menu-modal-content">
+            <h3>Select Category</h3>
+            <ul class="menu-links" id="categoryLinks"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script src="./assets/js/jquery-3.7.1.min.js"></script>
+  <script src="./assets/js/bootstrap.bundle.min.js"></script>
+  <script src="./assets/js/main.js"></script>
+
+  <script>
+    // ── CONFIG ──────────────────────────────────────────────────────────────
+    const API_BASE = 'https://api.theboxsync.com/api'; // ← same as feedback.html
+    const IMG_BASE = 'https://api.theboxsync.com';     // ← base for dish images
+
+    // ── STATE ───────────────────────────────────────────────────────────────
+    let menuToken = null;
+    let allMenuData = [];    // raw array of category docs from API
+    let activeFilter = 'all'; // 'all' | 'veg' | 'nonveg'
+    let searchQuery = '';    // live search string
+
+    // ── HELPERS ─────────────────────────────────────────────────────────────
+    const qs = (id) => document.getElementById(id);
+    const show = (id) => { qs(id).style.display = 'block'; };
+    const hide = (id) => { qs(id).style.display = 'none'; };
+
+    function getTokenFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('token')) return params.get('token');
+      const parts = window.location.pathname.split('/').filter(Boolean);
+      const last = parts[parts.length - 1];
+      if (last && last !== 'menu.html') return last;
+      return null;
+    }
+
+    function getTableFromURL() {
+      return new URLSearchParams(window.location.search).get('table') || null;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function showTokenError(msg) {
+      qs('tokenLoading').classList.remove('show');
+      qs('tokenError').classList.add('show');
+      qs('tokenErrorMsg').textContent = msg;
+    }
+
+    function showMenuError(msg) {
+      qs('menuErrorMsg').textContent = msg;
+      show('menuError');
+    }
+
+    // ── INIT ─────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+      menuToken = getTokenFromURL();
+      if (!menuToken) {
+        showTokenError('No restaurant token found in the URL.');
+        return;
+      }
+      await loadMenu();
+    });
+
+    // ── SINGLE API CALL — mirrors feedback.html pattern exactly ─────────────
+    async function loadMenu() {
+      qs('tokenLoading').classList.add('show');
+
+      try {
+        // One call to the new token-based endpoint — no resolve-token step needed
+        const res = await fetch(`${API_BASE}/menu/get/token/${menuToken}`);
+        const data = await res.json();
+
+        if (!data.success) throw new Error(data.message || 'Restaurant not found.');
+
+        // ── Populate branding from the same response ──
+        qs('restaurantName').textContent = data.restaurant_name || '';
+        qs('restaurantCity').textContent = data.restaurant_city || '';
+        qs('headerRestaurantName').textContent = data.restaurant_name || '';
+
+        if (data.restaurant_logo) {
+          qs('restaurantLogo').src = data.restaurant_logo;
+          qs('restaurantLogo').style.display = 'block';
+        }
+
+        // Optional table number from URL
+        const table = getTableFromURL();
+        if (table) {
+          qs('headerTableNo').textContent = 'Table No. ' + table;
+          qs('headerTableNo').style.display = 'block';
+        }
+
+        qs('tokenLoading').classList.remove('show');
+        show('mainContent');
+
+        // ── Store and render ──
+        allMenuData = data.data || [];
+
+        if (!allMenuData.length) {
+          show('menuEmpty');
+          return;
+        }
+
+        show('menuSkeleton');
+        // Short delay so skeleton is visible for perceived performance
+        setTimeout(() => {
+          hide('menuSkeleton');
+          show('menuSearchWrap');
+          renderMenu();
+          renderCategoryModal();
+        }, 300);
+
+      } catch (err) {
+        showTokenError(err.message || 'This link is invalid or has expired.');
+      }
+    }
+
+    // ── RENDER MENU ─────────────────────────────────────────────────────────
+    // Handles filter (veg/nonveg) + search (dish name / description) together.
+    // Everything is done client-side from allMenuData — no extra API calls.
+    function renderMenu() {
+      const list = qs('menuList');
+      list.innerHTML = '';
+
+      const q = searchQuery.toLowerCase().trim();
+
+      allMenuData.forEach((cat, idx) => {
+        const catId = 'cat-' + idx;
+        const isVeg = (cat.meal_type || '').toLowerCase() === 'veg';
+        const isNonVeg = ['non-veg', 'nonveg'].includes((cat.meal_type || '').toLowerCase());
+
+        // Step 1: apply veg/nonveg filter at category level
+        if (activeFilter === 'veg' && !isVeg) return;
+        if (activeFilter === 'nonveg' && !isNonVeg) return;
+
+        // Step 2: apply search filter at dish level
+        const filteredDishes = (cat.dishes || []).filter(dish => {
+          if (!q) return true;
+          const nameMatch = (dish.dish_name || '').toLowerCase().includes(q);
+          const descMatch = (dish.description || '').toLowerCase().includes(q);
+          return nameMatch || descMatch;
+        });
+
+        if (filteredDishes.length === 0) return;
+
+        const colDiv = document.createElement('div');
+        colDiv.className = 'col-lg-6 menu-category';
+        colDiv.id = catId;
+
+        const h3 = document.createElement('h3');
+        h3.textContent = cat.category || 'Uncategorised';
+        colDiv.appendChild(h3);
+
+        filteredDishes.forEach(dish => {
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'menu-item';
+
+          const iconHtml = isVeg ? '<span class="veg-icon"></span>' : isNonVeg ? '<span class="nonveg-icon"></span>' : '';
+          const specialBadge = dish.is_special ? '<span class="badge-special">Special</span>' : '';
+          const unavailBadge = dish.is_available === false ? '<span class="badge-unavailable">Unavailable</span>' : '';
+          const description = dish.description ? `<p>${escapeHtml(dish.description)}</p>` : '';
+          const priceHtml = dish.dish_price != null ? `₹${Number(dish.dish_price).toFixed(0)}` : '';
+          const imgHtml = dish.dish_img
+            ? `<img class="dish-img" src="${IMG_BASE}${escapeHtml(dish.dish_img)}" alt="${escapeHtml(dish.dish_name || '')}" loading="lazy">`
+            : '';
+
+          itemDiv.innerHTML = `
+              <div class="menu-left">
+                <h4>${iconHtml}${escapeHtml(dish.dish_name || '')}${specialBadge}${unavailBadge}</h4>
+                ${description}
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <div class="menu-right">${priceHtml}</div>
+              </div>`;
+
+          colDiv.appendChild(itemDiv);
+        });
+
+        list.appendChild(colDiv);
+      });
+
+      // Nothing matched
+      if (!list.children.length) {
+        const msg = searchQuery
+          ? `No items found for "<strong>${escapeHtml(searchQuery)}</strong>".`
+          : `No ${activeFilter === 'veg' ? 'vegetarian' : 'non-vegetarian'} items available.`;
+        list.innerHTML = `<div class="col-12 empty-state"><div class="icon" style="font-size:40px;margin-bottom:12px;">🍽️</div><p>${msg}</p></div>`;
+      }
+    }
+
+    // ── RENDER CATEGORY MODAL ───────────────────────────────────────────────
+    function renderCategoryModal() {
+      const ul = qs('categoryLinks');
+      ul.innerHTML = '';
+
+      allMenuData.forEach((cat, idx) => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#';
+        a.className = 'cat-select';
+        a.dataset.cat = 'cat-' + idx;
+        a.textContent = cat.category || 'Uncategorised';
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+
+      document.querySelectorAll('.cat-select').forEach(link => {
+        link.addEventListener('click', function (e) {
+          e.preventDefault();
+          const el = qs(this.dataset.cat);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const modal = bootstrap.Modal.getInstance(qs('categorylist'));
+          if (modal) modal.hide();
+        });
+      });
+    }
+
+    // ── FILTER — click handler ───────────────────────────────────────────────
+    document.addEventListener('click', function (e) {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter || 'all';
+      renderMenu();
+      renderCategoryModal();
+    });
+
+    // ── SEARCH — input handler ───────────────────────────────────────────────
+    // Debounced so it doesn't re-render on every keystroke
+    let searchTimer = null;
+    document.addEventListener('input', function (e) {
+      if (e.target.id !== 'menuSearch') return;
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        searchQuery = e.target.value;
+        renderMenu();
+      }, 250);
+    });
+
+    // Clear search button
+    document.addEventListener('click', function (e) {
+      if (e.target.id !== 'searchClear') return;
+      qs('menuSearch').value = '';
+      searchQuery = '';
+      renderMenu();
+    });
+  </script>
+
+</body>
+
+</html>

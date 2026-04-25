@@ -8,6 +8,7 @@ const {
   getMenuCounterOptions,
   getMenuDataById,
   getMenuDataByResCode,
+  getMenuDataByToken,
   updateMenuCategoryAndMealType,
   updateMenu,
   deleteMenu,
@@ -26,6 +27,7 @@ menuRouter
 menuRouter.route("/get").get(authMiddleware, getMenuData);
 menuRouter.route("/get/:id").get(authMiddleware, getMenuDataById);
 menuRouter.route("/get/rescode/:res_code").get(getMenuDataByResCode);
+menuRouter.route("/get/token/:token").get(authMiddleware, getMenuDataByToken);
 menuRouter.route("/get-categories").get(authMiddleware, getMenuCategories);
 menuRouter.route("/get-counter-options").get(authMiddleware, getMenuCounterOptions);
 menuRouter.route("/get-dishes-by-category").get(authMiddleware, getDishesByCategory);

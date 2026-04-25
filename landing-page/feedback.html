@@ -825,7 +825,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        feedbackToken,
+                        restaurant_token: feedbackToken,
                         customer_name,
                         customer_email: customer_email || '',
                         customer_phone: customer_phone || '',

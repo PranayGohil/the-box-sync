@@ -132,6 +132,36 @@ const getMenuDataByResCode = async (req, res) => {
   }
 };
 
+const getMenuDataByToken = async (req, res) => {
+  try {
+    const restaurant_token = req.params.token;
+
+    const restaurant = await User.findOne({ restaurant_token })
+      .select("_id name city logo")  // ← fix: space not comma, add city & logo for branding
+      .lean();
+
+    if (!restaurant) {
+      return res.status(404).json({ success: false, error: "Restaurant not found" });
+    }
+
+    const menuData = await Menu.find({
+      user_id: restaurant._id,
+    }).lean();
+
+    res.json({
+      success: true,
+      data: menuData,
+      restaurant_name: restaurant.name,
+      restaurant_city: restaurant.city || "",
+      restaurant_logo: restaurant.logo || "",
+    });
+
+  } catch (error) {
+    console.error("Error fetching menu data by token:", error);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+};
+
 const getMenuCategories = async (req, res) => {
   try {
     const userId = req.user;
@@ -284,7 +314,7 @@ const updateMenuCategoryAndMealType = async (req, res) => {
       counter = null;
     }
 
-    if(!hide_on_kot) {
+    if (!hide_on_kot) {
       hide_on_kot = false;
     }
 
@@ -434,6 +464,7 @@ module.exports = {
   getMenuData,
   getMenuDataById,
   getMenuDataByResCode,
+  getMenuDataByToken,
   getMenuCategories,
   getMenuCounterOptions,
   getMenuSuggestions,

@@ -257,19 +257,19 @@ export default function ViewStaffPayroll() {
     const downloadSalarySlip = (p) => {
         try {
             const doc = new jsPDF();
-            
+
             // Header
             doc.setFontSize(16);
             doc.setFont(undefined, 'bold');
             doc.text('SALARY SLIP', 105, 20, { align: 'center' });
-            
+
             doc.setFontSize(10);
             doc.setFont(undefined, 'normal');
             doc.text(`For the month of ${MONTH_NAMES[p.month]} ${p.year}`, 105, 26, { align: 'center' });
 
             // Employee Details Box
             doc.rect(14, 32, 182, 30);
-            
+
             doc.setFont(undefined, 'bold');
             doc.text('Employee Name:', 18, 40);
             doc.setFont(undefined, 'normal');
@@ -337,14 +337,14 @@ export default function ViewStaffPayroll() {
             });
 
             // Totals Row
-            const finalY = doc.lastAutoTable.finalY;
+            const { finalY } = doc.lastAutoTable;
             doc.setFillColor(240, 240, 240);
             doc.rect(14, finalY, 182, 10, 'F');
             doc.rect(14, finalY, 182, 10, 'S'); // border
             doc.setFont(undefined, 'bold');
             doc.text('Gross Earnings', 18, finalY + 6.5);
             doc.text(`${totalEarnings.toFixed(2)}`, 95, finalY + 6.5, { align: 'right' });
-            
+
             doc.text('Total Deductions', 109, finalY + 6.5);
             doc.text(`${totalDeductions.toFixed(2)}`, 186, finalY + 6.5, { align: 'right' });
 
@@ -360,7 +360,7 @@ export default function ViewStaffPayroll() {
 
             doc.save(`${staffData.staff_id}_SalarySlip_${MONTH_NAMES[p.month]}_${p.year}.pdf`);
             showSuccessToast('Salary Slip Downloaded!');
-        } catch(e) {
+        } catch (e) {
             console.error(e);
             showSuccessToast('Error generating Salary Slip.');
         }
