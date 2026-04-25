@@ -14,8 +14,8 @@ const QRforFeedback = () => {
   const { currentUser, userSubscriptions, activePlans } = useContext(AuthContext);
 
   useEffect(() => {
-    if (currentUser.feedbackToken) {
-      setFeedbackToken(currentUser.feedbackToken);
+    if (currentUser.restaurant_token) {
+      setFeedbackToken(currentUser.restaurant_token);
     }
   }, [currentUser]);
 
@@ -48,7 +48,7 @@ const QRforFeedback = () => {
   const copyToClipboard = async () => {
     setCopying(true);
     try {
-      await navigator.clipboard.writeText(`${process.env.REACT_APP_HOME_URL}/feedback/${feedbackToken}`);
+      await navigator.clipboard.writeText(`${process.env.REACT_APP_HOME_URL}/feedback.html?token=${feedbackToken}`);
       toast.success('URL copied to clipboard!');
     } catch (error) {
       console.error('Failed to copy:', error);
@@ -83,9 +83,9 @@ const QRforFeedback = () => {
                 <div className="mb-4">
                   <p className="text-muted mb-2">Scan the QR code to provide feedback:</p>
                   <div ref={qrCodeRef} className="mb-3">
-                    <QRCodeSVG size={250} value={`${process.env.REACT_APP_HOME_URL}/feedback/${feedbackToken}`} className="border rounded" />
+                    <QRCodeSVG size={250} value={`${process.env.REACT_APP_HOME_URL}/feedback.html?token=${feedbackToken}`} className="border rounded" />
                   </div>
-                  <div className="small text-muted mb-3">Feedback URL: {`${process.env.REACT_APP_HOME_URL}/feedback/${feedbackToken}`}</div>
+                  <div className="small text-muted mb-3">Feedback URL: {`${process.env.REACT_APP_HOME_URL}/feedback.html?token=${feedbackToken}`}</div>
                 </div>
 
                 <div className="d-flex justify-content-center gap-2 mb-4">

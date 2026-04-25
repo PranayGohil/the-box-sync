@@ -35,6 +35,7 @@ const AddStaff = () => {
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [positions, setPositions] = useState([]);
+  const [payrollConfig, setPayrollConfig] = useState(null);
   const [uploadingFiles, setUploadingFiles] = useState({
     photo: false,
     front_image: false,
@@ -157,6 +158,22 @@ const AddStaff = () => {
         'Unsupported file format (JPEG, PNG, JPG, WebP only)',
         (value) => !value || (value && ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(value.type))
       ),
+
+    salary_structure: Yup.object().shape({
+      earnings: Yup.object({
+        basic: Yup.number().min(0, 'Must be 0 or more').required('Basic is required'),
+        hra: Yup.number().min(0),
+        conveyance: Yup.number().min(0),
+        medical: Yup.number().min(0),
+        special: Yup.number().min(0),
+        other: Yup.number().min(0),
+      }),
+      deductions: Yup.object({
+        pf_percentage: Yup.number().min(0).max(100),
+        esi_percentage: Yup.number().min(0).max(100),
+        pt: Yup.number().min(0),
+      }),
+    }),
   });
 
   const formik = useFormik({
@@ -179,6 +196,10 @@ const AddStaff = () => {
       id_number: '',
       front_image: '',
       back_image: '',
+      salary_structure: {
+        earnings: { basic: 0, hra: 0, conveyance: 0, medical: 0, special: 0, other: 0 },
+        deductions: { pf_percentage: 12, esi_percentage: 0.75, pt: 200 }
+      },
     },
     validationSchema: addStaff,
     onSubmit: async (values, { setSubmitting }) => {
@@ -188,7 +209,9 @@ const AddStaff = () => {
         const formData = new FormData();
 
         Object.keys(values).forEach((key) => {
-          if (key !== 'photo' && key !== 'front_image' && key !== 'back_image') {
+          if (key === 'salary_structure') {
+            formData.append('salary_structure', JSON.stringify(values.salary_structure));
+          } else if (key !== 'photo' && key !== 'front_image' && key !== 'back_image') {
             formData.append(key, values[key]);
           }
         });
@@ -225,6 +248,22 @@ const AddStaff = () => {
       try {
         setLoading((prev) => ({ ...prev, initial: true }));
         setCountries(Country.getAllCountries());
+
+        try {
+          const configRes = await axios.get(`${process.env.REACT_APP_API}/payroll-config`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          });
+          if (configRes.data && configRes.data.success) {
+            setPayrollConfig(configRes.data.data);
+
+            // Set default deductions from config
+            setFieldValue('salary_structure.deductions.pf_percentage', configRes.data.data.statutory_deductions?.pf_percentage || 12);
+            setFieldValue('salary_structure.deductions.esi_percentage', configRes.data.data.statutory_deductions?.esi_percentage || 0.75);
+            setFieldValue('salary_structure.deductions.pt', configRes.data.data.statutory_deductions?.pt_amount || 200);
+          }
+        } catch (confErr) {
+          console.error("Could not fetch payroll config", confErr);
+        }
 
         const response = await axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -569,6 +608,84 @@ const AddStaff = () => {
               </Row>
             </Card>
 
+            {/* Payroll Configuration Card */}
+            <Card body className="mb-4">
+              <h5 className="mb-3">Statutory Payroll Configuration</h5>
+              <h6 className="mt-3 mb-2 text-primary">Earnings Breakdowns</h6>
+              <Row>
+                {(payrollConfig?.active_earnings || []).includes('basic') && (
+                  <Col md={4} className="mb-3">
+                    <Form.Group>
+                      <Form.Label>Basic Salary</Form.Label>
+                      <Form.Control type="number" name="salary_structure.earnings.basic" value={values.salary_structure.earnings.basic} onChange={handleChange} />
+                    </Form.Group>
+                  </Col>
+                )}
+                {(payrollConfig?.active_earnings || []).includes('hra') && (
+                  <Col md={4} className="mb-3">
+                    <Form.Group>
+                      <Form.Label>HRA (House Rent Allowance)</Form.Label>
+                      <Form.Control type="number" name="salary_structure.earnings.hra" value={values.salary_structure.earnings.hra} onChange={handleChange} />
+                    </Form.Group>
+                  </Col>
+                )}
+                {(payrollConfig?.active_earnings || []).includes('conveyance') && (
+                  <Col md={4} className="mb-3">
+                    <Form.Group>
+                      <Form.Label>Conveyance</Form.Label>
+                      <Form.Control type="number" name="salary_structure.earnings.conveyance" value={values.salary_structure.earnings.conveyance} onChange={handleChange} />
+                    </Form.Group>
+                  </Col>
+                )}
+                {(payrollConfig?.active_earnings || []).includes('medical') && (
+                  <Col md={4} className="mb-3">
+                    <Form.Group>
+                      <Form.Label>Medical</Form.Label>
+                      <Form.Control type="number" name="salary_structure.earnings.medical" value={values.salary_structure.earnings.medical} onChange={handleChange} />
+                    </Form.Group>
+                  </Col>
+                )}
+                {(payrollConfig?.active_earnings || []).includes('special') && (
+                  <Col md={4} className="mb-3">
+                    <Form.Group>
+                      <Form.Label>Special Allowance</Form.Label>
+                      <Form.Control type="number" name="salary_structure.earnings.special" value={values.salary_structure.earnings.special} onChange={handleChange} />
+                    </Form.Group>
+                  </Col>
+                )}
+                {(payrollConfig?.active_earnings || []).includes('other') && (
+                  <Col md={4} className="mb-3">
+                    <Form.Group>
+                      <Form.Label>Other Allowance</Form.Label>
+                      <Form.Control type="number" name="salary_structure.earnings.other" value={values.salary_structure.earnings.other} onChange={handleChange} />
+                    </Form.Group>
+                  </Col>
+                )}
+              </Row>
+
+              <h6 className="mt-4 mb-2 text-danger">Statutory Deductions (Calculated during generation)</h6>
+              <Row>
+                <Col md={4} className="mb-3">
+                  <Form.Group>
+                    <Form.Label>PF Percentage (on Basic)</Form.Label>
+                    <Form.Control type="number" step="0.01" name="salary_structure.deductions.pf_percentage" value={values.salary_structure.deductions.pf_percentage} onChange={handleChange} />
+                  </Form.Group>
+                </Col>
+                <Col md={4} className="mb-3">
+                  <Form.Group>
+                    <Form.Label>ESI Percentage (on Gross)</Form.Label>
+                    <Form.Control type="number" step="0.01" name="salary_structure.deductions.esi_percentage" value={values.salary_structure.deductions.esi_percentage} onChange={handleChange} />
+                  </Form.Group>
+                </Col>
+                <Col md={4} className="mb-3">
+                  <Form.Group>
+                    <Form.Label>Professional Tax (PT) Flat Rate</Form.Label>
+                    <Form.Control type="number" name="salary_structure.deductions.pt" value={values.salary_structure.deductions.pt} onChange={handleChange} />
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Card>
+
             {/* ID Proof Card */}
             <Card body className="mb-4">
               <h5 className="mb-3">ID Proof & Documents</h5>
@@ -636,10 +753,10 @@ const AddStaff = () => {
                         values.document_type === 'National Identity Card'
                           ? 'XXXX XXXX XXXX'
                           : values.document_type === 'Pan Card'
-                          ? 'ABCDE1234F'
-                          : values.document_type === 'Voter Card'
-                          ? 'ABC1234567'
-                          : 'Enter ID number'
+                            ? 'ABCDE1234F'
+                            : values.document_type === 'Voter Card'
+                              ? 'ABC1234567'
+                              : 'Enter ID number'
                       }
                       disabled={loading.submitting}
                     />

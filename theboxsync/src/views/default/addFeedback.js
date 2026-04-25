@@ -53,7 +53,7 @@ const AddFeedback = () => {
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API}/feedback/add`,
-        { ...feedbackData, feedbackToken: token },
+        { ...feedbackData, restaurant_token: token },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,

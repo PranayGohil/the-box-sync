@@ -21,6 +21,9 @@ const storage = multer.diskStorage({
       case "bill_files":
         uploadPath = path.join(uploadPath, "inventory/bills");
         break;
+      case "inventory_excel":
+        uploadPath = path.join(uploadPath, "inventory/excel");
+        break;
       case "room_imgs":
         uploadPath = path.join(uploadPath, "room/categories");
         break;
@@ -51,8 +54,10 @@ const fileFilter = (req, file, cb) => {
     "image/gif",
     "image/webp",
     "application/pdf",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel",
   ];
-  if (allowedTypes.includes(file.mimetype)) {
+  if (allowedTypes.includes(file.mimetype) || file.originalname.match(/\.(xlsx|xls)$/)) {
     cb(null, true);
   } else {
     cb(new Error("Invalid file type. Only images and PDFs are allowed."));
@@ -60,5 +65,19 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({ storage, fileFilter });
+
+const excelFilter = (req, file, cb) => {
+  const allowedTypes = [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel",
+  ];
+  if (allowedTypes.includes(file.mimetype) && file.originalname.match(/\.(xlsx|xls)$/)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Invalid file type. Only Excel files are allowed."));
+  }
+};
+
+upload.excel = multer({ storage, fileFilter: excelFilter });
 
 module.exports = upload;

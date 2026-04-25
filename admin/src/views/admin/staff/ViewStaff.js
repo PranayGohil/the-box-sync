@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Row, Col, Card, Spinner, Alert, Table, Modal, Form } from 'react-bootstrap';
+import { Button, Row, Col, Card, Spinner, Alert, Table, Modal, Form, Dropdown } from 'react-bootstrap';
 import { useHistory, Link } from 'react-router-dom';
 import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -82,10 +82,30 @@ const ViewStaff = () => {
           <Button variant="outline-primary" onClick={() => history.push('/staff/add')} className="me-2" disabled={loading}>
             <CsLineIcons icon="plus" className="me-2" /> Add Staff
           </Button>
-          <Button variant="outline-primary" onClick={() => history.push('/staff/attendance')} disabled={loading}>
+          <Button variant="outline-primary" onClick={() => history.push('/staff/attendance')} className="me-2" disabled={loading}>
             <CsLineIcons icon="calendar" className="me-2" />
-            Manage Attendance
+            Attendance
           </Button>
+          <Button
+            variant="outline-primary"
+            className="me-2"
+            onClick={() => history.push('/staff/payroll')}
+            disabled={loading}
+          >
+            <CsLineIcons icon="wallet" className="me-2" />
+            Payroll
+          </Button>
+          <Dropdown className="d-inline-block">
+            <Dropdown.Toggle variant="outline-primary" disabled={loading}>
+              <CsLineIcons icon="menu" className="me-2" /> HR Actions
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              <Dropdown.Item onClick={() => history.push('/staff/leave-requests')}>Leave Requests</Dropdown.Item>
+              <Dropdown.Item onClick={() => history.push('/staff/leave-policy')}>Leave Policy Config</Dropdown.Item>
+              <Dropdown.Item onClick={() => history.push('/staff/holidays')}>Holiday Calendar</Dropdown.Item>
+              <Dropdown.Item onClick={() => history.push('/staff/salary-advances')}>Salary Advances</Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
         </Col>
       </Row>
 

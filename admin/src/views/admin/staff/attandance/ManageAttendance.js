@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { useHistory, Link } from "react-router-dom";
-import axios from "axios";
-import { Row, Col, Card, Button, Badge, Alert, Modal, Form, Spinner } from "react-bootstrap";
-import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from "react-table";
+import React, { useState, useEffect } from 'react';
+import { useHistory, Link } from 'react-router-dom';
+import axios from 'axios';
+import { Row, Col, Card, Button, Badge, Alert, Modal, Spinner, Form } from 'react-bootstrap';
+import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -10,7 +10,8 @@ import ControlsPageSize from 'components/table/ControlsPageSize';
 import ControlsSearch from 'components/table/ControlsSearch';
 import Table from 'components/table/Table';
 import TablePagination from 'components/table/TablePagination';
-import { toast } from "react-toastify";
+import { toast } from 'react-toastify';
+import { getLeavePolicy } from 'api/payrollConfig';
 
 export default function ManageAttendance() {
     const title = 'Manage Attendance';
@@ -21,140 +22,37 @@ export default function ManageAttendance() {
     ];
 
     const history = useHistory();
-    const [isLoading, setIsLoading] = useState(false);
+    const [loading, setLoading] = useState({
+        initial: true,
+        actions: {
+            checkin: false,
+            checkout: false,
+            absent: false,
+            leave: false,
+        },
+    });
     const [staffList, setStaffList] = useState([]);
+    const [leaveTypes, setLeaveTypes] = useState([]);
+    const [selectedLeaveType, setSelectedLeaveType] = useState('');
+    const [isHalfDay, setIsHalfDay] = useState(false);
+    
     const [showActionModal, setShowActionModal] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState(null);
     const [actionType, setActionType] = useState('');
-    const [errorMessage, setErrorMessage] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
+    const [error, setError] = useState('');
 
-    const fetchStaff = async () => {
-        try {
-            setIsLoading(true);
-            const response = await axios.get(
-                `${process.env.REACT_APP_API}/staff/get-all`,
-                {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                }
-            );
-            setStaffList(response.data.data);
-        } catch (error) {
-            console.error("Error fetching staff:", error);
-            setErrorMessage("Failed to fetch staff data");
-            toast.error("Failed to fetch staff data");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchStaff();
-    }, []);
-
-    useEffect(() => {
-        if (errorMessage || successMessage) {
-            const timer = setTimeout(() => {
-                setErrorMessage('');
-                setSuccessMessage('');
-            }, 5000);
-            return () => clearTimeout(timer);
-        }
-        return () => {};
-    }, [errorMessage, successMessage]);
+    // ── API Helpers ─────────────────────────────────────────────────────────────
+    const authHeader = () => ({
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    });
 
     const getTodayDate = () => {
-        const today = new Date();
-        const options = { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" };
-        const [day, month, year] = today.toLocaleDateString("en-IN", options).split("/");
-        return `${year}-${month}-${day}`;
+        // Returns YYYY-MM-DD in IST
+        return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
     };
 
     const getCurrentTime = () => {
-        const now = new Date();
-        return now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    };
-
-    const handleCheckIn = async (staffId) => {
-        try {
-            const response = await axios.post(
-                `${process.env.REACT_APP_API}/staff/check-in`,
-                {
-                    staff_id: staffId,
-                    date: getTodayDate(),
-                    in_time: getCurrentTime(),
-                },
-                {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                }
-            );
-            setSuccessMessage(response.data.message || "Check-in successful");
-            fetchStaff();
-        } catch (error) {
-            console.error("Error during Check-In:", error);
-            setErrorMessage(error.response?.data?.message || "Error during check-in");
-            toast.error(error.response?.data?.message || "Error during check-in");
-        }
-    };
-
-    const handleCheckOut = async (staffId) => {
-        try {
-            const response = await axios.post(
-                `${process.env.REACT_APP_API}/staff/check-out`,
-                {
-                    staff_id: staffId,
-                    date: getTodayDate(),
-                    out_time: getCurrentTime(),
-                },
-                {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                }
-            );
-            setSuccessMessage(response.data.message || "Check-out successful");
-            fetchStaff();
-        } catch (error) {
-            console.error("Error during Check-Out:", error);
-            setErrorMessage(error.response?.data?.message || "Error during check-out");
-            toast.error(error.response?.data?.message || "Error during check-out");
-        }
-    };
-
-    const handleAbsent = async (staffId) => {
-        try {
-            const response = await axios.post(
-                `${process.env.REACT_APP_API}/staff/mark-absent`,
-                {
-                    staff_id: staffId,
-                    date: getTodayDate(),
-                },
-                {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                }
-            );
-            setSuccessMessage(response.data.message || "Marked absent successfully");
-            fetchStaff();
-        } catch (error) {
-            console.error("Error marking Absent:", error);
-            setErrorMessage(error.response?.data?.message || "Error marking absent");
-            toast.error(error.response?.data?.message || "Error marking absent");
-        }
-    };
-
-    const handleAction = (staff, type) => {
-        setSelectedStaff(staff);
-        setActionType(type);
-        setShowActionModal(true);
-    };
-
-    const confirmAction = () => {
-        if (actionType === 'checkin') {
-            handleCheckIn(selectedStaff._id);
-        } else if (actionType === 'checkout') {
-            handleCheckOut(selectedStaff._id);
-        } else if (actionType === 'absent') {
-            handleAbsent(selectedStaff._id);
-        }
-        setShowActionModal(false);
+        return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
     const formatDateDisplay = (dateString) => {
@@ -162,15 +60,131 @@ export default function ManageAttendance() {
         return `${day}-${month}-${year}`;
     };
 
-    // Helper function to check if staff has ongoing attendance
-    const hasOngoingAttendance = (staff) => {
-        return staff.attandance?.some(att => att.in_time && !att.out_time);
+    // ── Fetch today's attendance (staff + today record merged) ──────────────────
+    // New endpoint: GET /attendance/today
+    const fetchTodayAttendance = async () => {
+        try {
+            setLoading((prev) => ({ ...prev, initial: true }));
+            setError('');
+            const [attRes, polRes] = await Promise.all([
+                axios.get(`${process.env.REACT_APP_API}/attendance/today`, authHeader()),
+                getLeavePolicy()
+            ]);
+            setStaffList(attRes.data.data);
+            if (polRes.success && polRes.data) {
+                setLeaveTypes(polRes.data.leave_types || []);
+            }
+        } catch (err) {
+            console.error('Error fetching attendance:', err);
+            setError('Failed to load staff attendance data. Please try again.');
+            toast.error('Failed to fetch attendance data.');
+        } finally {
+            setLoading((prev) => ({ ...prev, initial: false }));
+        }
     };
 
-    // Helper function to get ongoing attendance details
-    const getOngoingAttendance = (staff) => {
-        return staff.attandance?.find(att => att.in_time && !att.out_time);
+    useEffect(() => {
+        fetchTodayAttendance();
+    }, []);
+
+    // ── Actions ─────────────────────────────────────────────────────────────────
+
+    const handleCheckIn = async (staffId, staffName) => {
+        setLoading((prev) => ({ ...prev, actions: { ...prev.actions, checkin: true } }));
+        try {
+            await axios.post(
+                `${process.env.REACT_APP_API}/attendance/check-in`,
+                { staff_id: staffId, date: getTodayDate(), in_time: getCurrentTime() },
+                authHeader()
+            );
+            toast.success(`${staffName} checked in successfully!`);
+            fetchTodayAttendance();
+        } catch (err) {
+            console.error('Error during Check-In:', err);
+            toast.error(err.response?.data?.message || 'Failed to check in.');
+        } finally {
+            setLoading((prev) => ({ ...prev, actions: { ...prev.actions, checkin: false } }));
+        }
     };
+
+    const handleCheckOut = async (staffId, staffName) => {
+        setLoading((prev) => ({ ...prev, actions: { ...prev.actions, checkout: true } }));
+        try {
+            await axios.post(
+                `${process.env.REACT_APP_API}/attendance/check-out`,
+                { staff_id: staffId, date: getTodayDate(), out_time: getCurrentTime() },
+                authHeader()
+            );
+            toast.success(`${staffName} checked out successfully!`);
+            fetchTodayAttendance();
+        } catch (err) {
+            console.error('Error during Check-Out:', err);
+            toast.error(err.response?.data?.message || 'Failed to check out.');
+        } finally {
+            setLoading((prev) => ({ ...prev, actions: { ...prev.actions, checkout: false } }));
+        }
+    };
+
+    const handleAbsent = async (staffId, staffName) => {
+        setLoading((prev) => ({ ...prev, actions: { ...prev.actions, absent: true } }));
+        try {
+            await axios.post(
+                `${process.env.REACT_APP_API}/attendance/mark-absent`,
+                { staff_id: staffId, date: getTodayDate() },
+                authHeader()
+            );
+            toast.success(`${staffName} marked as absent!`);
+            fetchTodayAttendance();
+        } catch (err) {
+            console.error('Error marking Absent:', err);
+            toast.error(err.response?.data?.message || 'Failed to mark as absent.');
+        } finally {
+            setLoading((prev) => ({ ...prev, actions: { ...prev.actions, absent: false } }));
+        }
+    };
+
+    const handleLeave = async (staffId, staffName) => {
+        setLoading((prev) => ({ ...prev, actions: { ...prev.actions, leave: true } }));
+        try {
+            await axios.post(
+                `${process.env.REACT_APP_API}/attendance/mark-leave`,
+                { staff_id: staffId, date: getTodayDate(), leave_type_id: selectedLeaveType, is_half_day: isHalfDay },
+                authHeader()
+            );
+            toast.success(`${staffName} marked on leave!`);
+            fetchTodayAttendance();
+        } catch (err) {
+            console.error('Error marking Leave:', err);
+            toast.error(err.response?.data?.message || 'Failed to mark leave.');
+        } finally {
+            setLoading((prev) => ({ ...prev, actions: { ...prev.actions, leave: false } }));
+        }
+    };
+
+    const handleAction = (staff, type) => {
+        setSelectedStaff(staff);
+        setActionType(type);
+        // Reset leave form if opening leave modal
+        if (type === 'leave') {
+            setSelectedLeaveType(leaveTypes.length > 0 ? leaveTypes[0].leave_type_id : '');
+            setIsHalfDay(false);
+        }
+        setShowActionModal(true);
+    };
+
+    const confirmAction = () => {
+        if (!selectedStaff) return;
+        const fullName = `${selectedStaff.f_name} ${selectedStaff.l_name}`;
+        if (actionType === 'checkin') handleCheckIn(selectedStaff._id, fullName);
+        if (actionType === 'checkout') handleCheckOut(selectedStaff._id, fullName);
+        if (actionType === 'absent') handleAbsent(selectedStaff._id, fullName);
+        if (actionType === 'leave') handleLeave(selectedStaff._id, fullName);
+        setShowActionModal(false);
+    };
+
+    // ── Table Columns ───────────────────────────────────────────────────────────
+    // NOTE: todayAttendance is now a top-level field on each staff object
+    // (merged by the /attendance/today endpoint) instead of being inside attandance[]
 
     const columns = React.useMemo(
         () => [
@@ -181,7 +195,7 @@ export default function ManageAttendance() {
             },
             {
                 Header: 'Name',
-                accessor: row => `${row.f_name} ${row.l_name}`,
+                accessor: (row) => `${row.f_name} ${row.l_name}`,
                 headerClassName: 'text-muted text-small text-uppercase w-20',
             },
             {
@@ -194,34 +208,34 @@ export default function ManageAttendance() {
                 id: 'status',
                 headerClassName: 'text-muted text-small text-uppercase w-15',
                 Cell: ({ row }) => {
-                    const today = getTodayDate();
-                    const ongoingAttendance = getOngoingAttendance(row.original);
-                    const todayAttendance = row.original.attandance?.find(
-                        (a) => a.date === today
-                    );
+                    // todayAttendance is the merged field from the new API
+                    const { todayAttendance } = row.original;
 
-                    let status = "Pending";
-                    let statusVariant = "warning";
-                    let statusIcon = "clock";
+                    let status = 'Pending';
+                    let statusVariant = 'warning';
+                    let statusIcon = 'clock';
 
-                    if (ongoingAttendance) {
-                        status = "Checked In";
-                        statusVariant = "success";
-                        statusIcon = "log-in";
-
-                        // Show different badge if checked in on a previous date
-                        if (ongoingAttendance.date !== today) {
-                            status = `Checked In (${formatDateDisplay(ongoingAttendance.date)})`;
-                        }
-                    } else if (todayAttendance) {
-                        if (todayAttendance.out_time) {
-                            status = "Completed";
-                            statusVariant = "primary";
-                            statusIcon = "check";
-                        } else if (todayAttendance.status === "absent") {
-                            status = "Absent";
-                            statusVariant = "danger";
-                            statusIcon = "user-block";
+                    if (todayAttendance) {
+                        if (todayAttendance.status === 'absent') {
+                            status = 'Absent';
+                            statusVariant = 'danger';
+                            statusIcon = 'user-block';
+                        } else if (todayAttendance.status === 'leave') {
+                            status = `Leave (${todayAttendance.leave_type_id || 'Other'})`;
+                            statusVariant = 'info';
+                            statusIcon = 'calendar';
+                        } else if (todayAttendance.status === 'half_day') {
+                            status = `Half Day (${todayAttendance.leave_type_id || 'Other'})`;
+                            statusVariant = 'warning';
+                            statusIcon = 'clock';
+                        } else if (todayAttendance.in_time && todayAttendance.out_time) {
+                            status = 'Completed';
+                            statusVariant = 'primary';
+                            statusIcon = 'check';
+                        } else if (todayAttendance.in_time && !todayAttendance.out_time) {
+                            status = 'Checked In';
+                            statusVariant = 'success';
+                            statusIcon = 'log-in';
                         }
                     }
 
@@ -237,69 +251,26 @@ export default function ManageAttendance() {
                 Header: 'Check-In Time',
                 id: 'in_time',
                 headerClassName: 'text-muted text-small text-uppercase w-15',
-                Cell: ({ row }) => {
-                    const ongoingAttendance = getOngoingAttendance(row.original);
-                    const today = getTodayDate();
-                    const todayAttendance = row.original.attandance?.find(
-                        (a) => a.date === today
-                    );
-
-                    if (ongoingAttendance) {
-                        return (
-                            <div>
-                                <div>{ongoingAttendance.in_time}</div>
-                                {ongoingAttendance.date !== today && (
-                                    <small className="text-muted">({formatDateDisplay(ongoingAttendance.date)})</small>
-                                )}
-                            </div>
-                        );
-                    }
-                    return todayAttendance?.in_time || '-';
-                },
+                Cell: ({ row }) => row.original.todayAttendance?.in_time || '-',
             },
             {
                 Header: 'Check-Out Time',
                 id: 'out_time',
                 headerClassName: 'text-muted text-small text-uppercase w-15',
-                Cell: ({ row }) => {
-                    const today = getTodayDate();
-                    const todayAttendance = row.original.attandance?.find(
-                        (a) => a.date === today
-                    );
-                    return todayAttendance?.out_time || '-';
-                },
+                Cell: ({ row }) => row.original.todayAttendance?.out_time || '-',
             },
             {
                 Header: 'Actions',
                 id: 'actions',
                 headerClassName: 'text-muted text-small text-uppercase w-10 text-center',
                 Cell: ({ row }) => {
-                    const today = getTodayDate();
-                    const ongoingAttendance = getOngoingAttendance(row.original);
-                    const todayAttendance = row.original.attandance?.find(
-                        (a) => a.date === today
-                    );
+                    const { todayAttendance } = row.original;
+                    const actionsDisabled =
+                        loading.actions.checkin || loading.actions.checkout || loading.actions.absent;
 
                     return (
                         <div className="d-flex justify-content-center">
-                            {ongoingAttendance ? (
-                                // Staff is checked in (possibly from a previous day)
-                                <Button
-                                    variant="outline-secondary"
-                                    size="sm"
-                                    className="btn-icon btn-icon-only me-1"
-                                    onClick={() => handleAction(row.original, 'checkout')}
-                                    title="Check-Out"
-                                >
-                                    <CsLineIcons icon="logout" />
-                                </Button>
-                            ) : todayAttendance ? (
-                                // Today's attendance exists and is completed or absent
-                                <Badge bg="secondary" className="mx-2 d-flex align-items-center">
-                                    <CsLineIcons icon="check" />
-                                </Badge>
-                            ) : (
-                                // No attendance for today
+                            {!todayAttendance ? (
                                 <>
                                     <Button
                                         variant="outline-primary"
@@ -307,6 +278,7 @@ export default function ManageAttendance() {
                                         className="btn-icon btn-icon-only me-1"
                                         onClick={() => handleAction(row.original, 'checkin')}
                                         title="Check-In"
+                                        disabled={actionsDisabled}
                                     >
                                         <CsLineIcons icon="login" />
                                     </Button>
@@ -316,10 +288,36 @@ export default function ManageAttendance() {
                                         className="btn-icon btn-icon-only me-1"
                                         onClick={() => handleAction(row.original, 'absent')}
                                         title="Mark Absent"
+                                        disabled={actionsDisabled}
                                     >
                                         <i className="bi-person-x-fill" />
                                     </Button>
+                                    <Button
+                                        variant="outline-info"
+                                        size="sm"
+                                        className="btn-icon btn-icon-only me-1"
+                                        onClick={() => handleAction(row.original, 'leave')}
+                                        title="Mark Leave"
+                                        disabled={actionsDisabled}
+                                    >
+                                        <CsLineIcons icon="calendar" />
+                                    </Button>
                                 </>
+                            ) : todayAttendance.in_time && !todayAttendance.out_time ? (
+                                <Button
+                                    variant="outline-secondary"
+                                    size="sm"
+                                    className="btn-icon btn-icon-only me-1"
+                                    onClick={() => handleAction(row.original, 'checkout')}
+                                    title="Check-Out"
+                                    disabled={actionsDisabled}
+                                >
+                                    <CsLineIcons icon="logout" />
+                                </Button>
+                            ) : (
+                                <Badge bg="secondary" className="mx-2 d-flex align-items-center">
+                                    <CsLineIcons icon="check" />
+                                </Badge>
                             )}
                             <Button
                                 variant="outline-dark"
@@ -327,6 +325,7 @@ export default function ManageAttendance() {
                                 className="btn-icon btn-icon-only"
                                 onClick={() => history.push(`/staff/attendance/view/${row.original._id}`)}
                                 title="View Attendance History"
+                                disabled={loading.initial}
                             >
                                 <CsLineIcons icon="eye" />
                             </Button>
@@ -335,24 +334,40 @@ export default function ManageAttendance() {
                 },
             },
         ],
-        []
+        [loading]
     );
 
     const tableInstance = useTable(
-        {
-            columns,
-            data: staffList,
-            initialState: {
-                pageIndex: 0,
-                pageSize: 10,
-            },
-        },
+        { columns, data: staffList, initialState: { pageIndex: 0, pageSize: 10 } },
         useGlobalFilter,
         useSortBy,
         usePagination,
         useRowSelect
     );
 
+    // ── Loading State ────────────────────────────────────────────────────────────
+    if (loading.initial) {
+        return (
+            <>
+                <HtmlHead title={title} description={description} />
+                <Row>
+                    <Col>
+                        <div className="page-title-container">
+                            <h1 className="mb-0 pb-0 display-4">{title}</h1>
+                            <BreadcrumbList items={breadcrumbs} />
+                        </div>
+                        <div className="text-center py-5">
+                            <Spinner animation="border" variant="primary" className="mb-3" />
+                            <h5>Loading Attendance Data...</h5>
+                            <p className="text-muted">Please wait while we fetch staff attendance information</p>
+                        </div>
+                    </Col>
+                </Row>
+            </>
+        );
+    }
+
+    // ── Render ───────────────────────────────────────────────────────────────────
     return (
         <>
             <HtmlHead title={title} description={description} />
@@ -360,56 +375,78 @@ export default function ManageAttendance() {
             <Row>
                 <Col>
                     <div className="page-title-container">
-                        <Row>
+                        <Row className="align-items-center">
                             <Col xs="12" md="7">
                                 <h1 className="mb-0 pb-0 display-4">{title}</h1>
                                 <BreadcrumbList items={breadcrumbs} />
                             </Col>
                             <Col xs="12" md="5" className="d-flex align-items-start justify-content-end">
-                                <Button
-                                    variant="outline-primary"
-                                    as={Link}
-                                    to="/staff/view"
-                                >
-                                    <CsLineIcons icon="eye" className="me-2" />
-                                    View Staff
-                                </Button>
+                                <div className="d-flex gap-2">
+                                    <Button
+                                        variant="outline-primary"
+                                        onClick={fetchTodayAttendance}
+                                        disabled={
+                                            loading.initial ||
+                                            loading.actions.checkin ||
+                                            loading.actions.checkout ||
+                                            loading.actions.absent
+                                        }
+                                    >
+                                        <CsLineIcons icon="refresh" className="me-2" />
+                                        Refresh
+                                    </Button>
+                                    <Button variant="outline-primary" as={Link} to="/staff/view">
+                                        <CsLineIcons icon="eye" className="me-2" />
+                                        View Staff
+                                    </Button>
+                                </div>
                             </Col>
                         </Row>
                     </div>
 
-                    {errorMessage && (
-                        <Alert variant="danger" dismissible onClose={() => setErrorMessage('')}>
-                            <CsLineIcons icon="warning-hexagon" className="me-2" />
-                            {errorMessage}
-                        </Alert>
-                    )}
-
-                    {successMessage && (
-                        <Alert variant="success" dismissible onClose={() => setSuccessMessage('')}>
-                            <CsLineIcons icon="check-circle" className="me-2" />
-                            {successMessage}
+                    {error && (
+                        <Alert variant="danger" className="mb-4">
+                            <CsLineIcons icon="error" className="me-2" />
+                            {error}
+                            <Button
+                                variant="outline-danger"
+                                size="sm"
+                                className="ms-3"
+                                onClick={fetchTodayAttendance}
+                                disabled={loading.initial}
+                            >
+                                Retry
+                            </Button>
                         </Alert>
                     )}
 
                     <Card className="mb-5">
-                        <Card.Header>
-                            <Card.Title className="mb-0">
-                                Today's Attendance - {formatDateDisplay(getTodayDate())}
-                            </Card.Title>
+                        <Card.Header className="d-flex justify-content-between align-items-center">
+                            <div>
+                                <Card.Title className="mb-0">
+                                    <CsLineIcons icon="calendar" className="me-2" />
+                                    Today's Attendance — {formatDateDisplay(getTodayDate())}
+                                </Card.Title>
+                                <small className="text-muted">All times are in IST (Asia/Kolkata) timezone</small>
+                            </div>
+                            <Badge bg="light" text="dark" className="p-2">
+                                <CsLineIcons icon="users" className="me-1" />
+                                {staffList.length} staff member{staffList.length !== 1 ? 's' : ''}
+                            </Badge>
                         </Card.Header>
+
                         <Card.Body>
-                            {isLoading ? (
-                                <div className="text-center py-4">
-                                    <div className="spinner-border text-primary" role="status">
-                                        <span className="visually-hidden">Loading...</span>
-                                    </div>
-                                    <p className="mt-2 text-muted">Loading staff data...</p>
-                                </div>
-                            ) : staffList.length === 0 ? (
+                            {staffList.length === 0 ? (
                                 <Alert variant="info" className="text-center">
-                                    <CsLineIcons icon="info" className="me-2" />
-                                    No staff members found. Please add staff first.
+                                    <div className="py-4">
+                                        <CsLineIcons icon="inbox" size="48" className="text-muted mb-3" />
+                                        <h5>No Staff Members Found</h5>
+                                        <p className="text-muted mb-4">Please add staff members to manage attendance</p>
+                                        <Button variant="primary" as={Link} to="/staff/add">
+                                            <CsLineIcons icon="plus" className="me-2" />
+                                            Add Staff
+                                        </Button>
+                                    </div>
                                 </Alert>
                             ) : (
                                 <div className="mt-3">
@@ -436,11 +473,26 @@ export default function ManageAttendance() {
                                 </div>
                             )}
                         </Card.Body>
+
                         <Card.Footer className="bg-transparent">
-                            <small className="text-muted">
-                                <CsLineIcons icon="clock" className="me-1" />
-                                All times are in IST (Asia/Kolkata) timezone. Night shifts spanning multiple days are supported.
-                            </small>
+                            <div className="d-flex flex-wrap gap-3">
+                                <div className="d-flex align-items-center">
+                                    <Badge bg="warning" className="me-2 px-2 py-1"><CsLineIcons icon="clock" size="12" /></Badge>
+                                    <small>Pending</small>
+                                </div>
+                                <div className="d-flex align-items-center">
+                                    <Badge bg="success" className="me-2 px-2 py-1"><CsLineIcons icon="log-in" size="12" /></Badge>
+                                    <small>Checked In</small>
+                                </div>
+                                <div className="d-flex align-items-center">
+                                    <Badge bg="primary" className="me-2 px-2 py-1"><CsLineIcons icon="check" size="12" /></Badge>
+                                    <small>Completed</small>
+                                </div>
+                                <div className="d-flex align-items-center">
+                                    <Badge bg="danger" className="me-2 px-2 py-1"><i className="bi-person-x-fill" /></Badge>
+                                    <small>Absent</small>
+                                </div>
+                            </div>
                         </Card.Footer>
                     </Card>
                 </Col>
@@ -450,52 +502,112 @@ export default function ManageAttendance() {
             <Modal show={showActionModal} onHide={() => setShowActionModal(false)} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>
+                        <CsLineIcons
+                            icon={actionType === 'checkin' ? 'login' : actionType === 'checkout' ? 'logout' : 'user-block'}
+                            className="me-2"
+                        />
                         {actionType === 'checkin' && 'Confirm Check-In'}
                         {actionType === 'checkout' && 'Confirm Check-Out'}
                         {actionType === 'absent' && 'Confirm Absent'}
+                        {actionType === 'leave' && 'Mark Leave'}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {selectedStaff && (
                         <div>
                             <p>
-                                Are you sure you want to {actionType === 'checkin' ? 'check-in' :
-                                    actionType === 'checkout' ? 'check-out' : 'mark as absent'}
-                                <strong> {selectedStaff.f_name} {selectedStaff.l_name}</strong>?
+                                Are you sure you want to{' '}
+                                {actionType === 'checkin' ? 'check-in' : actionType === 'checkout' ? 'check-out' : actionType === 'leave' ? 'mark on leave' : 'mark as absent'}{' '}
+                                <strong>{selectedStaff.f_name} {selectedStaff.l_name}</strong>?
                             </p>
-                            {actionType === 'checkin' && (
-                                <p className="text-muted">Check-in time: {getCurrentTime()}</p>
+                            {actionType !== 'absent' && actionType !== 'leave' && (
+                                <p className="text-muted">
+                                    <CsLineIcons icon="clock" className="me-1" />
+                                    Time: {getCurrentTime()}
+                                </p>
                             )}
-                            {actionType === 'checkout' && (
-                                <>
-                                    <p className="text-muted">Check-out time: {getCurrentTime()}</p>
-                                    {(() => {
-                                        const ongoing = getOngoingAttendance(selectedStaff);
-                                        if (ongoing && ongoing.date !== getTodayDate()) {
-                                            return (
-                                                <Alert variant="info" className="mb-0">
-                                                    <small>
-                                                        This will complete the shift started on {formatDateDisplay(ongoing.date)} at {ongoing.in_time}
-                                                    </small>
-                                                </Alert>
-                                            );
-                                        }
-                                        return null;
-                                    })()}
-                                </>
+                            {actionType === 'absent' && (
+                                <Alert variant="warning" className="mt-3">
+                                    <CsLineIcons icon="alert" className="me-2" />
+                                    This will mark the staff as absent for today.
+                                </Alert>
+                            )}
+                            {actionType === 'leave' && (
+                                <div className="mt-3">
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Leave Type</Form.Label>
+                                        <Form.Select
+                                            value={selectedLeaveType}
+                                            onChange={(e) => setSelectedLeaveType(e.target.value)}
+                                        >
+                                            {leaveTypes.map((lt) => (
+                                                <option key={lt.leave_type_id} value={lt.leave_type_id}>
+                                                    {lt.name} ({lt.short_code})
+                                                </option>
+                                            ))}
+                                            {leaveTypes.length === 0 && <option value="other">Other Leave</option>}
+                                        </Form.Select>
+                                    </Form.Group>
+                                    <Form.Group>
+                                        <Form.Check
+                                            type="switch"
+                                            id="half-day-switch"
+                                            label="Half Day Leave"
+                                            checked={isHalfDay}
+                                            onChange={(e) => setIsHalfDay(e.target.checked)}
+                                        />
+                                    </Form.Group>
+                                </div>
                             )}
                         </div>
                     )}
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="dark" onClick={() => setShowActionModal(false)}>
+                    <Button
+                        variant="secondary"
+                        onClick={() => setShowActionModal(false)}
+                        disabled={loading.actions.checkin || loading.actions.checkout || loading.actions.absent || loading.actions.leave}
+                    >
                         Cancel
                     </Button>
-                    <Button variant="primary" onClick={confirmAction}>
-                        Confirm
+                    <Button
+                        variant={actionType === 'checkin' ? 'primary' : actionType === 'checkout' ? 'secondary' : actionType === 'leave' ? 'info' : 'danger'}
+                        onClick={confirmAction}
+                        disabled={loading.actions.checkin || loading.actions.checkout || loading.actions.absent || loading.actions.leave}
+                        style={{ minWidth: '100px' }}
+                    >
+                        {loading.actions.checkin || loading.actions.checkout || loading.actions.absent || loading.actions.leave ? (
+                            <>
+                                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                                Processing...
+                            </>
+                        ) : (
+                            'Confirm'
+                        )}
                     </Button>
                 </Modal.Footer>
             </Modal>
+
+            {/* Action processing overlay */}
+            {(loading.actions.checkin || loading.actions.checkout || loading.actions.absent || loading.actions.leave) && (
+                <div
+                    className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.7)', zIndex: 9999, backdropFilter: 'blur(2px)' }}
+                >
+                    <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
+                        <Card.Body className="text-center p-4">
+                            <Spinner animation="border" variant="primary" className="mb-3" style={{ width: '3rem', height: '3rem' }} />
+                            <h5 className="mb-0">
+                                {loading.actions.checkin && 'Checking In...'}
+                                {loading.actions.checkout && 'Checking Out...'}
+                                {loading.actions.absent && 'Marking Absent...'}
+                                {loading.actions.leave && 'Marking Leave...'}
+                            </h5>
+                            <small className="text-muted">Please wait a moment</small>
+                        </Card.Body>
+                    </Card>
+                </div>
+            )}
         </>
     );
 }

@@ -1,3 +1,4 @@
+// Admin Side Inventory
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { Row, Col, Card, Button, Form, Spinner } from 'react-bootstrap';
@@ -384,7 +385,7 @@ const AddInventory = () => {
               })}
 
               <Button variant="secondary" onClick={addItem} disabled={isSubmitting}>
-               Add
+                Add
               </Button>
 
               {/* 🔥 NEW: Financial Summary Section */}

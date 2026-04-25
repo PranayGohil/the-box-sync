@@ -1,5 +1,8 @@
 const Inventory = require("../models/inventoryModel");
+const mongoose = require("mongoose");
 const Notification = require("../models/notificationModel");
+const XLSX = require("xlsx");
+const StockUsageLog = require("../models/stockUsageLogModel");
 
 const getInventoryData = async (req, res) => {
   try {
@@ -246,6 +249,13 @@ const addInventory = async (req, res) => {
       }
     }
 
+    if (Array.isArray(items)) {
+      items = items.map(item => ({
+        ...item,
+        currentStock: item.currentStock !== undefined ? Number(item.currentStock) : (Number(item.item_quantity) || 0)
+      }));
+    }
+
     const inventoryData = {
       ...req.body,
       user_id: userId,
@@ -329,6 +339,13 @@ const updateInventory = async (req, res) => {
   try {
     if (typeof updatedData.items === "string") {
       updatedData.items = JSON.parse(updatedData.items);
+    }
+
+    if (Array.isArray(updatedData.items)) {
+      updatedData.items = updatedData.items.map(item => ({
+        ...item,
+        currentStock: item.currentStock !== undefined ? Number(item.currentStock) : (Number(item.item_quantity) || 0)
+      }));
     }
 
     if (req.files && req.files.length > 0) {
@@ -438,6 +455,16 @@ const completeInventoryRequest = async (req, res) => {
     if (typeof remainingItems === "string")
       remainingItems = JSON.parse(remainingItems);
 
+    console.log("items", items);
+
+    if (Array.isArray(items)) {
+      items = items.map(item => ({
+        ...item,
+        currentStock: item.currentStock !== undefined ? Number(item.currentStock) : (Number(item.item_quantity))
+      }));
+    }
+
+
     const bill_files = (req.files || []).map(
       (file) => `/inventory/bills/${file.filename}`
     );
@@ -452,6 +479,20 @@ const completeInventoryRequest = async (req, res) => {
     } else {
       inventory.items = remainingItems;
       await inventory.save();
+    }
+
+    // Explicitly update all other Completed records to increment the stock of the incoming items
+    if (Array.isArray(items)) {
+      for (const item of items) {
+        const qtyToAdd = Number(item.item_quantity) || 0;
+        if (qtyToAdd > 0) {
+          await Inventory.updateMany(
+            { user_id: inventory.user_id, status: "Completed" },
+            { $inc: { "items.$[elem].currentStock": qtyToAdd } },
+            { arrayFilters: [{ "elem.item_name": item.item_name }] }
+          );
+        }
+      }
     }
 
     const completedItems = {
@@ -513,6 +554,242 @@ const rejectInventoryRequest = async (req, res) => {
   }
 };
 
+const useInventory = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user;
+    const { item_name, quantity_used, comment } = req.body;
+
+    const requestedAmount = Number(quantity_used);
+    if (!item_name || !Number.isFinite(requestedAmount) || requestedAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "item_name and a positive numeric quantity_used are required",
+      });
+    }
+
+    // 1. Pre-flight check: total available stock
+    const stockAvailable = await Inventory.aggregate([
+      { $match: { user_id: userId, status: "Completed", "items.item_name": item_name } },
+      { $unwind: "$items" },
+      { $match: { "items.item_name": item_name } },
+      { $group: { _id: null, totalStock: { $sum: "$items.currentStock" } } }
+    ]);
+
+    const totalAvailable = stockAvailable.length > 0 ? stockAvailable[0].totalStock : 0;
+    if (totalAvailable < requestedAmount) {
+      return res.status(400).json({ success: false, message: `Insufficient stock. Only ${totalAvailable} available.` });
+    }
+
+    let remainingToDeduct = requestedAmount;
+
+    // 2. Atomic Loop Deduction
+    while (remainingToDeduct > 0) {
+      const inv = await Inventory.findOne({
+        user_id: userId,
+        status: "Completed",
+        "items": { $elemMatch: { item_name: item_name, currentStock: { $gt: 0 } } }
+      }).sort({ request_date: 1 });
+
+      if (!inv) break;
+
+      let deductAmount = 0;
+      let targetIndex = -1;
+
+      for (let i = 0; i < inv.items.length; i++) {
+        let item = inv.items[i];
+        if (item.item_name === item_name && item.currentStock > 0) {
+          deductAmount = Math.min(item.currentStock, remainingToDeduct);
+          targetIndex = i;
+          break;
+        }
+      }
+
+      if (targetIndex === -1 || deductAmount === 0) break;
+
+      // Make the specific element deduction atomically
+      const updatedInv = await Inventory.findOneAndUpdate(
+        {
+          _id: inv._id,
+          [`items.${targetIndex}.item_name`]: item_name,
+          [`items.${targetIndex}.currentStock`]: { $gte: deductAmount }
+        },
+        {
+          $inc: { [`items.${targetIndex}.currentStock`]: -deductAmount }
+        },
+        { new: true }
+      );
+
+      // Successfully updated; commit the deduction from running total
+      if (updatedInv) {
+        remainingToDeduct -= deductAmount;
+      }
+    }
+
+    // 3. Ensure full requested deduction happened
+    if (remainingToDeduct > 0) {
+      return res.status(400).json({ success: false, message: "Concurrent modification resulted in insufficient stock during processing. Transaction aborted." });
+    }
+
+    // 4. Record stock usage exactly once all atomic actions succeed
+    await StockUsageLog.create({
+      user_id: userId,
+      item_name,
+      quantity_used: requestedAmount,
+      comment
+    });
+
+    res.json({ success: true, message: "Stock deducted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+const exportInventory = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user;
+    const stockData = await Inventory.aggregate([
+      { $match: { user_id: userId, status: "Completed" } },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.item_name",
+          totalStock: { $sum: "$items.currentStock" },
+          unit: { $first: "$items.unit" }
+        }
+      }
+    ]);
+
+    const excelData = stockData.map(item => ({
+      'Item Name': item._id,
+      'Current Stock': item.totalStock,
+      'Unit': item.unit
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(excelData.length ? excelData : [{ 'Item Name': 'No Data', 'Current Stock': 0, 'Unit': '' }]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Inventory Stock");
+
+    const excelBuffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="Inventory_Stock.xlsx"'
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    res.send(excelBuffer);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+const importInventory = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user;
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "Excel file is required" });
+    }
+
+    const fs = require('fs');
+    const fd = fs.openSync(req.file.path, 'r');
+    const buffer = Buffer.alloc(8);
+    fs.readSync(fd, buffer, 0, 8, 0);
+    fs.closeSync(fd);
+
+    const hex = buffer.toString('hex').toUpperCase();
+    const isXlsx = hex.startsWith('504B0304');
+    const isXls = hex.startsWith('D0CF11E0A1B11AE1');
+
+    if (!isXlsx && !isXls) {
+      return res.status(400).json({ success: false, message: "Invalid file signature. File is not a genuine Excel document." });
+    }
+
+    const workbook = XLSX.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(worksheet);
+
+    const itemsToUpdate = data.filter(r => r['Item Name']).map(row => row['Item Name']);
+    if (itemsToUpdate.length > 0) {
+      const session = await mongoose.startSession();
+      try {
+        await session.withTransaction(async () => {
+          await Inventory.updateMany(
+            { user_id: userId, status: "Completed" },
+            { $set: { "items.$[elem].currentStock": 0 } },
+            { arrayFilters: [{ "elem.item_name": { $in: itemsToUpdate } }], multi: true, session }
+          );
+
+          const mappedItems = data.filter(r => r['Item Name']).map(row => ({
+            item_name: row['Item Name'],
+            unit: row['Unit'] || 'unit',
+            item_quantity: Number(row['Current Stock']) || 0,
+            currentStock: Number(row['Current Stock']) || 0,
+          }));
+
+          await Inventory.create([{
+            user_id: userId,
+            request_date: new Date(),
+            bill_date: new Date(),
+            bill_number: "IMPORT-" + Date.now(),
+            vendor_name: "Excel Import",
+            category: "System Adjustment",
+            status: "Completed",
+            items: mappedItems
+          }], { session });
+        });
+      } finally {
+        session.endSession();
+      }
+    }
+
+    res.json({ success: true, message: "Inventory imported successfully" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
+  } finally {
+    const fs = require('fs');
+    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+      try {
+        await fs.promises.unlink(req.file.path);
+      } catch (err) {
+        console.error("Failed to delete temp excel file:", err);
+      }
+    }
+  }
+};
+
+const getCurrentStock = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user;
+    const stockData = await Inventory.aggregate([
+      { $match: { user_id: String(userId), status: "Completed" } },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.item_name",
+          totalStock: { $sum: "$items.currentStock" },
+          unit: { $first: "$items.unit" },
+          low_stock_threshold: { $max: "$items.low_stock_threshold" },
+          tracking_level: { $first: "$items.tracking_level" },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    res.json({ success: true, data: stockData });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 module.exports = {
   getInventoryData,
   getInventoryDataByStatus,
@@ -524,4 +801,8 @@ module.exports = {
   deleteInventory,
   completeInventoryRequest,
   rejectInventoryRequest,
+  useInventory,
+  exportInventory,
+  importInventory,
+  getCurrentStock,
 };

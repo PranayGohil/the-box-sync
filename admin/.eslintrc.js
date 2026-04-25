@@ -99,6 +99,7 @@ module.exports = {
     'jsx-a11y/media-has-caption': 'off',
     'no-new': 'off',
     'prefer-const': 'off',
+    'no-return-await': 'off',
   },
   globals: {
     window: true,

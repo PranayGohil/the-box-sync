@@ -400,7 +400,7 @@ const getUserData = async (req, res) => {
       taxInfo: 1,
       containerCharges: 1,
       purchasedPlan: 1,
-      feedbackToken: 1,
+      restaurant_token: 1,
       // don't include password, otp, feedbacks by default
     };
 

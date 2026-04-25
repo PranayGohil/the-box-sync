@@ -10,6 +10,10 @@ import { Switch, Route, Redirect, NavLink } from 'react-router-dom';
 import OrderHistory from './order/OrderHistory';
 import OrderDetails from './order/OrderDetails';
 
+import ReservationForm from './reservation/ReservationForm';
+import ManageReservations from './reservation/ManageReservations';
+import QRforReservation from './reservation/QRforReservation';
+
 import ManageTable from './table/ManageTable';
 import AddTable from './table/AddTable';
 
@@ -22,6 +26,11 @@ import AddInventory from './inventory/AddInventory';
 import EditInventory from './inventory/EditInventory';
 import InventoryHistory from './inventory/InventoryHistory';
 import InventoryDetails from './inventory/InventoryDetails';
+import StockManagement from './inventory/StockManagement';
+import DailyOpeningStock from './inventory/DailyOpeningStock';
+import DailyClosingStock from './inventory/DailyClosingStock';
+import WastageLog from './inventory/WastageLog';
+import InventoryReport from './inventory/InventoryReport';
 
 import Feedback from './feedback/Feedback';
 import QRforFeedback from './feedback/QRforFeedback';
@@ -38,6 +47,27 @@ const NavContent = () => {
           <Nav.Link as={NavLink} to="/operations/order-history" className="px-0 pt-1">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Order History</span>
+          </Nav.Link>
+        </div>
+      </div>
+
+      <div className="mb-2">
+        <Nav.Link as={NavLink} to="/operations/manage-reservations" className="px-0">
+          <CsLineIcons icon="calendar" className="me-2 sw-3" size="17" />
+          <span className="align-middle">Reservation</span>
+        </Nav.Link>
+        <div>
+          <Nav.Link as={NavLink} to="/operations/manage-reservations" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Manage Reservations</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/reservation-form" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Reservation Form</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/qr-for-reservation" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">QR for Reservation</span>
           </Nav.Link>
         </div>
       </div>
@@ -98,6 +128,26 @@ const NavContent = () => {
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Add Inventory</span>
           </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/stock-management" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Stock Management</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/daily-opening-stock" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Opening Stock</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/daily-closing-stock" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Closing Stock</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/wastage-log" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Wastage Log</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/inventory-report" className="px-0 pt-1">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Inventory Report</span>
+          </Nav.Link>
         </div>
       </div>
 
@@ -128,6 +178,15 @@ const mobileNavItems = [
     items: [{ to: '/operations/order-history', label: 'Order History' }],
   },
   {
+    label: 'Reservation',
+    icon: 'calendar',
+    items: [
+      { to: '/operations/manage-reservations', label: 'Manage Reservations' },
+      { to: '/operations/reservation-form', label: 'Reservation Form' },
+      { to: '/operations/qr-for-reservation', label: 'QR for Reservation' }
+    ],
+  },
+  {
     label: 'Table',
     icon: 'square',
     items: [
@@ -151,6 +210,11 @@ const mobileNavItems = [
       { to: '/operations/requested-inventory', label: 'Requested Inventory' },
       { to: '/operations/inventory-history', label: 'Inventory History' },
       { to: '/operations/add-inventory', label: 'Add Inventory' },
+      { to: '/operations/stock-management', label: 'Stock Management' },
+      { to: '/operations/daily-opening-stock', label: '🌅 Opening Stock' },
+      { to: '/operations/daily-closing-stock', label: '🌙 Closing Stock' },
+      { to: '/operations/wastage-log', label: '🗑 Wastage Log' },
+      { to: '/operations/inventory-report', label: '📊 Inventory Report' },
     ],
   },
   {
@@ -223,6 +287,10 @@ const Operations = () => {
             <Route path="/operations/order-history" component={OrderHistory} />
             <Route path="/operations/order-details/:id" component={OrderDetails} />
 
+            <Route path="/operations/manage-reservations" component={ManageReservations} />
+            <Route path="/operations/reservation-form" component={ReservationForm} />
+            <Route path="/operations/qr-for-reservation" component={QRforReservation} />
+
             <Route path="/operations/manage-table" component={ManageTable} />
             <Route path="/operations/add-table" component={AddTable} />
 
@@ -235,6 +303,11 @@ const Operations = () => {
             <Route path="/operations/add-inventory" component={AddInventory} />
             <Route path="/operations/edit-inventory/:id" component={EditInventory} />
             <Route path="/operations/inventory-details/:id" component={InventoryDetails} />
+            <Route path="/operations/stock-management" component={StockManagement} />
+            <Route path="/operations/daily-opening-stock" component={DailyOpeningStock} />
+            <Route path="/operations/daily-closing-stock" component={DailyClosingStock} />
+            <Route path="/operations/wastage-log" component={WastageLog} />
+            <Route path="/operations/inventory-report" component={InventoryReport} />
 
             <Route path="/operations/feedback" component={Feedback} />
             <Route path="/operations/qr-for-feedback" component={QRforFeedback} />

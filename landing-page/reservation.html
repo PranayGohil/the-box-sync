@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="TheBox">
+    <meta name="description" content="Reserve your table online. Select your preferred date, time and party size.">
+    <title>TheBox - Table Reservation</title>
+
+    <link rel="shortcut icon" href="assets/images/favicon.png">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/animate.css">
+    <link rel="stylesheet" href="assets/css/magnific-popup.css">
+    <link rel="stylesheet" href="assets/css/meanmenu.css">
+    <link rel="stylesheet" href="assets/css/swiper-bundle.min.css">
+    <link rel="stylesheet" href="assets/css/nice-select.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+
+    <!-- Google Fonts matching the elegant restaurant theme -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* ── CSS Variables matching TheBox palette ── */
+        :root {
+            --thebox-primary: #1b3a6b;
+            /* deep navy from breadcrumb bg */
+            --thebox-accent: #e8a020;
+            /* warm gold — theme-btn colour */
+            --thebox-accent2: #c8121c;
+            /* TheBox red */
+            --thebox-light: #f5f7fa;
+            --thebox-card-bg: #ffffff;
+            --thebox-border: #e2e8f0;
+            --thebox-text: #1e293b;
+            --thebox-muted: #64748b;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'DM Sans', sans-serif;
+            --radius: 12px;
+            --shadow: 0 4px 24px rgba(27, 58, 107, 0.10);
+            --shadow-lg: 0 12px 48px rgba(27, 58, 107, 0.16);
+            --transition: all 0.28s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--thebox-text);
+        }
+
+        /* ── Step progress bar ── */
+        .res-steps {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 36px;
+        }
+
+        .res-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .res-step:last-child {
+            flex: 0;
+        }
+
+        .step-num {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--thebox-border);
+            color: var(--thebox-muted);
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: var(--transition);
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-num.active {
+            background: var(--thebox-primary);
+            color: #fff;
+            box-shadow: 0 0 0 4px rgba(27, 58, 107, .15);
+        }
+
+        .step-num.done {
+            background: #16a34a;
+            color: #fff;
+        }
+
+        .step-num.done::after {
+            content: '✓';
+        }
+
+        .step-num.done span {
+            display: none;
+        }
+
+        .step-label {
+            font-size: 12px;
+            color: var(--thebox-muted);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .step-label.active {
+            color: var(--thebox-primary);
+            font-weight: 600;
+        }
+
+        .step-line {
+            flex: 1;
+            height: 2px;
+            background: var(--thebox-border);
+            margin: 0 8px;
+            transition: var(--transition);
+        }
+
+        .step-line.done {
+            background: var(--thebox-primary);
+        }
+
+        /* ── Form card ── */
+        .res-card {
+            background: var(--thebox-card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--thebox-border);
+        }
+
+        .res-card-header {
+            background: var(--thebox-primary);
+            padding: 20px 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .res-card-header h5 {
+            color: #fff;
+            margin: 0;
+            font-family: var(--font-display);
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .res-card-header i {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 18px;
+        }
+
+        .res-card-body {
+            padding: 32px 28px;
+        }
+
+        /* ── Period tabs (Lunch / Dinner) ── */
+        .period-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .period-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border-radius: 50px;
+            border: 2px solid var(--thebox-border);
+            background: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--thebox-muted);
+        }
+
+        .period-tab:hover {
+            border-color: var(--thebox-primary);
+            color: var(--thebox-primary);
+        }
+
+        .period-tab.active {
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .period-tab .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .period-tab .count {
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 10px;
+            font-size: 10px;
+            padding: 1px 7px;
+            font-weight: 600;
+        }
+
+        .period-tab:not(.active) .count {
+            background: var(--thebox-light);
+            color: var(--thebox-muted);
+        }
+
+        /* ── Slot buttons grid ── */
+        .slots-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .slot-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 14px;
+            min-width: 90px;
+            border-radius: 10px;
+            border: 2px solid var(--thebox-border);
+            background: #fff;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: var(--font-body);
+        }
+
+        .slot-btn:hover:not(:disabled) {
+            border-color: var(--thebox-primary);
+            color: var(--thebox-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .slot-btn.selected {
+            color: #fff !important;
+            border-color: transparent !important;
+        }
+
+        .slot-btn:disabled {
+            opacity: 0.38;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .slot-time {
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .slot-end {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 3px;
+        }
+
+        .slot-tag {
+            font-size: 9px;
+            margin-top: 4px;
+            background: rgba(0, 0, 0, 0.12);
+            border-radius: 6px;
+            padding: 1px 6px;
+        }
+
+        /* ── Selected summary banner ── */
+        .slot-summary {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            border: 1.5px solid;
+            margin-top: 18px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .slot-summary .clear-btn {
+            margin-left: auto;
+            background: none;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0.6;
+            padding: 0;
+        }
+
+        .slot-summary .clear-btn:hover {
+            opacity: 1;
+        }
+
+        /* ── Form inputs ── */
+        .res-input,
+        .res-textarea,
+        .res-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid var(--thebox-border);
+            border-radius: 8px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            color: var(--thebox-text);
+            background: #fff;
+            transition: var(--transition);
+            outline: none;
+        }
+
+        .res-input:focus,
+        .res-textarea:focus,
+        .res-select:focus {
+            border-color: var(--thebox-primary);
+            box-shadow: 0 0 0 3px rgba(27, 58, 107, .10);
+        }
+
+        .res-input.error,
+        .res-textarea.error {
+            border-color: var(--thebox-accent2);
+        }
+
+        .res-textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        .res-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--thebox-text);
+            margin-bottom: 6px;
+        }
+
+        .res-label span {
+            color: var(--thebox-accent2);
+        }
+
+        .field-error {
+            font-size: 12px;
+            color: var(--thebox-accent2);
+            margin-top: 4px;
+            display: none;
+        }
+
+        .field-error.show {
+            display: block;
+        }
+
+        /* ── Buttons ── */
+        .btn-res-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--thebox-primary);
+            color: #fff;
+            border: none;
+            padding: 13px 32px;
+            border-radius: 8px;
+            font-family: var(--font-body);
+            font-weight: 500;
+            font-size: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .btn-res-primary:hover:not(:disabled) {
+            background: #142d57;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-res-primary:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .btn-res-outline {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: transparent;
+            color: var(--thebox-primary);
+            border: 2px solid var(--thebox-primary);
+            padding: 11px 24px;
+            border-radius: 8px;
+            font-family: var(--font-body);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-res-outline:hover {
+            background: var(--thebox-primary);
+            color: #fff;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-row .btn-res-primary {
+            flex: 1;
+        }
+
+        /* ── Info banner ── */
+        .info-banner {
+            background: #eff6ff;
+            border: 1.5px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #1e40af;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .info-banner i {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* ── Status lookup card ── */
+        .lookup-card {
+            background: #fff;
+            border: 1px solid var(--thebox-border);
+            border-radius: var(--radius);
+            padding: 24px 28px;
+            margin-top: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .lookup-card h6 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--thebox-text);
+        }
+
+        .lookup-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .lookup-row .res-input {
+            flex: 1;
+            margin: 0;
+        }
+
+        .btn-lookup {
+            padding: 12px 22px;
+            background: var(--thebox-light);
+            border: 1.5px solid var(--thebox-border);
+            border-radius: 8px;
+            font-family: var(--font-body);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--thebox-text);
+            white-space: nowrap;
+        }
+
+        .btn-lookup:hover {
+            border-color: var(--thebox-primary);
+            color: var(--thebox-primary);
+        }
+
+        /* ── Status result ── */
+        .status-result {
+            background: var(--thebox-light);
+            border: 1px solid var(--thebox-border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-top: 14px;
+            display: none;
+        }
+
+        .status-result.show {
+            display: block;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-rejected {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+
+        .badge-reserved {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-seated {
+            background: #ede9fe;
+            color: #4c1d95;
+        }
+
+        .badge-completed {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .badge-cancelled {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .badge-no_show {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+
+        /* ── Success screen ── */
+        #successScreen {
+            display: none;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #d1fae5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 36px;
+            color: #059669;
+        }
+
+        .reservation-id-box {
+            background: var(--thebox-light);
+            border: 1px dashed var(--thebox-border);
+            border-radius: 8px;
+            padding: 14px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            word-break: break-all;
+            color: var(--thebox-text);
+            margin: 12px 0;
+        }
+
+        .btn-copy {
+            background: none;
+            border: 1.5px solid var(--thebox-border);
+            border-radius: 6px;
+            padding: 6px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            color: var(--thebox-muted);
+            transition: var(--transition);
+        }
+
+        .btn-copy:hover {
+            border-color: var(--thebox-primary);
+            color: var(--thebox-primary);
+        }
+
+        /* ── Spinner ── */
+        .spin {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, .4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin-dark {
+            border-color: rgba(27, 58, 107, .2);
+            border-top-color: var(--thebox-primary);
+        }
+
+        /* ── Restaurant branding bar ── */
+        .restaurant-brand {
+            text-align: center;
+            padding: 28px 0 20px;
+        }
+
+        .restaurant-brand img {
+            height: 52px;
+            object-fit: contain;
+            margin-bottom: 10px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .restaurant-brand h3 {
+            font-family: var(--font-display);
+            font-size: 26px;
+            color: var(--thebox-primary);
+            margin: 0 0 4px;
+        }
+
+        .restaurant-brand p {
+            font-size: 13px;
+            color: var(--thebox-muted);
+            margin: 0;
+        }
+
+        /* ── Animations ── */
+        .fade-in {
+            animation: fadeIn .35s ease both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .step-panel {
+            display: none;
+        }
+
+        .step-panel.active {
+            display: block;
+            animation: fadeIn .3s ease both;
+        }
+
+        /* ── Misc ── */
+        .form-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .summary-bar {
+            background: var(--thebox-light);
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 13px;
+            color: var(--thebox-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border: 1px solid var(--thebox-border);
+        }
+
+        .summary-bar strong {
+            color: var(--thebox-text);
+        }
+
+        .btn-edit-link {
+            background: none;
+            border: none;
+            color: var(--thebox-primary);
+            font-size: 12px;
+            cursor: pointer;
+            padding: 0;
+            text-decoration: underline;
+        }
+
+        .alert-msg {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .alert-msg.show {
+            display: block;
+        }
+
+        .alert-danger {
+            background: #fee2e2;
+            color: #7f1d1d;
+            border: 1px solid #fca5a5;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+
+        /* ── Token loading / error ── */
+        #tokenLoading,
+        #tokenError {
+            display: none;
+        }
+
+        #tokenLoading.show,
+        #tokenError.show {
+            display: flex;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 576px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .res-card-body {
+                padding: 22px 16px;
+            }
+
+            .lookup-card {
+                padding: 18px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Preloader Start -->
+    <div id="preloader" class="preloader">
+        <div class="animation-preloader">
+            <div class="spinner"></div>
+            <div class="txt-loading">
+                <span data-text-preloader="T" class="letters-loading">T</span>
+                <span data-text-preloader="H" class="letters-loading">H</span>
+                <span data-text-preloader="E" class="letters-loading">E</span>
+                <span data-text-preloader="B" class="letters-loading">B</span>
+                <span data-text-preloader="O" class="letters-loading">O</span>
+                <span data-text-preloader="X" class="letters-loading">X</span>
+            </div>
+            <p class="text-center">Loading</p>
+        </div>
+        <div class="loader">
+            <div class="row">
+                <div class="col-3 loader-section section-left">
+                    <div class="bg"></div>
+                </div>
+                <div class="col-3 loader-section section-left">
+                    <div class="bg"></div>
+                </div>
+                <div class="col-3 loader-section section-right">
+                    <div class="bg"></div>
+                </div>
+                <div class="col-3 loader-section section-right">
+                    <div class="bg"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mouse Cursor -->
+    <div class="mouse-cursor cursor-outer"></div>
+    <div class="mouse-cursor cursor-inner"></div>
+
+    <!-- Back To Top -->
+    <button id="back-top" class="back-to-top"><i class="fa-solid fa-chevron-up"></i></button>
+
+    <!-- Offcanvas -->
+    <div class="fix-area">
+        <div class="offcanvas__info">
+            <div class="offcanvas__wrapper">
+                <div class="offcanvas__content">
+                    <div class="offcanvas__top mb-5 d-flex justify-content-between align-items-center">
+                        <div class="offcanvas__logo">
+                            <a href="index.html"><img src="assets/images/logo/logo-blue.svg" alt="logo-img" /></a>
+                        </div>
+                        <div class="offcanvas__close"><button><i class="fas fa-times"></i></button></div>
+                    </div>
+                    <div class="mobile-menu fix mb-3"></div>
+                    <div class="offcanvas__contact">
+                        <h4>Contact us</h4>
+                        <ul>
+                            <li class="d-flex align-items-center">
+                                <div class="offcanvas__contact-icon"><i class="fal fa-map-marker-alt"></i></div>
+                                <div class="offcanvas__contact-text"><a target="_blank" href="#">4th cross Road, Jakkur
+                                        Rd, Amrutahalli, Bengaluru, Karnataka 560064</a></div>
+                            </li>
+                            <li class="d-flex align-items-center">
+                                <div class="offcanvas__contact-icon mr-15"><i class="fal fa-envelope"></i></div>
+                                <div class="offcanvas__contact-text"><a
+                                        href="mailto:support@theboxsync.com">support@theboxsync.com</a></div>
+                            </li>
+                            <li class="d-flex align-items-center">
+                                <div class="offcanvas__contact-icon mr-15"><i class="far fa-phone"></i></div>
+                                <div class="offcanvas__contact-text"><a href="tel:9898869160">+91 9898869160</a></div>
+                            </li>
+                        </ul>
+                        <div class="header-button mt-4">
+                            <a href="contact.html" class="theme-btn text-center">
+                                <span>Get A Quote<i class="fa-solid fa-arrow-right-long"></i></span>
+                            </a>
+                        </div>
+                        <div class="social-icon d-flex align-items-center">
+                            <a href="#"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#"><i class="fab fa-twitter"></i></a>
+                            <a href="#"><i class="fab fa-youtube"></i></a>
+                            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="offcanvas__overlay"></div>
+
+    <!-- Search Area -->
+    <div class="search-wrap">
+        <div class="search-inner">
+            <i class="fas fa-times search-close" id="search-close"></i>
+            <div class="search-cell">
+                <form method="get">
+                    <div class="search-field-holder">
+                        <input type="search" class="main-search-input" placeholder="Search...">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breadcrumb -->
+    <div class="breadcumb-section fix">
+        <div class="breadcumb-container-wrapper" data-bg-src="assets/images/bg/breadcumgBg.png"
+            style="padding: 50px 0 50px;">
+            <div class="container">
+                <div class="shape1"><img src="assets/images/shape/breadCumbShape1_1.png" alt="shape"></div>
+                <div class="shape2"><img src="assets/images/shape/breadCumbShape1_2.png" alt="shape"></div>
+                <div class="breadcumb-wrapper">
+                    <div class="page-heading">
+                        <h1 id="breadcrumbRestaurantName">Table Reservation</h1>
+                        <div class="links">
+                            <a href="index.html">Home<span class="slash">/</span></a> Table Reservation
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         MAIN RESERVATION SECTION
+    ═══════════════════════════════════════════════ -->
+    <section class="privacy_policy_content terms_contents">
+        <div class="container">
+            <div class="wrapper my-5">
+
+                <!-- Token Loading State -->
+                <div id="tokenLoading" style="justify-content:center; align-items:center; min-height:200px;">
+                    <div class="text-center">
+                        <div class="spin spin-dark" style="width:36px;height:36px;border-width:3px;margin:0 auto 16px;">
+                        </div>
+                        <p style="color:var(--thebox-muted);">Loading restaurant details…</p>
+                    </div>
+                </div>
+
+                <!-- Token Error State -->
+                <div id="tokenError" style="justify-content:center; align-items:center; min-height:200px;">
+                    <div class="text-center">
+                        <div style="font-size:48px; color:#dc2626; margin-bottom:16px;">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <h4 style="color:var(--thebox-text);">Invalid Reservation Link</h4>
+                        <p style="color:var(--thebox-muted);" id="tokenErrorMsg">This link is invalid or has expired.
+                            Please contact the restaurant for a new link.</p>
+                    </div>
+                </div>
+
+                <!-- Main Form Area -->
+                <div id="mainContent" style="display:none;">
+
+                    <!-- Restaurant Branding -->
+                    <div class="restaurant-brand fade-in">
+                        <img id="restaurantLogo" src="" alt="" style="display:none;">
+                        <h3 id="restaurantName"></h3>
+                        <p id="restaurantCity"></p>
+                    </div>
+
+                    <div class="row justify-content-center">
+                        <div class="col-lg-8 col-xl-7">
+
+                            <!-- ── SUCCESS SCREEN ── -->
+                            <div id="successScreen" class="res-card fade-in">
+                                <div class="res-card-body text-center">
+                                    <div class="success-icon">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <h4
+                                        style="font-family:var(--font-display); font-size:26px; color:var(--thebox-primary); margin-bottom:8px;">
+                                        Reservation Requested!
+                                    </h4>
+                                    <p style="color:var(--thebox-muted); margin-bottom:4px;">
+                                        <span id="successSummary"></span>
+                                    </p>
+                                    <p style="color:var(--thebox-muted); font-size:13px; margin-bottom:20px;">
+                                        We'll review your booking and confirm shortly.
+                                    </p>
+
+                                    <p
+                                        style="font-size:13px; font-weight:600; color:var(--thebox-text); margin-bottom:6px;">
+                                        Your Reservation ID
+                                    </p>
+                                    <div class="reservation-id-box" id="reservationIdDisplay"></div>
+                                    <button class="btn-copy" onclick="copyReservationId()">
+                                        <i class="far fa-copy" style="margin-right:6px;"></i> Copy ID
+                                    </button>
+
+                                    <div style="border-top:1px solid var(--thebox-border); margin:28px 0 22px;"></div>
+
+                                    <!-- Inline status check after booking -->
+                                    <h6 style="font-size:14px; font-weight:600; text-align:left; margin-bottom:10px;">
+                                        <i class="fas fa-search"
+                                            style="margin-right:6px; color:var(--thebox-primary);"></i>
+                                        Check Status
+                                    </h6>
+                                    <div class="lookup-row">
+                                        <input type="text" class="res-input" id="lookupIdSuccess"
+                                            placeholder="Paste your Reservation ID">
+                                        <button class="btn-lookup" onclick="checkStatus('success')">
+                                            <span id="lookupBtnSuccessText">Check</span>
+                                        </button>
+                                    </div>
+                                    <div class="alert-msg alert-danger" id="lookupErrorSuccess"></div>
+                                    <div class="status-result" id="statusResultSuccess"></div>
+
+                                    <button onclick="resetForm()"
+                                        style="margin-top:24px; background:none; border:none; color:var(--thebox-primary); font-size:13px; cursor:pointer; text-decoration:underline;">
+                                        Make another reservation →
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- ── MULTI-STEP FORM ── -->
+                            <div id="formArea">
+
+                                <!-- Step progress -->
+                                <div class="res-steps" id="stepProgress">
+                                    <div class="res-step">
+                                        <div class="step-num active" id="stepNum1"><span>1</span></div>
+                                        <div class="step-label active" id="stepLabel1">Date &amp; Guests</div>
+                                    </div>
+                                    <div class="step-line" id="stepLine1"></div>
+                                    <div class="res-step">
+                                        <div class="step-num" id="stepNum2"><span>2</span></div>
+                                        <div class="step-label" id="stepLabel2">Select Time</div>
+                                    </div>
+                                    <div class="step-line" id="stepLine2"></div>
+                                    <div class="res-step" style="flex:0;">
+                                        <div class="step-num" id="stepNum3"><span>3</span></div>
+                                        <div class="step-label" id="stepLabel3">Your Details</div>
+                                    </div>
+                                </div>
+
+                                <!-- STEP 1: Date & Guests -->
+                                <div class="res-card step-panel active" id="panel1">
+                                    <div class="res-card-header">
+                                        <i class="far fa-calendar-alt"></i>
+                                        <h5>Choose Date &amp; Party Size</h5>
+                                    </div>
+                                    <div class="res-card-body">
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="res-label" for="resvDate">
+                                                    Reservation Date <span>*</span>
+                                                </label>
+                                                <input type="date" class="res-input" id="resvDate">
+                                                <div class="field-error" id="err-date">Please select a date.</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="res-label" for="resvPersons">
+                                                    Number of Guests <span>*</span>
+                                                </label>
+                                                <input type="number" class="res-input" id="resvPersons" min="1" max="50"
+                                                    placeholder="e.g. 4">
+                                                <div class="field-error" id="err-persons">Please enter number of guests.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="dateInfoBanner" class="info-banner" style="display:none;">
+                                            <i class="fas fa-info-circle"></i>
+                                            <span id="dateInfoText"></span>
+                                        </div>
+
+                                        <button class="btn-res-primary" id="step1Next" onclick="goToStep2()">
+                                            <span id="step1NextText">Choose Time</span>
+                                            <i class="fas fa-arrow-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- STEP 2: Time slots -->
+                                <div class="res-card step-panel" id="panel2">
+                                    <div class="res-card-header">
+                                        <i class="far fa-clock"></i>
+                                        <h5>Pick Your Time</h5>
+                                    </div>
+                                    <div class="res-card-body">
+                                        <!-- Summary of step 1 -->
+                                        <div class="summary-bar" id="step2Summary">
+                                            <strong></strong>
+                                            <button class="btn-edit-link" onclick="goToStep(1)">Edit</button>
+                                        </div>
+
+                                        <!-- Loading state for slots -->
+                                        <div id="slotsLoading" style="text-align:center; padding:32px 0; display:none;">
+                                            <div class="spin spin-dark"
+                                                style="width:30px;height:30px;border-width:2px;margin:0 auto 12px;">
+                                            </div>
+                                            <p style="color:var(--thebox-muted); font-size:13px;">Loading available
+                                                slots…</p>
+                                        </div>
+
+                                        <!-- No slots -->
+                                        <div id="noSlots" class="info-banner" style="display:none;">
+                                            <i class="fas fa-info-circle"></i>
+                                            <span id="noSlotsText">No slots available for this date.</span>
+                                        </div>
+
+                                        <!-- Period tabs + slot grid -->
+                                        <div id="slotsContainer" style="display:none;">
+                                            <div class="period-tabs" id="periodTabs"></div>
+                                            <div class="info-banner" style="margin-bottom:16px;">
+                                                <i class="fas fa-info-circle"></i>
+                                                <span id="slotHint">Select consecutive slots to extend your booking
+                                                    time.</span>
+                                            </div>
+                                            <div class="slots-grid" id="slotsGrid"></div>
+                                            <div class="slot-summary" id="slotSummary" style="display:none;">
+                                                <i class="fas fa-clock"></i>
+                                                <span id="slotSummaryText"></span>
+                                                <button class="clear-btn" onclick="clearSlots()">✕ Clear</button>
+                                            </div>
+                                        </div>
+
+                                        <div class="btn-row" style="margin-top:24px;">
+                                            <button class="btn-res-outline" onclick="goToStep(1)">
+                                                <i class="fas fa-arrow-left"></i> Back
+                                            </button>
+                                            <button class="btn-res-primary" id="step2Next" onclick="goToStep3()"
+                                                disabled>
+                                                Continue <i class="fas fa-arrow-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- STEP 3: Contact details -->
+                                <div class="res-card step-panel" id="panel3">
+                                    <div class="res-card-header">
+                                        <i class="far fa-user"></i>
+                                        <h5>Your Details</h5>
+                                    </div>
+                                    <div class="res-card-body">
+                                        <!-- Summary of steps 1+2 -->
+                                        <div class="summary-bar" id="step3Summary">
+                                            <strong></strong>
+                                            <button class="btn-edit-link" onclick="goToStep(2)">Edit</button>
+                                        </div>
+
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="res-label" for="custName">Full Name <span>*</span></label>
+                                                <input type="text" class="res-input" id="custName"
+                                                    placeholder="Rahul Sharma">
+                                                <div class="field-error" id="err-name">Name is required.</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="res-label" for="custPhone">Phone <span>*</span></label>
+                                                <input type="tel" class="res-input" id="custPhone"
+                                                    placeholder="+91 98765 43210">
+                                                <div class="field-error" id="err-phone">Enter a valid phone number.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="res-label" for="custEmail">
+                                                Email <span
+                                                    style="color:var(--thebox-muted); font-weight:400;">(optional)</span>
+                                            </label>
+                                            <input type="email" class="res-input" id="custEmail"
+                                                placeholder="rahul@example.com">
+                                            <div class="field-error" id="err-email">Enter a valid email address.</div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="res-label" for="custNotes">
+                                                Special Requests <span
+                                                    style="color:var(--thebox-muted); font-weight:400;">(optional)</span>
+                                            </label>
+                                            <textarea class="res-textarea" id="custNotes"
+                                                placeholder="Dietary requirements, birthday celebration, high chair needed…"></textarea>
+                                        </div>
+
+                                        <div class="alert-msg alert-danger" id="submitError"></div>
+
+                                        <div class="btn-row">
+                                            <button class="btn-res-outline" onclick="goToStep(2)">
+                                                <i class="fas fa-arrow-left"></i> Back
+                                            </button>
+                                            <button class="btn-res-primary" id="submitBtn"
+                                                onclick="submitReservation()">
+                                                <span id="submitBtnText">
+                                                    <i class="fas fa-paper-plane" style="margin-right:8px;"></i>
+                                                    Request Reservation
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div><!-- /formArea -->
+
+                            <!-- ── STATUS LOOKUP CARD ── -->
+                            <div class="lookup-card">
+                                <h6>
+                                    <i class="fas fa-search" style="color:var(--thebox-primary);"></i>
+                                    Check an Existing Reservation
+                                </h6>
+                                <div class="lookup-row">
+                                    <input type="text" class="res-input" id="lookupId"
+                                        placeholder="Paste your Reservation ID here">
+                                    <button class="btn-lookup" onclick="checkStatus('main')">
+                                        <span id="lookupBtnText">Check</span>
+                                    </button>
+                                </div>
+                                <div class="alert-msg alert-danger" id="lookupError"></div>
+                                <div class="status-result" id="statusResult"></div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div><!-- /mainContent -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- JS Plugins (same as feedback.html)             -->
+    <!-- ══════════════════════════════════════════════ -->
+    <script src="assets/js/jquery-3.7.1.min.js"></script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/jquery.waypoints.js"></script>
+    <script src="assets/js/jquery.counterup.min.js"></script>
+    <script src="assets/js/viewport.jquery.js"></script>
+    <script src="assets/js/tilt.min.js"></script>
+    <script src="assets/js/swiper-bundle.min.js"></script>
+    <script src="assets/js/jquery.meanmenu.min.js"></script>
+    <script src="assets/js/magnific-popup.min.js"></script>
+    <script src="assets/js/wow.min.js"></script>
+    <script src="assets/js/nice-select.min.js"></script>
+    <script src="assets/js/main.js"></script>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- RESERVATION LOGIC                              -->
+    <!-- ══════════════════════════════════════════════ -->
+    <script>
+        // ── CONFIG ─────────────────────────────────────────────────────────────
+        const API_BASE = 'http://localhost:5001/api'; // ← replace with your REACT_APP_API value
+
+        // ── STATE ──────────────────────────────────────────────────────────────
+        let restaurantToken = null; // from URL param
+        let restaurantInfo = null; // { user_id, name, logo, city }
+        let currentStep = 1;
+        let allGroups = [];   // slot groups fetched from API
+        let activeGroupId = null;
+        let selectedSlots = [];   // ["12:00","12:30"]
+        let activeGroupData = null; // the full group object
+        let lastReservationId = null;
+
+        // ── STATUS META ────────────────────────────────────────────────────────
+        const STATUS_META = {
+            pending: { label: 'Pending Review', cls: 'badge-pending' },
+            approved: { label: 'Approved', cls: 'badge-approved' },
+            rejected: { label: 'Rejected', cls: 'badge-rejected' },
+            reserved: { label: 'Reserved', cls: 'badge-reserved' },
+            seated: { label: 'Seated', cls: 'badge-seated' },
+            completed: { label: 'Completed', cls: 'badge-completed' },
+            cancelled: { label: 'Cancelled', cls: 'badge-cancelled' },
+            no_show: { label: 'No-Show', cls: 'badge-no_show' },
+        };
+
+        // ── HELPERS ────────────────────────────────────────────────────────────
+        const todayStr = () => new Date().toISOString().slice(0, 10);
+        const addDays = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+        const fmtDate = (str) => new Date(str + 'T00:00:00').toLocaleDateString('en-IN', { dateStyle: 'long' });
+        const qs = (id) => document.getElementById(id);
+        const show = (id) => { qs(id).style.display = 'block'; };
+        const hide = (id) => { qs(id).style.display = 'none'; };
+
+        // Extract token from URL: /reservation.html?token=abc or /reservation/abc
+        function getTokenFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('token')) return params.get('token');
+            // also handle path-based: last segment of pathname
+            const parts = window.location.pathname.split('/').filter(Boolean);
+            const last = parts[parts.length - 1];
+            if (last && last !== 'reservation.html') return last;
+            return null;
+        }
+
+        // ── INIT ──────────────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Set min/max dates
+            qs('resvDate').min = todayStr();
+            qs('resvDate').max = addDays(60);
+
+            // Load token
+            restaurantToken = getTokenFromURL();
+            if (!restaurantToken) {
+                showTokenError('No reservation token found in the URL.');
+                return;
+            }
+            await resolveToken();
+        });
+
+        // ── RESOLVE TOKEN ─────────────────────────────────────────────────────
+        async function resolveToken() {
+            qs('tokenLoading').classList.add('show');
+            try {
+                const res = await fetch(`${API_BASE}/reservation/resolve-token/${restaurantToken}`);
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message);
+
+                restaurantInfo = data.data;
+
+                // Populate branding
+                qs('restaurantName').textContent = restaurantInfo.name || '';
+                qs('restaurantCity').textContent = restaurantInfo.city || '';
+                qs('breadcrumbRestaurantName').textContent = (restaurantInfo.name ? restaurantInfo.name + ' — ' : '') + 'Table Reservation';
+
+                if (restaurantInfo.logo) {
+                    qs('restaurantLogo').src = restaurantInfo.logo;
+                    qs('restaurantLogo').style.display = 'block';
+                }
+
+                qs('tokenLoading').classList.remove('show');
+                qs('mainContent').style.display = 'block';
+
+            } catch (err) {
+                showTokenError(err.message || 'Invalid reservation link.');
+            }
+        }
+
+        function showTokenError(msg) {
+            qs('tokenLoading').classList.remove('show');
+            qs('tokenError').classList.add('show');
+            qs('tokenErrorMsg').textContent = msg;
+        }
+
+        // ── STEP NAVIGATION ───────────────────────────────────────────────────
+        function goToStep(n) {
+            // Hide all panels
+            document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+            qs('panel' + n).classList.add('active');
+            currentStep = n;
+            updateProgress();
+            window.scrollTo({ top: qs('formArea').offsetTop - 80, behavior: 'smooth' });
+        }
+
+        function updateProgress() {
+            for (let i = 1; i <= 3; i++) {
+                const num = qs('stepNum' + i);
+                const lbl = qs('stepLabel' + i);
+                num.classList.remove('active', 'done');
+                lbl.classList.remove('active');
+                if (i < currentStep) { num.classList.add('done'); }
+                else if (i === currentStep) { num.classList.add('active'); lbl.classList.add('active'); }
+            }
+            for (let i = 1; i <= 2; i++) {
+                qs('stepLine' + i).classList.toggle('done', i < currentStep);
+            }
+        }
+
+        // ── STEP 1 → 2 ────────────────────────────────────────────────────────
+        async function goToStep2() {
+            const date = qs('resvDate').value;
+            const persons = qs('resvPersons').value;
+            let valid = true;
+
+            if (!date) { showFieldError('err-date', true); qs('resvDate').classList.add('error'); valid = false; }
+            else { showFieldError('err-date', false); qs('resvDate').classList.remove('error'); }
+            if (!persons || persons < 1) { showFieldError('err-persons', true); qs('resvPersons').classList.add('error'); valid = false; }
+            else { showFieldError('err-persons', false); qs('resvPersons').classList.remove('error'); }
+            if (!valid) return;
+
+            // Update step 2 summary
+            qs('step2Summary').querySelector('strong').textContent =
+                `${fmtDate(date)} · ${persons} guest${persons > 1 ? 's' : ''}`;
+
+            goToStep(2);
+            await fetchSlots(date);
+        }
+
+        function showFieldError(id, show) {
+            qs(id).classList.toggle('show', show);
+        }
+
+        // ── FETCH SLOTS ────────────────────────────────────────────────────────
+        async function fetchSlots(date) {
+            allGroups = [];
+            activeGroupId = null;
+            selectedSlots = [];
+            activeGroupData = null;
+
+            qs('slotsLoading').style.display = 'block';
+            qs('slotsContainer').style.display = 'none';
+            qs('noSlots').style.display = 'none';
+            qs('step2Next').disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE}/reservation/slots?token=${restaurantToken}&date=${date}`);
+                const data = await res.json();
+
+                qs('slotsLoading').style.display = 'none';
+
+                if (!data.success || !data.data || data.data.length === 0) {
+                    qs('noSlotsText').textContent = data.message || 'No slots available for this date.';
+                    qs('noSlots').style.display = 'flex';
+                    return;
+                }
+
+                allGroups = data.data;
+                renderPeriodTabs();
+                activatePeriod(allGroups[0].group_id);
+                qs('slotsContainer').style.display = 'block';
+
+            } catch (err) {
+                qs('slotsLoading').style.display = 'none';
+                qs('noSlotsText').textContent = 'Could not load slots. Please try again.';
+                qs('noSlots').style.display = 'flex';
+            }
+        }
+
+        // ── RENDER PERIOD TABS ─────────────────────────────────────────────────
+        function renderPeriodTabs() {
+            const tabs = qs('periodTabs');
+            tabs.innerHTML = '';
+            allGroups.forEach(group => {
+                const bookable = group.slots.filter(s => s.bookable).length;
+                const tab = document.createElement('button');
+                tab.className = 'period-tab' + (group.group_id === activeGroupId ? ' active' : '');
+                tab.dataset.groupId = group.group_id;
+                if (group.group_id === activeGroupId && group.color) {
+                    tab.style.background = group.color;
+                }
+                tab.innerHTML = `
+                <span class="dot" style="background:${group.color || '#6b7280'}"></span>
+                ${group.name}
+                <span class="count">${bookable}</span>
+            `;
+                tab.addEventListener('click', () => {
+                    selectedSlots = [];
+                    hideSummary();
+                    qs('step2Next').disabled = true;
+                    activatePeriod(group.group_id);
+                });
+                tabs.appendChild(tab);
+            });
+        }
+
+        function activatePeriod(groupId) {
+            activeGroupId = groupId;
+            activeGroupData = allGroups.find(g => g.group_id === groupId);
+            // Update tab active state
+            document.querySelectorAll('.period-tab').forEach(tab => {
+                const isActive = tab.dataset.groupId === groupId;
+                tab.classList.toggle('active', isActive);
+                if (isActive && activeGroupData.color) {
+                    tab.style.background = activeGroupData.color;
+                    tab.style.borderColor = activeGroupData.color;
+                    tab.style.color = '#fff';
+                } else {
+                    tab.style.background = '';
+                    tab.style.borderColor = '';
+                    tab.style.color = '';
+                }
+            });
+            // Multiple Slots
+            // Multiple Slots
+            // qs('slotHint').textContent =
+            //     `Select up to ${activeGroupData.max_slots_per_booking} consecutive slots ` +
+            //     `(${activeGroupData.max_slots_per_booking * activeGroupData.slot_duration} min max). ` +
+            //     `Tap a slot to select, tap adjacent slots to extend.`;
+
+            // Single Slot
+            qs('slotHint').textContent =
+                `Select one time slot for your reservation (${activeGroupData.slot_duration} min).`;
+
+            renderSlots();
+        }
+
+        function formatTime12h(timeStr) {
+            const [hour, minute] = timeStr.split(':');
+            const date = new Date();
+            date.setHours(hour, minute);
+
+            return date.toLocaleTimeString('en-IN', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
+        // ── RENDER SLOTS ────────────────────────────────────────────────────────
+        function renderSlots() {
+            const grid = qs('slotsGrid');
+            grid.innerHTML = '';
+            if (!activeGroupData) return;
+
+            activeGroupData.slots.forEach(s => {
+                const isSelected = selectedSlots.includes(s.slot_start);
+                const disabled = !s.bookable && !isSelected;
+
+                // Decide if this slot can be added (must be adjacent to current selection)
+                let canAdd = false;
+
+                // Multiple Slots
+                // if (!isSelected) {
+                //     if (selectedSlots.length === 0) {
+                //         canAdd = s.bookable;
+                //     } else if (selectedSlots.length < activeGroupData.max_slots_per_booking) {
+                //         const allStarts = activeGroupData.slots.map(sl => sl.slot_start);
+                //         const selIdx = selectedSlots.map(ss => allStarts.indexOf(ss));
+                //         const thisIdx = allStarts.indexOf(s.slot_start);
+                //         canAdd = (thisIdx === Math.min(...selIdx) - 1 || thisIdx === Math.max(...selIdx) + 1) && s.bookable;
+                //     }
+                // }
+
+                // Single Slot
+                if (!isSelected) {
+                    canAdd = selectedSlots.length === 0 && s.bookable;
+                }
+
+                const btn = document.createElement('button');
+                btn.className = 'slot-btn' + (isSelected ? ' selected' : '');
+                btn.disabled = disabled || (!isSelected && !canAdd && selectedSlots.length > 0);
+
+                if (isSelected && activeGroupData.color) {
+                    btn.style.background = activeGroupData.color;
+                    btn.style.color = '#fff';
+                }
+
+                const label = s.is_past ? 'Past' : s.is_blocked ? 'Blocked' : !s.bookable ? 'Full' : '';
+
+                btn.innerHTML = `
+                <span class="slot-time">${formatTime12h(s.slot_start)}</span>
+<span class="slot-end"></span>
+                ${label ? `<span class="slot-tag">${label}</span>` : ''}
+            `;
+
+                btn.addEventListener('click', () => toggleSlot(s.slot_start));
+                grid.appendChild(btn);
+            });
+        }
+
+        function toggleSlot(slotStart) {
+            // Multiple Slots
+            // if (selectedSlots.includes(slotStart)) {
+            //     // Only allow deselecting from ends
+            //     if (slotStart === selectedSlots[0] || slotStart === selectedSlots[selectedSlots.length - 1]) {
+            //         selectedSlots = selectedSlots.filter(s => s !== slotStart);
+            //     }
+            // } else {
+            //     selectedSlots = [...selectedSlots, slotStart].sort();
+            // }
+
+            // Single slot only — deselect if same, replace if different
+            if (selectedSlots.includes(slotStart)) {
+                selectedSlots = [];
+            } else {
+                selectedSlots = [slotStart];
+            }
+
+            renderSlots();
+            updateSlotSummary();
+            qs('step2Next').disabled = selectedSlots.length === 0;
+        }
+
+        function updateSlotSummary() {
+            if (!selectedSlots.length || !activeGroupData) { hideSummary(); return; }
+            const first = selectedSlots[0];
+            const last = selectedSlots[selectedSlots.length - 1];
+            const lastSlot = activeGroupData.slots.find(s => s.slot_start === last);
+            const endTime = lastSlot ? lastSlot.slot_end : '';
+            const mins = selectedSlots.length * activeGroupData.slot_duration;
+
+            qs('slotSummaryText').textContent =
+                `${formatTime12h(first)} – ${formatTime12h(endTime)} · ${mins} minutes · ${activeGroupData.name}`;
+            qs('slotSummary').style.display = 'flex';
+            if (activeGroupData.color) {
+                qs('slotSummary').style.borderColor = activeGroupData.color;
+                qs('slotSummary').style.background = activeGroupData.color + '12';
+            }
+        }
+
+        function hideSummary() {
+            qs('slotSummary').style.display = 'none';
+        }
+
+        function clearSlots() {
+            selectedSlots = [];
+            renderSlots();
+            hideSummary();
+            qs('step2Next').disabled = true;
+        }
+
+        // ── STEP 2 → 3 ────────────────────────────────────────────────────────
+        function goToStep3() {
+            if (!selectedSlots.length) return;
+            const date = qs('resvDate').value;
+            const persons = qs('resvPersons').value;
+            const last = selectedSlots[selectedSlots.length - 1];
+            const lastSlot = activeGroupData.slots.find(s => s.slot_start === last);
+
+            qs('step3Summary').querySelector('strong').textContent =
+                `${fmtDate(date)} · ${activeGroupData.name} · ${formatTime12h(selectedSlots[0])}–${formatTime12h(lastSlot?.slot_end)} · ${persons} guest${persons > 1 ? 's' : ''}`;
+
+            goToStep(3);
+        }
+
+        // ── SUBMIT ─────────────────────────────────────────────────────────────
+        async function submitReservation() {
+            const name = qs('custName').value.trim();
+            const phone = qs('custPhone').value.trim();
+            const email = qs('custEmail').value.trim();
+            const notes = qs('custNotes').value.trim();
+            let valid = true;
+
+            // Validate
+            if (!name) { showFieldError('err-name', true); qs('custName').classList.add('error'); valid = false; }
+            else { showFieldError('err-name', false); qs('custName').classList.remove('error'); }
+
+            if (!phone || !/^\d{7,15}$/.test(phone.replace(/[\s\-+]/g, ''))) {
+                showFieldError('err-phone', true); qs('custPhone').classList.add('error'); valid = false;
+            } else { showFieldError('err-phone', false); qs('custPhone').classList.remove('error'); }
+
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showFieldError('err-email', true); qs('custEmail').classList.add('error'); valid = false;
+            } else { showFieldError('err-email', false); qs('custEmail').classList.remove('error'); }
+
+            if (!valid) return;
+
+            // Submit
+            const btn = qs('submitBtn');
+            btn.disabled = true;
+            qs('submitBtnText').innerHTML = '<span class="spin"></span> Submitting…';
+            qs('submitError').classList.remove('show');
+
+            try {
+                const res = await fetch(`${API_BASE}/reservation/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer_name: name,
+                        customer_phone: phone,
+                        customer_email: email || null,
+                        notes: notes || null,
+                        reservation_date: qs('resvDate').value,
+                        group_id: activeGroupId,
+                        slots: selectedSlots,
+                        num_persons: Number(qs('resvPersons').value),
+                        token: restaurantToken,   // ← token, never user_id
+                    }),
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message);
+
+                lastReservationId = data.data._id;
+                showSuccess();
+
+            } catch (err) {
+                qs('submitError').textContent = err.message || 'Submission failed. Please try again.';
+                qs('submitError').classList.add('show');
+                btn.disabled = false;
+                qs('submitBtnText').innerHTML = '<i class="fas fa-paper-plane" style="margin-right:8px;"></i>Request Reservation';
+            }
+        }
+
+        // ── SUCCESS SCREEN ─────────────────────────────────────────────────────
+        function showSuccess() {
+            const date = qs('resvDate').value;
+            const persons = qs('resvPersons').value;
+            const last = selectedSlots[selectedSlots.length - 1];
+            const lastSlot = activeGroupData.slots.find(s => s.slot_start === last);
+
+            qs('successSummary').textContent =
+                `${fmtDate(date)} · ${activeGroupData.name} · ` +
+                `${selectedSlots[0]}–${lastSlot?.slot_end} · ` +
+                `${persons} guest${persons > 1 ? 's' : ''}`;
+
+            qs('reservationIdDisplay').textContent = lastReservationId;
+
+            hide('formArea');
+            qs('successScreen').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function copyReservationId() {
+            navigator.clipboard.writeText(lastReservationId).then(() => {
+                const btn = document.querySelector('.btn-copy');
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => { btn.innerHTML = '<i class="far fa-copy" style="margin-right:6px;"></i> Copy ID'; }, 2000);
+            });
+        }
+
+        function resetForm() {
+            lastReservationId = null;
+            selectedSlots = [];
+            allGroups = [];
+            activeGroupData = null;
+            currentStep = 1;
+
+            qs('resvDate').value = '';
+            qs('resvPersons').value = '';
+            qs('custName').value = '';
+            qs('custPhone').value = '';
+            qs('custEmail').value = '';
+            qs('custNotes').value = '';
+            qs('slotSummary').style.display = 'none';
+            qs('step2Next').disabled = true;
+
+            qs('successScreen').style.display = 'none';
+            show('formArea');
+            goToStep(1);
+        }
+
+        // ── STATUS LOOKUP ──────────────────────────────────────────────────────
+        async function checkStatus(context) {
+            const inputId = context === 'success' ? 'lookupIdSuccess' : 'lookupId';
+            const errorId = context === 'success' ? 'lookupErrorSuccess' : 'lookupError';
+            const resultId = context === 'success' ? 'statusResultSuccess' : 'statusResult';
+            const btnTextId = context === 'success' ? 'lookupBtnSuccessText' : 'lookupBtnText';
+
+            const id = qs(inputId).value.trim();
+            if (!id) return;
+
+            qs(errorId).classList.remove('show');
+            qs(resultId).classList.remove('show');
+            qs(btnTextId).innerHTML = '<span class="spin spin-dark" style="width:14px;height:14px;border-width:2px;"></span>';
+
+            try {
+                const res = await fetch(`${API_BASE}/reservation/status/${id}`);
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message);
+
+                const r = data.data;
+                const sm = STATUS_META[r.status] || { label: r.status, cls: 'badge-pending' };
+
+                qs(resultId).innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                    <strong style="font-size:14px;">${r.customer_name}</strong>
+                    <span class="status-badge ${sm.cls}">${sm.label}</span>
+                </div>
+                <div style="font-size:13px; color:var(--thebox-muted);">
+                    ${fmtDate(r.reservation_date)}
+                    ${r.group_name ? ' · ' + r.group_name : ''}
+                    · ${r.slot_start}–${r.slot_end}
+                    · ${r.num_persons} guest${r.num_persons > 1 ? 's' : ''}
+                </div>
+                ${r.manager_notes ? `<div style="font-size:12px; color:var(--thebox-muted); margin-top:6px;">Note: ${r.manager_notes}</div>` : ''}
+                ${r.assigned_tables?.length ? `<div style="font-size:12px; color:var(--thebox-muted); margin-top:4px;">Tables: ${r.assigned_tables.map(t => t.table_no).join(', ')}</div>` : ''}
+            `;
+                qs(resultId).classList.add('show');
+
+            } catch (err) {
+                qs(errorId).textContent = err.message || 'Reservation not found.';
+                qs(errorId).classList.add('show');
+            } finally {
+                qs(btnTextId).textContent = 'Check';
+            }
+        }
+    </script>
+
+</body>
+
+</html>

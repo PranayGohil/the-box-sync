@@ -139,7 +139,7 @@ export default function Dashboard() {
   const handleCheckIn = async (staffId) => {
     try {
       await axios.post(
-        `${process.env.REACT_APP_API}/staff/check-in`,
+        `${process.env.REACT_APP_API}/attendance/check-in`,
         {
           staff_id: staffId,
           date: getTodayDate(),
@@ -161,7 +161,7 @@ export default function Dashboard() {
   const handleCheckOut = async (staffId) => {
     try {
       await axios.post(
-        `${process.env.REACT_APP_API}/staff/check-out`,
+        `${process.env.REACT_APP_API}/attendance/check-out`,
         {
           staff_id: staffId,
           date: getTodayDate(),

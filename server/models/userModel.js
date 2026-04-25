@@ -79,8 +79,9 @@ const userSchema = new Schema({
       price: { type: Number, default: 0, required: true },
     },
   ],
-  feedbackToken: {
+  restaurant_token: {
     type: String,
+    default: null,
   },
   feedbacks: [
     {
@@ -111,8 +112,8 @@ userSchema.index({ country: 1, state: 1, createdAt: -1 });
 // Optional: if you search by mobile anywhere
 // userSchema.index({ mobile: 1 }, { sparse: true });
 
-// Optional: if you use feedbackToken in links
-userSchema.index({ feedbackToken: 1 }, { sparse: true });
+// Optional: if you use restaurant_token in links
+userSchema.index({ restaurant_token: 1 }, { unique: true, sparse: true });
 
 userSchema.pre("save", async function (next) {
   const user = this;
@@ -139,7 +140,7 @@ userSchema.methods.generateAuthToken = async function (role) {
       { expiresIn: "30d" }
     );
     return token;
-  } catch (error) {}
+  } catch (error) { }
 };
 
 const User = mongoose.model("users", userSchema);
