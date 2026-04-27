@@ -26,7 +26,7 @@ const SalesReport = () => {
   const [error, setError] = useState(null);
   const [reportData, setReportData] = useState(null);
 
-  const { currentUser } = useContext(AuthContext);
+  const { currentUser, activePlans } = useContext(AuthContext);
 
   // Export states
   const [exporting, setExporting] = useState(false);
@@ -896,52 +896,54 @@ const SalesReport = () => {
       </div>
 
       {/* Filters */}
-      <Card className="mb-4 no-print">
-        <Card.Body>
-          <Row className="g-3 align-items-start">
-            <Col md={3}>
-              <Form.Label>Start Date</Form.Label>
-              <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-            </Col>
-            <Col md={3}>
-              <Form.Label>End Date</Form.Label>
-              <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-            </Col>
-            <Col md={2}>
-              <Form.Label>Group By</Form.Label>
-              <Form.Select value={groupBy} onChange={(e) => setGroupBy(e.target.value)}>
-                {['hour', 'day', 'month'].map((option) => (
-                  <option key={option} value={option} disabled={!getAllowedGroupBy().includes(option)}>
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
-                    {!getAllowedGroupBy().includes(option) ? ' (Not available)' : ''}
-                  </option>
-                ))}
-              </Form.Select>
-              <Form.Text className="text-muted">
-                {groupBy === 'hour' && 'Best for 1-2 day analysis'}
-                {groupBy === 'day' && 'Best for daily trends'}
-                {groupBy === 'month' && 'Best for long-term growth'}
-              </Form.Text>
-            </Col>
-            <Col md={2}>
-              <Form.Label>Order Type</Form.Label>
-              <Form.Select value={orderType} onChange={(e) => setOrderType(e.target.value)}>
-                <option value="all">All Types</option>
-                <option value="dine-in">Dine In</option>
-                <option value="takeaway">Takeaway</option>
-                <option value="delivery">Delivery</option>
-              </Form.Select>
-            </Col>
-            <Col md={1} className="h-100" style={{ minHeight: '-webkit-fill-available' }}>
-              <Form.Label> &nbsp; </Form.Label>
-              <Button variant="primary" className="w-100" onClick={fetchSalesReport} disabled={loading}>
-                <CsLineIcons icon="sync" className="me-2" />
-                {loading ? 'Loading...' : 'Generate'}
-              </Button>
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
+      {activePlans?.includes('Dynamic Reports') && (
+        <Card className="mb-4 no-print">
+          <Card.Body>
+            <Row className="g-3 align-items-start">
+              <Col md={3}>
+                <Form.Label>Start Date</Form.Label>
+                <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              </Col>
+              <Col md={3}>
+                <Form.Label>End Date</Form.Label>
+                <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              </Col>
+              <Col md={2}>
+                <Form.Label>Group By</Form.Label>
+                <Form.Select value={groupBy} onChange={(e) => setGroupBy(e.target.value)}>
+                  {['hour', 'day', 'month'].map((option) => (
+                    <option key={option} value={option} disabled={!getAllowedGroupBy().includes(option)}>
+                      {option.charAt(0).toUpperCase() + option.slice(1)}
+                      {!getAllowedGroupBy().includes(option) ? ' (Not available)' : ''}
+                    </option>
+                  ))}
+                </Form.Select>
+                <Form.Text className="text-muted">
+                  {groupBy === 'hour' && 'Best for 1-2 day analysis'}
+                  {groupBy === 'day' && 'Best for daily trends'}
+                  {groupBy === 'month' && 'Best for long-term growth'}
+                </Form.Text>
+              </Col>
+              <Col md={2}>
+                <Form.Label>Order Type</Form.Label>
+                <Form.Select value={orderType} onChange={(e) => setOrderType(e.target.value)}>
+                  <option value="all">All Types</option>
+                  <option value="dine-in">Dine In</option>
+                  <option value="takeaway">Takeaway</option>
+                  <option value="delivery">Delivery</option>
+                </Form.Select>
+              </Col>
+              <Col md={1} className="h-100" style={{ minHeight: '-webkit-fill-available' }}>
+                <Form.Label> &nbsp; </Form.Label>
+                <Button variant="primary" className="w-100" onClick={fetchSalesReport} disabled={loading}>
+                  <CsLineIcons icon="sync" className="me-2" />
+                  {loading ? 'Loading...' : 'Generate'}
+                </Button>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
+      )}
 
       {error && (
         <Alert variant="danger" className="mb-3">

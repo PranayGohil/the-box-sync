@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Row, Col, Nav, Dropdown } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { LAYOUT } from 'constants.js';
@@ -7,6 +7,7 @@ import useCustomLayout from 'hooks/useCustomLayout';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useWindowSize } from 'hooks/useWindowSize';
 import { Switch, Route, Redirect, NavLink } from 'react-router-dom';
+import { AuthContext } from 'contexts/AuthContext';
 import OrderHistory from './order/OrderHistory';
 import OrderDetails from './order/OrderDetails';
 
@@ -36,6 +37,7 @@ import Feedback from './feedback/Feedback';
 import QRforFeedback from './feedback/QRforFeedback';
 
 const NavContent = () => {
+  const { activePlans } = useContext(AuthContext);
   return (
     <Nav className="flex-column">
       <div className="mb-2">
@@ -51,6 +53,7 @@ const NavContent = () => {
         </div>
       </div>
 
+      {activePlans.includes('Reservation Manager') && (
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/manage-reservations" className="px-0">
           <CsLineIcons icon="calendar" className="me-2 sw-3" size="17" />
@@ -71,6 +74,7 @@ const NavContent = () => {
           </Nav.Link>
         </div>
       </div>
+      )}
 
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/manage-table" className="px-0">
@@ -103,10 +107,12 @@ const NavContent = () => {
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Add Dish</span>
           </Nav.Link>
+          {activePlans.includes('Scan For Menu') && (
           <Nav.Link as={NavLink} to="/operations/qr-for-menu" className="px-0 pt-1">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">QR for Menu</span>
           </Nav.Link>
+          )}
         </div>
       </div>
 
@@ -151,6 +157,7 @@ const NavContent = () => {
         </div>
       </div>
 
+      {activePlans.includes('Feedback') && (
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/feedback" className="px-0">
           <i className="bi-chat-text me-2 ms-1 sw-3" size="17" />
@@ -167,6 +174,7 @@ const NavContent = () => {
           </Nav.Link>
         </div>
       </div>
+      )}
     </Nav>
   );
 };
@@ -228,9 +236,28 @@ const mobileNavItems = [
 ];
 
 const MobileNavbar = () => {
+  const { activePlans } = useContext(AuthContext);
+
+  const filteredNavItems = mobileNavItems.filter(nav => {
+    if (nav.label === 'Reservation' && !activePlans.includes('Reservation Manager')) return false;
+    if (nav.label === 'Feedback' && !activePlans.includes('Feedback')) return false;
+    return true;
+  }).map(nav => {
+    if (nav.label === 'Menu') {
+      return {
+        ...nav,
+        items: nav.items.filter(item => {
+          if (item.label === 'QR for Menu' && !activePlans.includes('Scan For Menu')) return false;
+          return true;
+        })
+      };
+    }
+    return nav;
+  });
+
   return (
     <div className="d-flex gap-2 overflow-auto pb-2">
-      {mobileNavItems.map((nav) => (
+      {filteredNavItems.map((nav) => (
         <Dropdown key={nav.label} container="body" className="position-static">
           <Dropdown.Toggle variant="outline-primary" size="sm" className="d-flex align-items-center gap-1">
             <CsLineIcons icon={nav.icon} size="16" />
@@ -264,6 +291,7 @@ const Operations = () => {
 
   const { themeValues } = useSelector((state) => state.settings);
   const lgBreakpoint = parseInt(themeValues.lg.replace('px', ''), 10);
+  const { activePlans } = useContext(AuthContext);
 
   return (
     <div className="position-relative">
@@ -287,16 +315,48 @@ const Operations = () => {
             <Route path="/operations/order-history" component={OrderHistory} />
             <Route path="/operations/order-details/:id" component={OrderDetails} />
 
-            <Route path="/operations/manage-reservations" component={ManageReservations} />
-            <Route path="/operations/reservation-form" component={ReservationForm} />
-            <Route path="/operations/qr-for-reservation" component={QRforReservation} />
+            <Route path="/operations/manage-reservations" render={() => (
+              <>
+                {activePlans.includes('Reservation Manager') ? (
+                  <ManageReservations />
+                ) : (
+                  <div className="text-center">You need to buy or renew to Reservation Manager plan to access this page.</div>
+                )}
+              </>
+            )} />
+            <Route path="/operations/reservation-form" render={() => (
+              <>
+                {activePlans.includes('Reservation Manager') ? (
+                  <ReservationForm />
+                ) : (
+                  <div className="text-center">You need to buy or renew to Reservation Manager plan to access this page.</div>
+                )}
+              </>
+            )} />
+            <Route path="/operations/qr-for-reservation" render={() => (
+              <>
+                {activePlans.includes('Reservation Manager') ? (
+                  <QRforReservation />
+                ) : (
+                  <div className="text-center">You need to buy or renew to Reservation Manager plan to access this page.</div>
+                )}
+              </>
+            )} />
 
             <Route path="/operations/manage-table" component={ManageTable} />
             <Route path="/operations/add-table" component={AddTable} />
 
             <Route path="/operations/manage-menu" component={ManageMenu} />
             <Route path="/operations/add-dish" component={AddDishes} />
-            <Route path="/operations/qr-for-menu" component={QRforMenu} />
+            <Route path="/operations/qr-for-menu" render={() => (
+              <>
+                {activePlans.includes('Scan For Menu') ? (
+                  <QRforMenu />
+                ) : (
+                  <div className="text-center">You need to buy or renew to Scan For Menu plan to access this page.</div>
+                )}
+              </>
+            )} />
 
             <Route path="/operations/requested-inventory" component={RequestedInventory} />
             <Route path="/operations/inventory-history" component={InventoryHistory} />
@@ -309,8 +369,24 @@ const Operations = () => {
             <Route path="/operations/wastage-log" component={WastageLog} />
             <Route path="/operations/inventory-report" component={InventoryReport} />
 
-            <Route path="/operations/feedback" component={Feedback} />
-            <Route path="/operations/qr-for-feedback" component={QRforFeedback} />
+            <Route path="/operations/feedback" render={() => (
+              <>
+                {activePlans.includes('Feedback') ? (
+                  <Feedback />
+                ) : (
+                  <div className="text-center">You need to buy or renew to Feedback plan to access this page.</div>
+                )}
+              </>
+            )} />
+            <Route path="/operations/qr-for-feedback" render={() => (
+              <>
+                {activePlans.includes('Feedback') ? (
+                  <QRforFeedback />
+                ) : (
+                  <div className="text-center">You need to buy or renew to Feedback plan to access this page.</div>
+                )}
+              </>
+            )} />
           </Switch>
         </Col>
       </Row>

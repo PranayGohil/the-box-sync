@@ -84,18 +84,31 @@ exports.sendVerification = async (req, res) => {
         await otpDoc.save();
 
         // send email via nodemailer
-        const mailOptions = {
-            from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-            to: email,
-            subject: 'Your verification code',
-            text: `Your verification code is: ${otpPlain}\nThis code will expire in ${OTP_TTL_MINUTES} minutes.`,
-            html: `<p>Your verification code is: <strong>${otpPlain}</strong></p><p>This code will expire in ${OTP_TTL_MINUTES} minutes.</p>`,
-        };
+        const emailHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+            <div style="background: #7444FD; padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+              <h2 style="color: #fff; margin: 0;">Verify Your Email</h2>
+            </div>
+            <div style="padding: 24px; background: #fafafa;">
+              <p style="color: #333; font-size: 16px;">Hi there,</p>
+              <p style="color: #555;">Please use the following One Time Password (OTP) to complete your registration process:</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <span style="background: #7444FD; color: #fff; padding: 12px 24px; font-size: 28px; font-weight: bold; border-radius: 6px; letter-spacing: 4px;">${otpPlain}</span>
+              </div>
+              <p style="color: #555; text-align: center;">This code will expire in <strong>${OTP_TTL_MINUTES} minutes</strong>.</p>
+              <p style="color: #555; margin-top: 30px;">If you did not request this code, please ignore this email.</p>
+              <p style="color: #555; margin-top: 24px;">Best regards,<br><strong>The TheBox Team</strong></p>
+            </div>
+            <div style="padding: 12px 24px; background: #f0f0f0; border-radius: 0 0 6px 6px; text-align: center; font-size: 12px; color: #999;">
+              © TheBox | <a href="mailto:support@theboxsync.com" style="color: #7444FD; text-decoration: none;">support@theboxsync.com</a>
+            </div>
+          </div>
+        `;
 
         await sendEmail({
             to: email,
             subject: "OTP Verification from TheBox",
-            html: `<p>Your verification code is: <strong>${otpPlain}</strong></p><p>This code will expire in ${OTP_TTL_MINUTES} minutes.</p>`,
+            html: emailHtml,
         });
 
         return res.status(200).json({ success: true, message: 'Verification code sent' });

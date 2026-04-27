@@ -97,10 +97,12 @@ const NavContent = () => {
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Add Dish</span>
           </Nav.Link>
+          {activePlans.includes('Scan For Menu') && (
           <Nav.Link as={NavLink} to="/operations/qr-for-menu" className="px-0 pt-1">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">QR for Menu</span>
           </Nav.Link>
+          )}
         </div>
       </div>
 
@@ -164,6 +166,7 @@ const NavContent = () => {
         </div>
       </div>
 
+      {activePlans.includes('Feedback') && (
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/feedback" className="px-0">
           <i className="bi-chat-text me-2 ms-1 sw-3" size="17" />
@@ -180,6 +183,7 @@ const NavContent = () => {
           </Nav.Link>
         </div>
       </div>
+      )}
     </Nav>
   );
 };
@@ -236,9 +240,28 @@ const mobileNavItems = [
 ];
 
 const MobileNavbar = () => {
+  const { activePlans } = useContext(AuthContext);
+
+  const filteredNavItems = mobileNavItems.filter(nav => {
+    if (nav.label === 'Reservation' && !activePlans.includes('Reservation Manager')) return false;
+    if (nav.label === 'Feedback' && !activePlans.includes('Feedback')) return false;
+    return true;
+  }).map(nav => {
+    if (nav.label === 'Menu') {
+      return {
+        ...nav,
+        items: nav.items.filter(item => {
+          if (item.label === 'QR for Menu' && !activePlans.includes('Scan For Menu')) return false;
+          return true;
+        })
+      };
+    }
+    return nav;
+  });
+
   return (
     <div className="d-flex gap-2 overflow-auto pb-2">
-      {mobileNavItems.map((nav) => (
+      {filteredNavItems.map((nav) => (
         <Dropdown key={nav.label} container="body" className='position-static'>
           <Dropdown.Toggle variant="outline-primary" size="sm" className="d-flex align-items-center gap-1">
             <CsLineIcons icon={nav.icon} size="16" />

@@ -25,7 +25,7 @@ const MenuPerformanceReport = () => {
   const [error, setError] = useState(null);
   const [reportData, setReportData] = useState(null);
 
-  const { currentUser } = useContext(AuthContext);
+  const { currentUser, activePlans } = useContext(AuthContext);
 
   // Export states
   const [exporting, setExporting] = useState(false);
@@ -813,46 +813,48 @@ const MenuPerformanceReport = () => {
       </div>
 
       {/* Filters */}
-      <Card className="mb-4">
-        <Card.Body>
-          <Row className="g-3 align-items-end">
-            <Col md={3}>
-              <Form.Label>Start Date</Form.Label>
-              <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-            </Col>
-            <Col md={3}>
-              <Form.Label>End Date</Form.Label>
-              <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-            </Col>
-            <Col md={2}>
-              <Form.Label>Category</Form.Label>
-              <Form.Select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat === 'all' ? 'All Categories' : cat}
-                  </option>
-                ))}
-              </Form.Select>
-            </Col>
-            <Col md={2}>
-              <Form.Label>Meal Type</Form.Label>
-              <Form.Select value={selectedMealType} onChange={(e) => setSelectedMealType(e.target.value)}>
-                {mealTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type === 'all' ? 'All Types' : type}
-                  </option>
-                ))}
-              </Form.Select>
-            </Col>
-            <Col md={2}>
-              <Button variant="primary" className="w-100" style={{maxWidth: '150px'}} onClick={fetchMenuReport} disabled={loading}>
-                <CsLineIcons icon="sync" className="me-2" />
-                {loading ? 'Loading...' : 'Generate'}
-              </Button>
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
+      {activePlans?.includes('Dynamic Reports') && (
+        <Card className="mb-4">
+          <Card.Body>
+            <Row className="g-3 align-items-end">
+              <Col md={3}>
+                <Form.Label>Start Date</Form.Label>
+                <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              </Col>
+              <Col md={3}>
+                <Form.Label>End Date</Form.Label>
+                <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              </Col>
+              <Col md={2}>
+                <Form.Label>Category</Form.Label>
+                <Form.Select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat === 'all' ? 'All Categories' : cat}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+              <Col md={2}>
+                <Form.Label>Meal Type</Form.Label>
+                <Form.Select value={selectedMealType} onChange={(e) => setSelectedMealType(e.target.value)}>
+                  {mealTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type === 'all' ? 'All Types' : type}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+              <Col md={2}>
+                <Button variant="primary" className="w-100" style={{maxWidth: '150px'}} onClick={fetchMenuReport} disabled={loading}>
+                  <CsLineIcons icon="sync" className="me-2" />
+                  {loading ? 'Loading...' : 'Generate'}
+                </Button>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
+      )}
 
       {error && (
         <Alert variant="danger" className="mb-3">

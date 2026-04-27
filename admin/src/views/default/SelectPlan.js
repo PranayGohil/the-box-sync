@@ -12,10 +12,37 @@ const SelectPlan = () => {
 
   const [selectedPlan, setSelectedPlan] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [selectedAddons, setSelectedAddons] = useState([]);
+
+  const allAddons = [
+    { label: 'Reservation Management', value: 'Reservation Manager' },
+    { label: 'QSR Billing App', value: 'QSR' },
+    { label: 'Captain Ordering App', value: 'Captain Panel' },
+    { label: 'Kitchen Display System', value: 'KOT Panel' },
+    { label: 'Restaurant Website', value: 'Restaurant Website' },
+    { label: 'Scan & QR Order', value: 'Scan For Menu' },
+    { label: 'QR-based Feedback', value: 'Feedback' },
+    { label: 'Waiter Calling System', value: 'Waiter Calling System' },
+    { label: 'Dynamic Reports', value: 'Dynamic Reports' },
+    { label: 'E-Invoice', value: 'E-Invoice' },
+  ];
 
   const handlePlanSelect = (plan) => {
     setSelectedPlan(plan);
+    setSelectedAddons([]);
     setShowModal(true);
+  };
+
+  const handleToggleAddon = (value) => {
+    if (selectedAddons.includes(value)) {
+      setSelectedAddons(selectedAddons.filter((a) => a !== value));
+    } else {
+      if (selectedAddons.length < 6) {
+        setSelectedAddons([...selectedAddons, value]);
+      } else {
+        toast.warning('You can only select up to 6 add-ons for the Growth plan.');
+      }
+    }
   };
 
   const handleConfirm = async () => {
@@ -23,7 +50,7 @@ const SelectPlan = () => {
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API}/subscription/buy-complete`,
-        { planType: selectedPlan },
+        { planType: selectedPlan, chosenAddons: selectedAddons },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       if (response.data.success) {
@@ -82,14 +109,16 @@ const SelectPlan = () => {
           'Free Training',
         ],
         addons: [
-          'QSR',
-          'Captain panel',
-          'Staff management',
-          'Feedback management',
-          'Scan For Menu',
-          'Restaurant website',
-          'Online order reconciliation',
-          'Reservation manager',
+          'Reservation Management',
+          'QSR Billing App',
+          'Captain Ordering App',
+          'Kitchen Display System',
+          'Restaurant Website',
+          'Scan & QR Order',
+          'QR-based Feedback',
+          'Waiter Calling System',
+          'Dynamic Reports',
+          'E-Invoice',
         ],
         advanced: [],
       },
@@ -114,14 +143,16 @@ const SelectPlan = () => {
           'Free Training',
         ],
         addons: [
-          'QSR',
-          'Captain panel',
-          'Staff management',
-          'Feedback management',
-          'Scan For Menu',
-          'Restaurant website',
-          'Online order reconciliation',
-          'Reservation manager',
+          'Reservation Management',
+          'QSR Billing App',
+          'Captain Ordering App',
+          'Kitchen Display System',
+          'Restaurant Website',
+          'Scan & QR Order',
+          'QR-based Feedback',
+          'Waiter Calling System',
+          'Dynamic Reports',
+          'E-Invoice',
         ],
         advanced: ['Payroll By TheBox', 'Dynamic reports'],
       },
@@ -267,14 +298,16 @@ const SelectPlan = () => {
                           </td>
                         </tr>
                         {[
-                          'QSR',
-                          'Captain panel',
-                          'Staff management',
-                          'Feedback management',
-                          'Scan For Menu',
-                          'Restaurant website',
-                          'Online order reconciliation',
-                          'Reservation manager',
+                          'Reservation Management',
+                          'QSR Billing App',
+                          'Captain Ordering App',
+                          'Kitchen Display System',
+                          'Restaurant Website',
+                          'Scan & QR Order',
+                          'QR-based Feedback',
+                          'Waiter Calling System',
+                          'Dynamic Reports',
+                          'E-Invoice',
                         ].map((feature, index) => (
                           <tr key={`addon-${index}`}>
                             <td>{feature}</td>
@@ -328,13 +361,46 @@ const SelectPlan = () => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <div className="text-center mb-4">
-            <CsLineIcons icon="shield" size="48" className="text-primary mb-3" />
-            <h5>
-              Are you sure you want to select the <strong>{selectedPlan}</strong> Plan?
-            </h5>
-            <p className="text-muted mb-0">You will be redirected to the checkout page to complete your purchase.</p>
-          </div>
+          {selectedPlan === 'Growth' ? (
+            <div>
+              <div className="text-center mb-4">
+                <CsLineIcons icon="grid" size="48" className="text-success mb-3" />
+                <h5>Customize Your <strong>Growth</strong> Plan</h5>
+                <p className="text-muted mb-0">Select up to 6 Add-ons included in your plan ({selectedAddons.length}/6 selected).</p>
+              </div>
+              <div className="row g-2">
+                {allAddons.map((addon, index) => (
+                  <div key={index} className="col-md-6">
+                    <div 
+                      className={`border rounded p-2 ${selectedAddons.includes(addon.value) ? 'border-success bg-success-subtle' : ''}`}
+                      onClick={() => handleToggleAddon(addon.value)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div className="form-check m-0 d-flex align-items-center" style={{ cursor: 'pointer' }}>
+                        <input 
+                          className="form-check-input mt-0 me-2" 
+                          type="checkbox" 
+                          checked={selectedAddons.includes(addon.value)}
+                          onChange={() => {}} 
+                        />
+                        <label className="form-check-label mb-0" style={{ cursor: 'pointer', fontSize: '13px' }}>
+                          {addon.label}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center mb-4">
+              <CsLineIcons icon="shield" size="48" className={`text-${selectedPlan === 'Scale' ? 'warning' : 'primary'} mb-3`} />
+              <h5>
+                Are you sure you want to select the <strong>{selectedPlan}</strong> Plan?
+              </h5>
+              <p className="text-muted mb-0">You will be redirected to the checkout page to complete your purchase.</p>
+            </div>
+          )}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="dark" onClick={() => setShowModal(false)}>

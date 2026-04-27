@@ -74,7 +74,7 @@ const OrderHistory = () => {
   // Ref to prevent infinite loops
   const fetchRef = useRef(false);
 
-  const COMPANY_NAME = currentUser.name || 'TheBoxSync';
+  const COMPANY_NAME = currentUser?.name || 'TheBoxSync';
   const API_BASE = process.env.REACT_APP_API;
 
   const formatCurrency = (amount) => {

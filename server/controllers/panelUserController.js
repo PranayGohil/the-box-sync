@@ -5,6 +5,7 @@ const Captain = require("../models/captainModel");
 const Attendance = require("../models/attendanceModel");
 const HotelManager = require("../models/hotelManagerModel");
 const User = require("../models/userModel");
+const Subscription = require("../models/subscriptionModel");
 
 const bcrypt = require("bcryptjs");
 
@@ -173,6 +174,19 @@ exports.panelLogin = async (req, res) => {
     if (!isMatch) {
       return res.json({ message: "Invalid Password" });
     }
+
+    // Verify active subscription for the requested panel
+    const activeSubscription = await Subscription.findOne({
+      user_id: user._id,
+      plan_name: planName,
+      status: "active",
+      end_date: { $gt: new Date() }
+    });
+
+    if (!activeSubscription) {
+      return res.status(403).json({ message: `No active subscription for ${planName}. Please purchase or renew the plan.` });
+    }
+
     token = await user.generateAuthToken(planName);
 
     res.status(200).json({ message: "Logged In", token, user });

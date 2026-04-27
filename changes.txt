@@ -1,0 +1,2 @@
+- Registration OTP email formate.
+- forget password OTP email formate.

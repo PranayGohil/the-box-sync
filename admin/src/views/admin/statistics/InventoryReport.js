@@ -8,8 +8,10 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { AuthContext } from 'contexts/AuthContext';
 
 const InventoryReport = () => {
+    const { activePlans } = React.useContext(AuthContext);
     const title = 'Inventory Report';
     const description = 'Comprehensive Inventory and Purchase Analysis';
 
@@ -790,46 +792,48 @@ const InventoryReport = () => {
             </div>
 
             {/* Filters */}
-            <Card className="mb-4">
-                <Card.Body>
-                    <Row className="g-3 align-items-end">
-                        <Col md={3}>
-                            <Form.Label>Start Date</Form.Label>
-                            <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                        </Col>
-                        <Col md={3}>
-                            <Form.Label>End Date</Form.Label>
-                            <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-                        </Col>
-                        <Col md={2}>
-                            <Form.Label>Status</Form.Label>
-                            <Form.Select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
-                                {statuses.map((status) => (
-                                    <option key={status} value={status}>
-                                        {status === 'all' ? 'All Status' : status}
-                                    </option>
-                                ))}
-                            </Form.Select>
-                        </Col>
-                        <Col md={2}>
-                            <Form.Label>Category</Form.Label>
-                            <Form.Select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
-                                {categories.map((cat) => (
-                                    <option key={cat} value={cat}>
-                                        {cat === 'all' ? 'All Categories' : cat}
-                                    </option>
-                                ))}
-                            </Form.Select>
-                        </Col>
-                        <Col md={2}>
-                            <Button variant="primary" className="w-100" style={{maxWidth: '150px'}} onClick={fetchInventoryReport} disabled={loading}>
-                                <CsLineIcons icon="sync" className="me-2" />
-                                {loading ? 'Loading...' : 'Generate'}
-                            </Button>
-                        </Col>
-                    </Row>
-                </Card.Body>
-            </Card>
+            {activePlans?.includes('Dynamic Reports') && (
+                <Card className="mb-4">
+                    <Card.Body>
+                        <Row className="g-3 align-items-end">
+                            <Col md={3}>
+                                <Form.Label>Start Date</Form.Label>
+                                <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                            </Col>
+                            <Col md={3}>
+                                <Form.Label>End Date</Form.Label>
+                                <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                            </Col>
+                            <Col md={2}>
+                                <Form.Label>Status</Form.Label>
+                                <Form.Select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
+                                    {statuses.map((status) => (
+                                        <option key={status} value={status}>
+                                            {status === 'all' ? 'All Status' : status}
+                                        </option>
+                                    ))}
+                                </Form.Select>
+                            </Col>
+                            <Col md={2}>
+                                <Form.Label>Category</Form.Label>
+                                <Form.Select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
+                                    {categories.map((cat) => (
+                                        <option key={cat} value={cat}>
+                                            {cat === 'all' ? 'All Categories' : cat}
+                                        </option>
+                                    ))}
+                                </Form.Select>
+                            </Col>
+                            <Col md={2}>
+                                <Button variant="primary" className="w-100" style={{maxWidth: '150px'}} onClick={fetchInventoryReport} disabled={loading}>
+                                    <CsLineIcons icon="sync" className="me-2" />
+                                    {loading ? 'Loading...' : 'Generate'}
+                                </Button>
+                            </Col>
+                        </Row>
+                    </Card.Body>
+                </Card>
+            )}
 
             {error && (
                 <Alert variant="danger" className="mb-3">

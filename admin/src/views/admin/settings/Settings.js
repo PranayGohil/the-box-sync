@@ -17,7 +17,7 @@ import Subscription from './subscription/Subscription';
 import ManageWebsite from './manage-website/ManageWebsite';
 import ForgotPassword from './forgot-password/ForgotPassword';
 
-const NavContent = () => {
+const NavContent = ({ activePlans }) => {
   return (
     <Nav className="flex-column">
       <div className="mb-2">
@@ -74,26 +74,14 @@ const NavContent = () => {
                     </Nav.Link>
                 </div> */}
       </div>
-      <div className="mb-2">
-        <Nav.Link as={NavLink} to="/settings/manage-website" className="px-0">
-          <CsLineIcons icon="web-page" className="me-2 sw-3" size="17" />
-          <span className="align-middle">Manage Website</span>
-        </Nav.Link>
-        {/* <div>
-                    <Nav.Link as={NavLink} to="/operations/requested-inventory" className="px-0 pt-1">
-                        <i className="me-2 sw-3 d-inline-block" />
-                        <span className="align-middle">Requested Inventory</span>
-                    </Nav.Link>
-                    <Nav.Link as={NavLink} to="/operations/inventory-history" className="px-0 pt-1">
-                        <i className="me-2 sw-3 d-inline-block" />
-                        <span className="align-middle">Inventory History</span>
-                    </Nav.Link>
-                    <Nav.Link as={NavLink} to="/operations/add-inventory" className="px-0 pt-1">
-                        <i className="me-2 sw-3 d-inline-block" />
-                        <span className="align-middle">Add Inventory</span>
-                    </Nav.Link>
-                </div> */}
-      </div>
+      {activePlans.includes('Restaurant Website') && (
+        <div className="mb-2">
+          <Nav.Link as={NavLink} to="/settings/manage-website" className="px-0">
+            <CsLineIcons icon="web-page" className="me-2 sw-3" size="17" />
+            <span className="align-middle">Manage Website</span>
+          </Nav.Link>
+        </div>
+      )}
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/settings/forgot-password" className="px-0">
           <CsLineIcons icon="key" className="me-2 sw-3" size="17" />
@@ -138,10 +126,17 @@ const mobileNavItems = [
   },
 ];
 
-const MobileNavbar = () => {
+const MobileNavbar = ({ activePlans }) => {
+  const filteredNavItems = mobileNavItems.filter((nav) => {
+    if (nav.label === 'Manage Website' && (!activePlans || !activePlans.includes('Restaurant Website'))) {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <div className="d-flex gap-2 overflow-auto pb-2">
-      {mobileNavItems.map((nav) => (
+      {filteredNavItems.map((nav) => (
         <Dropdown key={nav.label} container="body" className="position-static">
           <Dropdown.Toggle variant="outline-primary" size="sm" className="d-flex align-items-center gap-1">
             <CsLineIcons icon={nav.icon} size="16" />
@@ -183,14 +178,14 @@ const Settings = () => {
       {/* ✅ MOBILE NAVBAR — OUTSIDE SCROLL */}
       {width && width < lgBreakpoint && (
         <div className="position-absolute top-0 start-0 end-0 d-lg-none">
-          <MobileNavbar />
+          <MobileNavbar activePlans={activePlans} />
         </div>
       )}
       <Row>
         {(width && width >= lgBreakpoint) ? (
           <Col xs="auto" className="d-none d-lg-flex">
             <div className="nav flex-column sw-25 mt-2">
-              <NavContent />
+              <NavContent activePlans={activePlans} />
             </div>
           </Col>
         ) : (<div className="pt-7" />)}

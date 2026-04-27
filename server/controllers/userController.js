@@ -448,28 +448,26 @@ const sendAdminOtp = async (req, res) => {
 
     // Replace placeholders in the email template
     const adminOtpMail = `
-      <p>
-        Dear ${user.name || "User"},
-        <br>We received a request to reset the password for your TheBox account associated with this email address: ${email}.
-      </p>
-      <p>
-        To proceed with the password reset, please use the following One Time Password (OTP):
-      </p>
-      <p><strong>OTP: ${otp}</strong></p>
-      <p>
-        Please enter this OTP on the password reset page to verify your identity and create a new password.
-        If you did not initiate this password reset request, please ignore this email. Your account security is important to us.
-      </p>
-      <p>
-        For further assistance or if you have any concerns, please contact our support team at <span style="font-weight: bold; color: blue;">support@theboxsync.com</span>.
-      </p>
-      <p>
-        Thank you for choosing TheBox.
-        <br>TheBox,
-        <br><span style="font-weight: bold; color: blue;">support@theboxsync.com</span>
-        <br><a href="https://theboxsync.com" style="font-weight: bold; color: blue;">theboxsync.com</a>
-      </p>
-      `;
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+        <div style="background: #7444FD; padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+          <h2 style="color: #fff; margin: 0;">Password Reset Request</h2>
+        </div>
+        <div style="padding: 24px; background: #fafafa;">
+          <p style="color: #333; font-size: 16px;">Dear <strong>${user.name || "User"}</strong>,</p>
+          <p style="color: #555;">We received a request to reset the password for your TheBox account associated with this email address: <strong style="color: #7444FD;">${email}</strong>.</p>
+          <p style="color: #555;">To proceed with the password reset, please use the following One Time Password (OTP):</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <span style="background: #7444FD; color: #fff; padding: 12px 24px; font-size: 28px; font-weight: bold; border-radius: 6px; letter-spacing: 4px;">${otp}</span>
+          </div>
+          <p style="color: #555; text-align: center;">Please enter this OTP on the password reset page to verify your identity.</p>
+          <p style="color: #555; margin-top: 30px;">If you did not initiate this password reset request, please ignore this email. Your account security is important to us.</p>
+          <p style="color: #555; margin-top: 24px;">Thank you for choosing TheBox.<br><strong>The TheBox Team</strong></p>
+        </div>
+        <div style="padding: 12px 24px; background: #f0f0f0; border-radius: 0 0 6px 6px; text-align: center; font-size: 12px; color: #999;">
+          © TheBox | <a href="mailto:support@theboxsync.com" style="color: #7444FD; text-decoration: none;">support@theboxsync.com</a>
+        </div>
+      </div>
+    `;
 
     // Send OTP via email
     await sendEmail({

@@ -300,7 +300,7 @@ const renewSubscription = async (req, res) => {
 const buyCompletePlan = async (req, res) => {
   try {
     const userId = req.user;
-    const { planType } = req.body;
+    const { planType, chosenAddons = [] } = req.body;
 
     if (!userId || !planType) {
       return res
@@ -315,33 +315,46 @@ const buyCompletePlan = async (req, res) => {
         .json({ success: false, message: "User not found." });
     }
 
+    const validAddons = [
+      "Reservation Manager",
+      "QSR",
+      "Captain Panel",
+      "KOT Panel",
+      "Restaurant Website",
+      "Scan For Menu",
+      "Feedback",
+      "Waiter Calling System",
+      "Dynamic Reports",
+      "E-Invoice",
+    ];
+
     const planMapping = {
-      Core: ["Manager", "KOT Panel"],
+      Core: [
+        "Manager",
+        "Staff Management",
+        "Online Order Reconciliation",
+      ],
       Growth: [
         "Manager",
-        "QSR",
-        "Captain Panel",
         "Staff Management",
-        "Feedback",
-        "Scan For Menu",
-        "Restaurant Website",
         "Online Order Reconciliation",
-        "Reservation Manager",
-        "KOT Panel",
+        ...chosenAddons.filter(addon => validAddons.includes(addon)).slice(0, 6)
       ],
       Scale: [
         "Manager",
-        "QSR",
-        "Captain Panel",
         "Staff Management",
-        "Feedback",
-        "Scan For Menu",
-        "Restaurant Website",
         "Online Order Reconciliation",
         "Reservation Manager",
-        "Payroll By The Box",
-        "Dynamic Reports",
+        "QSR",
+        "Captain Panel",
         "KOT Panel",
+        "Restaurant Website",
+        "Scan For Menu",
+        "Feedback",
+        "Waiter Calling System",
+        "Dynamic Reports",
+        "E-Invoice",
+        "Payroll By The Box",
       ],
     };
 

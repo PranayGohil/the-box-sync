@@ -8,8 +8,28 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const history = useHistory();
   const [currentUser, setCurrentUser] = useState(null);
+  const [activePlans, setActivePlans] = useState([]);
   const [isLogin, setIsLogin] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const fetchUserSubscriptions = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API}/subscription/get`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+      if (response.data?.data?.length > 0) {
+        const active = response.data.data.filter((plan) => plan.status === 'active');
+        setActivePlans(active.map((plan) => plan.plan_name));
+      }
+    } catch (error) {
+      console.error('Error fetching subscription plans:', error);
+    }
+  };
 
   // Load user from token on initial load
   useEffect(() => {
@@ -38,6 +58,7 @@ export const AuthProvider = ({ children }) => {
           setIsLogin(false);
         })
         .finally(() => setLoading(false));
+      fetchUserSubscriptions();
     } else {
       history.push('/login');
       setLoading(false);
@@ -61,5 +82,5 @@ export const AuthProvider = ({ children }) => {
     setIsLogin(false);
   };
 
-  return <AuthContext.Provider value={{ currentUser, isLogin, loading, login, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ currentUser, activePlans, isLogin, loading, login, logout }}>{children}</AuthContext.Provider>;
 };

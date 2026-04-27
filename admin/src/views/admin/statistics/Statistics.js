@@ -6,11 +6,13 @@ import { format } from 'date-fns';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { AuthContext } from 'contexts/AuthContext';
 import ChartDoughnut from './components/ChartDoughnut';
 import ChartPie from './components/ChartPie';
 import ChartHorizontal from './components/ChartBar';
 
 const Statistics = () => {
+  const { activePlans } = React.useContext(AuthContext);
   const title = 'Analytics Dashboard';
   const description = 'Comprehensive Analytics Dashboard';
 
@@ -175,23 +177,25 @@ const Statistics = () => {
             <BreadcrumbList items={breadcrumbs} />
           </Col>
           <Col md="5" className="d-flex justify-content-end align-items-center">
-            <Dropdown>
-              <Dropdown.Toggle variant="outline-primary d-flex align-items-center" size="sm">
-                <CsLineIcons icon="calendar" className="me-2" />
-                {periodOptions.find(p => p.value === selectedPeriod)?.label}
-              </Dropdown.Toggle>
-              <Dropdown.Menu>
-                {periodOptions.map((period) => (
-                  <Dropdown.Item
-                    key={period.value}
-                    active={selectedPeriod === period.value}
-                    onClick={() => setSelectedPeriod(period.value)}
-                  >
-                    {period.label}
-                  </Dropdown.Item>
-                ))}
-              </Dropdown.Menu>
-            </Dropdown>
+            {activePlans?.includes('Dynamic Reports') && (
+              <Dropdown>
+                <Dropdown.Toggle variant="outline-primary d-flex align-items-center" size="sm">
+                  <CsLineIcons icon="calendar" className="me-2" />
+                  {periodOptions.find(p => p.value === selectedPeriod)?.label}
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  {periodOptions.map((period) => (
+                    <Dropdown.Item
+                      key={period.value}
+                      active={selectedPeriod === period.value}
+                      onClick={() => setSelectedPeriod(period.value)}
+                    >
+                      {period.label}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown.Menu>
+              </Dropdown>
+            )}
           </Col>
         </Row>
       </div>

@@ -25,7 +25,7 @@ const OperationalReport = () => {
   const [error, setError] = useState(null);
   const [reportData, setReportData] = useState(null);
 
-  const { currentUser } = useContext(AuthContext);
+  const { currentUser, activePlans } = useContext(AuthContext);
 
   // Export states
   const [exporting, setExporting] = useState(false);
@@ -801,26 +801,28 @@ const OperationalReport = () => {
       </div>
 
       {/* Filters */}
-      <Card className="mb-4">
-        <Card.Body>
-          <Row className="g-3 align-items-end">
-            <Col md={4}>
-              <Form.Label>Start Date</Form.Label>
-              <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-            </Col>
-            <Col md={4}>
-              <Form.Label>End Date</Form.Label>
-              <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-            </Col>
-            <Col md={4}>
-              <Button variant="primary" className="w-100" style={{ maxWidth: '150px' }} onClick={fetchOperationalReport} disabled={loading}>
-                <CsLineIcons icon="sync" className="me-2" />
-                {loading ? 'Loading...' : 'Generate'}
-              </Button>
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
+      {activePlans?.includes('Dynamic Reports') && (
+        <Card className="mb-4">
+          <Card.Body>
+            <Row className="g-3 align-items-end">
+              <Col md={4}>
+                <Form.Label>Start Date</Form.Label>
+                <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              </Col>
+              <Col md={4}>
+                <Form.Label>End Date</Form.Label>
+                <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              </Col>
+              <Col md={4}>
+                <Button variant="primary" className="w-100" style={{ maxWidth: '150px' }} onClick={fetchOperationalReport} disabled={loading}>
+                  <CsLineIcons icon="sync" className="me-2" />
+                  {loading ? 'Loading...' : 'Generate'}
+                </Button>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
+      )}
 
       {error && (
         <Alert variant="danger" className="mb-3">

@@ -7,6 +7,7 @@ import { getMenuItems } from 'routing/helper';
 import { useWindowSize } from 'hooks/useWindowSize';
 import { useWindowScroll } from 'hooks/useWindowScroll';
 import allRoutes from 'routes.js';
+import { AuthContext } from 'contexts/AuthContext';
 import { layoutShowingNavMenu } from 'layout/layoutSlice';
 import MainMenuItems from './MainMenuItems';
 import {
@@ -27,14 +28,42 @@ const MainMenu = () => {
   const scrolled = useWindowScroll();
   const { width } = useWindowSize();
 
+  const { activePlans } = React.useContext(AuthContext);
+
+  const filteredRoutes = useMemo(() => {
+    let routesToFilter = attrMobile && useSidebar ? allRoutes : allRoutes.mainRoutes;
+    
+    if (activePlans) {
+      const hasStaff = activePlans.includes('Staff Management');
+
+      if (!hasStaff) {
+        if (Array.isArray(routesToFilter)) {
+          routesToFilter = routesToFilter.filter(route => {
+            if (route.label === 'Staff' && !hasStaff) return false;
+            return true;
+          });
+        } else if (routesToFilter.mainRoutes) {
+          routesToFilter = {
+            ...routesToFilter,
+            mainRoutes: routesToFilter.mainRoutes.filter(route => {
+              if (route.label === 'Staff' && !hasStaff) return false;
+              return true;
+            })
+          };
+        }
+      }
+    }
+    return routesToFilter;
+  }, [attrMobile, useSidebar, activePlans]);
+
   const menuItemsMemo = useMemo(
     () =>
       getMenuItems({
-        data: attrMobile && useSidebar ? allRoutes : allRoutes.mainRoutes,
+        data: filteredRoutes,
         isLogin,
         userRole: currentUser.role,
       }),
-    [isLogin, currentUser, attrMobile, useSidebar]
+    [isLogin, currentUser, filteredRoutes]
   );
 
   useEffect(() => {
