@@ -1,0 +1,26 @@
+{
+  "dependencies": {
+    "@21st-sdk/agent": "^0.0.18",
+    "motion": "^12.38.0",
+    "zod": "^4.3.6"
+  },
+  "name": "theboxsync",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PranayGohil/the-box-sync.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/PranayGohil/the-box-sync/issues"
+  },
+  "homepage": "https://github.com/PranayGohil/the-box-sync#readme"
+}

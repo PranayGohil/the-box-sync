@@ -12,11 +12,11 @@ const reservationSchema = new Schema(
         reservation_date: { type: String, required: true }, // "YYYY-MM-DD"
 
         // Which slot group (Lunch / Dinner / etc.)
-        group_id: { type: Schema.Types.ObjectId, required: true },
+        group_id: { type: Schema.Types.ObjectId, required: false },
         group_name: { type: String },   // denormalised for display
 
         // Ordered slot start-times within the group e.g. ["12:00","12:30"]
-        slots: { type: [String], required: true },
+        slots: { type: [String], required: false },
 
         // Scalar convenience fields derived by pre-save hook (safe to index alone)
         slot_start: { type: String },

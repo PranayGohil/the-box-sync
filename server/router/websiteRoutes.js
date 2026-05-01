@@ -7,6 +7,8 @@ const {
   getAllDishes,
   getWebsiteSettingsByCode,
   getFeaturedDishesByCode,
+  createPublicReservation,
+  getPublicMenuByCode,
 } = require("../controllers/websiteController");
 
 const websiteRouter = express.Router();
@@ -17,6 +19,8 @@ websiteRouter.get("/dishes", authMiddleware, getAllDishes);
 
 websiteRouter.get("/settings/:code", getWebsiteSettingsByCode);
 websiteRouter.get("/featured-dishes/:code", getFeaturedDishesByCode);
+websiteRouter.get("/menu/:code", getPublicMenuByCode);
+websiteRouter.post("/reservation/:code", createPublicReservation);
 
 
 

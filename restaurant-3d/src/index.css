@@ -1,0 +1,242 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');
+
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* ─── CSS Custom Properties ─── */
+:root {
+  --brand: #f27a1a;
+  --gold:  #D4AF37;
+  --dark:  #060606;
+  --dark-accent: #1A1A1A;
+}
+
+/* ─── Base Resets ─── */
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+/* ─── Utilities & Components rewritten for Bootstrap ─── */
+body {
+  background-color: var(--dark);
+  color: #ffffff;
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 0% 0%, rgba(242, 122, 26, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+  background-attachment: fixed;
+}
+
+.font-display { font-family: "Playfair Display", Georgia, serif; }
+.font-sans { font-family: "Inter", system-ui, sans-serif; }
+.font-accent { font-family: "Cormorant Garamond", serif; }
+
+.bg-dark-900 { background-color: #0A0A0A; }
+.bg-dark-800 { background-color: #111111; }
+.bg-brand-500 { background-color: #f27a1a; }
+.text-brand-400 { color: #f59e42; }
+.text-gold { color: #D4AF37; }
+.text-white-60 { color: rgba(255, 255, 255, 0.6); }
+
+/* Glassmorphism */
+.glass {
+  background-color: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.glass-strong {
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.glass-light {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* Brand gradient text */
+.text-gradient {
+  background: linear-gradient(to right, #f59e42, #D4AF37, #f27a1a);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Glow effect */
+.glow-brand { text-shadow: 0 0 20px rgba(242, 122, 26, 0.5); }
+
+/* Hide scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  background: linear-gradient(to right, #f27a1a, #e05c0c);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 9999px;
+  border: none;
+  transition: all 0.3s;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn-primary:hover {
+  background: linear-gradient(to right, #f59e42, #f27a1a);
+  box-shadow: 0 8px 60px rgba(242, 122, 26, 0.40);
+  transform: scale(1.05);
+  color: #fff;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 9999px;
+  transition: all 0.3s;
+  text-decoration: none;
+  cursor: pointer;
+  background: transparent;
+}
+.btn-ghost:hover {
+  border-color: #f59e42;
+  color: #f59e42;
+  background-color: rgba(242, 122, 26, 0.1);
+}
+
+.card-3d {
+  background-color: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: all 0.5s;
+  cursor: pointer;
+  transform-style: preserve-3d;
+}
+.card-3d:hover {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border-color: rgba(242, 122, 26, 0.3);
+}
+
+.section-title {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.section-subtitle {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border-radius: 0.75rem;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s;
+}
+.input-field:focus {
+  border-color: #f59e42;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(242, 122, 26, 0.2);
+}
+.input-field::placeholder { color: rgba(255, 255, 255, 0.4); }
+
+.price-tag {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(to right, #f59e42, #D4AF37, #f27a1a);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* ─── Page Transitions ─── */
+.page-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 400ms, transform 400ms;
+}
+.page-exit { opacity: 1; }
+.page-exit-active {
+  opacity: 0;
+  transition: opacity 300ms;
+}
+
+/* ─── Loading Skeleton ─── */
+.skeleton {
+  background: linear-gradient(90deg, #1A1A1A 25%, #2D2D2D 50%, #1A1A1A 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ─── Floating particles ─── */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: float 6s ease-in-out infinite;
+}
+
+/* ─── Light mode (Invert Hack for strictly dark themes) ─── */
+.light {
+  filter: invert(1) hue-rotate(180deg);
+  background-color: #f5f5f5; /* Inverted equivalent of dark-900 */
+}
+.light img, 
+.light video, 
+.light canvas, 
+.light iframe, 
+.light .preserve-colors {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Custom Scrollbar */
+.scrollbar-custom::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: rgba(242, 122, 26, 0.3);
+  border-radius: 10px;
+}
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: rgba(242, 122, 26, 0.5);
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.hover\:bg-white-10:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.mask-fade-right {
+  mask-image: linear-gradient(to right, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+}
