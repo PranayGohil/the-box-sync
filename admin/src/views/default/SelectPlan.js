@@ -36,12 +36,10 @@ const SelectPlan = () => {
   const handleToggleAddon = (value) => {
     if (selectedAddons.includes(value)) {
       setSelectedAddons(selectedAddons.filter((a) => a !== value));
+    } else if (selectedAddons.length < 6) {
+      setSelectedAddons([...selectedAddons, value]);
     } else {
-      if (selectedAddons.length < 6) {
-        setSelectedAddons([...selectedAddons, value]);
-      } else {
-        toast.warning('You can only select up to 6 add-ons for the Growth plan.');
-      }
+      toast.warning('You can only select up to 6 add-ons for the Growth plan.');
     }
   };
 
@@ -371,17 +369,17 @@ const SelectPlan = () => {
               <div className="row g-2">
                 {allAddons.map((addon, index) => (
                   <div key={index} className="col-md-6">
-                    <div 
+                    <div
                       className={`border rounded p-2 ${selectedAddons.includes(addon.value) ? 'border-success bg-success-subtle' : ''}`}
                       onClick={() => handleToggleAddon(addon.value)}
                       style={{ cursor: 'pointer' }}
                     >
                       <div className="form-check m-0 d-flex align-items-center" style={{ cursor: 'pointer' }}>
-                        <input 
-                          className="form-check-input mt-0 me-2" 
-                          type="checkbox" 
+                        <input
+                          className="form-check-input mt-0 me-2"
+                          type="checkbox"
                           checked={selectedAddons.includes(addon.value)}
-                          onChange={() => {}} 
+                          onChange={() => { }}
                         />
                         <label className="form-check-label mb-0" style={{ cursor: 'pointer', fontSize: '13px' }}>
                           {addon.label}

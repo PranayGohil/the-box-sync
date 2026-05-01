@@ -10,9 +10,7 @@ const qsr = {
 };
 
 const order = {
-  dinein: lazy(() => import('views/qsr/order/DineInOrder')),
-  takeaway: lazy(() => import('views/qsr/order/TakeawayOrder')),
-  delivery: lazy(() => import('views/qsr/order/DeliveryOrder')),
+  unified: lazy(() => import('views/qsr/order/UnifiedOrder')),
   deliveryPartner: lazy(() => import('views/qsr/order/DeliveryPartners')),
 }
 const dashboards = {
@@ -53,9 +51,7 @@ const allRoutes = {
     {
       path: `${appRoot}/order`,
       subs: [
-        { path: '/dine-in', label: 'Dine In', component: order.dinein },
-        { path: '/takeaway', label: 'Take Away', component: order.takeaway },
-        { path: '/delivery', label: 'Delivery', component: order.delivery },
+        { path: '/new', label: 'New Order', component: order.unified },
         { path: '/delivery-partners', label: 'Delivery Partners', component: order.deliveryPartner },
       ]
     },

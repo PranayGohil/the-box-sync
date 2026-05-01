@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory, Switch, Route, Redirect } from 'react-router-dom';
+import { useHistory, Switch, Route } from 'react-router-dom';
 import { Button, Row, Col, Card, Badge } from 'react-bootstrap';
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
-
-import DineInOrder from './order/DineInOrder';
-import TakeawayOrder from './order/TakeawayOrder';
-import DeliveryOrder from './order/DeliveryOrder';
+import UnifiedOrder from './order/UnifiedOrder';
 
 const Dashboard = () => {
   const title = 'Dashboard';
@@ -37,117 +34,33 @@ const Dashboard = () => {
   }, []);
 
   const handleOrderClick = (order) => {
-    const orderType = order.order_type.toLowerCase().replace(' ', '-');
-    history.push(`/order/${orderType}?orderId=${order._id}&mode=edit`);
+    history.push(`/order/new?orderId=${order._id}&mode=edit`);
   };
 
-  const createNewOrder = (orderType) => {
-    history.push(`/order/${orderType}?mode=new`);
+  const createNewOrder = () => {
+    history.push('/order/new?mode=new');
   };
 
   return (
     <>
       <HtmlHead title={title} description={description} />
 
+      <div className="page-title-container">
+        <Row>
+          <Col md="12" className="d-flex align-items-start justify-content-left gap-2">
+            <Button variant="outline-primary" onClick={createNewOrder}>
+              + New Order
+            </Button>
+            <Button variant="outline-primary" onClick={() => history.push('/order/delivery-partners')}>
+              Delivery Partners
+            </Button>
+          </Col>
+        </Row>
+      </div>
       <Row>
-        <Col lg="6">
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <h2 className="small-title mb-0 mx-3">Active Dine In</h2>
-            <div className="d-flex gap-2 mx-2">
-              <Button variant="outline-primary" onClick={() => createNewOrder('dine-in')}>
-                + New Dine In
-              </Button>
-            </div>
-          </div>
-
-          <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
-            {activeDineInOrders.length === 0 ? (
-              <Card className="text-center p-4">
-                <Card.Body>
-                  <p className="text-muted mb-0">No active dine in orders</p>
-                </Card.Body>
-              </Card>
-            ) : (
-              activeDineInOrders.map((order) => {
-
-                const preparingCount = order.order_items.filter(
-                  (item) => item.status === 'Preparing' || item.status === 'Pending'
-                ).length;
-
-                const completedCount = order.order_items.filter(
-                  (item) => item.status === 'Completed'
-                ).length;
-
-                return (
-                  <Card
-                    key={order._id}
-                    className="mb-3 hover-border-primary cursor-pointer"
-                    onClick={() => handleOrderClick(order)}
-                  >
-                    <Card.Body>
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                          <h5 className="mb-1">
-                            {order.order_type}
-                            {order.token && <span className="text-info fs-5"> #{order.token}</span>}
-                          </h5>
-                          <p className="mb-0 px-2">Token: {order.token}</p>
-                        </div>
-                        <div className="d-flex gap-2">
-                          {order.order_status === 'Save' && (
-                            <Badge bg="success">
-                              {order.order_status}
-                            </Badge>
-                          )}
-                          {order.order_status === 'KOT' && (
-                            <>
-                              {preparingCount > 0 && (
-                                <Badge bg="warning">
-                                  KOT: {preparingCount}
-                                </Badge>
-                              )}
-                              {completedCount > 0 && (
-                                <Badge bg="success">
-                                  Served: {completedCount}
-                                </Badge>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      <div className="d-flex flex-wrap gap-1">
-                        {order.order_items.slice(0, 3).map((item, i) => (
-                          <small key={i} className="badge bg-light text-dark">
-                            {item.dish_name} x{item.quantity}
-                          </small>
-                        ))}
-                        {order.order_items.length > 3 && <small className="badge bg-secondary">+{order.order_items.length - 3} more</small>}
-                      </div>
-                    </Card.Body>
-                  </Card>
-                )
-              })
-            )}
-          </div>
-        </Col>
-
         {/* Active Orders Section */}
         <Col lg="6">
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <h2 className="small-title mb-0 mx-3">Active Takeaways & Deliveries</h2>
-
-            <div className="d-flex gap-2 mx-2">
-              <Button variant="outline-primary" onClick={() => createNewOrder('takeaway')}>
-                + Takeaway
-              </Button>
-              <Button variant="outline-primary" onClick={() => createNewOrder('delivery')}>
-                + Delivery
-              </Button>
-              <Button variant="outline-primary" onClick={() => history.push('/order/delivery-partners')}>
-                Delivery Partners
-              </Button>
-            </div>
-          </div>
+          <h3 className="mb-3 text-primary small-title">Active Takeaways & Deliveries</h3>
           <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
             {activeTakeawaysAndDeliveries.length === 0 ? (
               <Card className="text-center p-4">
@@ -189,12 +102,40 @@ const Dashboard = () => {
             )}
           </div>
         </Col>
+        <Col lg="6">
+          <h3 className="mb-3 text-primary small-title">Active Delivery Partners's Orders</h3>
+          <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+            <Card className="mb-3 hover-border-primary cursor-pointer">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <h5 className="mb-1">
+                      Zomato Order
+                      <span className="text-info fs-5"> #12345</span>
+                    </h5>
+                    <p className="mb-0 px-2">
+                      Customer: John Doe
+                    </p>
+                  </div>
+                  <Badge bg="warning" className="text-white">
+                    Requested
+                  </Badge>
+                </div>
+                <div className="d-flex flex-wrap gap-1">
+
+                  <small className="badge bg-light text-dark">
+                    Paneer masala x 2
+                  </small>
+                  {/* {order.order_items.length > 3 && <small className="badge bg-secondary">+{order.order_items.length - 3} more</small>} */}
+                </div>
+              </Card.Body>
+            </Card>
+          </div>
+        </Col>
       </Row>
 
       <Switch>
-        <Route exact path="/order/dine-in" render={() => <DineInOrder />} />
-        <Route exact path="/order/takeaway" render={() => <TakeawayOrder />} />
-        <Route exact path="/order/delivery" render={() => <DeliveryOrder />} />
+        <Route path="/order/new" component={UnifiedOrder} />
       </Switch>
     </>
   );
