@@ -5,9 +5,10 @@ import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-import DineInOrder from './order/DineInOrder';
-import TakeawayOrder from './order/TakeawayOrder';
-import DeliveryOrder from './order/DeliveryOrder';
+// import DineInOrder from './order/DineInOrder';
+// import TakeawayOrder from './order/TakeawayOrder';
+// import DeliveryOrder from './order/DeliveryOrder';
+import UnifiedOrder from "./order/UnifiedOrder";
 
 const Dashboard = () => {
   const title = 'Dashboard';
@@ -227,7 +228,7 @@ const Dashboard = () => {
                       </div>
                       <div className="d-flex flex-wrap gap-1">
                         {order.order_items.slice(0, 3).map((item, i) => (
-                          <small key={i} className="badge bg-light text-dark" style={{fontSize:'12px'}}>
+                          <small key={i} className="badge bg-light text-dark" style={{ fontSize: '12px' }}>
                             {item.dish_name} x{item.quantity}
                           </small>
                         ))}
@@ -243,9 +244,9 @@ const Dashboard = () => {
       </Row>
 
       <Switch>
-        <Route exact path="/order/dine-in" render={() => <DineInOrder />} />
-        <Route exact path="/order/takeaway" render={() => <TakeawayOrder />} />
-        <Route exact path="/order/delivery" render={() => <DeliveryOrder />} />
+        <Route exact path="/order/dine-in" render={() => <UnifiedOrder />} />
+        <Route exact path="/order/takeaway" render={() => <UnifiedOrder />} />
+        <Route exact path="/order/delivery" render={() => <UnifiedOrder />} />
       </Switch>
     </>
   );

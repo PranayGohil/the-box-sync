@@ -33,7 +33,7 @@ const Login = () => {
       const res = await axios.post(`${process.env.REACT_APP_API}/panel-user/login/QSR`, values);
       if (res.data.message === 'Logged In') {
         login(res.data.token, res.data.user);
-        window.location.href = '/dashboard';
+        window.location.href = '/order/new?mode=new';
       } else {
         setWrongMsg(res.data.message);
       }

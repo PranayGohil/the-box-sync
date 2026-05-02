@@ -553,6 +553,7 @@
   &:hover {
     @include shadow-and-border-active-before;
   }
+  border-radius: 20px !important;
 }
 
 .hover-img-scale-up {

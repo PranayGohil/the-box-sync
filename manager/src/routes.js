@@ -11,6 +11,7 @@ const manager = {
 };
 
 const order = {
+  unified: lazy(() => import('views/manager/order/UnifiedOrder')),
   dinein: lazy(() => import('views/manager/order/DineInOrder')),
   takeaway: lazy(() => import('views/manager/order/TakeawayOrder')),
   delivery: lazy(() => import('views/manager/order/DeliveryOrder')),
@@ -54,9 +55,9 @@ const allRoutes = {
     {
       path: `${appRoot}/order`,
       subs: [
-        { path: '/dine-in', label: 'Dine In', component: order.dinein },
-        { path: '/takeaway', label: 'Take Away', component: order.takeaway },
-        { path: '/delivery', label: 'Delivery', component: order.delivery },
+        { path: '/dine-in', label: 'Dine In', component: order.unified },
+        { path: '/takeaway', label: 'Take Away', component: order.unified },
+        { path: '/delivery', label: 'Delivery', component: order.unified },
         { path: '/delivery-partners', label: 'Delivery Partners', component: order.deliveryPartner },
       ]
     },
