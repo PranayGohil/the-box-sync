@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal, Row, Col, Form, Button } from 'react-bootstrap';
+import { printModalBill } from '../../../../utils/printUtils';
 
 const PaymentModal = ({
   showPaymentModal,
@@ -10,8 +11,17 @@ const PaymentModal = ({
   handleDiscountTypeChange,
   handleDiscountValueChange,
   handlePaidAmountChange,
-  handlePayment
+  handlePayment,
+  orderItems,
+  customerInfo,
+  orderType,
+  orderId,
+  orderNo,
 }) => {
+  const [printing, setPrinting] = useState(false);
+  const handlePrintBill = () => {
+    printModalBill({ paymentData, orderItems, customerInfo, orderType, orderId, orderNo }, setPrinting);
+  };
   return (
     <Modal show={showPaymentModal} onHide={() => setShowPaymentModal(false)} centered size="lg">
       <Modal.Header closeButton>
@@ -151,6 +161,11 @@ const PaymentModal = ({
         <Button variant="secondary" onClick={() => setShowPaymentModal(false)}>
           Cancel
         </Button>
+        {orderId && (
+          <Button variant="outline-primary" onClick={handlePrintBill} disabled={printing || isLoading}>
+            {printing ? 'Printing...' : 'Print Bill'}
+          </Button>
+        )}
         <Button variant="success" onClick={handlePayment} disabled={isLoading}>
           Complete Payment
         </Button>

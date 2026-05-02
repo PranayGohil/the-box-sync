@@ -46,13 +46,13 @@ export const printCounterBill = (ord, userData, counterName, items) => {
 
       <!-- Items Table -->
       <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
-        <thead>
+    <thead>
           <tr>
             <th style="text-align: left; border-bottom: 1px solid #ccc;">Item</th>
             <th style="text-align: center; border-bottom: 1px solid #ccc;">Qty</th>
           </tr>
-        </thead>
-        <tbody>
+    </thead>
+    <tbody>
           ${items.map(item => `
             <tr>
               <td>${item.dish_name}</td>
@@ -363,9 +363,9 @@ export const printKOTSlip = (slipData, userData, setPrinting) => {
                   ${item.special_notes ? `<div style="font-size:11px;color:#666;">${item.special_notes}</div>` : ''}
                 </td>
                 <td style="text-align:center;font-size:16px;font-weight:bold;">${item.quantity}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
+        </tr>`).join('')}
+    </tbody>
+  </table>
         <hr style="border:0.5px dashed #ccc;"/>
         <div style="text-align:center;font-size:10px;color:#999;">KOT Print — ${printTime}</div>
       </div>`;
