@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 
-import { CartProvider, ThemeProvider, AuthProvider } from './context/AppContext';
+import { CartProvider, ThemeProvider, AuthProvider, useAuth } from './context/AppContext';
 import { RestaurantProvider, useRestaurant } from './context/RestaurantContext';
 import Navbar       from './components/Navbar';
 import Footer       from './components/Footer';
@@ -56,9 +56,25 @@ function AnimatedRoutes() {
 function AppShell() {
   const [navVisible, setNavVisible] = useState(false);
   const { loading, error } = useRestaurant();
+  const { user } = useAuth();
   const location = useLocation();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
+
   const isLoginPage = location.pathname.includes('/login');
+  const isProfilePage = location.pathname.includes('/profile');
+  
+  // Show navigation if it's NOT a login/profile-without-login page,
+  // OR if it's one of those pages but we are on mobile.
+  const isAuthPage = isLoginPage || (isProfilePage && !user);
+  const shouldShowNav = !isAuthPage || isMobile;
+
   useLenis(); // Initialize smooth scroll
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 992);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -79,16 +95,16 @@ function AppShell() {
   }
 
   return (
-    <div style={{ paddingBottom: isLoginPage ? 0 : 'env(safe-area-inset-bottom, 80px)' }}>
+    <div style={{ paddingBottom: !shouldShowNav ? 0 : 'env(safe-area-inset-bottom, 80px)' }}>
       <AnimatePresence>
         {loading && <Preloader onComplete={handlePreloaderComplete} />}
       </AnimatePresence>
-
-      {!isLoginPage && <Navbar visible={!loading} />}
+ 
+      {shouldShowNav && <Navbar visible={!loading} />}
       <AnimatedRoutes />
-      {!isLoginPage && <Footer />}
-      {!isLoginPage && <MobileBottomNav />}
-      {!isLoginPage && <ScrollToTopButton />}
+      {shouldShowNav && <Footer />}
+      {shouldShowNav && <MobileBottomNav />}
+      {shouldShowNav && <ScrollToTopButton />}
 
       {/* Global Toast Notifications */}
       <Toaster 

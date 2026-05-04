@@ -32,8 +32,10 @@ const ManageWebsite = () => {
   const [saving, setSaving] = useState(false);
   const [allDishes, setAllDishes] = useState([]);
   const [logoFile, setLogoFile] = useState(null);
+  const [heroImageFile, setHeroImageFile] = useState(null);
   const [aboutImageFile, setAboutImageFile] = useState(null);
-  
+  const [legacyImageFile, setLegacyImageFile] = useState(null);
+
   const { currentUser } = React.useContext(AuthContext);
   const restaurant_code = currentUser?.restaurant_code;
   const publicLink = restaurant_code ? `http://localhost:5173/${restaurant_code}` : '';
@@ -50,12 +52,18 @@ const ManageWebsite = () => {
       opening_hours: [],
       featured_dish_ids: [],
       hero_title: '',
+      hero_subtitle: '',
       hero_details: '',
+      hero_image: '',
       about_title: '',
       about_details: '',
       about_image: '',
+      legacy_title: '',
+      legacy_details: '',
+      legacy_image: '',
       legacy_years: '',
       contact_details: '',
+      map_location: '',
       logo: '',
       testimonials: [],
       social_links: [],
@@ -74,20 +82,42 @@ const ManageWebsite = () => {
           if (uploadRes.data?.logo) uploadedLogo = uploadRes.data.logo;
         }
 
+        let uploadedHeroImg = values.hero_image;
+        if (heroImageFile) {
+          const formData = new FormData();
+          formData.append('logo', heroImageFile);
+          const uploadRes = await axios.post(`${process.env.REACT_APP_API}/upload/uploadlogo`, formData, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'multipart/form-data' },
+          });
+          if (uploadRes.data?.logo) uploadedHeroImg = uploadRes.data.logo;
+        }
+
         let uploadedAboutImg = values.about_image;
         if (aboutImageFile) {
           const formData = new FormData();
-          formData.append('logo', aboutImageFile); // Using the same upload logo endpoint for simplicity if it handles menu images
+          formData.append('logo', aboutImageFile);
           const uploadRes = await axios.post(`${process.env.REACT_APP_API}/upload/uploadlogo`, formData, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'multipart/form-data' },
           });
           if (uploadRes.data?.logo) uploadedAboutImg = uploadRes.data.logo;
         }
 
-        const payload = { 
-          ...values, 
+        let uploadedLegacyImg = values.legacy_image;
+        if (legacyImageFile) {
+          const formData = new FormData();
+          formData.append('logo', legacyImageFile);
+          const uploadRes = await axios.post(`${process.env.REACT_APP_API}/upload/uploadlogo`, formData, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'multipart/form-data' },
+          });
+          if (uploadRes.data?.logo) uploadedLegacyImg = uploadRes.data.logo;
+        }
+
+        const payload = {
+          ...values,
           logo: uploadedLogo,
+          hero_image: uploadedHeroImg,
           about_image: uploadedAboutImg,
+          legacy_image: uploadedLegacyImg,
           featured_dish_ids: JSON.stringify(values.featured_dish_ids),
           opening_hours: JSON.stringify(values.opening_hours),
           testimonials: JSON.stringify(values.testimonials),
@@ -100,7 +130,8 @@ const ManageWebsite = () => {
         toast.success('Website settings updated successfully.');
       } catch (err) {
         console.error('Failed to update:', err);
-        toast.error('Update failed.');
+        const errMsg = err.response?.data?.details || err.response?.data?.error || 'Update failed.';
+        toast.error(errMsg);
       } finally {
         setSaving(false);
       }
@@ -120,11 +151,14 @@ const ManageWebsite = () => {
         if (settingsRes.data) {
           Object.keys(settingsRes.data).forEach((key) => {
             if (key in formik.initialValues) {
-              if (['featured_dish_ids', 'opening_hours', 'testimonials', 'social_links'].includes(key) && settingsRes.data[key]) {
+              const arrayFields = ['featured_dish_ids', 'opening_hours', 'testimonials', 'social_links'];
+              if (arrayFields.includes(key)) {
                 try {
-                  const val = typeof settingsRes.data[key] === 'string' ? JSON.parse(settingsRes.data[key]) : settingsRes.data[key];
-                  setFieldValue(key, val || []);
-                } catch {
+                  const val = typeof settingsRes.data[key] === 'string' 
+                    ? JSON.parse(settingsRes.data[key]) 
+                    : settingsRes.data[key];
+                  setFieldValue(key, Array.isArray(val) ? val : []);
+                } catch (e) {
                   setFieldValue(key, []);
                 }
               } else {
@@ -253,91 +287,109 @@ const ManageWebsite = () => {
               <Card.Body>
                 <h5 className="mb-3">Hero Section (Home Page Top)</h5>
                 <Form.Group className="mb-3">
-                  <Form.Label>Main Title</Form.Label>
+                  <Form.Label>Hero Main Title</Form.Label>
                   <Form.Control name="hero_title" value={values.hero_title} onChange={handleChange} placeholder="Welcome to..." />
                 </Form.Group>
-                <Form.Group>
-                  <Form.Label>Subtext / Details</Form.Label>
+                <Form.Group className="mb-3">
+                  <Form.Label>Hero Subtitle</Form.Label>
+                  <Form.Control name="hero_subtitle" value={values.hero_subtitle} onChange={handleChange} placeholder="Delicious. Authentic. Fresh." />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Hero Description</Form.Label>
                   <Form.Control name="hero_details" as="textarea" rows={2} value={values.hero_details} onChange={handleChange} />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Hero Background Image</Form.Label>
+                  <Form.Control type="file" onChange={(e) => setHeroImageFile(e.target.files[0])} />
+                  {values.hero_image && <div className="mt-1 small text-muted">Current: {values.hero_image}</div>}
+                  <div className="text-muted small mt-1">Leave empty to use the default professional 3D restaurant scene.</div>
                 </Form.Group>
               </Card.Body>
             </Card>
 
-            {/* Our Legacy (About) Section */}
+            {/* Our Legacy Section */}
             <Card className="mb-4">
               <Card.Body>
-                <h5 className="mb-3">Our Legacy (About Us)</h5>
+                <h5 className="mb-3">Our Legacy (History Section)</h5>
                 <Row className="g-3">
                   <Col md={8}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Section Title</Form.Label>
-                      <Form.Control name="about_title" value={values.about_title} onChange={handleChange} />
+                      <Form.Label>Legacy Section Title</Form.Label>
+                      <Form.Control name="legacy_title" value={values.legacy_title} onChange={handleChange} placeholder="Our Legacy" />
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Years of Legacy (Number)</Form.Label>
+                      <Form.Label>Years of Legacy</Form.Label>
                       <Form.Control name="legacy_years" value={values.legacy_years} onChange={handleChange} placeholder="e.g. 15+" />
                     </Form.Group>
                   </Col>
                 </Row>
                 <Form.Group className="mb-3">
-                  <Form.Label>Detailed Story</Form.Label>
+                  <Form.Label>Legacy Description</Form.Label>
+                  <Form.Control name="legacy_details" as="textarea" rows={4} value={values.legacy_details} onChange={handleChange} />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Legacy Section Image</Form.Label>
+                  <Form.Control type="file" onChange={(e) => setLegacyImageFile(e.target.files[0])} />
+                  {values.legacy_image && <div className="mt-1 small text-muted">Current: {values.legacy_image}</div>}
+                </Form.Group>
+              </Card.Body>
+            </Card>
+
+            {/* About Us Section */}
+            <Card className="mb-4">
+              <Card.Body>
+                <h5 className="mb-3">About Us (Secondary Story)</h5>
+                <Form.Group className="mb-3">
+                  <Form.Label>About Title</Form.Label>
+                  <Form.Control name="about_title" value={values.about_title} onChange={handleChange} />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>About Details</Form.Label>
                   <Form.Control name="about_details" as="textarea" rows={4} value={values.about_details} onChange={handleChange} />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>Legacy Image</Form.Label>
+                  <Form.Label>About Section Image</Form.Label>
                   <Form.Control type="file" onChange={(e) => setAboutImageFile(e.target.files[0])} />
                   {values.about_image && <div className="mt-1 small text-muted">Current: {values.about_image}</div>}
                 </Form.Group>
               </Card.Body>
             </Card>
 
-            {/* Testimonials */}
+            {/* Map Location */}
             <Card className="mb-4">
               <Card.Body>
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <h5 className="mb-0">Testimonials (Voices of Delight)</h5>
-                  <Button variant="outline-primary" size="sm" onClick={addTestimonial}>Add Review</Button>
-                </div>
-                {values.testimonials.map((t, index) => (
-                  <div key={index} className="border rounded p-3 mb-3 position-relative">
-                    <Button variant="link" className="position-absolute top-0 end-0 text-danger" onClick={() => removeTestimonial(index)}>
-                      <CsLineIcons icon="bin" size="15" />
-                    </Button>
-                    <Row className="g-2">
-                      <Col md={6}>
-                        <Form.Control placeholder="Customer Name" value={t.name} onChange={(e) => {
-                          const newTest = [...values.testimonials];
-                          newTest[index].name = e.target.value;
-                          setFieldValue('testimonials', newTest);
-                        }} />
-                      </Col>
-                      <Col md={6}>
-                        <Form.Control placeholder="Role (e.g. Food Critic)" value={t.role} onChange={(e) => {
-                          const newTest = [...values.testimonials];
-                          newTest[index].role = e.target.value;
-                          setFieldValue('testimonials', newTest);
-                        }} />
-                      </Col>
-                      <Col md={12}>
-                        <Form.Control as="textarea" rows={2} placeholder="Review Text" value={t.text} onChange={(e) => {
-                          const newTest = [...values.testimonials];
-                          newTest[index].text = e.target.value;
-                          setFieldValue('testimonials', newTest);
-                        }} />
-                      </Col>
-                      <Col md={4}>
-                        <Form.Label className="small">Rating (1-5)</Form.Label>
-                        <Form.Control type="number" min="1" max="5" value={t.rating} onChange={(e) => {
-                          const newTest = [...values.testimonials];
-                          newTest[index].rating = e.target.value;
-                          setFieldValue('testimonials', newTest);
-                        }} />
-                      </Col>
-                    </Row>
+                <h5 className="mb-3">Map Location</h5>
+                <Form.Group className="mb-3">
+                  <Form.Label>Google Maps Embed Link / URL</Form.Label>
+                  <Form.Control
+                    name="map_location"
+                    as="textarea"
+                    rows={2}
+                    value={values.map_location}
+                    onChange={handleChange}
+                    placeholder="Paste the <iframe src='...'> or just the map link here"
+                  />
+                  <div className="text-muted small mt-1">
+                    To get this: Go to Google Maps → Search your restaurant → Share → Embed a map → Copy the 'src' link inside the iframe.
                   </div>
-                ))}
+                </Form.Group>
+              </Card.Body>
+            </Card>
+
+            {/* Voices of Delight - Automatic Section */}
+            <Card className="mb-4">
+              <Card.Body>
+                <h5 className="mb-3">Testimonials (Voices of Delight)</h5>
+                <Alert variant="light" className="border">
+                  <div className="d-flex align-items-center">
+                    <CsLineIcons icon="info-circle" className="me-2 text-primary" />
+                    <div className="small">
+                      Customer feedback is now automatically fetched from your restaurant's feedback system. No manual entry needed here!
+                    </div>
+                  </div>
+                </Alert>
               </Card.Body>
             </Card>
 
@@ -351,34 +403,31 @@ const ManageWebsite = () => {
                 {values.social_links.map((s, index) => (
                   <div key={index} className="border rounded p-3 mb-3">
                     <Row className="g-2 align-items-center">
-                      <Col md={3}>
+                      <Col md={4}>
                         <Form.Select value={s.platform} onChange={(e) => {
                           const newSocials = [...values.social_links];
                           newSocials[index].platform = e.target.value;
                           setFieldValue('social_links', newSocials);
                         }}>
-                          <option value="">Platform</option>
-                          <option value="Instagram">Instagram</option>
+                          <option value="">Select Platform</option>
+                          <option value="WhatsApp">WhatsApp</option>
                           <option value="Facebook">Facebook</option>
+                          <option value="Instagram">Instagram</option>
                           <option value="Twitter">Twitter (X)</option>
                           <option value="Youtube">Youtube</option>
                         </Form.Select>
                       </Col>
-                      <Col md={4}>
-                        <Form.Control placeholder="Profile URL" value={s.url} onChange={(e) => {
+                      <Col md={6}>
+                        <Form.Control placeholder="Profile URL / Phone Number" value={s.url} onChange={(e) => {
                           const newSocials = [...values.social_links];
                           newSocials[index].url = e.target.value;
                           setFieldValue('social_links', newSocials);
                         }} />
                       </Col>
-                      <Col md={3}>
-                        <Form.Control type="file" size="sm" onChange={(e) => handleSocialLogoUpload(index, e.target.files[0])} />
-                      </Col>
                       <Col md={2}>
                         <Button variant="outline-danger" size="sm" className="w-100" onClick={() => removeSocial(index)}>Remove</Button>
                       </Col>
                     </Row>
-                    {s.logo && <div className="mt-1 x-small text-muted">Logo: {s.logo}</div>}
                   </div>
                 ))}
               </Card.Body>
@@ -398,11 +447,24 @@ const ManageWebsite = () => {
                     <Button variant="link" className="position-absolute top-0 end-0 text-danger p-0" onClick={() => removeOpeningSlot(index)}>
                       <CsLineIcons icon="close" size="12" />
                     </Button>
-                    <Form.Control size="sm" className="mb-2" placeholder="Days (e.g. Mon-Fri)" value={h.day} onChange={(e) => {
+                    <Form.Select size="sm" className="mb-2" value={h.day} onChange={(e) => {
                       const newHours = [...values.opening_hours];
                       newHours[index].day = e.target.value;
                       setFieldValue('opening_hours', newHours);
-                    }} />
+                    }}>
+                      <option value="">Select Day(s)</option>
+                      <option value="Monday - Friday">Monday - Friday</option>
+                      <option value="Monday - Saturday">Monday - Saturday</option>
+                      <option value="Everyday">Everyday</option>
+                      <option value="Weekend">Weekend</option>
+                      <option value="Monday">Monday</option>
+                      <option value="Tuesday">Tuesday</option>
+                      <option value="Wednesday">Wednesday</option>
+                      <option value="Thursday">Thursday</option>
+                      <option value="Friday">Friday</option>
+                      <option value="Saturday">Saturday</option>
+                      <option value="Sunday">Sunday</option>
+                    </Form.Select>
                     <Row className="g-2">
                       <Col>
                         <Form.Control size="sm" type="time" value={h.from} onChange={(e) => {

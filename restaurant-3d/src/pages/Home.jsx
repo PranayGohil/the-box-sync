@@ -37,22 +37,38 @@ export default function Home() {
   const heroWords = heroTitle.split(' ');
   const lastWord = heroWords.pop();
   const titleFirstPart = heroWords.join(' ');
+  
+  const heroImageUrl = settings?.hero_image ? `${API_URL.replace('/api', '')}/uploads/menu/${settings.hero_image}` : null;
+  const legacyImageUrl = settings?.legacy_image ? `${API_URL.replace('/api', '')}/uploads/menu/${settings.legacy_image}` : (settings?.about_image ? `${API_URL.replace('/api', '')}/uploads/menu/${settings.about_image}` : "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80");
 
   return (
     <div ref={containerRef} className="overflow-hidden">
       {/* ── HERO SECTION ── */}
       <section className="position-relative w-100 min-vh-100 d-flex align-items-center justify-content-center overflow-hidden">
-        {/* 3D Scene Background */}
+        {/* Background (3D Scene or Static Image) */}
         <div className="position-absolute top-0 bottom-0 start-0 end-0" style={{ zIndex: 0 }}>
-          <HeroScene />
+          {heroImageUrl ? (
+            <img src={heroImageUrl} alt="Hero" className="w-100 h-100 object-fit-cover" />
+          ) : (
+            <HeroScene />
+          )}
         </div>
         
         {/* Vignette Overlay */}
-        <div className="position-absolute top-0 bottom-0 start-0 end-0 pointer-events-none opacity-75" style={{ background: 'radial-gradient(ellipse at center, transparent 0%, #060606 100%)', zIndex: 0 }} />
-        <div className="position-absolute top-0 bottom-0 start-0 end-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(10,10,10,0.4), transparent, #0A0A0A)', zIndex: 0 }} />
+        <div className="position-absolute top-0 bottom-0 start-0 end-0 pointer-events-none opacity-75" style={{ background: 'radial-gradient(ellipse at center, transparent 0%, #060606 100%)', zIndex: 1 }} />
+        <div className="position-absolute top-0 bottom-0 start-0 end-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(10,10,10,0.4), transparent, #0A0A0A)', zIndex: 1 }} />
 
         <div className="position-relative container-lg w-100 d-flex flex-column align-items-center text-center mt-5" style={{ zIndex: 10 }}>
-
+          {settings?.hero_subtitle && (
+            <motion.span
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-brand-400 fw-bold text-uppercase tracking-widest small mb-3 d-block"
+            >
+              {settings.hero_subtitle}
+            </motion.span>
+          )}
 
           <motion.h1 
             initial={{ opacity: 0, y: 30 }}
@@ -174,7 +190,7 @@ export default function Home() {
               <div className="pe-lg-5">
                 <div className="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-4" style={{ background: 'rgba(242, 122, 26, 0.1)', border: '1px solid rgba(242, 122, 26, 0.2)' }}>
                   <div className="rounded-circle bg-brand-500" style={{ width: '8px', height: '8px' }} />
-                  <span className="small text-brand-400 fw-bold text-uppercase" style={{ letterSpacing: '0.1em' }}>Our Legacy</span>
+                  <span className="small text-brand-400 fw-bold text-uppercase" style={{ letterSpacing: '0.1em' }}>{settings?.legacy_title || 'Our Legacy'}</span>
                 </div>
                 
                 <h2 className="font-display fw-bold text-white mb-4" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', lineHeight: 1.1 }}>
@@ -182,7 +198,11 @@ export default function Home() {
                 </h2>
                 
                 <div className="text-white-60 mb-5 fs-5 fw-light lh-lg">
-                  {settings?.about_details ? (
+                  {settings?.legacy_details ? (
+                    settings.legacy_details.split('\n').map((para, idx) => (
+                      <p key={idx} className="mb-3">{para}</p>
+                    ))
+                  ) : settings?.about_details ? (
                     settings.about_details.split('\n').map((para, idx) => (
                       <p key={idx} className="mb-3">{para}</p>
                     ))
@@ -224,7 +244,7 @@ export default function Home() {
                 
                 <div className="rounded-5 overflow-hidden shadow-2xl position-relative z-1" style={{ height: '550px', border: '1px solid rgba(255,255,255,0.1)' }}>
                   <img 
-                    src={settings?.about_image ? `${API_URL.replace('/api', '')}/uploads/menu/${settings.about_image}` : "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80"} 
+                    src={legacyImageUrl} 
                     alt="Our story" 
                     className="w-100 h-100 object-fit-cover transition-all duration-1000 hover:scale-110"
                   />
@@ -250,25 +270,25 @@ export default function Home() {
             </h2>
           </div>
           <div className="row g-4">
-            {(settings?.testimonials?.length > 0 ? settings.testimonials : TESTIMONIALS).slice(0, 3).map((t, i) => (
-              <div key={t.id || i} className="col-12 col-md-4">
+            {(settings?.restaurant_feedbacks?.length > 0 ? settings.restaurant_feedbacks : (settings?.testimonials?.length > 0 ? settings.testimonials : TESTIMONIALS)).slice(0, 3).map((t, i) => (
+              <div key={t._id || t.id || i} className="col-12 col-md-4">
                 <div data-reveal="bottom" data-delay={i * 0.15} className="glass p-4 rounded-4 position-relative h-100">
                   <div className="d-flex gap-1 mb-4">
-                    {[...Array(t.rating || 5)].map((_, idx) => (
+                    {[...Array(Number(t.rating) || 5)].map((_, idx) => (
                       <Star key={idx} size={16} className="text-gold" style={{ fill: 'var(--gold)' }} />
                     ))}
                   </div>
-                  <p className="text-white-60 fst-italic mb-4">"{t.text}"</p>
+                  <p className="text-white-60 fst-italic mb-4">"{t.feedback || t.text}"</p>
                   <div className="d-flex align-items-center gap-3">
                     <div 
                       className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-brand-400"
                       style={{ width: '48px', height: '48px', background: 'rgba(242, 122, 26, 0.1)' }}
                     >
-                      {t.name?.charAt(0) || 'U'}
+                      {(t.customer_name || t.name)?.charAt(0) || 'U'}
                     </div>
                     <div>
-                      <h6 className="fw-bold text-white mb-0">{t.name}</h6>
-                      <small className="text-white-60">{t.role}</small>
+                      <h6 className="fw-bold text-white mb-0">{t.customer_name || t.name}</h6>
+                      <small className="text-white-60">{t.role || 'Happy Customer'}</small>
                     </div>
                   </div>
                   {/* Large quote mark */}
