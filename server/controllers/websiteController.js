@@ -6,8 +6,12 @@ const Reservation = require("../models/reservationModel");
 // GET current settings
 exports.getWebsiteSettings = async (req, res) => {
   try {
-    const settings = await Website.findOne({ user_id: req.user });
-    const user = await User.findById(req.user);
+    const userId = req.user?._id || req.user;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const settings = await Website.findOne({ user_id: userId });
+    const user = await User.findById(userId);
 
     const fullAddress = user ? [user.address, user.city, user.state, user.pincode].filter(Boolean).join(", ") : "";
 
@@ -54,17 +58,27 @@ exports.updateWebsiteSettings = async (req, res) => {
       featured_dish_ids,
       logo,
       hero_title,
+      hero_subtitle,
       hero_details,
+      hero_image,
       about_title,
       about_details,
       about_image,
+      legacy_title,
+      legacy_details,
+      legacy_image,
       legacy_years,
       contact_details,
       testimonials,
       social_links,
+      map_location,
     } = req.body;
 
-    console.log("Updating website settings for user:", req.body);
+    const userId = req.user?._id || req.user;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    console.log("Updating website settings for user:", userId);
 
     // Parse featured_dish_ids only if it exists and is a valid JSON string
     let parsedFeaturedDishes = [];
@@ -79,45 +93,57 @@ exports.updateWebsiteSettings = async (req, res) => {
     }
 
     const updated = await Website.findOneAndUpdate(
-      { user_id: req.user },
+      { user_id: userId },
       {
+        restaurant_id: userId,
         restaurant_name,
         restaurant_address,
         open_days,
         open_time_from,
         open_time_to,
-        opening_hours: typeof opening_hours === 'string' ? JSON.parse(opening_hours) : opening_hours,
+        opening_hours: (typeof opening_hours === 'string' && opening_hours.trim()) ? JSON.parse(opening_hours) : (Array.isArray(opening_hours) ? opening_hours : []),
         contact_email,
         contact_phone,
         featured_dish_ids: parsedFeaturedDishes,
         logo,
         hero_title,
+        hero_subtitle,
         hero_details,
+        hero_image,
         about_title,
         about_details,
         about_image,
+        legacy_title,
+        legacy_details,
+        legacy_image,
         legacy_years,
         contact_details,
-        testimonials: typeof testimonials === 'string' ? JSON.parse(testimonials) : testimonials,
-        social_links: typeof social_links === 'string' ? JSON.parse(social_links) : social_links,
+        testimonials: (typeof testimonials === 'string' && testimonials.trim()) ? JSON.parse(testimonials) : (Array.isArray(testimonials) ? testimonials : []),
+        social_links: (typeof social_links === 'string' && social_links.trim()) ? JSON.parse(social_links) : (Array.isArray(social_links) ? social_links : []),
+        map_location,
       },
       { new: true, upsert: true }
     );
 
     res.json(updated);
   } catch (err) {
-    console.error("Website update error:", err);
-    res.status(500).json({ error: "Failed to update settings" });
+    console.error("Website update full error:", err);
+    res.status(500).json({ 
+      error: "Failed to update settings", 
+      details: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined 
+    });
   }
 };
 
 // GET all dishes for the restaurant
 exports.getAllDishes = async (req, res) => {
   try {
-    const websiteSettings = await Website.findOne({ user_id: req.user });
+    const userId = req.user?._id || req.user;
+    const websiteSettings = await Website.findOne({ user_id: userId });
     const featuredIds = websiteSettings?.featured_dish_ids || [];
 
-    const menus = await Menu.find({ user_id: req.user });
+    const menus = await Menu.find({ user_id: userId });
 
     const categorized = menus.map((menu) => {
       const dishesWithFlag = menu.dishes.map((dish) => ({
@@ -157,13 +183,21 @@ exports.getWebsiteSettingsByCode = async (req, res) => {
       contact_email: settings?.contact_email || user.email,
       contact_phone: settings?.contact_phone || user.mobile,
       hero_title: settings?.hero_title || "Welcome to Our Restaurant",
+      hero_subtitle: settings?.hero_subtitle || "Delicious. Authentic. Fresh.",
       hero_details: settings?.hero_details || "Experience extraordinary flavors where every dish tells a story.",
+      hero_image: settings?.hero_image || "",
+      legacy_title: settings?.legacy_title || "Our Legacy",
+      legacy_details: settings?.legacy_details || "A journey through flavors since our inception.",
+      legacy_image: settings?.legacy_image || "",
+      map_location: settings?.map_location || "",
       // Pass through user address fields
       address: user.address || "",
       city: user.city || "",
       state: user.state || "",
       country: user.country || "",
-      pincode: user.pincode || ""
+      pincode: user.pincode || "",
+      // Include real feedbacks from user model
+      restaurant_feedbacks: user.feedbacks || []
     };
 
     res.json(response);
