@@ -408,10 +408,10 @@ const UnifiedOrder = () => {
           allowNavigationRef.current = true;
           // Maintain tableId in URL if Dine In
           if (orderType === 'Dine In' && tableId) {
-            window.location.href = `/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`;
+            window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`;
           } else {
             const pathBase = orderType === 'Delivery' ? 'delivery' : 'takeaway';
-            window.location.href = `/${pathBase}?orderId=${savedId}&mode=edit`;
+            window.location.href = `/order/${pathBase}?orderId=${savedId}&mode=edit`;
           }
         }
       }
@@ -686,6 +686,9 @@ const UnifiedOrder = () => {
         handlePrint={handlePrint} history={history}
         alreadyPaid={parseFloat(initialStateRef.current?.paid_amount) || 0}
         canKOT={canKOT}
+        onKotAndPrint={handleKotAndPrint} kotPrinting={kotPrinting}
+        kotHistory={kotHistory} onReprintKOT={handleReprintKOT}
+        paymentHistory={paymentHistory}
       >
         <div className="d-flex align-items-center justify-content-between mb-3">
           <h6 className="mb-0 fw-bold text-muted border-bottom pb-2 flex-grow-1">Customer Details</h6>

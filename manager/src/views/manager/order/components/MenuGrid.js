@@ -41,10 +41,10 @@ const MenuGrid = ({
           }
         }
       `}</style>
-      
+
       {/* Mobile Backdrop */}
       {showCategories && (
-        <div 
+        <div
           className="d-md-none position-fixed top-0 start-0 w-100 h-100 bg-dark"
           style={{ opacity: 0.5, zIndex: 1045 }}
           onClick={() => setShowCategories(false)}
@@ -123,7 +123,7 @@ const MenuGrid = ({
           {!showParcelCharge ? (
             filteredMenuData.map((category) => (
               <div key={category._id} className="mb-4">
-                <h6 className="text-muted mb-3">{category.category}</h6>
+                <h6 className="mb-3">{category.category}</h6>
                 <Row className="g-2">
                   {category.dishes.map((dish) => (
                     <Col xs="6" md="4" lg="3" xl="2" key={dish._id}>

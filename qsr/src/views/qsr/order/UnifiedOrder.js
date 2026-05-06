@@ -629,6 +629,9 @@ const UnifiedOrder = () => {
         handlePrint={handlePrint} history={history}
         alreadyPaid={parseFloat(initialStateRef.current?.paid_amount) || 0}
         canKOT={canKOT}
+        onKotAndPrint={handleKotAndPrint} kotPrinting={kotPrinting}
+        kotHistory={kotHistory} onReprintKOT={handleReprintKOT}
+        paymentHistory={paymentHistory}
       >
         <div className="d-flex align-items-center justify-content-between mb-3">
           <h6 className="mb-0 fw-bold text-muted border-bottom pb-2 flex-grow-1">Customer Details</h6>

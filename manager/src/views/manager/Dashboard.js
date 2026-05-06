@@ -80,26 +80,27 @@ const Dashboard = () => {
       <HtmlHead title={title} description={description} />
 
       <div className="page-title-container">
-        <Row>
-          <Col md="7">
-            <h1 className="mb-0 pb-0 display-4">Dashboard</h1>
+        <Row className="align-items-center gy-2">
+          <Col xs="12" md="7" className="mb-1 mb-md-0">
+            <h1 className="mb-0 pb-0 display-4" style={{ fontSize: 'clamp(1.6rem, 5vw, 2.5rem)' }}>Dashboard</h1>
           </Col>
-          <Col md="5" className="d-flex align-items-start justify-content-end gap-2">
-            <Button variant="outline-primary" onClick={() => createNewOrder('takeaway')}>
+          {/* Desktop buttons — hidden on mobile */}
+          <Col xs="12" md="5" className="d-none d-md-flex align-items-center justify-content-md-end gap-2 flex-wrap">
+            <Button variant="outline-primary" size="sm" onClick={() => createNewOrder('takeaway')}>
               + Takeaway
             </Button>
-            <Button variant="outline-primary" onClick={() => createNewOrder('delivery')}>
+            <Button variant="outline-primary" size="sm" onClick={() => createNewOrder('delivery')}>
               + Delivery
             </Button>
-            <Button variant="outline-primary" onClick={() => history.push('/order/delivery-partners')}>
+            <Button variant="outline-primary" size="sm" onClick={() => history.push('/order/delivery-partners')}>
               Delivery Partners
             </Button>
           </Col>
         </Row>
       </div>
 
-      <Row>
-        <Col lg="8">
+      <Row className="gy-4">
+        <Col xs="12" lg="8">
           {tables.map((tableArea) => (
             <div className="gx-2" key={tableArea._id}>
               <h3 className="mb-3 text-primary">{tableArea.area}</h3>
@@ -138,7 +139,7 @@ const Dashboard = () => {
 
                       return (
                         <Col key={table._id} xs="6" sm="4" md="3" lg="2"
-                          style={{ position: "relative" }}
+                          style={{ position: 'relative' }}
                         >
                           {completedCount > 0 && (
                             <Badge bg="success"
@@ -153,10 +154,10 @@ const Dashboard = () => {
                           )}
                           <Card
                             key={table._id}
-                            className={`sh-20 hover-border-primary mb-5 ${bgClass}`}
+                            className={`sh-20 hover-border-primary mb-3 mb-sm-5 ${bgClass}`}
                             onClick={() => handleTableClick(table._id, activeOrder?._id)}
                           >
-                            <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
+                            <Card.Body className="p-2 p-sm-3 text-center align-items-center d-flex flex-column justify-content-between">
                               <div className="d-flex sh-7 sw-7 bg-gradient-light mb-3 align-items-center justify-content-center rounded-xl">
                                 <h2 className="mb-0 lh-1 text-white">{table.table_no}</h2>
                               </div>
@@ -198,7 +199,7 @@ const Dashboard = () => {
         </Col>
 
         {/* Active Orders Section */}
-        <Col lg="4">
+        <Col xs="12" lg="4">
           <h3 className="mb-3 text-primary small-title">Active Takeaways & Deliveries</h3>
           <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
             {activeTakeawaysAndDeliveries.length === 0 ? (
@@ -248,6 +249,29 @@ const Dashboard = () => {
         <Route exact path="/order/takeaway" render={() => <UnifiedOrder />} />
         <Route exact path="/order/delivery" render={() => <UnifiedOrder />} />
       </Switch>
+      {/* Spacer so sticky bar doesn't overlap last content on mobile */}
+      <div className="d-md-none" style={{ height: '80px' }} />
+      {/* Mobile sticky bottom action bar */}
+
+      <div className="d-md-none" style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        background: '#ffffff', padding: '12px 16px',
+        zIndex: 1040,
+        boxShadow: '0 -4px 15px rgba(0,0,0,0.1)',
+        borderTop: '1px solid #dee2e6',
+      }}>
+        <div className="d-flex gap-2">
+          <Button variant="primary" className="flex-grow-1" onClick={() => createNewOrder('takeaway')}>
+            + Takeaway
+          </Button>
+          <Button variant="outline-primary" className="flex-grow-1" onClick={() => createNewOrder('delivery')}>
+            + Delivery
+          </Button>
+          <Button variant="outline-secondary" className="d-flex align-items-center justify-content-center p-0" style={{ width: '50px' }} onClick={() => history.push('/order/delivery-partners')}>
+            <CsLineIcons icon="shipping" />
+          </Button>
+        </div>
+      </div>
     </>
   );
 };

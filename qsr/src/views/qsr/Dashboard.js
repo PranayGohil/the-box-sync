@@ -3,6 +3,7 @@ import { useHistory, Switch, Route } from 'react-router-dom';
 import { Button, Row, Col, Card, Badge } from 'react-bootstrap';
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import UnifiedOrder from './order/UnifiedOrder';
 
 const Dashboard = () => {
@@ -46,20 +47,22 @@ const Dashboard = () => {
       <HtmlHead title={title} description={description} />
 
       <div className="page-title-container">
-        <Row>
-          <Col md="12" className="d-flex align-items-start justify-content-left gap-2">
-            <Button variant="outline-primary" onClick={createNewOrder}>
+        <Row className="align-items-center gy-2">
+          {/* Desktop buttons — hidden on mobile */}
+          <Col xs="12" className="d-none d-md-flex align-items-center justify-content-start gap-2 flex-wrap">
+            <Button variant="outline-primary" size="sm" onClick={createNewOrder}>
               + New Order
             </Button>
-            <Button variant="outline-primary" onClick={() => history.push('/order/delivery-partners')}>
+            <Button variant="outline-primary" size="sm" onClick={() => history.push('/order/delivery-partners')}>
               Delivery Partners
             </Button>
           </Col>
         </Row>
       </div>
-      <Row>
+
+      <Row className="gy-4">
         {/* Active Orders Section */}
-        <Col lg="6">
+        <Col xs="12" lg="6">
           <h3 className="mb-3 text-primary small-title">Active Takeaways & Deliveries</h3>
           <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
             {activeTakeawaysAndDeliveries.length === 0 ? (
@@ -102,7 +105,7 @@ const Dashboard = () => {
             )}
           </div>
         </Col>
-        <Col lg="6">
+        <Col xs="12" lg="6">
           <h3 className="mb-3 text-primary small-title">Active Delivery Partners's Orders</h3>
           <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
             <Card className="mb-3 hover-border-primary cursor-pointer">
@@ -137,6 +140,25 @@ const Dashboard = () => {
       <Switch>
         <Route path="/order/new" component={UnifiedOrder} />
       </Switch>
+      {/* Spacer so sticky bar doesn't overlap last content on mobile */}
+      <div className="d-md-none" style={{ height: '80px' }} />
+      {/* Mobile sticky bottom action bar */}
+      <div className="d-md-none" style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        background: '#ffffff', padding: '12px 16px',
+        zIndex: 1040,
+        boxShadow: '0 -4px 15px rgba(0,0,0,0.1)',
+        borderTop: '1px solid #dee2e6',
+      }}>
+        <div className="d-flex gap-2">
+          <Button variant="primary" className="flex-grow-1" onClick={createNewOrder}>
+            + New Order
+          </Button>
+          <Button variant="outline-secondary" className="d-flex align-items-center justify-content-center p-0" style={{ width: '50px' }} onClick={() => history.push('/order/delivery-partners')}>
+            <CsLineIcons icon="shipping" />
+          </Button>
+        </div>
+      </div>
     </>
   );
 };

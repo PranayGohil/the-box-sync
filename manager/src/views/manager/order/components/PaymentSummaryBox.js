@@ -66,16 +66,14 @@ const PaymentSummaryBox = ({
           )}
         </div>
         <div className="d-flex justify-content-between gap-2">
+          {/* LEFT group: save / kitchen / KOT & Print / KOT History */}
           <div className="d-flex gap-2 flex-wrap">
-            {/* Existing Save Order - now allowed if Paid but Dirty */}
             {orderItems.length > 0 && isDirty && (
               <Button variant="secondary" onClick={() => handleSaveOrder('Save')} disabled={isLoading}>Save Changes</Button>
             )}
-            {/* Existing Send to Kitchen - now allowed if Paid but Dirty */}
             {canKOT && showKOTButtons && (
               <Button variant="primary" onClick={() => handleSaveOrder('KOT')} disabled={isLoading}>Send to Kitchen</Button>
             )}
-            {/* NEW: KOT & Print */}
             {showKOTButtons && (
               <Button variant="warning" onClick={onKotAndPrint} disabled={isLoading || kotPrinting}>
                 {kotPrinting ? 'Printing...' : 'KOT & Print'}
@@ -87,6 +85,8 @@ const PaymentSummaryBox = ({
               </Button>
             )}
           </div>
+
+          {/* RIGHT group: Payment History / Cancel / Process Payment / Paid state */}
           <div className="d-flex gap-2 flex-wrap justify-content-md-end">
             <div className="d-flex gap-2 me-2">
               {paymentHistory.length > 0 && (
