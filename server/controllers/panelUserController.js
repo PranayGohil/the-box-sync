@@ -20,7 +20,6 @@ const panelModels = {
 
 const getModel = (planName) => {
   const model = panelModels[planName];
-  console.log("Model fetched for " + planName + ": " + model);
   if (!model) throw new Error(`No model found for ${planName}`);
   return model;
 };

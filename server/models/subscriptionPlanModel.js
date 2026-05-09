@@ -33,6 +33,14 @@ const subscriptionPlanSchema = new Schema(
       default: null,
       index: true,
     },
+    bundled_plans: {
+      type: [String], // Array of plan_names that are included in this bundle
+      default: [],
+    },
+    max_custom_addons: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

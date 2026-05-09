@@ -2,6 +2,7 @@ const SubscriptionPlan = require("../models/subscriptionPlanModel");
 const Subscription = require("../models/subscriptionModel");
 const User = require("../models/userModel");
 const cron = require("node-cron");
+const { logActivity } = require("../utils/auditLogger");
 
 const updateExpiredSubscriptions = async () => {
   const today = new Date();
@@ -197,6 +198,16 @@ const blockSubscriptions = async (req, res) => {
       { $set: { status: "blocked" } }
     );
 
+    // Log Activity
+    if (req.user.Role === "Super Admin") {
+      await logActivity(
+        { _id: req.user._id, username: req.user.username },
+        "BLOCK_SUBSCRIPTIONS",
+        subscriptionIds.join(","),
+        { count: result.modifiedCount }
+      );
+    }
+
     res.status(200).json({ message: "Subscriptions blocked", result });
   } catch (error) {
     console.error("Error in blocking subscriptions:", error);
@@ -229,6 +240,16 @@ const unblockSubscription = async (req, res) => {
     subscription.status = newStatus;
     await subscription.save();
 
+    // Log Activity
+    if (req.user.Role === "Super Admin") {
+      await logActivity(
+        { _id: req.user._id, username: req.user.username },
+        "UNBLOCK_SUBSCRIPTION",
+        subscriptionId,
+        { plan_name: subscription.plan_name, new_status: newStatus }
+      );
+    }
+
     res.status(200).json({
       message: `Subscription status updated to ${newStatus}`,
       subscription,
@@ -253,6 +274,16 @@ const expandSubscriptions = async (req, res) => {
       { _id: { $in: subscriptionIds } },
       { $set: { end_date: endDate, status: "active" } }
     );
+
+    // Log Activity
+    if (req.user.Role === "Super Admin") {
+      await logActivity(
+        { _id: req.user._id, username: req.user.username },
+        "EXPAND_SUBSCRIPTIONS",
+        subscriptionIds.join(","),
+        { new_end_date: newEndDate, count: result.modifiedCount }
+      );
+    }
 
     res
       .status(200)
@@ -286,6 +317,16 @@ const renewSubscription = async (req, res) => {
     subscription.status = "active";
     await subscription.save();
 
+    // Log Activity
+    if (req.user.Role === "Super Admin") {
+      await logActivity(
+        { _id: req.user._id, username: req.user.username },
+        "RENEW_SUBSCRIPTION",
+        subscriptionId,
+        { plan_name: plan.plan_name, duration: plan.plan_duration }
+      );
+    }
+
     res.json({
       success: true,
       message: "Subscription renewed successfully",
@@ -315,54 +356,26 @@ const buyCompletePlan = async (req, res) => {
         .json({ success: false, message: "User not found." });
     }
 
-    const validAddons = [
-      "Reservation Manager",
-      "QSR",
-      "Captain Panel",
-      "KOT Panel",
-      "Restaurant Website",
-      "Scan For Menu",
-      "Feedback",
-      "Waiter Calling System",
-      "Dynamic Reports",
-      "E-Invoice",
-    ];
+    // Fetch the bundle definition from the database
+    const bundlePlan = await SubscriptionPlan.findOne({ plan_name: planType }).lean();
 
-    const planMapping = {
-      Core: [
-        "Manager",
-        "Staff Management",
-        "Online Order Reconciliation",
-      ],
-      Growth: [
-        "Manager",
-        "Staff Management",
-        "Online Order Reconciliation",
-        ...chosenAddons.filter(addon => validAddons.includes(addon)).slice(0, 6)
-      ],
-      Scale: [
-        "Manager",
-        "Staff Management",
-        "Online Order Reconciliation",
-        "Reservation Manager",
-        "QSR",
-        "Captain Panel",
-        "KOT Panel",
-        "Restaurant Website",
-        "Scan For Menu",
-        "Feedback",
-        "Waiter Calling System",
-        "Dynamic Reports",
-        "E-Invoice",
-        "Payroll By The Box",
-      ],
-    };
+    if (!bundlePlan) {
+      return res.status(404).json({ success: false, message: `Bundle '${planType}' not found in database.` });
+    }
 
-    const selectedPlanNames = planMapping[planType];
-    if (!selectedPlanNames) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid plan type." });
+    let selectedPlanNames = [...(bundlePlan.bundled_plans || [])];
+
+    // If the bundle supports custom addons (like "Growth"), validate and append them
+    if (bundlePlan.max_custom_addons > 0 && chosenAddons.length > 0) {
+      // Fetch valid addons from the DB to prevent injecting fake plan names
+      const validAddonsInDb = await SubscriptionPlan.find({ is_addon: true }).select("plan_name").lean();
+      const validAddonNames = validAddonsInDb.map(p => p.plan_name);
+
+      const filteredAddons = chosenAddons
+        .filter(addon => validAddonNames.includes(addon))
+        .slice(0, bundlePlan.max_custom_addons);
+
+      selectedPlanNames = [...selectedPlanNames, ...filteredAddons];
     }
 
     const selectedPlans = await SubscriptionPlan.find({
