@@ -1,4 +1,5 @@
 require("dotenv").config();
+require("express-async-errors");
 require('./cron/reservationCron');
 require('./cron/dailyStockCron');
 const express = require("express");
@@ -128,6 +129,9 @@ app.use("/api/holidays", require("./router/holidayRouter"));
 app.use("/api/leave-policy", require("./router/leavePolicyRouter"));
 app.use("/api/leave", require("./router/leaveRouter"));
 app.use("/api/salary-advance", require("./router/salaryAdvanceRouter"));
+
+const errorHandler = require("./middlewares/errorHandler");
+app.use(errorHandler);
 
 connectDB().then(() => {
   server.listen(PORT, () => {

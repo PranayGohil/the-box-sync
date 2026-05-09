@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { NavLink } from 'react-router-dom';
+import { useLocation, NavLink } from 'react-router-dom';
 import { Button, Form, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import * as Yup from 'yup';
@@ -15,10 +15,38 @@ const Login = () => {
   const description = 'Login Page';
 
   const { login } = useContext(AuthContext);
+  const location = useLocation();
 
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Handle Impersonation Token
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('impersonate_token');
+    
+    if (token) {
+      setIsLoading(true);
+      toast.info("Logging in via Super Admin...");
+      
+      // Fetch user data for this token
+      axios.get(`${process.env.REACT_APP_API}/user/get`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(res => {
+        if (res.data && res.data !== "Null") {
+          login(token, res.data);
+          window.location.href = '/';
+        } else {
+          toast.error("Impersonation token invalid or expired.");
+          setIsLoading(false);
+        }
+      }).catch(err => {
+        toast.error("Failed to fetch user data for impersonation.");
+        setIsLoading(false);
+      });
+    }
+  }, []);
 
   const validationSchema = Yup.object().shape({
     email: Yup.string().email().required('Email is required'),

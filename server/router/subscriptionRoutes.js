@@ -15,12 +15,21 @@ const {
   getAllSubscriptions,
 } = require("../controllers/subscriptionController");
 const adminAuth = require("../middlewares/adminAuth");
+const validate = require("../middlewares/validate");
+const {
+  addSubscriptionPlanSchema,
+  blockSubscriptionsSchema,
+  unblockSubscriptionSchema,
+  expandSubscriptionsSchema,
+  renewSubscriptionSchema,
+  buyCompletePlanSchema,
+} = require("../schemas/subscriptionSchemas");
 
 const subscriptionRouter = express.Router();
 
 subscriptionRouter
   .route("/add-plan")
-  .post(authMiddleware, addSubscriptionPlan);
+  .post(authMiddleware, validate(addSubscriptionPlanSchema), addSubscriptionPlan);
 subscriptionRouter
   .route("/get-plans")
   .get(authMiddleware, getSubscriptionPlans);
@@ -41,26 +50,27 @@ subscriptionRouter
 
 subscriptionRouter
   .route("/block")
-  .post(authMiddleware, blockSubscriptions);
+  .post(authMiddleware, validate(blockSubscriptionsSchema), blockSubscriptions);
 
 subscriptionRouter
   .route("/unblock")
-  .post(authMiddleware, unblockSubscription);
+  .post(authMiddleware, validate(unblockSubscriptionSchema), unblockSubscription);
 
 subscriptionRouter
   .route("/expand")
-  .post(authMiddleware, expandSubscriptions);
+  .post(authMiddleware, validate(expandSubscriptionsSchema), expandSubscriptions);
 
 subscriptionRouter
   .route("/renew")
-  .post(authMiddleware, renewSubscription);
+  .post(authMiddleware, validate(renewSubscriptionSchema), renewSubscription);
 
 subscriptionRouter
   .route("/buy-complete")
-  .post(authMiddleware, adminAuth, buyCompletePlan);
+  .post(authMiddleware, adminAuth, validate(buyCompletePlanSchema), buyCompletePlan);
 
 subscriptionRouter
   .route("/get-all-subs")
   .get(authMiddleware,  getAllSubscriptions);
 
 module.exports = subscriptionRouter;
+

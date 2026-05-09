@@ -1,12 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Modal, Button, Form } from "react-bootstrap";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-
-import { forwardRef } from "react";
-import { FaRegCalendarAlt } from "react-icons/fa";
+import { 
+  FaArrowLeft, 
+  FaUser, 
+  FaMapMarkerAlt, 
+  FaCalendarAlt, 
+  FaLock, 
+  FaUnlock, 
+  FaExpandArrowsAlt,
+  FaCheckCircle,
+  FaClock,
+  FaEnvelope
+} from "react-icons/fa";
 
 const UserDetails = () => {
   const { id } = useParams();
@@ -28,38 +37,22 @@ const UserDetails = () => {
   const fetchUserData = async () => {
     try {
       setLoading(true);
-
-      // Fetch user and subscriptions
       const response = await axios.get(
-        `${
-          import.meta.env.VITE_APP_API_URL
-        }/api/subscription/get/${id}`,
-        { headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          } }
+        `${import.meta.env.VITE_APP_API_URL}/api/subscription/get/${id}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-
-      if (response.data === "Null") {
-        navigate("/login");
-        return;
-      }
 
       setUser(response.data.user);
       setSubscriptions(response.data.subscriptions);
 
-      // Fetch customer queries
       const queriesRes = await axios.get(
-        `${
-          import.meta.env.VITE_APP_API_URL
-        }/api/customerquery/query-user-id/${id}`,
-        { headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          } }
+        `${import.meta.env.VITE_APP_API_URL}/api/customerquery/query-user-id/${id}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-      setQueries(queriesRes.data);
-      console.log("Aueries : ", queriesRes.data);
+      setQueries(queriesRes.data || []);
     } catch (error) {
-      console.error("Failed to fetch user details or queries:", error);
+      if (error.response?.status === 401) navigate("/login");
+      console.error("Failed to fetch user details:", error);
     } finally {
       setLoading(false);
     }
@@ -71,436 +64,311 @@ const UserDetails = () => {
 
   const toggleSelectSub = (subId) => {
     setSelectedSubs((prev) =>
-      prev.includes(subId)
-        ? prev.filter((id) => id !== subId)
-        : [...prev, subId]
+      prev.includes(subId) ? prev.filter((id) => id !== subId) : [...prev, subId]
     );
   };
 
   const confirmBlockPlans = async () => {
     try {
-      const response = await axios.post(
+      await axios.post(
         `${import.meta.env.VITE_APP_API_URL}/api/subscription/block`,
         { subscriptionIds: selectedSubs },
-        { headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          } }
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-      if (response.data === "Null") {
-        navigate("/login");
-      }
       setShowBlockModal(false);
       setSelectedSubs([]);
       fetchUserData();
     } catch (error) {
-      console.error("Error pausing plans:", error);
+      console.error("Error blocking plans:", error);
     }
   };
 
   const confirmUnblockPlans = async () => {
     try {
-      const response = await axios.post(
+      await axios.post(
         `${import.meta.env.VITE_APP_API_URL}/api/subscription/unblock`,
         { subscriptionId: selectedSub4unblock },
-        { headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          } }
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-      if (response.data === "Null") {
-        navigate("/login");
-      }
       setShowUnblockModal(false);
       setselectedSub4unblock(null);
-      setselectedSubName4unblock(null);
       fetchUserData();
     } catch (error) {
-      console.error("Error resuming plans:", error);
+      console.error("Error unblocking plans:", error);
     }
   };
 
   const confirmExpandPlans = async () => {
     try {
-      const response = await axios.post(
+      await axios.post(
         `${import.meta.env.VITE_APP_API_URL}/api/subscription/expand`,
         {
           subscriptionIds: selectedSubs,
-          newEndDate: newEndDate?.toISOString().split("T")[0], // format: YYYY-MM-DD
+          newEndDate: newEndDate?.toISOString().split("T")[0],
         },
-        { headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          } }
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-      if (response.data === "Null") {
-        navigate("/login");
-      }
       setShowExpandModal(false);
       setSelectedSubs([]);
-      setNewEndDate("");
+      setNewEndDate(null);
       fetchUserData();
     } catch (error) {
       console.error("Error expanding plans:", error);
     }
   };
 
-  const CustomDateInput = forwardRef(({ value, onClick }, ref) => (
-    <div className="input-group">
-      <input
-        type="text"
-        className="form-control"
-        value={value}
-        onClick={onClick}
-        ref={ref}
-        readOnly
-        placeholder="Select a date"
-      />
-      <span
-        className="input-group-text"
-        onClick={onClick}
-        style={{ cursor: "pointer" }}
-      >
-        <FaRegCalendarAlt />
-      </span>
-    </div>
-  ));
+  const handleImpersonate = async () => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_APP_API_URL}/api/superadmin/impersonate/${id}`,
+        {},
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+
+      if (response.data.token) {
+        // Construct the Manager URL with the token
+        // In production, this would be your manager domain.
+        // Assuming Manager runs on port 3000 locally.
+        const managerUrl = `http://localhost:4001/login?impersonate_token=${response.data.token}`;
+        window.open(managerUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Impersonation failed:", error);
+      alert("Failed to impersonate user.");
+    }
+  };
 
   const handleCompleteQuery = async (queryId) => {
     try {
       await axios.post(
         `${import.meta.env.VITE_APP_API_URL}/api/customerquery/complete-query`,
         { queryId },
-        { headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          } }
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-      alert("Marked as completed.");
-      fetchUserData(); // refresh queries
+      fetchUserData();
     } catch (err) {
       alert("Failed to mark as completed.");
-      console.error(err);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
-  }
+  const CustomDateInput = forwardRef(({ value, onClick }, ref) => (
+    <div className="input-group" onClick={onClick} ref={ref} style={{ cursor: "pointer" }}>
+      <input type="text" className="form-control" value={value} readOnly placeholder="Select a date" style={{ cursor: "pointer" }} />
+      <span className="input-group-text"><FaCalendarAlt /></span>
+    </div>
+  ));
+
+  if (loading) return (
+    <div className="d-flex justify-content-center align-items-center" style={{ height: "60vh" }}>
+      <div className="spinner-border text-primary" role="status"></div>
+    </div>
+  );
 
   return (
-    <div className="d-flex justify-content-center align-items-center min-vh-100 min-vw-100">
-      <div className="container">
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="mb-0">User Details</h2>
-          <button
-            className="btn btn-outline-secondary"
-            onClick={() => navigate(-1)}
-          >
-            ← Back
+    <div className="pb-5">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <button className="btn btn-link text-muted p-0 text-decoration-none mb-2 d-flex align-items-center gap-2" onClick={() => navigate(-1)}>
+            <FaArrowLeft size={12} /> Back to Directory
+          </button>
+          <h2 className="fw-bold mb-0">Restaurant Profile</h2>
+        </div>
+        <div className="d-flex gap-2">
+          <button className="btn-modern btn-modern-primary" onClick={handleImpersonate}>
+            <FaUser size={14} /> Login as Restaurant
           </button>
         </div>
+      </div>
 
-        {/* User Card */}
-        <div className="card shadow-sm mb-5">
-          <div className="card-header bg-primary text-white">
-            <h5 className="mb-0">{user?.name}</h5>
-          </div>
-          <div className="card-body">
-            <p>
-              <strong>Email:</strong> {user?.email}
-            </p>
-            <p>
-              <strong>Mobile:</strong> {user?.mobile}
-            </p>
-            <p>
-              <strong>Restaurant Code:</strong> {user?.restaurant_code}
-            </p>
-            <p>
-              <strong>Location:</strong> {user?.city}, {user?.state},{" "}
-              {user?.country}
-            </p>
-            <p>
-              <strong>Address:</strong> {user?.address}
-            </p>
-            <p>
-              <strong>Pincode:</strong> {user?.pincode}
-            </p>
-            <p>
-              <strong>Registered On:</strong>{" "}
-              {new Date(user?.createdAt).toLocaleDateString('en-IN')}
-            </p>
-          </div>
-        </div>
+      <div className="row g-4">
+        {/* User Info Card */}
+        <div className="col-lg-4">
+          <div className="glass-card p-4 h-100">
+            <div className="text-center mb-4">
+              <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style={{ width: "80px", height: "80px", fontSize: "32px", fontWeight: 700 }}>
+                {user?.name?.[0]}
+              </div>
+              <h4 className="fw-bold mb-1">{user?.name}</h4>
+              <code className="text-primary fw-600 bg-primary bg-opacity-10 px-2 py-1 rounded">{user?.restaurant_code}</code>
+            </div>
 
-        {/* Subscriptions Table */}
-        <div className="card">
-          <div className="card-header d-flex justify-content-between align-items-center">
-            <h5 className="mb-0">Subscriptions</h5>
-            <div>
-              <button
-                className="btn btn-warning btn-sm me-2"
-                disabled={!selectedSubs.length}
-                onClick={() => setShowBlockModal(true)}
-              >
-                Block Plans
-              </button>
-              <button
-                className="btn btn-info btn-sm"
-                disabled={!selectedSubs.length}
-                onClick={() => setShowExpandModal(true)}
-              >
-                Expand Plans
-              </button>
+            <hr className="opacity-10" />
+
+            <div className="d-flex flex-column gap-3 mt-4">
+              <div className="d-flex align-items-center gap-3">
+                <div className="text-muted"><FaEnvelope /></div>
+                <div>
+                  <div className="small text-muted">Email Address</div>
+                  <div className="fw-500">{user?.email}</div>
+                </div>
+              </div>
+              <div className="d-flex align-items-center gap-3">
+                <div className="text-muted"><FaUser /></div>
+                <div>
+                  <div className="small text-muted">Mobile Number</div>
+                  <div className="fw-500">{user?.mobile}</div>
+                </div>
+              </div>
+              <div className="d-flex align-items-center gap-3">
+                <div className="text-muted"><FaMapMarkerAlt /></div>
+                <div>
+                  <div className="small text-muted">Location</div>
+                  <div className="fw-500">{user?.city}, {user?.state}</div>
+                </div>
+              </div>
+              <div className="d-flex align-items-center gap-3">
+                <div className="text-muted"><FaCalendarAlt /></div>
+                <div>
+                  <div className="small text-muted">Registered Since</div>
+                  <div className="fw-500">{new Date(user?.createdAt).toLocaleDateString('en-IN', { month: 'long', year: 'numeric', day: 'numeric' })}</div>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="table-responsive">
-            <table className="table table-bordered table-hover">
-              <thead className="table-light">
-                <tr>
-                  <th>
-                    <input
-                      type="checkbox"
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedSubs(subscriptions.map((s) => s._id));
-                        } else {
-                          setSelectedSubs([]);
-                        }
-                      }}
-                      checked={selectedSubs?.length === subscriptions?.length}
-                    />
-                  </th>
-                  <th>Plan</th>
-                  <th>Price</th>
-                  <th>Start</th>
-                  <th>End</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {subscriptions?.map((sub) => (
-                  <tr key={sub._id}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={selectedSubs.includes(sub._id)}
-                        onChange={() => toggleSelectSub(sub._id)}
-                      />
-                    </td>
-                    <td>{sub.plan_name}</td>
-                    <td>{sub.plan_price}</td>
-                    <td>{new Date(sub.start_date).toLocaleDateString('en-IN')}</td>
-                    <td>{new Date(sub.end_date).toLocaleDateString('en-IN')}</td>
-                    <td>
-                      {sub.status === "active" && (
-                        <span className="badge bg-success">Active</span>
-                      )}
-                      {sub.status === "inactive" && (
-                        <span className="badge bg-warning">Inactive</span>
-                      )}
-                      {sub.status === "blocked" && (
-                        <>
-                          <span className="badge bg-danger">Blocked</span>
-                          <button
-                            className="btn btn-primary btn-sm ms-2"
-                            onClick={() => {
-                              setselectedSub4unblock(sub._id);
-                              setselectedSubName4unblock(sub.plan_name);
-                              setShowUnblockModal(true);
-                            }}
-                          >
-                            Unblock
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
 
-        {/* Customer Queries Section */}
-        <div className="card mt-4">
-          <div className="card-header">
-            <h5 className="mb-0">Customer Queries</h5>
-          </div>
-          <div className="card-body">
-            {queries.length === 0 ? (
-              <p>No queries found.</p>
-            ) : (
-              <table className="table table-bordered">
+        {/* Subscriptions Card */}
+        <div className="col-lg-8">
+          <div className="glass-card p-4 h-100">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h5 className="fw-bold mb-0">Active Subscriptions</h5>
+              <div className="d-flex gap-2">
+                <button className="btn btn-outline-warning btn-sm fw-600 rounded-pill" disabled={!selectedSubs.length} onClick={() => setShowBlockModal(true)}>
+                  <FaLock size={12} className="me-1" /> Block Selected
+                </button>
+                <button className="btn btn-outline-info btn-sm fw-600 rounded-pill" disabled={!selectedSubs.length} onClick={() => setShowExpandModal(true)}>
+                  <FaExpandArrowsAlt size={12} className="me-1" /> Extend
+                </button>
+              </div>
+            </div>
+
+            <div className="table-responsive">
+              <table className="table-modern">
                 <thead>
                   <tr>
-                    <th>Message</th>
-                    <th>Purpose</th>
-                    <th>Created</th>
+                    <th>
+                      <input type="checkbox" className="form-check-input" onChange={(e) => setSelectedSubs(e.target.checked ? subscriptions.map(s => s._id) : [])} checked={selectedSubs.length === subscriptions.length && subscriptions.length > 0} />
+                    </th>
+                    <th>Plan Name</th>
+                    <th>Price</th>
+                    <th>Valid Until</th>
                     <th>Status</th>
-                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {queries.map((q) => (
-                    <tr key={q._id}>
-                      <td>{q.message}</td>
-                      <td>{q.purpose}</td>
-                      <td>{new Date(q.created_at).toLocaleString()}</td>
+                  {subscriptions?.map((sub) => (
+                    <tr key={sub._id}>
                       <td>
-                        {q.completed_at ? (
-                          <span className="badge bg-success">Completed</span>
-                        ) : (
-                          <span className="badge bg-warning">Pending</span>
-                        )}
+                        <input type="checkbox" className="form-check-input" checked={selectedSubs.includes(sub._id)} onChange={() => toggleSelectSub(sub._id)} />
                       </td>
+                      <td className="fw-bold">{sub.plan_name}</td>
+                      <td>₹{sub.plan_price}</td>
+                      <td>{new Date(sub.end_date).toLocaleDateString('en-IN')}</td>
                       <td>
-                        {/* <button
-                          className="btn btn-sm btn-outline-primary me-2"
-                          onClick={() => handleSendEmail(q._id)}
-                        >
-                          Send Email
-                        </button> */}
-                        {!q.completed_at && (
-                          <button
-                            className="btn btn-sm btn-outline-success"
-                            onClick={() => handleCompleteQuery(q._id)}
-                          >
-                            Mark Completed
-                          </button>
-                        )}
+                        <div className="d-flex align-items-center gap-2">
+                          <span className={`badge-modern ${sub.status === "active" ? "badge-active" : sub.status === "blocked" ? "badge-expired" : "badge-blocked"}`}>
+                            {sub.status}
+                          </span>
+                          {sub.status === "blocked" && (
+                            <button className="btn btn-link btn-sm p-0 text-primary" onClick={() => { setselectedSub4unblock(sub._id); setselectedSubName4unblock(sub.plan_name); setShowUnblockModal(true); }}>
+                              <FaUnlock size={12} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            )}
+            </div>
           </div>
         </div>
 
-        {/* Block Modal */}
-        <Modal show={showBlockModal} onHide={() => setShowBlockModal(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Block Subscriptions</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            Are you sure you want to block {selectedSubs.length} plan(s)?
-          </Modal.Body>
-          <Modal.Footer>
-            <Button
-              variant="secondary"
-              onClick={() => setShowBlockModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="warning" onClick={confirmBlockPlans}>
-              Confirm Block
-            </Button>
-          </Modal.Footer>
-        </Modal>
-
-        {/* Unblock Modal */}
-        <Modal
-          show={showUnblockModal}
-          onHide={() => setShowUnblockModal(false)}
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>Unblock Subscriptions</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            Are you sure you want to unblock {selectedSubName4unblock} plan(s)?
-          </Modal.Body>
-          <Modal.Footer>
-            <Button
-              variant="secondary"
-              onClick={() => setShowUnblockModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="info" onClick={confirmUnblockPlans}>
-              Confirm Unblock
-            </Button>
-          </Modal.Footer>
-        </Modal>
-
-        {/* Expand Modal */}
-        <Modal show={showExpandModal} onHide={() => setShowExpandModal(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Expand Subscriptions</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form.Group>
-              <Form.Label style={{ marginRight: "10px" }}>
-                Select New End Date :{" "}
-              </Form.Label>
-              <DatePicker
-                selected={newEndDate}
-                onChange={(date) => setNewEndDate(date)}
-                minDate={new Date()}
-                dateFormat="yyyy-MM-dd"
-                showMonthDropdown
-                showYearDropdown
-                dropdownMode="select"
-                customInput={<CustomDateInput />}
-              />
-            </Form.Group>
-
-            <div className="mt-3">
-              <span className="me-2 fw-bold">Quick Add:</span>
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                className="me-2"
-                onClick={
-                  () => setNewEndDate(new Date(Date.now() + 86400000)) // +1 day
-                }
-              >
-                +1 Day
-              </Button>
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                className="me-2"
-                onClick={
-                  () => setNewEndDate(new Date(Date.now() + 7 * 86400000)) // +1 week
-                }
-              >
-                +1 Week
-              </Button>
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={() => {
-                  const today = new Date();
-                  const nextMonth = new Date(
-                    today.setMonth(today.getMonth() + 1)
-                  );
-                  setNewEndDate(nextMonth);
-                }}
-              >
-                +1 Month
-              </Button>
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button
-              variant="secondary"
-              onClick={() => setShowExpandModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="info"
-              onClick={confirmExpandPlans}
-              disabled={!newEndDate}
-            >
-              Confirm Expand
-            </Button>
-          </Modal.Footer>
-        </Modal>
+        {/* Customer Queries Card */}
+        <div className="col-12">
+          <div className="glass-card p-4">
+            <h5 className="fw-bold mb-4">Support Inquiries</h5>
+            {queries.length === 0 ? (
+              <div className="text-center py-4 text-muted">No support queries found for this user.</div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table-modern">
+                  <thead>
+                    <tr>
+                      <th>Inquiry Message</th>
+                      <th>Category</th>
+                      <th>Timestamp</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {queries.map((q) => (
+                      <tr key={q._id}>
+                        <td style={{ maxWidth: "400px" }}>{q.message}</td>
+                        <td><span className="badge bg-light text-dark border">{q.purpose}</span></td>
+                        <td className="small text-muted">{new Date(q.created_at).toLocaleString()}</td>
+                        <td>
+                          {q.completed_at ? (
+                            <span className="badge-modern badge-active"><FaCheckCircle className="me-1" /> Resolved</span>
+                          ) : (
+                            <span className="badge-modern badge-blocked"><FaClock className="me-1" /> Pending</span>
+                          )}
+                        </td>
+                        <td>
+                          {!q.completed_at && (
+                            <button className="btn btn-sm btn-outline-success rounded-pill fw-600" onClick={() => handleCompleteQuery(q._id)}>
+                              Mark Resolved
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Modals remain functionally the same but with cleaner styling */}
+      <Modal show={showBlockModal} onHide={() => setShowBlockModal(false)} centered>
+        <Modal.Header closeButton className="border-0 pb-0"><Modal.Title className="fw-bold">Block Subscriptions</Modal.Title></Modal.Header>
+        <Modal.Body className="py-4">Are you sure you want to block <strong>{selectedSubs.length}</strong> plan(s)? This will instantly restrict access for the restaurant.</Modal.Body>
+        <Modal.Footer className="border-0 pt-0">
+          <Button variant="light" className="fw-600" onClick={() => setShowBlockModal(false)}>Cancel</Button>
+          <Button variant="danger" className="fw-600 px-4" onClick={confirmBlockPlans}>Block Now</Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showUnblockModal} onHide={() => setShowUnblockModal(false)} centered>
+        <Modal.Header closeButton className="border-0 pb-0"><Modal.Title className="fw-bold">Restore Access</Modal.Title></Modal.Header>
+        <Modal.Body className="py-4">Confirm unblocking <strong>{selectedSubName4unblock}</strong>? Access will be restored immediately.</Modal.Body>
+        <Modal.Footer className="border-0 pt-0">
+          <Button variant="light" className="fw-600" onClick={() => setShowUnblockModal(false)}>Cancel</Button>
+          <Button variant="success" className="fw-600 px-4" onClick={confirmUnblockPlans}>Confirm Unblock</Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showExpandModal} onHide={() => setShowExpandModal(false)} centered>
+        <Modal.Header closeButton className="border-0 pb-0"><Modal.Title className="fw-bold">Extend Plans</Modal.Title></Modal.Header>
+        <Modal.Body className="py-4">
+          <Form.Group className="mb-4">
+            <Form.Label className="fw-600 small text-muted">Select New Expiry Date</Form.Label>
+            <DatePicker selected={newEndDate} onChange={(date) => setNewEndDate(date)} minDate={new Date()} dateFormat="yyyy-MM-dd" customInput={<CustomDateInput />} />
+          </Form.Group>
+          <div className="d-flex gap-2 justify-content-center">
+            <Button variant="outline-secondary" size="sm" className="rounded-pill px-3" onClick={() => setNewEndDate(new Date(Date.now() + 86400000))}>+1 Day</Button>
+            <Button variant="outline-secondary" size="sm" className="rounded-pill px-3" onClick={() => setNewEndDate(new Date(Date.now() + 7 * 86400000))}>+1 Week</Button>
+            <Button variant="outline-secondary" size="sm" className="rounded-pill px-3" onClick={() => { let d = new Date(); d.setMonth(d.getMonth() + 1); setNewEndDate(d); }}>+1 Month</Button>
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0">
+          <Button variant="light" className="fw-600" onClick={() => setShowExpandModal(false)}>Cancel</Button>
+          <Button variant="info" className="fw-600 px-4 text-white" onClick={confirmExpandPlans} disabled={!newEndDate}>Apply Extension</Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

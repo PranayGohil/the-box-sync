@@ -98,14 +98,16 @@ const Subscription = () => {
       const inactivePlans = enriched.filter((sub) => sub.status === 'inactive');
 
       const purchasedPlanIds = new Set(userRes.data.data.map((sub) => sub.plan_id));
-      const available = plansRes.data.data.filter((plan) => !purchasedPlanIds.has(plan._id));
+      // Only show true addons as purchasable, exclude bundles (Core, Growth, Scale)
+      const available = plansRes.data.data.filter((plan) => !purchasedPlanIds.has(plan._id) && plan.is_addon === true);
       setAvailablePlans(available);
 
       setInactiveAddOns(
         inactivePlans
           .filter((sub) => {
             const plan = plansRes.data.data.find((p) => p._id === sub.plan_id);
-            return plan?.is_addon;
+            // Only show true addon plans, exclude bundles (Core, Growth, Scale)
+            return plan?.is_addon === true;
           })
           .map((sub) => {
             const plan = plansRes.data.data.find((p) => p._id === sub.plan_id);
