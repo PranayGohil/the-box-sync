@@ -41,7 +41,7 @@ const BottomCartSheet = ({
               <div className="d-flex gap-2 mt-3 flex-wrap">
                 {kotHistory.length > 0 && (
                   <Button variant="outline-secondary" size="sm" onClick={() => setShowKotHistory(true)}>
-                    KOT History ({kotHistory.length})
+                    Order Print History ({kotHistory.length})
                   </Button>
                 )}
                 {paymentHistory.length > 0 && (
@@ -89,7 +89,7 @@ const BottomCartSheet = ({
                   }
                 }}
                 disabled={isLoading || kotPrinting}>
-                {kotPrinting ? 'Printing...' : 'KOT & Print'}
+                {kotPrinting ? 'Printing...' : 'Order Print'}
               </Button>
             )}
             {/* Cancel Order */}
@@ -120,17 +120,17 @@ const BottomCartSheet = ({
       {/* KOT History Modal */}
       <Modal show={showKotHistory} onHide={() => setShowKotHistory(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>KOT Print History</Modal.Title>
+          <Modal.Title>Order Print History</Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ maxHeight: '60vh', overflowY: 'auto' }}>
           {kotHistory.length === 0 ? (
-            <p className="text-muted text-center">No KOT prints yet</p>
+            <p className="text-muted text-center">No order prints yet</p>
           ) : (
             [...kotHistory].reverse().map((record) => (
               <div key={record.id} className="border rounded p-2 mb-2">
                 <div className="d-flex justify-content-between align-items-center mb-1">
                   <div>
-                    <Badge bg="dark" className="me-2">KOT #{record.kotNo}</Badge>
+                    <Badge bg="dark" className="me-2">Print #{record.kotNo}</Badge>
                     <small className="text-muted">{new Date(record.timestamp).toLocaleTimeString('en-IN')}</small>
                   </div>
                   <Button size="sm" variant="outline-primary"

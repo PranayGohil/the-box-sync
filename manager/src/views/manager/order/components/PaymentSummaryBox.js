@@ -76,12 +76,12 @@ const PaymentSummaryBox = ({
             )}
             {showKOTButtons && (
               <Button variant="warning" onClick={onKotAndPrint} disabled={isLoading || kotPrinting}>
-                {kotPrinting ? 'Printing...' : 'KOT & Print'}
+                {kotPrinting ? 'Printing...' : 'Order Print'}
               </Button>
             )}
             {kotHistory.length > 0 && (
               <Button variant="outline-secondary" size="sm" onClick={() => setShowKotHistory(true)}>
-                KOT History ({kotHistory.length})
+                Order Print History ({kotHistory.length})
               </Button>
             )}
           </div>
@@ -123,17 +123,17 @@ const PaymentSummaryBox = ({
       {/* KOT History Modal */}
       <Modal show={showKotHistory} onHide={() => setShowKotHistory(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>KOT Print History</Modal.Title>
+          <Modal.Title>Order Print History</Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ maxHeight: '60vh', overflowY: 'auto' }}>
           {kotHistory.length === 0 ? (
-            <p className="text-muted text-center">No KOT prints yet</p>
+            <p className="text-muted text-center">No order prints yet</p>
           ) : (
             [...kotHistory].reverse().map((record) => (
               <div key={record.id} className="border rounded p-2 mb-2">
                 <div className="d-flex justify-content-between align-items-center mb-1">
                   <div>
-                    <Badge bg="dark" className="me-2">KOT #{record.kotNo}</Badge>
+                    <Badge bg="dark" className="me-2">Print #{record.kotNo}</Badge>
                     <small className="text-muted">{new Date(record.timestamp).toLocaleTimeString('en-IN')}</small>
                   </div>
                   <Button size="sm" variant="outline-primary"
@@ -142,9 +142,10 @@ const PaymentSummaryBox = ({
                     Reprint
                   </Button>
                 </div>
-                <ul className="mb-0 ps-3" style={{ fontSize: '13px' }}>
+                <ul className="mb-0 ps-4" style={{ fontSize: '13px' }}>
                   {record.items.map((item, i) => (
-                    <li key={i}>{item.dish_name} × {item.quantity}
+                    <li key={i}>
+                      {item.dish_name} × {item.quantity}
                       {item.special_notes && <span className="text-muted ms-1">({item.special_notes})</span>}
                     </li>
                   ))}
