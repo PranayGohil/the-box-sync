@@ -12,9 +12,6 @@ const manager = {
 
 const order = {
   unified: lazy(() => import('views/manager/order/UnifiedOrder')),
-  dinein: lazy(() => import('views/manager/order/DineInOrder')),
-  takeaway: lazy(() => import('views/manager/order/TakeawayOrder')),
-  delivery: lazy(() => import('views/manager/order/DeliveryOrder')),
   deliveryPartner: lazy(() => import('views/manager/order/DeliveryPartners')),
 }
 
@@ -45,7 +42,7 @@ const allRoutes = {
       label: 'Staff',
       icon: 'user',
       component: manager.staff,
-    },  
+    },
     {
       path: `${appRoot}/kot`,
       label: 'KOT',

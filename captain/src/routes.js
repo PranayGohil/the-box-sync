@@ -8,7 +8,7 @@ const manager = {
 };
 
 const order = {
-  dinein: lazy(() => import('views/captain/order/DineInOrder')),
+  dinein: lazy(() => import('views/captain/order/UnifiedOrder')),
 }
 const dashboards = {
   index: lazy(() => import('views/dashboards/Dashboards')),

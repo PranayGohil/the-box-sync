@@ -13,7 +13,9 @@ export const SocketProvider = ({ children }) => {
   const { currentUser } = useContext(AuthContext);
 
   useEffect(() => {
-    const s = io(process.env.REACT_APP_API_URL);
+    const s = io(process.env.REACT_APP_API_URL, {
+      transports: ["websocket"],
+    });
 
     s.on("connect", () => {
       if (currentUser) {

@@ -4,8 +4,6 @@ import { Row, Col, Card, Badge } from 'react-bootstrap';
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
 
-import DineInOrder from './order/DineInOrder';
-
 const Dashboard = () => {
   const title = 'Dashboard';
   const description = 'Restaurant Management Dashboard';
@@ -159,9 +157,6 @@ const Dashboard = () => {
           ))}
         </Col>
       </Row>
-      <Switch>
-        <Route exact path="/order/dine-in" render={() => <DineInOrder />} />
-      </Switch>
     </>
   );
 };

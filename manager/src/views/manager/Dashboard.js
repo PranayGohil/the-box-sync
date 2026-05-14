@@ -5,9 +5,6 @@ import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-// import DineInOrder from './order/DineInOrder';
-// import TakeawayOrder from './order/TakeawayOrder';
-// import DeliveryOrder from './order/DeliveryOrder';
 import UnifiedOrder from "./order/UnifiedOrder";
 
 const Dashboard = () => {

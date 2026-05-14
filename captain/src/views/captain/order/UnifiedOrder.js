@@ -5,8 +5,6 @@ import axios from 'axios';
 import {
   getOrderById, getUserTaxInfo, getTableById,
   createOrUpdateDineInOrder,
-  createOrUpdateTakeawayOrder,
-  createOrUpdateDeliveryOrder,
 } from 'api/orderService';
 import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -26,29 +24,21 @@ import useOrderCart from './hooks/useOrderCart';
 import useOrderCalculations from './hooks/useOrderCalculations';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-const ORDER_TYPES = ['Dine In', 'Takeaway', 'Delivery'];
+const ORDER_TYPES = ['Dine In'];
 
 const DEFAULT_CUSTOMER_INFO = {
-  Takeaway: { name: '', phone: '', comment: '' },
-  Delivery: { name: '', phone: '', address: '', comment: '' },
   'Dine In': { name: '', total_persons: '', waiter: '', table_no: '', comment: '' },
 };
 
 const VISIBLE_FIELDS = {
-  Takeaway: { name: true, phone: true, address: false, total_persons: false, waiter: false },
-  Delivery: { name: true, phone: true, address: true, total_persons: false, waiter: false },
   'Dine In': { name: true, phone: false, address: false, total_persons: true, waiter: true },
 };
 
 const REQUIRED_FIELDS = {
-  Takeaway: { name: false, phone: false },
-  Delivery: { name: true, phone: true, address: true },
   'Dine In': { name: false, total_persons: false, waiter: false },
 };
 
 const API_MAP = {
-  Takeaway: createOrUpdateTakeawayOrder,
-  Delivery: createOrUpdateDeliveryOrder,
   'Dine In': createOrUpdateDineInOrder,
 };
 
@@ -73,11 +63,7 @@ const UnifiedOrder = () => {
   const { activePlans } = useContext(AuthContext);
   const canKOT = activePlans ? activePlans.includes('KOT Panel') : false;
 
-  // Default type from URL path
-  const defaultType = location.pathname.includes('dine-in') ? 'Dine In' : location.pathname.includes('delivery') ? 'Delivery' : 'Takeaway';
-
-  // ── Order Type ────────────────────────────────────────────────────────────
-  const [orderType, setOrderType] = useState(defaultType);
+  const orderType = 'Dine In';
   const isEditMode = mode === 'edit';
 
   const title = `${isEditMode ? 'Edit' : 'New'} ${orderType} Order`;
@@ -89,7 +75,6 @@ const UnifiedOrder = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [showParcelCharge, setShowParcelCharge] = useState(false);
   const [nextLocation, setNextLocation] = useState(null);
   const [printing, setPrinting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -104,7 +89,6 @@ const UnifiedOrder = () => {
   const [orderItems, setOrderItems] = useState([]);
   const [orderStatus, setOrderStatus] = useState('Save');
   const [tokenNumber, setTokenNumber] = useState(null);
-  const [containerCharges, setContainerCharges] = useState([]);
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', address: '', total_persons: '', waiter: '', table_no: '', comment: '' });
   const [taxRates, setTaxRates] = useState({ cgst: 0, sgst: 0, vat: 0 });
   const [paymentData, setPaymentData] = useState(DEFAULT_PAYMENT_DATA);
@@ -118,26 +102,13 @@ const UnifiedOrder = () => {
 
   const waiterOptions = (waiters || []).map((w) => ({ value: w.full_name, label: w.full_name }));
 
-  // ── Order Type Switch (new mode only) ─────────────────────────────────────
-  const handleOrderTypeChange = (newType) => {
-    if (isEditMode) return; // Locked in edit mode
-    setOrderType(newType);
-    setOrderItems([]);
-    const freshCustomerInfo = { ...DEFAULT_CUSTOMER_INFO[newType] };
-    setCustomerInfo({ name: '', phone: '', address: '', total_persons: '', waiter: '', table_no: tableInfo.table_no || '', comment: '', ...freshCustomerInfo });
-    setPaymentData((prev) => ({ ...DEFAULT_PAYMENT_DATA, cgstPercent: prev.cgstPercent, sgstPercent: prev.sgstPercent, vatPercent: prev.vatPercent }));
-    setIsDirty(false);
-    // Reset dirty tracking baseline for new type
-    initialStateRef.current = { orderItems: [], customerInfo: { ...freshCustomerInfo, table_no: tableInfo.table_no || '' } };
-  };
-
   // ── Data Fetchers ─────────────────────────────────────────────────────────
   async function fetchTableInfo() {
     try {
       const token = localStorage.getItem('token');
       const response = await getTableById(tableId, token);
       setTableInfo(response.data.data);
-      if (orderType === 'Dine In' && !isEditMode) {
+      if (!isEditMode) {
         const tableNo = response.data.data.table_no;
         setCustomerInfo(prev => ({ ...prev, table_no: tableNo }));
         initialStateRef.current.customerInfo.table_no = tableNo;
@@ -165,44 +136,15 @@ const UnifiedOrder = () => {
       const order = res.data.data;
       const items = order.order_items || [];
 
-      // Auto-detect order type from fetched order
-      const detectedType = order.order_type || 'Takeaway'; // 'Dine In' | 'Takeaway' | 'Delivery'
-      setOrderType(detectedType);
-
-      // Build customerInfo based on detected type
-      let custInfo;
-      if (detectedType === 'Dine In') {
-        custInfo = {
-          name: order.customer_name || '',
-          total_persons: order.total_persons || '',
-          waiter: order.waiter || '',
-          table_no: order.table_no || '',
-          phone: '',
-          address: '',
-          comment: order.comment || '',
-        };
-      } else if (detectedType === 'Delivery') {
-        custInfo = {
-          name: order.customer_details?.name || order.customer_name || '',
-          phone: order.customer_details?.phone || order.customer_phone || '',
-          address: order.customer_details?.address || '',
-          total_persons: '',
-          waiter: '',
-          table_no: '',
-          comment: order.comment || '',
-        };
-      } else {
-        // Takeaway
-        custInfo = {
-          name: order.customer_name || '',
-          phone: order.customer_phone || '',
-          address: '',
-          total_persons: '',
-          waiter: '',
-          table_no: '',
-          comment: order.comment || '',
-        };
-      }
+      const custInfo = {
+        name: order.customer_name || '',
+        total_persons: order.total_persons || '',
+        waiter: order.waiter || '',
+        table_no: order.table_no || '',
+        phone: '',
+        address: '',
+        comment: order.comment || '',
+      };
 
       setOrderItems(items);
       setOrderStatus(order.order_status);
@@ -237,11 +179,6 @@ const UnifiedOrder = () => {
 
   const { handleDiscountTypeChange, handleDiscountValueChange, handlePaidAmountChange } = useOrderCalculations({ orderItems, taxRates, paymentData, setPaymentData });
 
-  // ── Parcel Charge helper ───────────────────────────────────────────────────
-  const addParcelCharge = (charge) => {
-    addItemToOrder({ dish_name: `${charge.name} ${charge.size}`, dish_price: charge.price, special_notes: 'Parcel Charge', status: 'Container Charge', quantity: 1 });
-  };
-
   // ── Dirty Check ───────────────────────────────────────────────────────────
   const hasUnsavedChanges = () => {
     const initial = initialStateRef.current;
@@ -266,14 +203,12 @@ const UnifiedOrder = () => {
     if (orderId) {
       fetchOrderDetails();
     } else {
-      // New order — start dirty tracking immediately
       setIsInitialized(true);
     }
     getUserTaxInfo(token).then((r) => {
       const taxInfo = r.data.taxInfo || {};
       setPaymentData((prev) => ({ ...prev, cgstPercent: taxInfo.cgst || 0, sgstPercent: taxInfo.sgst || 0, vatPercent: taxInfo.vat || 0 }));
       setTaxRates({ cgst: taxInfo.cgst || 0, sgst: taxInfo.sgst || 0, vat: taxInfo.vat || 0 });
-      setContainerCharges(r.data.containerCharges || []);
       setUserData(r.data);
     }).catch(console.error);
   }, [orderId, tableId]);
@@ -320,12 +255,7 @@ const UnifiedOrder = () => {
 
   // ── Validation ────────────────────────────────────────────────────────────
   const validateOrder = () => {
-    if (orderItems.length === 0) { alert('Please add items to the order'); return false; }
-    if (orderType === 'Delivery') {
-      if (!customerInfo.name) { alert('Please enter customer name'); return false; }
-      if (!customerInfo.phone) { alert('Please enter customer phone number'); return false; }
-      if (!customerInfo.address) { alert('Please enter customer address'); return false; }
-    }
+    if (orderItems.length === 0) { toast.error('Please add items to the order'); return false; }
     return true;
   };
 
@@ -350,25 +280,18 @@ const UnifiedOrder = () => {
       cgst_amount: parseFloat(paymentData.cgstAmount), sgst_amount: parseFloat(paymentData.sgstAmount), vat_amount: parseFloat(paymentData.vatAmount),
       discount_amount: parseFloat(paymentData.discountAmount), waveoff_amount: parseFloat(paymentData.waveoffAmount),
       total_amount: parseFloat(paymentData.total), paid_amount: parseFloat(paymentData.paidAmount),
-      payment_type: paymentData.paymentType, order_source: 'Manager',
+      payment_type: paymentData.paymentType, order_source: 'Captain',
     };
 
-    // DineIn-specific fields
-    if (orderType === 'Dine In') {
-      orderData.total_persons = customerInfo.total_persons;
-      orderData.waiter = customerInfo.waiter;
-      orderData.table_no = customerInfo.table_no || tableInfo.table_no;
-      if (tableInfo.area) orderData.table_area = tableInfo.area;
-    }
-
-    const custPayload = { name: customerInfo.name };
-    if (orderType !== 'Dine In') custPayload.phone = customerInfo.phone;
-    if (orderType === 'Delivery') custPayload.address = customerInfo.address;
+    orderData.total_persons = customerInfo.total_persons;
+    orderData.waiter = customerInfo.waiter;
+    orderData.table_no = customerInfo.table_no || tableInfo.table_no;
+    if (tableInfo.area) orderData.table_area = tableInfo.area;
 
     return {
       orderInfo: { ...orderData, order_id: orderId },
-      customerInfo: custPayload,
-      tableId: orderType === 'Dine In' ? tableId : undefined,
+      customerInfo: { name: customerInfo.name },
+      tableId,
     };
   };
 
@@ -380,7 +303,7 @@ const UnifiedOrder = () => {
 
     setIsLoading(true);
     try {
-      const payload = buildPayload('KOT', true);
+      const payload = buildPayload('KOT', true); // completeAll = true as requested
       const token = localStorage.getItem('token');
       const response = await API_MAP[orderType](payload, token);
       if (response.data.status === 'success') {
@@ -407,23 +330,16 @@ const UnifiedOrder = () => {
         );
         toast.success(`KOT #${kotNo} sent to kitchen!`);
 
-        // For new orders, update URL so subsequent saves work correctly
         if (!orderId && savedId) {
           allowNavigationRef.current = true;
-          // Maintain tableId in URL if Dine In
-          if (orderType === 'Dine In' && tableId) {
-            window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`;
-          } else {
-            const pathBase = orderType === 'Delivery' ? 'delivery' : 'takeaway';
-            window.location.href = `/order/${pathBase}?orderId=${savedId}&mode=edit`;
-          }
+          window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`;
         } else {
           fetchOrderDetails();
         }
       }
     } catch (err) {
       console.error('Error saving KOT:', err);
-      alert('Error saving KOT. Please try again.');
+      toast.error('Error saving KOT. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -455,7 +371,6 @@ const UnifiedOrder = () => {
         setOrderStatus(status);
 
         if (status === 'Paid') {
-          // Update payment history
           const amountPaidThisTime = parseFloat(paymentData.paidAmount) - (parseFloat(initialStateRef.current.paid_amount) || 0);
           if (amountPaidThisTime > 0) {
             const payRecord = {
@@ -474,13 +389,13 @@ const UnifiedOrder = () => {
           history.push('/dashboard');
         } else {
           fetchOrderDetails();
-          toast.success('Order saved and marked as Paid!');
+          toast.success('Order saved successfully!');
           history.push('/dashboard');
         }
       }
     } catch (err) {
       console.error('Error saving order:', err);
-      alert('Error saving order. Please try again.');
+      toast.error('Error saving order. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -496,7 +411,7 @@ const UnifiedOrder = () => {
           order_status: 'Cancelled',
           order_items: orderItems.map((item) => ({ ...item, status: 'Cancelled' })),
         },
-        tableId: orderType === 'Dine In' ? tableId : undefined,
+        tableId,
       };
       const token = localStorage.getItem('token');
       const response = await API_MAP[orderType](payload, token);
@@ -508,36 +423,30 @@ const UnifiedOrder = () => {
       }
     } catch (err) {
       console.error('Error cancelling order:', err);
-      alert('Error cancelling order. Please try again.');
+      toast.error('Error cancelling order. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handlePayment = async () => {
-    if (paymentData.paidAmount <= 0) { alert('Please enter a valid paid amount'); return; }
+    if (paymentData.paidAmount <= 0) { toast.error('Please enter a valid paid amount'); return; }
     await handleSaveOrder('Paid');
   };
 
   const handleOpenPaymentModal = () => {
     const totalAmount = parseFloat(paymentData.total);
-    const alreadyPaid = parseFloat(initialStateRef.current.paid_amount) || 0;
-    const dueAmount = Math.max(0, totalAmount - alreadyPaid);
-
     setPaymentData((prev) => ({
       ...prev,
-      paidAmount: totalAmount, // This is the total cumulative amount
+      paidAmount: totalAmount,
       waveoffAmount: 0
     }));
     setShowPaymentModal(true);
   };
 
-  // ── Derived display helpers ───────────────────────────────────────────────
-  const showParcelUI = orderType !== 'Dine In';
   const visibleFields = VISIBLE_FIELDS[orderType];
   const requiredFields = REQUIRED_FIELDS[orderType];
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
       <HtmlHead title={title} description={description} />
@@ -548,7 +457,7 @@ const UnifiedOrder = () => {
         <div className="d-flex align-items-center gap-2">
           <h5 className="mb-0 fw-bold">
             {orderType}
-            {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no)
+            {(tableInfo.table_no || customerInfo.table_no)
               ? ` — Table ${tableInfo.table_no || customerInfo.table_no}`
               : ''}
           </h5>
@@ -561,7 +470,6 @@ const UnifiedOrder = () => {
       </div>
 
       <Row className="g-1">
-        {/* Menu Section */}
         <Col lg="8" xs="12" className="px-1 mb-3 mb-lg-0">
           <Card className="h-100 position-relative overflow-hidden">
             <Card.Header>
@@ -582,16 +490,11 @@ const UnifiedOrder = () => {
                 showSpecial={showSpecial} setShowSpecial={setShowSpecial}
                 showCategories={showCategories} setShowCategories={setShowCategories}
                 addItemToOrder={addItemToOrder}
-                showParcelCharge={showParcelUI ? showParcelCharge : false}
-                setShowParcelCharge={showParcelUI ? setShowParcelCharge : undefined}
-                containerCharges={showParcelUI ? containerCharges : []}
-                addParcelCharge={showParcelUI ? addParcelCharge : undefined}
               />
             </Card.Body>
           </Card>
         </Col>
 
-        {/* Order Details Section */}
         <Col lg="4" xs="12" className="pe-lg-0 px-1 px-lg-0">
           <Card className="h-100 mobile-transparent-card">
             <Card.Header className="d-none d-lg-block">
@@ -599,7 +502,7 @@ const UnifiedOrder = () => {
                 <Col md="7">
                   {tokenNumber && <Badge bg="primary" className="mb-1">Token #{tokenNumber}</Badge>}
                   <h5 className="mb-0">
-                    {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no)
+                    {tableInfo.table_no || customerInfo.table_no
                       ? `Table ${tableInfo.table_no || customerInfo.table_no}`
                       : orderType}
                   </h5>
@@ -614,24 +517,7 @@ const UnifiedOrder = () => {
               </Row>
             </Card.Header>
             <Card.Body className="p-0 p-lg-3">
-              {/* Desktop only: type selector + customer form + cart */}
               <div className="d-none d-lg-block">
-                {/* Order Type Dropdown */}
-                <Form.Group className="mb-3">
-                  <Form.Label>Order Type</Form.Label>
-                  <Form.Select
-                    size="sm"
-                    value={orderType}
-                    onChange={(e) => handleOrderTypeChange(e.target.value)}
-                    disabled={isEditMode || tableId} // Disable if editing or if tableId exists in URL
-                    className="mb-1"
-                  >
-                    {ORDER_TYPES.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-                <hr className="my-3" />
                 <CustomerInfoForm
                   customerInfo={customerInfo} setCustomerInfo={setCustomerInfo}
                   tableInfo={tableInfo} waiterOptions={waiterOptions}
@@ -672,7 +558,6 @@ const UnifiedOrder = () => {
         handlePaidAmountChange={handlePaidAmountChange} handlePayment={handlePayment}
         orderItems={orderItems} customerInfo={customerInfo} orderType={orderType}
         orderId={orderId} orderNo={orderNo}
-        alreadyPaid={parseFloat(initialStateRef.current.paid_amount) || 0}
       />
       <LeaveConfirmationModal
         showLeaveModal={showLeaveModal} setShowLeaveModal={setShowLeaveModal}
@@ -682,7 +567,6 @@ const UnifiedOrder = () => {
       />
       <CancelOrderModal showCancelModal={showCancelModal} setShowCancelModal={setShowCancelModal} handleCancelOrder={handleCancelOrder} isLoading={isLoading} />
 
-      {/* Mobile Bottom Sheet */}
       <BottomCartSheet
         showCartSheet={showCartSheet} setShowCartSheet={setShowCartSheet}
         orderItems={orderItems} updateItemQuantity={updateItemQuantity} removeItem={removeItem}
@@ -696,21 +580,7 @@ const UnifiedOrder = () => {
         kotHistory={kotHistory} onReprintKOT={handleReprintKOT}
         paymentHistory={paymentHistory}
       >
-        <div className="d-flex align-items-center justify-content-between mb-3">
-          <h6 className="mb-0 fw-bold text-muted border-bottom pb-2 flex-grow-1">Customer Details</h6>
-          {/* Mobile type selector */}
-          <Form.Select
-            size="sm"
-            value={orderType}
-            onChange={(e) => handleOrderTypeChange(e.target.value)}
-            disabled={isEditMode || tableId}
-            style={{ maxWidth: '130px' }}
-          >
-            {ORDER_TYPES.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </Form.Select>
-        </div>
+        <h6 className="mb-3 fw-bold text-muted border-bottom pb-2">Customer Details</h6>
         <CustomerInfoForm
           customerInfo={customerInfo} setCustomerInfo={setCustomerInfo}
           tableInfo={tableInfo} waiterOptions={waiterOptions}
