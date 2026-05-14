@@ -83,13 +83,21 @@ const customStyles = `
 
 const QRforMenu = ({ setSection }) => {
   const [loading, setLoading] = useState(true);
+  const [restaurantToken, setRestaurantToken] = useState('');
+  const [generatingQR, setGeneratingQR] = useState(false);
   const [copying, setCopying] = useState(false);
   const qrCodeRef = useRef(null);
 
   const { currentUser } = useContext(AuthContext);
   const restaurant_code = currentUser?.restaurant_code;
 
-  const menuLink = `${process.env.REACT_APP_HOME_URL}/menu/${restaurant_code}`;
+  const menuLink = `${process.env.REACT_APP_HOME_URL}/menu.html?token=${restaurantToken}`;
+
+  useEffect(() => {
+    if (currentUser.restaurant_token) {
+      setRestaurantToken(currentUser.restaurant_token);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     setLoading(true);
@@ -124,7 +132,6 @@ const QRforMenu = ({ setSection }) => {
     newWindow.print();
     newWindow.close();
   };
-
   const copyToClipboard = async () => {
     setCopying(true);
     try {
