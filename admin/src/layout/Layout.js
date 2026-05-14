@@ -6,6 +6,7 @@ import Footer from 'layout/footer/Footer';
 import Nav from 'layout/nav/Nav';
 import RightButtons from 'layout/right-buttons/RightButtons';
 import SidebarMenu from 'layout/nav/sidebar-menu/SidebarMenu';
+import BottomNav from 'layout/nav/BottomNav';
 
 const Layout = ({ children }) => {
   useLayout();
@@ -32,6 +33,7 @@ const Layout = ({ children }) => {
       </main>
       <Footer />
       <RightButtons />
+      <BottomNav />
     </>
   );
 };

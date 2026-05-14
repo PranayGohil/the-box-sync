@@ -6,6 +6,81 @@ import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
 
+const customStyles = `
+  .glass-card {
+    background: #ffffff !important;
+    border: 1px solid #f0f0f0 !important;
+    border-radius: 1.5rem !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.3s ease;
+  }
+  .qr-container-box {
+    background: #f8fafc;
+    border-radius: 1.5rem;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #eef2f6;
+  }
+  .qr-frame {
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 1.25rem;
+    box-shadow: 0 15px 35px rgba(30, 168, 231, 0.08);
+    border: 1px solid #eef2f6;
+    transition: transform 0.3s ease;
+  }
+  .qr-frame:hover {
+    transform: scale(1.02);
+  }
+  .url-pill {
+    background: #ffffff;
+    border-radius: 50px;
+    padding: 0.6rem 1.5rem;
+    border: none !important;
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 500;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  }
+  .custom-btn-outline {
+    border: 1px solid #1ea8e7 !important;
+    color: #1ea8e7 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+  }
+  .custom-btn-outline:hover {
+    background-color: #1ea8e7 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
+  }
+  .custom-btn-outline:hover svg {
+    stroke: #fff !important;
+  }
+  .custom-btn-solid {
+    background-color: #1ea8e7 !important;
+    border: 1px solid #1ea8e7 !important;
+    color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+  }
+  .custom-btn-solid:hover {
+    background-color: #158dc4 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
+  }
+`;
+
 const QRforMenu = ({ setSection }) => {
   const [loading, setLoading] = useState(true);
   const [restaurantToken, setRestaurantToken] = useState('');
@@ -13,41 +88,45 @@ const QRforMenu = ({ setSection }) => {
   const [copying, setCopying] = useState(false);
   const qrCodeRef = useRef(null);
 
-  const { currentUser, userSubscriptions, activePlans } = useContext(AuthContext);
+  const { currentUser } = useContext(AuthContext);
   const restaurant_code = currentUser?.restaurant_code;
 
+  const menuLink = restaurantToken 
+    ? `${process.env.REACT_APP_HOME_URL}/menu.html?token=${restaurantToken}`
+    : `${process.env.REACT_APP_HOME_URL}/menu/${restaurant_code}`;
+
   useEffect(() => {
-    if (currentUser.restaurant_token) {
+    if (currentUser?.restaurant_token) {
       setRestaurantToken(currentUser.restaurant_token);
     }
   }, [currentUser]);
 
   useEffect(() => {
     setLoading(true);
-    // Simulate loading for better UX
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500);
+    const timer = setTimeout(() => setLoading(false), 500);
     return () => clearTimeout(timer);
   }, []);
 
   const printQRCode = () => {
+    if (!qrCodeRef.current) return;
     const printContent = qrCodeRef.current.innerHTML;
     const newWindow = window.open('', '_blank');
     newWindow.document.write(`
       <html>
         <head>
-          <title>Print QR Code</title>
+          <title>Print Menu QR Code</title>
           <style>
-            body { text-align: center; font-family: Arial, sans-serif; }
-            .qr-container { padding: 20px; }
-            .qr-container h2 { font-size: 18px; margin-bottom: 10px; }
+            body { text-align: center; font-family: 'Inter', sans-serif; padding: 40px; }
+            .print-container { border: 2px solid #f0f0f0; padding: 40px; border-radius: 20px; display: inline-block; }
+            h2 { color: #1ea8e7; margin-bottom: 30px; font-size: 24px; }
+            .url { color: #64748b; margin-top: 20px; font-size: 14px; }
           </style>
         </head>
         <body>
-          <div class="qr-container">
-            <h2 style="margin-bottom: 25px;">Scan the QR Code to View Menu</h2>
+          <div class="print-container">
+            <h2>Scan to View Menu</h2>
             ${printContent}
+            <div class="url">${menuLink}</div>
           </div>
         </body>
       </html>
@@ -56,16 +135,12 @@ const QRforMenu = ({ setSection }) => {
     newWindow.print();
     newWindow.close();
   };
-
-  const menuLink = `${process.env.REACT_APP_HOME_URL}/menu.html?token=${restaurantToken}`;
-
   const copyToClipboard = async () => {
     setCopying(true);
     try {
       await navigator.clipboard.writeText(menuLink);
-      toast.success('URL copied to clipboard!');
+      toast.success('URL copied successfully!');
     } catch (error) {
-      console.error('Failed to copy:', error);
       toast.error('Failed to copy URL');
     } finally {
       setTimeout(() => setCopying(false), 500);
@@ -74,114 +149,105 @@ const QRforMenu = ({ setSection }) => {
 
   if (loading) {
     return (
-      <Row className="justify-content-center">
-        <Col>
-          <Card className="mb-5">
-            <Card.Body className="text-center py-5">
-              <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading...</h5>
+      <div className="d-flex align-items-center justify-content-center py-5">
+        <Spinner animation="border" style={{ color: '#1ea8e7' }} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="container-fluid pb-5">
+      <style>{customStyles}</style>
+      
+      <div className="page-title-container mb-4">
+        <Row className="g-3 align-items-center">
+          <Col>
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>Menu QR Code</h1>
+            <div className="text-muted mt-1 small">Generate and share your restaurant's digital menu</div>
+          </Col>
+          <Col xs="auto">
+            {setSection && (
+              <Button
+                className="custom-btn-outline px-4 py-2 d-flex align-items-center gap-2"
+                onClick={() => setSection("ViewMenu")}
+              >
+                <CsLineIcons icon="eye" size="18" />
+                View Menu
+              </Button>
+            )}
+          </Col>
+        </Row>
+      </div>
+
+      <Row className="justify-content-center mt-5">
+        <Col lg={8} xl={7}>
+          <Card className="glass-card border-0 overflow-hidden">
+            <Card.Body className="p-0">
+              <div className="qr-container-box p-4 p-md-5">
+                {restaurant_code ? (
+                  <>
+                    <div className="text-center mb-5">
+                      <h4 className="fw-bold text-dark mb-2">Digital Menu QR</h4>
+                      <p className="text-muted small">Customers can scan this code to view your menu instantly</p>
+                    </div>
+
+                    <div className="qr-frame mb-4" ref={qrCodeRef}>
+                      <QRCodeSVG 
+                        size={220} 
+                        value={menuLink} 
+                        level="H"
+                        includeMargin={false}
+                      />
+                    </div>
+
+                    <div className="w-100 mb-5 text-center">
+                      <div className="url-pill d-inline-block px-4 mx-auto shadow-sm">
+                        <CsLineIcons icon="link" size="14" className="me-2 text-primary" />
+                        {menuLink}
+                      </div>
+                    </div>
+
+                    <div className="d-flex flex-column flex-sm-row justify-content-center gap-3 w-100 px-md-5">
+                      <Button
+                        className="custom-btn-outline px-4 py-2 flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                        onClick={printQRCode}
+                      >
+                        <CsLineIcons icon="print" size="18" />
+                        Print QR Code
+                      </Button>
+
+                      <Button
+                        className="custom-btn-outline px-4 py-2 flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                        onClick={copyToClipboard}
+                        disabled={copying}
+                      >
+                        {copying ? (
+                          <>
+                            <Spinner animation="border" size="sm" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <CsLineIcons icon="copy" size="18" />
+                            Copy URL
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-5">
+                    <CsLineIcons icon="warning" size="48" className="text-warning mb-3" />
+                    <h5 className="fw-bold">Restaurant Code Not Found</h5>
+                    <p className="text-muted px-4">We couldn't retrieve your restaurant code. Please ensure your profile is complete or contact support.</p>
+                  </div>
+                )}
+              </div>
             </Card.Body>
           </Card>
         </Col>
       </Row>
-    );
-  }
-
-  // if (!activePlans.includes('Scan For Menu')) {
-  //   return (
-  //     <Card className="mb-5">
-  //       <Card.Body className="text-center">
-  //         <CsLineIcons icon="blocked" className="text-danger" size={48} />
-  //         <h4 className="mt-3">Menu Plan Required</h4>
-  //         <p className="text-muted">You need to purchase or renew the Scan For Menu plan to access this feature.</p>
-  //       </Card.Body>
-  //     </Card>
-  //   );
-  // }
-
-  return (
-    <Row className="justify-content-center">
-      <Col>
-        <Card className="mb-5">
-          <Card.Header className="d-flex justify-content-between align-items-center">
-            <Card.Title className="mb-0">Menu QR Code</Card.Title>
-            <Button
-              variant="outline-primary"
-              size="sm"
-              onClick={() => setSection("ViewMenu")}
-              disabled={generatingQR}
-            >
-              <CsLineIcons icon="eye" className="me-2" />
-              View Menu
-            </Button>
-          </Card.Header>
-          <Card.Body className="text-center">
-            {restaurant_code ? (
-              <>
-                <div className="mb-4">
-                  <p className="text-muted mb-2">Scan the QR code to view your restaurant menu:</p>
-                  <div ref={qrCodeRef} className="mb-3">
-                    <QRCodeSVG size={250} value={menuLink} className="border rounded" />
-                  </div>
-                  <div className="small text-muted mb-3">Menu URL: {menuLink}</div>
-                </div>
-
-                <div className="d-flex justify-content-center gap-2">
-                  <Button
-                    variant="outline-primary"
-                    onClick={printQRCode}
-                    disabled={generatingQR}
-                  >
-                    <CsLineIcons icon="print" className="me-2" />
-                    Print QR Code
-                  </Button>
-
-                  <Button
-                    variant="outline-secondary"
-                    onClick={copyToClipboard}
-                    disabled={copying || generatingQR}
-                  >
-                    {copying ? (
-                      <>
-                        <Spinner
-                          as="span"
-                          animation="border"
-                          size="sm"
-                          role="status"
-                          aria-hidden="true"
-                          className="me-2"
-                        />
-                        Copying...
-                      </>
-                    ) : (
-                      <>
-                        <CsLineIcons icon="copy" className="me-2" />
-                        Copy URL
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <Alert variant="warning" className="text-center">
-                <CsLineIcons icon="warning" className="me-2" />
-                Restaurant code not found. Please contact support.
-              </Alert>
-            )}
-
-            {/* Loading overlay for any async operations */}
-            {generatingQR && (
-              <div className="mt-4">
-                <Alert variant="light" className="d-inline-flex align-items-center">
-                  <Spinner animation="border" size="sm" className="me-2" />
-                  <small>Generating QR code...</small>
-                </Alert>
-              </div>
-            )}
-          </Card.Body>
-        </Card>
-      </Col>
-    </Row>
+    </div>
   );
 };
 
