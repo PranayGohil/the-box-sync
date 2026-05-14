@@ -1,15 +1,12 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
-import { Row, Col, Card, Button, Form, Modal, Alert, Spinner } from 'react-bootstrap';
+import { Row, Col, Card, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import { Country, State, City } from 'country-state-city';
-import * as faceapi from 'face-api.js';
-import Webcam from 'react-webcam';
-import { AuthContext } from 'contexts/AuthContext';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
 import CreatableSelect from 'react-select/creatable';
@@ -24,11 +21,7 @@ const EditStaff = () => {
   ];
   const { id } = useParams();
   const history = useHistory();
-  const [loading, setLoading] = useState({
-    initial: true,
-    submitting: false,
-    faceModels: false,
-  });
+  const [loading, setLoading] = useState({ initial: true, submitting: false });
   const [fileUploadError, setFileUploadError] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [frontImagePreview, setFrontImagePreview] = useState(null);
@@ -37,23 +30,12 @@ const EditStaff = () => {
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [positions, setPositions] = useState([]);
-  const [payrollConfig, setPayrollConfig] = useState(null);
   const [uploadingFiles, setUploadingFiles] = useState({
     photo: false,
     front_image: false,
     back_image: false,
   });
 
-  // Face capture states
-  const [showFaceModal, setShowFaceModal] = useState(false);
-  const webcamRef = useRef(null);
-  const [faceDescriptor, setFaceDescriptor] = useState(null);
-  const [faceBox, setFaceBox] = useState(null);
-  const [isDetecting, setIsDetecting] = useState(false);
-  const [isCapturing, setIsCapturing] = useState(false);
-  const [captureStatus, setCaptureStatus] = useState('none');
-  const [captureErrorMessage, setCaptureErrorMessage] = useState('');
-  const { userSubscriptions, activePlans } = useContext(AuthContext);
 
   // Common restaurant staff positions
   const commonPositions = [
@@ -206,109 +188,6 @@ const EditStaff = () => {
     }),
   });
 
-  const loadModels = async () => {
-    setLoading((prev) => ({ ...prev, faceModels: true }));
-    try {
-      await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
-      await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
-      await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-      console.log('Face detection models loaded');
-    } catch (error) {
-      console.error('Error loading face models:', error);
-      toast.error('Failed to load face detection models');
-    } finally {
-      setLoading((prev) => ({ ...prev, faceModels: false }));
-    }
-  };
-
-  useEffect(() => {
-    if (activePlans.includes('Payroll By The Box')) {
-      loadModels();
-    }
-  }, [activePlans]);
-
-  useEffect(() => {
-    let interval;
-    const detectFace = async () => {
-      if (webcamRef.current && webcamRef.current.video.readyState === 4 && faceapi.nets.tinyFaceDetector.params) {
-        const { video } = webcamRef.current;
-        const canvas = document.getElementById('faceCanvas');
-
-        if (!canvas) {
-          return;
-        }
-
-        try {
-          const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-
-          const dims = faceapi.matchDimensions(canvas, video, true);
-          const ctx = canvas.getContext('2d');
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-          if (detection) {
-            const resized = faceapi.resizeResults(detection, dims);
-            faceapi.draw.drawDetections(canvas, resized);
-            setFaceBox(resized.detection.box);
-          } else {
-            setFaceBox(null);
-          }
-        } catch (error) {
-          console.error('Face detection error:', error);
-          setFaceBox(null);
-        }
-      }
-    };
-
-    if (showFaceModal) {
-      setIsDetecting(true);
-      setTimeout(() => {
-        interval = setInterval(detectFace, 300);
-      }, 100);
-    }
-
-    return () => {
-      setIsDetecting(false);
-      if (interval) {
-        clearInterval(interval);
-      }
-      const canvas = document.getElementById('faceCanvas');
-      if (canvas) {
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-    };
-  }, [showFaceModal]);
-
-  const handleFaceCapture = async () => {
-    try {
-      setIsCapturing(true);
-      const screenshot = webcamRef.current.getScreenshot();
-      const img = await faceapi.fetchImage(screenshot);
-
-      const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-
-      if (detection) {
-        const descriptorArray = Array.from(detection.descriptor);
-        setFaceDescriptor(descriptorArray);
-        setCaptureStatus('success');
-        setCaptureErrorMessage('');
-        setShowFaceModal(false);
-        toast.success('Face captured successfully!');
-      } else {
-        setCaptureStatus('error');
-        setCaptureErrorMessage('No face detected. Please try again.');
-        toast.error('No face detected. Please try again.');
-      }
-    } catch (err) {
-      console.error('Face capture error:', err);
-      setCaptureStatus('error');
-      setCaptureErrorMessage('Error capturing face. Try again.');
-      toast.error('Error capturing face. Try again.');
-    } finally {
-      setIsCapturing(false);
-    }
-  };
-
   const formik = useFormik({
     initialValues: {
       staff_id: '',
@@ -329,10 +208,6 @@ const EditStaff = () => {
       id_number: '',
       front_image: '',
       back_image: '',
-      salary_structure: {
-        earnings: { basic: 0, hra: 0, conveyance: 0, medical: 0, special: 0, other: 0 },
-        deductions: { pf_percentage: 12, esi_percentage: 0.75, pt: 200 }
-      },
     },
     validationSchema: editStaff,
     enableReinitialize: true,
@@ -342,9 +217,7 @@ const EditStaff = () => {
       try {
         const formData = new FormData();
         Object.keys(values).forEach((key) => {
-          if (key === 'salary_structure') {
-            formData.append('salary_structure', JSON.stringify(values.salary_structure));
-          } else if (!['photo', 'front_image', 'back_image'].includes(key)) {
+          if (!['photo', 'front_image', 'back_image'].includes(key)) {
             formData.append(key, values[key]);
           }
         });
@@ -352,10 +225,6 @@ const EditStaff = () => {
         if (values.photo instanceof File) formData.append('photo', values.photo);
         if (values.front_image instanceof File) formData.append('front_image', values.front_image);
         if (values.back_image instanceof File) formData.append('back_image', values.back_image);
-
-        if (faceDescriptor) {
-          formData.append('face_encoding', JSON.stringify(faceDescriptor));
-        }
 
         await axios.put(`${process.env.REACT_APP_API}/staff/edit/${id}`, formData, {
           headers: {
@@ -386,21 +255,14 @@ const EditStaff = () => {
       try {
         setLoading((prev) => ({ ...prev, initial: true }));
 
-        const [positionsRes, staffRes, configRes] = await Promise.all([
+        const [positionsRes, staffRes] = await Promise.all([
           axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
           axios.get(`${process.env.REACT_APP_API}/staff/get/${id}`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
-          axios.get(`${process.env.REACT_APP_API}/payroll-config`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-          }).catch(e => ({ data: { success: false } })),
         ]);
-
-        if (configRes.data && configRes.data.success) {
-            setPayrollConfig(configRes.data.data);
-        }
 
         setPositions(positionsRes.data.data);
 
@@ -423,18 +285,6 @@ const EditStaff = () => {
         setFieldValue('photo', staff.photo || '');
         setFieldValue('front_image', staff.front_image || '');
         setFieldValue('back_image', staff.back_image || '');
-
-        if (staff.salary_structure) {
-          setFieldValue('salary_structure', {
-            earnings: { ...staff.salary_structure.earnings },
-            deductions: { ...staff.salary_structure.deductions },
-          });
-        }
-
-        if (staff.face_encoding && staff.face_encoding.length > 0) {
-          setFaceDescriptor(staff.face_encoding);
-          setCaptureStatus('success');
-        }
 
         const selectedCountry = Country.getAllCountries().find((c) => c.name === staff.country);
 
@@ -506,158 +356,239 @@ const EditStaff = () => {
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: false }));
   };
 
+  const customStyles = `
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 1.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+      transition: all 0.3s ease;
+    }
+    .custom-btn-outline {
+      background: #ffffff !important;
+      border: 1px solid #1ea8e7 !important;
+      color: #1ea8e7 !important;
+      border-radius: 50px !important;
+      padding: 0.5rem 1.5rem !important;
+      font-weight: 500 !important;
+      transition: all 0.3s ease !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+    }
+    .custom-btn-outline:hover {
+      background: #1ea8e7 !important;
+      color: #ffffff !important;
+      border-color: #1ea8e7 !important;
+      transform: translateY(-1px) !important;
+    }
+    .custom-btn-outline i, .custom-btn-outline svg {
+      color: #1ea8e7 !important;
+      transition: color 0.3s ease !important;
+    }
+    .custom-btn-outline:hover i, .custom-btn-outline:hover svg {
+      color: #ffffff !important;
+    }
+    .custom-btn-danger {
+      background: transparent !important;
+      border: 1px solid #cf2637 !important;
+      color: #cf2637 !important;
+      border-radius: 50px !important;
+      padding: 0.6rem 1.5rem !important;
+      font-weight: 600 !important;
+      transition: all 0.3s ease !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    .custom-btn-danger i, .custom-btn-danger svg {
+      color: #cf2637 !important;
+      transition: color 0.3s ease !important;
+    }
+    .custom-btn-danger:hover {
+      background: #cf2637 !important;
+      color: #ffffff !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 12px rgba(207, 38, 55, 0.3) !important;
+    }
+    .custom-btn-danger:hover i, .custom-btn-danger:hover svg {
+      color: #ffffff !important;
+    }
+    .custom-btn-solid {
+      background: #1ea8e7 !important;
+      border: 1px solid #1ea8e7 !important;
+      color: #ffffff !important;
+      border-radius: 50px !important;
+      padding: 0.6rem 1.5rem !important;
+      font-weight: 600 !important;
+      transition: all 0.3s ease !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+    }
+    .custom-btn-solid:hover {
+      background: #0091d5 !important;
+      border-color: #0091d5 !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
+    }
+    .custom-btn-solid i, .custom-btn-solid svg {
+      color: #ffffff !important;
+    }
+  `;
+
   if (loading.initial) {
     return (
-      <>
+      <div className="container-fluid py-5">
+        <style>{customStyles}</style>
         <HtmlHead title={title} description={description} />
-        <Row>
-          <Col>
-            <div className="page-title-container">
-              <h1 className="mb-0 pb-0 display-4">{title}</h1>
-              <BreadcrumbList items={breadcrumbs} />
-            </div>
-            <div className="text-center py-5">
-              <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading Staff Information...</h5>
-              <p className="text-muted">Please wait while we fetch staff details</p>
-            </div>
-          </Col>
-        </Row>
-      </>
+        <div className="d-flex flex-column align-items-center justify-content-center py-5 mt-5">
+          <Spinner animation="border" style={{ color: '#1ea8e7' }} className="mb-3" />
+          <h5 className="fw-bold">Loading Staff Details...</h5>
+        </div>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="container-fluid pb-5">
+      <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
-      <Row>
-        <Col>
-          <div className="page-title-container">
-            <Row className="align-items-center">
-              <Col>
-                <h1 className="mb-0 pb-0 display-4">{title}</h1>
-                <BreadcrumbList items={breadcrumbs} />
-              </Col>
-              <Col xs="auto">
-                <Button variant="outline-primary" onClick={() => history.push('/staff/view')} disabled={loading.submitting}>
-                  <CsLineIcons icon="eye" className="me-2" />
-                  View Staff
-                </Button>
-              </Col>
-            </Row>
-          </div>
+      <Row className="g-3 align-items-center mb-4">
+        <Col md={7}>
+          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
+          <BreadcrumbList items={breadcrumbs} />
+        </Col>
+        <Col md={5} className="d-flex justify-content-md-end">
+          <Button className="custom-btn-outline" onClick={() => history.push('/staff/view')} disabled={loading.submitting}>
+            <CsLineIcons icon="arrow-left" size="18" /> Back to List
+          </Button>
+        </Col>
+      </Row>
 
-          {fileUploadError && (
-            <Alert variant="danger" className="mb-4">
-              <CsLineIcons icon="error" className="me-2" />
-              {fileUploadError}
-            </Alert>
-          )}
+      {fileUploadError && (
+        <Alert variant="danger" className="mb-4 glass-card border-0">
+          <CsLineIcons icon="error" className="me-2" />
+          {fileUploadError}
+        </Alert>
+      )}
 
-          <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit}>
+        <Row className="g-4">
+          {/* Main Content Column */}
+          <Col lg={8}>
             {/* Personal Details Card */}
-            <Card body className="mb-4">
-              <h5 className="mb-3">Personal Details</h5>
+            <Card className="glass-card border-0 mb-4">
+              <Card.Body className="p-4">
+                <div className="section-header mb-4">
+                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <CsLineIcons icon="user" size="20" className="text-primary" />
+                    Personal Details
+                  </h5>
+                </div>
 
-              <Row>
-                <Col md={4}>
-                  <Form.Group>
-                    <Form.Label>Staff ID</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="staff_id"
-                      value={values.staff_id}
-                      onChange={handleChange}
-                      isInvalid={touched.staff_id && errors.staff_id}
-                      disabled={loading.submitting}
-                    />
-                    <Form.Control.Feedback type="invalid">{errors.staff_id}</Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-                <Col md={4}>
-                  <Form.Group>
-                    <Form.Label>First Name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="f_name"
-                      value={values.f_name}
-                      onChange={handleChange}
-                      isInvalid={touched.f_name && errors.f_name}
-                      disabled={loading.submitting}
-                    />
-                    <Form.Control.Feedback type="invalid">{errors.f_name}</Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-                <Col md={4}>
-                  <Form.Group>
-                    <Form.Label>Last Name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="l_name"
-                      value={values.l_name}
-                      onChange={handleChange}
-                      isInvalid={touched.l_name && errors.l_name}
-                      disabled={loading.submitting}
-                    />
-                    <Form.Control.Feedback type="invalid">{errors.l_name}</Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-              </Row>
+                <Row className="g-3">
+                  <Col md={4}>
+                    <Form.Group>
+                      <Form.Label className="small fw-bold">Staff ID</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="staff_id"
+                        value={values.staff_id}
+                        onChange={handleChange}
+                        isInvalid={touched.staff_id && errors.staff_id}
+                        disabled={loading.submitting}
+                        className="bg-light border-0"
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.staff_id}</Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group>
+                      <Form.Label className="small fw-bold">First Name</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="f_name"
+                        value={values.f_name}
+                        onChange={handleChange}
+                        isInvalid={touched.f_name && errors.f_name}
+                        disabled={loading.submitting}
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.f_name}</Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group>
+                      <Form.Label className="small fw-bold">Last Name</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="l_name"
+                        value={values.l_name}
+                        onChange={handleChange}
+                        isInvalid={touched.l_name && errors.l_name}
+                        disabled={loading.submitting}
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.l_name}</Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                </Row>
 
-              <Row className="mt-3">
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>Birthday</Form.Label>
-                    <Form.Control
-                      type="date"
-                      name="birth_date"
-                      value={values.birth_date}
-                      onChange={handleChange}
-                      isInvalid={touched.birth_date && errors.birth_date}
-                      disabled={loading.submitting}
-                    />
-                    <Form.Control.Feedback type="invalid">{errors.birth_date}</Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>Joining Date</Form.Label>
-                    <Form.Control
-                      type="date"
-                      name="joining_date"
-                      value={values.joining_date}
-                      onChange={handleChange}
-                      isInvalid={touched.joining_date && errors.joining_date}
-                      disabled={loading.submitting}
-                    />
-                    <Form.Control.Feedback type="invalid">{errors.joining_date}</Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-              </Row>
+                <Row className="g-3 mt-1">
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="small fw-bold">Birthday</Form.Label>
+                      <Form.Control
+                        type="date"
+                        name="birth_date"
+                        value={values.birth_date}
+                        onChange={handleChange}
+                        isInvalid={touched.birth_date && errors.birth_date}
+                        disabled={loading.submitting}
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.birth_date}</Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="small fw-bold">Joining Date</Form.Label>
+                      <Form.Control
+                        type="date"
+                        name="joining_date"
+                        value={values.joining_date}
+                        onChange={handleChange}
+                        isInvalid={touched.joining_date && errors.joining_date}
+                        disabled={loading.submitting}
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.joining_date}</Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                </Row>
 
-              <Row className="mt-3">
-                <Col>
-                  <Form.Group>
-                    <Form.Label>Address</Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={3}
-                      name="address"
-                      value={values.address}
-                      onChange={handleChange}
-                      isInvalid={touched.address && errors.address}
-                      disabled={loading.submitting}
-                    />
-                    <Form.Control.Feedback type="invalid">{errors.address}</Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-              </Row>
+                <Row className="g-3 mt-1">
+                  <Col md={12}>
+                    <Form.Group>
+                      <Form.Label className="small fw-bold">Address</Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={2}
+                        name="address"
+                        value={values.address}
+                        onChange={handleChange}
+                        isInvalid={touched.address && errors.address}
+                        disabled={loading.submitting}
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.address}</Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                </Row>
 
-              <Row className="mt-3">
-                <Col md={4}>
-                  <Form.Group>
-                    <Form.Label>Country</Form.Label>
-                    <div className="position-relative">
+                <Row className="g-3 mt-1">
+                  <Col md={4}>
+                    <Form.Group>
+                      <Form.Label className="small fw-bold">Country</Form.Label>
                       <Form.Select
                         name="country"
                         value={values.country}
@@ -673,13 +604,11 @@ const EditStaff = () => {
                         ))}
                       </Form.Select>
                       <Form.Control.Feedback type="invalid">{errors.country}</Form.Control.Feedback>
-                    </div>
-                  </Form.Group>
-                </Col>
-                <Col md={4}>
-                  <Form.Group>
-                    <Form.Label>State</Form.Label>
-                    <div className="position-relative">
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group>
+                      <Form.Label className="small fw-bold">State</Form.Label>
                       <Form.Select
                         name="state"
                         value={values.state}
@@ -695,13 +624,11 @@ const EditStaff = () => {
                         ))}
                       </Form.Select>
                       <Form.Control.Feedback type="invalid">{errors.state}</Form.Control.Feedback>
-                    </div>
-                  </Form.Group>
-                </Col>
-                <Col md={4}>
-                  <Form.Group>
-                    <Form.Label>City</Form.Label>
-                    <div className="position-relative">
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group>
+                      <Form.Label className="small fw-bold">City</Form.Label>
                       <Form.Select
                         name="city"
                         value={values.city}
@@ -717,495 +644,290 @@ const EditStaff = () => {
                         ))}
                       </Form.Select>
                       <Form.Control.Feedback type="invalid">{errors.city}</Form.Control.Feedback>
-                    </div>
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              <Row className="mt-3">
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>Contact No.</Form.Label>
-                    <Form.Control
-                      type="number"
-                      name="phone_no"
-                      value={values.phone_no}
-                      onChange={handleChange}
-                      isInvalid={touched.phone_no && errors.phone_no}
-                      disabled={loading.submitting}
-                    />
-                    <Form.Control.Feedback type="invalid">{errors.phone_no}</Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>Email</Form.Label>
-                    <Form.Control
-                      type="email"
-                      name="email"
-                      value={values.email}
-                      onChange={handleChange}
-                      isInvalid={touched.email && errors.email}
-                      disabled={loading.submitting}
-                    />
-                    <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              <Row className="mt-3">
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>Position</Form.Label>
-                    <CreatableSelect
-                      isClearable
-                      isDisabled={loading.submitting}
-                      options={positionOptions}
-                      value={values.position ? { label: values.position, value: values.position } : null}
-                      onChange={(selected) => {
-                        setFieldValue('position', selected ? selected.value : '');
-                      }}
-                      onBlur={() => formik.setFieldTouched('position', true)}
-                      placeholder="Select or create position"
-                      classNamePrefix="react-select"
-                    />
-                    {touched.position && errors.position && (
-                      <div className="text-danger mt-1" style={{ fontSize: '0.875rem' }}>
-                        {errors.position}
-                      </div>
-                    )}
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>Salary</Form.Label>
-                    <Form.Control
-                      type="number"
-                      step="0.01"
-                      name="salary"
-                      value={values.salary}
-                      onChange={handleChange}
-                      isInvalid={touched.salary && errors.salary}
-                      disabled={loading.submitting}
-                    />
-                    <Form.Control.Feedback type="invalid">{errors.salary}</Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-              </Row>
-            </Card>
-
-            {/* Payroll Configuration Card */}
-            <Card body className="mb-4">
-              <h5 className="mb-3">Statutory Payroll Configuration</h5>
-              <h6 className="mt-3 mb-2 text-primary">Earnings Breakdowns</h6>
-              <Row>
-                {(payrollConfig?.active_earnings || []).includes('basic') && (
-                  <Col md={4} className="mb-3">
-                    <Form.Group>
-                      <Form.Label>Basic Salary</Form.Label>
-                      <Form.Control
-                        type="number"
-                        name="salary_structure.earnings.basic"
-                        value={values.salary_structure?.earnings?.basic || 0}
-                        onChange={handleChange}
-                      />
                     </Form.Group>
                   </Col>
-                )}
-                {(payrollConfig?.active_earnings || []).includes('hra') && (
-                  <Col md={4} className="mb-3">
-                    <Form.Group>
-                      <Form.Label>HRA (House Rent Allowance)</Form.Label>
-                      <Form.Control type="number" name="salary_structure.earnings.hra" value={values.salary_structure?.earnings?.hra || 0} onChange={handleChange} />
-                    </Form.Group>
-                  </Col>
-                )}
-                {(payrollConfig?.active_earnings || []).includes('conveyance') && (
-                  <Col md={4} className="mb-3">
-                    <Form.Group>
-                      <Form.Label>Conveyance</Form.Label>
-                      <Form.Control type="number" name="salary_structure.earnings.conveyance" value={values.salary_structure?.earnings?.conveyance || 0} onChange={handleChange} />
-                    </Form.Group>
-                  </Col>
-                )}
-                {(payrollConfig?.active_earnings || []).includes('medical') && (
-                  <Col md={4} className="mb-3">
-                    <Form.Group>
-                      <Form.Label>Medical</Form.Label>
-                      <Form.Control type="number" name="salary_structure.earnings.medical" value={values.salary_structure?.earnings?.medical || 0} onChange={handleChange} />
-                    </Form.Group>
-                  </Col>
-                )}
-                {(payrollConfig?.active_earnings || []).includes('special') && (
-                  <Col md={4} className="mb-3">
-                    <Form.Group>
-                      <Form.Label>Special Allowance</Form.Label>
-                      <Form.Control type="number" name="salary_structure.earnings.special" value={values.salary_structure?.earnings?.special || 0} onChange={handleChange} />
-                    </Form.Group>
-                  </Col>
-                )}
-                {(payrollConfig?.active_earnings || []).includes('other') && (
-                  <Col md={4} className="mb-3">
-                    <Form.Group>
-                      <Form.Label>Other Allowance</Form.Label>
-                      <Form.Control type="number" name="salary_structure.earnings.other" value={values.salary_structure?.earnings?.other || 0} onChange={handleChange} />
-                    </Form.Group>
-                  </Col>
-                )}
-              </Row>
+                </Row>
 
-              <h6 className="mt-4 mb-2 text-danger">Statutory Deductions (Calculated during generation)</h6>
-              <Row>
-                <Col md={4} className="mb-3">
-                  <Form.Group>
-                    <Form.Label>PF Percentage (on Basic)</Form.Label>
-                    <Form.Control type="number" step="0.01" name="salary_structure.deductions.pf_percentage" value={values.salary_structure?.deductions?.pf_percentage || 0} onChange={handleChange} />
-                  </Form.Group>
-                </Col>
-                <Col md={4} className="mb-3">
-                  <Form.Group>
-                    <Form.Label>ESI Percentage (on Gross)</Form.Label>
-                    <Form.Control type="number" step="0.01" name="salary_structure.deductions.esi_percentage" value={values.salary_structure?.deductions?.esi_percentage || 0} onChange={handleChange} />
-                  </Form.Group>
-                </Col>
-                <Col md={4} className="mb-3">
-                  <Form.Group>
-                    <Form.Label>Professional Tax (PT) Flat Rate</Form.Label>
-                    <Form.Control type="number" name="salary_structure.deductions.pt" value={values.salary_structure?.deductions?.pt || 0} onChange={handleChange} />
-                  </Form.Group>
-                </Col>
-              </Row>
-            </Card>
-
-            {/* ID Proof Card */}
-            <Card body className="mb-4">
-              <h5 className="mb-3">ID Proof & Documents</h5>
-
-              <Row>
-                <Col md={12}>
-                  <Form.Group>
-                    <Form.Label>Photo</Form.Label>
-                    <div className="position-relative">
-                      <Form.Control
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) handleFileChange('photo', file, setPhotoPreview);
-                        }}
-                        isInvalid={touched.photo && errors.photo}
-                        disabled={loading.submitting || uploadingFiles.photo}
-                      />
-                      {uploadingFiles.photo && (
-                        <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
-                          <Spinner animation="border" size="sm" />
-                        </div>
-                      )}
-                      <Form.Control.Feedback type="invalid">{errors.photo}</Form.Control.Feedback>
-                      {photoPreview && (
-                        <div className="mt-2">
-                          <img src={photoPreview} alt="Photo Preview" className="img-thumbnail" style={{ maxWidth: '150px', maxHeight: '150px' }} />
-                        </div>
-                      )}
-                    </div>
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              <Row className="mt-3">
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>ID Card Type</Form.Label>
-                    <Form.Select
-                      name="document_type"
-                      value={values.document_type}
-                      onChange={handleChange}
-                      isInvalid={touched.document_type && errors.document_type}
-                      disabled={loading.submitting}
-                    >
-                      <option value="">Select ID Type</option>
-                      <option value="National Identity Card">National Identity Card</option>
-                      <option value="Pan Card">Pan Card</option>
-                      <option value="Voter Card">Voter Card</option>
-                    </Form.Select>
-                    <Form.Control.Feedback type="invalid">{errors.document_type}</Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>ID Card Number</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="id_number"
-                      value={values.id_number}
-                      onChange={handleChange}
-                      isInvalid={touched.id_number && errors.id_number}
-                      placeholder={
-                        values.document_type === 'National Identity Card'
-                          ? 'XXXX XXXX XXXX'
-                          : values.document_type === 'Pan Card'
-                          ? 'ABCDE1234F'
-                          : values.document_type === 'Voter Card'
-                          ? 'ABC1234567'
-                          : 'Enter ID number'
-                      }
-                      disabled={loading.submitting}
-                    />
-                    <Form.Control.Feedback type="invalid">{errors.id_number}</Form.Control.Feedback>
-                    {values.document_type === 'National Identity Card' && <Form.Text className="text-muted">Format: 12 digits (XXXX XXXX XXXX)</Form.Text>}
-                    {values.document_type === 'Pan Card' && (
-                      <Form.Text className="text-muted">Format: 5 letters, 4 digits, 1 letter (e.g., ABCDE1234F)</Form.Text>
-                    )}
-                    {values.document_type === 'Voter Card' && (
-                      <Form.Text className="text-muted">Format: 3 letters followed by 7 digits (e.g., ABC1234567)</Form.Text>
-                    )}
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              <Row className="mt-3">
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>ID Card Front Image</Form.Label>
-                    <div className="position-relative">
-                      <Form.Control
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) handleFileChange('front_image', file, setFrontImagePreview);
-                        }}
-                        isInvalid={touched.front_image && errors.front_image}
-                        disabled={loading.submitting || uploadingFiles.front_image}
-                      />
-                      {uploadingFiles.front_image && (
-                        <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
-                          <Spinner animation="border" size="sm" />
-                        </div>
-                      )}
-                      <Form.Control.Feedback type="invalid">{errors.front_image}</Form.Control.Feedback>
-                      {frontImagePreview && (
-                        <div className="mt-2">
-                          <img src={frontImagePreview} alt="Front Image Preview" className="img-thumbnail" style={{ maxWidth: '150px', maxHeight: '150px' }} />
-                        </div>
-                      )}
-                    </div>
-                  </Form.Group>
-                </Col>
-                {values.document_type && values.document_type === 'National Identity Card' && (
+                <Row className="g-3 mt-1">
                   <Col md={6}>
                     <Form.Group>
-                      <Form.Label>
-                        ID Card Back Image
-                        {values.document_type === 'National Identity Card' && <span className="text-danger"> *</span>}
-                      </Form.Label>
-                      <div className="position-relative">
+                      <Form.Label className="small fw-bold">Contact No.</Form.Label>
+                      <Form.Control
+                        type="number"
+                        name="phone_no"
+                        value={values.phone_no}
+                        onChange={handleChange}
+                        isInvalid={touched.phone_no && errors.phone_no}
+                        disabled={loading.submitting}
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.phone_no}</Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="small fw-bold">Email Address</Form.Label>
+                      <Form.Control
+                        type="email"
+                        name="email"
+                        value={values.email}
+                        onChange={handleChange}
+                        isInvalid={touched.email && errors.email}
+                        disabled={loading.submitting}
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+
+            {/* Employment & Payroll Section */}
+            <Card className="glass-card border-0 mb-4">
+              <Card.Body className="p-4">
+                <div className="section-header mb-4">
+                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <CsLineIcons icon="briefcase" size="20" className="text-primary" />
+                    Employment & Payroll
+                  </h5>
+                </div>
+
+                <Row className="g-3">
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-bold">Job Position</Form.Label>
+                      <CreatableSelect
+                        isClearable
+                        isDisabled={loading.submitting}
+                        options={positionOptions}
+                        value={values.position ? { label: values.position, value: values.position } : null}
+                        onChange={(selected) => setFieldValue('position', selected ? selected.value : '')}
+                        onBlur={() => formik.setFieldTouched('position', true)}
+                        placeholder="Select or type..."
+                        classNamePrefix="react-select"
+                      />
+                      {touched.position && errors.position && (
+                        <div className="text-danger mt-1 small fw-bold">{errors.position}</div>
+                      )}
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-bold">Salary (Base)</Form.Label>
+                      <div className="input-group">
+                        <span className="input-group-text bg-light border-end-0">₹</span>
                         <Form.Control
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files[0];
-                            if (file) handleFileChange('back_image', file, setBackImagePreview);
-                          }}
-                          isInvalid={touched.back_image && errors.back_image}
-                          disabled={loading.submitting || uploadingFiles.back_image}
+                          type="number"
+                          name="salary"
+                          placeholder="0.00"
+                          value={values.salary}
+                          onChange={handleChange}
+                          isInvalid={touched.salary && errors.salary}
+                          disabled={loading.submitting}
                         />
-                        {uploadingFiles.back_image && (
-                          <div className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
-                            <Spinner animation="border" size="sm" />
-                          </div>
-                        )}
-                        <Form.Control.Feedback type="invalid">{errors.back_image}</Form.Control.Feedback>
-                        <Form.Text className="text-muted">Back image is required for Aadhar card</Form.Text>
-                        {backImagePreview && (
-                          <div className="mt-2">
-                            <img src={backImagePreview} alt="Back Image Preview" className="img-thumbnail" style={{ maxWidth: '150px', maxHeight: '150px' }} />
-                          </div>
-                        )}
+                        <Form.Control.Feedback type="invalid">{errors.salary}</Form.Control.Feedback>
                       </div>
                     </Form.Group>
                   </Col>
-                )}
-              </Row>
+                </Row>
+
+                {/* Submit Button inside Card */}
+                <div className="d-flex justify-content-center mt-4">
+                  <Button
+                    className="custom-btn-outline px-5 py-3"
+                    type="submit"
+                    disabled={loading.submitting}
+                  >
+                    {loading.submitting ? (
+                      <>
+                        <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <CsLineIcons icon="save" size="20" />
+                        Update Staff Member
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Card.Body>
             </Card>
+          </Col>
 
-            {activePlans.includes('Payroll By The Box') && (
-              <Card body className="mb-4">
-                <h5 className="mb-3">Face Capture</h5>
-
-                {captureStatus === 'success' ? (
-                  <Alert variant="success" className="mb-3">
-                    <CsLineIcons icon="check" className="me-2" />
-                    Face captured successfully. You can now update the staff record.
-                  </Alert>
-                ) : captureStatus === 'error' ? (
-                  <Alert variant="danger" className="mb-3">
-                    <CsLineIcons icon="warning" className="me-2" />
-                    {captureErrorMessage}
-                  </Alert>
-                ) : faceDescriptor && faceDescriptor.length > 0 ? (
-                  <Alert variant="info" className="mb-3">
-                    <CsLineIcons icon="info" className="me-2" />
-                    Face data is already captured. You can recapture if needed.
-                  </Alert>
-                ) : (
-                  <Alert variant="warning" className="mb-3">
-                    <CsLineIcons icon="warning" className="me-2" />
-                    Face data not captured yet. Please capture to proceed.
-                  </Alert>
-                )}
-
-                <Button
-                  variant={faceDescriptor && faceDescriptor.length > 0 ? 'outline-warning' : 'secondary'}
-                  onClick={() => setShowFaceModal(true)}
-                  className="me-2"
-                  disabled={loading.faceModels || loading.submitting}
-                >
-                  {loading.faceModels ? (
-                    <>
-                      <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                      Loading Models...
-                    </>
-                  ) : (
-                    <>
-                      <CsLineIcons icon="camera" className="me-2" />
-                      {faceDescriptor && faceDescriptor.length > 0 ? 'Recapture Face' : 'Capture Face'}
-                    </>
-                  )}
-                </Button>
-              </Card>
-            )}
-
-            <div className="d-flex justify-content-start">
-              <Button variant="primary" type="submit" className="mx-2 px-4" disabled={loading.submitting} style={{ minWidth: '100px' }}>
-                {loading.submitting ? (
-                  <>
-                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                    Submitting...
-                  </>
-                ) : (
-                  <div className="d-flex align-items-center">
-                    <CsLineIcons icon="save" className="me-1" />
-                    Submit
-                  </div>
-                )}
-              </Button>
-            </div>
-          </Form>
-
-          {/* Submitting overlay */}
-          {loading.submitting && (
-            <div
-              className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                zIndex: 9999,
-                backdropFilter: 'blur(2px)',
-              }}
-            >
-              <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
-                <Card.Body className="text-center p-4">
-                  <Spinner animation="border" variant="success" className="mb-3" style={{ width: '3rem', height: '3rem' }} />
-                  <h5 className="mb-0">Updating Staff Information...</h5>
-                  <small className="text-muted">Please wait a moment</small>
-                </Card.Body>
-              </Card>
-            </div>
-          )}
-        </Col>
-      </Row>
-
-      {/* Face Capture Modal */}
-      {activePlans.includes('Payroll By The Box') && (
-        <Modal show={showFaceModal} onHide={() => setShowFaceModal(false)} centered size="lg">
-          <Modal.Header closeButton>
-            <Modal.Title>Face Capture</Modal.Title>
-          </Modal.Header>
-          <Modal.Body className="d-flex flex-column align-items-center">
-            {loading.faceModels ? (
-              <div className="text-center py-5">
-                <Spinner animation="border" variant="primary" className="mb-3" />
-                <h5>Loading Face Detection...</h5>
-                <p className="text-muted">Please wait while we initialize the camera</p>
-              </div>
-            ) : (
-              <>
-                <div
-                  style={{
-                    position: 'relative',
-                    width: '100%',
-                    maxWidth: '640px',
-                    aspectRatio: '4 / 3',
-                    margin: '0 auto',
-                    background: '#000',
-                  }}
-                >
-                  <Webcam
-                    ref={webcamRef}
-                    audio={false}
-                    screenshotFormat="image/jpeg"
-                    videoConstraints={{
-                      facingMode: 'user',
-                    }}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      zIndex: 1,
-                      borderRadius: '8px',
-                    }}
-                  />
-
-                  <canvas
-                    id="faceCanvas"
-                    width={640}
-                    height={480}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      zIndex: 2,
-                      pointerEvents: 'none',
-                    }}
-                  />
+          {/* Sidebar Content Column */}
+          <Col lg={4}>
+            {/* Profile Photo Card */}
+            <Card className="glass-card border-0 mb-4 text-center">
+              <Card.Body className="p-4">
+                <div className="section-header text-start mb-3">
+                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <CsLineIcons icon="camera" size="20" className="text-primary" />
+                    Profile Photo
+                  </h5>
                 </div>
 
-                {!faceBox && (
-                  <Alert variant="warning" className="mt-3">
-                    <CsLineIcons icon="warning" className="me-2" />
-                    Please position your face in the frame
-                  </Alert>
-                )}
+                <div className="mb-3 d-flex justify-content-center">
+                  <div 
+                    className="rounded-circle border border-3 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center"
+                    style={{ width: '150px', height: '150px' }}
+                  >
+                    {photoPreview ? (
+                      <img src={photoPreview} alt="Staff" className="w-100 h-100 object-fit-cover" />
+                    ) : (
+                      <CsLineIcons icon="user" size="64" className="text-muted opacity-20" />
+                    )}
+                  </div>
+                </div>
 
-                <Button variant="primary" className="mt-4" disabled={!faceBox || isCapturing} onClick={handleFaceCapture} style={{ minWidth: '150px' }}>
-                  {isCapturing ? (
-                    <>
-                      <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                      Capturing...
-                    </>
-                  ) : (
-                    <>
-                      <CsLineIcons icon="camera" className="me-2" />
-                      Capture Face
-                    </>
-                  )}
+                <input
+                  type="file"
+                  id="photo-upload"
+                  className="d-none"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) handleFileChange('photo', file, setPhotoPreview);
+                  }}
+                  disabled={loading.submitting || uploadingFiles.photo}
+                />
+                <Button 
+                  as="label" 
+                  htmlFor="photo-upload" 
+                  className="custom-btn-outline px-4 mx-auto"
+                  style={{ maxWidth: 'fit-content' }}
+                  disabled={loading.submitting || uploadingFiles.photo}
+                >
+                  {uploadingFiles.photo ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                  {photoPreview ? 'Change Photo' : 'Upload Photo'}
                 </Button>
-              </>
-            )}
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowFaceModal(false)} disabled={isCapturing}>
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
+              </Card.Body>
+            </Card>
+
+            {/* Identification Card */}
+            <Card className="glass-card border-0 mb-4">
+              <Card.Body className="p-4">
+                <div className="section-header mb-4">
+                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <CsLineIcons icon="badge" size="20" className="text-primary" />
+                    Identification
+                  </h5>
+                </div>
+
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-bold">Document Type</Form.Label>
+                  <Form.Select
+                    name="document_type"
+                    value={values.document_type}
+                    onChange={handleChange}
+                    isInvalid={touched.document_type && errors.document_type}
+                    disabled={loading.submitting}
+                  >
+                    <option value="">Select ID Type</option>
+                    <option value="National Identity Card">National Identity Card</option>
+                    <option value="Pan Card">Pan Card</option>
+                    <option value="Voter Card">Voter Card</option>
+                  </Form.Select>
+                  <Form.Control.Feedback type="invalid">{errors.document_type}</Form.Control.Feedback>
+                </Form.Group>
+
+                <Form.Group className="mb-4">
+                  <Form.Label className="small fw-bold">Document Number</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="id_number"
+                    value={values.id_number}
+                    onChange={handleChange}
+                    isInvalid={touched.id_number && errors.id_number}
+                    disabled={loading.submitting}
+                    placeholder="Enter ID Number"
+                  />
+                  <Form.Control.Feedback type="invalid">{errors.id_number}</Form.Control.Feedback>
+                </Form.Group>
+
+                <div className="id-previews">
+                  <div className="mb-3">
+                    <div className="small text-muted mb-2 fw-bold text-uppercase opacity-50 letter-spacing-1">Front Image</div>
+                    <div className="bg-light rounded-3 p-2 mb-2 text-center border border-dashed" style={{ minHeight: '120px' }}>
+                      {frontImagePreview ? (
+                        <img src={frontImagePreview} alt="Front" className="img-fluid rounded" style={{ maxHeight: '100px' }} />
+                      ) : (
+                        <div className="py-4"><CsLineIcons icon="image" size="32" className="text-muted opacity-20" /></div>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      id="front-image-upload"
+                      className="d-none"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) handleFileChange('front_image', file, setFrontImagePreview);
+                      }}
+                    />
+                    <Button 
+                      as="label" 
+                      htmlFor="front-image-upload" 
+                      className="custom-btn-outline px-4 mx-auto"
+                      style={{ maxWidth: 'fit-content' }}
+                      disabled={loading.submitting || uploadingFiles.front_image}
+                    >
+                      {uploadingFiles.front_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                      {frontImagePreview ? 'Change Front Image' : 'Upload Front Image'}
+                    </Button>
+                  </div>
+
+                  {values.document_type === 'National Identity Card' && (
+                    <div className="mb-2">
+                      <div className="small text-muted mb-2 fw-bold text-uppercase opacity-50 letter-spacing-1">Back Image</div>
+                      <div className="bg-light rounded-3 p-2 mb-2 text-center border border-dashed" style={{ minHeight: '120px' }}>
+                        {backImagePreview ? (
+                          <img src={backImagePreview} alt="Back" className="img-fluid rounded" style={{ maxHeight: '100px' }} />
+                        ) : (
+                          <div className="py-4"><CsLineIcons icon="image" size="32" className="text-muted opacity-20" /></div>
+                        )}
+                      </div>
+                      <input
+                        type="file"
+                        id="back-image-upload"
+                        className="d-none"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) handleFileChange('back_image', file, setBackImagePreview);
+                        }}
+                      />
+                      <Button 
+                        as="label" 
+                        htmlFor="back-image-upload" 
+                        className="custom-btn-outline px-4 mx-auto"
+                        style={{ maxWidth: 'fit-content' }}
+                        disabled={loading.submitting || uploadingFiles.back_image}
+                      >
+                        {uploadingFiles.back_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                        {backImagePreview ? 'Change Back Image' : 'Upload Back Image'}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </Card.Body>
+            </Card>
+
+          </Col>
+        </Row>
+      </Form>
+
+      {/* Modern Overlay */}
+      {loading.submitting && (
+        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}>
+          <Card className="glass-card border-0 p-5 shadow-lg text-center" style={{ maxWidth: '400px' }}>
+            <Spinner animation="grow" variant="primary" className="mb-4" />
+            <h4 className="fw-bold">Updating Profile</h4>
+            <p className="text-muted mb-0">Synchronizing records and securing identity documents.</p>
+          </Card>
+        </div>
       )}
-    </>
+
+    </div>
   );
 };
 

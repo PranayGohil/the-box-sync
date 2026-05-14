@@ -1,24 +1,10 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Button, Row, Col, Card } from 'react-bootstrap';
-import { Switch, Route, Redirect, useHistory } from 'react-router-dom';
-import axios from 'axios';
-import Glide from 'components/carousel/Glide';
-
+import React, { useContext } from 'react';
+import { Switch, Route, Redirect } from 'react-router-dom';
 import { AuthContext } from 'contexts/AuthContext';
 import ViewStaff from './ViewStaff';
 import AddStaff from './AddStaff';
 import EditStaff from './EditStaff';
 import StaffProfile from './StaffProfile';
-import ManageAttendance from './attandance/ManageAttendance';
-import ViewAttendance from './attandance/ViewAttendance';
-import PayrollSettings from './payroll/PayrollSettings';
-import ManagePayroll from './payroll/ManagePayroll';
-import GeneratePayroll from './payroll/GeneratePayroll';
-import ViewStaffPayroll from './payroll/ViewStaffPayroll';
-import Holidays from './payroll/Holidays';
-import LeavePolicy from './payroll/LeavePolicy';
-import LeaveRequests from './payroll/LeaveRequests';
-import SalaryAdvances from './payroll/SalaryAdvances';
 
 const Staff = () => {
   const { activePlans } = useContext(AuthContext);
@@ -54,84 +40,6 @@ const Staff = () => {
               <div className="text-center">You need to buy or renew to Staff Management plan to access this page.</div>
           }
         </>} />
-        <Route exact path="/staff/attendance" render={() => <>
-          {
-            activePlans.includes("Staff Management") && activePlans.includes("Payroll By The Box") ?
-              <ManageAttendance /> :
-              <div className="text-center">You need to buy or renew to Staff Management and Payroll By The Box plan to access this page.</div>
-          }
-        </>} />
-        <Route exact path="/staff/attendance/view/:id" render={() => <>
-          {
-            activePlans.includes("Staff Management") && activePlans.includes("Payroll By The Box") ?
-              <ViewAttendance /> :
-              <div className="text-center">You need to buy or renew to Staff Management and Payroll By The Box plan to access this page.</div>
-          }
-        </>} />
-
-        <Route exact path="/staff/payroll/settings" render={() => <>
-          {
-            activePlans.includes("Staff Management") && activePlans.includes("Payroll By The Box") ?
-              <PayrollSettings /> :
-              <div className="text-center">You need to buy or renew to Staff Management and Payroll By The Box plan to access this page.</div>
-          }
-        </>} />
-
-        <Route exact path="/staff/holidays" render={() => <>
-          {
-            activePlans.includes("Staff Management") && activePlans.includes("Payroll By The Box") ?
-              <Holidays /> :
-              <div className="text-center">You need to buy or renew to Staff Management and Payroll By The Box plan to access this page.</div>
-          }
-        </>} />
-
-        <Route exact path="/staff/leave-policy" render={() => <>
-          {
-            activePlans.includes("Staff Management") && activePlans.includes("Payroll By The Box") ?
-              <LeavePolicy /> :
-              <div className="text-center">You need to buy or renew to Staff Management and Payroll By The Box plan to access this page.</div>
-          }
-        </>} />
-        <Route exact path="/staff/leave-requests" render={() => <>
-          {
-            activePlans.includes("Staff Management") && activePlans.includes("Payroll By The Box") ?
-              <LeaveRequests /> :
-              <div className="text-center">You need to buy or renew to Staff Management and Payroll By The Box plan to access this page.</div>
-          }
-        </>} />
-        
-        <Route exact path="/staff/salary-advances" render={() => <>
-          {
-            activePlans.includes("Staff Management") && activePlans.includes("Payroll By The Box") ?
-              <SalaryAdvances /> :
-              <div className="text-center">You need to buy or renew to Staff Management and Payroll By The Box plan to access this page.</div>
-          }
-        </>} />
-
-        <Route exact path="/staff/payroll/generate" render={() => <>
-          {
-            activePlans.includes("Staff Management") && activePlans.includes("Payroll By The Box") ?
-              <GeneratePayroll /> :
-              <div className="text-center">You need to buy or renew to Staff Management and Payroll By The Box plan to access this page.</div>
-          }
-        </>} />
-        
-        <Route exact path="/staff/payroll/view/:staffId" render={() => <>
-          {
-            activePlans.includes("Staff Management") && activePlans.includes("Payroll By The Box") ?
-              <ViewStaffPayroll /> :
-              <div className="text-center">You need to buy or renew to Staff Management and Payroll By The Box plan to access this page.</div>
-          }
-        </>} />
-        
-        <Route exact path="/staff/payroll/:month?/:year?" render={() => <>
-          {
-            activePlans.includes("Staff Management") && activePlans.includes("Payroll By The Box") ?
-              <ManagePayroll /> :
-              <div className="text-center">You need to buy or renew to Staff Management and Payroll By The Box plan to access this page.</div>
-          }
-        </>} />
-
       </Switch>
     </>
   );

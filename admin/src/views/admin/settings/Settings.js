@@ -10,9 +10,7 @@ import { Switch, Route, Redirect, NavLink } from 'react-router-dom';
 
 import { AuthContext } from 'contexts/AuthContext';
 import Profile from './account/Profile';
-import Address from './account/Address';
-import Gst from './tax-charges/Gst';
-import Container from './tax-charges/Container';
+import TaxAndCharges from './tax-charges/TaxAndCharges';
 import Subscription from './subscription/Subscription';
 import ManageWebsite from './manage-website/ManageWebsite';
 import ForgotPassword from './forgot-password/ForgotPassword';
@@ -30,28 +28,14 @@ const NavContent = ({ activePlans }) => {
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Profile</span>
           </Nav.Link>
-          <Nav.Link as={NavLink} to="/settings/address" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Address</span>
-          </Nav.Link>
         </div>
       </div>
 
       <div className="mb-2">
-        <Nav.Link as={NavLink} to="/settings/gst" className="px-0">
+        <Nav.Link as={NavLink} to="/settings/tax-charges" className="px-0">
           <CsLineIcons icon="dollar" className="me-2 sw-3" size="17" />
           <span className="align-middle">Tax & Charges</span>
         </Nav.Link>
-        <div>
-          <Nav.Link as={NavLink} to="/settings/gst" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">GST</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/settings/container-charge" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Container Charges</span>
-          </Nav.Link>
-        </div>
       </div>
 
       <div className="mb-2">
@@ -98,15 +82,13 @@ const mobileNavItems = [
     icon: 'user',
     items: [
       { label: 'Profile', to: '/settings/profile' },
-      { label: 'Address', to: '/settings/address' },
     ],
   },
   {
     label: 'Tax & Charges',
     icon: 'dollar',
     items: [
-      { label: 'GST', to: '/settings/gst' },
-      { label: 'Container Charges', to: '/settings/container-charge' },
+      { label: 'Tax & Charges', to: '/settings/tax-charges' },
     ],
   },
   {
@@ -175,12 +157,12 @@ const Settings = () => {
 
   return (
     <div className="position-relative">
-      {/* ✅ MOBILE NAVBAR — OUTSIDE SCROLL */}
-      {width && width < lgBreakpoint && (
+      {/* ✅ MOBILE NAVBAR — HIDDEN AS IT IS NOW IN BOTTOM NAV */}
+      {/* {width && width < lgBreakpoint && (
         <div className="position-absolute top-0 start-0 end-0 d-lg-none">
           <MobileNavbar activePlans={activePlans} />
         </div>
-      )}
+      )} */}
       <Row>
         {(width && width >= lgBreakpoint) ? (
           <Col xs="auto" className="d-none d-lg-flex">
@@ -193,9 +175,7 @@ const Settings = () => {
           <Switch>
             <Route exact path="/settings" render={() => <Redirect to="/settings/profile" />} />
             <Route exact path="/settings/profile" render={() => <Profile />} />
-            <Route exact path="/settings/address" render={() => <Address />} />
-            <Route exact path="/settings/gst" render={() => <Gst />} />
-            <Route exact path="/settings/container-charge" render={() => <Container />} />
+            <Route exact path="/settings/tax-charges" render={() => <TaxAndCharges />} />
             <Route exact path="/settings/subscription" render={() => <Subscription />} />
             <Route
               exact

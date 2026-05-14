@@ -6,13 +6,11 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import useCustomLayout from 'hooks/useCustomLayout';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useWindowSize } from 'hooks/useWindowSize';
-import { Switch, Route, Redirect, NavLink } from 'react-router-dom';
+import { Switch, Route, Redirect, NavLink, useLocation } from 'react-router-dom';
 
 import { AuthContext } from 'contexts/AuthContext';
 import OrderHistory from './order/OrderHistory';
 import OrderDetails from './order/OrderDetails';
-
-import ManageWaiters from './waiter/ManageWaiters';
 
 import ManageTable from './table/ManageTable';
 import AddTable from './table/AddTable';
@@ -29,7 +27,6 @@ import CompleteInventory from './inventory/CompleteInventory';
 import InventoryDetails from './inventory/InventoryDetails';
 import StockManagement from './inventory/StockManagement';
 import AdminDailyStockLogs from './inventory/AdminDailyStockLogs';
-import AdminInventoryReport from './inventory/AdminInventoryReport';
 import AdminWastageLog from './inventory/AdminWastageLog';
 
 import Feedback from './feedback/Feedback';
@@ -41,7 +38,7 @@ const NavContent = () => {
     <Nav className="flex-column">
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/order-history" className="px-0">
-          <CsLineIcons icon="handbag" className="me-2 sw-3" size="17" />
+          <CsLineIcons icon="cart" className="me-2 sw-3" size="17" />
           <span className="align-middle">Order</span>
         </Nav.Link>
         <div>
@@ -53,22 +50,8 @@ const NavContent = () => {
       </div>
 
       <div className="mb-2">
-        <Nav.Link as={NavLink} to="/operations/manage-waiters" className="px-0">
-          <CsLineIcons icon="main-course" className="me-2 sw-3" size="17" />
-          <span className="align-middle">Waiter</span>
-        </Nav.Link>
-        <div>
-          <Nav.Link as={NavLink} to="/operations/manage-waiters" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Manage Waiters</span>
-          </Nav.Link>
-        </div>
-      </div>
-
-      <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/manage-table" className="px-0">
-          <CsLineIcons icon="square" className="me-2 sw-3" size="17" />
-          {/* <i className="bi-calendar me-2 ms-1 sw-3" size="17" /> */}
+          <CsLineIcons icon="layout-5" className="me-2 sw-3" size="17" />
           <span className="align-middle">Table</span>
         </Nav.Link>
         <div>
@@ -85,7 +68,7 @@ const NavContent = () => {
 
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/manage-menu" className="px-0">
-          <CsLineIcons icon="list" className="me-2 sw-3" size="17" />
+          <CsLineIcons icon="book-open" className="me-2 sw-3" size="17" />
           <span className="align-middle">Menu</span>
         </Nav.Link>
         <div>
@@ -130,38 +113,14 @@ const NavContent = () => {
       )}
 
       <div className="mb-2">
-        <Nav.Link as={NavLink} to="/operations/requested-inventory" className="px-0">
+        <Nav.Link as={NavLink} to="/operations/inventory-history" className="px-0">
           <CsLineIcons icon="boxes" className="me-2 sw-3" size="17" />
           <span className="align-middle">Inventory</span>
         </Nav.Link>
         <div>
-          <Nav.Link as={NavLink} to="/operations/requested-inventory" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Requested Inventory</span>
-          </Nav.Link>
           <Nav.Link as={NavLink} to="/operations/inventory-history" className="px-0 pt-1">
             <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Inventory History</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/add-inventory" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Add Inventory</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/stock-management" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Stock Management</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/daily-stock-logs" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Daily Stock Logs</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/wastage-log" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Wastage Log</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/inventory-report" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Inventory Report</span>
+            <span className="align-middle">Manage Inventory</span>
           </Nav.Link>
         </div>
       </div>
@@ -169,7 +128,7 @@ const NavContent = () => {
       {activePlans.includes('Feedback') && (
       <div className="mb-2">
         <Nav.Link as={NavLink} to="/operations/feedback" className="px-0">
-          <i className="bi-chat-text me-2 ms-1 sw-3" size="17" />
+          <CsLineIcons icon="message" className="me-2 sw-3" size="17" />
           <span className="align-middle">Feedback</span>
         </Nav.Link>
         <div>
@@ -188,101 +147,81 @@ const NavContent = () => {
   );
 };
 
-const mobileNavItems = [
-  {
-    label: 'Order',
-    icon: 'handbag',
-    items: [{ label: 'Order History', to: '/operations/order-history' }],
-  },
-  {
-    label: 'Waiter',
-    icon: 'main-course',
-    items: [{ label: 'Manage Waiters', to: '/operations/manage-waiters' }],
-  },
-  {
-    label: 'Table',
-    icon: 'square',
-    items: [
-      { label: 'Manage Table', to: '/operations/manage-table' },
-      { label: 'Add Table', to: '/operations/add-table' },
-    ],
-  },
-  {
-    label: 'Menu',
-    icon: 'list',
-    items: [
-      { label: 'Manage Menu', to: '/operations/manage-menu' },
-      { label: 'Add Dish', to: '/operations/add-dish' },
-      { label: 'QR for Menu', to: '/operations/qr-for-menu' },
-    ],
-  },
-  {
-    label: 'Inventory',
-    icon: 'boxes',
-    items: [
-      { label: 'Requested Inventory', to: '/operations/requested-inventory' },
-      { label: 'Inventory History', to: '/operations/inventory-history' },
-      { label: 'Add Inventory', to: '/operations/add-inventory' },
-      { label: 'Stock Management', to: '/operations/stock-management' },
-      { label: '📅 Daily Stock Logs', to: '/operations/daily-stock-logs' },
-      { label: '🗑 Wastage Log', to: '/operations/wastage-log' },
-      { label: '📊 Inventory Report', to: '/operations/inventory-report' },
-    ],
-  },
-  {
-    label: 'Feedback',
-    icon: 'chat-text',
-    items: [
-      { label: 'View Feedbacks', to: '/operations/feedback' },
-      { label: 'Feedback QR', to: '/operations/qr-for-feedback' },
-    ],
-  },
-];
-
-const MobileNavbar = () => {
+const MobileBottomNav = () => {
   const { activePlans } = useContext(AuthContext);
+  const { pathname } = useLocation();
 
-  const filteredNavItems = mobileNavItems.filter(nav => {
-    if (nav.label === 'Reservation' && !activePlans.includes('Reservation Manager')) return false;
-    if (nav.label === 'Feedback' && !activePlans.includes('Feedback')) return false;
-    return true;
-  }).map(nav => {
-    if (nav.label === 'Menu') {
-      return {
-        ...nav,
-        items: nav.items.filter(item => {
-          if (item.label === 'QR for Menu' && !activePlans.includes('Scan For Menu')) return false;
-          return true;
-        })
-      };
-    }
-    return nav;
-  });
+  const navItems = [
+    { label: 'Order', icon: 'cart', to: '/operations/order-history' },
+    { label: 'Table', icon: 'layout-5', to: '/operations/manage-table' },
+    { label: 'Menu', icon: 'book-open', to: '/operations/manage-menu' },
+    { label: 'Inventory', icon: 'boxes', to: '/operations/inventory-history' },
+    { label: 'Feedback', icon: 'message', to: '/operations/feedback', hide: !activePlans.includes('Feedback') },
+  ].filter(item => !item.hide);
 
   return (
-    <div className="d-flex gap-2 overflow-auto pb-2">
-      {filteredNavItems.map((nav) => (
-        <Dropdown key={nav.label} container="body" className='position-static'>
-          <Dropdown.Toggle variant="outline-primary" size="sm" className="d-flex align-items-center gap-1">
-            <CsLineIcons icon={nav.icon} size="16" />
-            {nav.label}
-          </Dropdown.Toggle>
-
-          <Dropdown.Menu style={{
-            position: 'absolute',
-            minWidth: '150px',
-            maxHeight: '300px',
-            overflowY: 'auto',
-            marginTop: '5px',
-          }}>
-            {nav.items.map((item) => (
-              <Dropdown.Item as={NavLink} key={item.to} to={item.to}>
-                {item.label}
-              </Dropdown.Item>
-            ))}
-          </Dropdown.Menu>
-        </Dropdown>
-      ))}
+    <div 
+      className="position-fixed bottom-0 start-0 end-0 d-lg-none px-4" 
+      style={{ 
+        zIndex: 1050, 
+        paddingBottom: 'calc(20px + env(safe-area-inset-bottom))',
+      }}
+    >
+      <div 
+        className="d-flex justify-content-around align-items-center position-relative shadow-lg"
+        style={{ 
+          height: '65px',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(25px)',
+          borderRadius: '35px',
+          border: '1px solid rgba(255, 255, 255, 0.4)',
+          boxShadow: '0 15px 40px rgba(0,0,0,0.12)'
+        }}
+      >
+        {navItems.map((item) => {
+          const isActive = pathname.startsWith(item.to);
+          return (
+            <NavLink
+              key={item.label}
+              to={item.to}
+              className="d-flex flex-column align-items-center text-decoration-none"
+              style={{ flex: 1, height: '100%', position: 'relative', justifyContent: 'center' }}
+            >
+              <div 
+                className="d-flex align-items-center justify-content-center transition-all"
+                style={{ 
+                  width: isActive ? '60px' : '38px',
+                  height: isActive ? '60px' : '38px',
+                  background: isActive ? 'linear-gradient(135deg, #1ea8e7 0%, #007bff 100%)' : 'transparent',
+                  borderRadius: '50%',
+                  transform: isActive ? 'translateY(-28px) scale(1.1)' : 'scale(1)',
+                  boxShadow: isActive ? '0 10px 25px rgba(30, 168, 231, 0.4)' : 'none',
+                  border: isActive ? '5px solid #fff' : 'none',
+                  transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                  zIndex: isActive ? 5 : 1
+                }}
+              >
+                <div 
+                  style={{ 
+                    filter: isActive ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <CsLineIcons 
+                    icon={item.icon} 
+                    size={isActive ? 32 : 28} 
+                    stroke={isActive ? '#ffffff' : '#94a3b8'}
+                    fill={isActive ? 'rgba(255,255,255,0.2)' : 'none'}
+                  />
+                </div>
+              </div>
+            </NavLink>
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -297,13 +236,9 @@ const Operations = () => {
   const { activePlans } = useContext(AuthContext);
 
   return (
-    <div className="position-relative">
-      {/* ✅ MOBILE NAVBAR — OUTSIDE SCROLL */}
-      {width && width < lgBreakpoint && (
-        <div className="position-absolute top-0 start-0 end-0 d-lg-none">
-          <MobileNavbar />
-        </div>
-      )}
+    <div className="position-relative pb-7 pb-lg-0">
+      {/* MOBILE BOTTOM NAV — REMOVED AS IT IS NOW HANDLED BY GLOBAL BOTTOMNAV */}
+      {/* {width && width < lgBreakpoint && <MobileBottomNav />} */}
       <Row>
         {(width && width >= lgBreakpoint) ? (
           <Col xs="auto" className="d-none d-lg-flex">
@@ -317,8 +252,6 @@ const Operations = () => {
             <Route exact path="/operations" render={() => <Redirect to="/operations/order-history" />} />
             <Route exact path="/operations/order-history" render={() => <OrderHistory />} />
             <Route exact path="/operations/order-details/:id" render={() => <OrderDetails />} />
-
-            <Route exact path="/operations/manage-waiters" render={() => <ManageWaiters />} />
 
             <Route exact path="/operations/manage-table" render={() => <ManageTable />} />
             <Route exact path="/operations/add-table" render={() => <AddTable />} />
@@ -339,7 +272,7 @@ const Operations = () => {
               )}
             />
 
-            <Route exact path="/operations/requested-inventory" render={() => <RequestedInventory />} />
+            <Route exact path="/operations/requested-inventory" render={() => <Redirect to="/operations/inventory-history" />} />
             <Route exact path="/operations/inventory-history" render={() => <InventoryHistory />} />
             <Route exact path="/operations/add-inventory" render={() => <AddInventory />} />
             <Route exact path="/operations/edit-inventory/:id" render={() => <EditInventory />} />
@@ -348,7 +281,7 @@ const Operations = () => {
             <Route exact path="/operations/stock-management" render={() => <StockManagement />} />
             <Route exact path="/operations/daily-stock-logs" render={() => <AdminDailyStockLogs />} />
             <Route exact path="/operations/wastage-log" render={() => <AdminWastageLog />} />
-            <Route exact path="/operations/inventory-report" render={() => <AdminInventoryReport />} />
+            <Route exact path="/operations/inventory-report" render={() => <Redirect to="/statistics/inventory" />} />
 
             <Route
               exact
