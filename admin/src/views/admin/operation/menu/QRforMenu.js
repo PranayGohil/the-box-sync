@@ -91,10 +91,12 @@ const QRforMenu = ({ setSection }) => {
   const { currentUser } = useContext(AuthContext);
   const restaurant_code = currentUser?.restaurant_code;
 
-  const menuLink = `${process.env.REACT_APP_HOME_URL}/menu.html?token=${restaurantToken}`;
+  const menuLink = restaurantToken 
+    ? `${process.env.REACT_APP_HOME_URL}/menu.html?token=${restaurantToken}`
+    : `${process.env.REACT_APP_HOME_URL}/menu/${restaurant_code}`;
 
   useEffect(() => {
-    if (currentUser.restaurant_token) {
+    if (currentUser?.restaurant_token) {
       setRestaurantToken(currentUser.restaurant_token);
     }
   }, [currentUser]);
@@ -106,6 +108,7 @@ const QRforMenu = ({ setSection }) => {
   }, []);
 
   const printQRCode = () => {
+    if (!qrCodeRef.current) return;
     const printContent = qrCodeRef.current.innerHTML;
     const newWindow = window.open('', '_blank');
     newWindow.document.write(`

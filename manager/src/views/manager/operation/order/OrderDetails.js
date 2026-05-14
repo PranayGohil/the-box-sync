@@ -23,6 +23,7 @@ const OrderDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [printing, setPrinting] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -326,6 +327,39 @@ const OrderDetails = () => {
     }
   };
 
+  const handleWhatsAppShare = () => {
+    if (!order) return;
+    setSharing(true);
+    
+    try {
+      let message = `*${order.restaurant_name || 'Restaurant'}*\n\n`;
+      message += `🧾 *Bill No:* ${order.order_no || order.id}\n`;
+      message += `📅 *Date:* ${new Date(order.order_date).toLocaleString()}\n\n`;
+      message += `*Items:*\n`;
+      order.order_items.forEach(item => {
+        message += `▫️ ${item.quantity} x ${item.dish_name} - ₹${(item.dish_price * item.quantity).toFixed(2)}\n`;
+      });
+      message += `\n💵 *Sub Total:* ₹${parseFloat(order.sub_total || 0).toFixed(2)}\n`;
+      if (order.cgst_amount > 0) message += `CGST: ₹${parseFloat(order.cgst_amount).toFixed(2)}\n`;
+      if (order.sgst_amount > 0) message += `SGST: ₹${parseFloat(order.sgst_amount).toFixed(2)}\n`;
+      if (order.vat_amount > 0) message += `VAT: ₹${parseFloat(order.vat_amount).toFixed(2)}\n`;
+      if (order.discount_amount > 0) message += `🎁 *Discount:* -₹${parseFloat(order.discount_amount).toFixed(2)}\n`;
+      message += `💰 *Total Amount:* ₹${parseFloat(order.total_amount || 0).toFixed(2)}\n\n`;
+      message += `Thank you for your visit! 😊`;
+
+      const encodedMessage = encodeURIComponent(message);
+      const phoneNumber = order.customer_phone ? order.customer_phone.replace(/\D/g, '') : '';
+      const whatsappUrl = phoneNumber ? `https://wa.me/${phoneNumber}?text=${encodedMessage}` : `https://wa.me/?text=${encodedMessage}`;
+      
+      window.open(whatsappUrl, '_blank');
+    } catch (err) {
+      console.error("Share error:", err);
+      toast.error("Failed to generate WhatsApp link");
+    } finally {
+      setSharing(false);
+    }
+  };
+
   if (loading) {
     return (
       <>
@@ -404,34 +438,43 @@ const OrderDetails = () => {
           </Col>
           <Col xs="12" md="4" className="text-end">
             <Button
-              variant="secondary"
+              variant="outline-primary"
               onClick={() => history.push('/operations/order-history')}
-              className="me-2"
+              className="me-2 btn-icon btn-icon-start"
             >
-              <CsLineIcons icon="arrow-left" className="me-2" />
-              Back
+              <CsLineIcons icon="arrow-left" /> <span>Back</span>
+            </Button>
+            <Button
+              variant="success"
+              onClick={handleWhatsAppShare}
+              disabled={sharing || !order}
+              className="me-2 btn-icon btn-icon-start"
+            >
+              {sharing ? (
+                <>
+                  <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                  <span className="ms-2">Opening...</span>
+                </>
+              ) : (
+                <>
+                  <CsLineIcons icon="whatsapp" /> <span>Share via WhatsApp</span>
+                </>
+              )}
             </Button>
             <Button
               variant="primary"
               onClick={handlePrint}
               disabled={printing}
+              className="btn-icon btn-icon-start"
             >
               {printing ? (
                 <>
-                  <Spinner
-                    as="span"
-                    animation="border"
-                    size="sm"
-                    role="status"
-                    aria-hidden="true"
-                    className="me-2"
-                  />
-                  Printing...
+                  <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                  <span className="ms-2">Printing...</span>
                 </>
               ) : (
                 <>
-                  <CsLineIcons icon="print" className="me-2" />
-                  Print Invoice
+                  <CsLineIcons icon="print" /> <span>Print Invoice</span>
                 </>
               )}
             </Button>
@@ -439,84 +482,116 @@ const OrderDetails = () => {
         </Row>
       </div>
 
-      <Card className="mb-4">
-        <Card.Header>
-          <h4 className="mb-0">
-            <CsLineIcons icon="user" className="me-2" />
-            Customer & Order Information
-          </h4>
-        </Card.Header>
-        <Card.Body>
-          <Row>
-            <Col md={6}>
-              {order.customer_name && (
-                <p>
-                  <strong>Customer:</strong> {order.customer_name}
-                </p>
-              )}
-              <p>
-                <strong>Order Number:</strong> {order.order_no || order.id || '-'}
-              </p>
-              <p>
-                <strong>Order Type:</strong> {' '}
-                <Badge bg={
-                  order.order_type === 'Dine In' ? 'primary' :
-                    order.order_type === 'Takeaway' ? 'warning' :
-                      order.order_type === 'Delivery' ? 'success' : 'secondary'
-                }>
-                  {order.order_type || '-'}
-                </Badge>
-              </p>
-              {order.order_type === 'Dine In' && order.table_area && order.table_no && (
-                <p>
-                  <strong>Table:</strong> {order.table_area || '-'} ({order.table_no || '-'})
-                </p>
-              )}
-              {order.order_type === 'Takeaway' && (
-                <p>
-                  <strong>Token:</strong> {order.token || '-'}
-                </p>
-              )}
-              <p>
-                <strong>Order Date:</strong> {order.order_date ? new Date(order.order_date).toLocaleString() : '-'}
-              </p>
-            </Col>
-            <Col md={6}>
-              <p>
-                <strong>Status:</strong> {' '}
-                <Badge bg={
-                  order.order_status === 'Completed' ? 'success' :
-                    order.order_status === 'Pending' ? 'warning' :
-                      order.order_status === 'Cancelled' ? 'danger' : 'secondary'
-                }>
-                  {order.order_status || '-'}
-                </Badge>
-              </p>
-              {order.waiter && (
-                <p>
-                  <strong>Waiter:</strong> {order.waiter || '-'}
-                </p>
-              )}
-              {order.total_persons && (
-                <p>
-                  <strong>Total Persons:</strong> {order.total_persons || '-'}
-                </p>
-              )}
-              <p>
-                <strong>Payment Type:</strong> {order.payment_type || 'Not specified'}
-              </p>
-              <p>
-                <strong>Order Source:</strong> {order.order_source || '-'}
-              </p>
-            </Col>
-          </Row>
-          <p className="mt-3">
-            <strong>Comment:</strong> {order.comment || 'No comments'}
-          </p>
-        </Card.Body>
-      </Card>
+      <Row className="mb-n4">
+        <Col xl="5" className="mb-4">
+          <Card className="h-100">
+            <Card.Header>
+              <h4 className="mb-0 d-flex align-items-center">
+                <CsLineIcons icon="info-hexagon" className="me-2 text-primary" size={20} />
+                Order Information
+              </h4>
+            </Card.Header>
+            <Card.Body>
+              <div className="mb-4">
+                <div className="text-small text-muted mb-1">CUSTOMER INFO</div>
+                <div className="mb-2">
+                  <CsLineIcons icon="user" size={16} className="me-2 text-muted" />
+                  <strong>{order.customer_name || 'Guest'}</strong>
+                  {order.customer_phone && <span className="ms-2 text-muted">({order.customer_phone})</span>}
+                </div>
+              </div>
 
-      <Card className="mb-4">
+              <Row className="g-3 mb-4">
+                <Col xs={6}>
+                  <div className="text-small text-muted mb-1">ORDER NUMBER</div>
+                  <div className="h6 mb-0">{order.order_no || order.id || '-'}</div>
+                </Col>
+                <Col xs={6}>
+                  <div className="text-small text-muted mb-1">ORDER DATE</div>
+                  <div className="h6 mb-0">{order.order_date ? new Date(order.order_date).toLocaleString() : '-'}</div>
+                </Col>
+                <Col xs={6}>
+                  <div className="text-small text-muted mb-1">ORDER TYPE</div>
+                  <div className="h6 mb-0">
+                    <Badge bg={
+                      order.order_type === 'Dine In' ? 'primary' :
+                        order.order_type === 'Takeaway' ? 'warning' :
+                          order.order_type === 'Delivery' ? 'success' : 'secondary'
+                    }>
+                      {order.order_type || '-'}
+                    </Badge>
+                  </div>
+                </Col>
+                <Col xs={6}>
+                  <div className="text-small text-muted mb-1">STATUS</div>
+                  <div className="h6 mb-0">
+                    <Badge bg={
+                      order.order_status === 'Completed' ? 'success' :
+                        order.order_status === 'Pending' ? 'warning' :
+                          order.order_status === 'Cancelled' ? 'danger' : 'secondary'
+                    }>
+                      {order.order_status || '-'}
+                    </Badge>
+                  </div>
+                </Col>
+              </Row>
+
+              <Row className="g-3 mb-4">
+                {order.order_type === 'Dine In' && order.table_area && (
+                  <Col xs={6}>
+                    <div className="text-small text-muted mb-1">TABLE DETAILS</div>
+                    <div>
+                      <CsLineIcons icon="shop" size={16} className="me-2 text-muted" />
+                      {order.table_area} - T{order.table_no || '-'}
+                    </div>
+                  </Col>
+                )}
+                {order.order_type === 'Takeaway' && (
+                  <Col xs={6}>
+                    <div className="text-small text-muted mb-1">TOKEN</div>
+                    <div className="h6 mb-0">{order.token || '-'}</div>
+                  </Col>
+                )}
+                <Col xs={6}>
+                  <div className="text-small text-muted mb-1">PAYMENT TYPE</div>
+                  <div>
+                    <CsLineIcons icon="credit-card" size={16} className="me-2 text-muted" />
+                    {order.payment_type || 'Not specified'}
+                  </div>
+                </Col>
+                {order.waiter && (
+                  <Col xs={6}>
+                    <div className="text-small text-muted mb-1">WAITER</div>
+                    <div>{order.waiter}</div>
+                  </Col>
+                )}
+                {order.total_persons && (
+                  <Col xs={6}>
+                    <div className="text-small text-muted mb-1">TOTAL PERSONS</div>
+                    <div>
+                      <CsLineIcons icon="user" size={16} className="me-2 text-muted" />
+                      {order.total_persons}
+                    </div>
+                  </Col>
+                )}
+                <Col xs={6}>
+                  <div className="text-small text-muted mb-1">ORDER SOURCE</div>
+                  <div>{order.order_source || '-'}</div>
+                </Col>
+              </Row>
+
+              {order.comment && (
+                <div>
+                  <div className="text-small text-muted mb-1">COMMENT</div>
+                  <div className="bg-light p-2 rounded">{order.comment}</div>
+                </div>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+
+        <Col xl="7" className="mb-4">
+          <Card className="h-100">
         <Card.Header>
           <h4 className="mb-0">
             <CsLineIcons icon="restaurant" className="me-2" />
@@ -524,102 +599,95 @@ const OrderDetails = () => {
           </h4>
         </Card.Header>
         <Card.Body>
-          <Table striped bordered hover responsive>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Dish</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {order.order_items?.map((item, index) => (
-                <tr key={`${item.dish_name}-${index}`}>
-                  <td>{index + 1}</td>
-                  <td>{item.dish_name}</td>
-                  <td>{item.quantity}</td>
-                  <td>₹ {parseFloat(item.dish_price).toFixed(2)}</td>
-                  <td>₹ {(parseFloat(item.dish_price) * parseFloat(item.quantity)).toFixed(2)}</td>
-                  <td>
-                    <Badge bg={
-                      item.status === 'Served' ? 'success' :
-                        item.status === 'Preparing' ? 'warning' :
-                          item.status === 'Pending' ? 'secondary' : 'info'
-                    }>
-                      {item.status || 'Pending'}
-                    </Badge>
-                  </td>
-                  <td>{item.special_notes || '-'}</td>
-                </tr>
-              ))}
-              <tr className="table-active">
-                <td colSpan={4} className="text-end">
-                  <strong>Sub Total</strong>
-                </td>
-                <td colSpan={3}>₹ {parseFloat(order.sub_total || 0).toFixed(2)}</td>
-              </tr>
-              {order.cgst_amount > 0 && (
+          <div className="table-responsive">
+            <Table className="align-middle" hover>
+              <thead className="table-light">
                 <tr>
-                  <td colSpan={4} className="text-end">
-                    <strong>CGST ({order.cgst_percent || 0}%)</strong>
-                  </td>
-                  <td colSpan={3}>₹ {parseFloat(order.cgst_amount || 0).toFixed(2)}</td>
+                  <th scope="col" className="text-muted text-small text-uppercase">No.</th>
+                  <th scope="col" className="text-muted text-small text-uppercase">Dish</th>
+                  <th scope="col" className="text-muted text-small text-uppercase text-center">Quantity</th>
+                  <th scope="col" className="text-muted text-small text-uppercase text-end">Price</th>
+                  <th scope="col" className="text-muted text-small text-uppercase text-end">Amount</th>
+                  <th scope="col" className="text-muted text-small text-uppercase text-center">Status</th>
+                  <th scope="col" className="text-muted text-small text-uppercase">Note</th>
                 </tr>
+              </thead>
+              <tbody>
+                {order.order_items?.map((item, index) => (
+                  <tr key={`${item.dish_name}-${index}`}>
+                    <td className="text-muted">{index + 1}</td>
+                    <td className="fw-medium">{item.dish_name}</td>
+                    <td className="text-center">{item.quantity}</td>
+                    <td className="text-end">₹ {parseFloat(item.dish_price).toFixed(2)}</td>
+                    <td className="text-end fw-medium text-primary">₹ {(parseFloat(item.dish_price) * parseFloat(item.quantity)).toFixed(2)}</td>
+                    <td className="text-center">
+                      <Badge bg={
+                        item.status === 'Served' ? 'success' :
+                          item.status === 'Preparing' ? 'warning' :
+                            item.status === 'Pending' ? 'secondary' : 'info'
+                      }>
+                        {item.status || 'Pending'}
+                      </Badge>
+                    </td>
+                    <td className="text-muted text-small">{item.special_notes || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+          
+          <Row className="mt-4 border-top pt-4">
+            <Col xs={12} md={6} className="d-none d-md-block" />
+            <Col xs={12} md={6}>
+              <div className="d-flex justify-content-between mb-2">
+                <span className="text-muted">Sub Total</span>
+                <span className="fw-medium">₹ {parseFloat(order.sub_total || 0).toFixed(2)}</span>
+              </div>
+              {order.cgst_amount > 0 && (
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-muted">CGST ({order.cgst_percent || 0}%)</span>
+                  <span>₹ {parseFloat(order.cgst_amount || 0).toFixed(2)}</span>
+                </div>
               )}
               {order.sgst_amount > 0 && (
-                <tr>
-                  <td colSpan={4} className="text-end">
-                    <strong>SGST ({order.sgst_percent || 0}%)</strong>
-                  </td>
-                  <td colSpan={3}>₹ {parseFloat(order.sgst_amount || 0).toFixed(2)}</td>
-                </tr>
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-muted">SGST ({order.sgst_percent || 0}%)</span>
+                  <span>₹ {parseFloat(order.sgst_amount || 0).toFixed(2)}</span>
+                </div>
               )}
               {order.vat_amount > 0 && (
-                <tr>
-                  <td colSpan={4} className="text-end">
-                    <strong>VAT ({order.vat_percent || 0}%)</strong>
-                  </td>
-                  <td colSpan={3}>₹ {parseFloat(order.vat_amount || 0).toFixed(2)}</td>
-                </tr>
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-muted">VAT ({order.vat_percent || 0}%)</span>
+                  <span>₹ {parseFloat(order.vat_amount || 0).toFixed(2)}</span>
+                </div>
               )}
               {order.discount_amount > 0 && (
-                <tr className="table-danger">
-                  <td colSpan={4} className="text-end">
-                    <strong>Discount</strong>
-                  </td>
-                  <td colSpan={3}>- ₹ {parseFloat(order.discount_amount || 0).toFixed(2)}</td>
-                </tr>
+                <div className="d-flex justify-content-between mb-2 text-danger">
+                  <span>Discount</span>
+                  <span>- ₹ {parseFloat(order.discount_amount || 0).toFixed(2)}</span>
+                </div>
               )}
-              <tr className="table-success">
-                <td colSpan={4} className="text-end">
-                  <strong>Total Amount</strong>
-                </td>
-                <td colSpan={3}>
-                  <strong>₹ {parseFloat(order.total_amount || order.bill_amount || 0).toFixed(2)}</strong>
-                </td>
-              </tr>
-              <tr className="table-info">
-                <td colSpan={4} className="text-end">
-                  <strong>Paid Amount</strong>
-                </td>
-                <td colSpan={3}>₹ {parseFloat(order.paid_amount || order.bill_amount || 0).toFixed(2)}</td>
-              </tr>
               {order.waveoff_amount > 0 && (
-                <tr className="table-warning">
-                  <td colSpan={4} className="text-end">
-                    <strong>Waveoff Amount</strong>
-                  </td>
-                  <td colSpan={3}>₹ {parseFloat(order.waveoff_amount || 0).toFixed(2)}</td>
-                </tr>
+                <div className="d-flex justify-content-between mb-2 text-warning">
+                  <span>Waveoff Amount</span>
+                  <span>- ₹ {parseFloat(order.waveoff_amount || 0).toFixed(2)}</span>
+                </div>
               )}
-            </tbody>
-          </Table>
+              <hr className="my-2" />
+              <div className="d-flex justify-content-between mb-2 h5 font-weight-bold">
+                <span className="text-primary">Total Amount</span>
+                <span className="text-primary">₹ {parseFloat(order.total_amount || order.bill_amount || 0).toFixed(2)}</span>
+              </div>
+              <div className="d-flex justify-content-between mb-0 h6">
+                <span className="text-success">Paid Amount</span>
+                <span className="text-success">₹ {parseFloat(order.paid_amount || order.bill_amount || 0).toFixed(2)}</span>
+              </div>
+            </Col>
+          </Row>
         </Card.Body>
       </Card>
+      </Col>
+      </Row>
     </>
   );
 };
