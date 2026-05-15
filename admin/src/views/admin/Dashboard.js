@@ -75,8 +75,8 @@ const CustomToggle = React.forwardRef(({ children, onClick, style }, ref) => (
       e.preventDefault();
       onClick(e);
     }}
-    className="d-flex align-items-center justify-content-center px-4 rounded-pill border border-separator-light shadow-sm bg-white cursor-pointer transition-all hover-scale-up"
-    style={{ ...style, height: '42px', minWidth: '170px', fontWeight: '700', color: '#23b3f4', border: '1.5px solid rgba(35, 179, 244, 0.2)' }}
+    className="d-flex align-items-center justify-content-center px-4 rounded-pill shadow-sm bg-white cursor-pointer transition-all hover-scale-up"
+    style={{ ...style, height: '42px', minWidth: '170px', fontWeight: '700', color: '#23b3f4', border: '1.5px solid #23b3f4' }}
   >
     {children}
   </div>
@@ -194,7 +194,7 @@ const Dashboard = () => {
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4">
+      <div className="page-title-container mb-4 mt-5 mt-lg-0">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto">
             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>

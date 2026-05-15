@@ -23,6 +23,17 @@ const customStyles = `
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    @media (max-width: 768px) {
+      .overview-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .overview-bar > div {
+        width: 100%;
+      }
     }
     .info-label {
       font-size: 0.65rem;
@@ -44,6 +55,11 @@ const customStyles = `
       box-shadow: 0 10px 40px rgba(0,0,0,0.02) !important;
       margin-bottom: 2.5rem;
     }
+    @media (max-width: 768px) {
+      .section-card {
+        padding: 1.5rem !important;
+      }
+    }
     .item-header-row {
       display: flex;
       padding: 0 1.5rem;
@@ -64,6 +80,30 @@ const customStyles = `
       align-items: center;
       transition: all 0.25s ease;
     }
+    @media (max-width: 991px) {
+      .item-row-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+      .item-row-card > div {
+        width: 100% !important;
+        text-align: left !important;
+      }
+      .item-row-card .mobile-label {
+        display: block !important;
+        font-size: 0.65rem;
+        color: #94a3b8;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 0.15rem;
+      }
+    }
+    @media (min-width: 992px) {
+      .item-row-card .mobile-label {
+        display: none !important;
+      }
+    }
     .item-row-card:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(0,0,0,0.05) !important;
@@ -75,6 +115,11 @@ const customStyles = `
       padding: 2rem;
       border: 1px solid #f1f5f9;
     }
+    @media (max-width: 768px) {
+      .summary-hub {
+        padding: 1.5rem;
+      }
+    }
     .total-display {
       background: #ffffff;
       border-radius: 1rem;
@@ -83,6 +128,18 @@ const customStyles = `
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    @media (max-width: 768px) {
+      .total-display {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .total-display > div {
+        width: 100% !important;
+        text-align: left !important;
+      }
     }
     .total-val {
       font-size: 1.5rem;
@@ -184,30 +241,24 @@ const InventoryDetails = () => {
       <style>{customStyles}</style>
       <HtmlHead title="Inventory Details" />
       <div className="container px-lg-5">
-        <div className="mb-5 pt-4 d-flex justify-content-between align-items-center">
-          <div>
-            <h1 className="display-4 fw-bold mb-1" style={{ color: brandColor }}>
-              Inventory Details
-            </h1>
-            <BreadcrumbList
-              items={[
-                { to: '', text: 'Home' },
-                { to: 'operations/inventory', text: 'Inventory' },
-                { to: '', title: 'Details' },
-              ]}
-            />
-          </div>
-          <div className="d-flex gap-2">
-            <Button variant="outline-secondary" onClick={() => history.push('/operations/inventory-history')} className="btn-action">
-              <CsLineIcons icon="arrow-left" size="14" className="me-2" /> Back
-            </Button>
-            <Button variant="outline-warning" onClick={() => history.push(`/operations/edit-inventory/${id}`)} className="btn-action">
-              <CsLineIcons icon="edit" size="14" className="me-2" /> Edit
-            </Button>
-            <Button variant="outline-danger" onClick={() => setShowDeleteModal(true)} className="btn-action">
-              <CsLineIcons icon="bin" size="14" className="me-2" /> Delete
-            </Button>
-          </div>
+        <div className="page-title-container mb-4 mt-n3">
+          <Row className="g-3 align-items-center">
+            <Col xs="12" md="7">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>Inventory Details</h1>
+              <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations/inventory', text: 'Inventory' }, { to: '', title: 'Details' }]} />
+            </Col>
+            <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
+              <Button variant="outline-secondary" onClick={() => history.push('/operations/inventory-history')} className="rounded-pill px-4 fw-bold border-2">
+                <CsLineIcons icon="arrow-left" size="14" className="me-2" /> Back
+              </Button>
+              <Button variant="outline-warning" onClick={() => history.push(`/operations/edit-inventory/${id}`)} className="rounded-pill px-4 fw-bold border-2">
+                <CsLineIcons icon="edit" size="14" className="me-2" /> Edit
+              </Button>
+              <Button variant="outline-danger" onClick={() => setShowDeleteModal(true)} className="rounded-pill px-4 fw-bold border-2">
+                <CsLineIcons icon="bin" size="14" className="me-2" /> Delete
+              </Button>
+            </Col>
+          </Row>
         </div>
 
         <div className="overview-bar">
@@ -243,19 +294,19 @@ const InventoryDetails = () => {
             <CsLineIcons icon="file-text" size="18" /> Purchase Information
           </div>
           <Row className="g-4">
-            <Col md={4}>
+            <Col xs={12} md={4}>
               <div>
                 <div className="info-label">Bill Number</div>
                 <div className="h5 fw-bold mb-0">{inventory.bill_number || 'N/A'}</div>
               </div>
             </Col>
-            <Col md={4}>
+            <Col xs={6} md={4}>
               <div>
                 <div className="info-label">Category</div>
                 <div className="h5 fw-bold mb-0">{inventory.category || 'N/A'}</div>
               </div>
             </Col>
-            <Col md={4}>
+            <Col xs={6} md={4}>
               <div>
                 <div className="info-label">Vendor Name</div>
                 <div className="h5 fw-bold mb-0">{inventory.vendor_name || 'N/A'}</div>
@@ -280,18 +331,23 @@ const InventoryDetails = () => {
           {inventory.items.map((item, index) => (
             <div key={index} className="item-row-card">
               <div style={{ width: '60px' }} className="fw-bold text-muted">
+                <span className="mobile-label">#</span>
                 {index + 1}
               </div>
               <div style={{ flex: 2 }} className="fw-bold text-dark">
+                <span className="mobile-label">Description</span>
                 {item.item_name}
               </div>
               <div style={{ flex: 1 }} className="fw-bold">
+                <span className="mobile-label">Quantity</span>
                 {item.item_quantity} {item.unit}
               </div>
               <div style={{ flex: 1 }} className="text-muted">
+                <span className="mobile-label">Unit Price</span>
                 ₹ {item.item_price || '0.00'}
               </div>
-              <div style={{ flex: 1 }} className="text-end fw-bold text-primary">
+              <div style={{ flex: 1 }} className="text-md-end fw-bold text-primary">
+                <span className="mobile-label">Subtotal</span>
                 ₹ {(item.item_quantity * (item.item_price || 0)).toFixed(2)}
               </div>
             </div>
@@ -299,19 +355,19 @@ const InventoryDetails = () => {
 
           <div className="summary-hub mt-5">
             <Row className="g-4">
-              <Col md={4}>
+              <Col xs={12} md={4}>
                 <div>
                   <div className="info-label">Net Subtotal</div>
                   <div className="h5 fw-bold text-muted">₹ {Number(inventory.sub_total || 0).toFixed(2)}</div>
                 </div>
               </Col>
-              <Col md={4}>
+              <Col xs={6} md={4}>
                 <div>
                   <div className="info-label">Tax (GST/VAT)</div>
                   <div className="h5 fw-bold text-muted">₹ {Number(inventory.tax || 0).toFixed(2)}</div>
                 </div>
               </Col>
-              <Col md={4}>
+              <Col xs={6} md={4}>
                 <div>
                   <div className="info-label">Discount Applied</div>
                   <div className="h5 fw-bold text-success">- ₹ {Number(inventory.discount || 0).toFixed(2)}</div>
@@ -324,7 +380,7 @@ const InventoryDetails = () => {
                     <div className="info-label mb-1">Total Grand Amount</div>
                     <div className="total-val">₹ {Number(inventory.total_amount || 0).toFixed(2)}</div>
                   </div>
-                  <div className="text-end">
+                  <div className="text-md-end">
                     <div>
                       <div className="info-label">Amount Paid</div>
                       <div className="h3 fw-bold text-success mb-0">₹ {Number(inventory.paid_amount || 0).toFixed(2)}</div>
@@ -333,7 +389,7 @@ const InventoryDetails = () => {
                 </div>
               </Col>
 
-              <Col md={12} className="text-end pt-3 d-flex justify-content-between align-items-center">
+              <Col md={12} className="text-end pt-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
                 <div className="d-flex align-items-center gap-2">
                   <div className={`sw-2 sh-2 rounded-circle bg-${Number(inventory.unpaid_amount || 0) > 0 ? 'warning' : 'success'}`} />{' '}
                   <span className="fw-bold text-muted">

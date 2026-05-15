@@ -8,6 +8,7 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { Country, State, City } from 'country-state-city';
+import Select from 'react-select';
 
 const Profile = () => {
   const title = 'Profile & Address';
@@ -127,13 +128,14 @@ const Profile = () => {
     fetchProfile();
   }, []);
 
-  const handleCountryChange = (countryName, setFieldValue) => {
+  const handleCountryChange = (selected, setFieldValue) => {
+    const countryName = selected ? selected.value : '';
     setFieldValue('country', countryName);
     setFieldValue('state', '');
     setFieldValue('city', '');
     setStates([]);
     setCities([]);
-
+ 
     if (countryName) {
       setLoadingStates((prev) => ({ ...prev, states: true }));
       const countryObj = Country.getAllCountries().find(c => c.name === countryName);
@@ -143,12 +145,13 @@ const Profile = () => {
       setLoadingStates((prev) => ({ ...prev, states: false }));
     }
   };
-
-  const handleStateChange = (stateName, countryName, setFieldValue) => {
+ 
+  const handleStateChange = (selected, countryName, setFieldValue) => {
+    const stateName = selected ? selected.value : '';
     setFieldValue('state', stateName);
     setFieldValue('city', '');
     setCities([]);
-
+ 
     if (stateName && countryName) {
       setLoadingStates((prev) => ({ ...prev, cities: true }));
       const countryObj = Country.getAllCountries().find(c => c.name === countryName);
@@ -311,6 +314,97 @@ const Profile = () => {
       background-position: right 1rem center;
       background-size: 12px;
     }
+    .form-select.appearance-none {
+      padding-right: 2.5rem !important;
+    }
+    .react-select__control {
+      border-radius: 1rem !important;
+      border: 1px solid #e2e8f0 !important;
+      background-color: #f8fafc !important;
+      font-size: 0.9rem !important;
+      min-height: 45px !important;
+      height: 45px !important;
+    }
+    .react-select__value-container {
+      padding: 0 1rem !important;
+    }
+    .react-select__indicators-container {
+      height: 43px !important;
+    }
+    .form-control {
+      height: 45px !important;
+      border-radius: 1rem !important;
+      border: 1px solid #e2e8f0 !important;
+      background-color: #f8fafc !important;
+      font-size: 0.9rem !important;
+      padding: 0.45rem 1rem !important;
+    }
+    .react-select__control--is-focused {
+      border-color: #23b3f4 !important;
+      box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
+      background-color: white !important;
+    }
+    .react-select__placeholder {
+      color: #94a3b8 !important;
+    }
+    .react-select__menu {
+      border-radius: 1rem !important;
+      overflow: hidden !important;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+      border: 1px solid #e2e8f0 !important;
+      z-index: 1000 !important;
+    }
+    .react-select__option {
+      padding: 0.75rem 1.25rem !important;
+      font-size: 0.9rem !important;
+    }
+    .react-select__option--is-focused {
+      background-color: rgba(35, 179, 244, 0.1) !important;
+      color: #23b3f4 !important;
+    }
+    .react-select__option--is-selected {
+      background-color: #23b3f4 !important;
+      color: white !important;
+    }
+    .react-select__single-value {
+      color: #1e293b !important;
+      font-weight: 600 !important;
+    }
+    @media (max-width: 768px) {
+      .form-control, .form-select, .react-select__control, .react-select__single-value, .react-select__placeholder, .react-select__input {
+        font-size: 16px !important;
+        min-height: 45px !important;
+        height: 45px !important;
+      }
+      .react-select__control {
+        padding: 0 !important;
+      }
+      .react-select__value-container {
+        padding: 2px 8px !important;
+      }
+      .react-select__indicators-container {
+        height: 48px !important;
+      }
+      .react-select {
+        width: 100% !important;
+      }
+      .profile-header-container {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 15px !important;
+      }
+      .profile-header-container .section-header {
+        margin-bottom: 0 !important;
+      }
+      .button-group-responsive {
+        flex-direction: column !important;
+        width: 100% !important;
+      }
+      .button-group-responsive button, .button-group-responsive label {
+        width: 100% !important;
+        justify-content: center !important;
+      }
+    }
   `;
 
   if (loading) {
@@ -401,7 +495,7 @@ const Profile = () => {
               <Col lg={8}>
                 <Card className="glass-card border-0 h-100">
                   <Card.Body className="p-4">
-                    <div className="d-flex align-items-center justify-content-between mb-4">
+                    <div className="d-flex profile-header-container align-items-center justify-content-between mb-4">
                       <div className="section-header mb-0">
                         <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                           <CsLineIcons icon="user" size="20" className="text-primary" />
@@ -409,14 +503,14 @@ const Profile = () => {
                         </h5>
                       </div>
                       {!editMode && (
-                        <Button variant="none" className="custom-btn-outline" onClick={() => setEditMode(true)}>
+                        <Button variant="none" className="custom-btn-outline w-md-auto w-100 mt-md-0 mt-2" onClick={() => setEditMode(true)}>
                           <CsLineIcons icon="edit" size="18" />
                           Edit Profile
                         </Button>
                       )}
                     </div>
 
-                    <Row className="g-4">
+                    <Row className="g-3">
                       <Col md={6}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">Restaurant Code</Form.Label>
@@ -460,7 +554,7 @@ const Profile = () => {
                       </h5>
                     </div>
 
-                    <Row className="g-4">
+                    <Row className="g-3">
                       <Col md={12}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">Full Address *</Form.Label>
@@ -468,38 +562,68 @@ const Profile = () => {
                           <Form.Control.Feedback type="invalid">{errors.address}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
-                        <Form.Group>
+                      <Col md={4} xs={12}>
+                        <Form.Group className="mb-3">
                           <Form.Label className="small fw-bold opacity-75">Country *</Form.Label>
-                          <Form.Select name="country" value={values.country} onChange={(e) => handleCountryChange(e.target.value, setFieldValue)} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.country && errors.country} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold appearance-none" : "appearance-none"}>
-                            <option value="">Select Country</option>
-                            {countries.map(c => <option key={c.isoCode} value={c.name}>{c.name}</option>)}
-                          </Form.Select>
-                          <Form.Control.Feedback type="invalid">{errors.country}</Form.Control.Feedback>
+                          {editMode ? (
+                            <Select
+                              classNamePrefix="react-select"
+                              options={countries.map((c) => ({ label: c.name, value: c.name }))}
+                              value={values.country ? { label: values.country, value: values.country } : null}
+                              onChange={(selected) => handleCountryChange(selected, setFieldValue)}
+                              placeholder="Select Country"
+                              isDisabled={saving}
+                              menuPortalTarget={document.body}
+                              styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                            />
+                          ) : (
+                            <Form.Control type="text" value={values.country || 'Not Specified'} disabled className="bg-light border-0 px-3 py-2 fw-bold" />
+                          )}
+                          {touched.country && errors.country && <div className="text-danger mt-1 small fw-bold">{errors.country}</div>}
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
-                        <Form.Group>
+                      <Col md={4} xs={12}>
+                        <Form.Group className="mb-3">
                           <Form.Label className="small fw-bold opacity-75">State *</Form.Label>
-                          <Form.Select name="state" value={values.state} onChange={(e) => handleStateChange(e.target.value, values.country, setFieldValue)} onBlur={handleBlur} disabled={!editMode || saving || !values.country} isInvalid={touched.state && errors.state} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold appearance-none" : "appearance-none"}>
-                            <option value="">Select State</option>
-                            {states.map(s => <option key={s.isoCode} value={s.name}>{s.name}</option>)}
-                          </Form.Select>
-                          <Form.Control.Feedback type="invalid">{errors.state}</Form.Control.Feedback>
+                          {editMode ? (
+                            <Select
+                              classNamePrefix="react-select"
+                              options={states.map((s) => ({ label: s.name, value: s.name }))}
+                              value={values.state ? { label: values.state, value: values.state } : null}
+                              onChange={(selected) => handleStateChange(selected, values.country, setFieldValue)}
+                              placeholder="Select State"
+                              isDisabled={!values.country || saving}
+                              menuPortalTarget={document.body}
+                              styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                            />
+                          ) : (
+                            <Form.Control type="text" value={values.state || 'Not Specified'} disabled className="bg-light border-0 px-3 py-2 fw-bold" />
+                          )}
+                          {touched.state && errors.state && <div className="text-danger mt-1 small fw-bold">{errors.state}</div>}
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
-                        <Form.Group>
+                      <Col md={4} xs={12}>
+                        <Form.Group className="mb-3">
                           <Form.Label className="small fw-bold opacity-75">City *</Form.Label>
-                          <Form.Select name="city" value={values.city} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving || !values.state} isInvalid={touched.city && errors.city} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold appearance-none" : "appearance-none"}>
-                            <option value="">Select City</option>
-                            {cities.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                          </Form.Select>
-                          <Form.Control.Feedback type="invalid">{errors.city}</Form.Control.Feedback>
+                          {editMode ? (
+                            <Select
+                              classNamePrefix="react-select"
+                              options={cities.map((c) => ({ label: c.name, value: c.name }))}
+                              value={values.city ? { label: values.city, value: values.city } : null}
+                              onChange={(selected) => setFieldValue('city', selected ? selected.value : '')}
+                              placeholder="Select City"
+                              isDisabled={!values.state || saving}
+                              menuPortalTarget={document.body}
+                              styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                            />
+                          ) : (
+                            <Form.Control type="text" value={values.city || 'Not Specified'} disabled className="bg-light border-0 px-3 py-2 fw-bold" />
+                          )}
+                          {touched.city && errors.city && <div className="text-danger mt-1 small fw-bold">{errors.city}</div>}
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
-                        <Form.Group>
+                      <Col md={4} xs={12}>
+                        <Form.Group className="mb-3">
                           <Form.Label className="small fw-bold opacity-75">Pin Code *</Form.Label>
                           <Form.Control type="text" name="pincode" value={values.pincode} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.pincode && errors.pincode} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} maxLength={6} />
                           <Form.Control.Feedback type="invalid">{errors.pincode}</Form.Control.Feedback>
@@ -510,7 +634,7 @@ const Profile = () => {
                     {error && <Alert variant="danger" className="mt-4 glass-card border-0">{error}</Alert>}
 
                     {editMode && (
-                      <div className="d-flex gap-3 mt-5">
+                      <div className="d-flex button-group-responsive gap-3 mt-5">
                         <Button variant="none" className="custom-btn-outline px-4" onClick={() => handleCancel(resetForm)} disabled={saving || isSubmitting}>
                           <CsLineIcons icon="close" size="18" />
                           Cancel

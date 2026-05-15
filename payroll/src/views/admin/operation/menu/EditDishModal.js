@@ -4,6 +4,7 @@ import { useFormik } from 'formik';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import Select from 'react-select';
 
 const customStyles = `
   .pill-input {
@@ -248,7 +249,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
 
             {showAdvancedOptions && (
               <>
-                <Col md={6}>
+                <Col xs={6} md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label className="small fw-bold text-muted text-uppercase mb-1">Quantity</Form.Label>
                     <Form.Control
@@ -258,28 +259,58 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                       onChange={formik.handleChange}
                       disabled={isSubmitting}
                       className="pill-input shadow-sm"
+                      placeholder="e.g. 1"
                     />
                   </Form.Group>
                 </Col>
-                <Col md={6}>
+                <Col xs={6} md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label className="small fw-bold text-muted text-uppercase mb-1">Unit</Form.Label>
-                    <Form.Select
-                      name="unit"
-                      value={formik.values.unit}
-                      onChange={formik.handleChange}
-                      disabled={isSubmitting}
-                      className="pill-input shadow-sm"
-                    >
-                      <option value="">Select Unit</option>
-                      <option value="kg">kg</option>
-                      <option value="g">g</option>
-                      <option value="litre">litre</option>
-                      <option value="ml">ml</option>
-                      <option value="piece">piece</option>
-                      <option value="plate">Plate</option>
-                      <option value="portion">Portion</option>
-                    </Form.Select>
+                    <Select
+                      classNamePrefix="react-select"
+                      menuPlacement="auto"
+                      menuPortalTarget={document.body}
+                      options={[
+                        { value: 'kg', label: 'kg' },
+                        { value: 'g', label: 'g' },
+                        { value: 'litre', label: 'litre' },
+                        { value: 'ml', label: 'ml' },
+                        { value: 'piece', label: 'piece' },
+                        { value: 'plate', label: 'Plate' },
+                        { value: 'portion', label: 'Portion' },
+                      ]}
+                      value={formik.values.unit ? { value: formik.values.unit, label: formik.values.unit } : null}
+                      onChange={(selected) => formik.setFieldValue('unit', selected ? selected.value : '')}
+                      placeholder="Select Unit"
+                      isDisabled={isSubmitting}
+                      styles={{
+                        control: (base, state) => ({
+                          ...base,
+                          borderRadius: '12px',
+                          minHeight: '45px',
+                          border: state.isFocused ? '1px solid #1ea8e7' : '1px solid #e5e7eb',
+                          boxShadow: state.isFocused ? '0 0 0 4px rgba(30, 168, 231, 0.1)' : 'none',
+                          backgroundColor: '#fff',
+                          '&:hover': { border: '1px solid #1ea8e7' },
+                        }),
+                        menu: (base) => ({
+                          ...base,
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                          border: '1px solid #e5e7eb',
+                          zIndex: 9999,
+                        }),
+                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                        option: (base, state) => ({
+                          ...base,
+                          backgroundColor: state.isSelected ? '#1ea8e7' : state.isFocused ? '#f0f9ff' : 'white',
+                          color: state.isSelected ? 'white' : '#333',
+                          padding: '10px 15px',
+                          '&:active': { backgroundColor: '#1ea8e7', color: 'white' },
+                        })
+                      }}
+                    />
                   </Form.Group>
                 </Col>
               </>

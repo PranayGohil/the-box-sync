@@ -8,6 +8,7 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 
 const customStyles = `
@@ -314,9 +315,12 @@ const AddDishes = () => {
                               control: (base, state) => ({
                                 ...selectStyles.control(base, state),
                                 borderColor: values.category === '' && isSubmitting ? '#ef4444' : state.isFocused ? '#1ea8e7' : '#e5e7eb',
+                                minHeight: '45px',
                               })
                             }}
                             isClearable
+                            menuPlacement="auto"
+                            menuPortalTarget={document.body}
                             isDisabled={isSubmitting || loadingCategories || isFromManageMenu}
                             options={categoryOptions}
                             value={values.category ? { label: values.category, value: values.category } : null}
@@ -335,8 +339,16 @@ const AddDishes = () => {
                       <BForm.Group>
                         <BForm.Label className="fw-bold text-muted text-uppercase small mb-2">Counter</BForm.Label>
                         <CreatableSelect
-                          styles={selectStyles}
+                          styles={{
+                            ...selectStyles,
+                            control: (base, state) => ({
+                              ...selectStyles.control(base, state),
+                              minHeight: '45px',
+                            })
+                          }}
                           isClearable
+                          menuPlacement="auto"
+                          menuPortalTarget={document.body}
                           isDisabled={isSubmitting || isFromManageMenu}
                           options={counterOptions}
                           value={values.counter ? { label: values.counter, value: values.counter } : null}
@@ -364,9 +376,18 @@ const AddDishes = () => {
                       {({ push, remove }) => (
                         <div className="d-flex flex-column gap-3">
                           {values.dishes.map((dish, index) => (
-                            <div key={index} className="p-4 rounded-xl border-0 position-relative" style={{ background: '#f8fafc' }}>
+                            <div key={index} className="p-4 rounded-xl border-0 position-relative shadow-sm mb-3" style={{ background: '#f8fafc', borderRadius: '1.25rem' }}>
+                              <Button 
+                                variant="outline-danger" 
+                                className="delete-btn-table"
+                                onClick={() => remove(index)} 
+                                disabled={values.dishes.length === 1}
+                                title="Remove Dish"
+                              >
+                                <CsLineIcons icon="bin" size="16" />
+                              </Button>
                               <Row className="g-3">
-                                <Col md={4}>
+                                <Col xs={12} md={4}>
                                   <BForm.Group>
                                     <BForm.Label className="text-muted text-small fw-bold mb-1">Dish Name</BForm.Label>
                                     <div className="position-relative">
@@ -376,9 +397,12 @@ const AddDishes = () => {
                                           control: (base, state) => ({
                                             ...selectStyles.control(base, state),
                                             borderColor: values.dishes[index].dish_name === '' && isSubmitting ? '#ef4444' : state.isFocused ? '#1ea8e7' : '#e5e7eb',
+                                            minHeight: '45px',
                                           })
                                         }}
                                         isClearable
+                                        menuPlacement="auto"
+                                        menuPortalTarget={document.body}
                                         options={dishOptions}
                                         value={dish.dish_name ? { label: dish.dish_name, value: dish.dish_name } : null}
                                         onChange={(selected) => setFieldValue(`dishes[${index}].dish_name`, selected ? selected.value : '')}
@@ -388,7 +412,7 @@ const AddDishes = () => {
                                     </div>
                                   </BForm.Group>
                                 </Col>
-                                <Col md={2}>
+                                <Col xs={4} md={2}>
                                   <BForm.Group>
                                     <BForm.Label className="text-muted text-small fw-bold mb-1">Price</BForm.Label>
                                     <BForm.Control
@@ -403,7 +427,7 @@ const AddDishes = () => {
                                     <ErrorMessage name={`dishes[${index}].dish_price`} component="div" className="text-danger small mt-1" />
                                   </BForm.Group>
                                 </Col>
-                                <Col md={2}>
+                                <Col xs={3} md={2}>
                                   <BForm.Group>
                                     <BForm.Label className="text-muted text-small fw-bold mb-1">Qty</BForm.Label>
                                     <BForm.Control
@@ -416,36 +440,58 @@ const AddDishes = () => {
                                     />
                                   </BForm.Group>
                                 </Col>
-                                <Col md={3}>
+                                <Col xs={5} md={4}>
                                   <BForm.Group>
                                     <BForm.Label className="text-muted text-small fw-bold mb-1">Unit</BForm.Label>
-                                    <BForm.Select
-                                      name={`dishes[${index}].unit`}
-                                      value={dish.unit}
-                                      onChange={handleChange}
-                                      className="pill-input"
-                                    >
-                                      <option value="">Select Unit</option>
-                                      <option value="kg">kg</option>
-                                      <option value="g">g</option>
-                                      <option value="piece">piece</option>
-                                      <option value="plate">Plate</option>
-                                      <option value="portion">Portion</option>
-                                    </BForm.Select>
+                                    <Select
+                                      classNamePrefix="react-select"
+                                      menuPlacement="auto"
+                                      menuPortalTarget={document.body}
+                                      options={[
+                                        { value: 'kg', label: 'kg' },
+                                        { value: 'g', label: 'g' },
+                                        { value: 'litre', label: 'litre' },
+                                        { value: 'ml', label: 'ml' },
+                                        { value: 'piece', label: 'piece' },
+                                        { value: 'plate', label: 'Plate' },
+                                        { value: 'portion', label: 'Portion' },
+                                      ]}
+                                      value={dish.unit ? { value: dish.unit, label: dish.unit } : null}
+                                      onChange={(selected) => setFieldValue(`dishes[${index}].unit`, selected ? selected.value : '')}
+                                      placeholder="Select Unit"
+                                      isDisabled={isSubmitting}
+                                      styles={{
+                                        control: (base, state) => ({
+                                          ...base,
+                                          borderRadius: '12px',
+                                          minHeight: '45px',
+                                          border: state.isFocused ? '1px solid #1ea8e7' : '1px solid #e5e7eb',
+                                          boxShadow: state.isFocused ? '0 0 0 4px rgba(30, 168, 231, 0.1)' : 'none',
+                                          backgroundColor: '#fff',
+                                          '&:hover': { border: '1px solid #1ea8e7' },
+                                        }),
+                                        menu: (base) => ({
+                                          ...base,
+                                          borderRadius: '12px',
+                                          overflow: 'hidden',
+                                          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                                          border: '1px solid #e5e7eb',
+                                          zIndex: 9999,
+                                        }),
+                                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                        option: (base, state) => ({
+                                          ...base,
+                                          backgroundColor: state.isSelected ? '#1ea8e7' : state.isFocused ? '#f0f9ff' : 'white',
+                                          color: state.isSelected ? 'white' : '#333',
+                                          padding: '10px 15px',
+                                          '&:active': { backgroundColor: '#1ea8e7', color: 'white' },
+                                        })
+                                      }}
+                                    />
                                   </BForm.Group>
                                 </Col>
-                                <Col md={1} className="text-end pt-4">
-                                  <Button 
-                                    variant="outline-danger" 
-                                    className="delete-btn-table"
-                                    onClick={() => remove(index)} 
-                                    disabled={values.dishes.length === 1}
-                                  >
-                                    <CsLineIcons icon="bin" size="18" />
-                                  </Button>
-                                </Col>
 
-                                <Col md={3} className="pt-2">
+                                <Col xs={12} md={4} className="pt-2">
                                   <div className="d-flex align-items-center">
                                     <input
                                       type="file"
@@ -454,26 +500,26 @@ const AddDishes = () => {
                                       accept="image/*"
                                       onChange={(e) => handleImageChange(e, index, setFieldValue)}
                                     />
-                                    <label htmlFor={`file-${index}`} className="custom-btn-outline px-3 py-1 rounded-pill small fw-bold cursor-pointer mb-0">
-                                      <CsLineIcons icon="upload" size="14" className="me-1" />
+                                    <label htmlFor={`file-${index}`} className="custom-btn-outline px-3 py-2 rounded-pill small fw-bold cursor-pointer mb-0 d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0">
+                                      <CsLineIcons icon="upload" size="14" className="me-2" />
                                       {dish.dish_img ? 'Change Image' : 'Add Image'}
                                     </label>
                                     {imagePreviews[index] && (
-                                      <img src={imagePreviews[index]} alt="Preview" className="ms-2 rounded shadow-sm" style={{ width: '38px', height: '38px', objectFit: 'cover' }} />
+                                      <img src={imagePreviews[index]} alt="Preview" className="ms-2 rounded shadow-sm" style={{ width: '40px', height: '40px', objectFit: 'cover' }} />
                                     )}
                                   </div>
                                 </Col>
-                                <Col md={9} className="pt-2">
+                                <Col xs={12} md={8} className="pt-2">
                                   <Field name={`dishes[${index}].description`} className="form-control pill-input bg-white" placeholder="Add description (optional)..." />
                                 </Col>
                               </Row>
                             </div>
                           ))}
 
-                          <div className="d-flex justify-content-between align-items-center mt-4">
+                          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3 mt-4">
                             <Button
                               type="button"
-                              className="custom-btn-outline px-4 py-2 d-flex align-items-center gap-2"
+                              className="custom-btn-outline px-4 py-2 d-flex align-items-center justify-content-center gap-2"
                               onClick={() => push({
                                 dish_name: '', dish_price: '', dish_img: null, description: '', quantity: '', unit: '', showAdvancedOptions: false,
                               })}
@@ -484,7 +530,7 @@ const AddDishes = () => {
 
                             <Button 
                               type="submit" 
-                              className="custom-btn-outline px-5 py-2 d-flex align-items-center gap-2"
+                              className="custom-btn-outline px-5 py-2 d-flex align-items-center justify-content-center gap-2"
                               disabled={isSubmitting}
                             >
                               {isSubmitting ? <Spinner size="sm" /> : <CsLineIcons icon="save" size="18" />}

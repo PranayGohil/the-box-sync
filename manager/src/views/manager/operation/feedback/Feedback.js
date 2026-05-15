@@ -13,6 +13,41 @@ import Table from './components/Table';
 import TablePagination from './components/TablePagination';
 import DeleteFeedbackModal from './DeleteFeedbackModal';
 
+const customStyles = `
+    .feedback-container {
+      background: #f9f9fb;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+    }
+    .page-card {
+      background: #ffffff !important;
+      border-radius: 2rem !important;
+      border: 1px solid rgba(0, 0, 0, 0.05) !important;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.02) !important;
+      overflow: hidden;
+    }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .modern-input {
+      border-radius: 12px !important;
+      padding: 0.8rem 1.25rem !important;
+      border: 1.5px solid #f1f5f9 !important;
+      font-weight: 600 !important;
+      color: #334155 !important;
+      transition: all 0.3s ease !important;
+      background: #fcfdfe !important;
+    }
+`;
+
 const Feedback = () => {
   const title = 'Feedback Management';
   const description = 'View and manage customer feedback';
@@ -182,18 +217,18 @@ const Feedback = () => {
 
   return (
     <>
-      <HtmlHead title={title} description={description} />
-
-      <Row>
-        <Col>
-          <div className="page-title-container">
-            <Row>
-              <Col xs="12" md="7">
-                <h1 className="mb-0 pb-0 display-4">{title}</h1>
+      <div className="feedback-container">
+        <style>{customStyles}</style>
+        <HtmlHead title={title} description={description} />
+        <div className="container-fluid px-lg-5">
+          <div className="page-title-container mb-4 pt-4">
+            <Row className="g-3 align-items-center">
+              <Col lg="7">
+                <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
-              <Col xs="12" md="5" className="d-flex align-items-start justify-content-end">
-                <Button variant="primary" onClick={() => history.push('/operations/qr-for-feedback')} disabled={loading}>
+              <Col lg="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-lg-0">
+                <Button variant="outline-primary" onClick={() => history.push('/operations/qr-for-feedback')} className="rounded-pill px-4 fw-bold border-2" disabled={loading}>
                   <CsLineIcons icon="qr-code" className="me-2" /> Feedback QR
                 </Button>
               </Col>
@@ -246,8 +281,8 @@ const Feedback = () => {
               </Row>
             </div>
           )}
-        </Col>
-      </Row>
+        </div>
+      </div>
 
       {/* Reply Modal */}
       <Modal className="modal-right large" show={showReplyModal} onHide={() => setShowReplyModal(false)} backdrop="static">

@@ -541,170 +541,228 @@ const UnifiedOrder = () => {
   return (
     <>
       <HtmlHead title={title} description={description} />
-      <style>{`@media (max-width: 991px) { .mobile-transparent-card { background: transparent !important; border: none !important; box-shadow: none !important; } }`}</style>
 
-      {/* Mobile Top Info */}
-      <div className="d-flex d-lg-none justify-content-between align-items-center mb-2 px-2 mt-2">
-        <div className="d-flex align-items-center gap-2">
-          <h5 className="mb-0 fw-bold">
-            {orderType}
-            {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no)
-              ? ` — Table ${tableInfo.table_no || customerInfo.table_no}`
-              : ''}
-          </h5>
-          {orderStatus && <Badge bg="secondary">{orderStatus}</Badge>}
-        </div>
-        <div className="d-flex flex-column align-items-end text-muted small">
-          {tokenNumber && <span className="fw-bold text-primary">Token #{tokenNumber}</span>}
-          <span>{new Date().toLocaleDateString('en-IN')}</span>
-        </div>
-      </div>
+      {/* POS Wrapper */}
+      <div className="pos-wrapper">
 
-      <Row className="g-1">
-        {/* Menu Section */}
-        <Col lg="8" xs="12" className="px-1 mb-3 mb-lg-0">
-          <Card className="h-100 position-relative overflow-hidden">
-            <Card.Header>
-              <Row className="align-items-center">
-                <Col className="d-flex align-items-center gap-2"><h5 className="mb-0">Menu Items</h5></Col>
-                <Col className="d-flex justify-content-end">
-                  <Button variant="outline-secondary" size="sm" onClick={() => handleNavigation('/dashboard')}>
-                    <CsLineIcons icon="arrow-left" className='pb-1' /> Back
-                  </Button>
-                </Col>
-              </Row>
-            </Card.Header>
-            <Card.Body className="p-0 d-flex h-100">
-              <MenuGrid
-                filteredMenuData={filteredMenuData} categories={categories}
-                selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory}
-                searchText={searchText} setSearchText={setSearchText}
-                showSpecial={showSpecial} setShowSpecial={setShowSpecial}
-                showCategories={showCategories} setShowCategories={setShowCategories}
-                addItemToOrder={addItemToOrder}
-                showParcelCharge={showParcelUI ? showParcelCharge : false}
-                setShowParcelCharge={showParcelUI ? setShowParcelCharge : undefined}
-                containerCharges={showParcelUI ? containerCharges : []}
-                addParcelCharge={showParcelUI ? addParcelCharge : undefined}
-              />
-            </Card.Body>
-          </Card>
-        </Col>
-
-        {/* Order Details Section */}
-        <Col lg="4" xs="12" className="pe-lg-0 px-1 px-lg-0">
-          <Card className="h-100 mobile-transparent-card">
-            <Card.Header className="d-none d-lg-block">
-              <Row>
-                <Col md="7">
-                  {tokenNumber && <Badge bg="primary" className="mb-1">Token #{tokenNumber}</Badge>}
-                  <h5 className="mb-0">
-                    {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no)
-                      ? `Table ${tableInfo.table_no || customerInfo.table_no}`
-                      : orderType}
-                  </h5>
-                </Col>
-                <Col md="5" className="d-flex flex-column align-items-end justify-content-start">
-                  {orderStatus && <Badge bg="secondary" className="ms-2 mb-1">{orderStatus}</Badge>}
-                  <div className="d-flex justify-content-center align-items-center small">
-                    <div className="mx-1">Date: </div>
-                    <div className="fw-bold">{new Date().toLocaleDateString('en-IN')}</div>
-                  </div>
-                </Col>
-              </Row>
-            </Card.Header>
-            <Card.Body className="p-0 p-lg-3">
-              {/* Desktop only: type selector + customer form + cart */}
-              <div className="d-none d-lg-block">
-                {/* Order Type Dropdown */}
-                <Form.Group className="mb-3">
-                  <Form.Label>Order Type</Form.Label>
-                  <Form.Select
-                    size="sm"
-                    value={orderType}
-                    onChange={(e) => handleOrderTypeChange(e.target.value)}
-                    disabled={isEditMode || tableId} // Disable if editing or if tableId exists in URL
-                    className="mb-1"
-                  >
-                    {ORDER_TYPES.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-                <hr className="my-3" />
-                <CustomerInfoForm
-                  customerInfo={customerInfo} setCustomerInfo={setCustomerInfo}
-                  tableInfo={tableInfo} waiterOptions={waiterOptions}
-                  orderStatus={orderStatus}
-                  visibleFields={visibleFields}
-                  requiredFields={requiredFields}
-                />
-                <hr className="my-3" />
-                <OrderCartTable orderItems={orderItems} updateItemQuantity={updateItemQuantity} removeItem={removeItem} />
-                <Form.Group className="mb-3 mt-3">
-                  <Form.Label>Special Instructions</Form.Label>
-                  <Form.Control as="textarea" rows={2} value={customerInfo.comment}
-                    onChange={(e) => setCustomerInfo((prev) => ({ ...prev, comment: e.target.value }))}
-                    placeholder="Any special instructions..." />
-                </Form.Group>
-              </div>
-              <PaymentSummaryBox
-                orderItems={orderItems} isDirty={isDirty} orderStatus={orderStatus}
-                isLoading={isLoading} printing={printing} paymentData={paymentData} orderId={orderId}
-                handleSaveOrder={handleSaveOrder} handleOpenPaymentModal={handleOpenPaymentModal}
-                setShowCancelModal={setShowCancelModal} handlePrint={handlePrint}
-                history={history} setShowCartSheet={setShowCartSheet}
-                onKotAndPrint={handleKotAndPrint} kotPrinting={kotPrinting}
-                kotHistory={kotHistory} onReprintKOT={handleReprintKOT}
-                paymentHistory={paymentHistory}
-                alreadyPaid={parseFloat(initialStateRef.current?.paid_amount) || 0}
-                canKOT={canKOT}
-              />
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      <PaymentModal
-        showPaymentModal={showPaymentModal} setShowPaymentModal={setShowPaymentModal}
-        paymentData={paymentData} setPaymentData={setPaymentData} isLoading={isLoading}
-        handleDiscountTypeChange={handleDiscountTypeChange} handleDiscountValueChange={handleDiscountValueChange}
-        handlePaidAmountChange={handlePaidAmountChange} handlePayment={handlePayment}
-        orderItems={orderItems} customerInfo={customerInfo} orderType={orderType}
-        orderId={orderId} orderNo={orderNo}
-        alreadyPaid={parseFloat(initialStateRef.current.paid_amount) || 0}
-      />
-      <LeaveConfirmationModal
-        showLeaveModal={showLeaveModal} setShowLeaveModal={setShowLeaveModal}
-        setNextLocation={setNextLocation} orderStatus={orderStatus} allowNavigationRef={allowNavigationRef}
-        setIsDirty={setIsDirty} nextLocation={nextLocation} history={history}
-        handleSaveOrder={handleSaveOrder} isLoading={isLoading}
-      />
-      <CancelOrderModal showCancelModal={showCancelModal} setShowCancelModal={setShowCancelModal} handleCancelOrder={handleCancelOrder} isLoading={isLoading} />
-
-      {/* Mobile Bottom Sheet */}
-      <BottomCartSheet
-        showCartSheet={showCartSheet} setShowCartSheet={setShowCartSheet}
-        orderItems={orderItems} updateItemQuantity={updateItemQuantity} removeItem={removeItem}
-        isDirty={isDirty} orderStatus={orderStatus} isLoading={isLoading} printing={printing}
-        paymentData={paymentData} orderId={orderId} handleSaveOrder={handleSaveOrder}
-        handleOpenPaymentModal={handleOpenPaymentModal} setShowCancelModal={setShowCancelModal}
-        handlePrint={handlePrint} history={history}
-        alreadyPaid={parseFloat(initialStateRef.current?.paid_amount) || 0}
-        canKOT={canKOT}
-        onKotAndPrint={handleKotAndPrint} kotPrinting={kotPrinting}
-        kotHistory={kotHistory} onReprintKOT={handleReprintKOT}
-        paymentHistory={paymentHistory}
-      >
-        <div className="d-flex align-items-center justify-content-between mb-3">
-          <h6 className="mb-0 fw-bold text-muted border-bottom pb-2 flex-grow-1">Customer Details</h6>
-          {/* Mobile type selector */}
+        {/* Top Bar */}
+        <div className="pos-topbar">
+          <Button
+            className="custom-btn-outline"
+            style={{ padding: '0.35rem 1rem', flexShrink: 0 }}
+            onClick={() => handleNavigation('/dashboard')}
+          >
+            <CsLineIcons icon="arrow-left" size="13" className="me-1" />
+            Back
+          </Button>
+          <div className="pos-title flex-grow-1">
+            {title}
+            {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no) && (
+              <span className="ms-2 fw-normal text-muted" style={{ fontSize: '14px' }}>
+                — Table {tableInfo.table_no || customerInfo.table_no}
+              </span>
+            )}
+          </div>
+          {tokenNumber && (
+            <div style={{ border: '1.5px solid #23b3f4', borderRadius: '50px', padding: '3px 12px', color: '#23b3f4', fontWeight: 700, fontSize: '12px', flexShrink: 0 }}>
+              Token #{tokenNumber}
+            </div>
+          )}
+          {orderStatus && (
+            <div style={{ border: '1.5px solid #6c757d', borderRadius: '50px', padding: '3px 12px', color: '#6c757d', fontWeight: 700, fontSize: '12px', flexShrink: 0 }}>
+              {orderStatus}
+            </div>
+          )}
           <Form.Select
             size="sm"
             value={orderType}
             onChange={(e) => handleOrderTypeChange(e.target.value)}
-            disabled={isEditMode || tableId}
-            style={{ maxWidth: '130px' }}
+            disabled={isEditMode || !!tableId}
+            style={{ maxWidth: '130px', borderRadius: '50px', borderColor: 'rgba(35,179,244,0.35)', color: '#23b3f4', fontWeight: 700, fontSize: '13px', flexShrink: 0 }}
+          >
+            {ORDER_TYPES.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </Form.Select>
+          <div className="text-muted small fw-semibold" style={{ flexShrink: 0 }}>
+            {new Date().toLocaleDateString('en-IN')}
+          </div>
+        </div>
+
+        {/* POS Body */}
+        <div className="pos-body">
+          {/* Menu Panel */}
+          <MenuGrid
+            filteredMenuData={filteredMenuData}
+            categories={categories}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            searchText={searchText}
+            setSearchText={setSearchText}
+            showSpecial={showSpecial}
+            setShowSpecial={setShowSpecial}
+            showCategories={showCategories}
+            setShowCategories={setShowCategories}
+            addItemToOrder={addItemToOrder}
+            orderItems={orderItems}
+            showParcelCharge={showParcelUI ? showParcelCharge : false}
+            setShowParcelCharge={showParcelUI ? setShowParcelCharge : undefined}
+            containerCharges={showParcelUI ? containerCharges : []}
+            addParcelCharge={showParcelUI ? addParcelCharge : undefined}
+          />
+
+          {/* Order Panel */}
+          <div className="pos-order-panel">
+            <div className="pos-order-header">
+              <div className="d-flex justify-content-between align-items-center">
+                <div>
+                  <div className="fw-bold" style={{ color: '#23b3f4', fontSize: '15px' }}>
+                    {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no)
+                      ? `Table ${tableInfo.table_no || customerInfo.table_no}`
+                      : 'Order Details'}
+                  </div>
+                  <div className="text-muted" style={{ fontSize: '11px' }}>
+                    {orderItems.length} item{orderItems.length !== 1 ? 's' : ''} in cart
+                  </div>
+                </div>
+                {tokenNumber && (
+                  <div style={{ background: 'rgba(35,179,244,0.1)', borderRadius: '50px', padding: '3px 12px', color: '#23b3f4', fontWeight: 700, fontSize: '12px' }}>
+                    #{tokenNumber}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="pos-customer-section">
+              <CustomerInfoForm
+                customerInfo={customerInfo}
+                setCustomerInfo={setCustomerInfo}
+                tableInfo={tableInfo}
+                waiterOptions={waiterOptions}
+                orderStatus={orderStatus}
+                visibleFields={visibleFields}
+                requiredFields={requiredFields}
+              />
+              {/* Special Instructions - Moved here to save space for cart */}
+              <div className="mt-2">
+                <Form.Control
+                  as="textarea"
+                  rows={1}
+                  value={customerInfo.comment}
+                  onChange={(e) => setCustomerInfo((prev) => ({ ...prev, comment: e.target.value }))}
+                  placeholder="Notes..."
+                  style={{ borderRadius: '8px', border: '1.5px solid rgba(226,232,240,0.9)', fontSize: '12px', resize: 'none', color: '#333', background: '#f8fafc' }}
+                />
+              </div>
+            </div>
+
+            <div className="pos-cart-section">
+              <OrderCartTable
+                orderItems={orderItems}
+                updateItemQuantity={updateItemQuantity}
+                removeItem={removeItem}
+              />
+            </div>
+
+            <div className="pos-total-section">
+              <PaymentSummaryBox
+                orderItems={orderItems}
+                isDirty={isDirty}
+                orderStatus={orderStatus}
+                isLoading={isLoading}
+                printing={printing}
+                paymentData={paymentData}
+                orderId={orderId}
+                handleSaveOrder={handleSaveOrder}
+                handleOpenPaymentModal={handleOpenPaymentModal}
+                setShowCancelModal={setShowCancelModal}
+                handlePrint={handlePrint}
+                history={history}
+                setShowCartSheet={setShowCartSheet}
+                onKotAndPrint={handleKotAndPrint}
+                kotPrinting={kotPrinting}
+                kotHistory={kotHistory}
+                onReprintKOT={handleReprintKOT}
+                paymentHistory={paymentHistory}
+                alreadyPaid={parseFloat(initialStateRef.current?.paid_amount) || 0}
+                canKOT={canKOT}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modals */}
+      <PaymentModal
+        showPaymentModal={showPaymentModal}
+        setShowPaymentModal={setShowPaymentModal}
+        paymentData={paymentData}
+        setPaymentData={setPaymentData}
+        isLoading={isLoading}
+        handleDiscountTypeChange={handleDiscountTypeChange}
+        handleDiscountValueChange={handleDiscountValueChange}
+        handlePaidAmountChange={handlePaidAmountChange}
+        handlePayment={handlePayment}
+        orderItems={orderItems}
+        customerInfo={customerInfo}
+        orderType={orderType}
+        orderId={orderId}
+        orderNo={orderNo}
+        alreadyPaid={parseFloat(initialStateRef.current.paid_amount) || 0}
+      />
+      <LeaveConfirmationModal
+        showLeaveModal={showLeaveModal}
+        setShowLeaveModal={setShowLeaveModal}
+        setNextLocation={setNextLocation}
+        orderStatus={orderStatus}
+        allowNavigationRef={allowNavigationRef}
+        setIsDirty={setIsDirty}
+        nextLocation={nextLocation}
+        history={history}
+        handleSaveOrder={handleSaveOrder}
+        isLoading={isLoading}
+      />
+      <CancelOrderModal
+        showCancelModal={showCancelModal}
+        setShowCancelModal={setShowCancelModal}
+        handleCancelOrder={handleCancelOrder}
+        isLoading={isLoading}
+      />
+
+      {/* Mobile Bottom Sheet */}
+      <BottomCartSheet
+        showCartSheet={showCartSheet}
+        setShowCartSheet={setShowCartSheet}
+        orderItems={orderItems}
+        updateItemQuantity={updateItemQuantity}
+        removeItem={removeItem}
+        isDirty={isDirty}
+        orderStatus={orderStatus}
+        isLoading={isLoading}
+        printing={printing}
+        paymentData={paymentData}
+        orderId={orderId}
+        handleSaveOrder={handleSaveOrder}
+        handleOpenPaymentModal={handleOpenPaymentModal}
+        setShowCancelModal={setShowCancelModal}
+        handlePrint={handlePrint}
+        history={history}
+        alreadyPaid={parseFloat(initialStateRef.current?.paid_amount) || 0}
+        canKOT={canKOT}
+        onKotAndPrint={handleKotAndPrint}
+        kotPrinting={kotPrinting}
+        kotHistory={kotHistory}
+        onReprintKOT={handleReprintKOT}
+        paymentHistory={paymentHistory}
+      >
+        <div className="d-flex align-items-center justify-content-between mb-3">
+          <h6 className="mb-0 fw-bold text-muted border-bottom pb-2 flex-grow-1">Customer Details</h6>
+          <Form.Select
+            size="sm"
+            value={orderType}
+            onChange={(e) => handleOrderTypeChange(e.target.value)}
+            disabled={isEditMode || !!tableId}
+            style={{ maxWidth: '130px', borderRadius: '50px', borderColor: 'rgba(35,179,244,0.3)', color: '#23b3f4', fontWeight: 700 }}
           >
             {ORDER_TYPES.map((t) => (
               <option key={t} value={t}>{t}</option>
@@ -712,17 +770,24 @@ const UnifiedOrder = () => {
           </Form.Select>
         </div>
         <CustomerInfoForm
-          customerInfo={customerInfo} setCustomerInfo={setCustomerInfo}
-          tableInfo={tableInfo} waiterOptions={waiterOptions}
+          customerInfo={customerInfo}
+          setCustomerInfo={setCustomerInfo}
+          tableInfo={tableInfo}
+          waiterOptions={waiterOptions}
           orderStatus={orderStatus}
           visibleFields={visibleFields}
           requiredFields={requiredFields}
         />
         <Form.Group className="mb-3">
-          <Form.Label>Special Instructions</Form.Label>
-          <Form.Control as="textarea" rows={2} value={customerInfo.comment}
+          <Form.Label className="fw-semibold small text-muted">Special Instructions</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={2}
+            value={customerInfo.comment}
             onChange={(e) => setCustomerInfo((prev) => ({ ...prev, comment: e.target.value }))}
-            placeholder="Any special instructions..." />
+            placeholder="Any special instructions..."
+            style={{ borderRadius: '12px', border: '1px solid rgba(35,179,244,0.2)', fontSize: '13px' }}
+          />
         </Form.Group>
       </BottomCartSheet>
     </>
@@ -730,3 +795,5 @@ const UnifiedOrder = () => {
 };
 
 export default UnifiedOrder;
+
+

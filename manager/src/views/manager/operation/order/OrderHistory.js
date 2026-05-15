@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { Badge, Col, Form, Row, Button, Spinner, Alert, Card, Collapse } from 'react-bootstrap';
+import { Badge, Col, Form, Row, Button, Spinner, Alert, Card, Collapse, Dropdown } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy } from 'react-table';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -19,7 +19,7 @@ const OrderHistory = () => {
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
-    { to: 'operations/order-history', text: 'Operations' },
+    { to: 'operations', text: 'Operations' },
     { to: 'operations/order-history', title: 'Order History' },
   ];
 
@@ -234,7 +234,7 @@ const OrderHistory = () => {
   //           <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
   //            <tr>
   //              <td style="width: 50%; height: 30px;">
-  //                <strong> Name: </strong> ${order?.customer_name || '(M: 1234567890)'} 
+  //                <strong> Name: </strong> ${order?.customer_name || '(M: 1234567890)'}
   //              </td>
   //               <td style="text-align: right;">
   //                 <strong>${order.order_type}</strong>
@@ -290,7 +290,7 @@ const OrderHistory = () => {
   //                  ? `
   //                <tr>
   //                  <td colspan="3" style="text-align: right;"><strong>CGST (${order.cgst_percent || 0} %):</strong></td>
-  //                  <td style="text-align: right;">₹ ${order.cgst_amount || 0}</td> 
+  //                  <td style="text-align: right;">₹ ${order.cgst_amount || 0}</td>
   //                </tr>`
   //                  : ''
   //              }
@@ -390,16 +390,10 @@ const OrderHistory = () => {
           <tr>
             <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
             <td style="text-align: right;">
-              ${ord.table_no
-        ? `<strong>Table:</strong> ${ord.table_no}`
-        : ord.token
-          ? `<strong>Token:</strong> ${ord.token}`
-          : ''}
+              ${ord.table_no ? `<strong>Table:</strong> ${ord.table_no}` : ord.token ? `<strong>Token:</strong> ${ord.token}` : ''}
             </td>
           </tr>
-          ${ord.customer_name
-        ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
-        : ''}
+          ${ord.customer_name ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>` : ''}
         </table>
 
         <!-- Items Table -->
@@ -411,12 +405,16 @@ const OrderHistory = () => {
             </tr>
           </thead>
           <tbody>
-            ${items.map(item => `
+            ${items
+              .map(
+                (item) => `
               <tr>
                 <td>${item.dish_name}</td>
                 <td style="text-align: center;">${item.quantity}</td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
           </tbody>
         </table>
       </div>
@@ -446,16 +444,10 @@ const OrderHistory = () => {
           <tr>
             <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
             <td style="text-align: right;">
-              ${ord.table_no
-        ? `<strong>Table:</strong> ${ord.table_no}`
-        : ord.token
-          ? `<strong>Token:</strong> ${ord.token}`
-          : ''}
+              ${ord.table_no ? `<strong>Table:</strong> ${ord.table_no}` : ord.token ? `<strong>Token:</strong> ${ord.token}` : ''}
             </td>
           </tr>
-          ${ord.customer_name
-        ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
-        : ''}
+          ${ord.customer_name ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>` : ''}
         </table>
 
         <!-- Items Table -->
@@ -469,14 +461,18 @@ const OrderHistory = () => {
             </tr>
           </thead>
           <tbody>
-            ${items.map(item => `
+            ${items
+              .map(
+                (item) => `
               <tr>
                 <td>${item.dish_name}</td>
                 <td style="text-align: center;">${item.quantity}</td>
                 <td style="text-align: center;">₹${item.dish_price}</td>
                 <td style="text-align: right;">₹${(item.dish_price * item.quantity).toFixed(2)}</td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
 
             <tr>
               <td colspan="3" style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
@@ -487,7 +483,9 @@ const OrderHistory = () => {
               </td>
             </tr>
 
-            ${ord.cgst_amount > 0 ? `
+            ${
+              ord.cgst_amount > 0
+                ? `
               <tr>
                 <td colspan="3" style="text-align: right;">
                   <strong>CGST (${ord.cgst_percent || 0}%):</strong>
@@ -496,9 +494,13 @@ const OrderHistory = () => {
                   ₹${parseFloat(ord.cgst_amount).toFixed(2)}
                 </td>
               </tr>
-            ` : ''}
+            `
+                : ''
+            }
 
-            ${ord.sgst_amount > 0 ? `
+            ${
+              ord.sgst_amount > 0
+                ? `
               <tr>
                 <td colspan="3" style="text-align: right;">
                   <strong>SGST (${ord.sgst_percent || 0}%):</strong>
@@ -507,9 +509,13 @@ const OrderHistory = () => {
                   ₹${parseFloat(ord.sgst_amount).toFixed(2)}
                 </td>
               </tr>
-            ` : ''}
+            `
+                : ''
+            }
 
-            ${ord.vat_amount > 0 ? `
+            ${
+              ord.vat_amount > 0
+                ? `
               <tr>
                 <td colspan="3" style="text-align: right;">
                   <strong>VAT (${ord.vat_percent || 0}%):</strong>
@@ -518,9 +524,13 @@ const OrderHistory = () => {
                   ₹${parseFloat(ord.vat_amount).toFixed(2)}
                 </>
               </tr>
-            ` : ''}
+            `
+                : ''
+            }
 
-            ${ord.discount_amount > 0 ? `
+            ${
+              ord.discount_amount > 0
+                ? `
               <tr>
                 <td colspan="3" style="text-align: right;">
                   <strong>Discount:</strong>
@@ -529,7 +539,9 @@ const OrderHistory = () => {
                   ₹${parseFloat(ord.discount_amount).toFixed(2)}
                 </td>
               </tr>
-            ` : ''}
+            `
+                : ''
+            }
 
             <tr>
               <td colspan="3" style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
@@ -554,11 +566,11 @@ const OrderHistory = () => {
       setPrinting(true);
 
       const userRes = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
 
       const orderRes = await axios.get(`${process.env.REACT_APP_API}/order/get/${orderId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
 
       const order = orderRes.data.data;
@@ -566,28 +578,25 @@ const OrderHistory = () => {
       const userData = userRes.data;
 
       const groupedByCounter = {};
-      order.order_items.forEach(item => {
-        const counterName = item.counter || "Default";
+      order.order_items.forEach((item) => {
+        const counterName = item.counter || 'Default';
         if (!groupedByCounter[counterName]) groupedByCounter[counterName] = [];
         groupedByCounter[counterName].push(item);
       });
 
-      const printWindow = window.open("", "_blank");
+      const printWindow = window.open('', '_blank');
 
       if (!printWindow) {
-        toast.error("Popup blocked! Please allow popups.");
+        toast.error('Popup blocked! Please allow popups.');
         return;
       }
 
-      let allBillsHTML = "";
+      let allBillsHTML = '';
 
       allBillsHTML += printFullBill(order, userData, order.order_items, order.sub_total);
 
       Object.entries(groupedByCounter).forEach(([counterName, items]) => {
-        const subTotal = items.reduce(
-          (sum, i) => sum + (i.dish_price * i.quantity),
-          0
-        );
+        const subTotal = items.reduce((sum, i) => sum + i.dish_price * i.quantity, 0);
 
         allBillsHTML += printCounterBill(order, userData, counterName, items);
       });
@@ -615,15 +624,13 @@ const OrderHistory = () => {
         ${allBillsHTML}
         </body>
         </html>
-        `
-      );
+        `);
       printWindow.document.close();
 
       printWindow.focus();
-
     } catch (err) {
-      console.error("Print error:", err);
-      toast.error("Failed to print bills");
+      console.error('Print error:', err);
+      toast.error('Failed to print bills');
     } finally {
       setPrinting(false);
     }
@@ -771,14 +778,12 @@ const OrderHistory = () => {
         <HtmlHead title={title} description={description} />
         <Row>
           <Col>
-            <div className="page-title-container">
-              <Row>
-                <Col xs="12" md="7">
-                  <h1 className="mb-0 pb-0 display-4">{title}</h1>
-                  <BreadcrumbList items={breadcrumbs} />
-                </Col>
-              </Row>
-            </div>
+            <section className="scroll-section" id="title">
+              <div className="page-title-container">
+                <h1 className="mb-0 pb-0 display-4">{title}</h1>
+                <BreadcrumbList items={breadcrumbs} />
+              </div>
+            </section>
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" className="mb-3" />
               <h5>Loading Order History...</h5>
@@ -796,14 +801,12 @@ const OrderHistory = () => {
 
       <Row>
         <Col>
-          <div className="page-title-container">
-            <Row className="align-items-center">
-              <Col xs="12" md="7">
-                <h1 className="mb-0 pb-0 display-4">{title}</h1>
-                <BreadcrumbList items={breadcrumbs} />
-              </Col>
-            </Row>
-          </div>
+          <section className="scroll-section" id="title">
+            <div className="page-title-container mb-4">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </div>
+          </section>
 
           {error && (
             <Alert variant="danger" className="mb-4">
@@ -814,36 +817,36 @@ const OrderHistory = () => {
 
           {/* Search and Controls */}
           <div>
-            <Row className="mb-3">
-              <Col sm="12" md="5" lg="3" xxl="2">
+            <Row className="mb-3 g-2">
+              <Col xs="12" sm="auto" className="flex-grow-1">
                 <div className="d-flex gap-2">
-                  <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
+                  <div className="flex-grow-1">
                     <ControlsSearch onSearch={handleSearch} />
                   </div>
                   <Button
-                    variant={`${showFilters ? 'secondary' : 'outline-secondary'}`}
-                    size="sm"
-                    className="btn-icon btn-icon-only position-relative"
+                    variant={showFilters ? 'primary' : 'outline-primary'}
+                    className="btn-icon btn-icon-only rounded-pill shadow-sm border-2"
+                    style={{ width: '40px', height: '40px' }}
                     onClick={() => setShowFilters(!showFilters)}
                     title="Filters"
                     disabled={loading}
                   >
-                    <CsLineIcons icon={`${showFilters ? 'close' : 'filter'}`} />
+                    <CsLineIcons icon={showFilters ? 'close' : 'filter'} size="18" />
                     {getActiveFilterCount() > 0 && (
-                      <Badge bg="primary" className="position-absolute top-0 start-100 translate-middle">
+                      <Badge bg="danger" className="position-absolute rounded-pill border border-2 border-white" style={{ top: '-5px', right: '-5px', fontSize: '10px', padding: '4px 6px' }}>
                         {getActiveFilterCount()}
                       </Badge>
                     )}
                   </Button>
                 </div>
               </Col>
-              <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
-                <div className="d-inline-block me-2 text-muted">
+              <Col xs="12" sm="auto" className="d-flex align-items-center justify-content-between justify-content-sm-end ms-sm-auto">
+                <div className="text-muted small fw-bold me-3">
                   {loading ? (
                     'Loading...'
                   ) : (
                     <>
-                      Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0} to {Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords} entries
+                      {data.length > 0 ? pageIndex * pageSize + 1 : 0}-{Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords}
                     </>
                   )}
                 </div>
@@ -855,62 +858,117 @@ const OrderHistory = () => {
 
             {/* Filter Section */}
             <Collapse in={showFilters}>
-              <Card className="mb-3">
-                <Card.Body>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5>Filters</h5>
+              <Card className="mb-4 border-0 shadow-sm" style={{ borderRadius: '1.25rem', backgroundColor: '#f8f9fa' }}>
+                <Card.Body className="p-4">
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h5 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4' }}>
+                      <CsLineIcons icon="filter" className="me-2" size="18" />
+                      Filter Records
+                    </h5>
                     {getActiveFilterCount() > 0 && (
-                      <Button variant="outline-danger" size="sm" onClick={handleClearFilters}>
-                        <CsLineIcons icon="close" className="me-1" />
-                        Clear
+                      <Button 
+                        variant="link" 
+                        className="p-0 text-danger text-decoration-none small fw-bold" 
+                        onClick={handleClearFilters}
+                      >
+                        <CsLineIcons icon="close" size="12" className="me-1" />
+                        Clear All
                       </Button>
                     )}
                   </div>
 
                   <div>
-                    <Row>
+                    <Row className="g-3">
                       {/* Order Source Filter */}
-                      <Col md={2} className="mb-3">
-                        <Form.Label className="small text-muted">Order Source</Form.Label>
-                        <Form.Select size="sm" value={filters.orderSource} onChange={(e) => handleFilterChange('orderSource', e.target.value)}>
-                          <option value="">All</option>
-                          <option value="Manager">Manager</option>
-                          <option value="Captain">Captain</option>
-                        </Form.Select>
-                      </Col>
+                    <Col xs="12" sm="6" md="2">
+                      <Form.Label className="small fw-bold text-muted mb-1">Order Source</Form.Label>
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle 
+                          variant="white" 
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                          style={{ height: '44px', fontSize: '14px' }}
+                        >
+                          {filters.orderSource || 'All Sources'}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu 
+                          className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" 
+                          style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+                        >
+                          <Dropdown.Item onClick={() => handleFilterChange('orderSource', '')}>All Sources</Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Manager')}>Manager</Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Captain')}>Captain</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </Col>
 
                       {/* Date Range Filter */}
-                      <Col md={2} className="mb-3">
-                        <Form.Label className="small text-muted">From Date</Form.Label>
-                        <Form.Control type="date" size="sm" value={filters.fromDate} onChange={(e) => handleFilterChange('fromDate', e.target.value)} />
+                      <Col xs="6" sm="6" md="2">
+                        <Form.Label className="small fw-bold text-muted mb-1">From Date</Form.Label>
+                        <Form.Control 
+                          type="date" 
+                          value={filters.fromDate} 
+                          onChange={(e) => handleFilterChange('fromDate', e.target.value)} 
+                          className="rounded-pill px-4 border-0 shadow-sm bg-white"
+                          style={{ height: '44px', fontSize: '14px', appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 16 16\'%3e%3cpath fill=\'none\' stroke=\'%23343a40\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M2 5l6 6 6-6\'/%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '16px 12px' }}
+                        />
                       </Col>
-                      <Col md={2} className="mb-3">
-                        <Form.Label className="small text-muted">To Date</Form.Label>
-                        <Form.Control type="date" size="sm" value={filters.toDate} onChange={(e) => handleFilterChange('toDate', e.target.value)} />
+                      <Col xs="6" sm="6" md="2">
+                        <Form.Label className="small fw-bold text-muted mb-1">To Date</Form.Label>
+                        <Form.Control 
+                          type="date" 
+                          value={filters.toDate} 
+                          onChange={(e) => handleFilterChange('toDate', e.target.value)} 
+                          className="rounded-pill px-4 border-0 shadow-sm bg-white"
+                          style={{ height: '44px', fontSize: '14px', appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 16 16\'%3e%3cpath fill=\'none\' stroke=\'%23343a40\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M2 5l6 6 6-6\'/%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '16px 12px' }}
+                        />
                       </Col>
 
                       {/* Order Status Filter */}
-                      <Col md={3} className="mb-3">
-                        <Form.Label className="small text-muted">Order Status</Form.Label>
-                        <Form.Select size="sm" value={filters.orderStatus} onChange={(e) => handleFilterChange('orderStatus', e.target.value)}>
-                          <option value="">All</option>
-                          <option value="Paid">Paid</option>
-                          <option value="Save">Save</option>
-                          <option value="KOT">KOT</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </Form.Select>
-                      </Col>
+                    <Col xs="12" sm="6" md="3">
+                      <Form.Label className="small fw-bold text-muted mb-1">Order Status</Form.Label>
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle 
+                          variant="white" 
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                          style={{ height: '44px', fontSize: '14px' }}
+                        >
+                          {filters.orderStatus || 'All Status'}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu 
+                          className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" 
+                          style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+                        >
+                          <Dropdown.Item onClick={() => handleFilterChange('orderStatus', '')}>All Status</Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Paid')}>Paid</Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Save')}>Save</Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'KOT')}>KOT</Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Cancelled')}>Cancelled</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </Col>
 
                       {/* Order Type Filter */}
-                      <Col md={3} className="mb-3">
-                        <Form.Label className="small text-muted">Order Type</Form.Label>
-                        <Form.Select size="sm" value={filters.orderType} onChange={(e) => handleFilterChange('orderType', e.target.value)}>
-                          <option value="">All</option>
-                          <option value="Dine In">Dine In</option>
-                          <option value="Takeaway">Takeaway</option>
-                          <option value="Delivery">Delivery</option>
-                        </Form.Select>
-                      </Col>
+                    <Col xs="12" sm="6" md="3">
+                      <Form.Label className="small fw-bold text-muted mb-1">Order Type</Form.Label>
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle 
+                          variant="white" 
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                          style={{ height: '44px', fontSize: '14px' }}
+                        >
+                          {filters.orderType || 'All Types'}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu 
+                          className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" 
+                          style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+                        >
+                          <Dropdown.Item onClick={() => handleFilterChange('orderType', '')}>All Types</Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Dine In')}>Dine In</Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Takeaway')}>Takeaway</Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Delivery')}>Delivery</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </Col>
 
                       {/* Table Area Filter */}
                       {/* <Col md={2} className="mb-3">

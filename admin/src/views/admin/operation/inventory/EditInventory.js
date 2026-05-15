@@ -41,6 +41,7 @@ const customStyles = `
       color: #334155 !important;
       transition: all 0.3s ease !important;
       background: #fcfdfe !important;
+      height: 52px !important;
     }
     .modern-input:focus {
       border-color: #23b3f4 !important;
@@ -80,8 +81,8 @@ const customStyles = `
       border-color: rgba(35, 179, 244, 0.2) !important;
     }
     .remove-btn {
-      width: 36px;
-      height: 36px;
+      width: 45px;
+      height: 45px;
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -103,6 +104,11 @@ const customStyles = `
       margin-top: 3rem;
       border: 1px solid #f1f5f9;
     }
+    @media (max-width: 768px) {
+      .summary-hub {
+        padding: 1.5rem;
+      }
+    }
     .total-display {
       background: #ffffff;
       border-radius: 1.25rem;
@@ -111,6 +117,22 @@ const customStyles = `
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .amount-paid-container {
+      width: 300px;
+      text-align: right;
+    }
+    @media (max-width: 768px) {
+      .total-display {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .amount-paid-container {
+        width: 100%;
+        text-align: left;
+      }
     }
     .total-val {
       font-size: 1.75rem;
@@ -270,9 +292,18 @@ const EditInventory = () => {
       <style>{customStyles}</style>
       <HtmlHead title="Edit Inventory" />
       <div className="container px-lg-5">
-        <div className="mb-5 pt-4 d-flex justify-content-between align-items-center">
-          <div><h1 className="display-4 fw-bold mb-1" style={{color: brandColor}}>Edit Inventory</h1><BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations', text: 'Operations' }, { to: 'operations/edit-inventory', title: 'Edit' }]} /></div>
-          <Button variant="outline-secondary" onClick={() => history.goBack()} className="rounded-pill px-4 fw-bold border-2"><CsLineIcons icon="arrow-left" size="14" className="me-2" /> Cancel</Button>
+        <div className="page-title-container mb-4 mt-n3">
+          <Row className="g-3 align-items-center">
+            <Col xs="12" md="7">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>Edit Inventory</h1>
+              <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations', text: 'Operations' }, { to: 'operations/edit-inventory', title: 'Edit' }]} />
+            </Col>
+            <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
+              <Button variant="outline-secondary" onClick={() => history.goBack()} className="rounded-pill px-4 fw-bold border-2">
+                <CsLineIcons icon="arrow-left" size="14" className="me-2" /> Cancel
+              </Button>
+            </Col>
+          </Row>
         </div>
 
         <Form onSubmit={handleSubmit}>
@@ -280,10 +311,10 @@ const EditInventory = () => {
             <Card.Body className="p-4 p-lg-5">
               <div className="section-label"><CsLineIcons icon="file-text" size="18" /> Record Modification</div>
               <Row className="g-4 mb-5">
-                <Col md={3}><div className="input-group-label">Bill Date</div><Form.Control type="date" className="modern-input" name="bill_date" value={values.bill_date} onChange={handleChange} isInvalid={touched.bill_date && errors.bill_date} /></Col>
-                <Col md={3}><div className="input-group-label">Bill Number</div><Form.Control type="text" className="modern-input" name="bill_number" value={values.bill_number} onChange={handleChange} isInvalid={touched.bill_number && errors.bill_number} /></Col>
-                <Col md={3}><div className="input-group-label">Vendor</div><Form.Control type="text" className="modern-input" name="vendor_name" value={values.vendor_name} onChange={handleChange} /></Col>
-                <Col md={3}><div className="input-group-label">Category</div><Form.Control type="text" className="modern-input" name="category" value={values.category} onChange={handleChange} /></Col>
+                <Col xs={12} md={3}><div className="input-group-label">Bill Date</div><Form.Control type="date" className="modern-input" name="bill_date" value={values.bill_date} onChange={handleChange} isInvalid={touched.bill_date && errors.bill_date} /></Col>
+                <Col xs={12} md={3}><div className="input-group-label">Bill Number</div><Form.Control type="text" className="modern-input" name="bill_number" value={values.bill_number} onChange={handleChange} isInvalid={touched.bill_number && errors.bill_number} /></Col>
+                <Col xs={12} md={3}><div className="input-group-label">Vendor</div><Form.Control type="text" className="modern-input" name="vendor_name" value={values.vendor_name} onChange={handleChange} /></Col>
+                <Col xs={12} md={3}><div className="input-group-label">Category</div><Form.Control type="text" className="modern-input" name="category" value={values.category} onChange={handleChange} /></Col>
                 <Col md={12}><div className="input-group-label">Update Attachments</div><Form.Control type="file" multiple className="d-none" id="bill-update" onChange={handleFileChange} /><label htmlFor="bill-update" className="w-100 d-block p-4 text-center border-dashed rounded-4 bg-light cursor-pointer"><CsLineIcons icon="upload" size="24" className="mb-2 text-primary" /><div className="fw-bold text-muted small">Select New Files to Replace Current ones</div></label><div className="d-flex flex-wrap gap-2 mt-3">{filePreviews.map((f, i) => <div key={i} className="file-pill"><CsLineIcons icon={f.name.match(/\.(pdf)$/i) ? 'file-text' : 'image'} size="14" /> {f.name.substring(0, 15)}...</div>)}</div></Col>
               </Row>
 
@@ -299,11 +330,23 @@ const EditInventory = () => {
               {values.items.map((item, idx) => (
                 <div key={idx} className="item-row-card">
                   <Row className="w-100 g-3 align-items-center">
-                    <Col lg={4.5} style={{flex: 2}}><Form.Control type="text" className="modern-input" value={item.item_name} onChange={(e) => handleItemChange(idx, 'item_name', e.target.value)} /></Col>
-                    <Col lg={1.5} style={{flex: 0.8}}><Form.Control type="number" className="modern-input" value={item.item_quantity} onChange={(e) => handleItemChange(idx, 'item_quantity', e.target.value)} /></Col>
-                    <Col lg={2} style={{flex: 1}}><Form.Select className="modern-input" value={item.unit} onChange={(e) => handleItemChange(idx, 'unit', e.target.value)}><option value="">Unit</option><option value="kg">kg</option><option value="g">g</option><option value="litre">ltr</option><option value="ml">ml</option><option value="piece">pc</option></Form.Select></Col>
-                    <Col lg={3} style={{flex: 1.2}}><Form.Control type="number" className="modern-input" value={item.item_price} onChange={(e) => handleItemChange(idx, 'item_price', e.target.value)} /></Col>
-                    <Col xs="auto" style={{width: '60px'}} className="text-end"><button type="button" className="remove-btn" onClick={() => removeItem(idx)} disabled={values.items.length === 1}><CsLineIcons icon="bin" size="16" /></button></Col>
+                    <Col xs={12} lg={4}>
+                      <div className="input-group-label d-lg-none">Item Name</div>
+                      <Form.Control type="text" className="modern-input" value={item.item_name} onChange={(e) => handleItemChange(idx, 'item_name', e.target.value)} />
+                    </Col>
+                    <Col xs={4} lg={1.5}>
+                      <div className="input-group-label d-lg-none">Qty</div>
+                      <Form.Control type="number" className="modern-input" value={item.item_quantity} onChange={(e) => handleItemChange(idx, 'item_quantity', e.target.value)} />
+                    </Col>
+                    <Col xs={4} lg={2}>
+                      <div className="input-group-label d-lg-none">Unit</div>
+                      <Form.Select className="modern-input" value={item.unit} onChange={(e) => handleItemChange(idx, 'unit', e.target.value)}><option value="">Unit</option><option value="kg">kg</option><option value="g">g</option><option value="litre">ltr</option><option value="ml">ml</option><option value="piece">pc</option></Form.Select>
+                    </Col>
+                    <Col xs={4} lg={3}>
+                      <div className="input-group-label d-lg-none">Price</div>
+                      <Form.Control type="number" className="modern-input" value={item.item_price} onChange={(e) => handleItemChange(idx, 'item_price', e.target.value)} />
+                    </Col>
+                    <Col xs={12} lg="auto" className="text-end"><button type="button" className="remove-btn ms-auto" onClick={() => removeItem(idx)} disabled={values.items.length === 1}><CsLineIcons icon="bin" size="16" /></button></Col>
                   </Row>
                 </div>
               ))}
@@ -315,9 +358,28 @@ const EditInventory = () => {
                   <Col md={4}><div className="input-group-label">Tax Amount</div><Form.Control type="number" className="modern-input" name="tax" value={values.tax} onChange={handleChange} /></Col>
                   <Col md={4}><div className="input-group-label">Discount</div><Form.Control type="number" className="modern-input" name="discount" value={values.discount} onChange={handleChange} /></Col>
                   
-                  <Col md={12}><div className="total-display shadow-sm"><div><div className="input-group-label mb-1">Updated Payable</div><div className="total-val">₹ {values.total_amount}</div></div><div className="text-end" style={{width: '300px'}}><div className="input-group-label">Revised Paid Amount</div><Form.Control type="number" className="modern-input text-center fw-bold text-primary" style={{fontSize: '1.25rem'}} name="paid_amount" value={values.paid_amount} onChange={handleChange} /></div></div></Col>
+                  <Col md={12}>
+                    <div className="total-display shadow-sm flex-column flex-md-row align-items-stretch align-items-md-center gap-3">
+                      <div>
+                        <div className="input-group-label mb-1">Updated Payable</div>
+                        <div className="total-val">₹ {values.total_amount}</div>
+                      </div>
+                      <div className="text-start text-md-end" style={{ width: '300px' }}>
+                        <div className="input-group-label">Revised Paid Amount</div>
+                        <Form.Control type="number" className="modern-input text-md-center fw-bold text-primary" style={{ fontSize: '1.25rem' }} name="paid_amount" value={values.paid_amount} onChange={handleChange} />
+                      </div>
+                    </div>
+                  </Col>
                   
-                  <Col md={12} className="text-end pt-3 d-flex justify-content-between align-items-center"><div className="d-flex align-items-center gap-2"><div className="sw-2 sh-2 rounded-circle bg-warning" /><span className="fw-bold text-muted">Remaining Due: ₹ {values.unpaid_amount}</span></div><Button type="submit" variant="outline-primary" className="rounded-pill px-5 fw-bold border-2 ms-auto" disabled={isSubmitting}>{isSubmitting ? <Spinner animation="border" size="sm" className="me-2" /> : <CsLineIcons icon="save" className="me-2" />} Update & Finalize Changes</Button></Col>
+                  <Col md={12} className="text-end pt-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                    <div className="d-flex align-items-center gap-2 w-100 justify-content-center justify-content-md-start">
+                      <div className="sw-2 sh-2 rounded-circle bg-warning flex-shrink-0" />
+                      <span className="fw-bold text-muted">Remaining Due: ₹ {values.unpaid_amount}</span>
+                    </div>
+                    <Button type="submit" variant="outline-primary" className="rounded-pill px-5 fw-bold border-2 w-100 w-md-auto ms-md-auto" disabled={isSubmitting}>
+                      {isSubmitting ? <Spinner animation="border" size="sm" className="me-2" /> : <CsLineIcons icon="save" className="me-2" />} Update & Finalize Changes
+                    </Button>
+                  </Col>
                 </Row>
               </div>
             </Card.Body>

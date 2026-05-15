@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Button, Col, Row, Card, Form, Spinner, Alert, Badge, ProgressBar } from 'react-bootstrap';
+import { Button, Col, Row, Card, Form, Spinner, Badge, ProgressBar, Table } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -11,129 +11,222 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
+// Re-using the FilterSelect from MenuPerformanceReport for perfectly responsive mobile dropdowns
+const FilterSelect = ({ value, onChange, options, disabled }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
+    };
+  }, []);
+
+  const selected = options.find((o) => o.value === value);
+
+  return (
+    <div className="filter-select" ref={ref}>
+      <div className={`filter-select-value ${disabled ? 'disabled' : ''}`} onClick={() => !disabled && setOpen(!open)}>
+        {selected ? selected.label : 'Select...'}
+        <CsLineIcons icon="chevron-down" size="14" />
+      </div>
+      {open && (
+        <div className="filter-select-options">
+          {options.map((opt) => (
+            <div
+              key={opt.value}
+              className={`filter-select-option${opt.value === value ? ' is-selected' : ''}${opt.disabled ? ' is-disabled' : ''}`}
+              onMouseDown={(e) => {
+                if (opt.disabled) return;
+                e.preventDefault();
+                onChange(opt.value);
+                setOpen(false);
+              }}
+              onTouchEnd={(e) => {
+                if (opt.disabled) return;
+                e.preventDefault();
+                onChange(opt.value);
+                setOpen(false);
+              }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const customStyles = `
-    .report-container {
-      background: #f9f9fb;
-      min-height: 100vh;
-      padding-bottom: 5rem;
-    }
-    .filter-bar {
-      background: #ffffff !important;
-      border-radius: 1rem !important;
-      border: 1px solid rgba(0, 0, 0, 0.05) !important;
-      padding: 1rem 1.5rem !important;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.01) !important;
-      max-width: 1400px;
-      margin: 0 auto 1.5rem;
-    }
-    .stats-card {
-      background: #ffffff !important;
-      border-radius: 1.25rem !important;
-      border: 1.5px solid #f1f5f9 !important;
-      padding: 1.25rem !important;
-      transition: all 0.2s ease;
-      height: 100%;
-    }
-    .stats-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.02);
-      border-color: #23b3f4;
-    }
-    .workstation-card {
-      background: #ffffff !important;
+    .interactive-card {
+      background: rgba(255, 255, 255, 0.98) !important;
+      backdrop-filter: blur(15px) !important;
       border-radius: 1.5rem !important;
-      border: 1px solid rgba(0, 0, 0, 0.05) !important;
-      padding: 1.5rem !important;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01) !important;
-      max-width: 1400px;
-      margin: 0 auto 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.8) !important;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05) !important;
+      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+      overflow: hidden;
+      position: relative;
     }
-    .item-row-card {
-      background: #f8fafc !important;
-      border-radius: 0.75rem !important;
-      padding: 0.75rem 1rem !important;
-      margin-bottom: 0.5rem;
-      border: 1px solid #f1f5f9 !important;
+    .interactive-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px -10px rgba(35, 179, 244, 0.15) !important;
+      border-color: rgba(35, 179, 244, 0.4) !important;
+    }
+    .filter-card {
+      overflow: visible !important;
+      z-index: 10 !important;
+    }
+    .card-title-container {
+      padding-bottom: 0.75rem;
+      margin-bottom: 1rem;
+      border-bottom: 1.5px solid rgba(35, 179, 244, 0.1);
       display: flex;
       align-items: center;
-      transition: all 0.2s ease;
+      justify-content: space-between;
     }
-    .item-row-card:hover {
+    .stat-card-inner {
+      background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(35, 179, 244, 0.02) 100%);
+    }
+    .custom-btn-outline {
       background: #ffffff !important;
-      border-color: #23b3f4 !important;
-    }
-    .btn-pill-action {
+      border: 1.5px solid #23b3f4 !important;
+      color: #23b3f4 !important;
       border-radius: 50px !important;
-      padding: 0.45rem 1.25rem !important;
+      padding: 0.6rem 1.5rem !important;
       font-weight: 700 !important;
-      border-width: 2px !important;
-      font-size: 0.75rem !important;
+      transition: all 0.3s ease !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
     }
-    .modern-input {
-      border-radius: 10px !important;
-      border: 1.5px solid #f1f5f9 !important;
-      padding: 0.5rem 0.75rem !important;
-      font-weight: 600 !important;
-      font-size: 0.85rem !important;
-    }
-    .header-text {
-      font-size: 0.6rem;
-      font-weight: 800;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .stats-val { font-weight: 900; line-height: 1.1; }
-    .status-pill {
-      padding: 0.35rem 0.75rem;
-      border-radius: 50px;
-      font-weight: 800;
-      font-size: 0.6rem;
-      text-transform: uppercase;
+    .custom-btn-outline:hover {
+      background: #23b3f4 !important;
+      color: #ffffff !important;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(35, 179, 244, 0.2) !important;
     }
     .preset-pill {
       border-radius: 50px !important;
       padding: 0.35rem 1rem !important;
       font-weight: 700 !important;
-      font-size: 0.65rem !important;
+      font-size: 0.75rem !important;
       border-width: 1.5px !important;
       margin-right: 0.4rem;
       margin-bottom: 0.4rem;
     }
-    .section-divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(35, 179, 244, 0.2), transparent);
-      margin: 2rem 0;
+    .stat-label {
+      font-size: 0.7rem !important;
+      font-weight: 800 !important;
+      color: #64748b !important;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .stat-value {
+      font-size: 1.8rem !important;
+      font-weight: 900 !important;
+      color: #0f172a !important;
+      line-height: 1;
+    }
+    .form-control {
+      border-radius: 0.8rem !important;
+      padding: 0.6rem 1rem !important;
+      border: 1.5px solid rgba(0,0,0,0.05) !important;
+      background: rgba(0,0,0,0.01) !important;
+      font-weight: 600 !important;
+    }
+    .data-table thead th {
+      background: #f8fafc !important;
+      color: #475569 !important;
+      font-size: 0.7rem !important;
+      font-weight: 800 !important;
+      text-transform: uppercase;
+      border: none !important;
+      padding: 1rem !important;
+    }
+    
+    /* FilterSelect CSS */
+    .filter-select {
+      position: relative;
       width: 100%;
     }
-
-    @media print {
-      .filter-bar, .btn-pill-action, .preset-pill, .breadcrumb-container { display: none !important; }
-      .workstation-card { box-shadow: none !important; border: 1px solid #eee !important; margin-bottom: 2rem !important; }
-      .report-container { background: #ffffff !important; padding: 0 !important; }
-      .stats-card { border: 1px solid #eee !important; box-shadow: none !important; }
-      body { background: #fff !important; }
+    .filter-select-value {
+      border-radius: 0.8rem !important;
+      padding: 0.6rem 1rem !important;
+      border: 1.5px solid rgba(0,0,0,0.05) !important;
+      background: rgba(0,0,0,0.01) !important;
+      font-weight: 600 !important;
+      color: #495057;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 42px;
+      user-select: none;
     }
-
-    @media (max-width: 991px) {
-      .workstation-card { padding: 1rem !important; }
-      .item-row-card { flex-direction: column; align-items: flex-start; padding: 1rem !important; }
-      .mobile-stats-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        width: 100%;
-        gap: 0.5rem;
-        margin-top: 0.75rem;
-        padding-top: 0.75rem;
-        border-top: 1px solid #f1f5f9;
-      }
+    .filter-select-value.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: rgba(0,0,0,0.03) !important;
+    }
+    .filter-select-options {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 4px;
+      background: #ffffff;
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 0.8rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      z-index: 9999;
+      max-height: 250px;
+      overflow-y: auto;
+      padding: 0.5rem 0;
+    }
+    .filter-select-option {
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #495057;
+      transition: background 0.2s;
+    }
+    .filter-select-option:hover {
+      background: rgba(35, 179, 244, 0.05);
+      color: #23b3f4;
+    }
+    .filter-select-option.is-selected {
+      background: rgba(35, 179, 244, 0.1);
+      color: #23b3f4;
+    }
+    .filter-select-option.is-disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .filter-select-option.is-disabled:hover {
+      background: none;
+      color: inherit;
     }
 `;
 
 const PRESETS = [
   { label: 'Today', getValue: () => ({ from: format(new Date(), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') }) },
   { label: '7 Days', getValue: () => ({ from: format(subDays(new Date(), 6), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') }) },
-  { label: 'Week', getValue: () => ({ from: format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'), to: format(endOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd') }) },
+  {
+    label: 'Week',
+    getValue: () => ({
+      from: format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+      to: format(endOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+    }),
+  },
   { label: '30 Days', getValue: () => ({ from: format(subDays(new Date(), 29), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') }) },
   { label: 'Month', getValue: () => ({ from: format(startOfMonth(new Date()), 'yyyy-MM-dd'), to: format(endOfMonth(new Date()), 'yyyy-MM-dd') }) },
 ];
@@ -141,7 +234,8 @@ const PRESETS = [
 const InventoryReport = () => {
   const title = 'Unified Inventory Hub';
   const brandColor = '#23b3f4';
-  
+  const brandBg = 'rgba(35, 179, 244, 0.08)';
+
   const [fromDate, setFromDate] = useState(format(subDays(new Date(), 6), 'yyyy-MM-dd'));
   const [toDate, setToDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [reportData, setReportData] = useState(null);
@@ -167,9 +261,9 @@ const InventoryReport = () => {
 
       const [resOper, resStats] = await Promise.all([
         getDailyReport({ from: fromDate, to: toDate }),
-        axios.get(`${API_BASE}/statistics/inventory`, { ...getHeaders(), params })
+        axios.get(`${API_BASE}/statistics/inventory`, { ...getHeaders(), params }),
       ]);
-      
+
       if (resOper.data.success) setReportData(resOper.data);
       if (resStats.data) setStatsData(resStats.data);
     } catch (err) {
@@ -181,10 +275,15 @@ const InventoryReport = () => {
 
   useEffect(() => {
     fetchUnifiedReport();
-  }, []);
+  }, [fetchUnifiedReport]);
 
   useEffect(() => {
-    const cleanup = () => { if (chartInstance.current) { chartInstance.current.destroy(); chartInstance.current = null; } };
+    const cleanup = () => {
+      if (chartInstance.current) {
+        chartInstance.current.destroy();
+        chartInstance.current = null;
+      }
+    };
     if (!reportData?.chartData?.length || !chartRef.current) return cleanup;
     cleanup();
 
@@ -202,7 +301,7 @@ const InventoryReport = () => {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { display: true, position: 'top', labels: { usePointStyle: true, font: { weight: 'bold', size: 11 } } } },
-        scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+        scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } },
       },
     });
     return cleanup;
@@ -210,7 +309,9 @@ const InventoryReport = () => {
 
   const applyPreset = (preset) => {
     const { from, to } = preset.getValue();
-    setFromDate(from); setToDate(to); setActivePreset(preset.label);
+    setFromDate(from);
+    setToDate(to);
+    setActivePreset(preset.label);
   };
 
   const handleExportExcel = async () => {
@@ -221,7 +322,9 @@ const InventoryReport = () => {
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `Inventory_Intelligence.xlsx`);
-      document.body.appendChild(link); link.click(); link.parentNode.removeChild(link);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
       toast.success('Excel exported');
     } catch (err) {
       toast.error('Export failed');
@@ -232,252 +335,631 @@ const InventoryReport = () => {
 
   const formatCurrency = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0);
 
+  const statusOptions = ['all', 'Completed', 'Pending', 'Partially Paid'].map((s) => ({ value: s, label: s === 'all' ? 'All' : s }));
+  const categoryOptions = ['all', ...new Set(statsData?.categoryPerformance?.map((c) => c.category) || [])].map((c) => ({
+    value: c,
+    label: c === 'all' ? 'All' : c,
+  }));
+
   return (
-    <div className="report-container">
+    <>
       <style>{customStyles}</style>
       <HtmlHead title={title} />
-      <div className="container-fluid px-3 px-lg-5 pt-3">
-        <div className="mb-4 d-flex justify-content-between align-items-center">
-          <div><h2 className="fw-bold mb-0" style={{color: brandColor}}>{title}</h2><BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'statistics', text: 'Statistics' }, { to: '', title: 'Unified Hub' }]} /></div>
-        </div>
 
-        <Card className="filter-bar border-0">
-          <Row className="g-2 align-items-end">
-            <Col xs={12} className="mb-2">
-              <div className="d-flex flex-wrap">
-                {PRESETS.map((p) => (
-                  <Button key={p.label} variant={activePreset === p.label ? 'primary' : 'outline-primary'} className="preset-pill" onClick={() => applyPreset(p)}>{p.label}</Button>
-                ))}
-              </div>
+      <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
+        <Row className="g-0 align-items-center">
+          <Col xs="auto" className="me-auto">
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>
+              {title}
+            </h1>
+            <BreadcrumbList
+              items={[
+                { to: '', text: 'Home' },
+                { to: 'statistics', text: 'Statistics' },
+                { to: 'reports/inventory', text: 'Unified Hub' },
+              ]}
+            />
+          </Col>
+        </Row>
+      </div>
+
+      {/* Hub Filters */}
+      <Card className="interactive-card filter-card border-0 mb-4 no-print shadow-sm">
+        <Card.Body className="p-4">
+          <div className="card-title-container">
+            <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+              Intelligence Parameters
+            </h2>
+            <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
+          </div>
+
+          <div className="d-flex flex-wrap mb-4">
+            {PRESETS.map((p) => (
+              <Button key={p.label} variant={activePreset === p.label ? 'primary' : 'outline-primary'} className="preset-pill" onClick={() => applyPreset(p)}>
+                {p.label}
+              </Button>
+            ))}
+          </div>
+
+          <Row className="g-3">
+            <Col xs={12} md={3}>
+              <Form.Label className="stat-label mb-2">Start Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={fromDate}
+                onChange={(e) => {
+                  setFromDate(e.target.value);
+                  setActivePreset('Custom');
+                }}
+              />
             </Col>
-            <Col md={3}><div><div className="header-text mb-1">Start Date</div><Form.Control type="date" className="modern-input w-100" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setActivePreset('Custom'); }} /></div></Col>
-            <Col md={3}><div><div className="header-text mb-1">End Date</div><Form.Control type="date" className="modern-input w-100" value={toDate} onChange={(e) => { setToDate(e.target.value); setActivePreset('Custom'); }} /></div></Col>
-            <Col md={2}>
-              <div>
-                <div className="header-text mb-1">Status</div>
-                <Form.Select className="modern-input w-100" value={selectedStatus} onChange={(e) => { setSelectedStatus(e.target.value); }}>
-                  {['all', 'Completed', 'Pending', 'Partially Paid'].map(s => <option key={s} value={s}>{s}</option>)}
-                </Form.Select>
-              </div>
+            <Col xs={12} md={3}>
+              <Form.Label className="stat-label mb-2">End Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={toDate}
+                onChange={(e) => {
+                  setToDate(e.target.value);
+                  setActivePreset('Custom');
+                }}
+              />
             </Col>
-            <Col md={2}>
-              <div>
-                <div className="header-text mb-1">Category</div>
-                <Form.Select className="modern-input w-100" value={selectedCategory} onChange={(e) => { setSelectedCategory(e.target.value); }}>
-                  {['all', ...new Set(statsData?.categoryPerformance?.map(c => c.category) || [])].map(c => <option key={c} value={c}>{c}</option>)}
-                </Form.Select>
-              </div>
+            <Col xs={12} md={2}>
+              <Form.Label className="stat-label mb-2">Status</Form.Label>
+              <FilterSelect value={selectedStatus} onChange={setSelectedStatus} options={statusOptions} />
             </Col>
-            <Col md="auto" className="d-flex gap-2 flex-wrap mt-2">
-              <Button variant="primary" className="btn-pill-action border-2 px-3" onClick={fetchUnifiedReport} disabled={loading}>{loading ? <Spinner animation="border" size="sm" /> : 'Generate Hub'}</Button>
-              <Button variant="outline-success" className="btn-pill-action border-2 px-3" onClick={handleExportExcel} disabled={exporting}>Excel</Button>
-              <Button variant="outline-danger" className="btn-pill-action border-2 px-3" onClick={() => window.print()} disabled={!reportData}>PDF</Button>
+            <Col xs={12} md={2}>
+              <Form.Label className="stat-label mb-2">Category</Form.Label>
+              <FilterSelect value={selectedCategory} onChange={setSelectedCategory} options={categoryOptions} />
+            </Col>
+            <Col xs={12} md={2} className="d-flex align-items-end">
+              <Button className="custom-btn-outline w-100" onClick={fetchUnifiedReport} disabled={loading}>
+                <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
+                {loading ? 'Processing...' : 'Generate Hub'}
+              </Button>
             </Col>
           </Row>
-        </Card>
+        </Card.Body>
+      </Card>
 
-        {loading ? (
-          <div className="text-center py-5"><Spinner animation="border" variant="primary" /></div>
-        ) : (reportData && statsData) ? (
-          <div style={{maxWidth: '1400px', margin: '0 auto'}}>
-            
-            {/* KPI Section 1: Operations */}
-            <div className="header-text mb-3 px-2">Operational Performance Metrics</div>
-            <Row className="mb-4 g-3">
-              {[
-                { label: 'Received', value: reportData.summary.total_received, color: '#3b82f6', icon: 'boxes' },
-                { label: 'Used', value: reportData.summary.total_used, color: '#10b981', icon: 'check-circle' },
-                { label: 'Wasted', value: reportData.summary.total_wasted, color: '#ef4444', icon: 'bin' },
-                { label: 'Stock On Hand', value: reportData.summary.total_current_stock, color: '#f59e0b', icon: 'layers' },
-              ].map((c) => (
-                <Col key={c.label} lg={3} md={6} xs={6}>
-                  <div className="stats-card">
-                    <div className="d-flex justify-content-between mb-2">
-                       <div className="header-text">{c.label}</div>
-                       <CsLineIcons icon={c.icon} size="14" style={{color: c.color}} />
-                    </div>
-                    <div className="stats-val h4 mb-0" style={{color: c.color}}>{c.value}</div>
-                  </div>
-                </Col>
-              ))}
-            </Row>
+      {/* Action Bar */}
+      <Card className="interactive-card border-0 mb-4 no-print shadow-sm">
+        <Card.Body className="p-4 d-flex justify-content-between align-items-center">
+          <div className="d-flex gap-3 align-items-center">
+            <Button variant="outline-success" className="custom-btn-outline border-success text-success" onClick={handleExportExcel} disabled={exporting}>
+              <CsLineIcons icon="file-text" className="me-2" size="15" /> Excel
+            </Button>
+            <Button variant="outline-danger" className="custom-btn-outline border-danger text-danger" onClick={() => window.print()} disabled={!reportData}>
+              <CsLineIcons icon="file-text" className="me-2" size="15" /> PDF
+            </Button>
+          </div>
+        </Card.Body>
+      </Card>
 
-            {/* KPI Section 2: Financials */}
-            <div className="header-text mb-3 px-2">Financial Procurement Analytics</div>
-            <Row className="mb-4 g-3">
-              {[
-                { label: 'Total Investment', value: formatCurrency(statsData.summary.totalAmount), color: '#3b82f6', icon: 'wallet' },
-                { label: 'Unpaid Dues', value: formatCurrency(statsData.summary.totalUnpaid), color: '#ef4444', icon: 'credit-card' },
-                { label: 'Payment Rate', value: `${statsData.summary.paymentRate}%`, color: '#10b981', icon: 'activity' },
-                { label: 'Avg PO Value', value: formatCurrency(statsData.summary.avgPurchaseValue), color: '#23b3f4', icon: 'trend-up' },
-              ].map((c) => (
-                <Col key={c.label} lg={3} md={6} xs={6}>
-                  <div className="stats-card">
-                    <div className="d-flex justify-content-between mb-2">
-                       <div className="header-text">{c.label}</div>
-                       <CsLineIcons icon={c.icon} size="14" style={{color: c.color}} />
-                    </div>
-                    <div className="stats-val h4 mb-0" style={{color: c.color}}>{c.value}</div>
-                  </div>
-                </Col>
-              ))}
-            </Row>
-
-            <div className="section-divider" />
-
-            <Row className="g-4">
-               {/* Left Column: Alerts, Charts, and Insights */}
-               <Col xl={4}>
-                  {/* Reorder Suggestions (Operational) */}
-                  {reportData.reorderSuggestions?.filter((s) => s.needs_reorder || s.is_below_threshold).length > 0 && (
-                    <div className="workstation-card mb-4 border-danger" style={{borderWidth: '2px'}}>
-                      <div className="d-flex align-items-center gap-2 mb-4">
-                         <div className="bg-danger p-2 rounded-3 shadow-sm"><CsLineIcons icon="notification" className="text-white" size="18" /></div>
-                         <div className="h6 fw-bold mb-0">Smart Reorder Alerts</div>
+      {loading ? (
+        <div className="d-flex justify-content-center align-items-center py-5" style={{ minHeight: '400px' }}>
+          <Spinner animation="border" variant="primary" />
+        </div>
+      ) : reportData && statsData ? (
+        <>
+          {/* KPI Section 1: Operations */}
+          <h2 className="small-title mt-4 mb-3" style={{ color: brandColor, fontWeight: '800' }}>
+            Operational Performance Metrics
+          </h2>
+          <Row className="mb-4 g-4">
+            {[
+              { label: 'Received', value: reportData.summary.total_received, color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', icon: 'boxes' },
+              { label: 'Used', value: reportData.summary.total_used, color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', icon: 'check-circle' },
+              { label: 'Wasted', value: reportData.summary.total_wasted, color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', icon: 'bin' },
+              { label: 'Stock On Hand', value: reportData.summary.total_current_stock, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', icon: 'archive' },
+            ].map((c) => (
+              <Col key={c.label} xl="3" md="6" xs="12">
+                <Card className="interactive-card border-0 h-100 shadow-sm">
+                  <Card.Body className="p-4 stat-card-inner">
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div>
+                        <div className="stat-label mb-2">{c.label}</div>
+                        <div className="stat-value" style={{ color: c.color }}>
+                          {c.value}
+                        </div>
                       </div>
-                      {reportData.reorderSuggestions.filter((s) => s.needs_reorder || s.is_below_threshold).map((item) => (
-                        <div key={item.item_name} className="item-row-card border-danger" style={{borderLeftWidth: '4px'}}>
-                           <div className="d-flex justify-content-between w-100 align-items-center">
-                              <div><div className="fw-bold small">{item.item_name}</div><div className="x-small text-muted">{item.current_stock} {item.unit} left</div></div>
-                              <Badge bg="danger" className="status-pill text-white">URGENT</Badge>
-                           </div>
+                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: c.bg }}>
+                        <CsLineIcons icon={c.icon} size="24" style={{ color: c.color }} />
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+
+          {/* KPI Section 2: Financials */}
+          <h2 className="small-title mt-4 mb-3" style={{ color: brandColor, fontWeight: '800' }}>
+            Financial Procurement Analytics
+          </h2>
+          <Row className="mb-4 g-4">
+            {[
+              {
+                label: 'Total Investment',
+                value: formatCurrency(statsData.summary.totalAmount),
+                color: '#3b82f6',
+                bg: 'rgba(59, 130, 246, 0.1)',
+                icon: 'wallet',
+              },
+              {
+                label: 'Unpaid Dues',
+                value: formatCurrency(statsData.summary.totalUnpaid),
+                color: '#ef4444',
+                bg: 'rgba(239, 68, 68, 0.1)',
+                icon: 'credit-card',
+              },
+              { label: 'Payment Rate', value: `${statsData.summary.paymentRate}%`, color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', icon: 'activity' },
+              { label: 'Avg PO Value', value: formatCurrency(statsData.summary.avgPurchaseValue), color: '#23b3f4', bg: brandBg, icon: 'trend-up' },
+            ].map((c) => (
+              <Col key={c.label} xl="3" md="6" xs="12">
+                <Card className="interactive-card border-0 h-100 shadow-sm">
+                  <Card.Body className="p-4 stat-card-inner">
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div>
+                        <div className="stat-label mb-2">{c.label}</div>
+                        <div className="stat-value text-dark h3">{c.value}</div>
+                      </div>
+                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: c.bg }}>
+                        <CsLineIcons icon={c.icon} size="24" style={{ color: c.color }} />
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+
+          <Row className="g-4 mb-4">
+            {/* Left Column: Alerts, Charts, and Insights */}
+            <Col xl={4}>
+              {/* Reorder Suggestions (Operational) */}
+              {reportData.reorderSuggestions?.filter((s) => s.needs_reorder || s.is_below_threshold).length > 0 && (
+                <Card className="interactive-card border-0 shadow-sm mb-4" style={{ border: '2px solid rgba(239, 68, 68, 0.3) !important' }}>
+                  <Card.Body className="p-4">
+                    <div className="card-title-container border-0 mb-3">
+                      <div className="d-flex align-items-center gap-3">
+                        <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center bg-danger shadow-sm">
+                          <CsLineIcons icon="notification" className="text-white" size="20" />
+                        </div>
+                        <h2 className="small-title mb-0" style={{ color: '#ef4444', fontWeight: '800' }}>
+                          Smart Reorder Alerts
+                        </h2>
+                      </div>
+                    </div>
+                    {reportData.reorderSuggestions
+                      .filter((s) => s.needs_reorder || s.is_below_threshold)
+                      .map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 rounded mb-2"
+                          style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)', borderLeft: '4px solid #ef4444' }}
+                        >
+                          <div className="d-flex justify-content-between w-100 align-items-center">
+                            <div>
+                              <div className="fw-bold text-dark">{item.item_name}</div>
+                              <div className="smaller text-muted mt-1 fw-bold">
+                                {item.current_stock} {item.unit} left
+                              </div>
+                            </div>
+                            <Badge bg="danger" className="rounded-pill px-3 py-2 fw-bold" style={{ fontSize: '0.65rem' }}>
+                              URGENT
+                            </Badge>
+                          </div>
                         </div>
                       ))}
-                    </div>
-                  )}
+                  </Card.Body>
+                </Card>
+              )}
 
-                  {/* Daily Trend Chart (Operational) */}
-                  <div className="workstation-card">
-                    <div className="header-text mb-4">Stock Movement Trend</div>
-                    <div style={{height: '300px'}}><canvas ref={chartRef} /></div>
+              {/* Daily Trend Chart (Operational) */}
+              <Card className="interactive-card border-0 shadow-sm mb-4">
+                <Card.Body className="p-4">
+                  <div className="card-title-container">
+                    <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                      Stock Movement Trend
+                    </h2>
+                    <CsLineIcons icon="chart-4" size="18" style={{ color: brandColor }} />
+                  </div>
+                  <div style={{ height: '300px' }}>
+                    <canvas ref={chartRef} />
+                  </div>
+                </Card.Body>
+              </Card>
+
+              {/* Category Performance (Statistical) */}
+              <Card className="interactive-card border-0 shadow-sm mb-4">
+                <Card.Body className="p-4">
+                  <div className="card-title-container">
+                    <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                      Category Allocation Insights
+                    </h2>
+                    <CsLineIcons icon="pie-chart" size="18" style={{ color: brandColor }} />
+                  </div>
+                  {statsData.categoryPerformance.map((category, idx) => (
+                    <div key={idx} className="mb-4">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <div className="fw-bold small text-dark">{category.category}</div>
+                        <div className="small text-muted fw-bold">{formatCurrency(category.totalAmount)}</div>
+                      </div>
+                      <ProgressBar now={(category.paidAmount / category.totalAmount) * 100} variant="info" className="progress-sm" style={{ height: '6px' }} />
+                    </div>
+                  ))}
+                </Card.Body>
+              </Card>
+
+              {/* Executive Insights (Statistical) */}
+              <Card className="interactive-card border-0 shadow-sm mb-4" style={{ backgroundColor: 'rgba(35, 179, 244, 0.03)' }}>
+                <Card.Body className="p-4">
+                  <div className="card-title-container">
+                    <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                      Executive Stock Intelligence
+                    </h2>
+                    <CsLineIcons icon="star" size="18" style={{ color: brandColor }} />
+                  </div>
+                  {[
+                    {
+                      title: 'Vendor Health',
+                      text: `Working with ${statsData.vendorPerformance.length} vendors. Top vendor contributes ${
+                        statsData.vendorPerformance.length > 0
+                          ? ((statsData.vendorPerformance[0].totalAmount / statsData.summary.totalAmount) * 100).toFixed(1)
+                          : 0
+                      }% of load.`,
+                      icon: 'shield',
+                    },
+                    {
+                      title: 'Fiscal Discipline',
+                      text: `Payment rate at ${statsData.summary.paymentRate}%. ${
+                        statsData.summary.unpaidCount > 0 ? `${statsData.summary.unpaidCount} POs pending.` : 'Excellent compliance.'
+                      }`,
+                      icon: 'credit-card',
+                    },
+                  ].map((insight, i) => (
+                    <div key={i} className="mb-4 d-flex gap-3 align-items-start">
+                      <div
+                        className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center flex-shrink-0"
+                        style={{ backgroundColor: brandBg }}
+                      >
+                        <CsLineIcons icon={insight.icon} size="18" style={{ color: brandColor }} />
+                      </div>
+                      <div>
+                        <div className="fw-bold text-dark mb-1">{insight.title}</div>
+                        <div className="smaller text-muted fw-bold">{insight.text}</div>
+                      </div>
+                    </div>
+                  ))}
+                </Card.Body>
+              </Card>
+            </Col>
+
+            {/* Right Column: Detailed Tables */}
+            <Col xl={8}>
+              {/* Ingredient Movement Audit */}
+              <Card className="interactive-card border-0 shadow-sm mb-4">
+                <Card.Body className="p-4">
+                  <div className="card-title-container">
+                    <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                      Ingredient Movement Audit
+                    </h2>
+                    <CsLineIcons icon="list" size="18" style={{ color: brandColor }} />
                   </div>
 
-                  {/* Category Performance (Statistical) */}
-                  <div className="workstation-card mt-4">
-                    <div className="header-text mb-4">Category Allocation Insights</div>
-                    {statsData.categoryPerformance.map((category, idx) => (
-                       <div key={idx} className="mb-3">
-                          <div className="d-flex justify-content-between align-items-center mb-1">
-                             <div className="fw-bold small text-dark">{category.category}</div>
-                             <div className="x-small text-muted fw-bold">{formatCurrency(category.totalAmount)}</div>
+                  <div className="d-none d-md-block table-responsive">
+                    <Table borderless hover className="align-middle mb-0">
+                      <thead className="stat-label">
+                        <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
+                          <th className="py-3">Ingredient</th>
+                          <th className="py-3 text-center">Received</th>
+                          <th className="py-3 text-center">Used</th>
+                          <th className="py-3 text-center">Wasted</th>
+                          <th className="py-3 text-center">Efficiency</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData.itemSummary.slice(0, 10).map((item, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
+                            <td className="py-3">
+                              <div className="d-flex align-items-center gap-2">
+                                <div className="bg-light p-2 rounded-2">
+                                  <CsLineIcons icon="box" size="14" className="text-muted" />
+                                </div>
+                                <div>
+                                  <div className="fw-bold text-dark">{item.item_name}</div>
+                                  <div className="smaller text-muted fw-bold">{item.unit}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 text-center fw-bold text-primary">{item.received}</td>
+                            <td className="py-3 text-center fw-bold text-success">{item.used}</td>
+                            <td className="py-3 text-center fw-bold text-danger">{item.wasted}</td>
+                            <td className="py-3 text-center">
+                              <Badge
+                                bg={item.wastage_percent > 15 ? 'danger' : 'success'}
+                                className="rounded-pill px-3 py-2 fw-bold"
+                                style={{ fontSize: '0.65rem' }}
+                              >
+                                {100 - item.wastage_percent}%
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile Layout */}
+                  <div className="d-md-none d-flex flex-column gap-3 mt-2">
+                    {reportData.itemSummary.slice(0, 10).map((item, idx) => (
+                      <div key={idx} className="p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <div className="d-flex align-items-center gap-2">
+                            <CsLineIcons icon="box" size="16" className="text-muted" />
+                            <span className="fw-bold text-dark fs-6">
+                              {item.item_name} <span className="smaller text-muted">({item.unit})</span>
+                            </span>
                           </div>
-                          <ProgressBar now={(category.paidAmount / category.totalAmount) * 100} variant="success" className="progress-pill" style={{height: '4px'}} />
-                       </div>
-                    ))}
-                  </div>
-
-                  {/* Executive Insights (Statistical) */}
-                  <div className="workstation-card mt-4 bg-primary bg-opacity-10 border-0">
-                     <div className="header-text mb-4">Executive Stock Intelligence</div>
-                     {[
-                        { title: 'Vendor Health', text: `Working with ${statsData.vendorPerformance.length} vendors. Top vendor contributes ${statsData.vendorPerformance.length > 0 ? ((statsData.vendorPerformance[0].totalAmount / statsData.summary.totalAmount) * 100).toFixed(1) : 0}% of load.`, icon: 'shield' },
-                        { title: 'Fiscal Discipline', text: `Payment rate at ${statsData.summary.paymentRate}%. ${statsData.summary.unpaidCount > 0 ? `${statsData.summary.unpaidCount} POs pending.` : 'Excellent compliance.'}`, icon: 'credit-card' },
-                     ].map((insight, i) => (
-                        <div key={i} className="mb-3 d-flex gap-2">
-                           <div className="text-primary mt-1"><CsLineIcons icon={insight.icon} size="16" /></div>
-                           <div><div className="fw-bold small text-dark">{insight.title}</div><div className="x-small text-muted fw-bold">{insight.text}</div></div>
+                          <Badge bg={item.wastage_percent > 15 ? 'danger' : 'success'} className="rounded-pill px-2 py-1" style={{ fontSize: '0.65rem' }}>
+                            {100 - item.wastage_percent}% EFFICIENCY
+                          </Badge>
                         </div>
-                     ))}
-                  </div>
-               </Col>
-
-               {/* Right Column: Detailed Tables */}
-               <Col xl={8}>
-                  {/* Top Items by Quantity (Statistical) */}
-                  <div className="workstation-card mb-4">
-                     <div className="header-text mb-4">Top Stock Item Performance</div>
-                     <div className="d-none d-lg-flex px-3 mb-2">
-                        <div style={{flex: 2}} className="header-text">Item Details</div>
-                        <div style={{flex: 1}} className="header-text text-center">Volume</div>
-                        <div style={{flex: 1}} className="header-text text-center">Total Value</div>
-                        <div style={{flex: 1}} className="header-text text-center">Avg Price</div>
-                     </div>
-                     {statsData.topItemsByQuantity.slice(0, 10).map((item, idx) => (
-                        <div key={idx} className="item-row-card">
-                           <div style={{flex: 2}} className="d-flex align-items-center gap-2">
-                              <div className="bg-light p-1 rounded-2 fw-bold x-small text-muted">{idx+1}</div>
-                              <div><div className="fw-bold text-dark small">{item.itemName}</div><div className="x-small text-muted fw-bold">{item.unit || 'N/A'}</div></div>
-                           </div>
-                           <div className="text-center" style={{flex: 1}}><div className="fw-bold small text-primary">{item.totalQuantity}</div></div>
-                           <div className="text-center" style={{flex: 1}}><div className="fw-bold small">{formatCurrency(item.totalValue)}</div></div>
-                           <div className="text-center" style={{flex: 1}}><div className="small text-muted fw-bold">{formatCurrency(item.avgPrice)}</div></div>
+                        <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                          <span className="text-muted fw-bold">Received:</span>
+                          <span className="fw-bold text-primary">{item.received}</span>
                         </div>
-                     ))}
-                  </div>
-
-                  {/* Ingredient Performance (Operational) */}
-                  <div className="workstation-card mb-4">
-                    <div className="d-flex justify-content-between align-items-center mb-4">
-                       <div><div className="h5 fw-bold mb-0">Ingredient Movement Audit</div><div className="text-muted small fw-medium">Real-time usage vs wastage efficiency</div></div>
-                    </div>
-                    <div className="d-none d-lg-flex px-3 mb-2">
-                      <div style={{flex: 2}} className="header-text">Ingredient</div>
-                      <div style={{flex: 1}} className="header-text text-center">Rec.</div>
-                      <div style={{flex: 1}} className="header-text text-center">Used</div>
-                      <div style={{flex: 1}} className="header-text text-center">Waste</div>
-                      <div style={{flex: 1}} className="header-text text-center">Efficiency</div>
-                    </div>
-                    {reportData.itemSummary.slice(0, 10).map((item) => (
-                      <div key={item.item_name} className="item-row-card">
-                        <div style={{flex: 2}} className="d-flex align-items-center gap-2">
-                          <div className="bg-light p-1 rounded-2"><CsLineIcons icon="box" size="12" className="text-muted" /></div>
-                          <div><div className="fw-bold text-dark small">{item.item_name}</div><div className="x-small text-muted fw-bold">{item.unit}</div></div>
+                        <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                          <span className="text-muted fw-bold">Used:</span>
+                          <span className="fw-bold text-success">{item.used}</span>
                         </div>
-                        <div className="d-none d-lg-block text-center" style={{flex: 1}}><div className="fw-bold small text-primary">{item.received}</div></div>
-                        <div className="d-none d-lg-block text-center" style={{flex: 1}}><div className="fw-bold small text-success">{item.used}</div></div>
-                        <div className="d-none d-lg-block text-center" style={{flex: 1}}><div className="fw-bold small text-danger">{item.wasted}</div></div>
-                        <div className="d-none d-lg-block text-center" style={{flex: 1}}>
-                           <Badge bg={item.wastage_percent > 15 ? 'danger' : 'success'} className="status-pill text-white">{100 - item.wastage_percent}%</Badge>
+                        <div className="d-flex justify-content-between align-items-center smaller">
+                          <span className="text-muted fw-bold">Wasted:</span>
+                          <span className="fw-bold text-danger">{item.wasted}</span>
                         </div>
                       </div>
                     ))}
                   </div>
+                </Card.Body>
+              </Card>
 
-                  {/* Vendor Performance (Statistical) */}
-                  <div className="workstation-card mb-4">
-                     <div className="header-text mb-4">Vendor Relationship Audit</div>
-                     {statsData.vendorPerformance.slice(0, 5).map((vendor, idx) => (
-                        <div key={idx} className="item-row-card">
-                           <div style={{flex: 2}} className="d-flex align-items-center gap-2">
-                              <div className="bg-primary bg-opacity-10 p-2 rounded-circle fw-bold small text-primary">{idx+1}</div>
-                              <div><div className="fw-bold text-dark small">{vendor.vendorName}</div><div className="x-small text-muted">{vendor.purchaseCount} Orders</div></div>
-                           </div>
-                           <div style={{flex: 1}} className="text-end"><div className="header-text mb-1">Total PO</div><div className="fw-bold small">{formatCurrency(vendor.totalAmount)}</div></div>
-                           <div style={{flex: 1}} className="text-end"><div className="header-text mb-1">Dues</div><div className="fw-bold small text-danger">{formatCurrency(vendor.unpaidAmount)}</div></div>
-                           <div style={{flex: 1}} className="text-center d-none d-lg-block">
-                              <div className="header-text mb-1">Credit Health</div>
-                              <Badge bg={vendor.paymentRate >= 90 ? 'success' : 'warning'} className="status-pill text-white">{vendor.paymentRate}%</Badge>
-                           </div>
-                        </div>
-                     ))}
+              {/* Top Stock Item Performance */}
+              <Card className="interactive-card border-0 shadow-sm mb-4">
+                <Card.Body className="p-4">
+                  <div className="card-title-container">
+                    <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                      Top Stock Item Performance
+                    </h2>
+                    <CsLineIcons icon="trend-up" size="18" style={{ color: brandColor }} />
                   </div>
 
-                  {/* Fiscal Status Ledger (Statistical) */}
-                  <div className="workstation-card">
-                     <div className="header-text mb-4">Fiscal Status Ledger</div>
-                     <div className="d-none d-lg-flex px-3 mb-2">
-                        <div style={{flex: 2}} className="header-text">Status</div>
-                        <div style={{flex: 1}} className="header-text text-center">Orders</div>
-                        <div style={{flex: 2}} className="header-text text-center">Allocation</div>
-                        <div style={{flex: 1}} className="header-text text-center">Portfolio %</div>
-                     </div>
-                     {statsData.statusBreakdown.map((status, idx) => (
-                        <div key={idx} className="item-row-card">
-                           <div style={{flex: 2}}><Badge bg={status.status === 'Completed' ? 'success' : 'warning'} className="status-pill text-white">{status.status}</Badge></div>
-                           <div style={{flex: 1}} className="text-center fw-bold small text-muted">{status.count}</div>
-                           <div style={{flex: 2}} className="text-center fw-bold small text-primary">{formatCurrency(status.totalAmount)}</div>
-                           <div style={{flex: 1}} className="text-center fw-bold x-small text-muted">{((status.totalAmount / statsData.summary.totalAmount) * 100).toFixed(1)}%</div>
-                        </div>
-                     ))}
+                  <div className="d-none d-md-block table-responsive">
+                    <Table borderless hover className="align-middle mb-0">
+                      <thead className="stat-label">
+                        <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
+                          <th className="py-3">Item Details</th>
+                          <th className="py-3 text-center">Volume</th>
+                          <th className="py-3 text-end">Total Value</th>
+                          <th className="py-3 text-end">Avg Price</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {statsData.topItemsByQuantity.slice(0, 10).map((item, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
+                            <td className="py-3">
+                              <div className="d-flex align-items-center gap-3">
+                                <Badge bg={idx < 3 ? 'primary' : 'light'} className={`rounded-pill px-2 py-1 ${idx < 3 ? '' : 'text-dark'}`}>
+                                  {idx + 1}
+                                </Badge>
+                                <div>
+                                  <div className="fw-bold text-dark">{item.itemName}</div>
+                                  <div className="smaller text-muted fw-bold">{item.unit || 'N/A'}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 text-center fw-bold text-primary">{item.totalQuantity}</td>
+                            <td className="py-3 text-end fw-bold text-dark">{formatCurrency(item.totalValue)}</td>
+                            <td className="py-3 text-end text-muted fw-bold smaller">{formatCurrency(item.avgPrice)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
                   </div>
-               </Col>
-            </Row>
-          </div>
-        ) : (
-          <div className="text-center py-5"><CsLineIcons icon="chart-2" size="48" className="text-muted mb-3 d-block mx-auto" /><div className="h5 text-muted">Select a range and generate intelligence</div></div>
-        )}
-      </div>
-    </div>
+
+                  {/* Mobile Layout */}
+                  <div className="d-md-none d-flex flex-column gap-3 mt-2">
+                    {statsData.topItemsByQuantity.slice(0, 10).map((item, idx) => (
+                      <div key={idx} className="p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <div className="d-flex align-items-center gap-2">
+                            <Badge bg={idx < 3 ? 'primary' : 'light'} className={`rounded-pill px-2 py-1 ${idx < 3 ? '' : 'text-dark'}`}>
+                              {idx + 1}
+                            </Badge>
+                            <span className="fw-bold text-dark fs-6">
+                              {item.itemName} <span className="smaller text-muted">({item.unit || 'N/A'})</span>
+                            </span>
+                          </div>
+                          <span className="fw-bold text-primary">
+                            {item.totalQuantity} <span className="smaller text-muted">vol</span>
+                          </span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                          <span className="text-muted fw-bold">Total Value:</span>
+                          <span className="fw-bold text-dark">{formatCurrency(item.totalValue)}</span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center smaller">
+                          <span className="text-muted fw-bold">Avg Price:</span>
+                          <span className="fw-bold text-muted">{formatCurrency(item.avgPrice)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card.Body>
+              </Card>
+
+              {/* Vendor Relationship Audit */}
+              <Card className="interactive-card border-0 shadow-sm mb-4">
+                <Card.Body className="p-4">
+                  <div className="card-title-container">
+                    <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                      Vendor Relationship Audit
+                    </h2>
+                    <CsLineIcons icon="shield" size="18" style={{ color: brandColor }} />
+                  </div>
+
+                  <div className="d-none d-md-block table-responsive">
+                    <Table borderless hover className="align-middle mb-0">
+                      <thead className="stat-label">
+                        <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
+                          <th className="py-3">Vendor</th>
+                          <th className="py-3 text-end">Total PO</th>
+                          <th className="py-3 text-end">Dues</th>
+                          <th className="py-3 text-center">Credit Health</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {statsData.vendorPerformance.slice(0, 5).map((vendor, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
+                            <td className="py-3">
+                              <div className="d-flex align-items-center gap-3">
+                                <div className="sw-4 sh-4 rounded-circle d-flex justify-content-center align-items-center bg-primary bg-opacity-10 text-primary fw-bold smaller">{idx + 1}</div>
+                                <div>
+                                  <div className="fw-bold text-dark">{vendor.vendorName || 'Unknown Vendor'}</div>
+                                  <div className="smaller text-muted fw-bold">{vendor.purchaseCount} Orders</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 text-end fw-bold text-dark">{formatCurrency(vendor.totalAmount)}</td>
+                            <td className="py-3 text-end fw-bold text-danger">{formatCurrency(vendor.unpaidAmount)}</td>
+                            <td className="py-3 text-center">
+                              <Badge
+                                bg={vendor.paymentRate >= 90 ? 'success' : 'warning'}
+                                className="rounded-pill px-3 py-2 fw-bold"
+                                style={{ fontSize: '0.65rem' }}
+                              >
+                                {vendor.paymentRate}%
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile Layout */}
+                  <div className="d-md-none d-flex flex-column gap-3 mt-2">
+                    {statsData.vendorPerformance.slice(0, 5).map((vendor, idx) => (
+                      <div key={idx} className="p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <div className="d-flex align-items-center gap-2">
+                            <div className="sw-4 sh-4 rounded-circle d-flex justify-content-center align-items-center bg-primary bg-opacity-10 text-primary fw-bold smaller">{idx + 1}</div>
+                            <span className="fw-bold text-dark fs-6">{vendor.vendorName || 'Unknown Vendor'}</span>
+                          </div>
+                          <Badge bg={vendor.paymentRate >= 90 ? 'success' : 'warning'} className="rounded-pill px-2 py-1" style={{ fontSize: '0.65rem' }}>
+                            {vendor.paymentRate}% HEALTH
+                          </Badge>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                          <span className="text-muted fw-bold">Orders:</span>
+                          <span className="fw-bold text-muted">{vendor.purchaseCount}</span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                          <span className="text-muted fw-bold">Total PO:</span>
+                          <span className="fw-bold text-dark">{formatCurrency(vendor.totalAmount)}</span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center smaller">
+                          <span className="text-muted fw-bold">Dues:</span>
+                          <span className="fw-bold text-danger">{formatCurrency(vendor.unpaidAmount)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card.Body>
+              </Card>
+
+              {/* Fiscal Status Ledger */}
+              <Card className="interactive-card border-0 shadow-sm mb-4">
+                <Card.Body className="p-4">
+                  <div className="card-title-container">
+                    <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                      Fiscal Status Ledger
+                    </h2>
+                    <CsLineIcons icon="book" size="18" style={{ color: brandColor }} />
+                  </div>
+
+                  <div className="d-none d-md-block table-responsive">
+                    <Table borderless hover className="align-middle mb-0">
+                      <thead className="stat-label">
+                        <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
+                          <th className="py-3">Status</th>
+                          <th className="py-3 text-center">Orders</th>
+                          <th className="py-3 text-end">Allocation</th>
+                          <th className="py-3 text-end">Portfolio %</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {statsData.statusBreakdown.map((status, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
+                            <td className="py-3">
+                              <Badge
+                                bg={status.status === 'Completed' ? 'success' : 'warning'}
+                                className="rounded-pill px-3 py-2 fw-bold"
+                                style={{ fontSize: '0.65rem' }}
+                              >
+                                {status.status.toUpperCase()}
+                              </Badge>
+                            </td>
+                            <td className="py-3 text-center fw-bold text-muted">{status.count}</td>
+                            <td className="py-3 text-end fw-bold text-primary">{formatCurrency(status.totalAmount)}</td>
+                            <td className="py-3 text-end fw-bold text-muted smaller">
+                              {((status.totalAmount / statsData.summary.totalAmount) * 100).toFixed(1)}%
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile Layout */}
+                  <div className="d-md-none d-flex flex-column gap-3 mt-2">
+                    {statsData.statusBreakdown.map((status, idx) => (
+                      <div key={idx} className="p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <Badge
+                            bg={status.status === 'Completed' ? 'success' : 'warning'}
+                            className="rounded-pill px-3 py-2 fw-bold"
+                            style={{ fontSize: '0.65rem' }}
+                          >
+                            {status.status.toUpperCase()}
+                          </Badge>
+                          <span className="fw-bold text-muted">
+                            {status.count} <span className="smaller">orders</span>
+                          </span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                          <span className="text-muted fw-bold">Allocation:</span>
+                          <span className="fw-bold text-primary">{formatCurrency(status.totalAmount)}</span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center smaller">
+                          <span className="text-muted fw-bold">Portfolio %:</span>
+                          <span className="fw-bold text-muted">{((status.totalAmount / statsData.summary.totalAmount) * 100).toFixed(1)}%</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </>
+      ) : (
+        <div className="text-center py-5">
+          <CsLineIcons icon="chart-2" size="48" className="text-muted mb-3 d-block mx-auto" />
+          <div className="h5 text-muted">Select a range and generate intelligence</div>
+        </div>
+      )}
+    </>
   );
 };
 

@@ -7,17 +7,8 @@ const ChartPie = ({ orderTypeWise }) => {
   const { themeValues } = useSelector((state) => state.settings);
   const chartContainer = useRef(null);
 
-  const LegendLabels = React.useMemo(() => {
-    return {
-      font: {
-        size: 14,
-        family: themeValues.font,
-      },
-      padding: 20,
-      usePointStyle: true,
-      boxWidth: 8,
-    };
-  }, [themeValues]);
+  const colors = [themeValues.primary, themeValues.secondary, themeValues.tertiary, '#10b981', '#f59e0b', '#6366f1', '#f43f5e', '#8b5cf6'];
+
   const ChartTooltip = React.useMemo(() => {
     return {
       enabled: true,
@@ -37,58 +28,144 @@ const ChartPie = ({ orderTypeWise }) => {
     };
   }, [themeValues]);
 
+  const CenterTextPlugin = React.useMemo(() => {
+    return {
+      beforeDraw(chart) {
+        const {
+          ctx,
+          chartArea: { width, height },
+          _metasets,
+        } = chart;
+
+        if (!_metasets?.length) return;
+
+        ctx.restore();
+        const { total } = _metasets[0];
+        
+        let activeLabel = chart.data.labels[0] || '';
+        let activeValue = chart.data.datasets[0]?.data[0] || 0;
+        let activePercentage = total ? parseFloat(((activeValue / total) * 100).toFixed(1)) : 0;
+
+        const activeElements = chart.getActiveElements();
+        if (activeElements?.length > 0) {
+          const { datasetIndex, index } = activeElements[0];
+          activeLabel = chart.data.labels[index] || '';
+          activeValue = chart.data.datasets[datasetIndex]?.data[index] || 0;
+          activePercentage = total ? parseFloat(((activeValue / total) * 100).toFixed(1)) : 0;
+        }
+
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const baseSize = Math.min(width, height);
+        const percentageSize = Math.max(14, Math.floor(baseSize / 8));
+        const labelSize = Math.max(8, Math.floor(baseSize / 22));
+
+        ctx.font = `900 ${percentageSize}px ${themeValues.font}`;
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = themeValues.body;
+        ctx.fillText(`${activePercentage}%`, centerX, centerY + (labelSize / 2));
+
+        ctx.fillStyle = themeValues.alternate;
+        ctx.font = `700 ${labelSize}px ${themeValues.font}`;
+        const displayLabel = activeLabel.length > 20 ? `${activeLabel.substring(0, 17)}...`.toUpperCase() : activeLabel.toUpperCase();
+        ctx.fillText(displayLabel, centerX, centerY - (percentageSize / 2) - 5);
+        ctx.save();
+      },
+    };
+  }, [themeValues]);
+
   const data = React.useMemo(() => {
     return {
       labels: orderTypeWise.map((item) => item.orderType),
       datasets: [
         {
           label: '',
-          borderColor: [themeValues.primary, themeValues.secondary, themeValues.tertiary],
-          backgroundColor: [`rgba(${themeValues.primaryrgb},0.1)`, `rgba(${themeValues.secondaryrgb},0.1)`, `rgba(${themeValues.tertiaryrgb},0.1)`],
+          borderColor: colors.slice(0, orderTypeWise.length),
+          backgroundColor: colors.slice(0, orderTypeWise.length).map(c => `${c}1A`), // 10% opacity
           borderWidth: 2,
           data: orderTypeWise.map((item) => item.totalOrders),
         },
       ],
     };
   }, [themeValues, orderTypeWise]);
+
   const config = React.useMemo(() => {
     return {
-      type: 'pie',
+      type: 'doughnut',
+      plugins: [CenterTextPlugin],
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        title: {
-          display: false,
-        },
+        cutout: '75%',
         plugins: {
-          crosshair: false,
-          datalabels: false,
+          legend: { display: false },
           tooltip: ChartTooltip,
-          legend: {
-            position: 'right',
-            labels: LegendLabels,
-          },
-          streaming: false,
         },
       },
       data,
     };
-  }, [data, LegendLabels, ChartTooltip]);
+  }, [data, ChartTooltip, CenterTextPlugin]);
 
   useEffect(() => {
-    let myChart = null;
-    if (chartContainer && chartContainer.current) {
-      Chart.register(...registerables);
-      myChart = new Chart(chartContainer.current, config);
-    }
-    return () => {
-      if (myChart) {
-        myChart.destroy();
-      }
-    };
+    Chart.register(...registerables);
+    const myChart = new Chart(chartContainer.current, config);
+    return () => myChart.destroy();
   }, [config]);
 
-  return <canvas ref={chartContainer} />;
+  return (
+    <div className="d-flex flex-column h-100">
+      <style>{`
+        .premium-scroll::-webkit-scrollbar {
+          width: 4px;
+        }
+        .premium-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .premium-scroll::-webkit-scrollbar-thumb {
+          background: rgba(0, 0, 0, 0.05);
+          border-radius: 10px;
+        }
+        .premium-scroll:hover::-webkit-scrollbar-thumb {
+          background: rgba(35, 179, 244, 0.2);
+        }
+        .legend-mask {
+          position: relative;
+        }
+        .legend-mask::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 25px;
+          background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));
+          pointer-events: none;
+          opacity: ${orderTypeWise.length > 5 ? 1 : 0};
+          transition: opacity 0.3s;
+        }
+      `}</style>
+      <div style={{ position: 'relative', height: '240px' }} className="mb-2">
+        <canvas ref={chartContainer} />
+      </div>
+      <div className="mt-4 pt-3 border-top w-100 legend-mask">
+        <div className="d-flex flex-column gap-2 px-1 premium-scroll overflow-auto" style={{ maxHeight: '160px', paddingBottom: '15px' }}>
+          {orderTypeWise.map((item, idx) => (
+            <div key={idx} className="d-flex align-items-center justify-content-between py-1">
+              <div className="d-flex align-items-center overflow-hidden">
+                <div 
+                  className="rounded-circle me-2 flex-shrink-0" 
+                  style={{ width: '8px', height: '8px', backgroundColor: colors[idx % colors.length] }} 
+                />
+                <span className="text-muted smaller fw-bold text-truncate" style={{ fontSize: '0.75rem' }}>{item.orderType}</span>
+              </div>
+              <span className="fw-bold small text-primary ms-2" style={{ fontSize: '0.75rem' }}>{item.totalOrders}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default React.memo(ChartPie);

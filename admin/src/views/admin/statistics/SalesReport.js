@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, Modal, ProgressBar, Toast, ToastContainer } from 'react-bootstrap';
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -20,6 +20,11 @@ const customStyles = `
       box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05) !important;
       transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
       overflow: hidden;
+      position: relative;
+    }
+    .interactive-card.filter-card {
+      overflow: visible !important;
+      z-index: 100;
       position: relative;
     }
     .interactive-card:hover {
@@ -73,19 +78,84 @@ const customStyles = `
     .dish-row-highlight-1 { background: linear-gradient(90deg, rgba(192, 192, 192, 0.1) 0%, transparent 100%) !important; }
     .dish-row-highlight-2 { background: linear-gradient(90deg, rgba(205, 127, 50, 0.06) 0%, transparent 100%) !important; }
     
-    .form-control, .form-select {
-      border-radius: 0.8rem !important;
-      padding: 0.6rem 1rem !important;
-      border: 1.5px solid rgba(0,0,0,0.05) !important;
-      background: rgba(0,0,0,0.01) !important;
-      font-weight: 600 !important;
+    .filter-select-btn {
+      width: 100%;
+      min-height: var(--input-height, 38px);
+      border: 1px solid var(--separator, #dee2e6);
+      border-radius: var(--border-radius-md, 0.4rem);
+      background: var(--foreground, #fff);
+      color: var(--body, #212529);
+      padding: 0.375rem 2rem 0.375rem 0.75rem;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 1em;
+      transition: border-color 0.15s ease-in-out;
+      line-height: 1.5;
     }
-    .form-control:focus, .form-select:focus {
-      border-color: #23b3f4 !important;
-      box-shadow: 0 0 0 0.25rem rgba(35, 179, 244, 0.1) !important;
-      background: #fff !important;
+    .filter-select-btn:focus { outline: none; border-color: rgba(var(--primary-rgb, 35,179,244), 1); }
+    .filter-select-dropdown {
+      position: absolute;
+      top: calc(100% + 3px);
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      background: var(--foreground, #fff);
+      border: 1px solid var(--separator, #dee2e6);
+      border-radius: var(--border-radius-md, 0.4rem);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      overflow: hidden;
     }
+    .filter-select-option {
+      padding: 0.6rem 0.85rem;
+      cursor: pointer;
+      font-size: 0.95em;
+      color: var(--body, #212529);
+      transition: background 0.12s;
+    }
+    .filter-select-option:hover { background: rgba(35,179,244,0.07); }
+    .filter-select-option.is-selected { background: rgba(35,179,244,0.1); color: #23b3f4; font-weight: 700; }
+    .filter-select-option.is-disabled { opacity: 0.4; cursor: not-allowed; }
 `;
+
+const FilterSelect = ({ value, onChange, options }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler);
+    return () => { document.removeEventListener('mousedown', handler); document.removeEventListener('touchstart', handler); };
+  }, []);
+
+  const selected = options.find((o) => o.value === value);
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button type="button" className="filter-select-btn" onClick={() => setOpen((p) => !p)}>
+        <span>{selected?.label || 'Select...'}</span>
+        <span style={{ fontSize: '10px', color: 'var(--muted,#6c757d)', flexShrink: 0 }}>{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="filter-select-dropdown">
+          {options.map((opt) => (
+            <div
+              key={opt.value}
+              className={`filter-select-option${opt.value === value ? ' is-selected' : ''}${opt.disabled ? ' is-disabled' : ''}`}
+              onMouseDown={(e) => { if (opt.disabled) return; e.preventDefault(); onChange(opt.value); setOpen(false); }}
+              onTouchEnd={(e) => { if (opt.disabled) return; e.preventDefault(); onChange(opt.value); setOpen(false); }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SalesReport = () => {
   const title = 'Sales Performance';
@@ -346,7 +416,7 @@ const SalesReport = () => {
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4 no-print">
+      <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto">
             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
@@ -357,41 +427,63 @@ const SalesReport = () => {
 
       {/* Filters Section */}
       {activePlans?.includes('Dynamic Reports') && (
-        <Card className="interactive-card border-0 mb-4 no-print shadow-sm">
+        <Card className="interactive-card filter-card border-0 mb-4 no-print shadow-sm">
           <Card.Body className="p-4">
             <div className="card-title-container">
               <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Report Filters</h2>
               <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
             </div>
-            <Row className="g-3 align-items-end">
-              <Col md={3}>
-                <Form.Label className="stat-label mb-2">Start Date</Form.Label>
-                <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <Row className="g-3">
+              <Col xs={12} md={3}>
+                <Form.Group>
+                  <Form.Label className="stat-label mb-2">Start Date</Form.Label>
+                  <Form.Control
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                </Form.Group>
               </Col>
-              <Col md={3}>
-                <Form.Label className="stat-label mb-2">End Date</Form.Label>
-                <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <Col xs={12} md={3}>
+                <Form.Group>
+                  <Form.Label className="stat-label mb-2">End Date</Form.Label>
+                  <Form.Control
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </Form.Group>
               </Col>
-              <Col md={2}>
-                <Form.Label className="stat-label mb-2">Group By</Form.Label>
-                <Form.Select value={groupBy} onChange={(e) => setGroupBy(e.target.value)}>
-                  {['hour', 'day', 'month'].map((option) => (
-                    <option key={option} value={option} disabled={!getAllowedGroupBy().includes(option)}>
-                      {option.charAt(0).toUpperCase() + option.slice(1)}
-                    </option>
-                  ))}
-                </Form.Select>
+              <Col xs={12} md={2}>
+                <Form.Group>
+                  <Form.Label className="stat-label mb-2">Group By</Form.Label>
+                  <FilterSelect
+                    value={groupBy}
+                    onChange={setGroupBy}
+                    options={['hour', 'day', 'month'].map((o) => ({
+                      value: o,
+                      label: o.charAt(0).toUpperCase() + o.slice(1),
+                      disabled: !getAllowedGroupBy().includes(o),
+                    }))}
+                  />
+                </Form.Group>
               </Col>
-              <Col md={2}>
-                <Form.Label className="stat-label mb-2">Order Type</Form.Label>
-                <Form.Select value={orderType} onChange={(e) => setOrderType(e.target.value)}>
-                  <option value="all">All Types</option>
-                  <option value="dine-in">Dine In</option>
-                  <option value="takeaway">Takeaway</option>
-                  <option value="delivery">Delivery</option>
-                </Form.Select>
+              <Col xs={12} md={2}>
+                <Form.Group>
+                  <Form.Label className="stat-label mb-2">Order Type</Form.Label>
+                  <FilterSelect
+                    value={orderType}
+                    onChange={setOrderType}
+                    options={[
+                      { value: 'all', label: 'All Types' },
+                      { value: 'dine-in', label: 'Dine In' },
+                      { value: 'takeaway', label: 'Takeaway' },
+                      { value: 'delivery', label: 'Delivery' },
+                    ]}
+                  />
+                </Form.Group>
               </Col>
-              <Col md={2}>
+              <Col xs={12} md={2} className="d-flex align-items-end">
                 <Button className="custom-btn-outline w-100" onClick={fetchSalesReport} disabled={loading}>
                   <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
                   {loading ? 'Processing...' : 'Generate Report'}
@@ -408,8 +500,8 @@ const SalesReport = () => {
         <>
           {/* Action Bar */}
           <Card className="interactive-card border-0 mb-4 no-print shadow-sm">
-            <Card.Body className="p-4 d-flex justify-content-between align-items-center">
-              <div className="d-flex gap-3 align-items-center">
+            <Card.Body className="p-4 d-flex button-group-responsive justify-content-between align-items-center">
+              <div className="d-flex button-group-responsive gap-3 align-items-center">
                 <Button variant="outline-success" className="custom-btn-outline border-success text-success" onClick={() => handleExportClick('Excel')} disabled={exporting}>
                   <CsLineIcons icon="file-text" className="me-2" size="15" /> Excel
                 </Button>

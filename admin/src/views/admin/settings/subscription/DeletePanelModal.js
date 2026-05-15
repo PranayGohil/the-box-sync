@@ -4,6 +4,45 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
+const customStyles = `
+  .btn-pill-outline {
+    border: 1px solid #1ea8e7 !important;
+    color: #1ea8e7 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    padding: 0.6rem 1.5rem !important;
+    font-weight: 600 !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  .btn-pill-outline:hover {
+    background-color: #1ea8e7 !important;
+    color: #fff !important;
+  }
+  .btn-pill-danger {
+    border: 1px solid #cf2637 !important;
+    color: #cf2637 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    padding: 0.6rem 1.5rem !important;
+    font-weight: 600 !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  .btn-pill-danger:hover {
+    background-color: #cf2637 !important;
+    color: #fff !important;
+  }
+  .modal-footer {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-end !important;
+    gap: 0.75rem !important;
+  }
+`;
+
 const DeletePanelModal = ({ show, handleClose, planName, fetchData }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState('');
@@ -30,75 +69,52 @@ const DeletePanelModal = ({ show, handleClose, planName, fetchData }) => {
   };
 
   return (
-    <Modal show={show} onHide={handleClose} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>
-          Delete Panel?
+    <Modal show={show} onHide={handleClose} backdrop="static" centered>
+      <style>{customStyles}</style>
+      <Modal.Header closeButton className="border-0 pb-0">
+        <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>
+          Delete Panel Credentials
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        <p>
-          This Panel will be permanently deleted from your Account.
+      <Modal.Body className="py-4">
+        <p className="mb-0">
+          Are you sure you want to delete the credentials for <strong>{planName}</strong>? This action cannot be undone and will remove access to the panel.
         </p>
         {error && (
-          <Alert variant="danger" className="mt-3">
-            <CsLineIcons icon="error" className="me-2" />
+          <Alert variant="danger" className="mt-3 border-0 shadow-sm small fw-bold">
+            <CsLineIcons icon="error" size="18" className="me-2" />
             {error}
           </Alert>
         )}
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="dark" onClick={handleClose} disabled={isDeleting}>
+      <Modal.Footer className="border-0 pt-0">
+        <Button 
+          onClick={handleClose} 
+          disabled={isDeleting}
+          className="rounded-pill px-4 fw-bold btn-pill-outline"
+        >
           Cancel
         </Button>
         <Button
-          variant="danger"
           onClick={handleDelete}
           disabled={isDeleting}
-          style={{ minWidth: '100px' }}
+          className="rounded-pill px-4 fw-bold btn-pill-danger"
         >
           {isDeleting ? (
             <>
-              <Spinner
-                as="span"
-                animation="border"
-                size="sm"
-                role="status"
-                aria-hidden="true"
-                className="me-2"
-              />
+              <Spinner as="span" animation="border" size="sm" className="me-2" />
               Deleting...
             </>
-          ) : 'Delete'}
+          ) : (
+            <div className="d-flex align-items-center">
+              <CsLineIcons icon="bin" size="18" className="me-2" />
+              Confirm Delete
+            </div>
+          )}
         </Button>
       </Modal.Footer>
-
-      {/* Deleting overlay */}
-      {isDeleting && (
-        <div
-          className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
-          style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.7)',
-            zIndex: 9999,
-            backdropFilter: 'blur(2px)'
-          }}
-        >
-          <div className="card shadow-lg border-0" style={{ minWidth: '200px' }}>
-            <div className="card-body text-center p-4">
-              <Spinner
-                animation="border"
-                variant="danger"
-                className="mb-3"
-                style={{ width: '3rem', height: '3rem' }}
-              />
-              <h5 className="mb-0">Deleting Panel User...</h5>
-              <small className="text-muted">Please wait a moment</small>
-            </div>
-          </div>
-        </div>
-      )}
     </Modal>
   );
 };
 
-export default DeletePanelModal;
+export default DeletePanelModal;

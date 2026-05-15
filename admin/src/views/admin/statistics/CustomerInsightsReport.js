@@ -230,7 +230,7 @@ const CustomerInsightsReport = () => {
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4 no-print">
+      <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto">
             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
@@ -247,16 +247,20 @@ const CustomerInsightsReport = () => {
               <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Analysis Scope</h2>
               <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
             </div>
-            <Row className="g-3 align-items-end">
-              <Col md={5}>
-                <Form.Label className="stat-label mb-2">Start Date</Form.Label>
-                <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <Row className="g-3">
+              <Col xs={12} md={5}>
+                <Form.Group>
+                  <Form.Label className="stat-label mb-2">Start Date</Form.Label>
+                  <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                </Form.Group>
               </Col>
-              <Col md={5}>
-                <Form.Label className="stat-label mb-2">End Date</Form.Label>
-                <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <Col xs={12} md={5}>
+                <Form.Group>
+                  <Form.Label className="stat-label mb-2">End Date</Form.Label>
+                  <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                </Form.Group>
               </Col>
-              <Col md={2}>
+              <Col xs={12} md={2} className="d-flex align-items-end">
                 <Button className="custom-btn-outline w-100" onClick={fetchCustomerReport} disabled={loading}>
                   <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
                   {loading ? 'Analyzing...' : 'Generate'}
@@ -273,14 +277,19 @@ const CustomerInsightsReport = () => {
         <>
           {/* Action Bar */}
           <Card className="interactive-card border-0 mb-4 no-print shadow-sm">
-            <Card.Body className="p-4 d-flex justify-content-between align-items-center">
-              <div className="d-flex gap-3 align-items-center">
-                <Button variant="outline-success" className="custom-btn-outline border-success text-success" onClick={() => setShowExportModal(true)}>
-                  <CsLineIcons icon="file-text" className="me-2" size="15" /> Export Insights
+            <Card.Body className="p-4 d-flex flex-wrap gap-3 justify-content-between align-items-center">
+              <div className="d-flex flex-wrap gap-3 align-items-center">
+                <Button variant="outline-success" className="custom-btn-outline border-success text-success"
+                  onClick={() => { setExportType('Excel'); setShowExportModal(true); }} disabled={exporting || !reportData}>
+                  <CsLineIcons icon="file-text" className="me-2" size="15" /> Excel
+                </Button>
+                <Button variant="outline-danger" className="custom-btn-outline border-danger text-danger"
+                  onClick={() => { setExportType('PDF'); setShowExportModal(true); }} disabled={exporting || !reportData}>
+                  <CsLineIcons icon="file-text" className="me-2" size="15" /> PDF
                 </Button>
               </div>
               {exporting && (
-                <div className="flex-grow-1 ms-4">
+                <div className="flex-grow-1">
                   <ProgressBar now={exportProgress} className="progress-sm" variant="info" style={{ height: '6px' }} />
                 </div>
               )}
@@ -297,8 +306,8 @@ const CustomerInsightsReport = () => {
                       <div className="stat-label mb-2">Total Unique Customers</div>
                       <div className="stat-value text-primary">{totalCustomers}</div>
                     </div>
-                    <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: brandBg }}>
-                      <CsLineIcons icon="users" size="24" style={{ color: brandColor }} />
+                    <div className="rounded-circle d-flex justify-content-center align-items-center flex-shrink-0" style={{ backgroundColor: brandBg, width: '52px', height: '52px' }}>
+                       <CsLineIcons icon="user" size="24" style={{ color: brandColor }} />
                     </div>
                   </div>
                 </Card.Body>
@@ -313,8 +322,8 @@ const CustomerInsightsReport = () => {
                       <div className="stat-value text-success">{repeatCustomers}</div>
                       <div className="smaller fw-bold text-success mt-1">{repeatRate}% Loyalty Rate</div>
                     </div>
-                    <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
-                      <CsLineIcons icon="user-check" size="24" style={{ color: '#10b981' }} />
+                    <div className="rounded-circle d-flex justify-content-center align-items-center flex-shrink-0" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', width: '52px', height: '52px' }}>
+                       <CsLineIcons icon="check-circle" size="24" style={{ color: '#10b981' }} />
                     </div>
                   </div>
                 </Card.Body>
@@ -551,7 +560,9 @@ const CustomerInsightsReport = () => {
         </Modal.Body>
         <Modal.Footer className="border-0 p-4 pt-0">
           <Button variant="light" className="custom-btn-outline border-0 text-muted" onClick={() => setShowExportModal(false)}>Cancel</Button>
-          <Button className="custom-btn-outline px-4" onClick={handleExportConfirm}>Generate PDF</Button>
+          <Button className="custom-btn-outline px-4" onClick={handleExportConfirm}>
+            Generate {exportType || 'Report'}
+          </Button>
         </Modal.Footer>
       </Modal>
 

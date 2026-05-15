@@ -8,10 +8,9 @@ import { getDailyLogHistory, updateDailyLog } from 'api/inventory';
 import { format, subDays } from 'date-fns';
 
 const customStyles = `
-    .logs-container {
+    .stock-container {
       background: #f9f9fb;
       min-height: 100vh;
-      padding-bottom: 5rem;
     }
     .filter-bar {
       background: #ffffff !important;
@@ -207,12 +206,17 @@ const AdminDailyStockLogs = () => {
   }, {});
 
   return (
-    <div className="logs-container">
+    <div className="stock-container">
       <style>{customStyles}</style>
       <HtmlHead title={title} />
-      <div className="container px-3 px-lg-5 pt-3">
-        <div className="mb-4 d-flex justify-content-between align-items-center">
-          <div><h2 className="fw-bold mb-0" style={{color: brandColor}}>{title}</h2><BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations/inventory', text: 'Inventory' }, { to: '', title: 'Logs' }]} /></div>
+      <div className="container px-lg-5">
+        <div className="page-title-container mb-4 mt-n3">
+          <Row className="g-3 align-items-center">
+            <Col xs="12" md="7">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
+              <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations/inventory', text: 'Inventory' }, { to: '', title: 'Logs' }]} />
+            </Col>
+          </Row>
         </div>
 
         <Card className="filter-bar border-0">
