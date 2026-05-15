@@ -6,6 +6,33 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
+const customStyles = `
+  .btn-pill-outline {
+    border: 1px solid #1ea8e7 !important;
+    color: #1ea8e7 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    padding: 0.6rem 1.5rem !important;
+    font-weight: 600 !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  .btn-pill-outline:hover {
+    background-color: #1ea8e7 !important;
+    color: #fff !important;
+  }
+  .btn-pill-outline:hover svg {
+    stroke: #fff !important;
+  }
+  .modal-footer {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-end !important;
+    gap: 0.75rem !important;
+  }
+`;
+
 function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -13,18 +40,14 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
 
   const isAddMode = !data?._id;
 
-  // Dynamic Yup validation schema
   const validationSchema = Yup.object().shape({
     username: Yup.string().required('Username is required'),
-
     adminPassword: isAddMode || showPasswordFields
       ? Yup.string().required('Admin password is required')
       : Yup.string(),
-
     newPassword: isAddMode || showPasswordFields
       ? Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required')
       : Yup.string(),
-
     confirmPassword: isAddMode || showPasswordFields
       ? Yup.string()
         .oneOf([Yup.ref('newPassword'), null], 'Passwords must match')
@@ -32,16 +55,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
       : Yup.string(),
   });
 
-  const {
-    values,
-    handleSubmit,
-    handleChange,
-    resetForm,
-    errors,
-    touched,
-    handleBlur,
-    setFieldTouched,
-  } = useFormik({
+  const formik = useFormik({
     initialValues: {
       username: data?.username || '',
       adminPassword: '',
@@ -95,7 +109,6 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
         }
 
         onSave({ username: formValues.username });
-
         setShowPasswordFields(false);
         handleClose();
       } catch (err) {
@@ -110,205 +123,188 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
 
   useEffect(() => {
     if (!show) {
-      resetForm();
+      formik.resetForm();
       setShowPasswordFields(false);
       setError(null);
     }
-  }, [show, resetForm]);
+  }, [show]);
 
   const renderError = (field) =>
-    touched[field] && errors[field] ? (
-      <div className="text-danger mt-1" style={{ fontSize: '0.875em' }}>
-        {errors[field]}
+    formik.touched[field] && formik.errors[field] ? (
+      <div className="text-danger mt-1 small fw-bold">
+        {formik.errors[field]}
       </div>
     ) : null;
 
   return (
-    <>
-      <Modal className="modal-right large fade" show={show} onHide={handleClose} backdrop="static">
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {isAddMode ? 'Add' : 'Edit'} {planName}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form noValidate>
-            <div className="mb-3">
-              <Form.Label>Username</Form.Label>
-              <Form.Control
-                type="text"
-                name="username"
-                value={values.username}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                isInvalid={touched.username && !!errors.username}
-                disabled={isLoading}
-              />
-              {renderError('username')}
-            </div>
+    <Modal show={show} onHide={handleClose} backdrop="static" centered>
+      <style>{customStyles}</style>
+      <Modal.Header closeButton className="border-0 pb-0">
+        <Modal.Title className="fw-bold" style={{ color: '#1ea8e7' }}>
+          {isAddMode ? 'Add' : 'Edit'} {planName}
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body className="py-4">
+        <Form id="edit_panel_form" onSubmit={formik.handleSubmit}>
+          <Form.Group className="mb-3">
+            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Username</Form.Label>
+            <Form.Control
+              type="text"
+              name="username"
+              placeholder="Enter username"
+              value={formik.values.username}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              disabled={isLoading}
+              className="shadow-sm"
+            />
+            {renderError('username')}
+          </Form.Group>
 
-            {isAddMode && (
-              <>
-                <div className="mb-3">
-                  <Form.Label>Admin Password</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="adminPassword"
-                    value={values.adminPassword}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    isInvalid={touched.adminPassword && !!errors.adminPassword}
-                    disabled={isLoading}
-                  />
-                  {renderError('adminPassword')}
-                </div>
-                <div className="mb-3">
-                  <Form.Label>Panel Password</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="newPassword"
-                    value={values.newPassword}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    isInvalid={touched.newPassword && !!errors.newPassword}
-                    disabled={isLoading}
-                  />
-                  {renderError('newPassword')}
-                </div>
-                <div className="mb-3">
-                  <Form.Label>Confirm Panel Password</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="confirmPassword"
-                    value={values.confirmPassword}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    isInvalid={touched.confirmPassword && !!errors.confirmPassword}
-                    disabled={isLoading}
-                  />
-                  {renderError('confirmPassword')}
-                </div>
-              </>
-            )}
-
-            {!isAddMode && !showPasswordFields && (
-              <Button
-                variant="outline-warning"
-                size="sm"
-                onClick={() => setShowPasswordFields(true)}
-                disabled={isLoading}
-              >
-                <CsLineIcons icon="lock" className="me-2" />
-                Change Password
-              </Button>
-            )}
-
-            {!isAddMode && showPasswordFields && (
-              <>
-                <hr />
-                <div className="mb-3">
-                  <Form.Label>Admin Password</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="adminPassword"
-                    value={values.adminPassword}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    isInvalid={touched.adminPassword && !!errors.adminPassword}
-                    disabled={isLoading}
-                  />
-                  {renderError('adminPassword')}
-                </div>
-                <div className="mb-3">
-                  <Form.Label>New Panel Password</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="newPassword"
-                    value={values.newPassword}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    isInvalid={touched.newPassword && !!errors.newPassword}
-                    disabled={isLoading}
-                  />
-                  {renderError('newPassword')}
-                </div>
-                <div className="mb-3">
-                  <Form.Label>Confirm New Panel Password</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="confirmPassword"
-                    value={values.confirmPassword}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    isInvalid={touched.confirmPassword && !!errors.confirmPassword}
-                    disabled={isLoading}
-                  />
-                  {renderError('confirmPassword')}
-                </div>
-              </>
-            )}
-
-            {error && (
-              <Alert variant="danger" className="mt-3">
-                <CsLineIcons icon="error" className="me-2" />
-                {error}
-              </Alert>
-            )}
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="dark" onClick={handleClose} disabled={isLoading}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleSubmit}
-            disabled={isLoading}
-            style={{ minWidth: '100px' }}
-          >
-            {isLoading ? (
-              <>
-                <Spinner
-                  as="span"
-                  animation="border"
-                  size="sm"
-                  role="status"
-                  aria-hidden="true"
-                  className="me-2"
+          {isAddMode && (
+            <>
+              <Form.Group className="mb-3">
+                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Admin Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="adminPassword"
+                  placeholder="Your admin password"
+                  value={formik.values.adminPassword}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  disabled={isLoading}
+                  className="shadow-sm"
                 />
-                Saving...
-              </>
-            ) : 'Save'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+                {renderError('adminPassword')}
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Panel Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="newPassword"
+                  placeholder="Set panel password"
+                  value={formik.values.newPassword}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  disabled={isLoading}
+                  className="shadow-sm"
+                />
+                {renderError('newPassword')}
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Confirm Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="Confirm panel password"
+                  value={formik.values.confirmPassword}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  disabled={isLoading}
+                  className="shadow-sm"
+                />
+                {renderError('confirmPassword')}
+              </Form.Group>
+            </>
+          )}
 
-      {/* Saving overlay */}
-      {isLoading && (
-        <div
-          className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
-          style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.7)',
-            zIndex: 9999,
-            backdropFilter: 'blur(2px)'
-          }}
+          {!isAddMode && !showPasswordFields && (
+            <Button
+              variant="none"
+              className="btn-pill-outline w-100 d-flex justify-content-center align-items-center mb-3"
+              onClick={() => setShowPasswordFields(true)}
+              disabled={isLoading}
+            >
+              <CsLineIcons icon="lock" size="18" className="me-2" />
+              Change Password
+            </Button>
+          )}
+
+          {!isAddMode && showPasswordFields && (
+            <>
+              <hr className="my-4 opacity-10" />
+              <Form.Group className="mb-3">
+                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Admin Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="adminPassword"
+                  placeholder="Your admin password"
+                  value={formik.values.adminPassword}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  disabled={isLoading}
+                  className="shadow-sm"
+                />
+                {renderError('adminPassword')}
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">New Panel Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="newPassword"
+                  placeholder="Set new panel password"
+                  value={formik.values.newPassword}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  disabled={isLoading}
+                  className="shadow-sm"
+                />
+                {renderError('newPassword')}
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Confirm New Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="Confirm new password"
+                  value={formik.values.confirmPassword}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  disabled={isLoading}
+                  className="shadow-sm"
+                />
+                {renderError('confirmPassword')}
+              </Form.Group>
+            </>
+          )}
+
+          {error && (
+            <Alert variant="danger" className="mt-3 border-0 shadow-sm small fw-bold">
+              <CsLineIcons icon="error" size="18" className="me-2" />
+              {error}
+            </Alert>
+          )}
+        </Form>
+      </Modal.Body>
+      <Modal.Footer className="border-0 pt-0">
+        <Button 
+          onClick={handleClose} 
+          disabled={isLoading}
+          className="rounded-pill px-4 fw-bold btn-pill-outline"
         >
-          <div className="card shadow-lg border-0" style={{ minWidth: '200px' }}>
-            <div className="card-body text-center p-4">
-              <Spinner
-                animation="border"
-                variant="primary"
-                className="mb-3"
-                style={{ width: '3rem', height: '3rem' }}
-              />
-              <h5 className="mb-0">{isAddMode ? 'Creating' : 'Updating'} Panel User...</h5>
-              <small className="text-muted">Please wait a moment</small>
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          form="edit_panel_form"
+          disabled={isLoading}
+          className="rounded-pill px-4 fw-bold btn-pill-outline"
+        >
+          {isLoading ? (
+            <>
+              <Spinner as="span" animation="border" size="sm" className="me-2" />
+              Saving...
+            </>
+          ) : (
+            <div className="d-flex align-items-center">
+              <CsLineIcons icon="save" size="18" className="me-2" />
+              Save Credentials
             </div>
-          </div>
-        </div>
-      )}
-    </>
+          )}
+        </Button>
+      </Modal.Footer>
+    </Modal>
   );
 }
 
-export default ModalEditPanel;
+export default ModalEditPanel;

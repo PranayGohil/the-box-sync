@@ -72,6 +72,28 @@ const customStyles = `
     .dish-row-highlight-0 { background: linear-gradient(90deg, rgba(255, 215, 0, 0.08) 0%, transparent 100%) !important; }
     .dish-row-highlight-1 { background: linear-gradient(90deg, rgba(192, 192, 192, 0.1) 0%, transparent 100%) !important; }
     .dish-row-highlight-2 { background: linear-gradient(90deg, rgba(205, 127, 50, 0.06) 0%, transparent 100%) !important; }
+    .chart-container-responsive {
+      height: 300px;
+      position: relative;
+    }
+    .chart-container-expandable {
+      height: 500px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    @media (max-width: 768px) {
+      .chart-container-responsive {
+        height: 400px !important;
+      }
+      .chart-container-expandable {
+        height: auto !important;
+        min-height: 500px;
+      }
+      .stat-value {
+        font-size: 1.5rem !important;
+      }
+    }
 `;
 
 const CustomToggle = React.forwardRef(({ children, onClick, style }, ref) => (
@@ -81,8 +103,8 @@ const CustomToggle = React.forwardRef(({ children, onClick, style }, ref) => (
       e.preventDefault();
       onClick(e);
     }}
-    className="d-flex align-items-center justify-content-center px-4 rounded-pill border border-separator-light shadow-sm bg-white cursor-pointer transition-all hover-scale-up"
-    style={{ ...style, height: '42px', minWidth: '170px', fontWeight: '700', color: '#23b3f4', border: '1.5px solid rgba(35, 179, 244, 0.2)' }}
+    className="d-flex align-items-center justify-content-center px-4 rounded-pill shadow-sm bg-white cursor-pointer transition-all hover-scale-up"
+    style={{ ...style, height: '42px', minWidth: '170px', fontWeight: '700', color: '#23b3f4', border: '1.5px solid #23b3f4' }}
   >
     {children}
   </div>
@@ -226,7 +248,7 @@ const Statistics = () => {
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4">
+      <div className="page-title-container mb-4 mt-5 mt-lg-0">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto">
             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
@@ -335,7 +357,7 @@ const Statistics = () => {
                 <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Category Sales</h2>
                 <CsLineIcons icon="layout-5" size="18" style={{ color: brandColor }} />
               </div>
-              <div style={{ height: '300px' }}>
+              <div className="chart-container-expandable">
                 {categoryStats.length > 0 ? (
                   <ChartDoughnut orderCategoryWise={prepareCategoryChartData()} />
                 ) : (
@@ -353,7 +375,7 @@ const Statistics = () => {
                 <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Order Types</h2>
                 <CsLineIcons icon="main-course" size="18" style={{ color: brandColor }} />
               </div>
-              <div style={{ height: '300px' }}>
+              <div className="chart-container-expandable">
                 {orderStats.length > 0 ? (
                   <ChartPie orderTypeWise={prepareOrderTypeChartData()} />
                 ) : (
@@ -371,7 +393,7 @@ const Statistics = () => {
                 <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Revenue Trend</h2>
                 <CsLineIcons icon="chart-4" size="18" style={{ color: brandColor }} />
               </div>
-              <div style={{ height: '300px' }}>
+              <div className="chart-container-responsive">
                 {revenueStats.length > 0 ? (
                   <ChartHorizontal revenueSummary={prepareRevenueChartData()} />
                 ) : (

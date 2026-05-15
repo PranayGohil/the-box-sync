@@ -13,7 +13,8 @@ const OrderDetails = () => {
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
-    { to: 'orders', title: 'Orders' },
+    { to: 'operations', text: 'Operations' },
+    { to: 'operations/order-history', text: 'Order History' },
     { to: '', title: 'Order Details' },
   ];
 
@@ -430,64 +431,71 @@ const OrderDetails = () => {
   return (
     <>
       <HtmlHead title={title} description={description} />
-      <div className="page-title-container">
-        <Row className="align-items-center">
-          <Col xs="12" md="8">
-            <h1 className="mb-0 pb-0 display-4">{title}</h1>
-            <BreadcrumbList items={breadcrumbs} />
-          </Col>
-          <Col xs="12" md="4" className="text-end">
-            <Button
-              variant="outline-primary"
-              onClick={() => history.push('/operations/order-history')}
-              className="me-2 btn-icon btn-icon-start"
-            >
-              <CsLineIcons icon="arrow-left" /> <span>Back</span>
-            </Button>
-            <Button
-              variant="success"
-              onClick={handleWhatsAppShare}
-              disabled={sharing || !order}
-              className="me-2 btn-icon btn-icon-start"
-            >
-              {sharing ? (
-                <>
-                  <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
-                  <span className="ms-2">Opening...</span>
-                </>
-              ) : (
-                <>
-                  <CsLineIcons icon="whatsapp" /> <span>Share via WhatsApp</span>
-                </>
-              )}
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handlePrint}
-              disabled={printing}
-              className="btn-icon btn-icon-start"
-            >
-              {printing ? (
-                <>
-                  <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
-                  <span className="ms-2">Printing...</span>
-                </>
-              ) : (
-                <>
-                  <CsLineIcons icon="print" /> <span>Print Invoice</span>
-                </>
-              )}
-            </Button>
-          </Col>
-        </Row>
-      </div>
+      <Row>
+        <Col>
+          <section className="scroll-section" id="title">
+        <div className="page-title-container mb-4">
+          <Row className="align-items-center gy-3">
+            <Col xs="12" md="6">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </Col>
+            <Col xs="12" md="6" className="text-md-end mt-0 d-flex gap-2 justify-content-md-end flex-wrap flex-md-nowrap">
+              <Button
+                variant="outline-primary"
+                onClick={() => history.push('/operations/order-history')}
+                className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
+                style={{ minWidth: '100px', borderColor: '#23b3f4', color: '#23b3f4' }}
+              >
+                <CsLineIcons icon="arrow-left" className="me-2" size="15" /> <span>Back</span>
+              </Button>
+              <Button
+                variant="outline-primary"
+                onClick={handleWhatsAppShare}
+                disabled={sharing || !order}
+                className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
+                style={{ minWidth: '130px', borderColor: '#23b3f4', color: '#23b3f4' }}
+              >
+                {sharing ? (
+                  <>
+                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                    <span className="ms-2">Opening...</span>
+                  </>
+                ) : (
+                  <>
+                    <CsLineIcons icon="whatsapp" className="me-2" size="15" /> <span>WhatsApp</span>
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline-primary"
+                onClick={handlePrint}
+                disabled={printing}
+                className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
+                style={{ minWidth: '130px', borderColor: '#23b3f4', color: '#23b3f4' }}
+              >
+                {printing ? (
+                  <>
+                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                    <span className="ms-2">Printing...</span>
+                  </>
+                ) : (
+                  <>
+                    <CsLineIcons icon="print" className="me-2" size="15" /> <span>Print Invoice</span>
+                  </>
+                )}
+              </Button>
+            </Col>
+          </Row>
+        </div>
+      </section>
 
       <Row className="mb-n4">
         <Col xl="5" className="mb-4">
-          <Card className="h-100">
-            <Card.Header>
-              <h4 className="mb-0 d-flex align-items-center">
-                <CsLineIcons icon="info-hexagon" className="me-2 text-primary" size={20} />
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: '1.25rem' }}>
+            <Card.Header className="border-0 bg-transparent pt-4 px-4">
+              <h4 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4' }}>
+                <CsLineIcons icon="info-hexagon" className="me-2" size="20" />
                 Order Information
               </h4>
             </Card.Header>
@@ -517,7 +525,7 @@ const OrderDetails = () => {
                       order.order_type === 'Dine In' ? 'primary' :
                         order.order_type === 'Takeaway' ? 'warning' :
                           order.order_type === 'Delivery' ? 'success' : 'secondary'
-                    }>
+                    } className="rounded-pill px-3">
                       {order.order_type || '-'}
                     </Badge>
                   </div>
@@ -529,7 +537,7 @@ const OrderDetails = () => {
                       order.order_status === 'Completed' ? 'success' :
                         order.order_status === 'Pending' ? 'warning' :
                           order.order_status === 'Cancelled' ? 'danger' : 'secondary'
-                    }>
+                    } className="rounded-pill px-3">
                       {order.order_status || '-'}
                     </Badge>
                   </div>
@@ -591,15 +599,15 @@ const OrderDetails = () => {
         </Col>
 
         <Col xl="7" className="mb-4">
-          <Card className="h-100">
-        <Card.Header>
-          <h4 className="mb-0">
-            <CsLineIcons icon="restaurant" className="me-2" />
-            Ordered Items
-          </h4>
-        </Card.Header>
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: '1.25rem' }}>
+            <Card.Header className="border-0 bg-transparent pt-4 px-4">
+              <h4 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4' }}>
+                <CsLineIcons icon="restaurant" className="me-2" size="20" />
+                Ordered Items
+              </h4>
+            </Card.Header>
         <Card.Body>
-          <div className="table-responsive">
+          <div className="table-responsive d-none d-md-block">
             <Table className="align-middle" hover>
               <thead className="table-light">
                 <tr>
@@ -625,7 +633,7 @@ const OrderDetails = () => {
                         item.status === 'Served' ? 'success' :
                           item.status === 'Preparing' ? 'warning' :
                             item.status === 'Pending' ? 'secondary' : 'info'
-                      }>
+                      } className="rounded-pill px-3">
                         {item.status || 'Pending'}
                       </Badge>
                     </td>
@@ -634,6 +642,36 @@ const OrderDetails = () => {
                 ))}
               </tbody>
             </Table>
+          </div>
+
+          {/* Mobile View Items */}
+          <div className="d-md-none">
+            {order.order_items?.map((item, index) => (
+              <div key={`${item.dish_name}-${index}`} className="border-bottom py-3 last-child-border-0">
+                <div className="d-flex justify-content-between align-items-start mb-2">
+                  <div className="d-flex align-items-center">
+                    <div className="bg-light-primary text-primary sw-4 sh-4 rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold small">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <div className="fw-bold text-dark">{item.dish_name}</div>
+                      <div className="text-muted xsmall">Qty: {item.quantity} × ₹{parseFloat(item.dish_price).toFixed(2)}</div>
+                    </div>
+                  </div>
+                  <Badge bg={
+                    item.status === 'Served' ? 'success' :
+                      item.status === 'Preparing' ? 'warning' :
+                        item.status === 'Pending' ? 'secondary' : 'info'
+                  } className="rounded-pill px-2">
+                    {item.status || 'Pending'}
+                  </Badge>
+                </div>
+                <div className="d-flex justify-content-between align-items-center ps-7">
+                  <div className="text-muted xsmall italic">{item.special_notes ? `Note: ${item.special_notes}` : ''}</div>
+                  <div className="fw-bold text-primary">₹ {(parseFloat(item.dish_price) * parseFloat(item.quantity)).toFixed(2)}</div>
+                </div>
+              </div>
+            ))}
           </div>
           
           <Row className="mt-4 border-top pt-4">
@@ -674,11 +712,11 @@ const OrderDetails = () => {
                 </div>
               )}
               <hr className="my-2" />
-              <div className="d-flex justify-content-between mb-2 h5 font-weight-bold">
+              <div className="d-flex justify-content-between mb-2 h5 fw-bold">
                 <span className="text-primary">Total Amount</span>
                 <span className="text-primary">₹ {parseFloat(order.total_amount || order.bill_amount || 0).toFixed(2)}</span>
               </div>
-              <div className="d-flex justify-content-between mb-0 h6">
+              <div className="d-flex justify-content-between mb-0 h6 fw-bold">
                 <span className="text-success">Paid Amount</span>
                 <span className="text-success">₹ {parseFloat(order.paid_amount || order.bill_amount || 0).toFixed(2)}</span>
               </div>
@@ -686,9 +724,11 @@ const OrderDetails = () => {
           </Row>
         </Card.Body>
       </Card>
-      </Col>
-      </Row>
-    </>
+    </Col>
+  </Row>
+</Col>
+</Row>
+</>
   );
 };
 

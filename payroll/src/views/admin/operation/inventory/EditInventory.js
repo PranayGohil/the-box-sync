@@ -280,11 +280,11 @@ const EditInventory = () => {
             <Card.Body className="p-4 p-lg-5">
               <div className="section-label"><CsLineIcons icon="file-text" size="18" /> Record Modification</div>
               <Row className="g-4 mb-5">
-                <Col md={3}><div className="input-group-label">Bill Date</div><Form.Control type="date" className="modern-input" name="bill_date" value={values.bill_date} onChange={handleChange} isInvalid={touched.bill_date && errors.bill_date} /></Col>
-                <Col md={3}><div className="input-group-label">Bill Number</div><Form.Control type="text" className="modern-input" name="bill_number" value={values.bill_number} onChange={handleChange} isInvalid={touched.bill_number && errors.bill_number} /></Col>
-                <Col md={3}><div className="input-group-label">Vendor</div><Form.Control type="text" className="modern-input" name="vendor_name" value={values.vendor_name} onChange={handleChange} /></Col>
-                <Col md={3}><div className="input-group-label">Category</div><Form.Control type="text" className="modern-input" name="category" value={values.category} onChange={handleChange} /></Col>
-                <Col md={12}><div className="input-group-label">Update Attachments</div><Form.Control type="file" multiple className="d-none" id="bill-update" onChange={handleFileChange} /><label htmlFor="bill-update" className="w-100 d-block p-4 text-center border-dashed rounded-4 bg-light cursor-pointer"><CsLineIcons icon="upload" size="24" className="mb-2 text-primary" /><div className="fw-bold text-muted small">Select New Files to Replace Current ones</div></label><div className="d-flex flex-wrap gap-2 mt-3">{filePreviews.map((f, i) => <div key={i} className="file-pill"><CsLineIcons icon={f.name.match(/\.(pdf)$/i) ? 'file-text' : 'image'} size="14" /> {f.name.substring(0, 15)}...</div>)}</div></Col>
+                <Col xs={12} md={3}><div className="input-group-label">Bill Date</div><Form.Control type="date" className="modern-input" name="bill_date" value={values.bill_date} onChange={handleChange} isInvalid={touched.bill_date && errors.bill_date} /></Col>
+                <Col xs={12} md={3}><div className="input-group-label">Bill Number</div><Form.Control type="text" className="modern-input" name="bill_number" value={values.bill_number} onChange={handleChange} isInvalid={touched.bill_number && errors.bill_number} /></Col>
+                <Col xs={12} md={3}><div className="input-group-label">Vendor</div><Form.Control type="text" className="modern-input" name="vendor_name" value={values.vendor_name} onChange={handleChange} /></Col>
+                <Col xs={12} md={3}><div className="input-group-label">Category</div><Form.Control type="text" className="modern-input" name="category" value={values.category} onChange={handleChange} /></Col>
+                <Col xs={12} md={12}><div className="input-group-label">Update Attachments</div><Form.Control type="file" multiple className="d-none" id="bill-update" onChange={handleFileChange} /><label htmlFor="bill-update" className="w-100 d-block p-4 text-center border-dashed rounded-4 bg-light cursor-pointer"><CsLineIcons icon="upload" size="24" className="mb-2 text-primary" /><div className="fw-bold text-muted small">Select New Files to Replace Current ones</div></label><div className="d-flex flex-wrap gap-2 mt-3">{filePreviews.map((f, i) => <div key={i} className="file-pill"><CsLineIcons icon={f.name.match(/\.(pdf)$/i) ? 'file-text' : 'image'} size="14" /> {f.name.substring(0, 15)}...</div>)}</div></Col>
               </Row>
 
               <div className="section-label"><CsLineIcons icon="shopping-basket" size="18" /> Adjusted Item List</div>
@@ -299,11 +299,25 @@ const EditInventory = () => {
               {values.items.map((item, idx) => (
                 <div key={idx} className="item-row-card">
                   <Row className="w-100 g-3 align-items-center">
-                    <Col lg={4.5} style={{flex: 2}}><Form.Control type="text" className="modern-input" value={item.item_name} onChange={(e) => handleItemChange(idx, 'item_name', e.target.value)} /></Col>
-                    <Col lg={1.5} style={{flex: 0.8}}><Form.Control type="number" className="modern-input" value={item.item_quantity} onChange={(e) => handleItemChange(idx, 'item_quantity', e.target.value)} /></Col>
-                    <Col lg={2} style={{flex: 1}}><Form.Select className="modern-input" value={item.unit} onChange={(e) => handleItemChange(idx, 'unit', e.target.value)}><option value="">Unit</option><option value="kg">kg</option><option value="g">g</option><option value="litre">ltr</option><option value="ml">ml</option><option value="piece">pc</option></Form.Select></Col>
-                    <Col lg={3} style={{flex: 1.2}}><Form.Control type="number" className="modern-input" value={item.item_price} onChange={(e) => handleItemChange(idx, 'item_price', e.target.value)} /></Col>
-                    <Col xs="auto" style={{width: '60px'}} className="text-end"><button type="button" className="remove-btn" onClick={() => removeItem(idx)} disabled={values.items.length === 1}><CsLineIcons icon="bin" size="16" /></button></Col>
+                    <Col xs={12} lg={4}>
+                      <div className="input-group-label d-lg-none">Item Name</div>
+                      <Form.Control type="text" className="modern-input" value={item.item_name} onChange={(e) => handleItemChange(idx, 'item_name', e.target.value)} />
+                    </Col>
+                    <Col xs={4} lg={1.5}>
+                      <div className="input-group-label d-lg-none">Qty</div>
+                      <Form.Control type="number" className="modern-input" value={item.item_quantity} onChange={(e) => handleItemChange(idx, 'item_quantity', e.target.value)} />
+                    </Col>
+                    <Col xs={4} lg={2}>
+                      <div className="input-group-label d-lg-none">Unit</div>
+                      <Form.Select className="modern-input" value={item.unit} onChange={(e) => handleItemChange(idx, 'unit', e.target.value)}><option value="">Unit</option><option value="kg">kg</option><option value="g">g</option><option value="litre">ltr</option><option value="ml">ml</option><option value="piece">pc</option></Form.Select>
+                    </Col>
+                    <Col xs={4} lg={3}>
+                      <div className="input-group-label d-lg-none">Price</div>
+                      <Form.Control type="number" className="modern-input" value={item.item_price} onChange={(e) => handleItemChange(idx, 'item_price', e.target.value)} />
+                    </Col>
+                    <Col xs={12} lg="auto" className="text-end">
+                      <button type="button" className="remove-btn ms-auto" onClick={() => removeItem(idx)} disabled={values.items.length === 1}><CsLineIcons icon="bin" size="16" /></button>
+                    </Col>
                   </Row>
                 </div>
               ))}

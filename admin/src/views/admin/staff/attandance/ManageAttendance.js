@@ -428,10 +428,10 @@ export default function ManageAttendance() {
             <style>{customStyles}</style>
             <HtmlHead title={title} description={description} />
 
-            <div className="page-title-container mb-5">
+            <div className="page-title-container mb-4 mt-5 mt-md-n3">
                 <Row className="g-3 align-items-center">
                     <Col md={7}>
-                        <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
+                        <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
                     <Col md={5} className="d-flex justify-content-md-end gap-2">

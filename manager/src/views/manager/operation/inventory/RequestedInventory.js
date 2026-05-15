@@ -12,6 +12,42 @@ import ControlsPageSize from './components/ControlsPageSize';
 import Table from './components/Table';
 import TablePagination from './components/TablePagination';
 
+const customStyles = `
+    .inventory-container {
+      background: #f9f9fb;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+    }
+    .page-card {
+      background: #ffffff !important;
+      border-radius: 2rem !important;
+      border: 1px solid rgba(0, 0, 0, 0.05) !important;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.02) !important;
+      overflow: hidden;
+    }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .modern-input {
+      border-radius: 12px !important;
+      padding: 0.8rem 1.25rem !important;
+      border: 1.5px solid #f1f5f9 !important;
+      font-weight: 600 !important;
+      color: #334155 !important;
+      transition: all 0.3s ease !important;
+      background: #fcfdfe !important;
+      height: 52px !important;
+    }
+`;
+
 const RequestedInventory = () => {
   const title = 'Requested Inventory';
   const description = 'Requested inventory with modern table UI.';
@@ -285,21 +321,21 @@ const RequestedInventory = () => {
 
   return (
     <>
-      <HtmlHead title={title} description={description} />
-
-      <Row>
-        <Col>
-          <div className="page-title-container">
-            <Row className="align-items-center">
+      <div className="inventory-container">
+        <style>{customStyles}</style>
+        <HtmlHead title={title} description={description} />
+        <div className="container-fluid px-lg-5">
+          <div className="page-title-container mb-4 mt-n3">
+            <Row className="g-3 align-items-center">
               <Col xs="12" md="7">
-                <h1 className="mb-0 pb-0 display-4">{title}</h1>
+                <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
-              <Col xs="12" md="5" className="text-md-end mt-2 mt-md-0">
-                <Link to="/operations/add-inventory" className="btn btn-primary">
+              <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
+                <Button as={Link} to="/operations/add-inventory" variant="outline-primary" className="rounded-pill px-4 fw-bold border-2 shadow-sm">
                   <CsLineIcons icon="plus" className="me-2" />
                   Add Request
-                </Link>
+                </Button>
               </Col>
             </Row>
           </div>
@@ -390,58 +426,43 @@ const RequestedInventory = () => {
           </Collapse>
 
           {error ? (
-            <Alert variant="danger" className="my-4">
-              <CsLineIcons icon="error" className="me-2" />
-              {error}
-              <Button
-                variant="outline-danger"
-                size="sm"
-                className="ms-3"
-                onClick={() => {
-                  fetchRef.current = true;
-                  fetchRequestedInventory();
-                }}
-              >
-                Retry
-              </Button>
-            </Alert>
-          ) : loading.data ? (
-            <Row className="justify-content-center my-5">
-              <Col xs={12} className="text-center">
-                <Spinner animation="border" variant="primary" className="mb-3" />
-                <p className="text-muted">Loading...</p>
-              </Col>
-            </Row>
-          ) : data.length === 0 ? (
-            <Alert variant="info" className="my-4">
-              <div className="text-center py-4">
-                <CsLineIcons icon="inbox" size="48" className="text-muted mb-3" />
-                <h5>{searchTerm || getActiveFilterCount() > 0 ? 'No results found. Try adjusting your search or filters.' : 'No Inventory Requests Found'}</h5>
-                {!searchTerm && getActiveFilterCount() === 0 && (
-                  <>
-                    <p className="text-muted mb-4">Get started by creating your first inventory request</p>
-                    <Link to="/operations/add-inventory" className="btn btn-primary">
-                      <CsLineIcons icon="plus" className="me-2" />
-                      Create First Request
-                    </Link>
-                  </>
-                )}
+            <Alert variant="danger" className="border-0 shadow-sm rounded-4 d-flex align-items-center gap-3 mb-4 p-3 bg-white">
+              <div className="bg-danger text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
+                <CsLineIcons icon="warning" size="20" />
+              </div>
+              <div>
+                <div className="fw-bold text-dark">{error}</div>
+                <Button variant="link" size="sm" className="p-0 text-danger" onClick={() => { fetchRef.current = true; fetchRequestedInventory(); }}>Retry</Button>
               </div>
             </Alert>
+          ) : loading.data ? (
+            <div className="d-flex justify-content-center py-5">
+              <Spinner animation="border" variant="primary" />
+            </div>
+          ) : data.length === 0 ? (
+            <Alert variant="light" className="text-center py-5 rounded-4 border-0 shadow-sm bg-white">
+              <CsLineIcons icon="inbox" size="48" className="text-muted mb-3 opacity-20" />
+              <h5 className="fw-bold text-muted">{searchTerm || getActiveFilterCount() > 0 ? 'No results found.' : 'No Inventory Requests Found'}</h5>
+              {!searchTerm && getActiveFilterCount() === 0 && (
+                <Link to="/operations/add-inventory" className="btn btn-primary rounded-pill px-4 fw-bold mt-3 shadow-sm">
+                  <CsLineIcons icon="plus" className="me-2" /> Create First Request
+                </Link>
+              )}
+            </Alert>
           ) : (
-            <>
-              <Row>
-                <Col xs="12" style={{ overflow: 'auto' }}>
-                  <Table className="react-table rows" tableInstance={tableInstance} />
-                </Col>
-                <Col xs="12">
+            <Card className="page-card border-0 shadow-sm overflow-hidden">
+              <Card.Body className="p-0">
+                <div className="table-responsive">
+                  <Table className="react-table rows mb-0" tableInstance={tableInstance} />
+                </div>
+                <div className="p-4 bg-light border-top">
                   <TablePagination paginationProps={paginationProps} />
-                </Col>
-              </Row>
-            </>
+                </div>
+              </Card.Body>
+            </Card>
           )}
-        </Col>
-      </Row>
+        </div>
+      </div>
 
       {/* Delete Inventory Modal */}
       <Modal  show={deleteInventoryModal} onHide={() => setDeleteInventoryModal(false)} centered>

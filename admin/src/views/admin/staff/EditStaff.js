@@ -9,6 +9,7 @@ import axios from 'axios';
 import { Country, State, City } from 'country-state-city';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
+import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 
 const EditStaff = () => {
@@ -322,8 +323,8 @@ const EditStaff = () => {
     value: pos,
   }));
 
-  const handleCountryChange = (event) => {
-    const countryName = event.target.value;
+  const handleCountryChange = (selected) => {
+    const countryName = selected ? selected.value : '';
     const selectedCountry = countries.find((c) => c.name === countryName);
 
     setFieldValue('country', countryName);
@@ -333,8 +334,8 @@ const EditStaff = () => {
     setFieldValue('city', '');
   };
 
-  const handleStateChange = (event) => {
-    const stateName = event.target.value;
+  const handleStateChange = (selected) => {
+    const stateName = selected ? selected.value : '';
     const selectedCountry = countries.find((c) => c.name === values.country);
     const selectedState = states.find((s) => s.name === stateName);
 
@@ -357,86 +358,191 @@ const EditStaff = () => {
   };
 
   const customStyles = `
+    .staff-container {
+      background: #f9f9fb;
+      min-height: 100vh;
+    }
     .glass-card {
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
-      border-radius: 1.25rem;
+      border-radius: 1.5rem;
       border: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
       transition: all 0.3s ease;
     }
     .custom-btn-outline {
-      background: #ffffff !important;
-      border: 1px solid #1ea8e7 !important;
-      color: #1ea8e7 !important;
-      border-radius: 50px !important;
-      padding: 0.5rem 1.5rem !important;
-      font-weight: 500 !important;
+      border: 2px solid #23b3f4 !important;
+      color: #23b3f4 !important;
+      background-color: transparent !important;
       transition: all 0.3s ease !important;
+      border-radius: 50px !important;
+      font-weight: 700 !important;
+      font-size: 0.85rem !important;
+      padding: 0.6rem 1.5rem !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       gap: 8px !important;
     }
     .custom-btn-outline:hover {
-      background: #1ea8e7 !important;
-      color: #ffffff !important;
-      border-color: #1ea8e7 !important;
-      transform: translateY(-1px) !important;
-    }
-    .custom-btn-outline i, .custom-btn-outline svg {
-      color: #1ea8e7 !important;
-      transition: color 0.3s ease !important;
-    }
-    .custom-btn-outline:hover i, .custom-btn-outline:hover svg {
-      color: #ffffff !important;
-    }
-    .custom-btn-danger {
-      background: transparent !important;
-      border: 1px solid #cf2637 !important;
-      color: #cf2637 !important;
-      border-radius: 50px !important;
-      padding: 0.6rem 1.5rem !important;
-      font-weight: 600 !important;
-      transition: all 0.3s ease !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-    }
-    .custom-btn-danger i, .custom-btn-danger svg {
-      color: #cf2637 !important;
-      transition: color 0.3s ease !important;
-    }
-    .custom-btn-danger:hover {
-      background: #cf2637 !important;
-      color: #ffffff !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 4px 12px rgba(207, 38, 55, 0.3) !important;
-    }
-    .custom-btn-danger:hover i, .custom-btn-danger:hover svg {
-      color: #ffffff !important;
+      background-color: #23b3f4 !important;
+      color: #fff !important;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(35, 179, 244, 0.2) !important;
     }
     .custom-btn-solid {
-      background: #1ea8e7 !important;
-      border: 1px solid #1ea8e7 !important;
-      color: #ffffff !important;
-      border-radius: 50px !important;
-      padding: 0.6rem 1.5rem !important;
-      font-weight: 600 !important;
+      background-color: #23b3f4 !important;
+      border: 2px solid #23b3f4 !important;
+      color: #fff !important;
       transition: all 0.3s ease !important;
+      border-radius: 50px !important;
+      font-weight: 700 !important;
+      font-size: 0.85rem !important;
+      padding: 0.6rem 1.5rem !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       gap: 8px !important;
     }
     .custom-btn-solid:hover {
-      background: #0091d5 !important;
-      border-color: #0091d5 !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
+      background-color: #1ea8e7 !important;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(35, 179, 244, 0.3) !important;
     }
-    .custom-btn-solid i, .custom-btn-solid svg {
-      color: #ffffff !important;
+    .form-label {
+      font-weight: 700;
+      color: #4a5568;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .form-control, .form-select {
+      border-radius: 1rem;
+      padding: 0.75rem 1.25rem;
+      border: 1px solid #e2e8f0;
+      background-color: #f8fafc;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+    }
+    .form-control:focus, .form-select:focus {
+      background-color: white;
+      border-color: #23b3f4;
+      box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1);
+    }
+    .section-header {
+      border-left: 4px solid #23b3f4;
+      padding-left: 1rem;
+      margin-bottom: 2rem;
+      color: #2d3748;
+    }
+    .preview-container {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 4px solid #fff;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f8fafc;
+      margin-top: 10px;
+    }
+    .preview-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .id-preview-container {
+      width: 100%;
+      height: 180px;
+      border-radius: 1.25rem;
+      overflow: hidden;
+      border: 2px dashed #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f8fafc;
+      margin-bottom: 1rem;
+    }
+    .react-select__control {
+      border-radius: 1rem !important;
+      border: 1px solid #e2e8f0 !important;
+      background-color: #f8fafc !important;
+      font-size: 0.9rem !important;
+      min-height: 45px !important;
+      height: 45px !important;
+    }
+    .react-select__value-container {
+      padding: 0 1rem !important;
+    }
+    .react-select__indicators-container {
+      height: 43px !important;
+    }
+    .form-control {
+      height: 45px !important;
+      border-radius: 1rem !important;
+      border: 1px solid #e2e8f0 !important;
+      background-color: #f8fafc !important;
+      font-size: 0.9rem !important;
+      padding: 0.45rem 1rem !important;
+    }
+    .react-select__control--is-focused {
+      border-color: #23b3f4 !important;
+      box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
+      background-color: white !important;
+    }
+    .react-select__placeholder {
+      color: #94a3b8 !important;
+    }
+    .react-select__menu {
+      border-radius: 1rem !important;
+      overflow: hidden !important;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+      border: 1px solid #e2e8f0 !important;
+      z-index: 1000 !important;
+    }
+    .react-select__option {
+      padding: 0.75rem 1.25rem !important;
+      font-size: 0.9rem !important;
+    }
+    .react-select__option--is-focused {
+      background-color: rgba(35, 179, 244, 0.1) !important;
+      color: #23b3f4 !important;
+    }
+    .react-select__option--is-selected {
+      background-color: #23b3f4 !important;
+      color: white !important;
+    }
+    @media (max-width: 768px) {
+      .button-group-responsive {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 12px !important;
+      }
+      .button-group-responsive button, .button-group-responsive label, .button-group-responsive a {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 0.75rem 1rem !important;
+      }
+      .page-title-container h1 {
+        font-size: 1.75rem !important;
+      }
+      .form-control, .form-select, .react-select__control {
+        font-size: 16px !important;
+        min-height: 45px !important;
+        height: 45px !important;
+      }
+      .react-select__control {
+        padding: 0 !important;
+      }
+    }
+    @media (max-width: 576px) {
+      .glass-card {
+        border-radius: 1rem;
+        padding: 1.25rem !important;
+      }
     }
   `;
 
@@ -454,20 +560,26 @@ const EditStaff = () => {
   }
 
   return (
-    <div className="container-fluid pb-5">
+    <div className="staff-container pb-5">
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
-      <Row className="g-3 align-items-center mb-4">
-        <Col md={7}>
-          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
-          <BreadcrumbList items={breadcrumbs} />
-        </Col>
-        <Col md={5} className="d-flex justify-content-md-end">
-          <Button className="custom-btn-outline" onClick={() => history.push('/staff/view')} disabled={loading.submitting}>
-            <CsLineIcons icon="arrow-left" size="18" /> Back to List
-          </Button>
-        </Col>
-      </Row>
+      
+      <div className="container-fluid px-lg-5">
+        <div className="page-title-container mb-4 mt-5 mt-md-n3">
+          <Row className="g-3 align-items-center">
+            <Col md={7}>
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
+                {title}
+              </h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </Col>
+            <Col xs="12" md="5" className="d-flex button-group-responsive justify-content-md-end gap-2 mt-3 mt-md-0">
+              <Button className="custom-btn-outline" onClick={() => history.push('/staff/view')} disabled={loading.submitting}>
+                <CsLineIcons icon="arrow-left" size="18" /> Back to List
+              </Button>
+            </Col>
+          </Row>
+        </div>
 
       {fileUploadError && (
         <Alert variant="danger" className="mb-4 glass-card border-0">
@@ -586,70 +698,58 @@ const EditStaff = () => {
                 </Row>
 
                 <Row className="g-3 mt-1">
-                  <Col md={4}>
-                    <Form.Group>
+                  <Col md={4} xs={12}>
+                    <Form.Group className="mb-3">
                       <Form.Label className="small fw-bold">Country</Form.Label>
-                      <Form.Select
-                        name="country"
-                        value={values.country}
-                        onChange={handleCountryChange}
-                        isInvalid={touched.country && errors.country}
-                        disabled={loading.submitting}
-                      >
-                        <option value="">Select Country</option>
-                        {countries.map((country) => (
-                          <option key={country.isoCode} value={country.name}>
-                            {country.name}
-                          </option>
-                        ))}
-                      </Form.Select>
-                      <Form.Control.Feedback type="invalid">{errors.country}</Form.Control.Feedback>
+                      <Select
+                        classNamePrefix="react-select"
+                        options={countries.map((country) => ({ label: country.name, value: country.name }))}
+                        value={values.country ? { label: values.country, value: values.country } : null}
+                        onChange={(selected) => handleCountryChange(selected)}
+                        isDisabled={loading.submitting}
+                        placeholder="Select Country"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                      />
+                      {touched.country && errors.country && <div className="text-danger mt-1 small fw-bold">{errors.country}</div>}
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
-                    <Form.Group>
+                  <Col md={4} xs={12}>
+                    <Form.Group className="mb-3">
                       <Form.Label className="small fw-bold">State</Form.Label>
-                      <Form.Select
-                        name="state"
-                        value={values.state}
-                        onChange={handleStateChange}
-                        disabled={!values.country || loading.submitting}
-                        isInvalid={touched.state && errors.state}
-                      >
-                        <option value="">Select State</option>
-                        {states.map((state) => (
-                          <option key={state.isoCode} value={state.name}>
-                            {state.name}
-                          </option>
-                        ))}
-                      </Form.Select>
-                      <Form.Control.Feedback type="invalid">{errors.state}</Form.Control.Feedback>
+                      <Select
+                        classNamePrefix="react-select"
+                        options={states.map((state) => ({ label: state.name, value: state.name }))}
+                        value={values.state ? { label: values.state, value: values.state } : null}
+                        onChange={(selected) => handleStateChange(selected)}
+                        isDisabled={!values.country || loading.submitting}
+                        placeholder="Select State"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                      />
+                      {touched.state && errors.state && <div className="text-danger mt-1 small fw-bold">{errors.state}</div>}
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
-                    <Form.Group>
+                  <Col md={4} xs={12}>
+                    <Form.Group className="mb-3">
                       <Form.Label className="small fw-bold">City</Form.Label>
-                      <Form.Select
-                        name="city"
-                        value={values.city}
-                        onChange={handleChange}
-                        disabled={!values.state || loading.submitting}
-                        isInvalid={touched.city && errors.city}
-                      >
-                        <option value="">Select City</option>
-                        {cities.map((city) => (
-                          <option key={city.name} value={city.name}>
-                            {city.name}
-                          </option>
-                        ))}
-                      </Form.Select>
-                      <Form.Control.Feedback type="invalid">{errors.city}</Form.Control.Feedback>
+                      <Select
+                        classNamePrefix="react-select"
+                        options={cities.map((city) => ({ label: city.name, value: city.name }))}
+                        value={values.city ? { label: values.city, value: values.city } : null}
+                        onChange={(selected) => setFieldValue('city', selected ? selected.value : '')}
+                        isDisabled={!values.state || loading.submitting}
+                        placeholder="Select City"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                      />
+                      {touched.city && errors.city && <div className="text-danger mt-1 small fw-bold">{errors.city}</div>}
                     </Form.Group>
                   </Col>
                 </Row>
 
                 <Row className="g-3 mt-1">
-                  <Col md={6}>
+                  <Col md={6} xs={12}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">Contact No.</Form.Label>
                       <Form.Control
@@ -663,7 +763,7 @@ const EditStaff = () => {
                       <Form.Control.Feedback type="invalid">{errors.phone_no}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col md={6} xs={12}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">Email Address</Form.Label>
                       <Form.Control
@@ -680,7 +780,7 @@ const EditStaff = () => {
                 </Row>
               </Card.Body>
             </Card>
-
+ 
             {/* Employment & Payroll Section */}
             <Card className="glass-card border-0 mb-4">
               <Card.Body className="p-4">
@@ -690,9 +790,9 @@ const EditStaff = () => {
                     Employment & Payroll
                   </h5>
                 </div>
-
+ 
                 <Row className="g-3">
-                  <Col md={6}>
+                  <Col md={6} xs={12}>
                     <Form.Group className="mb-3">
                       <Form.Label className="small fw-bold">Job Position</Form.Label>
                       <CreatableSelect
@@ -704,13 +804,15 @@ const EditStaff = () => {
                         onBlur={() => formik.setFieldTouched('position', true)}
                         placeholder="Select or type..."
                         classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
                       />
                       {touched.position && errors.position && (
                         <div className="text-danger mt-1 small fw-bold">{errors.position}</div>
                       )}
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col md={6} xs={12}>
                     <Form.Group className="mb-3">
                       <Form.Label className="small fw-bold">Salary (Base)</Form.Label>
                       <div className="input-group">
@@ -728,10 +830,11 @@ const EditStaff = () => {
                       </div>
                     </Form.Group>
                   </Col>
+
                 </Row>
 
                 {/* Submit Button inside Card */}
-                <div className="d-flex justify-content-center mt-4">
+                <div className="d-flex button-group-responsive justify-content-center mt-4">
                   <Button
                     className="custom-btn-outline px-5 py-3"
                     type="submit"
@@ -814,20 +917,21 @@ const EditStaff = () => {
                 </div>
 
                 <Form.Group className="mb-3">
-                  <Form.Label className="small fw-bold">Document Type</Form.Label>
-                  <Form.Select
-                    name="document_type"
-                    value={values.document_type}
-                    onChange={handleChange}
-                    isInvalid={touched.document_type && errors.document_type}
-                    disabled={loading.submitting}
-                  >
-                    <option value="">Select ID Type</option>
-                    <option value="National Identity Card">National Identity Card</option>
-                    <option value="Pan Card">Pan Card</option>
-                    <option value="Voter Card">Voter Card</option>
-                  </Form.Select>
-                  <Form.Control.Feedback type="invalid">{errors.document_type}</Form.Control.Feedback>
+                  <Select
+                    classNamePrefix="react-select"
+                    options={[
+                      { label: 'National Identity Card', value: 'National Identity Card' },
+                      { label: 'Pan Card', value: 'Pan Card' },
+                      { label: 'Voter Card', value: 'Voter Card' },
+                    ]}
+                    value={values.document_type ? { label: values.document_type, value: values.document_type } : null}
+                    onChange={(selected) => setFieldValue('document_type', selected ? selected.value : '')}
+                    placeholder="Select ID Type"
+                    isDisabled={loading.submitting}
+                    menuPortalTarget={document.body}
+                    styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                  />
+                  {touched.document_type && errors.document_type && <div className="text-danger mt-1 small fw-bold">{errors.document_type}</div>}
                 </Form.Group>
 
                 <Form.Group className="mb-4">
@@ -926,9 +1030,9 @@ const EditStaff = () => {
           </Card>
         </div>
       )}
-
     </div>
-  );
+  </div>
+);
 };
 
 export default EditStaff;

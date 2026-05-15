@@ -254,8 +254,13 @@ const AddTable = () => {
                         <Form.Control.Feedback type="invalid">{formik.errors.tables?.[index]?.maxPerson}</Form.Control.Feedback>
                       </Col>
                       <Col md="4" className="mt-4">
-                        <Button variant="outline-danger" onClick={() => removeTable(index)} disabled={isSubmitting || formik.values.tables.length === 1}>
-                          <CsLineIcons icon="bin" className="me-1" />
+                        <Button
+                          variant="outline-danger"
+                          onClick={() => removeTable(index)}
+                          className="rounded-pill px-4"
+                          disabled={isSubmitting || formik.values.tables.length === 1}
+                        >
+                          <CsLineIcons icon="bin" className="me-2" />
                           Remove
                         </Button>
                       </Col>
@@ -270,19 +275,25 @@ const AddTable = () => {
                   )}
 
                   <div className="mt-4">
-                    <Button variant="secondary" onClick={addMoreTable} className="me-2" disabled={isSubmitting}>
-                      <CsLineIcons icon="plus" className="me-1" /> 
+                    <Button variant="outline-secondary" onClick={addMoreTable} className="me-2 rounded-pill px-4" disabled={isSubmitting}>
+                      <CsLineIcons icon="plus" className="me-1" />
                       Add
                     </Button>
-                    <Button type="submit" variant="primary" disabled={isSubmitting} style={{ minWidth: '100px' }}>
+                    <Button
+                      type="submit"
+                      variant="outline-primary"
+                      className="rounded-pill px-4"
+                      disabled={isSubmitting}
+                      style={{ minWidth: '120px', borderWidth: '1.5px' }}
+                    >
                       {isSubmitting ? (
                         <>
                           <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
                           Submitting...
                         </>
                       ) : (
-                        <div className="d-flex align-items-center">
-                          <CsLineIcons icon="save" className="me-1" />
+                        <div className="d-flex align-items-center justify-content-center">
+                          <CsLineIcons icon="save" className="me-2" />
                           Submit
                         </div>
                       )}

@@ -351,11 +351,11 @@ const CompleteInventory = () => {
                   <Card.Body className="p-4 p-lg-5">
                     <div className="section-label"><CsLineIcons icon="file-text" size="18" /> Purchase Verification</div>
                     <Row className="g-4 mb-5">
-                      <Col md={3}><div className="input-group-label">Bill Date</div><Field type="date" name="bill_date" className={`modern-input form-control ${touched.bill_date && errors.bill_date ? 'is-invalid' : ''}`} /></Col>
-                      <Col md={3}><div className="input-group-label">Bill Number</div><Field type="text" name="bill_number" className={`modern-input form-control ${touched.bill_number && errors.bill_number ? 'is-invalid' : ''}`} placeholder="Enter bill #" /></Col>
-                      <Col md={3}><div className="input-group-label">Vendor</div><div className="select-modern"><CreatableSelect isClearable options={(suggestions.vendors || []).map(v => ({ label: v, value: v }))} value={values.vendor_name ? { label: values.vendor_name, value: values.vendor_name } : null} onChange={(s) => setFieldValue('vendor_name', s ? s.value : '')} placeholder="Vendor..." classNamePrefix="react-select" /></div></Col>
-                      <Col md={3}><div className="input-group-label">Category</div><div className="select-modern"><CreatableSelect isClearable options={(suggestions.categories || []).map(c => ({ label: c, value: c }))} value={values.category ? { label: values.category, value: values.category } : null} onChange={(s) => setFieldValue('category', s ? s.value : '')} placeholder="Category..." classNamePrefix="react-select" /></div></Col>
-                      <Col md={12}><div className="input-group-label">Final Bill Files</div><Form.Control type="file" multiple className="d-none" id="bill-upload" onChange={(e) => { setFieldValue('bill_files', e.currentTarget.files); previewFiles(e.currentTarget.files); }} /><label htmlFor="bill-upload" className="w-100 d-block p-4 text-center border-dashed rounded-4 bg-light cursor-pointer"><CsLineIcons icon="upload" size="24" className="mb-2 text-primary" /><div className="fw-bold text-muted small">Upload Verified Bills</div></label><div className="d-flex flex-wrap gap-2 mt-3">{filePreviews.map((f, i) => <div key={i} className="file-pill"><CsLineIcons icon={f.type === 'pdf' ? 'file-text' : 'image'} size="14" /> {f.name.substring(0, 15)}...</div>)}</div></Col>
+                      <Col xs={12} md={3}><div className="input-group-label">Bill Date</div><Field type="date" name="bill_date" className={`modern-input form-control ${touched.bill_date && errors.bill_date ? 'is-invalid' : ''}`} /></Col>
+                      <Col xs={12} md={3}><div className="input-group-label">Bill Number</div><Field type="text" name="bill_number" className={`modern-input form-control ${touched.bill_number && errors.bill_number ? 'is-invalid' : ''}`} placeholder="Enter bill #" /></Col>
+                      <Col xs={12} md={3}><div className="input-group-label">Vendor</div><div className="select-modern"><CreatableSelect isClearable menuPlacement="auto" menuPortalTarget={document.body} options={(suggestions.vendors || []).map(v => ({ label: v, value: v }))} value={values.vendor_name ? { label: values.vendor_name, value: values.vendor_name } : null} onChange={(s) => setFieldValue('vendor_name', s ? s.value : '')} placeholder="Vendor..." classNamePrefix="react-select" /></div></Col>
+                      <Col xs={12} md={3}><div className="input-group-label">Category</div><div className="select-modern"><CreatableSelect isClearable menuPlacement="auto" menuPortalTarget={document.body} options={(suggestions.categories || []).map(c => ({ label: c, value: c }))} value={values.category ? { label: values.category, value: values.category } : null} onChange={(s) => setFieldValue('category', s ? s.value : '')} placeholder="Category..." classNamePrefix="react-select" /></div></Col>
+                      <Col xs={12} md={12}><div className="input-group-label">Final Bill Files</div><Form.Control type="file" multiple className="d-none" id="bill-upload" onChange={(e) => { setFieldValue('bill_files', e.currentTarget.files); previewFiles(e.currentTarget.files); }} /><label htmlFor="bill-upload" className="w-100 d-block p-4 text-center border-dashed rounded-4 bg-light cursor-pointer"><CsLineIcons icon="upload" size="24" className="mb-2 text-primary" /><div className="fw-bold text-muted small">Upload Verified Bills</div></label><div className="d-flex flex-wrap gap-2 mt-3">{filePreviews.map((f, i) => <div key={i} className="file-pill"><CsLineIcons icon={f.type === 'pdf' ? 'file-text' : 'image'} size="14" /> {f.name.substring(0, 15)}...</div>)}</div></Col>
                     </Row>
 
                     <div className="section-label"><CsLineIcons icon="shopping-basket" size="18" /> Verification List</div>
@@ -370,11 +370,23 @@ const CompleteInventory = () => {
                     {values.items.map((item, idx) => (
                       <div key={idx} className={`item-row-card ${item.completed ? 'completed' : ''}`}>
                         <Row className="w-100 g-3 align-items-center">
-                          <Col xs="auto" style={{width: '60px'}} className="text-center"><Field type="checkbox" name={`items[${idx}].completed`} className="form-check-input custom-check" /></Col>
-                          <Col lg={4} style={{flex: 2}}><Field name={`items[${idx}].item_name`} readOnly className="modern-input form-control border-0 bg-transparent fw-bold" /></Col>
-                          <Col lg={1.5} style={{flex: 0.8}}><Field type="number" name={`items[${idx}].item_quantity`} className="modern-input form-control" disabled={!item.completed} /></Col>
-                          <Col lg={2} style={{flex: 1}}><Field as="select" name={`items[${idx}].unit`} className="modern-input form-control" disabled={!item.completed}><option value="">Unit</option><option value="kg">kg</option><option value="g">g</option><option value="litre">ltr</option><option value="ml">ml</option><option value="piece">pc</option></Field></Col>
-                          <Col lg={3} style={{flex: 1.2}}><Field type="number" name={`items[${idx}].item_price`} className="modern-input form-control" disabled={!item.completed} /></Col>
+                          <Col xs={2} lg="auto" style={{width: '60px'}} className="text-center"><Field type="checkbox" name={`items[${idx}].completed`} className="form-check-input custom-check" /></Col>
+                          <Col xs={10} lg={4}>
+                            <div className="input-group-label d-lg-none">Item Name</div>
+                            <Field name={`items[${idx}].item_name`} readOnly className="modern-input form-control border-0 bg-transparent fw-bold px-0" />
+                          </Col>
+                          <Col xs={4} lg={1.5}>
+                            <div className="input-group-label d-lg-none">Qty</div>
+                            <Field type="number" name={`items[${idx}].item_quantity`} className="modern-input form-control" disabled={!item.completed} />
+                          </Col>
+                          <Col xs={4} lg={2}>
+                            <div className="input-group-label d-lg-none">Unit</div>
+                            <Field as="select" name={`items[${idx}].unit`} className="modern-input form-control" disabled={!item.completed}><option value="">Unit</option><option value="kg">kg</option><option value="g">g</option><option value="litre">ltr</option><option value="ml">ml</option><option value="piece">pc</option></Field>
+                          </Col>
+                          <Col xs={4} lg={3}>
+                            <div className="input-group-label d-lg-none">Price</div>
+                            <Field type="number" name={`items[${idx}].item_price`} className="modern-input form-control" disabled={!item.completed} />
+                          </Col>
                         </Row>
                       </div>
                     ))}

@@ -111,6 +111,18 @@ const customStyles = `
     border-color: #1ea8e7;
     box-shadow: 0 10px 30px rgba(0,0,0,0.05);
   }
+  @media (max-width: 768px) {
+    .button-group-responsive {
+      flex-direction: column !important;
+      width: 100% !important;
+      gap: 12px !important;
+    }
+    .button-group-responsive button, .button-group-responsive a {
+      width: 100% !important;
+      justify-content: center !important;
+      padding: 0.75rem 1rem !important;
+    }
+  }
 `;
 
 const StaffProfile = () => {
@@ -195,15 +207,15 @@ const StaffProfile = () => {
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-5">
+      <div className="page-title-container mb-4 mt-5 mt-md-n3">
         <Row className="g-3 align-items-center">
           <Col md={7}>
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
               {staff.f_name} {staff.l_name}
             </h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
-          <Col md={5} className="d-flex justify-content-md-end gap-2">
+          <Col md={5} className="d-flex button-group-responsive justify-content-md-end gap-2">
             <Button className="custom-btn-outline px-4 py-2 d-flex align-items-center gap-2" as={NavLink} to={`/staff/edit/${id}`}>
               <CsLineIcons icon="edit-square" size="18" /> <span>Edit Profile</span>
             </Button>

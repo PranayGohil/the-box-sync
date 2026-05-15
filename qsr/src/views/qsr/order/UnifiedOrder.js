@@ -292,17 +292,15 @@ const UnifiedOrder = () => {
   };
 
   // ── Payload Builder ───────────────────────────────────────────────────────
-  const buildPayload = (status, completeAll = false) => {
+  const buildPayload = (status) => {
     const orderData = {
       order_type: orderType,
       order_items: orderItems.map((item) => ({
         dish_name: item.dish_name, quantity: item.quantity, dish_price: item.dish_price,
         special_notes: item.special_notes || '',
-        status: completeAll
-          ? 'Completed'
-          : (status === 'KOT' || status === 'Paid')
-            ? (item.status === 'Pending' ? 'Preparing' : item.status)
-            : (status === 'Save' ? (item.status || 'Pending') : item.status),
+        status: (status === 'KOT' || status === 'Paid')
+          ? (item.status === 'Pending' ? 'Preparing' : item.status)
+          : (status === 'Save' ? (item.status || 'Pending') : item.status),
       })),
       order_status: status,
       customer_name: customerInfo.name,
@@ -340,7 +338,7 @@ const UnifiedOrder = () => {
 
     setIsLoading(true);
     try {
-      const payload = buildPayload('KOT', true);
+      const payload = buildPayload('KOT');
       const token = localStorage.getItem('token');
       const response = await API_MAP[orderType](payload, token);
       if (response.data.status === 'success') {
@@ -371,8 +369,6 @@ const UnifiedOrder = () => {
         if (!orderId && savedId) {
           allowNavigationRef.current = true;
           window.location.href = `/order/new?orderId=${savedId}&mode=edit`;
-        } else {
-          fetchOrderDetails();
         }
       }
     } catch (err) {

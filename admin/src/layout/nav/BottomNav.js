@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { useSelector } from 'react-redux';
+import { AuthContext } from 'contexts/AuthContext';
 
 const BottomNav = () => {
   const { isLogin } = useSelector((state) => state.auth);
   const { pathname } = useLocation();
+  const { activePlans } = useContext(AuthContext);
 
   if (!isLogin) return null;
 
@@ -25,8 +27,8 @@ const BottomNav = () => {
     { to: '/operations/manage-table', icon: 'layout-5', label: 'Tables' },
     { to: '/operations/manage-menu', icon: 'book-open', label: 'Menu' },
     { to: '/operations/inventory-history', icon: 'boxes', label: 'Inventory' },
-    { to: '/operations/feedback', icon: 'message', label: 'Feedback' },
-  ];
+    { to: '/operations/feedback', icon: 'message', label: 'Feedback', hide: !activePlans.includes('Feedback') },
+  ].filter(item => !item.hide);
 
   const defaultItems = [
     { to: '/dashboard', icon: 'grid-2', label: 'Dash' },
@@ -36,9 +38,14 @@ const BottomNav = () => {
     { to: '/settings', icon: 'gear', label: 'Settings' },
   ];
 
-  let navItems = defaultItems;
-  if (isSettings) navItems = settingsItems;
-  if (isOperations) navItems = operationsItems;
+  let navItems = [];
+  if (isOperations) {
+    navItems = operationsItems;
+  } else if (isSettings) {
+    navItems = settingsItems;
+  } else {
+    return null;
+  }
 
   return (
     <div className="bottom-nav-wrapper d-lg-none">
@@ -112,11 +119,33 @@ const BottomNav = () => {
       `}</style>
 
       <div className="bottom-nav-pill">
-        {navItems.map((item) => (
-          <NavLink key={item.to} to={item.to} className="bottom-nav-item" activeClassName="active">
-            <CsLineIcons icon={item.icon} size="20" />
-          </NavLink>
-        ))}
+        {navItems.map((item) => {
+          const customIsActive = (match, location) => {
+            if (item.to === '/operations/order-history') {
+              return location.pathname.startsWith('/operations/order-history') || location.pathname.startsWith('/operations/order-details');
+            }
+            if (item.to === '/operations/manage-table') {
+              return location.pathname.startsWith('/operations/manage-table') || location.pathname.startsWith('/operations/add-table');
+            }
+            if (item.to === '/operations/manage-menu') {
+              return location.pathname.startsWith('/operations/manage-menu') || location.pathname.startsWith('/operations/add-dish') || location.pathname.startsWith('/operations/qr-for-menu');
+            }
+            if (item.to === '/operations/inventory-history') {
+              const inventoryPaths = ['/operations/inventory', '/operations/add-inventory', '/operations/edit-inventory', '/operations/complete-inventory', '/operations/stock-management', '/operations/daily-stock-logs', '/operations/wastage-log', '/operations/requested-inventory'];
+              return inventoryPaths.some(p => location.pathname.startsWith(p));
+            }
+            if (item.to === '/operations/feedback') {
+              return location.pathname.startsWith('/operations/feedback') || location.pathname.startsWith('/operations/qr-for-feedback');
+            }
+            return location.pathname.startsWith(item.to);
+          };
+
+          return (
+            <NavLink key={item.to} to={item.to} className="bottom-nav-item" activeClassName="active" isActive={customIsActive}>
+              <CsLineIcons icon={item.icon} size="20" />
+            </NavLink>
+          );
+        })}
       </div>
     </div>
   );

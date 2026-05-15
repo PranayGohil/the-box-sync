@@ -6,155 +6,155 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
+const customStyles = `
+  .btn-pill-outline {
+    border: 1px solid #1ea8e7 !important;
+    color: #1ea8e7 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    padding: 0.6rem 1.5rem !important;
+    font-weight: 600 !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  .btn-pill-outline:hover {
+    background-color: #1ea8e7 !important;
+    color: #fff !important;
+  }
+  .btn-pill-outline:hover svg {
+    stroke: #fff !important;
+  }
+  .modal-footer {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-end !important;
+    gap: 0.75rem !important;
+  }
+`;
+
 function RaiseInquiryModal({ show, handleClose, subscriptionName, fetchData }) {
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-    const validationSchema = Yup.object().shape({
-        message: Yup.string().required('Message is required'),
-    });
+  const validationSchema = Yup.object().shape({
+    message: Yup.string().required('Message is required'),
+  });
 
-    const {
-        values,
-        errors,
-        touched,
-        handleChange,
-        handleBlur,
-        handleSubmit,
-        resetForm,
-    } = useFormik({
-        initialValues: {
-            message: '',
-        },
-        enableReinitialize: true,
-        validationSchema,
-        onSubmit: async (formValues) => {
-            setIsLoading(true);
-            setError('');
-            try {
-                await axios.post(
-                    `${process.env.REACT_APP_API}/customerquery/addquery`,
-                    {
-                        message: formValues.message,
-                        purpose: `Against Blocked Subscription: ${subscriptionName}`,
-                    },
-                    { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-                );
+  const formik = useFormik({
+    initialValues: {
+      message: '',
+    },
+    enableReinitialize: true,
+    validationSchema,
+    onSubmit: async (formValues) => {
+      setIsLoading(true);
+      setError('');
+      try {
+        await axios.post(
+          `${process.env.REACT_APP_API}/customerquery/addquery`,
+          {
+            message: formValues.message,
+            purpose: `Against Blocked Subscription: ${subscriptionName}`,
+          },
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
 
-                toast.success('Inquiry raised successfully!');
-                fetchData?.();
-                handleClose();
-            } catch (err) {
-                console.error('Error raising inquiry:', err);
-                setError(err.response?.data?.message || 'Failed to send inquiry. Try again.');
-                toast.error('Failed to send inquiry. Try again.');
-            } finally {
-                setIsLoading(false);
-            }
-        },
-    });
+        toast.success('Inquiry raised successfully!');
+        fetchData?.();
+        handleClose();
+      } catch (err) {
+        console.error('Error raising inquiry:', err);
+        setError(err.response?.data?.message || 'Failed to send inquiry. Try again.');
+        toast.error('Failed to send inquiry. Try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+  });
 
-    useEffect(() => {
-        if (!show) {
-            resetForm();
-            setError('');
-        }
-    }, [show, resetForm]);
+  useEffect(() => {
+    if (!show) {
+      formik.resetForm();
+      setError('');
+    }
+  }, [show]);
 
-    const renderError = (field) =>
-        touched[field] && errors[field] ? (
-            <div className="text-danger mt-1" style={{ fontSize: '0.875em' }}>
-                {errors[field]}
+  const renderError = (field) =>
+    formik.touched[field] && formik.errors[field] ? (
+      <div className="text-danger mt-1 small fw-bold">
+        {formik.errors[field]}
+      </div>
+    ) : null;
+
+  return (
+    <Modal show={show} onHide={handleClose} backdrop="static" centered>
+      <style>{customStyles}</style>
+      <Modal.Header closeButton className="border-0 pb-0">
+        <Modal.Title className="fw-bold" style={{ color: '#1ea8e7' }}>
+          Raise Support Inquiry
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body className="py-4">
+        <Form id="raise_inquiry_form" onSubmit={formik.handleSubmit}>
+          <p className="small text-muted mb-4">
+            You are raising an inquiry for: <strong>{subscriptionName}</strong>
+          </p>
+          <Form.Group className="mb-3">
+            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Detailed Message</Form.Label>
+            <Form.Control
+              as="textarea"
+              name="message"
+              rows={4}
+              placeholder="Describe your issue or request in detail..."
+              value={formik.values.message}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              isInvalid={formik.touched.message && !!formik.errors.message}
+              disabled={isLoading}
+              className="shadow-sm"
+              style={{ resize: 'none' }}
+            />
+            {renderError('message')}
+          </Form.Group>
+
+          {error && (
+            <Alert variant="danger" className="mt-3 border-0 shadow-sm small fw-bold">
+              <CsLineIcons icon="error" size="18" className="me-2" />
+              {error}
+            </Alert>
+          )}
+        </Form>
+      </Modal.Body>
+      <Modal.Footer className="border-0 pt-0">
+        <Button 
+          onClick={handleClose} 
+          disabled={isLoading}
+          className="rounded-pill px-4 fw-bold btn-pill-outline"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          form="raise_inquiry_form"
+          disabled={isLoading || !formik.values.message.trim()}
+          className="rounded-pill px-4 fw-bold btn-pill-outline"
+        >
+          {isLoading ? (
+            <>
+              <Spinner as="span" animation="border" size="sm" className="me-2" />
+              Sending...
+            </>
+          ) : (
+            <div className="d-flex align-items-center">
+              <CsLineIcons icon="send" size="18" className="me-2" stroke="currentColor" />
+              Submit Inquiry
             </div>
-        ) : null;
-
-    return (
-        <>
-            <Modal className="modal-right large fade" show={show} onHide={handleClose} backdrop="static">
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        Raise Inquiry
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form noValidate>
-                        <Form.Group controlId="inquiryMessage" className="mb-3">
-                            <Form.Label>Your Message</Form.Label>
-                            <Form.Control
-                                as="textarea"
-                                name="message"
-                                rows={4}
-                                value={values.message}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                isInvalid={touched.message && !!errors.message}
-                                placeholder="Describe your issue…"
-                                disabled={isLoading}
-                            />
-                            {renderError('message')}
-                        </Form.Group>
-
-                        {error && (
-                            <Alert variant="danger" className="mt-3">
-                                <CsLineIcons icon="error" className="me-2" />
-                                {error}
-                            </Alert>
-                        )}
-                    </Form>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="dark" onClick={handleClose} disabled={isLoading}>
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={handleSubmit}
-                        disabled={isLoading || !values.message.trim()}
-                        style={{ minWidth: '120px' }}
-                    >
-                        {isLoading ? (
-                            <>
-                                <Spinner
-                                    as="span"
-                                    animation="border"
-                                    size="sm"
-                                    role="status"
-                                    aria-hidden="true"
-                                    className="me-2"
-                                />
-                                Sending...
-                            </>
-                        ) : 'Send'}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-
-            {/* Sending overlay */}
-            {isLoading && (
-                <div
-                    className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
-                    style={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                        zIndex: 9999,
-                        backdropFilter: 'blur(2px)'
-                    }}
-                >
-                    <div className="card shadow-lg border-0" style={{ minWidth: '200px' }}>
-                        <div className="card-body text-center p-4">
-                            <Spinner
-                                animation="border"
-                                variant="primary"
-                                className="mb-3"
-                                style={{ width: '3rem', height: '3rem' }}
-                            />
-                            <h5 className="mb-0">Sending Inquiry...</h5>
-                            <small className="text-muted">Please wait a moment</small>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </>
-    );
+          )}
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
 }
 
-export default RaiseInquiryModal;
+export default RaiseInquiryModal;

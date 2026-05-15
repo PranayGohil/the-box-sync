@@ -1,11 +1,12 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Card, Col, Row, Form, Spinner, Alert, Button, Badge } from 'react-bootstrap';
+import { Card, Col, Row, Form, Spinner, Alert, Button, Badge, Dropdown } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import csInterfaceIcons from 'views/interface/content/icons/data/cs-interface-icons-tags';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
+import Select from 'react-select';
 import BoxedVariationsStripe from './components/BoxedVariationsStripe';
 import EditDishModal from './EditDishModal';
 import EditDishCategoryModal from './EditDishCategoryModal';
@@ -261,35 +262,79 @@ const ManageMenu = () => {
 
       <Card className="border-0 shadow-sm mb-5" style={{ borderRadius: '1.25rem' }}>
         <Card.Body className="p-3">
-          <Row className="g-3">
-            <Col md={6}>
-              <div className="search-container">
+          <Row className="g-3 align-items-center">
+            <Col xs={12} md={6}>
+              <div className="search-container shadow-sm rounded-pill bg-white border d-flex align-items-center px-3" style={{ height: '44px' }}>
+                <CsLineIcons icon="search" size="18" className="text-primary opacity-75" />
                 <Form.Control 
                   type="text" 
                   placeholder="Search dishes by name..." 
-                  className="pill-input ps-5"
+                  className="border-0 bg-transparent shadow-none flex-grow-1 ms-2"
+                  style={{ fontSize: '14px', outline: 'none' }}
                   onChange={(e) => handleSearch(e.target.value)} 
                 />
-                <div className="search-icon-wrapper">
-                  <CsLineIcons icon="search" size="18" />
-                </div>
               </div>
             </Col>
-            <Col md={3}>
-              <Form.Select className="pill-input" onChange={(e) => handleFilter('meal_type', e.target.value)}>
-                <option value="">All Meal Types</option>
-                <option value="veg">Veg Only</option>
-                <option value="non-veg">Non-Veg Only</option>
-                <option value="egg">Contains Egg</option>
-              </Form.Select>
+            <Col xs={12} sm={6} md={3}>
+              <Select
+                classNamePrefix="react-select"
+                options={[
+                  { value: '', label: 'All Meal Types' },
+                  { value: 'veg', label: 'Veg Only' },
+                  { value: 'non-veg', label: 'Non-Veg Only' },
+                  { value: 'egg', label: 'Contains Egg' },
+                ]}
+                value={filters.meal_type ? { value: filters.meal_type, label: filters.meal_type === 'veg' ? 'Veg Only' : filters.meal_type === 'non-veg' ? 'Non-Veg Only' : 'Contains Egg' } : { value: '', label: 'All Meal Types' }}
+                onChange={(selected) => handleFilter('meal_type', selected ? selected.value : '')}
+                placeholder="Meal Type"
+                styles={{
+                  control: (base, state) => ({
+                    ...base,
+                    borderRadius: '50px',
+                    height: '44px',
+                    border: '2px solid #1ea8e7',
+                    boxShadow: 'none',
+                    '&:hover': { border: '2px solid #1ea8e7' },
+                  }),
+                  menu: (base) => ({
+                    ...base,
+                    borderRadius: '1rem',
+                    overflow: 'hidden',
+                    boxShadow: '0 8px 32px rgba(31, 38, 135, 0.12)',
+                    zIndex: 9999,
+                  }),
+                  placeholder: (base) => ({ ...base, color: '#1ea8e7', fontWeight: '600' }),
+                  singleValue: (base) => ({ ...base, color: '#1ea8e7', fontWeight: '600' }),
+                }}
+              />
             </Col>
-            <Col md={3}>
-              <Form.Select className="pill-input" value={filters.category} onChange={(e) => handleFilter('category', e.target.value)}>
-                <option value="">All Categories</option>
-                {categoryOptions.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </Form.Select>
+            <Col xs={12} sm={6} md={3}>
+              <Select
+                classNamePrefix="react-select"
+                options={[{ value: '', label: 'All Categories' }, ...categoryOptions.map(cat => ({ value: cat, label: cat }))]}
+                value={filters.category ? { value: filters.category, label: filters.category } : { value: '', label: 'All Categories' }}
+                onChange={(selected) => handleFilter('category', selected ? selected.value : '')}
+                placeholder="Category"
+                styles={{
+                  control: (base, state) => ({
+                    ...base,
+                    borderRadius: '50px',
+                    height: '44px',
+                    border: '2px solid #1ea8e7',
+                    boxShadow: 'none',
+                    '&:hover': { border: '2px solid #1ea8e7' },
+                  }),
+                  menu: (base) => ({
+                    ...base,
+                    borderRadius: '1rem',
+                    overflow: 'hidden',
+                    boxShadow: '0 8px 32px rgba(31, 38, 135, 0.12)',
+                    zIndex: 9999,
+                  }),
+                  placeholder: (base) => ({ ...base, color: '#1ea8e7', fontWeight: '600' }),
+                  singleValue: (base) => ({ ...base, color: '#1ea8e7', fontWeight: '600' }),
+                }}
+              />
             </Col>
           </Row>
         </Card.Body>

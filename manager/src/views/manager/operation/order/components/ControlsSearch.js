@@ -37,38 +37,21 @@ const ControlsSearch = ({ onSearch, initialValue = '' }) => {
   };
 
   return (
-    <div className="position-relative">
+    <div className="custom-search-container shadow-sm d-flex align-items-center px-2 bg-white" style={{ borderRadius: '10px', height: '40px', border: '1px solid #eee' }}>
+      <CsLineIcons icon="search" size="18" className="text-primary opacity-75 ms-1" />
       <input
-        className="form-control datatable-search"
+        className="border-0 bg-transparent shadow-none flex-grow-1 px-2"
+        style={{ height: '38px', fontSize: '14px', outline: 'none' }}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Search"
+        placeholder="Search orders..."
       />
-      {value && value.length > 0 ? (
+      {value && value.length > 0 && (
         <span
-          className="search-delete-icon"
+          className="cursor-pointer text-muted px-1"
           onClick={handleClear}
-          style={{
-            cursor: 'pointer',
-            position: 'absolute',
-            right: '10px',
-            top: '50%',
-            transform: 'translateY(-50%)'
-          }}
         >
-          <CsLineIcons icon="close" />
-        </span>
-      ) : (
-        <span
-          className="search-magnifier-icon pe-none"
-          style={{
-            position: 'absolute',
-            right: '10px',
-            top: '50%',
-            transform: 'translateY(-50%)'
-          }}
-        >
-          <CsLineIcons icon="search" />
+          <CsLineIcons icon="close" size="14" />
         </span>
       )}
     </div>

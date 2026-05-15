@@ -532,7 +532,7 @@ const OperationalReport = () => {
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4 no-print">
+      <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto">
             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
@@ -668,7 +668,7 @@ const OperationalReport = () => {
             <Card.Body className="p-4">
               <div className="card-title-container">
                 <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Waiter Performance Ranking</h2>
-                <CsLineIcons icon="medal" size="18" style={{ color: brandColor }} />
+                <CsLineIcons icon="star" size="18" style={{ color: brandColor }} />
               </div>
               <div className="table-responsive">
                 <Table borderless hover className="align-middle mb-0">
@@ -678,9 +678,9 @@ const OperationalReport = () => {
                       <th className="py-3">Waiter Name</th>
                       <th className="py-3 text-end">Orders</th>
                       <th className="py-3 text-end">Revenue</th>
-                      <th className="py-3 text-end">Avg Ticket</th>
-                      <th className="py-3 text-end">Tables</th>
-                      <th className="py-3 text-center">Efficiency</th>
+                      <th className="py-3 text-end d-none d-md-table-cell">Avg Ticket</th>
+                      <th className="py-3 text-end d-none d-lg-table-cell">Tables</th>
+                      <th className="py-3 text-center d-none d-sm-table-cell">Efficiency</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -693,9 +693,9 @@ const OperationalReport = () => {
                           <td className="py-3 fw-bold text-dark">{waiter.waiter}</td>
                           <td className="py-3 text-end fw-bold text-muted smaller">{waiter.totalOrders}</td>
                           <td className="py-3 text-end fw-bold text-primary">{formatCurrency(waiter.totalRevenue)}</td>
-                          <td className="py-3 text-end fw-bold text-dark smaller">{formatCurrency(waiter.avgOrderValue)}</td>
-                          <td className="py-3 text-end fw-bold text-muted smaller">{waiter.tablesServed}</td>
-                          <td className="py-3 text-center">
+                          <td className="py-3 text-end fw-bold text-dark smaller d-none d-md-table-cell">{formatCurrency(waiter.avgOrderValue)}</td>
+                          <td className="py-3 text-end fw-bold text-muted smaller d-none d-lg-table-cell">{waiter.tablesServed}</td>
+                          <td className="py-3 text-center d-none d-sm-table-cell">
                             <Badge bg={performance === 'excellent' ? 'success' : performance === 'good' ? 'info' : 'warning'} className="rounded-pill px-3 py-2 fw-bold" style={{ fontSize: '0.65rem' }}>
                               {performance === 'excellent' ? '⭐ TOP PERFORMER' : performance === 'good' ? '👍 STABLE' : '📈 IMPROVING'}
                             </Badge>
@@ -721,24 +721,24 @@ const OperationalReport = () => {
                   <thead className="stat-label">
                     <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
                       <th className="py-3">Table No</th>
-                      <th className="py-3">Area</th>
+                      <th className="py-3 d-none d-sm-table-cell">Area</th>
                       <th className="py-3 text-end">Orders</th>
                       <th className="py-3 text-end">Revenue</th>
-                      <th className="py-3 text-end">Avg Ticket</th>
-                      <th className="py-3 text-end">Footfall</th>
-                      <th className="py-3 text-end">Rev/Person</th>
+                      <th className="py-3 text-end d-none d-md-table-cell">Avg Ticket</th>
+                      <th className="py-3 text-end d-none d-lg-table-cell">Footfall</th>
+                      <th className="py-3 text-end d-none d-xl-table-cell">Rev/Person</th>
                     </tr>
                   </thead>
                   <tbody>
                     {reportData.tablePerformance.map((table, idx) => (
                       <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
                         <td className="py-3 fw-bold text-dark">{table.tableNo}</td>
-                        <td className="py-3"><Badge bg="light" className="text-dark rounded-pill px-3 py-2 smaller">{table.tableArea || 'GENERAL'}</Badge></td>
+                        <td className="py-3 d-none d-sm-table-cell"><Badge bg="light" className="text-dark rounded-pill px-3 py-2 smaller">{table.tableArea || 'GENERAL'}</Badge></td>
                         <td className="py-3 text-end fw-bold text-muted smaller">{table.orderCount}</td>
                         <td className="py-3 text-end fw-bold text-success">{formatCurrency(table.totalRevenue)}</td>
-                        <td className="py-3 text-end fw-bold text-dark smaller">{formatCurrency(table.avgOrderValue)}</td>
-                        <td className="py-3 text-end fw-bold text-muted smaller">{table.totalPersons}</td>
-                        <td className="py-3 text-end fw-bold text-info smaller">{formatCurrency(table.revenuePerPerson)}</td>
+                        <td className="py-3 text-end fw-bold text-dark smaller d-none d-md-table-cell">{formatCurrency(table.avgOrderValue)}</td>
+                        <td className="py-3 text-end fw-bold text-muted smaller d-none d-lg-table-cell">{table.totalPersons}</td>
+                        <td className="py-3 text-end fw-bold text-info smaller d-none d-xl-table-cell">{formatCurrency(table.revenuePerPerson)}</td>
                       </tr>
                     ))}
                   </tbody>

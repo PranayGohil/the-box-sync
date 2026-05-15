@@ -16,15 +16,7 @@ const RightButtons = () => {
 
   return (
     <>
-      <div className="settings-buttons-container">
-        <OverlayTrigger delay={{ show: 1000, hide: 0 }} overlay={<Tooltip>Settings</Tooltip>} placement="left">
-          <Button variant="primary" className="settings-button p-0" onClick={showSettingsModal}>
-            <span>
-              <CsLineIcons icon="paint-roller" className="position-relative" />
-            </span>
-          </Button>
-        </OverlayTrigger>
-      </div>
+      {/* Settings buttons container removed */}
       <SettingsModal show={isShowSettingsModal} handleClose={closeSettingsModal} />
     </>
   );

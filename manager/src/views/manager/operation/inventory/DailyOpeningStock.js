@@ -5,12 +5,55 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import { getTodayLog, saveOpeningStock, autoGenerateOpening } from 'api/inventory';
 import { format } from 'date-fns';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const STATUS_BADGE = {
   manager_verified: { bg: 'success', label: 'Manager Verified' },
   partial: { bg: 'warning', label: 'Partial' },
   auto_generated: { bg: 'secondary', label: 'Auto Generated' },
 };
+const customStyles = `
+    .inventory-container {
+      background: #f9f9fb;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+    }
+    .page-card {
+      background: #ffffff !important;
+      border-radius: 2rem !important;
+      border: 1px solid rgba(0, 0, 0, 0.05) !important;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.02) !important;
+      overflow: hidden;
+    }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .modern-input {
+      border-radius: 12px !important;
+      padding: 0.8rem 1.25rem !important;
+      border: 1.5px solid #f1f5f9 !important;
+      font-weight: 600 !important;
+      color: #334155 !important;
+      transition: all 0.3s ease !important;
+      background: #fcfdfe !important;
+      height: 52px !important;
+    }
+    .stats-card {
+      background: #ffffff !important;
+      border-radius: 1.5rem !important;
+      border: 1px solid rgba(0,0,0,0.05) !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.02) !important;
+      transition: all 0.3s ease;
+    }
+`;
 
 const DailyOpeningStock = () => {
   const title = 'Opening Stock';
@@ -125,26 +168,29 @@ const DailyOpeningStock = () => {
 
   return (
     <>
-      <HtmlHead title={title} description={description} />
-      <div className="page-title-container">
-        <Row className="g-0">
-          <Col className="col-auto mb-3 mb-sm-0 me-auto">
-            <h1 className="mb-0 pb-0 display-4">{title}</h1>
-            <BreadcrumbList items={breadcrumbs} />
-          </Col>
-          <Col xs="auto" className="d-flex align-items-end gap-2 mb-2">
-            <Badge bg="light" text="dark" className="px-3 py-2 fs-6">
-              {format(new Date(), 'dd MMM yyyy')}
-            </Badge>
-            {/* Only show correction request if already submitted — NO edit button */}
-            {opening && (
-              <Button variant="outline-warning" size="sm" onClick={() => setShowCorrectionModal(true)}>
-                Request Correction
-              </Button>
-            )}
-          </Col>
-        </Row>
-      </div>
+      <div className="inventory-container">
+        <style>{customStyles}</style>
+        <HtmlHead title={title} description={description} />
+        <div className="container-fluid px-lg-5">
+          <div className="page-title-container mb-4 mt-n3">
+            <Row className="g-3 align-items-center">
+              <Col xs="12" md="7">
+                <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+                <BreadcrumbList items={breadcrumbs} />
+              </Col>
+              <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
+                <div className="bg-white border rounded-pill px-4 py-2 fw-bold text-dark shadow-sm d-flex align-items-center">
+                  <CsLineIcons icon="calendar" size="15" className="me-2 text-primary" />
+                  {format(new Date(), 'dd MMM yyyy')}
+                </div>
+                {opening && (
+                  <Button variant="outline-warning" className="rounded-pill fw-bold" size="sm" onClick={() => setShowCorrectionModal(true)}>
+                    <CsLineIcons icon="edit" size="14" className="me-1" /> Correction
+                  </Button>
+                )}
+              </Col>
+            </Row>
+          </div>
 
       {loading ? (
         <div className="d-flex justify-content-center align-items-center" style={{ minHeight: 300 }}>
@@ -205,50 +251,56 @@ const DailyOpeningStock = () => {
           )}
 
           <Form onSubmit={handleSubmit}>
-            <Card className="mb-3">
+            <Card className="page-card border-0 shadow-sm overflow-hidden mb-4">
               <Card.Body className="p-0">
-                <Table responsive hover className="mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th className="text-uppercase text-muted text-small ps-3">Item Name</th>
-                      <th className="text-uppercase text-muted text-small">Unit</th>
-                      <th className="text-uppercase text-muted text-small">Opening Quantity</th>
-                      {!opening && <th className="text-uppercase text-muted text-small text-center">Status</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.length === 0 ? (
-                      <tr><td colSpan={4} className="text-center text-muted py-4">No stock items found. Add inventory first.</td></tr>
-                    ) : items.map((item, idx) => (
-                      <tr key={idx} className={!opening && item.verified ? 'table-success' : ''}>
-                        <td className="align-middle fw-semibold ps-3">{item.item_name}</td>
-                        <td className="align-middle text-muted">{item.unit || '—'}</td>
-                        <td className="align-middle" style={{ width: 180 }}>
-                          {opening ? (
-                            <span className="fw-bold">{item.quantity}</span>
-                          ) : (
-                            <Form.Control
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={item.quantity}
-                              onChange={(e) => handleQtyChange(idx, e.target.value)}
-                              size="sm"
-                              style={{ maxWidth: 130 }}
-                            />
-                          )}
-                        </td>
-                        {!opening && (
-                          <td className="text-center align-middle">
-                            {item.verified
-                              ? <Badge bg="success">✅ Verified</Badge>
-                              : <Badge bg="warning" text="dark">Pending</Badge>}
-                          </td>
-                        )}
+                <div className="table-responsive">
+                  <Table hover className="mb-0 align-middle">
+                    <thead className="bg-light">
+                      <tr>
+                        <th className="text-uppercase text-muted text-small ps-4 py-3">Item Name</th>
+                        <th className="text-uppercase text-muted text-small py-3">Unit</th>
+                        <th className="text-uppercase text-muted text-small py-3">Opening Quantity</th>
+                        {!opening && <th className="text-uppercase text-muted text-small text-center py-3">Status</th>}
                       </tr>
-                    ))}
-                  </tbody>
-                </Table>
+                    </thead>
+                    <tbody>
+                      {items.length === 0 ? (
+                        <tr><td colSpan={4} className="text-center text-muted py-5">No stock items found. Add inventory first.</td></tr>
+                      ) : items.map((item, idx) => (
+                        <tr key={idx} className={!opening && item.verified ? 'bg-success-subtle' : ''}>
+                          <td className="ps-4 py-3">
+                            <div className="fw-bold text-dark">{item.item_name}</div>
+                          </td>
+                          <td className="text-muted py-3">{item.unit || '—'}</td>
+                          <td className="py-3" style={{ width: 180 }}>
+                            {opening ? (
+                              <div className="fw-bold fs-5">
+                                {item.quantity} <small className="text-muted fw-normal">{item.unit}</small>
+                              </div>
+                            ) : (
+                              <Form.Control
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={item.quantity}
+                                onChange={(e) => handleQtyChange(idx, e.target.value)}
+                                className="modern-input"
+                                style={{ height: '42px !important', maxWidth: '140px' }}
+                              />
+                            )}
+                          </td>
+                          {!opening && (
+                            <td className="text-center py-3">
+                              {item.verified
+                                ? <Badge pill bg="success" className="px-3">Verified</Badge>
+                                : <Badge pill bg="warning" text="dark" className="px-3">Pending</Badge>}
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
               </Card.Body>
             </Card>
 
@@ -277,6 +329,8 @@ const DailyOpeningStock = () => {
           </Form>
         </>
       )}
+        </div>
+      </div>
 
       {/* Correction Request Modal */}
       <Modal show={showCorrectionModal} onHide={() => !sendingCorrection && setShowCorrectionModal(false)} centered>

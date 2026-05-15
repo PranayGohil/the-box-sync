@@ -10,7 +10,6 @@ const customStyles = `
     .stock-container {
       background: #f9f9fb;
       min-height: 100vh;
-      padding-bottom: 5rem;
     }
     .main-workstation {
       background: #ffffff !important;
@@ -209,20 +208,22 @@ const StockManagement = () => {
     <div className="stock-container">
       <style>{customStyles}</style>
       <HtmlHead title={title} />
-      <div className="container px-3 px-lg-5">
-        <div className="mb-4 pt-4 d-flex justify-content-between align-items-center">
-          <div>
-            <h1 className="h2 fw-bold mb-1" style={{color: brandColor}}>Stock Control</h1>
-            <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations/stock-management', text: 'Operations' }, { to: '', title: 'Stock Management' }]} />
-          </div>
-          <div className="d-flex gap-2">
-            <Button variant="outline-primary" className="header-btn border-2" href="/operations/daily-stock-logs">
-              <CsLineIcons icon="file-text" size="14" className="me-1" /> <span className="d-none d-md-inline">Logs</span>
-            </Button>
-            <Button variant="outline-danger" className="header-btn border-2" href="/operations/wastage-log">
-              <CsLineIcons icon="bin" size="14" className="me-1" /> <span className="d-none d-md-inline">Wastage</span>
-            </Button>
-          </div>
+      <div className="container px-lg-5">
+        <div className="page-title-container mb-4 mt-n3">
+          <Row className="g-3 align-items-center">
+            <Col xs="12" md="7">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
+              <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations/stock-management', text: 'Operations' }, { to: '', title: 'Stock Management' }]} />
+            </Col>
+            <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
+              <Button variant="outline-primary" className="rounded-pill px-4 fw-bold border-2" href="/operations/daily-stock-logs">
+                <CsLineIcons icon="file-text" size="14" className="me-1" /> <span className="d-none d-md-inline">Logs</span>
+              </Button>
+              <Button variant="outline-danger" className="rounded-pill px-4 fw-bold border-2" href="/operations/wastage-log">
+                <CsLineIcons icon="bin" size="14" className="me-1" /> <span className="d-none d-md-inline">Wastage</span>
+              </Button>
+            </Col>
+          </Row>
         </div>
 
         {lowStockCount > 0 && (
@@ -270,7 +271,7 @@ const StockManagement = () => {
                     
                     <Col lg={2} className="d-none d-lg-block" style={{flex: 1}}>
                       {item.low_stock_threshold > 0 ? (
-                        <Badge className={`status-pill ${isBelow ? 'critical' : 'active-min'}`}>Min: {item.low_stock_threshold}</Badge>
+                        <span className={`status-pill ${isBelow ? 'critical' : 'active-min'}`}>Min: {item.low_stock_threshold}</span>
                       ) : <span className="text-muted small fw-bold">Not Set</span>}
                     </Col>
                     
@@ -279,7 +280,7 @@ const StockManagement = () => {
                     </Col>
 
                     <div className="mobile-info-grid d-lg-none">
-                       <div><div className="info-label-xs">Safety Min</div>{item.low_stock_threshold > 0 ? <Badge className={`status-pill ${isBelow ? 'critical' : 'active-min'}`}>Min: {item.low_stock_threshold}</Badge> : <span className="text-muted small">N/A</span>}</div>
+                       <div><div className="info-label-xs">Safety Min</div>{item.low_stock_threshold > 0 ? <span className={`status-pill ${isBelow ? 'critical' : 'active-min'}`}>Min: {item.low_stock_threshold}</span> : <span className="text-muted small">N/A</span>}</div>
                        <div><div className="info-label-xs">Tracking</div><span className="status-pill auto">{item.tracking_level || 'auto'}</span></div>
                     </div>
                     

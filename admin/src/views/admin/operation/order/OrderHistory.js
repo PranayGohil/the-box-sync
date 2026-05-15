@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useContext } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { Badge, Col, Form, Row, Button, Spinner, Alert, Card, Collapse, Modal, ProgressBar } from 'react-bootstrap';
+import { Badge, Col, Form, Row, Button, Spinner, Alert, Card, Collapse, Modal, ProgressBar, Dropdown } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy } from 'react-table';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -1088,45 +1088,36 @@ const OrderHistory = () => {
 
   if (loading && pageIndex === 0) {
     return (
-      <>
+      <div className="container-fluid pb-5">
         <HtmlHead title={title} description={description} />
-        <Row>
-          <Col>
-            <div className="page-title-container">
-              <Row>
-                <Col xs="12" md="7">
-                  <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
-                  <BreadcrumbList items={breadcrumbs} />
-                </Col>
-              </Row>
-            </div>
-            <div className="text-center py-5">
-              <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading...</h5>
-            </div>
-          </Col>
-        </Row>
-      </>
-    );
-  }
-
-  return (
-    <>
-      <HtmlHead title={title} description={description} />
-
-      <Row>
-        <Col>
           <div className="page-title-container">
-            <Row className="align-items-center">
+            <Row>
               <Col xs="12" md="7">
                 <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
-              <Col xs="12" md="5" className="text-end mt-2 mt-md-0">
-                {/* Export and Filter will be moved to the search bar row for better UX */}
-              </Col>
             </Row>
           </div>
+          <div className="text-center py-5">
+            <Spinner animation="border" variant="primary" className="mb-3" />
+            <h5>Loading...</h5>
+          </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container-fluid pb-5">
+      <HtmlHead title={title} description={description} />
+
+      <div className="page-title-container mb-4">
+        <Row className="align-items-center">
+          <Col xs="12" md="7">
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+            <BreadcrumbList items={breadcrumbs} />
+          </Col>
+        </Row>
+      </div>
 
           {error && (
             <Alert variant="danger" className="mb-4">
@@ -1141,7 +1132,7 @@ const OrderHistory = () => {
           <div>
             <style>{customStyles}</style>
             <Row className="mb-3 g-2 align-items-center">
-              <Col xs="12" sm="auto" className="flex-grow-1" style={{ maxWidth: '320px' }}>
+              <Col xs="12" sm="auto" className="flex-grow-1" style={{ minWidth: '200px' }}>
                 <div className="custom-search-container shadow-sm d-flex align-items-center px-2">
                   <CsLineIcons icon="search" size="18" className="text-primary opacity-75 ms-1" />
                   <Form.Control
@@ -1162,30 +1153,30 @@ const OrderHistory = () => {
                   )}
                 </div>
               </Col>
-              <Col xs="auto">
-                <Button
-                  className="custom-control-btn shadow-sm"
-                  onClick={handleExportClick}
-                  disabled={totalRecords === 0 || loading}
-                  title="Export Orders"
-                >
-                  <CsLineIcons icon="download" size="18" />
-                </Button>
-              </Col>
-              <Col xs="auto">
-                <Button
-                  className={`custom-control-btn shadow-sm ${showFilters ? 'active' : ''}`}
-                  onClick={() => setShowFilters(!showFilters)}
-                  title="Filters"
-                  disabled={loading}
-                >
-                  <CsLineIcons icon={showFilters ? 'close' : 'filter'} size="18" />
-                  {getActiveFilterCount() > 0 && (
-                    <Badge bg="danger" className="position-absolute rounded-pill border border-2 border-white" style={{ top: '-5px', right: '-5px', fontSize: '10px', padding: '4px 6px' }}>
-                      {getActiveFilterCount()}
-                    </Badge>
-                  )}
-                </Button>
+              <Col xs="auto" className="ms-auto ms-sm-0">
+                <div className="d-flex gap-2">
+                  <Button
+                    className="custom-control-btn shadow-sm"
+                    onClick={handleExportClick}
+                    disabled={totalRecords === 0 || loading}
+                    title="Export Orders"
+                  >
+                    <CsLineIcons icon="download" size="18" />
+                  </Button>
+                  <Button
+                    className={`custom-control-btn shadow-sm ${showFilters ? 'active' : ''}`}
+                    onClick={() => setShowFilters(!showFilters)}
+                    title="Filters"
+                    disabled={loading}
+                  >
+                    <CsLineIcons icon={showFilters ? 'close' : 'filter'} size="18" />
+                    {getActiveFilterCount() > 0 && (
+                      <Badge bg="danger" className="position-absolute rounded-pill border border-2 border-white" style={{ top: '-5px', right: '-5px', fontSize: '10px', padding: '4px 6px' }}>
+                        {getActiveFilterCount()}
+                      </Badge>
+                    )}
+                  </Button>
+                </div>
               </Col>
               <Col className="text-end d-none d-lg-block">
                 <div className="d-inline-block me-3 text-muted small fw-bold">
@@ -1203,63 +1194,118 @@ const OrderHistory = () => {
               </Col>
             </Row>
             <Collapse in={showFilters}>
-              <Card className="mb-3">
-                <Card.Body>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5>Filters</h5>
+              <Card className="mb-4 border-0 shadow-sm" style={{ borderRadius: '1.25rem', backgroundColor: '#f8f9fa' }}>
+                <Card.Body className="p-4">
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h5 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4' }}>
+                      <CsLineIcons icon="filter" className="me-2" size="18" />
+                      Filter Records
+                    </h5>
                     {getActiveFilterCount() > 0 && (
-                      <Button variant="outline-danger" size="sm" onClick={handleClearFilters}>
-                        <CsLineIcons icon="close" className="me-1" />
-                        Clear
+                      <Button 
+                        variant="link" 
+                        className="p-0 text-danger text-decoration-none small fw-bold" 
+                        onClick={handleClearFilters}
+                      >
+                        <CsLineIcons icon="close" size="12" className="me-1" />
+                        Clear All
                       </Button>
                     )}
                   </div>
 
                   <div>
-                    <Row>
+                    <Row className="g-3">
                       {/* Order Source Filter */}
-                      <Col md={2} className="mb-3">
-                        <Form.Label className="small">Source</Form.Label>
-                        <Form.Select size="sm" value={filters.orderSource} onChange={(e) => handleFilterChange('orderSource', e.target.value)}>
-                          <option value="">All</option>
-                          <option value="Manager">Manager</option>
-                          <option value="Captain">Captain</option>
-                          <option value="QSR">QSR</option>
-                          <option value="Restaurant Website">Restaurant Website</option>
-                        </Form.Select>
+                      <Col xs="12" sm="6" md="2">
+                        <Form.Label className="small fw-bold text-muted mb-1">Source</Form.Label>
+                        <Dropdown className="w-100">
+                          <Dropdown.Toggle 
+                            variant="white" 
+                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-3"
+                            style={{ height: '44px', fontSize: '14px' }}
+                          >
+                            {filters.orderSource || 'All Sources'}
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu 
+                            className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" 
+                            style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+                          >
+                            <Dropdown.Item onClick={() => handleFilterChange('orderSource', '')}>All Sources</Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Manager')}>Manager</Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Captain')}>Captain</Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'QSR')}>QSR</Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Restaurant Website')}>Restaurant Website</Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown>
                       </Col>
 
                       {/* Date Range Filter */}
-                      <Col md={2} className="mb-3">
-                        <Form.Label className="small">From</Form.Label>
-                        <Form.Control type="date" size="sm" value={filters.fromDate} onChange={(e) => handleFilterChange('fromDate', e.target.value)} />
+                      <Col xs="6" sm="6" md="2">
+                        <Form.Label className="small fw-bold text-muted mb-1">From</Form.Label>
+                        <Form.Control 
+                          type="date" 
+                          value={filters.fromDate} 
+                          onChange={(e) => handleFilterChange('fromDate', e.target.value)} 
+                          className="rounded-pill px-3 border-0 shadow-sm"
+                          style={{ height: '44px', fontSize: '14px' }}
+                        />
                       </Col>
-                      <Col md={2} className="mb-3">
-                        <Form.Label className="small">To</Form.Label>
-                        <Form.Control type="date" size="sm" value={filters.toDate} onChange={(e) => handleFilterChange('toDate', e.target.value)} />
+                      <Col xs="6" sm="6" md="2">
+                        <Form.Label className="small fw-bold text-muted mb-1">To</Form.Label>
+                        <Form.Control 
+                          type="date" 
+                          value={filters.toDate} 
+                          onChange={(e) => handleFilterChange('toDate', e.target.value)} 
+                          className="rounded-pill px-3 border-0 shadow-sm"
+                          style={{ height: '44px', fontSize: '14px' }}
+                        />
                       </Col>
 
                       {/* Order Status Filter */}
-                      <Col md={3} className="mb-3">
-                        <Form.Label className="small">Status</Form.Label>
-                        <Form.Select size="sm" value={filters.orderStatus} onChange={(e) => handleFilterChange('orderStatus', e.target.value)}>
-                          <option value="">All</option>
-                          <option value="Paid">Paid</option>
-                          <option value="Save">Save</option>
-                          <option value="KOT">KOT</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </Form.Select>
+                      <Col xs="12" sm="6" md="3">
+                        <Form.Label className="small fw-bold text-muted mb-1">Status</Form.Label>
+                        <Dropdown className="w-100">
+                          <Dropdown.Toggle 
+                            variant="white" 
+                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-3"
+                            style={{ height: '44px', fontSize: '14px' }}
+                          >
+                            {filters.orderStatus || 'All Status'}
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu 
+                            className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" 
+                            style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+                          >
+                            <Dropdown.Item onClick={() => handleFilterChange('orderStatus', '')}>All Status</Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Paid')}>Paid</Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Save')}>Save</Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'KOT')}>KOT</Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Cancelled')}>Cancelled</Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown>
                       </Col>
 
                       {/* Order Type Filter */}
-                      <Col md={3} className="mb-3">
-                        <Form.Label className="small">Type</Form.Label>
-                        <Form.Select size="sm" value={filters.orderType} onChange={(e) => handleFilterChange('orderType', e.target.value)}>
-                          <option value="">All</option>
-                          <option value="Dine In">Dine In</option>
-                          <option value="Takeaway">Takeaway</option>
-                          <option value="Delivery">Delivery</option>
-                        </Form.Select>
+                      <Col xs="12" sm="6" md="3">
+                        <Form.Label className="small fw-bold text-muted mb-1">Type</Form.Label>
+                        <Dropdown className="w-100">
+                          <Dropdown.Toggle 
+                            variant="white" 
+                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-3"
+                            style={{ height: '44px', fontSize: '14px' }}
+                          >
+                            {filters.orderType || 'All Types'}
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu 
+                          className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" 
+                          style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+                        >
+                            <Dropdown.Item onClick={() => handleFilterChange('orderType', '')}>All Types</Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Dine In')}>Dine In</Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Takeaway')}>Takeaway</Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Delivery')}>Delivery</Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown>
                       </Col>
                     </Row>
                   </div>
@@ -1335,8 +1381,6 @@ const OrderHistory = () => {
               </>
             )}
           </div>
-        </Col>
-      </Row>
 
       {/* Export Modal */}
       <Modal show={showExportModal} onHide={() => !exporting && setShowExportModal(false)} size="lg" centered className="modal-glass">
@@ -1358,48 +1402,48 @@ const OrderHistory = () => {
                 <div className="mb-4">
                   <Form.Label className="fw-bolder mb-3 text-uppercase text-muted" style={{ fontSize: '11px', letterSpacing: '1px' }}>Export Format</Form.Label>
                   <Row className="g-3">
-                    <Col xs="6">
+                    <Col xs="12" sm="6">
                       <Card 
-                        className={`border-2 transition-all cursor-pointer ${exportFormat === 'excel' ? 'border-primary' : 'border-separator-light'}`}
-                        style={{ borderRadius: '1rem', cursor: 'pointer' }}
+                        className={`border-2 transition-all cursor-pointer h-100 ${exportFormat === 'excel' ? 'border-primary' : 'border-separator-light'}`}
+                        style={{ borderRadius: '1.25rem', cursor: 'pointer', transition: 'all 0.3s ease' }}
                         onClick={() => setExportFormat('excel')}
                       >
                         <Card.Body className="d-flex align-items-center p-3">
-                          <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 bg-light-success">
-                            <CsLineIcons icon="file-text" size="18" className="text-success" />
+                          <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 bg-light-success text-success">
+                            <CsLineIcons icon="file-text" size="20" />
                           </div>
-                          <div>
-                            <div className="fw-bold text-dark">Excel</div>
-                            <div className="text-muted xsmall">.xlsx format</div>
+                          <div className="flex-grow-1">
+                            <div className="fw-bold text-dark">Excel Data</div>
+                            <div className="text-muted xsmall">Tabular .xlsx</div>
                           </div>
                           <Form.Check
                             type="radio"
-                            className="ms-auto"
+                            className="ms-2"
                             checked={exportFormat === 'excel'}
-                            readOnly
+                            onChange={() => {}}
                           />
                         </Card.Body>
                       </Card>
                     </Col>
-                    <Col xs="6">
+                    <Col xs="12" sm="6">
                       <Card 
-                        className={`border-2 transition-all cursor-pointer ${exportFormat === 'pdf' ? 'border-primary' : 'border-separator-light'}`}
-                        style={{ borderRadius: '1rem', cursor: 'pointer' }}
+                        className={`border-2 transition-all cursor-pointer h-100 ${exportFormat === 'pdf' ? 'border-primary' : 'border-separator-light'}`}
+                        style={{ borderRadius: '1.25rem', cursor: 'pointer', transition: 'all 0.3s ease' }}
                         onClick={() => setExportFormat('pdf')}
                       >
                         <Card.Body className="d-flex align-items-center p-3">
-                          <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 bg-light-danger">
-                            <CsLineIcons icon="file-text" size="18" className="text-danger" />
+                          <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 bg-light-danger text-danger">
+                            <CsLineIcons icon="file-text" size="20" />
                           </div>
-                          <div>
+                          <div className="flex-grow-1">
                             <div className="fw-bold text-dark">PDF Report</div>
-                            <div className="text-muted xsmall">.pdf format</div>
+                            <div className="text-muted xsmall">Document .pdf</div>
                           </div>
                           <Form.Check
                             type="radio"
-                            className="ms-auto"
+                            className="ms-2"
                             checked={exportFormat === 'pdf'}
-                            readOnly
+                            onChange={() => {}}
                           />
                         </Card.Body>
                       </Card>
@@ -1411,99 +1455,116 @@ const OrderHistory = () => {
                 <Form.Label className="fw-bolder mb-3 text-uppercase text-muted" style={{ fontSize: '11px', letterSpacing: '1px' }}>Filter Data</Form.Label>
 
                 <Card className="border-0 bg-light p-3" style={{ borderRadius: '1rem' }}>
-                  <Row>
-                    <Col md={6} className="mb-3">
-                      <Form.Label className="small fw-bold">Date Range</Form.Label>
-                      <div className="d-flex gap-2">
+                  <Row className="g-3">
+                    <Col xs={12}>
+                      <Form.Label className="small fw-bold text-muted mb-1">Date Range</Form.Label>
+                      <div className="d-flex flex-column flex-sm-row gap-3">
                         <Form.Control
                           type="date"
-                          size="sm"
                           value={exportFilters.fromDate}
                           onChange={(e) => setExportFilters({ ...exportFilters, fromDate: e.target.value })}
-                          className="border-0 shadow-sm rounded-pill"
+                          className="border-0 shadow-sm rounded-pill flex-grow-1 px-4"
+                          style={{ height: '44px', fontSize: '14px' }}
                         />
                         <Form.Control
                           type="date"
-                          size="sm"
                           value={exportFilters.toDate}
                           onChange={(e) => setExportFilters({ ...exportFilters, toDate: e.target.value })}
-                          className="border-0 shadow-sm rounded-pill"
+                          className="border-0 shadow-sm rounded-pill flex-grow-1 px-4"
+                          style={{ height: '44px', fontSize: '14px' }}
                         />
                       </div>
                     </Col>
 
-                    <Col md={6} className="mb-3">
-                      <Form.Label className="small fw-bold">Order Source</Form.Label>
-                      <Form.Select
-                        size="sm"
-                        value={exportFilters.orderSource}
-                        onChange={(e) => setExportFilters({ ...exportFilters, orderSource: e.target.value })}
-                        className="border-0 shadow-sm rounded-pill px-3"
-                      >
-                        <option value="">All Sources</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Captain">Captain</option>
-                        <option value="QSR">QSR</option>
-                        <option value="Restaurant Website">Restaurant Website</option>
-                      </Form.Select>
+                    <Col xs={12} sm={6}>
+                      <Form.Label className="small fw-bold text-muted mb-1">Order Source</Form.Label>
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle 
+                          variant="white" 
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                          style={{ height: '44px', fontSize: '14px' }}
+                        >
+                          {exportFilters.orderSource || 'All Sources'}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: '' })}>All Sources</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: 'Manager' })}>Manager</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: 'Captain' })}>Captain</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: 'QSR' })}>QSR</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: 'Restaurant Website' })}>Restaurant Website</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
                     </Col>
 
-                    <Col md={6} className="mb-3">
-                      <Form.Label className="small fw-bold">Status</Form.Label>
-                      <Form.Select
-                        size="sm"
-                        value={exportFilters.orderStatus}
-                        onChange={(e) => setExportFilters({ ...exportFilters, orderStatus: e.target.value })}
-                        className="border-0 shadow-sm rounded-pill px-3"
-                      >
-                        <option value="">All Status</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Save">Save</option>
-                        <option value="KOT">KOT</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </Form.Select>
+                    <Col xs={12} sm={6}>
+                      <Form.Label className="small fw-bold text-muted mb-1">Status</Form.Label>
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle 
+                          variant="white" 
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                          style={{ height: '44px', fontSize: '14px' }}
+                        >
+                          {exportFilters.orderStatus || 'All Status'}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: '' })}>All Status</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Paid' })}>Paid</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Save' })}>Save</Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'KOT')}>KOT</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Cancelled' })}>Cancelled</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
                     </Col>
 
-                    <Col md={6} className="mb-3">
-                      <Form.Label className="small fw-bold">Order Type</Form.Label>
-                      <Form.Select 
-                        size="sm" 
-                        value={exportFilters.orderType} 
-                        onChange={(e) => setExportFilters({ ...exportFilters, orderType: e.target.value })}
-                        className="border-0 shadow-sm rounded-pill px-3"
-                      >
-                        <option value="">All Types</option>
-                        <option value="Dine In">Dine In</option>
-                        <option value="Takeaway">Takeaway</option>
-                        <option value="Delivery">Delivery</option>
-                      </Form.Select>
+                    <Col xs={12} sm={6}>
+                      <Form.Label className="small fw-bold text-muted mb-1">Order Type</Form.Label>
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle 
+                          variant="white" 
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                          style={{ height: '44px', fontSize: '14px' }}
+                        >
+                          {exportFilters.orderType || 'All Types'}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: '' })}>All Types</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Dine In' })}>Dine In</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Takeaway' })}>Takeaway</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Delivery' })}>Delivery</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
                     </Col>
 
-                    <Col md={6} className="mb-3">
-                      <Form.Label className="small fw-bold">Payment Mode</Form.Label>
-                      <Form.Select
-                        size="sm"
-                        value={exportFilters.paymentType}
-                        onChange={(e) => setExportFilters({ ...exportFilters, paymentType: e.target.value })}
-                        className="border-0 shadow-sm rounded-pill px-3"
-                      >
-                        <option value="">All Payment Types</option>
-                        <option value="Cash">Cash</option>
-                        <option value="Card">Card</option>
-                        <option value="UPI">UPI</option>
-                        <option value="Online">Online</option>
-                      </Form.Select>
+                    <Col xs={12} sm={6}>
+                      <Form.Label className="small fw-bold text-muted mb-1">Payment Mode</Form.Label>
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle 
+                          variant="white" 
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                          style={{ height: '44px', fontSize: '14px' }}
+                        >
+                          {exportFilters.paymentType || 'All Payment Types'}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: '' })}>All Payment Types</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Cash' })}>Cash</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Card' })}>Card</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'UPI' })}>UPI</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Complementary' })}>Complementary</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Pending' })}>Pending</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
                     </Col>
 
-                    <Col md={6} className="mb-3">
-                      <Form.Label className="small fw-bold">Table Area</Form.Label>
+                    <Col xs={12}>
+                      <Form.Label className="small fw-bold text-muted mb-1">Table Area</Form.Label>
                       <Form.Control
                         type="text"
-                        size="sm"
                         placeholder="Enter table area"
                         value={exportFilters.tableArea}
                         onChange={(e) => setExportFilters({ ...exportFilters, tableArea: e.target.value })}
-                        className="border-0 shadow-sm rounded-pill px-3"
+                        className="border-0 shadow-sm rounded-pill px-4"
+                        style={{ height: '44px', fontSize: '14px' }}
                       />
                     </Col>
                   </Row>
@@ -1554,7 +1615,7 @@ const OrderHistory = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-    </>
+    </div>
   );
 };
 

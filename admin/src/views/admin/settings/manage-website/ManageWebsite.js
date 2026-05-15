@@ -101,16 +101,22 @@ const customStyles = `
       box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
     }
     .pill-input {
-      border-radius: 12px !important;
-      padding: 0.6rem 1rem !important;
-      border: 1px solid #e5e7eb !important;
-      background: #ffffff !important;
+      border-radius: 1rem !important;
+      padding: 0.45rem 1rem !important;
+      border: 1px solid #e2e8f0 !important;
+      background-color: #f8fafc !important;
+      font-size: 0.9rem !important;
+      height: 45px !important;
       transition: all 0.2s ease !important;
     }
     .pill-input:focus {
       border-color: #1ea8e7 !important;
       box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
       outline: none !important;
+    }
+    textarea.pill-input {
+      height: auto !important;
+      min-height: 100px !important;
     }
     .section-title {
       font-weight: 700 !important;
@@ -134,7 +140,7 @@ const customStyles = `
       background: linear-gradient(135deg, #1ea8e7 0%, #0091d5 100%) !important;
       color: white !important;
       border: none !important;
-      border-radius: 15px !important;
+      border-radius: 1rem !important;
       padding: 1rem 1.5rem !important;
       box-shadow: 0 4px 15px rgba(30, 168, 231, 0.2) !important;
     }
@@ -142,6 +148,30 @@ const customStyles = `
       color: white !important;
       text-decoration: underline !important;
       font-weight: 600 !important;
+    }
+    @media (max-width: 768px) {
+      .button-group-responsive {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 12px !important;
+      }
+      .button-group-responsive button, .button-group-responsive a {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 0.75rem 1rem !important;
+      }
+      .pill-input {
+        font-size: 16px !important;
+        height: 45px !important;
+      }
+      .page-title-container h1 {
+        font-size: 1.75rem !important;
+      }
+      .sticky-top-mobile-fix {
+        position: relative !important;
+        top: 0 !important;
+        margin-top: 2rem;
+      }
     }
   `;
 
@@ -335,15 +365,21 @@ const ManageWebsite = () => {
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
       <div className="page-title-container mb-4">
-        <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
-        <BreadcrumbList items={breadcrumbs} />
+        <Row className="g-3 align-items-center">
+          <Col xs={12} md={7}>
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
+            <BreadcrumbList items={breadcrumbs} />
+          </Col>
+        </Row>
       </div>
 
       {restaurant_code && (
-        <Alert className="public-link-banner mb-4 d-flex align-items-center gap-3">
-          <CsLineIcons icon="link" size="20" stroke="white" />
-          <div>
-            <strong className="me-2">Public Website Link:</strong>
+        <Alert className="public-link-banner mb-4 d-flex flex-column flex-md-row align-items-md-center gap-3">
+          <div className="d-flex align-items-center gap-2">
+            <CsLineIcons icon="link" size="20" stroke="white" />
+            <strong className="me-1">Public Website Link:</strong>
+          </div>
+          <div className="text-truncate">
             <a href={publicLink} target="_blank" rel="noopener noreferrer">{publicLink}</a>
           </div>
         </Alert>
@@ -357,31 +393,31 @@ const ManageWebsite = () => {
               <Card.Body className="p-4">
                 <h5 className="section-title">General Information</h5>
                 <Row className="g-3">
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group>
                       <Form.Label className="small fw-bold text-muted">Restaurant Name</Form.Label>
                       <Form.Control className="pill-input" name="restaurant_name" value={values.restaurant_name} onChange={handleChange} />
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group>
                       <Form.Label className="small fw-bold text-muted">Address</Form.Label>
                       <Form.Control className="pill-input" name="restaurant_address" value={values.restaurant_address} onChange={handleChange} />
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group>
                       <Form.Label className="small fw-bold text-muted">Email</Form.Label>
                       <Form.Control className="pill-input" name="contact_email" value={values.contact_email} onChange={handleChange} />
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <Form.Group>
                       <Form.Label className="small fw-bold text-muted">Phone</Form.Label>
                       <Form.Control className="pill-input" name="contact_phone" value={values.contact_phone} onChange={handleChange} />
                     </Form.Group>
                   </Col>
-                  <Col md={12}>
+                  <Col xs={12}>
                     <Form.Group>
                       <Form.Label className="small fw-bold text-muted">Logo Image</Form.Label>
                       <Form.Control className="pill-input" type="file" onChange={(e) => setLogoFile(e.target.files[0])} />
@@ -422,13 +458,13 @@ const ManageWebsite = () => {
               <Card.Body className="p-4">
                 <h5 className="section-title">Our Legacy (History Section)</h5>
                 <Row className="g-3">
-                  <Col md={8}>
+                  <Col xs={12} md={8}>
                     <Form.Group className="mb-3">
                       <Form.Label className="small fw-bold text-muted">Legacy Section Title</Form.Label>
                       <Form.Control className="pill-input" name="legacy_title" value={values.legacy_title} onChange={handleChange} placeholder="Our Legacy" />
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
+                  <Col xs={12} md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label className="small fw-bold text-muted">Years of Legacy</Form.Label>
                       <Form.Control className="pill-input" name="legacy_years" value={values.legacy_years} onChange={handleChange} placeholder="e.g. 15+" />
@@ -472,7 +508,7 @@ const ManageWebsite = () => {
             {/* Social Links */}
             <Card className="glass-card mb-4 border-0">
               <Card.Body className="p-4">
-                <div className="d-flex justify-content-between align-items-center mb-4">
+                <div className="d-flex button-group-responsive justify-content-between align-items-md-center mb-4">
                   <h5 className="section-title mb-0">Social Media Accounts</h5>
                   <Button 
                     className="custom-btn-outline" 
@@ -484,7 +520,7 @@ const ManageWebsite = () => {
                 {values.social_links.map((s, index) => (
                   <div key={index} className="p-3 mb-3 rounded-xl border bg-light position-relative">
                     <Row className="g-3 align-items-center">
-                      <Col md={4}>
+                      <Col xs={12} md={4}>
                         <Form.Select className="pill-input" value={s.platform} onChange={(e) => {
                           const newSocials = [...values.social_links];
                           newSocials[index].platform = e.target.value;
@@ -498,17 +534,17 @@ const ManageWebsite = () => {
                           <option value="Youtube">Youtube</option>
                         </Form.Select>
                       </Col>
-                      <Col md={6}>
+                      <Col xs={12} md={6}>
                         <Form.Control className="pill-input" placeholder="Profile URL / Phone Number" value={s.url} onChange={(e) => {
                           const newSocials = [...values.social_links];
                           newSocials[index].url = e.target.value;
                           setFieldValue('social_links', newSocials);
                         }} />
                       </Col>
-                      <Col md={2} className="text-end">
+                      <Col xs={12} md={2} className="text-md-end">
                         <Button 
                           variant="none" 
-                          className="custom-btn-danger custom-btn-circle ms-auto" 
+                          className="custom-btn-danger custom-btn-circle ms-md-auto w-100 w-md-auto" 
                           onClick={() => removeSocial(index)}
                         >
                           <CsLineIcons icon="bin" size="15" />
@@ -564,14 +600,14 @@ const ManageWebsite = () => {
                       <option value="Sunday">Sunday</option>
                     </Form.Select>
                     <Row className="g-2">
-                      <Col>
+                      <Col xs={6}>
                         <Form.Control className="pill-input" type="time" value={h.from} onChange={(e) => {
                           const newHours = [...values.opening_hours];
                           newHours[index].from = e.target.value;
                           setFieldValue('opening_hours', newHours);
                         }} />
                       </Col>
-                      <Col>
+                      <Col xs={6}>
                         <Form.Control className="pill-input" type="time" value={h.to} onChange={(e) => {
                           const newHours = [...values.opening_hours];
                           newHours[index].to = e.target.value;
@@ -609,9 +645,9 @@ const ManageWebsite = () => {
               </Card.Body>
             </Card>
 
-            <div className="sticky-top" style={{ top: '100px' }}>
-              <Button className="custom-btn-solid w-100 py-3" type="submit" disabled={saving}>
-                {saving ? <Spinner size="sm" className="me-2" /> : <CsLineIcons icon="save" className="me-2" />}
+            <div className="sticky-top sticky-top-mobile-fix" style={{ top: '100px' }}>
+              <Button className="custom-btn-outline w-100" type="submit" disabled={saving}>
+                {saving ? <Spinner size="sm" className="me-2" /> : <CsLineIcons icon="save" size="15" className="me-2" />}
                 Save All Changes
               </Button>
             </div>

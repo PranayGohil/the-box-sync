@@ -17,62 +17,70 @@ import ForgotPassword from './forgot-password/ForgotPassword';
 
 const NavContent = ({ activePlans }) => {
   return (
-    <Nav className="flex-column">
-      <div className="mb-2">
+    <>
+      <style>{`
+        .settings-sidebar .nav-link {
+          border-radius: 50px !important;
+          padding: 0.75rem 1.25rem !important;
+          margin-bottom: 0.5rem !important;
+          display: flex !important;
+          align-items: center !important;
+          transition: all 0.2s ease !important;
+          border: 1px solid transparent !important;
+          text-decoration: none !important;
+          color: #64748b !important;
+          background: transparent !important;
+          font-weight: 500 !important;
+        }
+        .settings-sidebar .nav-link:hover,
+        .settings-sidebar .nav-link.active {
+          color: #23b3f4 !important;
+          background-color: rgba(35, 179, 244, 0.08) !important;
+          border-color: rgba(35, 179, 244, 0.2) !important;
+        }
+        .settings-sidebar .nav-link.active span,
+        .settings-sidebar .nav-link.active svg {
+          color: #23b3f4 !important;
+          font-weight: 700 !important;
+        }
+        .settings-sidebar .nav-link svg {
+          color: #94a3b8 !important;
+          margin-right: 12px !important;
+          transition: color 0.2s ease !important;
+        }
+        .settings-sidebar .nav-link.active svg {
+          color: #23b3f4 !important;
+        }
+      `}</style>
+      <Nav className="flex-column settings-sidebar mt-2">
         <Nav.Link as={NavLink} to="/settings/profile" className="px-0">
-          <CsLineIcons icon="user" className="me-2 sw-3" size="17" />
-          <span className="align-middle">Account</span>
+          <CsLineIcons icon="user" size="18" />
+          <span className="align-middle">Profile</span>
         </Nav.Link>
-        <div>
-          <Nav.Link as={NavLink} to="/settings/profile" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Profile</span>
-          </Nav.Link>
-        </div>
-      </div>
 
-      <div className="mb-2">
         <Nav.Link as={NavLink} to="/settings/tax-charges" className="px-0">
-          <CsLineIcons icon="dollar" className="me-2 sw-3" size="17" />
+          <CsLineIcons icon="dollar" size="18" />
           <span className="align-middle">Tax & Charges</span>
         </Nav.Link>
-      </div>
 
-      <div className="mb-2">
         <Nav.Link as={NavLink} to="/settings/subscription" className="px-0">
-          <CsLineIcons icon="star" className="me-2 sw-3" size="17" />
+          <CsLineIcons icon="star" size="18" />
           <span className="align-middle">Subscription</span>
         </Nav.Link>
-        {/* <div>
-                    <Nav.Link as={NavLink} to="/operations/requested-inventory" className="px-0 pt-1">
-                        <i className="me-2 sw-3 d-inline-block" />
-                        <span className="align-middle">Requested Inventory</span>
-                    </Nav.Link>
-                    <Nav.Link as={NavLink} to="/operations/inventory-history" className="px-0 pt-1">
-                        <i className="me-2 sw-3 d-inline-block" />
-                        <span className="align-middle">Inventory History</span>
-                    </Nav.Link>
-                    <Nav.Link as={NavLink} to="/operations/add-inventory" className="px-0 pt-1">
-                        <i className="me-2 sw-3 d-inline-block" />
-                        <span className="align-middle">Add Inventory</span>
-                    </Nav.Link>
-                </div> */}
-      </div>
-      {activePlans.includes('Restaurant Website') && (
-        <div className="mb-2">
+
+        {activePlans.includes('Restaurant Website') && (
           <Nav.Link as={NavLink} to="/settings/manage-website" className="px-0">
-            <CsLineIcons icon="web-page" className="me-2 sw-3" size="17" />
+            <CsLineIcons icon="web-page" size="18" />
             <span className="align-middle">Manage Website</span>
           </Nav.Link>
-        </div>
-      )}
-      <div className="mb-2">
+        )}
+
         <Nav.Link as={NavLink} to="/settings/forgot-password" className="px-0">
-          <CsLineIcons icon="key" className="me-2 sw-3" size="17" />
+          <CsLineIcons icon="key" size="18" />
           <span className="align-middle">Forgot Password</span>
         </Nav.Link>
-      </div>
-    </Nav>
+      </Nav>
+    </>
   );
 };
 

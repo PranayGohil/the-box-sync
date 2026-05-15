@@ -67,10 +67,12 @@ const customStyles = `
       stroke-width: 2px !important;
     }
     .pill-input {
-      border-radius: 12px !important;
-      padding: 0.6rem 1rem !important;
-      border: 1px solid #e5e7eb !important;
-      background: #ffffff !important;
+      border-radius: 1rem !important;
+      padding: 0.45rem 1rem !important;
+      border: 1px solid #e2e8f0 !important;
+      background-color: #f8fafc !important;
+      font-size: 0.9rem !important;
+      height: 45px !important;
       transition: all 0.2s ease !important;
     }
     .pill-input:focus {
@@ -84,6 +86,21 @@ const customStyles = `
       border-radius: 1.25rem 1.25rem 0 0 !important;
       padding: 1.5rem !important;
       border: none !important;
+    }
+    @media (max-width: 768px) {
+      .button-group-responsive {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 12px !important;
+      }
+      .button-group-responsive button, .button-group-responsive a {
+        width: 100% !important;
+        justify-content: center !important;
+      }
+      .pill-input {
+        font-size: 16px !important;
+        height: 45px !important;
+      }
     }
   `;
 
@@ -224,8 +241,8 @@ function ForgotPassword() {
                       disabled={isLoading}
                     />
                   </Form.Group>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <Button className="custom-btn-solid" type="submit" disabled={isLoading}>
+                  <div className="d-flex button-group-responsive justify-content-between align-items-center">
+                    <Button className="custom-btn-outline px-4 py-2" type="submit" disabled={isLoading}>
                       {isLoading ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />
@@ -233,11 +250,12 @@ function ForgotPassword() {
                         </>
                       ) : (
                         <>
+                          <CsLineIcons icon="send" className="me-2" size="15" />
                           Send OTP
                         </>
                       )}
                     </Button>
-                    <Link to="/login" className="custom-btn-outline px-4 py-2" style={{ border: 'none', background: 'transparent', boxShadow: 'none' }}>
+                    <Link to="/login" className="custom-btn-outline px-4 py-2">
                       <CsLineIcons icon="arrow-left" className="me-2" size="15" />
                       Back
                     </Link>
@@ -262,8 +280,8 @@ function ForgotPassword() {
                       OTP is valid for 10 minutes
                     </Form.Text>
                   </Form.Group>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <Button className="custom-btn-solid" type="submit" disabled={isLoading} style={{ minWidth: '140px' }}>
+                  <div className="d-flex button-group-responsive justify-content-between align-items-center">
+                    <Button className="custom-btn-outline px-4 py-2" type="submit" disabled={isLoading}>
                       {isLoading ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />
@@ -271,12 +289,12 @@ function ForgotPassword() {
                         </>
                       ) : (
                         <>
-                          <CsLineIcons icon="check" className="me-2" size="18" stroke="white" />
+                          <CsLineIcons icon="check" className="me-2" size="15" />
                           Verify OTP
                         </>
                       )}
                     </Button>
-                    <Button variant="none" className="custom-btn-outline" onClick={() => setStep(1)} disabled={isLoading}>
+                    <Button variant="none" className="custom-btn-outline px-4 py-2" onClick={() => setStep(1)} disabled={isLoading}>
                       <CsLineIcons icon="arrow-left" className="me-2" size="15" />
                       Back
                     </Button>
@@ -310,8 +328,8 @@ function ForgotPassword() {
                       disabled={isLoading}
                     />
                   </Form.Group>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <Button className="custom-btn-solid" type="submit" disabled={isLoading} style={{ minWidth: '160px' }}>
+                  <div className="d-flex button-group-responsive justify-content-between align-items-center">
+                    <Button className="custom-btn-outline px-4 py-2" type="submit" disabled={isLoading}>
                       {isLoading ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />
@@ -319,12 +337,12 @@ function ForgotPassword() {
                         </>
                       ) : (
                         <>
-                          <CsLineIcons icon="lock-on" className="me-2" size="18" stroke="white" />
+                          <CsLineIcons icon="lock-on" className="me-2" size="15" />
                           Reset Password
                         </>
                       )}
                     </Button>
-                    <Button variant="none" className="custom-btn-outline" onClick={() => setStep(2)} disabled={isLoading}>
+                    <Button variant="none" className="custom-btn-outline px-4 py-2" onClick={() => setStep(2)} disabled={isLoading}>
                       <CsLineIcons icon="arrow-left" className="me-2" size="15" />
                       Back
                     </Button>

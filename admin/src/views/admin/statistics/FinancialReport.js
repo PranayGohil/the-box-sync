@@ -233,7 +233,7 @@ const FinancialReport = () => {
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4 no-print">
+      <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto">
             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
@@ -441,7 +441,7 @@ const FinancialReport = () => {
                 <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Daily Operational Fiscal Audit</h2>
                 <CsLineIcons icon="list" size="18" style={{ color: brandColor }} />
               </div>
-              <div className="table-responsive">
+              <div className="d-none d-md-block table-responsive">
                 <Table borderless hover className="align-middle mb-0">
                   <thead className="stat-label">
                     <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
@@ -481,6 +481,59 @@ const FinancialReport = () => {
                   </tfoot>
                 </Table>
               </div>
+              
+              <div className="d-md-none d-flex flex-column gap-3 mt-2">
+                {sortedDailyFinancials.map((day, idx) => (
+                  <div key={idx} className="p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <span className="fw-bold text-dark fs-6">{`${day.date.day}-${day.date.month}-${day.date.year}`}</span>
+                      <Badge bg="light" className="text-dark rounded-pill px-2 py-1 fw-bold" style={{ fontSize: '0.65rem' }}>
+                        {day.orders} ORDERS
+                      </Badge>
+                    </div>
+                    <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                      <span className="text-muted fw-bold">Gross Rev:</span>
+                      <span className="fw-bold text-muted">{formatCurrency(day.grossRevenue)}</span>
+                    </div>
+                    <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                      <span className="text-muted fw-bold">Deductions:</span>
+                      <span className="fw-bold text-danger">{formatCurrency(day.discount + day.waveOff)}</span>
+                    </div>
+                    <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                      <span className="text-muted fw-bold">Fiscal Tax:</span>
+                      <span className="fw-bold text-warning">{formatCurrency(day.tax)}</span>
+                    </div>
+                    <div className="d-flex justify-content-between align-items-center smaller">
+                      <span className="text-muted fw-bold">Net Yield:</span>
+                      <span className="fw-bold text-primary">{formatCurrency(day.netRevenue)}</span>
+                    </div>
+                  </div>
+                ))}
+                
+                <div className="p-3 rounded mt-2 border border-primary" style={{ backgroundColor: 'rgba(35, 179, 244, 0.05)' }}>
+                  <div className="stat-label mb-3 text-primary text-center">Audit Period Total</div>
+                  <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                      <span className="text-muted fw-bold">Gross Rev:</span>
+                      <span className="fw-bold text-primary">{formatCurrency(reportData.summary.grossRevenue)}</span>
+                  </div>
+                  <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                      <span className="text-muted fw-bold">Deductions:</span>
+                      <span className="fw-bold text-danger">{formatCurrency(reportData.summary.totalDiscount + reportData.summary.totalWaveOff)}</span>
+                  </div>
+                  <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                      <span className="text-muted fw-bold">Fiscal Tax:</span>
+                      <span className="fw-bold text-warning">{formatCurrency(reportData.summary.totalTax)}</span>
+                  </div>
+                  <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                      <span className="text-muted fw-bold">Net Yield:</span>
+                      <span className="fw-bold text-success">{formatCurrency(reportData.summary.netRevenue)}</span>
+                  </div>
+                  <div className="d-flex justify-content-between align-items-center smaller">
+                      <span className="text-muted fw-bold">Total Volume:</span>
+                      <span className="fw-bold text-dark">{reportData.summary.totalOrders} ORDERS</span>
+                  </div>
+                </div>
+              </div>
             </Card.Body>
           </Card>
 
@@ -489,7 +542,7 @@ const FinancialReport = () => {
             <Card.Body className="p-4">
               <div className="card-title-container">
                 <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Executive Fiscal Intelligence</h2>
-                <CsLineIcons icon="medal" size="18" style={{ color: brandColor }} />
+                <CsLineIcons icon="star" size="18" style={{ color: brandColor }} />
               </div>
               <Row className="g-4">
                 {[

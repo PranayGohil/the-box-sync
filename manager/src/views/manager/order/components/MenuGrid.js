@@ -1,5 +1,6 @@
 import React from 'react';
-import { Row, Col, Card, Form, Button, Badge } from 'react-bootstrap';
+import { Form } from 'react-bootstrap';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const MenuGrid = ({
   filteredMenuData,
@@ -12,162 +13,208 @@ const MenuGrid = ({
   setShowSpecial,
   showCategories,
   setShowCategories,
-  addItemToOrder,
-  // Optional props for Takeaway Parcel Charges
   showParcelCharge,
   setShowParcelCharge,
   containerCharges,
   addParcelCharge,
+  addItemToOrder,
+  orderItems = [], // Added orderItems
 }) => {
+  const totalItems = filteredMenuData.reduce((acc, cat) => acc + cat.dishes.length, 0);
+  const activeLabel = selectedCategory || (showSpecial ? 'Specials' : showParcelCharge ? 'Parcel' : 'All Items');
+  const uploadDir = process.env.REACT_APP_UPLOAD_DIR || 'http://localhost:5001/uploads';
+
+  // Helper to get added quantity for a dish
+  const getAddedQty = (dishName) => {
+    const item = orderItems.find((oi) => oi.dish_name === dishName);
+    return item ? item.quantity : 0;
+  };
+
   return (
     <>
-      <style>{`
-        .menu-content-transition {
-          transition: margin-left 0.3s ease;
-          margin-left: ${showCategories ? '220px' : '0'};
-        }
-        @media (max-width: 767px) {
-          .menu-content-transition {
-            margin-left: 0 !important;
-          }
-          .menu-sidebar {
-            position: fixed !important;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            height: 100vh !important;
-            z-index: 1050 !important;
-            box-shadow: ${showCategories ? '4px 0 15px rgba(0,0,0,0.15)' : 'none'};
-          }
-        }
-      `}</style>
-
-      {/* Mobile Backdrop */}
-      {showCategories && (
-        <div
-          className="d-md-none position-fixed top-0 start-0 w-100 h-100 bg-dark"
-          style={{ opacity: 0.5, zIndex: 1045 }}
-          onClick={() => setShowCategories(false)}
-        />
-      )}
-
-      {/* 🔥 SIDEBAR */}
+      {/* Drawer Backdrop */}
       <div
-        className={`bg-light border-end position-absolute h-100 menu-sidebar ${showCategories ? 'start-0' : ''}`}
-        style={{
-          width: '220px',
-          transform: showCategories ? 'translateX(0)' : 'translateX(-100%)',
-          transition: 'transform 0.3s ease',
-          zIndex: 10,
-          overflowY: 'auto',
-        }}
-      >
-        <div className="p-2">
-          {/* Close Button for Mobile */}
-          <div className="d-flex justify-content-between align-items-center mb-2 d-md-none px-2 pt-1 pb-2 border-bottom">
-            <span className="fw-bold text-muted">Categories</span>
-            <Button variant="link" className="p-0 text-dark" onClick={() => setShowCategories(false)}>
-              <i className="bi bi-x-lg" style={{ fontSize: '1.2rem' }} />
-            </Button>
-          </div>
+        role="button"
+        tabIndex={-1}
+        className={`pos-drawer-backdrop ${showCategories ? 'open' : ''}`}
+        onClick={() => setShowCategories(false)}
+        onKeyDown={(e) => e.key === 'Escape' && setShowCategories(false)}
+        aria-label="Close categories"
+      />
 
-          <div
-            onClick={() => {
-              setSelectedCategory('');
-              if (window.innerWidth < 768) setShowCategories(false);
-            }}
-            className={`py-2 px-2 mb-1 rounded ${selectedCategory === '' ? 'bg-primary text-white' : 'bg-white'}`}
-            style={{ cursor: 'pointer', fontSize: '13px' }}
-          >
-            All
+      {/* Category Drawer */}
+      <div className={`pos-category-drawer ${showCategories ? 'open' : ''}`}>
+        <div className="pos-drawer-header">
+          <div className="d-flex align-items-center gap-2">
+            <CsLineIcons icon="grid-1" size="16" stroke="#23b3f4" />
+            <span className="fw-bold" style={{ color: '#0f172a', fontSize: '14px' }}>Categories</span>
           </div>
+          <button type="button" className="pos-drawer-close" onClick={() => setShowCategories(false)}>
+            <CsLineIcons icon="close" size="13" />
+          </button>
+        </div>
+
+        <div className="pos-drawer-body">
+          <button
+            type="button"
+            className={`pos-category-item ${selectedCategory === '' && !showSpecial && !showParcelCharge ? 'active' : ''}`}
+            onClick={() => { setSelectedCategory(''); setShowSpecial(false); if (setShowParcelCharge) setShowParcelCharge(false); setShowCategories(false); }}
+          >
+            <span>🍽️</span> All Items
+          </button>
+
+          {setShowParcelCharge && (
+            <button
+              type="button"
+              className={`pos-category-item ${showParcelCharge ? 'active' : ''}`}
+              onClick={() => { setShowParcelCharge(true); setShowSpecial(false); setSelectedCategory(''); setShowCategories(false); }}
+            >
+              <span>📦</span> Parcel Charges
+            </button>
+          )}
+
+          <button
+            type="button"
+            className={`pos-category-item ${showSpecial && !showParcelCharge ? 'active' : ''}`}
+            onClick={() => { setShowSpecial(true); setSelectedCategory(''); if (setShowParcelCharge) setShowParcelCharge(false); setShowCategories(false); }}
+          >
+            <span>⭐</span> Specials
+          </button>
+
+          <div className="pos-drawer-divider"><span>Menu</span></div>
 
           {categories.map((category) => (
-            <div
+            <button
               key={category}
-              onClick={() => {
-                setSelectedCategory(category);
-                if (window.innerWidth < 768) setShowCategories(false);
-              }}
-              className={`py-2 px-2 mb-1 rounded ${selectedCategory === category ? 'bg-primary text-white' : 'bg-white'}`}
-              style={{ cursor: 'pointer', fontSize: '13px' }}
+              type="button"
+              className={`pos-category-item ${selectedCategory === category && !showSpecial && !showParcelCharge ? 'active' : ''}`}
+              onClick={() => { setSelectedCategory(category); setShowSpecial(false); if (setShowParcelCharge) setShowParcelCharge(false); setShowCategories(false); }}
             >
               {category}
-            </div>
+            </button>
           ))}
         </div>
       </div>
 
-      {/* 🔹 MAIN CONTENT */}
-      <div className="flex-grow-1 p-2 menu-content-transition">
-        {/* FILTERS */}
-        <Row className="mb-2 g-1 align-items-center">
-          <Col xs="2" md="1">
-            <Button variant="outline-primary" size="sm" onClick={() => setShowCategories((prev) => !prev)}>
-              {showCategories ? <i className="bi bi-x" /> : <i className="bi bi-list" />}
-            </Button>
-          </Col>
-          <Col xs="10" md="6">
-            <Form.Control size="sm" placeholder="Search items..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
-          </Col>
-          <Col xs="12" md="5" className="d-flex gap-3 align-items-center mt-2 mt-md-0">
-            <Form.Check type="checkbox" label="Special" checked={showSpecial} onChange={(e) => setShowSpecial(e.target.checked)} disabled={showParcelCharge} />
-            {setShowParcelCharge && (
-              <Form.Check type="checkbox" label="Parcel Charges" checked={showParcelCharge} onChange={(e) => setShowParcelCharge(e.target.checked)} />
-            )}
-          </Col>
-        </Row>
+      {/* Main Menu Area */}
+      <div className="pos-menu-area">
+        <div className="pos-menu-filters">
+          <button
+            type="button"
+            className="pos-categories-btn"
+            onClick={() => setShowCategories(true)}
+          >
+            <CsLineIcons icon="menu" size="14" />
+            {activeLabel}
+          </button>
 
-        {/* MENU ITEMS / PARCEL CHARGES */}
-        <div style={{ maxHeight: '65vh', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}>
+          <div className="pos-search-wrap">
+            <span className="search-icon">
+              <CsLineIcons icon="search" size="14" stroke="#94a3b8" />
+            </span>
+            <Form.Control
+              className="pos-search-input"
+              placeholder="Search dishes..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+            {searchText && (
+              <button type="button" className="pos-search-clear" onClick={() => setSearchText('')}>
+                <CsLineIcons icon="close" size="11" />
+              </button>
+            )}
+          </div>
+
+          <span className="pos-item-count">{totalItems} items</span>
+        </div>
+
+        <div className="pos-menu-grid">
           {!showParcelCharge ? (
-            filteredMenuData.map((category) => (
-              <div key={category._id} className="mb-4">
-                <h6 className="mb-3">{category.category}</h6>
-                <Row className="g-2">
-                  {category.dishes.map((dish) => (
-                    <Col xs="6" md="4" lg="3" xl="2" key={dish._id}>
-                      <Card className="sh-14 hover-border-primary mb-2" onClick={() => addItemToOrder(dish)}>
-                        <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
-                          <p className="cta-8 mb-2 lh-1">{dish.dish_name}</p>
-                          <p className="mb-0" style={{ fontWeight: 'bold' }}>
-                            ₹{dish.dish_price}
-                          </p>
-                        </Card.Body>
-                        <Badge
-                          variant="outline"
-                          className={`text-white mb-2 ${category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
-                            }`}
-                          style={{ position: 'absolute', top: '3px', right: '5px' }}
-                        >
-                          {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
-                        </Badge>
-                        {dish.is_special && (
-                          <i className="bi bi-stars text-warning" style={{ fontSize: '20px', position: 'absolute', top: '0px', left: '2px' }} />
-                        )}
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
+            filteredMenuData.length === 0 ? (
+              <div className="pos-empty-state">
+                <div className="pos-empty-icon">🔍</div>
+                <p className="pos-empty-text">No items found</p>
+                <p className="pos-empty-sub">Try a different search or category</p>
               </div>
-            ))
+            ) : (
+              filteredMenuData.map((category) => (
+                <div key={category._id} className="mb-4">
+                  <div className="pos-section-header">
+                    <div
+                      className="pos-section-dot"
+                      style={{
+                        background: category.meal_type === 'veg' ? '#10b981'
+                          : category.meal_type === 'egg' ? '#f59e0b'
+                          : '#ef4444'
+                      }}
+                    />
+                    <span>{category.category}</span>
+                    <div className="pos-section-line" />
+                    <span className="pos-section-count">{category.dishes.length}</span>
+                  </div>
+                  <div className="pos-grid-5">
+                    {category.dishes.map((dish) => {
+                      const addedQty = getAddedQty(dish.dish_name);
+                      return (
+                        <div className="pos-grid-item" key={dish._id}>
+                          <div className="pos-menu-card" onClick={() => addItemToOrder(dish)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && addItemToOrder(dish)}>
+                            {/* Qty Badge */}
+                            {addedQty > 0 && <div className="pos-added-badge">{addedQty} Added</div>}
+                            
+                            {/* Type Indicator */}
+                            <div className={`pos-type-dot ${category.meal_type === 'veg' ? 'veg' : category.meal_type === 'egg' ? 'egg' : 'nonveg'}`} />
+                            
+                            {/* Image */}
+                            <div className="pos-menu-img-wrap">
+                              {dish.dish_image ? (
+                                <img src={`${uploadDir}/${dish.dish_image}`} alt={dish.dish_name} className="pos-menu-img" />
+                              ) : (
+                                <div className="d-flex align-items-center justify-content-center h-100 text-muted">
+                                  <CsLineIcons icon="cupcake" size="30" opacity="0.3" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Details */}
+                            <div className="pos-menu-details">
+                              {dish.is_special && <div className="pos-special-star">⭐</div>}
+                              <div className="pos-dish-name">{dish.dish_name}</div>
+                              <div className="pos-dish-price">₹{dish.dish_price}</div>
+                              <div className="pos-add-hint">+ Add</div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))
+            )
           ) : (
-            <Row className="g-2">
-              {containerCharges?.map((charge) => (
-                <Col xs="6" md="4" lg="3" xl="2" key={charge._id}>
-                  <Card className="sh-14 hover-border-primary mb-2" onClick={() => addParcelCharge(charge)}>
-                    <Card.Body className="p-4 text-center align-items-center d-flex flex-column justify-content-between">
-                      <p className="cta-8 mb-2 lh-1">
-                        {charge.name} - {charge.size}
-                      </p>
-                      <p className="mb-0" style={{ fontWeight: 'bold' }}>
-                        ₹{charge.price}
-                      </p>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
+            <div>
+              <div className="pos-section-header">
+                <div className="pos-section-dot" style={{ background: '#8b5cf6' }} />
+                <span>Parcel Charges</span>
+                <div className="pos-section-line" />
+              </div>
+              <div className="pos-grid-5">
+                {containerCharges?.map((charge) => {
+                  const addedQty = getAddedQty(`${charge.name} — ${charge.size}`);
+                  return (
+                    <div className="pos-grid-item" key={charge._id}>
+                      <div className="pos-menu-card" onClick={() => addParcelCharge(charge)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && addParcelCharge(charge)}>
+                        {addedQty > 0 && <div className="pos-added-badge">{addedQty} Added</div>}
+                        <div className="pos-menu-details">
+                          <div className="pos-dish-name">{charge.name} — {charge.size}</div>
+                          <div className="pos-dish-price">₹{charge.price}</div>
+                          <div className="pos-add-hint">+ Add</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
       </div>

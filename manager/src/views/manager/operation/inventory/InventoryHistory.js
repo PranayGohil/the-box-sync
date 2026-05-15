@@ -12,6 +12,42 @@ import ControlsPageSize from './components/ControlsPageSize';
 import Table from './components/Table';
 import TablePagination from './components/TablePagination';
 
+const customStyles = `
+    .inventory-container {
+      background: #f9f9fb;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+    }
+    .page-card {
+      background: #ffffff !important;
+      border-radius: 2rem !important;
+      border: 1px solid rgba(0, 0, 0, 0.05) !important;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.02) !important;
+      overflow: hidden;
+    }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .modern-input {
+      border-radius: 12px !important;
+      padding: 0.8rem 1.25rem !important;
+      border: 1.5px solid #f1f5f9 !important;
+      font-weight: 600 !important;
+      color: #334155 !important;
+      transition: all 0.3s ease !important;
+      background: #fcfdfe !important;
+      height: 52px !important;
+    }
+`;
+
 const InventoryHistory = () => {
   const history = useHistory();
   const title = 'Inventory History';
@@ -505,17 +541,18 @@ const InventoryHistory = () => {
 
   return (
     <>
+      <div className="inventory-container">
+      <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
-      <Row>
-        <Col>
-          <div className="page-title-container mb-3">
-            <Row className="align-items-center">
-              <Col xs="12" md="7">
-                <h1 className="mb-0 pb-0 display-4">{title}</h1>
-                <BreadcrumbList items={breadcrumbs} />
-              </Col>
-            </Row>
-          </div>
+      <div className="container-fluid px-lg-5">
+        <div className="page-title-container mb-4 pt-4">
+          <Row className="g-3 align-items-center">
+            <Col lg="7">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </Col>
+          </Row>
+        </div>
 
           {/* Completed Requests */}
           <div className="mb-5">
@@ -818,8 +855,8 @@ const InventoryHistory = () => {
               </Row>
             )}
           </div>
-        </Col>
-      </Row>
+        </div>
+      </div>
 
       <Modal show={showRejectReasonModal} onHide={() => setShowRejectReasonModal(false)} centered>
         <Modal.Header closeButton>

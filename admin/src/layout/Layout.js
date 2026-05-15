@@ -4,7 +4,6 @@ import { useLocation } from 'react-router-dom';
 import useLayout from 'hooks/useLayout';
 import Footer from 'layout/footer/Footer';
 import Nav from 'layout/nav/Nav';
-import RightButtons from 'layout/right-buttons/RightButtons';
 import SidebarMenu from 'layout/nav/sidebar-menu/SidebarMenu';
 import BottomNav from 'layout/nav/BottomNav';
 
@@ -32,7 +31,6 @@ const Layout = ({ children }) => {
         </Container>
       </main>
       <Footer />
-      <RightButtons />
       <BottomNav />
     </>
   );

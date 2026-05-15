@@ -7,6 +7,47 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import { getDailyReport, exportDailyReportExcel } from 'api/inventory';
 import { format, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 
+const customStyles = `
+    .inventory-container {
+      background: #f9f9fb;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+    }
+    .page-card {
+      background: #ffffff !important;
+      border-radius: 2rem !important;
+      border: 1px solid rgba(0, 0, 0, 0.05) !important;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.02) !important;
+      overflow: hidden;
+    }
+    .modern-input {
+      border-radius: 12px !important;
+      padding: 0.6rem 1rem !important;
+      border: 1.5px solid #f1f5f9 !important;
+      font-weight: 700 !important;
+      color: #334155 !important;
+      transition: all 0.3s ease !important;
+      background: #fcfdfe !important;
+      height: 45px !important;
+    }
+    .modern-input:focus {
+      border-color: #23b3f4 !important;
+      box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
+      background: #ffffff !important;
+    }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+`;
+
 const PRESETS = [
   { label: 'Today', getValue: () => ({ from: format(new Date(), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') }) },
   { label: 'Yesterday', getValue: () => ({ from: format(subDays(new Date(), 1), 'yyyy-MM-dd'), to: format(subDays(new Date(), 1), 'yyyy-MM-dd') }) },
@@ -72,20 +113,22 @@ const InventoryReport = () => {
   const typeColors = { expired: 'danger', spillage: 'info', damaged: 'warning', overcook: 'secondary', theft: 'dark', other: 'light' };
 
   return (
-    <>
+    <div className="inventory-container">
+      <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
-      <div className="page-title-container">
-        <Row className="g-0">
-          <Col className="col-auto mb-3 mb-sm-0 me-auto">
-            <h1 className="mb-0 pb-0 display-4">{title}</h1>
-            <BreadcrumbList items={breadcrumbs} />
-          </Col>
-        </Row>
-      </div>
+      <div className="container-fluid px-lg-5">
+        <div className="page-title-container mb-4 pt-4">
+          <Row className="g-3 align-items-center">
+            <Col lg="7">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </Col>
+          </Row>
+        </div>
 
       {/* Date Filter */}
-      <Card className="mb-4">
-        <Card.Body>
+      <Card className="page-card border-0 mb-4 shadow-sm">
+        <Card.Body className="p-4">
           <Row className="g-2 align-items-end">
             <Col xs={12} className="mb-2">
               <div className="d-flex flex-wrap gap-2">
@@ -102,21 +145,21 @@ const InventoryReport = () => {
               </div>
             </Col>
             <Col md={3}>
-              <Form.Label className="text-muted small">From Date</Form.Label>
-              <Form.Control type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setActivePreset('Custom'); }} />
+              <Form.Label className="text-muted small fw-bold">From Date</Form.Label>
+              <Form.Control type="date" className="modern-input" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setActivePreset('Custom'); }} />
             </Col>
             <Col md={3}>
-              <Form.Label className="text-muted small">To Date</Form.Label>
-              <Form.Control type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setActivePreset('Custom'); }} />
+              <Form.Label className="text-muted small fw-bold">To Date</Form.Label>
+              <Form.Control type="date" className="modern-input" value={toDate} onChange={(e) => { setToDate(e.target.value); setActivePreset('Custom'); }} />
             </Col>
             <Col md="auto" className="d-flex gap-2">
-              <Button variant="primary" onClick={fetchReport} disabled={loading}>
-                <CsLineIcons icon="sync" className="me-1" size="14" />
-                {loading ? 'Loading...' : 'Generate Report'}
+              <Button variant="primary" className="rounded-pill px-4 fw-bold shadow-sm" onClick={fetchReport} disabled={loading} style={{ height: '45px' }}>
+                <CsLineIcons icon="sync" className="me-2" size="14" />
+                {loading ? 'Generating...' : 'Generate Report'}
               </Button>
               {reportData && (
-                <Button variant="success" onClick={handleExport} disabled={exporting}>
-                  <CsLineIcons icon="download" className="me-1" size="14" />
+                <Button variant="outline-success" className="rounded-pill px-4 fw-bold border-2" onClick={handleExport} disabled={exporting} style={{ height: '45px' }}>
+                  <CsLineIcons icon="download" className="me-2" size="14" />
                   {exporting ? 'Exporting...' : 'Export Excel'}
                 </Button>
               )}
@@ -142,8 +185,8 @@ const InventoryReport = () => {
               { label: 'Current Stock Items', value: reportData.summary.total_current_stock, color: 'warning', icon: 'layers' },
             ].map((c) => (
               <Col key={c.label} lg={3} md={6}>
-                <Card className={`border-${c.color}`}>
-                  <Card.Body>
+                <Card className="page-card border-0 h-100 shadow-sm">
+                  <Card.Body className="p-4">
                     <div className="d-flex justify-content-between align-items-start">
                       <div>
                         <div className="text-muted small">{c.label}</div>
@@ -169,9 +212,9 @@ const InventoryReport = () => {
           )}
 
           {/* Item Summary Table */}
-          <Card className="mb-4">
-            <Card.Header>
-              <h6 className="mb-0">Item-wise Summary</h6>
+          <Card className="page-card border-0 mb-4 shadow-sm">
+            <Card.Header className="bg-white border-bottom p-4">
+              <h6 className="mb-0 fw-bold">Item-wise Summary</h6>
               <small className="text-muted">Received vs Used vs Wasted vs Current Stock for the selected period</small>
             </Card.Header>
             <Card.Body className="p-0">
@@ -313,7 +356,8 @@ const InventoryReport = () => {
           <h5 className="text-muted">Select a date range and click Generate Report</h5>
         </Alert>
       )}
-    </>
+    </div>
+  </div>
   );
 };
 

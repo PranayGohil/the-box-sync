@@ -43,6 +43,7 @@ const customStyles = `
       color: #334155 !important;
       transition: all 0.3s ease !important;
       background: #fcfdfe !important;
+      height: 52px !important;
     }
     .modern-input:focus {
       border-color: #23b3f4 !important;
@@ -82,8 +83,8 @@ const customStyles = `
       border-color: rgba(35, 179, 244, 0.2) !important;
     }
     .remove-btn {
-      width: 36px;
-      height: 36px;
+      width: 45px;
+      height: 45px;
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -121,6 +122,11 @@ const customStyles = `
       margin-top: 3rem;
       border: 1px solid #f1f5f9;
     }
+    @media (max-width: 768px) {
+      .summary-hub {
+        padding: 1.5rem;
+      }
+    }
     .total-display {
       background: #ffffff;
       border-radius: 1.25rem;
@@ -129,6 +135,22 @@ const customStyles = `
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .amount-paid-container {
+      width: 300px;
+      text-align: right;
+    }
+    @media (max-width: 768px) {
+      .total-display {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .amount-paid-container {
+        width: 100%;
+        text-align: left;
+      }
     }
     .total-val {
       font-size: 1.75rem;
@@ -309,7 +331,7 @@ const AddInventory = () => {
                 <CsLineIcons icon="file-text" size="18" /> Purchase Information
               </div>
               <Row className="g-4 mb-5">
-                <Col md={3}>
+                <Col xs={12} md={3}>
                   <div className="input-group-label">Bill Date</div>
                   <Form.Control
                     type="date"
@@ -320,7 +342,7 @@ const AddInventory = () => {
                     isInvalid={touched.bill_date && errors.bill_date}
                   />
                 </Col>
-                <Col md={3}>
+                <Col xs={12} md={3}>
                   <div className="input-group-label">Bill Number</div>
                   <Form.Control
                     type="text"
@@ -332,11 +354,13 @@ const AddInventory = () => {
                     placeholder="Enter bill #"
                   />
                 </Col>
-                <Col md={3}>
+                <Col xs={12} md={3}>
                   <div className="input-group-label">Vendor</div>
                   <div className="select-modern">
                     <CreatableSelect
                       isClearable
+                      menuPlacement="auto"
+                      menuPortalTarget={document.body}
                       options={(suggestions.vendors || []).map((v) => ({ label: v, value: v }))}
                       value={values.vendor_name ? { label: values.vendor_name, value: values.vendor_name } : null}
                       onChange={(s) => setFieldValue('vendor_name', s ? s.value : '')}
@@ -345,11 +369,13 @@ const AddInventory = () => {
                     />
                   </div>
                 </Col>
-                <Col md={3}>
+                <Col xs={12} md={3}>
                   <div className="input-group-label">Category</div>
                   <div className="select-modern">
                     <CreatableSelect
                       isClearable
+                      menuPlacement="auto"
+                      menuPortalTarget={document.body}
                       options={(suggestions.categories || []).map((c) => ({ label: c, value: c }))}
                       value={values.category ? { label: values.category, value: values.category } : null}
                       onChange={(s) => setFieldValue('category', s ? s.value : '')}
@@ -400,10 +426,13 @@ const AddInventory = () => {
               {values.items.map((item, idx) => (
                 <div key={idx} className="item-row-card">
                   <Row className="w-100 g-3 align-items-center">
-                    <Col lg={4.5} style={{ flex: 2 }}>
+                    <Col xs={12} lg={4}>
+                      <div className="input-group-label d-lg-none">Item Name</div>
                       <div className="select-modern">
                         <CreatableSelect
                           isClearable
+                          menuPlacement="auto"
+                          menuPortalTarget={document.body}
                           options={(suggestions.items || []).map((i) => ({ label: i, value: i }))}
                           value={item.item_name ? { label: item.item_name, value: item.item_name } : null}
                           onChange={(s) => handleItemChange(idx, 'item_name', s ? s.value : '')}
@@ -412,7 +441,8 @@ const AddInventory = () => {
                         />
                       </div>
                     </Col>
-                    <Col lg={1.5} style={{ flex: 0.8 }}>
+                    <Col xs={4} lg={1.5}>
+                      <div className="input-group-label d-lg-none">Qty</div>
                       <Form.Control
                         type="number"
                         className="modern-input"
@@ -420,7 +450,8 @@ const AddInventory = () => {
                         onChange={(e) => handleItemChange(idx, 'item_quantity', e.target.value)}
                       />
                     </Col>
-                    <Col lg={2} style={{ flex: 1 }}>
+                    <Col xs={4} lg={2}>
+                      <div className="input-group-label d-lg-none">Unit</div>
                       <Form.Select className="modern-input" value={item.unit} onChange={(e) => handleItemChange(idx, 'unit', e.target.value)}>
                         <option value="">Unit</option>
                         <option value="kg">kg</option>
@@ -430,7 +461,8 @@ const AddInventory = () => {
                         <option value="piece">pc</option>
                       </Form.Select>
                     </Col>
-                    <Col lg={3} style={{ flex: 1.2 }}>
+                    <Col xs={4} lg={3}>
+                      <div className="input-group-label d-lg-none">Price</div>
                       <Form.Control
                         type="number"
                         className="modern-input"
@@ -438,8 +470,8 @@ const AddInventory = () => {
                         onChange={(e) => handleItemChange(idx, 'item_price', e.target.value)}
                       />
                     </Col>
-                    <Col xs="auto" style={{ width: '60px' }} className="text-end">
-                      <button type="button" className="remove-btn" onClick={() => removeItem(idx)} disabled={values.items.length === 1}>
+                    <Col xs={12} lg="auto" className="text-end">
+                      <button type="button" className="remove-btn ms-auto" onClick={() => removeItem(idx)} disabled={values.items.length === 1}>
                         <CsLineIcons icon="bin" size="16" />
                       </button>
                     </Col>
@@ -468,17 +500,17 @@ const AddInventory = () => {
                     <Form.Control type="number" className="modern-input" name="discount" value={values.discount} onChange={handleChange} />
                   </Col>
 
-                  <Col md={12}>
-                    <div className="total-display shadow-sm">
+                  <Col xs={12} md={12}>
+                    <div className="total-display shadow-sm flex-column flex-md-row align-items-stretch align-items-md-center gap-3">
                       <div>
                         <div className="input-group-label mb-1">Final Amount Payable</div>
                         <div className="total-val">₹ {values.total_amount}</div>
                       </div>
-                      <div className="text-end" style={{ width: '300px' }}>
+                      <div className="text-start text-md-end" style={{ minWidth: '200px' }}>
                         <div className="input-group-label">Paid Amount</div>
                         <Form.Control
                           type="number"
-                          className="modern-input text-center fw-bold text-primary"
+                          className="modern-input text-md-center fw-bold text-primary"
                           style={{ fontSize: '1.25rem' }}
                           name="paid_amount"
                           value={values.paid_amount}
@@ -490,12 +522,12 @@ const AddInventory = () => {
                     </div>
                   </Col>
 
-                  <Col md={12} className="text-end pt-3 d-flex justify-content-between align-items-center">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="sw-2 sh-2 rounded-circle bg-warning" />
+                  <Col xs={12} md={12} className="text-end pt-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                    <div className="d-flex align-items-center gap-2 w-100 justify-content-center justify-content-md-start">
+                      <div className="sw-2 sh-2 rounded-circle bg-warning flex-shrink-0" />
                       <span className="fw-bold text-muted">Pending Balance: ₹ {values.unpaid_amount}</span>
                     </div>
-                    <Button type="submit" variant="outline-primary" className="rounded-pill px-4 fw-bold border-2 ms-auto" disabled={isSubmitting}>
+                    <Button type="submit" variant="outline-primary" className="rounded-pill px-4 fw-bold border-2 w-100 w-md-auto ms-md-auto" disabled={isSubmitting}>
                       {isSubmitting ? <Spinner animation="border" size="sm" className="me-2" /> : <CsLineIcons icon="save" className="me-2" />} Complete & Sync Inventory
                     </Button>
                   </Col>

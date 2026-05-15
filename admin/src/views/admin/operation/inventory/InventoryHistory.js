@@ -16,7 +16,6 @@ const customStyles = `
     .inventory-container {
       background: #f9f9fb;
       min-height: 100vh;
-      padding: 2rem 0;
     }
     .interactive-card {
       background: #ffffff !important;
@@ -362,10 +361,20 @@ const InventoryHistory = () => {
       <style>{customStyles}</style>
       <HtmlHead title={title} description="Manage your inventory hub." />
       <div className="container-fluid px-lg-5">
-        <div className="page-title-container mb-4">
+        <div className="page-title-container mb-4 mt-n3">
           <Row className="g-3 align-items-center">
-            <Col lg="7"><h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1><BreadcrumbList items={breadcrumbs} /></Col>
-            <Col lg="5" className="text-lg-end d-flex gap-3 justify-content-lg-end justify-content-start mt-3 mt-lg-0"><Button as={Link} to="/operations/stock-management" className="custom-btn-outline border-info text-info px-4 shadow-sm"><CsLineIcons icon="activity" className="me-2" size="16" />Manage Stock</Button><Button as={Link} to="/operations/add-inventory" className="custom-btn-outline px-4 shadow-sm"><CsLineIcons icon="plus" className="me-2" size="16" /> Add Inventory</Button></Col>
+            <Col xs="12" md="7">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </Col>
+            <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
+              <Button as={Link} to="/operations/stock-management" variant="outline-primary" className="rounded-pill px-4 fw-bold border-2">
+                <CsLineIcons icon="activity" className="me-2" size="16" /> Manage Stock
+              </Button>
+              <Button as={Link} to="/operations/add-inventory" variant="outline-primary" className="rounded-pill px-4 fw-bold border-2">
+                <CsLineIcons icon="plus" className="me-2" size="16" /> Add Inventory
+              </Button>
+            </Col>
           </Row>
         </div>
 

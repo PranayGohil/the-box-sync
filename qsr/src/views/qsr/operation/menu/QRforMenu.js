@@ -8,18 +8,12 @@ import { toast } from 'react-toastify';
 
 const QRforMenu = ({ setSection }) => {
   const [loading, setLoading] = useState(true);
-  const [restaurantToken, setRestaurantToken] = useState('');
   const [generatingQR, setGeneratingQR] = useState(false);
   const [copying, setCopying] = useState(false);
   const qrCodeRef = useRef(null);
 
   const { currentUser, userSubscriptions, activePlans } = useContext(AuthContext);
-
-  useEffect(() => {
-    if (currentUser.restaurant_token) {
-      setRestaurantToken(currentUser.restaurant_token);
-    }
-  }, [currentUser]);
+  const restaurant_code = currentUser?.restaurant_code;
 
   useEffect(() => {
     setLoading(true);
@@ -56,7 +50,7 @@ const QRforMenu = ({ setSection }) => {
     newWindow.close();
   };
 
-  const menuLink = `${process.env.REACT_APP_HOME_URL}/menu.html?token=${restaurantToken}`;
+  const menuLink = `${process.env.REACT_APP_HOME_URL}/menu/${restaurant_code}`;
 
   const copyToClipboard = async () => {
     setCopying(true);
@@ -115,7 +109,7 @@ const QRforMenu = ({ setSection }) => {
             </Button>
           </Card.Header>
           <Card.Body className="text-center">
-            {restaurantToken ? (
+            {restaurant_code ? (
               <>
                 <div className="mb-4">
                   <p className="text-muted mb-2">Scan the QR code to view your restaurant menu:</p>
@@ -164,7 +158,7 @@ const QRforMenu = ({ setSection }) => {
             ) : (
               <Alert variant="warning" className="text-center">
                 <CsLineIcons icon="warning" className="me-2" />
-                Restaurant Token not found. Please contact support.
+                Restaurant code not found. Please contact support.
               </Alert>
             )}
 

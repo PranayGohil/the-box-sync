@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { Formik, useFormik } from 'formik';
 import * as Yup from 'yup';
+import Select from 'react-select';
 
 const TaxAndCharges = () => {
   const title = 'Tax & Charges';
@@ -201,6 +202,81 @@ const TaxAndCharges = () => {
       padding: 1.5rem;
       margin-bottom: 1rem;
     }
+    .react-select__control {
+      border-radius: 1rem !important;
+      border: 1px solid #e2e8f0 !important;
+      background-color: #f8fafc !important;
+      font-size: 0.9rem !important;
+      min-height: 45px !important;
+      height: 45px !important;
+    }
+    .react-select__value-container {
+      padding: 0 1rem !important;
+    }
+    .react-select__indicators-container {
+      height: 43px !important;
+    }
+    .react-select__placeholder {
+      color: #94a3b8 !important;
+    }
+    .react-select__menu {
+      border-radius: 1rem !important;
+      overflow: hidden !important;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+      border: 1px solid #e2e8f0 !important;
+      z-index: 1000 !important;
+    }
+    .react-select__option {
+      padding: 0.75rem 1.25rem !important;
+      font-size: 0.9rem !important;
+    }
+    .react-select__option--is-focused {
+      background-color: rgba(35, 179, 244, 0.1) !important;
+      color: #23b3f4 !important;
+    }
+    .react-select__option--is-selected {
+      background-color: #23b3f4 !important;
+      color: white !important;
+    }
+    .form-control, .form-select {
+      height: 45px !important;
+      border-radius: 1rem !important;
+      border: 1px solid #e2e8f0 !important;
+      background-color: #f8fafc !important;
+      font-size: 0.9rem !important;
+      padding: 0.45rem 1rem !important;
+    }
+    @media (max-width: 768px) {
+      .button-group-responsive {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 12px !important;
+      }
+      .button-group-responsive button {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 0.75rem 1rem !important;
+      }
+      .form-control, .form-select, .react-select__control, .react-select__single-value, .react-select__placeholder, .react-select__input {
+        font-size: 16px !important;
+        height: 45px !important;
+      }
+      .react-select__control {
+        padding: 0 !important;
+      }
+      .page-title-container h1 {
+        font-size: 1.75rem !important;
+      }
+    }
+    @media (max-width: 576px) {
+      .glass-card {
+        border-radius: 1rem;
+        padding: 1rem !important;
+      }
+      .matrix-item {
+        padding: 1rem;
+      }
+    }
   `;
 
   if (loading) {
@@ -217,8 +293,8 @@ const TaxAndCharges = () => {
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
       
-      <Row className="g-3 align-items-center mb-4">
-        <Col md={7}>
+      <Row className="g-3 align-items-center mb-4 page-title-container">
+        <Col xs={12} md={7}>
           <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
           <BreadcrumbList items={breadcrumbs} />
         </Col>
@@ -237,7 +313,7 @@ const TaxAndCharges = () => {
               <Form onSubmit={handleSubmit}>
                 <Card className="glass-card border-0 mb-4">
                   <Card.Body className="p-4 p-md-5">
-                    <div className="d-flex align-items-center justify-content-between mb-4">
+                    <div className="d-flex button-group-responsive align-items-md-center justify-content-between mb-4">
                       <div className="section-header mb-0">
                         <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                           <CsLineIcons icon="percentage" size="20" className="text-primary" />
@@ -251,8 +327,8 @@ const TaxAndCharges = () => {
                       )}
                     </div>
 
-                    <Row className="g-4">
-                      <Col md={6}>
+                    <Row className="g-3">
+                      <Col xs={12} md={6}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">GST Registration Number</Form.Label>
                           <Form.Control
@@ -267,19 +343,19 @@ const TaxAndCharges = () => {
                           <Form.Control.Feedback type="invalid">{errors.gst_no}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
-                      <Col md={2}>
+                      <Col xs={4} md={2}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">CGST (%)</Form.Label>
                           <Form.Control type="number" name="cgst" value={values.cgst} onChange={handleChange} disabled={!gstEditMode || gstSaving} className={!gstEditMode ? "bg-light border-0" : ""} />
                         </Form.Group>
                       </Col>
-                      <Col md={2}>
+                      <Col xs={4} md={2}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">SGST (%)</Form.Label>
                           <Form.Control type="number" name="sgst" value={values.sgst} onChange={handleChange} disabled={!gstEditMode || gstSaving} className={!gstEditMode ? "bg-light border-0" : ""} />
                         </Form.Group>
                       </Col>
-                      <Col md={2}>
+                      <Col xs={4} md={2}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">VAT (%)</Form.Label>
                           <Form.Control type="number" name="vat" value={values.vat} onChange={handleChange} disabled={!gstEditMode || gstSaving} className={!gstEditMode ? "bg-light border-0" : ""} />
@@ -288,7 +364,7 @@ const TaxAndCharges = () => {
                     </Row>
 
                     {gstEditMode && (
-                      <div className="d-flex gap-3 mt-4">
+                      <div className="d-flex button-group-responsive gap-3 mt-4">
                         <Button variant="none" className="custom-btn-outline" onClick={() => { resetForm(); setGstEditMode(false); }}>Cancel</Button>
                         <Button variant="none" className="custom-btn-outline" type="submit" disabled={gstSaving}>
                           {gstSaving ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="save" size="18" />} Save Tax
@@ -307,7 +383,7 @@ const TaxAndCharges = () => {
           <Card className="glass-card border-0">
             <Card.Body className="p-4 p-md-5">
               <Form onSubmit={containerFormik.handleSubmit}>
-                <div className="d-flex align-items-center justify-content-between mb-4">
+                <div className="d-flex button-group-responsive align-items-md-center justify-content-between mb-4">
                   <div className="section-header mb-0">
                     <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                       <CsLineIcons icon="box" size="20" className="text-primary" />
@@ -324,7 +400,7 @@ const TaxAndCharges = () => {
                 {containerFormik.values.containers.map((container, index) => (
                   <div key={index} className="matrix-item">
                     <Row className="g-3">
-                      <Col md={4}>
+                      <Col xs={12} md={4}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">Container Name</Form.Label>
                           <Form.Control
@@ -336,7 +412,7 @@ const TaxAndCharges = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
+                      <Col xs={12} md={4}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">Volume / Size</Form.Label>
                           <Row className="g-2">
@@ -344,19 +420,31 @@ const TaxAndCharges = () => {
                               <Form.Control type="number" name={`containers.${index}.sizeValue`} value={container.sizeValue} onChange={containerFormik.handleChange} disabled={!containerEditMode || containerSaving} className={!containerEditMode ? "bg-light border-0" : ""} />
                             </Col>
                             <Col xs={6}>
-                              <Form.Select name={`containers.${index}.sizeUnit`} value={container.sizeUnit} onChange={containerFormik.handleChange} disabled={!containerEditMode || containerSaving} className={!containerEditMode ? "bg-light border-0" : ""}>
-                                <option value="">Unit</option>
-                                <option value="ml">ml</option>
-                                <option value="l">l</option>
-                                <option value="g">g</option>
-                                <option value="kg">kg</option>
-                                <option value="pieces">pieces</option>
-                              </Form.Select>
+                              {containerEditMode ? (
+                                <Select
+                                  classNamePrefix="react-select"
+                                  options={[
+                                    { value: 'ml', label: 'ml' },
+                                    { value: 'l', label: 'l' },
+                                    { value: 'g', label: 'g' },
+                                    { value: 'kg', label: 'kg' },
+                                    { value: 'pieces', label: 'pieces' },
+                                  ]}
+                                  value={container.sizeUnit ? { label: container.sizeUnit, value: container.sizeUnit } : null}
+                                  onChange={(selected) => containerFormik.setFieldValue(`containers.${index}.sizeUnit`, selected ? selected.value : '')}
+                                  placeholder="Unit"
+                                  isDisabled={containerSaving}
+                                  menuPortalTarget={document.body}
+                                  styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                                />
+                              ) : (
+                                <Form.Control value={container.sizeUnit || 'Unit'} disabled className="bg-light border-0" />
+                              )}
                             </Col>
                           </Row>
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
+                      <Col xs={12} md={4}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">Price (₹)</Form.Label>
                           <div className="d-flex gap-2">
@@ -373,10 +461,10 @@ const TaxAndCharges = () => {
 
                 {containerEditMode && (
                   <div className="mt-4">
-                    <Button variant="none" className="custom-btn-outline mb-3" onClick={addContainer} disabled={containerSaving}>
+                    <Button variant="none" className="custom-btn-outline mb-3 w-100 w-md-auto" onClick={addContainer} disabled={containerSaving}>
                       <CsLineIcons icon="plus" size="18" /> Add Type
                     </Button>
-                    <div className="d-flex gap-3">
+                    <div className="d-flex button-group-responsive gap-3">
                       <Button variant="none" className="custom-btn-outline" onClick={() => setContainerEditMode(false)}>Cancel</Button>
                       <Button variant="none" className="custom-btn-outline" type="submit" disabled={containerSaving}>
                         {containerSaving ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="save" size="18" />} Save Matrix
