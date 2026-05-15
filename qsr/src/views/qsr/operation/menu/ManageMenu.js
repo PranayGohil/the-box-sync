@@ -6,40 +6,10 @@ import csInterfaceIcons from 'views/interface/content/icons/data/cs-interface-ic
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
-import Select from 'react-select';
 import BoxedVariationsStripe from './components/BoxedVariationsStripe';
 import EditDishModal from './EditDishModal';
 import EditDishCategoryModal from './EditDishCategoryModal';
 import DeleteDishModal from './DeleteDishModal';
-
-const customStyles = `
-  .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
-  }
-  .glass-card {
-    background: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 1.25rem !important;
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07) !important;
-  }
-  .search-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
-  }
-`;
 
 const ManageMenu = () => {
   const title = 'Manage Menu';
@@ -180,101 +150,46 @@ const ManageMenu = () => {
       <HtmlHead title={title} description={description} />
       <Row>
         <Col>
-      <style>{customStyles}</style>
-      <div className="page-title-container mb-4">
-        <Row className="align-items-center">
-          <Col xs="12" md="7">
-            <h1 className="mb-0 pb-0 display-4 fw-bold text-primary">{title}</h1>
-            <BreadcrumbList items={breadcrumbs} />
-          </Col>
-          <Col xs="12" md="5" className="text-end">
-            <Button className="custom-btn-outline px-4 py-2" href="/operations/add-dish">
-              <CsLineIcons icon="plus" className="me-2" size="18" />
-              Add New Dish
-            </Button>
-          </Col>
-        </Row>
-      </div>
+          <div className="page-title-container mb-4">
+            <Row className="align-items-center">
+              <Col xs="12" md="7">
+                <h1 className="mb-0 pb-0 display-4">{title}</h1>
+                <BreadcrumbList items={breadcrumbs} />
+              </Col>
+              <Col xs="12" md="5" className="text-end">
+                <Button variant="primary" href="/operations/add-dish">
+                  <CsLineIcons icon="plus" className="me-2" />
+                  Add New
+                </Button>
+              </Col>
+            </Row>
+          </div>
 
-      <Card className="border-0 shadow-sm mb-5" style={{ borderRadius: '1.25rem' }}>
-        <Card.Body className="p-3">
-          <Row className="g-3 align-items-center">
-            <Col xs={12} md={6}>
-              <div className="search-container shadow-sm rounded-pill bg-white border d-flex align-items-center px-3" style={{ height: '44px' }}>
-                <CsLineIcons icon="search" size="18" className="text-primary opacity-75" />
-                <Form.Control 
-                  type="text" 
-                  placeholder="Search dishes by name..." 
-                  className="border-0 bg-transparent shadow-none flex-grow-1 ms-2"
-                  style={{ fontSize: '14px', outline: 'none' }}
-                  onChange={(e) => handleSearch(e.target.value)} 
-                />
-              </div>
-            </Col>
-            <Col xs={12} sm={6} md={3}>
-              <Select
-                classNamePrefix="react-select"
-                options={[
-                  { value: '', label: 'All Meal Types' },
-                  { value: 'veg', label: 'Veg Only' },
-                  { value: 'non-veg', label: 'Non-Veg Only' },
-                  { value: 'egg', label: 'Contains Egg' },
-                ]}
-                value={filters.meal_type ? { value: filters.meal_type, label: filters.meal_type === 'veg' ? 'Veg Only' : filters.meal_type === 'non-veg' ? 'Non-Veg Only' : 'Contains Egg' } : { value: '', label: 'All Meal Types' }}
-                onChange={(selected) => handleFilter('meal_type', selected ? selected.value : '')}
-                placeholder="Meal Type"
-                styles={{
-                  control: (base, state) => ({
-                    ...base,
-                    borderRadius: '50px',
-                    height: '44px',
-                    border: '2px solid #1ea8e7',
-                    boxShadow: 'none',
-                    '&:hover': { border: '2px solid #1ea8e7' },
-                  }),
-                  menu: (base) => ({
-                    ...base,
-                    borderRadius: '1rem',
-                    overflow: 'hidden',
-                    boxShadow: '0 8px 32px rgba(31, 38, 135, 0.12)',
-                    zIndex: 9999,
-                  }),
-                  placeholder: (base) => ({ ...base, color: '#1ea8e7', fontWeight: '600' }),
-                  singleValue: (base) => ({ ...base, color: '#1ea8e7', fontWeight: '600' }),
-                }}
-              />
-            </Col>
-            <Col xs={12} sm={6} md={3}>
-              <Select
-                classNamePrefix="react-select"
-                options={[{ value: '', label: 'All Categories' }, ...categoryOptions.map(cat => ({ value: cat, label: cat }))]}
-                value={filters.category ? { value: filters.category, label: filters.category } : { value: '', label: 'All Categories' }}
-                onChange={(selected) => handleFilter('category', selected ? selected.value : '')}
-                placeholder="Category"
-                styles={{
-                  control: (base, state) => ({
-                    ...base,
-                    borderRadius: '50px',
-                    height: '44px',
-                    border: '2px solid #1ea8e7',
-                    boxShadow: 'none',
-                    '&:hover': { border: '2px solid #1ea8e7' },
-                  }),
-                  menu: (base) => ({
-                    ...base,
-                    borderRadius: '1rem',
-                    overflow: 'hidden',
-                    boxShadow: '0 8px 32px rgba(31, 38, 135, 0.12)',
-                    zIndex: 9999,
-                  }),
-                  placeholder: (base) => ({ ...base, color: '#1ea8e7', fontWeight: '600' }),
-                  singleValue: (base) => ({ ...base, color: '#1ea8e7', fontWeight: '600' }),
-                }}
-              />
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
+          <Form className="mb-4">
+            <Row>
+              <Col md={4}>
+                <Form.Control type="text" placeholder="Search dishes..." onChange={(e) => handleSearch(e.target.value)} />
+              </Col>
+              <Col md={3}>
+                <Form.Select onChange={(e) => handleFilter('meal_type', e.target.value)}>
+                  <option value="">All Meal Types</option>
+                  <option value="veg">Veg</option>
+                  <option value="non-veg">Non-Veg</option>
+                  <option value="egg">Egg</option>
+                </Form.Select>
+              </Col>
+              <Col md={3}>
+                <Form.Select value={filters.category} onChange={(e) => handleFilter('category', e.target.value)}>
+                  <option value="">All Categories</option>
+                  {categoryOptions.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+            </Row>
+          </Form>
 
           {filteredMenuData.length === 0 ? (
             <Alert variant="info" className="text-center">
