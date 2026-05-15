@@ -492,8 +492,6 @@ const AddDishes = () => {
                       )}
                     </FieldArray>
                   </div>
-                </Card.Body>
-              </Card>
             </Form>
           )}
         </Formik>
