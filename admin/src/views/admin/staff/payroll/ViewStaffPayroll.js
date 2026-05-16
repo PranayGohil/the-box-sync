@@ -21,90 +21,7 @@ const MONTH_NAMES = [
     'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
-const customStyles = `
-  .glass-card {
-    background: #ffffff !important;
-    border: 1px solid #f0f0f0 !important;
-    border-radius: 1.5rem !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
-    transition: all 0.3s ease;
-  }
-  .glass-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.06) !important;
-  }
-  .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
-  }
-  .custom-btn-solid {
-    background-color: #1ea8e7 !important;
-    border: 1px solid #1ea8e7 !important;
-    color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-solid:hover {
-    background-color: #158dc4 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
-  }
-  .status-badge {
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
-    font-weight: 700;
-    font-size: 0.75rem;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-  }
-  .react-table-modern th {
-    background: #f8fafc !important;
-    color: #64748b !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    font-size: 0.75rem !important;
-    letter-spacing: 0.05em !important;
-    padding: 1.25rem !important;
-    border: none !important;
-  }
-  .react-table-modern td {
-    padding: 1.25rem !important;
-    vertical-align: middle !important;
-    border-bottom: 1px solid #f1f5f9 !important;
-  }
-  .stat-icon-circle {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1rem;
-  }
-  .bg-soft-primary { background-color: rgba(30, 168, 231, 0.1) !important; }
-  .bg-soft-success { background-color: rgba(40, 199, 111, 0.1) !important; }
-  .bg-soft-info { background-color: rgba(0, 207, 221, 0.1) !important; }
-  .bg-soft-danger { background-color: rgba(234, 84, 85, 0.1) !important; }
-  .bg-soft-warning { background-color: rgba(255, 159, 67, 0.1) !important; }
-  .text-primary { color: #1ea8e7 !important; }
-  .text-success { color: #28c76f !important; }
-  .text-info { color: #00cfdd !important; }
-  .text-danger { color: #ea5455 !important; }
-  .text-warning { color: #ff9f43 !important; }
-`;
+
 
 export default function ViewStaffPayroll() {
     const { staffId } = useParams();
@@ -482,7 +399,7 @@ export default function ViewStaffPayroll() {
 
     return (
         <div className="container-fluid pb-5">
-            <style>{customStyles}</style>
+            
             <HtmlHead title={main_title} description={description} />
 
             <div className="page-title-container mb-5">
@@ -494,28 +411,28 @@ export default function ViewStaffPayroll() {
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
                     <Col md={5} className="d-flex justify-content-md-end gap-2">
-                        <Button className="custom-btn-outline px-4" onClick={() => history.push('/staff/payroll')}>
+                        <Button className="view-staff-payroll-custom-btn-outline px-4" onClick={() => history.push('/staff/payroll')}>
                             <CsLineIcons icon="arrow-left" className="me-2" />Back to Payroll
                         </Button>
                     </Col>
                 </Row>
             </div>
 
-            {error && <Alert variant="danger" className="glass-card border-0 mb-4 shadow-sm">{error}</Alert>}
+            {error && <Alert variant="danger" className="view-staff-payroll-glass-card border-0 mb-4 shadow-sm">{error}</Alert>}
 
             {staffData && (
-                <Card className="glass-card border-0 mb-5 overflow-hidden">
+                <Card className="view-staff-payroll-glass-card border-0 mb-5 overflow-hidden">
                     <Card.Body className="p-4">
                         <Row className="align-items-center">
                             <Col md="auto" className="mb-3 mb-md-0">
-                                <div className="sw-13 sh-13 rounded-circle bg-soft-primary d-flex align-items-center justify-content-center text-primary fw-bold h3 shadow-sm border border-white border-4 mb-0">
+                                <div className="sw-13 sh-13 rounded-circle view-staff-payroll-bg-soft-primary d-flex align-items-center justify-content-center text-primary view-staff-payroll-text-primary fw-bold h3 shadow-sm border border-white border-4 mb-0">
                                     {staffData.f_name?.[0]}{staffData.l_name?.[0]}
                                 </div>
                             </Col>
                             <Col className="ms-md-4">
                                 <h3 className="fw-bold text-dark mb-1">{staffData.f_name} {staffData.l_name}</h3>
                                 <div className="d-flex align-items-center gap-3 flex-wrap">
-                                    <span className="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fw-bold">#{staffData.staff_id}</span>
+                                    <span className="badge view-staff-payroll-bg-soft-primary text-primary view-staff-payroll-text-primary px-3 py-2 rounded-pill fw-bold">#{staffData.staff_id}</span>
                                     <span className="text-muted fw-medium fs-6 d-flex align-items-center gap-1">
                                         <CsLineIcons icon="diploma" size="16" /> {staffData.position}
                                     </span>
@@ -526,7 +443,7 @@ export default function ViewStaffPayroll() {
                             </Col>
                             <Col md="auto" className="mt-3 mt-md-0 border-start ps-md-5">
                                 <div className="text-muted small fw-bold text-uppercase mb-1">Standard Base Pay</div>
-                                <h2 className="fw-bold text-primary mb-0">₹{(staffData.salary || 0).toLocaleString('en-IN')}</h2>
+                                <h2 className="fw-bold text-primary view-staff-payroll-text-primary mb-0">₹{(staffData.salary || 0).toLocaleString('en-IN')}</h2>
                                 <div className="text-muted small fw-medium mt-1">OT Rate: ₹{staffData.overtime_rate}/hr</div>
                             </Col>
                         </Row>
@@ -542,9 +459,9 @@ export default function ViewStaffPayroll() {
                     { label: 'Pending Payout', value: `₹${(careerStats.total_unpaid || 0).toLocaleString('en-IN')}`, icon: 'clock', bg: 'soft-danger', color: 'danger' },
                 ].map((s) => (
                     <Col xs={6} md={3} key={s.label}>
-                        <Card className="glass-card border-0 h-100">
+                        <Card className="view-staff-payroll-glass-card border-0 h-100">
                             <Card.Body className="p-4 text-center">
-                                <div className={`stat-icon-circle bg-${s.bg} text-${s.color} mx-auto shadow-sm`}>
+                                <div className={`view-staff-payroll-stat-icon-circle bg-${s.bg} text-${s.color} mx-auto shadow-sm`}>
                                     <CsLineIcons icon={s.icon} size="24" />
                                 </div>
                                 <div className="text-muted small fw-bold text-uppercase mb-1">{s.label}</div>
@@ -555,7 +472,7 @@ export default function ViewStaffPayroll() {
                 ))}
             </Row>
 
-            <Card className="glass-card border-0 mb-5 overflow-hidden">
+            <Card className="view-staff-payroll-glass-card border-0 mb-5 overflow-hidden">
                 <Card.Body className="p-4">
                     <Row className="g-4 align-items-end">
                         <Col md={3}>
@@ -574,19 +491,19 @@ export default function ViewStaffPayroll() {
                             </Form.Select>
                         </Col>
                         <Col md={2}>
-                            <Button className="custom-btn-outline w-100 py-2" onClick={() => { setYearFilter('all'); setStatusFilter('all'); }}>
+                            <Button className="view-staff-payroll-custom-btn-outline w-100 py-2" onClick={() => { setYearFilter('all'); setStatusFilter('all'); }}>
                                 Reset Filters
                             </Button>
                         </Col>
                         <Col md={4}>
                             <div className="d-flex gap-2 justify-content-md-end flex-wrap">
-                                <Button className="custom-btn-solid bg-soft-success text-success border-0 px-3" onClick={() => handleExportClick('Excel')} disabled={exporting}>
+                                <Button className="view-staff-payroll-custom-btn-solid view-staff-payroll-bg-soft-success text-success view-staff-payroll-text-success border-0 px-3" onClick={() => handleExportClick('Excel')} disabled={exporting}>
                                     <CsLineIcons icon="file-text" size="18" className="me-2" /> Excel
                                 </Button>
-                                <Button className="custom-btn-solid bg-soft-danger text-danger border-0 px-3" onClick={() => handleExportClick('PDF')} disabled={exporting}>
+                                <Button className="view-staff-payroll-custom-btn-solid view-staff-payroll-bg-soft-danger text-danger view-staff-payroll-text-danger border-0 px-3" onClick={() => handleExportClick('PDF')} disabled={exporting}>
                                     <CsLineIcons icon="file-text" size="18" className="me-2" /> PDF
                                 </Button>
-                                <Button className="custom-btn-solid bg-soft-info text-info border-0 px-3" onClick={() => handleExportClick('Word')} disabled={exporting}>
+                                <Button className="view-staff-payroll-custom-btn-solid view-staff-payroll-bg-soft-info text-info view-staff-payroll-text-info border-0 px-3" onClick={() => handleExportClick('Word')} disabled={exporting}>
                                     <CsLineIcons icon="file-text" size="18" className="me-2" /> Word
                                 </Button>
                             </div>
@@ -596,10 +513,10 @@ export default function ViewStaffPayroll() {
                         <div className="mt-4 p-3 bg-light rounded-3">
                             <div className="d-flex align-items-center mb-2 justify-content-between">
                                 <div className="d-flex align-items-center gap-2">
-                                    <Spinner animation="border" size="sm" className="text-primary" />
-                                    <span className="fw-bold small text-primary uppercase">Generating {exportType} Asset...</span>
+                                    <Spinner animation="border" size="sm" className="text-primary view-staff-payroll-text-primary" />
+                                    <span className="fw-bold small text-primary view-staff-payroll-text-primary uppercase">Generating {exportType} Asset...</span>
                                 </div>
-                                <span className="fw-bold text-primary">{exportProgress}%</span>
+                                <span className="fw-bold text-primary view-staff-payroll-text-primary">{exportProgress}%</span>
                             </div>
                             <ProgressBar now={exportProgress} className="sh-2 rounded-pill shadow-sm" />
                         </div>
@@ -607,17 +524,17 @@ export default function ViewStaffPayroll() {
                 </Card.Body>
             </Card>
 
-            <Card className="glass-card border-0 overflow-hidden shadow-sm mb-5">
+            <Card className="view-staff-payroll-glass-card border-0 overflow-hidden shadow-sm mb-5">
                 <Card.Header className="bg-light border-0 p-4">
                     <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
                         <div>
                             <h5 className="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
-                                <CsLineIcons icon="layout" size="20" className="text-primary" />
+                                <CsLineIcons icon="layout" size="20" className="text-primary view-staff-payroll-text-primary" />
                                 Payroll Audit Log
                             </h5>
                             <small className="text-muted fw-medium text-uppercase">Showing {filteredPayroll.length} filtered periods</small>
                         </div>
-                        <Badge bg="primary" className="status-badge sh-5 d-flex align-items-center px-4">
+                        <Badge bg="primary" className="view-staff-payroll-status-badge sh-5 d-flex align-items-center px-4">
                             Filtered Total: ₹{filteredStats.total_net.toLocaleString('en-IN')}
                         </Badge>
                     </div>
@@ -631,7 +548,7 @@ export default function ViewStaffPayroll() {
                         </div>
                     ) : (
                         <div className="table-responsive">
-                            <Table hover className="react-table-modern mb-0">
+                            <Table hover className="view-staff-payroll-react-table-modern mb-0">
                                 <thead>
                                     <tr>
                                         <th>Payroll Period</th>
@@ -640,7 +557,7 @@ export default function ViewStaffPayroll() {
                                         <th className="text-end">Base Rate</th>
                                         <th className="text-end">Earned Gross</th>
                                         <th className="text-end">Adjustments</th>
-                                        <th className="text-end fw-bold text-primary">Net Payable</th>
+                                        <th className="text-end fw-bold text-primary view-staff-payroll-text-primary">Net Payable</th>
                                         <th className="text-center">Payment Status</th>
                                         <th className="text-center">Actions</th>
                                     </tr>
@@ -650,36 +567,36 @@ export default function ViewStaffPayroll() {
                                         <tr key={p._id}>
                                             <td>
                                                 <div className="fw-bold text-dark">{MONTH_NAMES[p.month]} {p.year}</div>
-                                                {p.paid_date && <small className="text-success fw-bold">Paid: {format(new Date(p.paid_date), 'dd MMM yy')}</small>}
+                                                {p.paid_date && <small className="text-success view-staff-payroll-text-success fw-bold">Paid: {format(new Date(p.paid_date), 'dd MMM yy')}</small>}
                                             </td>
                                             <td className="text-center fw-medium">{p.working_days_in_month} Days</td>
                                             <td className="text-center">
                                                 <div className="d-flex align-items-center justify-content-center gap-2">
-                                                    <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill">{p.present_days}P</Badge>
-                                                    <Badge bg={p.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${p.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill`}>{p.absent_days}A</Badge>
+                                                    <Badge bg="soft-success" className="text-success view-staff-payroll-text-success px-2 py-1 rounded-pill">{p.present_days}P</Badge>
+                                                    <Badge bg={p.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${p.absent_days > 0 ? 'text-danger view-staff-payroll-text-danger' : 'text-muted'} px-2 py-1 rounded-pill`}>{p.absent_days}A</Badge>
                                                 </div>
                                             </td>
                                             <td className="text-end text-muted fw-medium">₹{(staffData?.salary || p.base_salary || 0).toLocaleString('en-IN')}</td>
-                                            <td className="text-end text-success fw-bold">₹{(p.earned_breakdown?.total_gross || p.earned_salary || 0).toLocaleString('en-IN')}</td>
+                                            <td className="text-end text-success view-staff-payroll-text-success fw-bold">₹{(p.earned_breakdown?.total_gross || p.earned_salary || 0).toLocaleString('en-IN')}</td>
                                             <td className="text-end">
-                                                <div className="small fw-bold text-primary">OT: +₹{(p.overtime_pay || 0).toLocaleString('en-IN')}</div>
-                                                <div className="small fw-bold text-danger">Ded: -₹{((p.deduction_breakdown?.total_statutory || 0) + (p.deductions || 0)).toLocaleString('en-IN')}</div>
+                                                <div className="small fw-bold text-primary view-staff-payroll-text-primary">OT: +₹{(p.overtime_pay || 0).toLocaleString('en-IN')}</div>
+                                                <div className="small fw-bold text-danger view-staff-payroll-text-danger">Ded: -₹{((p.deduction_breakdown?.total_statutory || 0) + (p.deductions || 0)).toLocaleString('en-IN')}</div>
                                             </td>
                                             <td className="text-end">
-                                                <div className="h5 mb-0 fw-bold text-primary">₹{p.net_salary.toLocaleString('en-IN')}</div>
+                                                <div className="h5 mb-0 fw-bold text-primary view-staff-payroll-text-primary">₹{p.net_salary.toLocaleString('en-IN')}</div>
                                             </td>
                                             <td className="text-center">
-                                                <Badge bg={p.status === 'paid' ? 'success' : 'warning'} className="status-badge px-3 py-1">
+                                                <Badge bg={p.status === 'paid' ? 'success' : 'warning'} className="view-staff-payroll-status-badge px-3 py-1">
                                                     {p.status === 'paid' ? 'Settled' : 'Pending'}
                                                 </Badge>
                                             </td>
                                             <td className="text-center">
                                                 <div className="d-flex justify-content-center gap-2">
-                                                    <Button className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center" onClick={() => { setSelectedPayroll(p); setShowDetailModal(true); }}>
+                                                    <Button className="view-staff-payroll-custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center" onClick={() => { setSelectedPayroll(p); setShowDetailModal(true); }}>
                                                         <CsLineIcons icon="eye" size="16" />
                                                     </Button>
                                                     {p.status === 'paid' && (
-                                                        <Button className="custom-btn-solid p-0 sw-5 sh-5 d-flex align-items-center justify-content-center" onClick={() => downloadSalarySlip(p)}>
+                                                        <Button className="view-staff-payroll-custom-btn-solid p-0 sw-5 sh-5 d-flex align-items-center justify-content-center" onClick={() => downloadSalarySlip(p)}>
                                                             <CsLineIcons icon="download" size="16" />
                                                         </Button>
                                                     )}
@@ -699,26 +616,26 @@ export default function ViewStaffPayroll() {
                     <Modal.Title className="fw-bold">Export Audit Report</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="p-4">
-                    <div className="glass-card bg-light border-0 p-4 mb-3 text-center">
-                        <CsLineIcons icon="download" size="48" className="text-primary opacity-25 mb-3" />
+                    <div className="view-staff-payroll-glass-card bg-light border-0 p-4 mb-3 text-center">
+                        <CsLineIcons icon="download" size="48" className="text-primary view-staff-payroll-text-primary opacity-25 mb-3" />
                         <h5 className="fw-bold mb-1">Confirm {exportType} Generation</h5>
                         <p className="text-muted mb-0">Generating report for <strong>{filteredPayroll.length}</strong> payroll records based on active filters.</p>
                     </div>
-                    <div className="d-flex align-items-center gap-3 p-3 bg-soft-info rounded-3 text-info">
+                    <div className="d-flex align-items-center gap-3 p-3 view-staff-payroll-bg-soft-info rounded-3 text-info view-staff-payroll-text-info">
                         <CsLineIcons icon="info-circle" size="20" />
                         <small className="fw-bold">Report will include Career Statistics and Earned/Deduction breakups.</small>
                     </div>
                 </Modal.Body>
                 <Modal.Footer className="border-0 p-4 pt-0 d-flex gap-3">
-                    <Button className="custom-btn-outline flex-grow-1" onClick={() => setShowExportModal(false)}>Cancel</Button>
-                    <Button className="custom-btn-solid flex-grow-1 py-2" onClick={handleExportConfirm}>Generate Asset</Button>
+                    <Button className="view-staff-payroll-custom-btn-outline flex-grow-1" onClick={() => setShowExportModal(false)}>Cancel</Button>
+                    <Button className="view-staff-payroll-custom-btn-solid flex-grow-1 py-2" onClick={handleExportConfirm}>Generate Asset</Button>
                 </Modal.Footer>
             </Modal>
 
             <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} centered size="lg" className="rounded-4">
                 <Modal.Header closeButton className="border-0 p-4 pb-0">
                     <Modal.Title className="fw-bold d-flex align-items-center gap-2">
-                        <CsLineIcons icon="file-text" size="24" className="text-primary" />
+                        <CsLineIcons icon="file-text" size="24" className="text-primary view-staff-payroll-text-primary" />
                         Payroll Insight: {selectedPayroll ? `${MONTH_NAMES[selectedPayroll.month]} ${selectedPayroll.year}` : ''}
                     </Modal.Title>
                 </Modal.Header>
@@ -726,7 +643,7 @@ export default function ViewStaffPayroll() {
                     {selectedPayroll && (
                         <Row className="g-4">
                             <Col md={12}>
-                                <div className="glass-card border-0 bg-light p-4 shadow-sm">
+                                <div className="view-staff-payroll-glass-card border-0 bg-light p-4 shadow-sm">
                                     <Row className="text-center g-3">
                                         <Col xs={6} md={3} className="border-end">
                                             <div className="text-muted small fw-bold text-uppercase mb-1">Fiscal Cycle</div>
@@ -738,11 +655,11 @@ export default function ViewStaffPayroll() {
                                         </Col>
                                         <Col xs={6} md={3} className="border-end">
                                             <div className="text-muted small fw-bold text-uppercase mb-1">Attendance</div>
-                                            <div className="fw-bold text-success fs-5">{selectedPayroll.present_days}P / <span className="text-danger">{selectedPayroll.absent_days}A</span></div>
+                                            <div className="fw-bold text-success view-staff-payroll-text-success fs-5">{selectedPayroll.present_days}P / <span className="text-danger view-staff-payroll-text-danger">{selectedPayroll.absent_days}A</span></div>
                                         </Col>
                                         <Col xs={6} md={3}>
                                             <div className="text-muted small fw-bold text-uppercase mb-1">Status</div>
-                                            <Badge bg={selectedPayroll.status === 'paid' ? 'success' : 'warning'} className="status-badge px-3 py-1">
+                                            <Badge bg={selectedPayroll.status === 'paid' ? 'success' : 'warning'} className="view-staff-payroll-status-badge px-3 py-1">
                                                 {selectedPayroll.status === 'paid' ? 'SETTLED' : 'PENDING'}
                                             </Badge>
                                         </Col>
@@ -751,12 +668,12 @@ export default function ViewStaffPayroll() {
                             </Col>
 
                             <Col md={6}>
-                                <div className="glass-card border-0 p-4 h-100 bg-white shadow-sm border border-soft-success">
+                                <div className="view-staff-payroll-glass-card border-0 p-4 h-100 bg-white shadow-sm border border-soft-success">
                                     <div className="d-flex align-items-center gap-2 mb-4">
-                                        <div className="sw-4 sh-4 rounded-circle bg-soft-success text-success d-flex align-items-center justify-content-center">
+                                        <div className="sw-4 sh-4 rounded-circle view-staff-payroll-bg-soft-success text-success view-staff-payroll-text-success d-flex align-items-center justify-content-center">
                                             <CsLineIcons icon="trending-up" size="16" />
                                         </div>
-                                        <h6 className="fw-bold text-success mb-0 uppercase letter-spacing-1">Earnings & Benefits</h6>
+                                        <h6 className="fw-bold text-success view-staff-payroll-text-success mb-0 uppercase letter-spacing-1">Earnings & Benefits</h6>
                                     </div>
                                     <div className="d-flex justify-content-between mb-3 pb-2 border-bottom">
                                         <span className="text-muted fw-bold small">Base Component</span>
@@ -783,19 +700,19 @@ export default function ViewStaffPayroll() {
                                         {selectedPayroll.overtime_pay > 0 && (
                                             <div className="d-flex justify-content-between small pt-2 border-top">
                                                 <span>Overtime ({selectedPayroll.overtime_hours}h)</span>
-                                                <span className="fw-bold text-primary">₹{selectedPayroll.overtime_pay.toLocaleString('en-IN')}</span>
+                                                <span className="fw-bold text-primary view-staff-payroll-text-primary">₹{selectedPayroll.overtime_pay.toLocaleString('en-IN')}</span>
                                             </div>
                                         )}
                                         {selectedPayroll.bonus > 0 && (
                                             <div className="d-flex justify-content-between small">
                                                 <span>Incentives / Bonus</span>
-                                                <span className="fw-bold text-success">₹{selectedPayroll.bonus.toLocaleString('en-IN')}</span>
+                                                <span className="fw-bold text-success view-staff-payroll-text-success">₹{selectedPayroll.bonus.toLocaleString('en-IN')}</span>
                                             </div>
                                         )}
                                     </div>
                                     <div className="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
-                                        <span className="h6 mb-0 fw-bold text-success">Total Gross</span>
-                                        <span className="h5 mb-0 fw-bold text-success">₹{(
+                                        <span className="h6 mb-0 fw-bold text-success view-staff-payroll-text-success">Total Gross</span>
+                                        <span className="h5 mb-0 fw-bold text-success view-staff-payroll-text-success">₹{(
                                             (selectedPayroll.earned_breakdown?.total_gross || selectedPayroll.earned_salary || 0) +
                                             (selectedPayroll.overtime_pay || 0) +
                                             (selectedPayroll.bonus || 0)
@@ -805,12 +722,12 @@ export default function ViewStaffPayroll() {
                             </Col>
 
                             <Col md={6}>
-                                <div className="glass-card border-0 p-4 h-100 bg-white shadow-sm border border-soft-danger">
+                                <div className="view-staff-payroll-glass-card border-0 p-4 h-100 bg-white shadow-sm border border-soft-danger">
                                     <div className="d-flex align-items-center gap-2 mb-4">
-                                        <div className="sw-4 sh-4 rounded-circle bg-soft-danger text-danger d-flex align-items-center justify-content-center">
+                                        <div className="sw-4 sh-4 rounded-circle view-staff-payroll-bg-soft-danger text-danger view-staff-payroll-text-danger d-flex align-items-center justify-content-center">
                                             <CsLineIcons icon="trending-down" size="16" />
                                         </div>
-                                        <h6 className="fw-bold text-danger mb-0 uppercase letter-spacing-1">Reductions & Taxes</h6>
+                                        <h6 className="fw-bold text-danger view-staff-payroll-text-danger mb-0 uppercase letter-spacing-1">Reductions & Taxes</h6>
                                     </div>
                                     <div className="vstack gap-2">
                                         {selectedPayroll.deduction_breakdown ? (
@@ -833,34 +750,34 @@ export default function ViewStaffPayroll() {
                                         {selectedPayroll.deductions > 0 && (
                                             <div className="d-flex justify-content-between small pt-2 border-top">
                                                 <span>Manual Reductions</span>
-                                                <span className="fw-bold text-danger">₹{selectedPayroll.deductions.toLocaleString('en-IN')}</span>
+                                                <span className="fw-bold text-danger view-staff-payroll-text-danger">₹{selectedPayroll.deductions.toLocaleString('en-IN')}</span>
                                             </div>
                                         )}
                                         {selectedPayroll.advance_deduction > 0 && (
                                             <div className="d-flex justify-content-between small">
                                                 <span>Advance Recovery</span>
-                                                <span className="fw-bold text-danger">₹{selectedPayroll.advance_deduction.toLocaleString('en-IN')}</span>
+                                                <span className="fw-bold text-danger view-staff-payroll-text-danger">₹{selectedPayroll.advance_deduction.toLocaleString('en-IN')}</span>
                                             </div>
                                         )}
                                     </div>
                                     <div className="mt-auto pt-3 border-top d-flex justify-content-between align-items-center" style={{ marginTop: 'auto' }}>
-                                        <span className="h6 mb-0 fw-bold text-danger">Total Reductions</span>
-                                        <span className="h5 mb-0 fw-bold text-danger">₹{((selectedPayroll.deduction_breakdown?.total_statutory || 0) + (selectedPayroll.deductions || 0) + (selectedPayroll.advance_deduction || 0)).toLocaleString('en-IN')}</span>
+                                        <span className="h6 mb-0 fw-bold text-danger view-staff-payroll-text-danger">Total Reductions</span>
+                                        <span className="h5 mb-0 fw-bold text-danger view-staff-payroll-text-danger">₹{((selectedPayroll.deduction_breakdown?.total_statutory || 0) + (selectedPayroll.deductions || 0) + (selectedPayroll.advance_deduction || 0)).toLocaleString('en-IN')}</span>
                                     </div>
                                 </div>
                             </Col>
 
                             <Col md={12}>
-                                <div className="glass-card border-0 bg-primary p-4 shadow-lg text-white d-flex justify-content-between align-items-center">
+                                <div className="view-staff-payroll-glass-card border-0 bg-primary p-4 shadow-lg text-white d-flex justify-content-between align-items-center">
                                     <div>
                                         <div className="small fw-bold text-uppercase opacity-75 mb-1">Net Disposable Income</div>
                                         <h2 className="fw-bold mb-0">₹{selectedPayroll.net_salary.toLocaleString('en-IN')}</h2>
                                     </div>
                                     <div className="text-end">
                                         {selectedPayroll.status === 'paid' ? (
-                                            <Badge bg="white" className="text-primary status-badge px-4 py-2">DISBURSED</Badge>
+                                            <Badge bg="white" className="text-primary view-staff-payroll-text-primary view-staff-payroll-status-badge px-4 py-2">DISBURSED</Badge>
                                         ) : (
-                                            <Badge bg="white" className="text-warning status-badge px-4 py-2">AUTHORIZED</Badge>
+                                            <Badge bg="white" className="text-warning view-staff-payroll-text-warning view-staff-payroll-status-badge px-4 py-2">AUTHORIZED</Badge>
                                         )}
                                     </div>
                                 </div>
@@ -869,7 +786,7 @@ export default function ViewStaffPayroll() {
                     )}
                 </Modal.Body>
                 <Modal.Footer className="border-0 p-4 pt-0">
-                    <Button className="custom-btn-outline w-100" onClick={() => setShowDetailModal(false)}>Close View</Button>
+                    <Button className="view-staff-payroll-custom-btn-outline w-100" onClick={() => setShowDetailModal(false)}>Close View</Button>
                 </Modal.Footer>
             </Modal>
         </div>

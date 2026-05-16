@@ -18,101 +18,7 @@ import autoTable from 'jspdf-autotable';
 import { Document, Packer, Paragraph, Table as DocTable, TableCell, TableRow, TextRun, AlignmentType, WidthType } from 'docx';
 import { format } from 'date-fns';
 
-const customStyles = `
-  .glass-card {
-    background: #ffffff !important;
-    border: 1px solid #f0f0f0 !important;
-    border-radius: 1.5rem !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
-    transition: all 0.3s ease;
-  }
-  .glass-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.06) !important;
-  }
-  .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
-  }
-  .custom-btn-solid {
-    background-color: #1ea8e7 !important;
-    border: 1px solid #1ea8e7 !important;
-    color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-solid:hover {
-    background-color: #158dc4 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
-  }
-  .stat-card {
-    position: relative;
-    overflow: hidden;
-  }
-  .stat-card::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 100px;
-    height: 100px;
-    background: rgba(30, 168, 231, 0.05);
-    border-radius: 50%;
-    z-index: 0;
-  }
-  .status-badge {
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
-    font-weight: 700;
-    font-size: 0.75rem;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-  }
-  .fc .fc-button-primary {
-    background-color: #1ea8e7 !important;
-    border-color: #1ea8e7 !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    padding: 0.5rem 1.25rem !important;
-  }
-  .fc .fc-toolbar-title {
-    font-weight: 700 !important;
-    color: #1ea8e7 !important;
-  }
-  .fc .fc-daygrid-day-number {
-    font-weight: 600 !important;
-    color: #64748b !important;
-  }
-  .react-table-modern th {
-    background: #f8fafc !important;
-    color: #64748b !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    font-size: 0.75rem !important;
-    letter-spacing: 0.05em !important;
-    padding: 1.25rem !important;
-    border: none !important;
-  }
-  .react-table-modern td {
-    padding: 1.25rem !important;
-    vertical-align: middle !important;
-    border-bottom: 1px solid #f1f5f9 !important;
-  }
-`;
+
 
 const ViewAttendance = () => {
   const { id } = useParams();
@@ -576,7 +482,7 @@ const ViewAttendance = () => {
 
   return (
     <div className="container-fluid pb-5">
-      <style>{customStyles}</style>
+      
       <HtmlHead title={main_title} description={description} />
 
       <div className="page-title-container mb-4 mt-5 mt-md-n3">
@@ -588,7 +494,7 @@ const ViewAttendance = () => {
             <BreadcrumbList items={breadcrumbs} />
           </Col>
           <Col md={5} className="d-flex justify-content-md-end">
-            <Button className="custom-btn-outline px-4 py-2 d-flex align-items-center gap-2" onClick={() => history.push('/attendance')}>
+            <Button className="view-attendance-custom-btn-outline px-4 py-2 d-flex align-items-center gap-2" onClick={() => history.push('/attendance')}>
               <CsLineIcons icon="arrow-left" size="18" /> Back to Dashboard
             </Button>
           </Col>
@@ -596,14 +502,14 @@ const ViewAttendance = () => {
       </div>
 
       {error && (
-        <Alert variant="danger" className="glass-card border-0 mb-4 p-4 shadow-sm d-flex align-items-center gap-3 text-danger fw-bold">
+        <Alert variant="danger" className="view-attendance-glass-card border-0 mb-4 p-4 shadow-sm d-flex align-items-center gap-3 text-danger fw-bold">
           <CsLineIcons icon="error" size="24" />
           <span>{error}</span>
         </Alert>
       )}
 
       {staffData && (
-        <Card className="glass-card border-0 mb-4 overflow-hidden">
+        <Card className="view-attendance-glass-card border-0 mb-4 overflow-hidden">
           <Card.Body className="p-4">
             <Row className="align-items-center g-4">
               <Col md={4} className="border-end d-flex align-items-center gap-4">
@@ -642,7 +548,7 @@ const ViewAttendance = () => {
         </Card>
       )}
 
-      <Card className="glass-card border-0 mb-4">
+      <Card className="view-attendance-glass-card border-0 mb-4">
         <Card.Body className="p-4">
           <Row className="g-3 align-items-end">
             <Col md={3}>
@@ -672,7 +578,7 @@ const ViewAttendance = () => {
               />
             </Col>
             <Col md={1}>
-              <Button className="custom-btn-outline w-100 sh-5 p-0 d-flex align-items-center justify-content-center" onClick={clearFilters} title="Reset Filters">
+              <Button className="view-attendance-custom-btn-outline w-100 sh-5 p-0 d-flex align-items-center justify-content-center" onClick={clearFilters} title="Reset Filters">
                 <CsLineIcons icon="rotate-left" size="18" />
               </Button>
             </Col>
@@ -682,7 +588,7 @@ const ViewAttendance = () => {
 
       <Row className="g-4">
         <Col lg={4}>
-          <Card className="glass-card border-0 mb-4 h-100">
+          <Card className="view-attendance-glass-card border-0 mb-4 h-100">
             <Card.Header className="bg-transparent border-0 p-4 pb-0">
               <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                 <CsLineIcons icon="download" size="20" className="text-primary" />
@@ -692,13 +598,13 @@ const ViewAttendance = () => {
             <Card.Body className="p-4">
               <p className="text-muted small mb-4">Generate detailed attendance reports in various formats for payroll or compliance.</p>
               <div className="d-grid gap-3">
-                <Button className="custom-btn-solid bg-success border-success py-3 d-flex align-items-center justify-content-center gap-2" onClick={() => handleExportClick('Excel')} disabled={exporting}>
+                <Button className="view-attendance-custom-btn-solid bg-success border-success py-3 d-flex align-items-center justify-content-center gap-2" onClick={() => handleExportClick('Excel')} disabled={exporting}>
                   <CsLineIcons icon="file-text" size="18" /> Excel Document
                 </Button>
-                <Button className="custom-btn-solid bg-danger border-danger py-3 d-flex align-items-center justify-content-center gap-2" onClick={() => handleExportClick('PDF')} disabled={exporting}>
+                <Button className="view-attendance-custom-btn-solid bg-danger border-danger py-3 d-flex align-items-center justify-content-center gap-2" onClick={() => handleExportClick('PDF')} disabled={exporting}>
                   <CsLineIcons icon="file-text" size="18" /> PDF Report
                 </Button>
-                <Button className="custom-btn-solid bg-info border-info py-3 d-flex align-items-center justify-content-center gap-2" onClick={() => handleExportClick('Word')} disabled={exporting}>
+                <Button className="view-attendance-custom-btn-solid bg-info border-info py-3 d-flex align-items-center justify-content-center gap-2" onClick={() => handleExportClick('Word')} disabled={exporting}>
                   <CsLineIcons icon="file-text" size="18" /> Word Document
                 </Button>
               </div>
@@ -720,7 +626,7 @@ const ViewAttendance = () => {
         </Col>
 
         <Col lg={8}>
-          <Card className="glass-card border-0 mb-4">
+          <Card className="view-attendance-glass-card border-0 mb-4">
             <Card.Header className="bg-transparent border-0 p-4 pb-0 d-flex justify-content-between align-items-center">
               <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                 <CsLineIcons icon="calendar" size="20" className="text-primary" />
@@ -749,7 +655,7 @@ const ViewAttendance = () => {
         </Col>
       </Row>
 
-      <Card className="glass-card border-0 mt-4 overflow-hidden">
+      <Card className="view-attendance-glass-card border-0 mt-4 overflow-hidden">
         <Card.Header className="bg-light border-0 p-4">
           <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
             <CsLineIcons icon="layout" size="20" className="text-primary" />
@@ -758,7 +664,7 @@ const ViewAttendance = () => {
         </Card.Header>
         <Card.Body className="p-0">
           <div className="table-responsive">
-            <table className="table table-hover react-table-modern mb-0">
+            <table className="table table-hover view-attendance-react-table-modern mb-0">
               <thead>
                 <tr>
                   <th>Date & Weekday</th>
@@ -795,7 +701,7 @@ const ViewAttendance = () => {
                             <small className="text-muted fw-medium">{new Date(att.date).toLocaleDateString('en-IN', { weekday: 'long' })}</small>
                           </td>
                           <td>
-                            <Badge bg={att.status === 'present' ? 'success' : 'danger'} className="status-badge d-inline-flex align-items-center gap-1">
+                            <Badge bg={att.status === 'present' ? 'success' : 'danger'} className="view-attendance-status-badge d-inline-flex align-items-center gap-1">
                               <CsLineIcons icon={att.status === 'present' ? 'check' : 'close-circle'} size="12" />
                               {att.status}
                             </Badge>
@@ -825,7 +731,7 @@ const ViewAttendance = () => {
                             ) : '—'}
                           </td>
                           <td className="text-center">
-                            <Button className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center mx-auto" onClick={() => { setSelectedAttendance(att); setShowDetailModal(true); }}>
+                            <Button className="view-attendance-custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center mx-auto" onClick={() => { setSelectedAttendance(att); setShowDetailModal(true); }}>
                               <CsLineIcons icon="eye" size="16" />
                             </Button>
                           </td>
@@ -852,7 +758,7 @@ const ViewAttendance = () => {
               <h4 className="fw-bold mb-1">{formatDateDisplay(selectedAttendance.date)}</h4>
               <p className="text-muted fw-medium">{new Date(selectedAttendance.date).toLocaleDateString('en-IN', { weekday: 'long' })}</p>
               
-              <div className="glass-card bg-light border-0 p-4 mt-4 text-start">
+              <div className="view-attendance-glass-card bg-light border-0 p-4 mt-4 text-start">
                 <Row className="g-4">
                   <Col xs={6}>
                     <div className="small fw-bold text-muted text-uppercase mb-1">Check-In</div>
@@ -884,7 +790,7 @@ const ViewAttendance = () => {
           )}
         </Modal.Body>
         <Modal.Footer className="border-0">
-          <Button className="custom-btn-solid w-100 py-3" onClick={() => setShowDetailModal(false)}>Close Detail</Button>
+          <Button className="view-attendance-custom-btn-solid w-100 py-3" onClick={() => setShowDetailModal(false)}>Close Detail</Button>
         </Modal.Footer>
       </Modal>
 
@@ -903,7 +809,7 @@ const ViewAttendance = () => {
           
           <Form>
             <h6 className="fw-bold text-muted text-uppercase letter-spacing-1 mb-3">Include Sections</h6>
-            <div className="glass-card p-4 border-0 shadow-none bg-light mb-4">
+            <div className="view-attendance-glass-card p-4 border-0 shadow-none bg-light mb-4">
               <Form.Check className="mb-3 fw-bold" type="switch" label="Staff Personal Details" checked={exportOptions.includeStaffInfo} onChange={(e) => setExportOptions({ ...exportOptions, includeStaffInfo: e.target.checked })} />
               <Form.Check className="mb-3 fw-bold" type="switch" label="Performance Statistics" checked={exportOptions.includeStatistics} onChange={(e) => setExportOptions({ ...exportOptions, includeStatistics: e.target.checked })} />
               <Form.Check className="mb-0 fw-bold" type="switch" label="Detailed Daily Logs" checked={exportOptions.includeDetailedRecords} onChange={(e) => setExportOptions({ ...exportOptions, includeDetailedRecords: e.target.checked })} />

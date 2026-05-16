@@ -10,177 +10,7 @@ import { toast } from 'react-toastify';
 import CreatableSelect from 'react-select/creatable';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-const customStyles = `
-    .inventory-container {
-      background: #f9f9fb;
-      min-height: 100vh;
-      padding-bottom: 5rem;
-    }
-    .page-card {
-      background: #ffffff !important;
-      border-radius: 2rem !important;
-      border: 1px solid rgba(0, 0, 0, 0.05) !important;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.02) !important;
-      overflow: hidden;
-    }
-    .section-label {
-      font-size: 0.75rem;
-      font-weight: 800;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-    .modern-input {
-      border-radius: 12px !important;
-      padding: 0.8rem 1.25rem !important;
-      border: 1.5px solid #f1f5f9 !important;
-      font-weight: 600 !important;
-      color: #334155 !important;
-      transition: all 0.3s ease !important;
-      background: #fcfdfe !important;
-      height: 52px !important;
-    }
-    .modern-input:focus {
-      border-color: #23b3f4 !important;
-      box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
-      background: #ffffff !important;
-    }
-    .modern-input:disabled {
-      background: #f1f5f9 !important;
-      color: #94a3b8 !important;
-      border-color: #e2e8f0 !important;
-    }
-    .input-group-label {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: #64748b;
-      margin-bottom: 0.5rem;
-      padding-left: 0.25rem;
-    }
-    .item-header-row {
-      display: flex;
-      padding: 0 1.5rem;
-      margin-bottom: 1rem;
-      color: #94a3b8;
-      font-size: 0.65rem;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-    .item-row-card {
-      background: #ffffff !important;
-      border-radius: 1.25rem !important;
-      border: 1px solid #f1f5f9 !important;
-      padding: 1.25rem 1.5rem !important;
-      margin-bottom: 1rem;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
-      display: flex;
-      align-items: center;
-      transition: all 0.25s ease;
-    }
-    .item-row-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.05) !important;
-      border-color: rgba(35, 179, 244, 0.2) !important;
-    }
-    .item-row-card.completed {
-      border-left: 5px solid #10b981 !important;
-    }
-    .summary-hub {
-      background: #f8fafc;
-      border-radius: 1.5rem;
-      padding: 2.5rem;
-      margin-top: 3rem;
-      border: 1px solid #f1f5f9;
-    }
-    @media (max-width: 768px) {
-      .summary-hub {
-        padding: 1.5rem;
-      }
-    }
-    .total-display {
-      background: #ffffff;
-      border-radius: 1.25rem;
-      padding: 1.5rem;
-      border: 1.5px solid #23b3f4;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-    }
-    .amount-paid-container {
-      width: 300px;
-      text-align: right;
-    }
-    @media (max-width: 768px) {
-      .total-display {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .amount-paid-container {
-        width: 100%;
-        text-align: left;
-      }
-    }
-    .total-val {
-      font-size: 1.75rem;
-      font-weight: 900;
-      color: #23b3f4;
-    }
-    .select-modern .react-select__control {
-      border-radius: 12px !important;
-      border: 1.5px solid #f1f5f9 !important;
-      min-height: 52px !important;
-      background: #fcfdfe !important;
-      font-weight: 600 !important;
-    }
-    .select-modern .react-select__control--is-focused {
-      border-color: #23b3f4 !important;
-      box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
-      background: #ffffff !important;
-    }
-    .file-pill {
-      background: #ffffff;
-      border: 1px solid #f1f5f9;
-      border-radius: 50px;
-      padding: 0.5rem 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-weight: 700;
-      font-size: 0.75rem;
-      color: #64748b;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-    }
-    .custom-check {
-      width: 24px;
-      height: 24px;
-      border-radius: 6px;
-      cursor: pointer;
-      border: 2px solid #e2e8f0;
-      transition: all 0.2s ease;
-    }
-    .custom-check:checked {
-      background-color: #10b981;
-      border-color: #10b981;
-    }
-    .remove-btn {
-      width: 45px;
-      height: 45px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #fff1f2;
-      color: #f43f5e;
-      border: 1px solid #ffe4e6;
-      transition: all 0.2s ease;
-    }
-`;
+
 
 const defaultValues = {
   bill_date: '',
@@ -317,13 +147,13 @@ const CompleteInventory = () => {
   }
 
   return (
-    <div className="inventory-container">
-      <style>{customStyles}</style>
+    <div className="complete-inventory-inventory-container">
+      
       <HtmlHead title="Complete Inventory" />
       <div className="container px-lg-5">
-        <div className="page-title-container mb-4 mt-n3">
-          <Row className="g-3 align-items-center">
-            <Col xs="12" md="7">
+        <div className="page-title-container mb-4 mt-5 mt-lg-0">
+          <Row className="g-0 align-items-center">
+            <Col xs="auto" className="me-auto">
               <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>Complete Request</h1>
               <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations/inventory', text: 'Inventory' }, { to: `operations/complete-inventory/${id}`, title: 'Complete' }]} />
             </Col>
@@ -390,19 +220,19 @@ const CompleteInventory = () => {
 
             return (
               <FormikForm>
-                <Card className="page-card border-0">
+                <Card className="complete-inventory-page-card border-0">
                   <Card.Body className="p-4 p-lg-5">
-                    <div className="section-label"><CsLineIcons icon="file-text" size="18" /> Purchase Verification</div>
+                    <div className="complete-inventory-section-label"><CsLineIcons icon="file-text" size="18" /> Purchase Verification</div>
                     <Row className="g-4 mb-5">
-                      <Col xs={12} md={3}><div className="input-group-label">Bill Date</div><Field type="date" name="bill_date" className={`modern-input form-control ${touched.bill_date && errors.bill_date ? 'is-invalid' : ''}`} /></Col>
-                      <Col xs={12} md={3}><div className="input-group-label">Bill Number</div><Field type="text" name="bill_number" className={`modern-input form-control ${touched.bill_number && errors.bill_number ? 'is-invalid' : ''}`} placeholder="Enter bill #" /></Col>
-                      <Col xs={12} md={3}><div className="input-group-label">Vendor</div><div className="select-modern"><CreatableSelect isClearable menuPlacement="auto" menuPortalTarget={document.body} options={(suggestions.vendors || []).map(v => ({ label: v, value: v }))} value={values.vendor_name ? { label: values.vendor_name, value: values.vendor_name } : null} onChange={(s) => setFieldValue('vendor_name', s ? s.value : '')} placeholder="Vendor..." classNamePrefix="react-select" /></div></Col>
-                      <Col xs={12} md={3}><div className="input-group-label">Category</div><div className="select-modern"><CreatableSelect isClearable menuPlacement="auto" menuPortalTarget={document.body} options={(suggestions.categories || []).map(c => ({ label: c, value: c }))} value={values.category ? { label: values.category, value: values.category } : null} onChange={(s) => setFieldValue('category', s ? s.value : '')} placeholder="Category..." classNamePrefix="react-select" /></div></Col>
-                      <Col xs={12} md={12}><div className="input-group-label">Final Bill Files</div><Form.Control type="file" multiple className="d-none" id="bill-upload" onChange={(e) => { setFieldValue('bill_files', e.currentTarget.files); previewFiles(e.currentTarget.files); }} /><label htmlFor="bill-upload" className="w-100 d-block p-4 text-center border-dashed rounded-4 bg-light cursor-pointer"><CsLineIcons icon="upload" size="24" className="mb-2 text-primary" /><div className="fw-bold text-muted small">Upload Verified Bills</div></label><div className="d-flex flex-wrap gap-2 mt-3">{filePreviews.map((f, i) => <div key={i} className="file-pill"><CsLineIcons icon={f.type === 'pdf' ? 'file-text' : 'image'} size="14" /> {f.name.substring(0, 15)}...</div>)}</div></Col>
+                      <Col xs={12} md={3}><div className="complete-inventory-input-group-label">Bill Date</div><Field type="date" name="bill_date" className={`complete-inventory-modern-input form-control ${touched.bill_date && errors.bill_date ? 'is-invalid' : ''}`} /></Col>
+                      <Col xs={12} md={3}><div className="complete-inventory-input-group-label">Bill Number</div><Field type="text" name="bill_number" className={`complete-inventory-modern-input form-control ${touched.bill_number && errors.bill_number ? 'is-invalid' : ''}`} placeholder="Enter bill #" /></Col>
+                      <Col xs={12} md={3}><div className="complete-inventory-input-group-label">Vendor</div><div className="complete-inventory-select-modern"><CreatableSelect isClearable menuPlacement="auto" menuPortalTarget={document.body} options={(suggestions.vendors || []).map(v => ({ label: v, value: v }))} value={values.vendor_name ? { label: values.vendor_name, value: values.vendor_name } : null} onChange={(s) => setFieldValue('vendor_name', s ? s.value : '')} placeholder="Vendor..." classNamePrefix="react-select" /></div></Col>
+                      <Col xs={12} md={3}><div className="complete-inventory-input-group-label">Category</div><div className="complete-inventory-select-modern"><CreatableSelect isClearable menuPlacement="auto" menuPortalTarget={document.body} options={(suggestions.categories || []).map(c => ({ label: c, value: c }))} value={values.category ? { label: values.category, value: values.category } : null} onChange={(s) => setFieldValue('category', s ? s.value : '')} placeholder="Category..." classNamePrefix="react-select" /></div></Col>
+                      <Col xs={12} md={12}><div className="complete-inventory-input-group-label">Final Bill Files</div><Form.Control type="file" multiple className="d-none" id="bill-upload" onChange={(e) => { setFieldValue('bill_files', e.currentTarget.files); previewFiles(e.currentTarget.files); }} /><label htmlFor="bill-upload" className="w-100 d-block p-4 text-center border-dashed rounded-4 bg-light cursor-pointer"><CsLineIcons icon="upload" size="24" className="mb-2 text-primary" /><div className="fw-bold text-muted small">Upload Verified Bills</div></label><div className="d-flex flex-wrap gap-2 mt-3">{filePreviews.map((f, i) => <div key={i} className="complete-inventory-file-pill"><CsLineIcons icon={f.type === 'pdf' ? 'file-text' : 'image'} size="14" /> {f.name.substring(0, 15)}...</div>)}</div></Col>
                     </Row>
 
-                    <div className="section-label"><CsLineIcons icon="shopping-basket" size="18" /> Verification List</div>
-                    <div className="item-header-row d-none d-lg-flex">
+                    <div className="complete-inventory-section-label"><CsLineIcons icon="shopping-basket" size="18" /> Verification List</div>
+                    <div className="complete-inventory-item-header-row d-none d-lg-flex">
                       <div style={{width: '60px'}} />
                       <div style={{flex: 2}}>Item Description</div>
                       <div style={{flex: 0.8}}>Qty</div>
@@ -411,45 +241,45 @@ const CompleteInventory = () => {
                     </div>
 
                     {values.items.map((item, idx) => (
-                      <div key={idx} className={`item-row-card ${item.completed ? 'completed' : ''}`}>
+                      <div key={idx} className={`complete-inventory-item-row-card ${item.completed ? 'completed' : ''}`}>
                         <Row className="w-100 g-3 align-items-center">
-                          <Col xs="auto" style={{width: '60px'}} className="text-center"><Field type="checkbox" name={`items[${idx}].completed`} className="form-check-input custom-check" /></Col>
+                          <Col xs="auto" style={{width: '60px'}} className="text-center"><Field type="checkbox" name={`items[${idx}].completed`} className="form-check-input complete-inventory-custom-check" /></Col>
                           <Col xs={10} lg={4}>
-                            <div className="input-group-label d-lg-none">Item Name</div>
-                            <Field name={`items[${idx}].item_name`} readOnly className="modern-input form-control border-0 bg-transparent fw-bold" />
+                            <div className="complete-inventory-input-group-label d-lg-none">Item Name</div>
+                            <Field name={`items[${idx}].item_name`} readOnly className="complete-inventory-modern-input form-control border-0 bg-transparent fw-bold" />
                           </Col>
                           <Col xs={4} lg={1.5}>
-                            <div className="input-group-label d-lg-none">Qty</div>
-                            <Field type="number" name={`items[${idx}].item_quantity`} className="modern-input form-control" disabled={!item.completed} />
+                            <div className="complete-inventory-input-group-label d-lg-none">Qty</div>
+                            <Field type="number" name={`items[${idx}].item_quantity`} className="complete-inventory-modern-input form-control" disabled={!item.completed} />
                           </Col>
                           <Col xs={4} lg={2}>
-                            <div className="input-group-label d-lg-none">Unit</div>
-                            <Field as="select" name={`items[${idx}].unit`} className="modern-input form-control" disabled={!item.completed}><option value="">Unit</option><option value="kg">kg</option><option value="g">g</option><option value="litre">ltr</option><option value="ml">ml</option><option value="piece">pc</option></Field>
+                            <div className="complete-inventory-input-group-label d-lg-none">Unit</div>
+                            <Field as="select" name={`items[${idx}].unit`} className="complete-inventory-modern-input form-control" disabled={!item.completed}><option value="">Unit</option><option value="kg">kg</option><option value="g">g</option><option value="litre">ltr</option><option value="ml">ml</option><option value="piece">pc</option></Field>
                           </Col>
                           <Col xs={4} lg={3}>
-                            <div className="input-group-label d-lg-none">Price</div>
-                            <Field type="number" name={`items[${idx}].item_price`} className="modern-input form-control" disabled={!item.completed} />
+                            <div className="complete-inventory-input-group-label d-lg-none">Price</div>
+                            <Field type="number" name={`items[${idx}].item_price`} className="complete-inventory-modern-input form-control" disabled={!item.completed} />
                           </Col>
                         </Row>
                       </div>
                     ))}
                     {typeof errors.items === 'string' && <div className="text-danger mt-2 fw-bold small text-center">{errors.items}</div>}
 
-                    <div className="summary-hub">
+                    <div className="complete-inventory-summary-hub">
                       <Row className="g-4">
-                        <Col xs={12} md={4}><div className="input-group-label">Sub Total</div><div className="h4 fw-bold text-muted">₹ {values.sub_total}</div></Col>
-                        <Col xs={6} md={4}><div className="input-group-label">Tax Amount</div><Field type="number" name="tax" className="modern-input form-control" /></Col>
-                        <Col xs={6} md={4}><div className="input-group-label">Discount</div><Field type="number" name="discount" className="modern-input form-control" /></Col>
+                        <Col xs={12} md={4}><div className="complete-inventory-input-group-label">Sub Total</div><div className="h4 fw-bold text-muted">₹ {values.sub_total}</div></Col>
+                        <Col xs={6} md={4}><div className="complete-inventory-input-group-label">Tax Amount</div><Field type="number" name="tax" className="complete-inventory-modern-input form-control" /></Col>
+                        <Col xs={6} md={4}><div className="complete-inventory-input-group-label">Discount</div><Field type="number" name="discount" className="complete-inventory-modern-input form-control" /></Col>
                         
                         <Col md={12}>
-                          <div className="total-display shadow-sm">
+                          <div className="complete-inventory-total-display shadow-sm">
                             <div>
-                              <div className="input-group-label mb-1">Total Payable Amount</div>
-                              <div className="total-val">₹ {values.total_amount}</div>
+                              <div className="complete-inventory-input-group-label mb-1">Total Payable Amount</div>
+                              <div className="complete-inventory-total-val">₹ {values.total_amount}</div>
                             </div>
-                            <div className="amount-paid-container">
-                              <div className="input-group-label">Amount Paid</div>
-                              <Field type="number" name="paid_amount" className="modern-input form-control text-center fw-bold text-primary" style={{fontSize: '1.25rem'}} placeholder="0.00" />
+                            <div className="complete-inventory-amount-paid-container">
+                              <div className="complete-inventory-input-group-label">Amount Paid</div>
+                              <Field type="number" name="paid_amount" className="complete-inventory-modern-input form-control text-center fw-bold text-primary" style={{fontSize: '1.25rem'}} placeholder="0.00" />
                             </div>
                           </div>
                         </Col>

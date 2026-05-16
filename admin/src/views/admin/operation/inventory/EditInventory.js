@@ -9,150 +9,7 @@ import * as Yup from 'yup';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-const customStyles = `
-    .inventory-container {
-      background: #f9f9fb;
-      min-height: 100vh;
-      padding-bottom: 5rem;
-    }
-    .page-card {
-      background: #ffffff !important;
-      border-radius: 2rem !important;
-      border: 1px solid rgba(0, 0, 0, 0.05) !important;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.02) !important;
-      overflow: hidden;
-    }
-    .section-label {
-      font-size: 0.75rem;
-      font-weight: 800;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-    .modern-input {
-      border-radius: 12px !important;
-      padding: 0.8rem 1.25rem !important;
-      border: 1.5px solid #f1f5f9 !important;
-      font-weight: 600 !important;
-      color: #334155 !important;
-      transition: all 0.3s ease !important;
-      background: #fcfdfe !important;
-      height: 52px !important;
-    }
-    .modern-input:focus {
-      border-color: #23b3f4 !important;
-      box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
-      background: #ffffff !important;
-    }
-    .input-group-label {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: #64748b;
-      margin-bottom: 0.5rem;
-      padding-left: 0.25rem;
-    }
-    .item-header-row {
-      display: flex;
-      padding: 0 1.5rem;
-      margin-bottom: 1rem;
-      color: #94a3b8;
-      font-size: 0.65rem;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-    .item-row-card {
-      background: #ffffff !important;
-      border-radius: 1.25rem !important;
-      border: 1px solid #f1f5f9 !important;
-      padding: 1.25rem 1.5rem !important;
-      margin-bottom: 1rem;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
-      display: flex;
-      align-items: center;
-      transition: all 0.25s ease;
-    }
-    .item-row-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.05) !important;
-      border-color: rgba(35, 179, 244, 0.2) !important;
-    }
-    .remove-btn {
-      width: 45px;
-      height: 45px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #fff1f2;
-      color: #f43f5e;
-      border: 1px solid #ffe4e6;
-      transition: all 0.2s ease;
-    }
-    .remove-btn:hover {
-      background: #f43f5e;
-      color: #ffffff;
-      border-color: #f43f5e;
-    }
-    .summary-hub {
-      background: #f8fafc;
-      border-radius: 1.5rem;
-      padding: 2.5rem;
-      margin-top: 3rem;
-      border: 1px solid #f1f5f9;
-    }
-    @media (max-width: 768px) {
-      .summary-hub {
-        padding: 1.5rem;
-      }
-    }
-    .total-display {
-      background: #ffffff;
-      border-radius: 1.25rem;
-      padding: 1.5rem;
-      border: 1.5px solid #23b3f4;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-    }
-    .amount-paid-container {
-      width: 300px;
-      text-align: right;
-    }
-    @media (max-width: 768px) {
-      .total-display {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .amount-paid-container {
-        width: 100%;
-        text-align: left;
-      }
-    }
-    .total-val {
-      font-size: 1.75rem;
-      font-weight: 900;
-      color: #23b3f4;
-    }
-    .file-pill {
-      background: #ffffff;
-      border: 1px solid #f1f5f9;
-      border-radius: 50px;
-      padding: 0.5rem 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-weight: 700;
-      font-size: 0.75rem;
-      color: #64748b;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-    }
-`;
+
 
 const validationSchema = Yup.object().shape({
   bill_date: Yup.date().required('Bill date is required'),
@@ -288,13 +145,13 @@ const EditInventory = () => {
   }
 
   return (
-    <div className="inventory-container">
-      <style>{customStyles}</style>
+    <div className="edit-inventory-inventory-container">
+      
       <HtmlHead title="Edit Inventory" />
       <div className="container px-lg-5">
-        <div className="page-title-container mb-4 mt-n3">
-          <Row className="g-3 align-items-center">
-            <Col xs="12" md="7">
+        <div className="page-title-container mb-4 mt-5 mt-lg-0">
+          <Row className="g-0 align-items-center">
+            <Col xs="auto" className="me-auto">
               <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>Edit Inventory</h1>
               <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations', text: 'Operations' }, { to: 'operations/edit-inventory', title: 'Edit' }]} />
             </Col>
@@ -307,19 +164,19 @@ const EditInventory = () => {
         </div>
 
         <Form onSubmit={handleSubmit}>
-          <Card className="page-card border-0">
+          <Card className="edit-inventory-page-card border-0">
             <Card.Body className="p-4 p-lg-5">
-              <div className="section-label"><CsLineIcons icon="file-text" size="18" /> Record Modification</div>
+              <div className="edit-inventory-section-label"><CsLineIcons icon="file-text" size="18" /> Record Modification</div>
               <Row className="g-4 mb-5">
-                <Col xs={12} md={3}><div className="input-group-label">Bill Date</div><Form.Control type="date" className="modern-input" name="bill_date" value={values.bill_date} onChange={handleChange} isInvalid={touched.bill_date && errors.bill_date} /></Col>
-                <Col xs={12} md={3}><div className="input-group-label">Bill Number</div><Form.Control type="text" className="modern-input" name="bill_number" value={values.bill_number} onChange={handleChange} isInvalid={touched.bill_number && errors.bill_number} /></Col>
-                <Col xs={12} md={3}><div className="input-group-label">Vendor</div><Form.Control type="text" className="modern-input" name="vendor_name" value={values.vendor_name} onChange={handleChange} /></Col>
-                <Col xs={12} md={3}><div className="input-group-label">Category</div><Form.Control type="text" className="modern-input" name="category" value={values.category} onChange={handleChange} /></Col>
-                <Col md={12}><div className="input-group-label">Update Attachments</div><Form.Control type="file" multiple className="d-none" id="bill-update" onChange={handleFileChange} /><label htmlFor="bill-update" className="w-100 d-block p-4 text-center border-dashed rounded-4 bg-light cursor-pointer"><CsLineIcons icon="upload" size="24" className="mb-2 text-primary" /><div className="fw-bold text-muted small">Select New Files to Replace Current ones</div></label><div className="d-flex flex-wrap gap-2 mt-3">{filePreviews.map((f, i) => <div key={i} className="file-pill"><CsLineIcons icon={f.name.match(/\.(pdf)$/i) ? 'file-text' : 'image'} size="14" /> {f.name.substring(0, 15)}...</div>)}</div></Col>
+                <Col xs={12} md={3}><div className="edit-inventory-input-group-label">Bill Date</div><Form.Control type="date" className="edit-inventory-modern-input" name="bill_date" value={values.bill_date} onChange={handleChange} isInvalid={touched.bill_date && errors.bill_date} /></Col>
+                <Col xs={12} md={3}><div className="edit-inventory-input-group-label">Bill Number</div><Form.Control type="text" className="edit-inventory-modern-input" name="bill_number" value={values.bill_number} onChange={handleChange} isInvalid={touched.bill_number && errors.bill_number} /></Col>
+                <Col xs={12} md={3}><div className="edit-inventory-input-group-label">Vendor</div><Form.Control type="text" className="edit-inventory-modern-input" name="vendor_name" value={values.vendor_name} onChange={handleChange} /></Col>
+                <Col xs={12} md={3}><div className="edit-inventory-input-group-label">Category</div><Form.Control type="text" className="edit-inventory-modern-input" name="category" value={values.category} onChange={handleChange} /></Col>
+                <Col md={12}><div className="edit-inventory-input-group-label">Update Attachments</div><Form.Control type="file" multiple className="d-none" id="bill-update" onChange={handleFileChange} /><label htmlFor="bill-update" className="w-100 d-block p-4 text-center border-dashed rounded-4 bg-light cursor-pointer"><CsLineIcons icon="upload" size="24" className="mb-2 text-primary" /><div className="fw-bold text-muted small">Select New Files to Replace Current ones</div></label><div className="d-flex flex-wrap gap-2 mt-3">{filePreviews.map((f, i) => <div key={i} className="edit-inventory-file-pill"><CsLineIcons icon={f.name.match(/\.(pdf)$/i) ? 'file-text' : 'image'} size="14" /> {f.name.substring(0, 15)}...</div>)}</div></Col>
               </Row>
 
-              <div className="section-label"><CsLineIcons icon="shopping-basket" size="18" /> Adjusted Item List</div>
-              <div className="item-header-row d-none d-lg-flex">
+              <div className="edit-inventory-section-label"><CsLineIcons icon="shopping-basket" size="18" /> Adjusted Item List</div>
+              <div className="edit-inventory-item-header-row d-none d-lg-flex">
                 <div style={{flex: 2}}>Item Name</div>
                 <div style={{flex: 0.8}}>Qty</div>
                 <div style={{flex: 1}}>Unit</div>
@@ -328,45 +185,45 @@ const EditInventory = () => {
               </div>
 
               {values.items.map((item, idx) => (
-                <div key={idx} className="item-row-card">
+                <div key={idx} className="edit-inventory-item-row-card">
                   <Row className="w-100 g-3 align-items-center">
                     <Col xs={12} lg={4}>
-                      <div className="input-group-label d-lg-none">Item Name</div>
-                      <Form.Control type="text" className="modern-input" value={item.item_name} onChange={(e) => handleItemChange(idx, 'item_name', e.target.value)} />
+                      <div className="edit-inventory-input-group-label d-lg-none">Item Name</div>
+                      <Form.Control type="text" className="edit-inventory-modern-input" value={item.item_name} onChange={(e) => handleItemChange(idx, 'item_name', e.target.value)} />
                     </Col>
                     <Col xs={4} lg={1.5}>
-                      <div className="input-group-label d-lg-none">Qty</div>
-                      <Form.Control type="number" className="modern-input" value={item.item_quantity} onChange={(e) => handleItemChange(idx, 'item_quantity', e.target.value)} />
+                      <div className="edit-inventory-input-group-label d-lg-none">Qty</div>
+                      <Form.Control type="number" className="edit-inventory-modern-input" value={item.item_quantity} onChange={(e) => handleItemChange(idx, 'item_quantity', e.target.value)} />
                     </Col>
                     <Col xs={4} lg={2}>
-                      <div className="input-group-label d-lg-none">Unit</div>
-                      <Form.Select className="modern-input" value={item.unit} onChange={(e) => handleItemChange(idx, 'unit', e.target.value)}><option value="">Unit</option><option value="kg">kg</option><option value="g">g</option><option value="litre">ltr</option><option value="ml">ml</option><option value="piece">pc</option></Form.Select>
+                      <div className="edit-inventory-input-group-label d-lg-none">Unit</div>
+                      <Form.Select className="edit-inventory-modern-input" value={item.unit} onChange={(e) => handleItemChange(idx, 'unit', e.target.value)}><option value="">Unit</option><option value="kg">kg</option><option value="g">g</option><option value="litre">ltr</option><option value="ml">ml</option><option value="piece">pc</option></Form.Select>
                     </Col>
                     <Col xs={4} lg={3}>
-                      <div className="input-group-label d-lg-none">Price</div>
-                      <Form.Control type="number" className="modern-input" value={item.item_price} onChange={(e) => handleItemChange(idx, 'item_price', e.target.value)} />
+                      <div className="edit-inventory-input-group-label d-lg-none">Price</div>
+                      <Form.Control type="number" className="edit-inventory-modern-input" value={item.item_price} onChange={(e) => handleItemChange(idx, 'item_price', e.target.value)} />
                     </Col>
-                    <Col xs={12} lg="auto" className="text-end"><button type="button" className="remove-btn ms-auto" onClick={() => removeItem(idx)} disabled={values.items.length === 1}><CsLineIcons icon="bin" size="16" /></button></Col>
+                    <Col xs={12} lg="auto" className="text-end"><button type="button" className="edit-inventory-remove-btn ms-auto" onClick={() => removeItem(idx)} disabled={values.items.length === 1}><CsLineIcons icon="bin" size="16" /></button></Col>
                   </Row>
                 </div>
               ))}
               <div className="text-start"><Button variant="outline-primary" className="rounded-pill px-4 fw-bold border-2" onClick={addItem}><CsLineIcons icon="plus" size="16" className="me-2" /> Add Item</Button></div>
 
-              <div className="summary-hub">
+              <div className="edit-inventory-summary-hub">
                 <Row className="g-4">
-                  <Col md={4}><div className="input-group-label">Sub Total</div><div className="h4 fw-bold text-muted">₹ {values.sub_total}</div></Col>
-                  <Col md={4}><div className="input-group-label">Tax Amount</div><Form.Control type="number" className="modern-input" name="tax" value={values.tax} onChange={handleChange} /></Col>
-                  <Col md={4}><div className="input-group-label">Discount</div><Form.Control type="number" className="modern-input" name="discount" value={values.discount} onChange={handleChange} /></Col>
+                  <Col md={4}><div className="edit-inventory-input-group-label">Sub Total</div><div className="h4 fw-bold text-muted">₹ {values.sub_total}</div></Col>
+                  <Col md={4}><div className="edit-inventory-input-group-label">Tax Amount</div><Form.Control type="number" className="edit-inventory-modern-input" name="tax" value={values.tax} onChange={handleChange} /></Col>
+                  <Col md={4}><div className="edit-inventory-input-group-label">Discount</div><Form.Control type="number" className="edit-inventory-modern-input" name="discount" value={values.discount} onChange={handleChange} /></Col>
                   
                   <Col md={12}>
-                    <div className="total-display shadow-sm flex-column flex-md-row align-items-stretch align-items-md-center gap-3">
+                    <div className="edit-inventory-total-display shadow-sm flex-column flex-md-row align-items-stretch align-items-md-center gap-3">
                       <div>
-                        <div className="input-group-label mb-1">Updated Payable</div>
-                        <div className="total-val">₹ {values.total_amount}</div>
+                        <div className="edit-inventory-input-group-label mb-1">Updated Payable</div>
+                        <div className="edit-inventory-total-val">₹ {values.total_amount}</div>
                       </div>
                       <div className="text-start text-md-end" style={{ width: '300px' }}>
-                        <div className="input-group-label">Revised Paid Amount</div>
-                        <Form.Control type="number" className="modern-input text-md-center fw-bold text-primary" style={{ fontSize: '1.25rem' }} name="paid_amount" value={values.paid_amount} onChange={handleChange} />
+                        <div className="edit-inventory-input-group-label">Revised Paid Amount</div>
+                        <Form.Control type="number" className="edit-inventory-modern-input text-md-center fw-bold text-primary" style={{ fontSize: '1.25rem' }} name="paid_amount" value={values.paid_amount} onChange={handleChange} />
                       </div>
                     </div>
                   </Col>

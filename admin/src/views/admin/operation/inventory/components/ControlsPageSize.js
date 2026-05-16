@@ -8,7 +8,7 @@ const ControlsPageSize = ({ pageSize, onPageSizeChange }) => {
     <OverlayTrigger placement="top" delay={{ show: 1000, hide: 0 }} overlay={<Tooltip>Item Count</Tooltip>}>
       {({ ref, ...triggerHandler }) => (
         <Dropdown className="d-inline-block" align="end">
-          <Dropdown.Toggle ref={ref} {...triggerHandler} variant="foreground-alternate" className="shadow">
+          <Dropdown.Toggle ref={ref} {...triggerHandler} variant="outline-primary" className="rounded-pill px-3 py-1 fw-bold border-2 small">
             {pageSize} Items
           </Dropdown.Toggle>
           <Dropdown.Menu

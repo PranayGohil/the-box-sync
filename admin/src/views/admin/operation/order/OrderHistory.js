@@ -18,52 +18,6 @@ import ControlsSearch from './components/ControlsSearch';
 import Table from './components/Table';
 import TablePagination from './components/TablePagination';
 
-const customStyles = `
-  .custom-control-btn {
-    position: relative !important;
-    width: 40px !important;
-    height: 40px !important;
-    padding: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border-radius: 10px !important;
-    transition: all 0.2s ease !important;
-    border: 1px solid #1ea8e7 !important;
-    background-color: #fff !important;
-    color: #1ea8e7 !important;
-  }
-  .custom-control-btn:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 8px rgba(30, 168, 231, 0.2) !important;
-  }
-  .custom-control-btn:hover svg {
-    color: #fff !important;
-    fill: #fff !important;
-  }
-  .custom-control-btn.active {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-  }
-  .custom-control-btn.active svg {
-    color: #fff !important;
-    fill: #fff !important;
-  }
-  .custom-search-container {
-    border-radius: 10px !important;
-    overflow: hidden !important;
-    background-color: #fff !important;
-    border: 1px solid #eee !important;
-    transition: all 0.2s ease !important;
-  }
-  .custom-search-container:focus-within {
-    border-color: #1ea8e7 !important;
-    box-shadow: 0 0 0 2px rgba(30, 168, 231, 0.1) !important;
-  }
-`;
-
 const OrderHistory = () => {
   const title = 'Order History';
   const description = 'Order history with advanced filters.';
@@ -317,16 +271,10 @@ const OrderHistory = () => {
           <tr>
             <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
             <td style="text-align: right;">
-              ${ord.table_no
-        ? `<strong>Table:</strong> ${ord.table_no}`
-        : ord.token
-          ? `<strong>Token:</strong> ${ord.token}`
-          : ''}
+              ${ord.table_no ? `<strong>Table:</strong> ${ord.table_no}` : ord.token ? `<strong>Token:</strong> ${ord.token}` : ''}
             </td>
           </tr>
-          ${ord.customer_name
-        ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
-        : ''}
+          ${ord.customer_name ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>` : ''}
         </table>
 
         <!-- Items Table -->
@@ -338,12 +286,16 @@ const OrderHistory = () => {
             </tr>
           </thead>
           <tbody>
-            ${items.map(item => `
+            ${items
+              .map(
+                (item) => `
               <tr>
                 <td>${item.dish_name}</td>
                 <td style="text-align: center;">${item.quantity}</td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
           </tbody>
         </table>
 
@@ -374,16 +326,10 @@ const OrderHistory = () => {
           <tr>
             <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
             <td style="text-align: right;">
-              ${ord.table_no
-        ? `<strong>Table:</strong> ${ord.table_no}`
-        : ord.token
-          ? `<strong>Token:</strong> ${ord.token}`
-          : ''}
+              ${ord.table_no ? `<strong>Table:</strong> ${ord.table_no}` : ord.token ? `<strong>Token:</strong> ${ord.token}` : ''}
             </td>
           </tr>
-          ${ord.customer_name
-        ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
-        : ''}
+          ${ord.customer_name ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>` : ''}
         </table>
 
         <!-- Items Table -->
@@ -397,14 +343,18 @@ const OrderHistory = () => {
             </tr>
           </thead>
           <tbody>
-            ${items.map(item => `
+            ${items
+              .map(
+                (item) => `
               <tr>
                 <td>${item.dish_name}</td>
                 <td style="text-align: center;">${item.quantity}</td>
                 <td style="text-align: center;">₹${item.dish_price}</td>
                 <td style="text-align: right;">₹${(item.dish_price * item.quantity).toFixed(2)}</td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
 
             <tr>
               <td colspan="3" style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
@@ -415,7 +365,9 @@ const OrderHistory = () => {
               </td>
             </tr>
 
-            ${ord.cgst_amount > 0 ? `
+            ${
+              ord.cgst_amount > 0
+                ? `
               <tr>
                 <td colspan="3" style="text-align: right;">
                   <strong>CGST (${ord.cgst_percent || 0}%):</strong>
@@ -424,9 +376,13 @@ const OrderHistory = () => {
                   ₹${parseFloat(ord.cgst_amount).toFixed(2)}
                 </td>
               </tr>
-            ` : ''}
+            `
+                : ''
+            }
 
-            ${ord.sgst_amount > 0 ? `
+            ${
+              ord.sgst_amount > 0
+                ? `
               <tr>
                 <td colspan="3" style="text-align: right;">
                   <strong>SGST (${ord.sgst_percent || 0}%):</strong>
@@ -435,9 +391,13 @@ const OrderHistory = () => {
                   ₹${parseFloat(ord.sgst_amount).toFixed(2)}
                 </td>
               </tr>
-            ` : ''}
+            `
+                : ''
+            }
 
-            ${ord.vat_amount > 0 ? `
+            ${
+              ord.vat_amount > 0
+                ? `
               <tr>
                 <td colspan="3" style="text-align: right;">
                   <strong>VAT (${ord.vat_percent || 0}%):</strong>
@@ -446,9 +406,13 @@ const OrderHistory = () => {
                   ₹${parseFloat(ord.vat_amount).toFixed(2)}
                 </>
               </tr>
-            ` : ''}
+            `
+                : ''
+            }
 
-            ${ord.discount_amount > 0 ? `
+            ${
+              ord.discount_amount > 0
+                ? `
               <tr>
                 <td colspan="3" style="text-align: right;">
                   <strong>Discount:</strong>
@@ -457,7 +421,9 @@ const OrderHistory = () => {
                   ₹${parseFloat(ord.discount_amount).toFixed(2)}
                 </td>
               </tr>
-            ` : ''}
+            `
+                : ''
+            }
 
             <tr>
               <td colspan="3" style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
@@ -482,11 +448,11 @@ const OrderHistory = () => {
       setPrinting(true);
 
       const userRes = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
 
       const orderRes = await axios.get(`${process.env.REACT_APP_API}/order/get/${orderId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
 
       const order = orderRes.data.data;
@@ -494,28 +460,25 @@ const OrderHistory = () => {
       const userData = userRes.data;
 
       const groupedByCounter = {};
-      order.order_items.forEach(item => {
-        const counterName = item.counter || "Default";
+      order.order_items.forEach((item) => {
+        const counterName = item.counter || 'Default';
         if (!groupedByCounter[counterName]) groupedByCounter[counterName] = [];
         groupedByCounter[counterName].push(item);
       });
 
-      const printWindow = window.open("", "_blank");
+      const printWindow = window.open('', '_blank');
 
       if (!printWindow) {
-        toast.error("Popup blocked! Please allow popups.");
+        toast.error('Popup blocked! Please allow popups.');
         return;
       }
 
-      let allBillsHTML = "";
+      let allBillsHTML = '';
 
       allBillsHTML += printFullBill(order, userData, order.order_items, order.sub_total);
 
       Object.entries(groupedByCounter).forEach(([counterName, items]) => {
-        const subTotal = items.reduce(
-          (sum, i) => sum + (i.dish_price * i.quantity),
-          0
-        );
+        const subTotal = items.reduce((sum, i) => sum + i.dish_price * i.quantity, 0);
 
         allBillsHTML += printCounterBill(order, userData, counterName, items);
       });
@@ -543,15 +506,13 @@ const OrderHistory = () => {
         ${allBillsHTML}
         </body>
         </html>
-        `
-      );
+        `);
       printWindow.document.close();
 
       printWindow.focus();
-
     } catch (err) {
-      console.error("Print error:", err);
-      toast.error("Failed to print bills");
+      console.error('Print error:', err);
+      toast.error('Failed to print bills');
     } finally {
       setPrinting(false);
     }
@@ -639,7 +600,8 @@ const OrderHistory = () => {
       if (exportFilters.fromDate || exportFilters.toDate) {
         summaryData.push([
           'Date Range',
-          `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
+          `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${
+            exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
           }`,
         ]);
       }
@@ -805,7 +767,8 @@ const OrderHistory = () => {
 
         if (exportFilters.fromDate || exportFilters.toDate) {
           doc.text(
-            `Date Range: ${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
+            `Date Range: ${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${
+              exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
             }`,
             20,
             yPosition
@@ -1090,18 +1053,20 @@ const OrderHistory = () => {
     return (
       <div className="container-fluid pb-5">
         <HtmlHead title={title} description={description} />
-          <div className="page-title-container">
-            <Row>
-              <Col xs="12" md="7">
-                <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
-                <BreadcrumbList items={breadcrumbs} />
-              </Col>
-            </Row>
-          </div>
-          <div className="text-center py-5">
-            <Spinner animation="border" variant="primary" className="mb-3" />
-            <h5>Loading...</h5>
-          </div>
+        <div className="page-title-container">
+          <Row>
+            <Col xs="12" md="7">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
+                {title}
+              </h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </Col>
+          </Row>
+        </div>
+        <div className="text-center py-5">
+          <Spinner animation="border" variant="primary" className="mb-3" />
+          <h5>Loading...</h5>
+        </div>
       </div>
     );
   }
@@ -1110,283 +1075,313 @@ const OrderHistory = () => {
     <div className="container-fluid pb-5">
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4">
-        <Row className="align-items-center">
-          <Col xs="12" md="7">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+      <div className="page-title-container mb-4 mt-5 mt-lg-0">
+        <Row className="g-0 align-items-center">
+          <Col xs="auto" className="me-auto">
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
+              {title}
+            </h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
         </Row>
       </div>
 
-          {error && (
-            <Alert variant="danger" className="mb-4">
-              <CsLineIcons icon="error" className="me-2" />
-              {error}
-            </Alert>
-          )}
+      {error && (
+        <Alert variant="danger" className="mb-4">
+          <CsLineIcons icon="error" className="me-2" />
+          {error}
+        </Alert>
+      )}
 
-          {/* Filter Section */}
+      {/* Filter Section */}
 
-          {/* Search and Controls */}
-          <div>
-            <style>{customStyles}</style>
-            <Row className="mb-3 g-2 align-items-center">
-              <Col xs="12" sm="auto" className="flex-grow-1" style={{ minWidth: '200px' }}>
-                <div className="custom-search-container shadow-sm d-flex align-items-center px-2">
-                  <CsLineIcons icon="search" size="18" className="text-primary opacity-75 ms-1" />
-                  <Form.Control
-                    type="text"
-                    className="border-0 bg-transparent shadow-none"
-                    placeholder="Search orders..."
-                    value={localSearchTerm}
-                    onChange={(e) => setLocalSearchTerm(e.target.value)}
-                    style={{ height: '40px', fontSize: '14px' }}
-                  />
-                  {localSearchTerm && (
-                    <div 
-                      className="cursor-pointer text-muted px-1" 
-                      onClick={() => setLocalSearchTerm('')}
-                    >
-                      <CsLineIcons icon="close" size="14" />
-                    </div>
-                  )}
+      {/* Search and Controls */}
+      <div>
+        <Row className="mb-3 g-2 align-items-center">
+          <Col xs="12" sm="auto" className="flex-grow-1" style={{ minWidth: '200px' }}>
+            <div className="order-history-custom-search-container shadow-sm d-flex align-items-center px-2">
+              <CsLineIcons icon="search" size="18" className="text-primary opacity-75 ms-1 me-2" />
+              <Form.Control
+                type="text"
+                className="border-0 bg-transparent shadow-none"
+                placeholder="Search orders..."
+                value={localSearchTerm}
+                onChange={(e) => setLocalSearchTerm(e.target.value)}
+                style={{ height: '40px', fontSize: '14px' }}
+              />
+              {localSearchTerm && (
+                <div className="cursor-pointer text-muted px-1" onClick={() => setLocalSearchTerm('')}>
+                  <CsLineIcons icon="close" size="14" />
                 </div>
-              </Col>
-              <Col xs="auto" className="ms-auto ms-sm-0">
-                <div className="d-flex gap-2">
-                  <Button
-                    className="custom-control-btn shadow-sm"
-                    onClick={handleExportClick}
-                    disabled={totalRecords === 0 || loading}
-                    title="Export Orders"
+              )}
+            </div>
+          </Col>
+          <Col xs="auto" className="ms-auto ms-sm-0">
+            <div className="d-flex gap-2">
+              <Button
+                className="order-history-custom-control-btn shadow-sm"
+                onClick={handleExportClick}
+                disabled={totalRecords === 0 || loading}
+                title="Export Orders"
+              >
+                <CsLineIcons icon="download" size="18" />
+              </Button>
+              <Button
+                className={`order-history-custom-control-btn shadow-sm ${showFilters ? 'active' : ''}`}
+                onClick={() => setShowFilters(!showFilters)}
+                title="Filters"
+                disabled={loading}
+              >
+                <CsLineIcons icon={showFilters ? 'close' : 'filter'} size="18" />
+                {getActiveFilterCount() > 0 && (
+                  <Badge
+                    bg="danger"
+                    className="position-absolute rounded-pill border border-2 border-white"
+                    style={{ top: '-5px', right: '-5px', fontSize: '10px', padding: '4px 6px' }}
                   >
-                    <CsLineIcons icon="download" size="18" />
+                    {getActiveFilterCount()}
+                  </Badge>
+                )}
+              </Button>
+            </div>
+          </Col>
+          <Col className="text-end d-none d-lg-block">
+            <div className="d-inline-block me-3 text-muted small fw-bold">
+              {loading ? (
+                'Loading...'
+              ) : (
+                <>
+                  Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0}-{Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords}
+                </>
+              )}
+            </div>
+            <div className="d-inline-block">
+              <ControlsPageSize pageSize={pageSize} onPageSizeChange={handlePageSizeChange} />
+            </div>
+          </Col>
+        </Row>
+        <Collapse in={showFilters}>
+          <Card className="mb-4 border-0 shadow-sm" style={{ borderRadius: '1.25rem', backgroundColor: '#f8f9fa' }}>
+            <Card.Body className="p-4">
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h5 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4' }}>
+                  <CsLineIcons icon="filter" className="me-2" size="18" />
+                  Filter Records
+                </h5>
+                {getActiveFilterCount() > 0 && (
+                  <Button variant="link" className="p-0 text-danger text-decoration-none small fw-bold" onClick={handleClearFilters}>
+                    <CsLineIcons icon="close" size="12" className="me-1" />
+                    Clear All
                   </Button>
-                  <Button
-                    className={`custom-control-btn shadow-sm ${showFilters ? 'active' : ''}`}
-                    onClick={() => setShowFilters(!showFilters)}
-                    title="Filters"
-                    disabled={loading}
-                  >
-                    <CsLineIcons icon={showFilters ? 'close' : 'filter'} size="18" />
-                    {getActiveFilterCount() > 0 && (
-                      <Badge bg="danger" className="position-absolute rounded-pill border border-2 border-white" style={{ top: '-5px', right: '-5px', fontSize: '10px', padding: '4px 6px' }}>
-                        {getActiveFilterCount()}
-                      </Badge>
-                    )}
-                  </Button>
-                </div>
-              </Col>
-              <Col className="text-end d-none d-lg-block">
-                <div className="d-inline-block me-3 text-muted small fw-bold">
-                  {loading ? (
-                    'Loading...'
-                  ) : (
-                    <>
-                      Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0}-{Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords}
-                    </>
-                  )}
-                </div>
-                <div className="d-inline-block">
-                  <ControlsPageSize pageSize={pageSize} onPageSizeChange={handlePageSizeChange} />
-                </div>
+                )}
+              </div>
+
+              <div>
+                <Row className="g-3">
+                  {/* Order Source Filter */}
+                  <Col xs="12" sm="6" md="2">
+                    <Form.Label className="small fw-bold text-muted mb-1">Source</Form.Label>
+                    <Dropdown className="w-100">
+                      <Dropdown.Toggle
+                        variant="white"
+                        className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-3"
+                        style={{ height: '44px', fontSize: '14px' }}
+                      >
+                        {filters.orderSource || 'All Sources'}
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu
+                        className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                        style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+                      >
+                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', '')}>All Sources</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Manager')}>Manager</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Captain')}>Captain</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'QSR')}>QSR</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Restaurant Website')}>Restaurant Website</Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </Col>
+
+                  {/* Date Range Filter */}
+                  <Col xs="6" sm="6" md="2">
+                    <Form.Label className="small fw-bold text-muted mb-1">From</Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={filters.fromDate}
+                      onChange={(e) => handleFilterChange('fromDate', e.target.value)}
+                      className="rounded-pill px-3 border-0 shadow-sm"
+                      style={{ height: '44px', fontSize: '14px' }}
+                    />
+                  </Col>
+                  <Col xs="6" sm="6" md="2">
+                    <Form.Label className="small fw-bold text-muted mb-1">To</Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={filters.toDate}
+                      onChange={(e) => handleFilterChange('toDate', e.target.value)}
+                      className="rounded-pill px-3 border-0 shadow-sm"
+                      style={{ height: '44px', fontSize: '14px' }}
+                    />
+                  </Col>
+
+                  {/* Order Status Filter */}
+                  <Col xs="12" sm="6" md="3">
+                    <Form.Label className="small fw-bold text-muted mb-1">Status</Form.Label>
+                    <Dropdown className="w-100">
+                      <Dropdown.Toggle
+                        variant="white"
+                        className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-3"
+                        style={{ height: '44px', fontSize: '14px' }}
+                      >
+                        {filters.orderStatus || 'All Status'}
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu
+                        className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                        style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+                      >
+                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', '')}>All Status</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Paid')}>Paid</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Save')}>Save</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'KOT')}>KOT</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Cancelled')}>Cancelled</Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </Col>
+
+                  {/* Order Type Filter */}
+                  <Col xs="12" sm="6" md="3">
+                    <Form.Label className="small fw-bold text-muted mb-1">Type</Form.Label>
+                    <Dropdown className="w-100">
+                      <Dropdown.Toggle
+                        variant="white"
+                        className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-3"
+                        style={{ height: '44px', fontSize: '14px' }}
+                      >
+                        {filters.orderType || 'All Types'}
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu
+                        className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                        style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+                      >
+                        <Dropdown.Item onClick={() => handleFilterChange('orderType', '')}>All Types</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Dine In')}>Dine In</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Takeaway')}>Takeaway</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Delivery')}>Delivery</Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </Col>
+                </Row>
+              </div>
+            </Card.Body>
+          </Card>
+        </Collapse>
+
+        {/* Show table or "no data" message */}
+        {data.length === 0 && !loading ? (
+          <Alert
+            variant="info"
+            className="text-center border-0 shadow-sm"
+            style={{ borderRadius: '1rem', backgroundColor: 'rgba(30, 168, 231, 0.05)', color: '#1ea8e7' }}
+          >
+            <CsLineIcons icon="inbox" size={24} className="me-2" />
+            No orders found. {searchTerm || getActiveFilterCount() > 0 ? 'Try adjusting your search or filters.' : 'Orders will appear here once created.'}
+          </Alert>
+        ) : (
+          <>
+            {/* Table View for Desktop */}
+            <Row className="d-none d-md-flex">
+              <Col xs="12" style={{ overflow: 'auto' }}>
+                <Table className="react-table rows" tableInstance={tableInstance} onSort={handleSort} />
               </Col>
             </Row>
-            <Collapse in={showFilters}>
-              <Card className="mb-4 border-0 shadow-sm" style={{ borderRadius: '1.25rem', backgroundColor: '#f8f9fa' }}>
-                <Card.Body className="p-4">
-                  <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h5 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4' }}>
-                      <CsLineIcons icon="filter" className="me-2" size="18" />
-                      Filter Records
-                    </h5>
-                    {getActiveFilterCount() > 0 && (
-                      <Button 
-                        variant="link" 
-                        className="p-0 text-danger text-decoration-none small fw-bold" 
-                        onClick={handleClearFilters}
-                      >
-                        <CsLineIcons icon="close" size="12" className="me-1" />
-                        Clear All
-                      </Button>
-                    )}
-                  </div>
 
-                  <div>
-                    <Row className="g-3">
-                      {/* Order Source Filter */}
-                      <Col xs="12" sm="6" md="2">
-                        <Form.Label className="small fw-bold text-muted mb-1">Source</Form.Label>
-                        <Dropdown className="w-100">
-                          <Dropdown.Toggle 
-                            variant="white" 
-                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-3"
-                            style={{ height: '44px', fontSize: '14px' }}
-                          >
-                            {filters.orderSource || 'All Sources'}
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu 
-                            className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" 
-                            style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
-                          >
-                            <Dropdown.Item onClick={() => handleFilterChange('orderSource', '')}>All Sources</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Manager')}>Manager</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Captain')}>Captain</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'QSR')}>QSR</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Restaurant Website')}>Restaurant Website</Dropdown.Item>
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </Col>
-
-                      {/* Date Range Filter */}
-                      <Col xs="6" sm="6" md="2">
-                        <Form.Label className="small fw-bold text-muted mb-1">From</Form.Label>
-                        <Form.Control 
-                          type="date" 
-                          value={filters.fromDate} 
-                          onChange={(e) => handleFilterChange('fromDate', e.target.value)} 
-                          className="rounded-pill px-3 border-0 shadow-sm"
-                          style={{ height: '44px', fontSize: '14px' }}
-                        />
-                      </Col>
-                      <Col xs="6" sm="6" md="2">
-                        <Form.Label className="small fw-bold text-muted mb-1">To</Form.Label>
-                        <Form.Control 
-                          type="date" 
-                          value={filters.toDate} 
-                          onChange={(e) => handleFilterChange('toDate', e.target.value)} 
-                          className="rounded-pill px-3 border-0 shadow-sm"
-                          style={{ height: '44px', fontSize: '14px' }}
-                        />
-                      </Col>
-
-                      {/* Order Status Filter */}
-                      <Col xs="12" sm="6" md="3">
-                        <Form.Label className="small fw-bold text-muted mb-1">Status</Form.Label>
-                        <Dropdown className="w-100">
-                          <Dropdown.Toggle 
-                            variant="white" 
-                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-3"
-                            style={{ height: '44px', fontSize: '14px' }}
-                          >
-                            {filters.orderStatus || 'All Status'}
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu 
-                            className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" 
-                            style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
-                          >
-                            <Dropdown.Item onClick={() => handleFilterChange('orderStatus', '')}>All Status</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Paid')}>Paid</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Save')}>Save</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'KOT')}>KOT</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Cancelled')}>Cancelled</Dropdown.Item>
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </Col>
-
-                      {/* Order Type Filter */}
-                      <Col xs="12" sm="6" md="3">
-                        <Form.Label className="small fw-bold text-muted mb-1">Type</Form.Label>
-                        <Dropdown className="w-100">
-                          <Dropdown.Toggle 
-                            variant="white" 
-                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-3"
-                            style={{ height: '44px', fontSize: '14px' }}
-                          >
-                            {filters.orderType || 'All Types'}
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu 
-                          className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" 
-                          style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+            {/* Card View for Mobile */}
+            <Row className="d-md-none g-3">
+              {data.map((order, idx) => (
+                <Col key={idx} xs="12">
+                  <Card className="border-0 shadow-sm hover-scale-up" style={{ borderRadius: '1.25rem', overflow: 'hidden' }}>
+                    <Card.Body className="p-3 position-relative">
+                      <div
+                        className="position-absolute"
+                        style={{
+                          top: '-10px',
+                          right: '-10px',
+                          width: '60px',
+                          height: '60px',
+                          borderRadius: '50%',
+                          background: 'rgba(30, 168, 231, 0.1)',
+                          filter: 'blur(10px)',
+                        }}
+                      />
+                      <div className="d-flex justify-content-between align-items-start mb-3 position-relative">
+                        <div>
+                          <div className="fw-bolder text-primary mb-1" style={{ fontSize: '14px' }}>
+                            {order.order_no || 'ORD-0000'}
+                          </div>
+                          <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd MMM yyyy, HH:mm')}</div>
+                        </div>
+                        <Badge
+                          bg={order.order_status === 'Paid' ? 'success' : order.order_status === 'KOT' ? 'warning' : 'secondary'}
+                          className="rounded-pill px-3 py-1"
                         >
-                            <Dropdown.Item onClick={() => handleFilterChange('orderType', '')}>All Types</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Dine In')}>Dine In</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Takeaway')}>Takeaway</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Delivery')}>Delivery</Dropdown.Item>
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </Col>
-                    </Row>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Collapse>
+                          {order.order_status}
+                        </Badge>
+                      </div>
 
-            {/* Show table or "no data" message */}
-            {data.length === 0 && !loading ? (
-              <Alert variant="info" className="text-center border-0 shadow-sm" style={{ borderRadius: '1rem', backgroundColor: 'rgba(30, 168, 231, 0.05)', color: '#1ea8e7' }}>
-                <CsLineIcons icon="inbox" size={24} className="me-2" />
-                No orders found. {searchTerm || getActiveFilterCount() > 0 ? 'Try adjusting your search or filters.' : 'Orders will appear here once created.'}
-              </Alert>
-            ) : (
-              <>
-                {/* Table View for Desktop */}
-                <Row className="d-none d-md-flex">
-                  <Col xs="12" style={{ overflow: "auto" }}>
-                    <Table className="react-table rows" tableInstance={tableInstance} onSort={handleSort} />
-                  </Col>
-                </Row>
-
-                {/* Card View for Mobile */}
-                <Row className="d-md-none g-3">
-                  {data.map((order, idx) => (
-                    <Col key={idx} xs="12">
-                      <Card className="border-0 shadow-sm hover-scale-up" style={{ borderRadius: '1.25rem', overflow: 'hidden' }}>
-                        <Card.Body className="p-3 position-relative">
-                          <div className="position-absolute" style={{ top: '-10px', right: '-10px', width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(30, 168, 231, 0.1)', filter: 'blur(10px)' }} />
-                          <div className="d-flex justify-content-between align-items-start mb-3 position-relative">
-                            <div>
-                              <div className="fw-bolder text-primary mb-1" style={{ fontSize: '14px' }}>{order.order_no || 'ORD-0000'}</div>
-                              <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd MMM yyyy, HH:mm')}</div>
-                            </div>
-                            <Badge bg={order.order_status === 'Paid' ? 'success' : order.order_status === 'KOT' ? 'warning' : 'secondary'} className="rounded-pill px-3 py-1">
-                              {order.order_status}
-                            </Badge>
+                      <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
+                        <Col xs="6">
+                          <div className="text-muted small">Type</div>
+                          <div className="fw-bold small">{order.order_type}</div>
+                        </Col>
+                        <Col xs="6" className="text-end">
+                          <div className="text-muted small">Amount</div>
+                          <div className="fw-bolder text-dark" style={{ fontSize: '15px' }}>
+                            ₹{parseFloat(order.total_amount).toFixed(2)}
                           </div>
-                          
-                          <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
-                            <Col xs="6">
-                              <div className="text-muted small">Type</div>
-                              <div className="fw-bold small">{order.order_type}</div>
-                            </Col>
-                            <Col xs="6" className="text-end">
-                              <div className="text-muted small">Amount</div>
-                              <div className="fw-bolder text-dark" style={{ fontSize: '15px' }}>₹{parseFloat(order.total_amount).toFixed(2)}</div>
-                            </Col>
-                          </Row>
+                        </Col>
+                      </Row>
 
-                          <div className="d-flex justify-content-between align-items-center">
-                            <Badge bg="info" className="rounded-pill opacity-75">{order.order_source}</Badge>
-                            <div className="d-flex gap-2">
-                              <Button variant="outline-primary" size="sm" className="btn-icon btn-icon-only rounded-circle" onClick={() => history.push(`/operations/order-details/${order.id}`)}>
-                                <CsLineIcons icon="eye" size="14" />
-                              </Button>
-                              <Button variant="outline-secondary" size="sm" className="btn-icon btn-icon-only rounded-circle" onClick={() => handlePrint(order.id)}>
-                                <CsLineIcons icon="print" size="14" />
-                              </Button>
-                            </div>
-                          </div>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
+                      <div className="d-flex justify-content-between align-items-center">
+                        <Badge bg="info" className="rounded-pill opacity-75">
+                          {order.order_source}
+                        </Badge>
+                        <div className="d-flex gap-2">
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            className="btn-icon btn-icon-only rounded-circle"
+                            onClick={() => history.push(`/operations/order-details/${order.id}`)}
+                          >
+                            <CsLineIcons icon="eye" size="14" />
+                          </Button>
+                          <Button variant="outline-secondary" size="sm" className="btn-icon btn-icon-only rounded-circle" onClick={() => handlePrint(order.id)}>
+                            <CsLineIcons icon="print" size="14" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
 
-                <Row className="mt-4">
-                  <Col xs="12">
-                    <TablePagination paginationProps={paginationProps} />
-                  </Col>
-                </Row>
-              </>
-            )}
-          </div>
+            <Row className="mt-4">
+              <Col xs="12">
+                <TablePagination paginationProps={paginationProps} />
+              </Col>
+            </Row>
+          </>
+        )}
+      </div>
 
       {/* Export Modal */}
       <Modal show={showExportModal} onHide={() => !exporting && setShowExportModal(false)} size="lg" centered className="modal-glass">
         <Modal.Header closeButton={!exporting} className="border-0 pb-0">
           <Modal.Title className="fw-bold d-flex align-items-center">
-            <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3" style={{ backgroundColor: 'rgba(30, 168, 231, 0.1)' }}>
+            <div
+              className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3"
+              style={{ backgroundColor: 'rgba(30, 168, 231, 0.1)' }}
+            >
               <CsLineIcons icon="download" size="20" style={{ color: '#1ea8e7' }} />
             </div>
             <span>Export Order History</span>
@@ -1400,10 +1395,12 @@ const OrderHistory = () => {
               <Form>
                 {/* Export Format Selection */}
                 <div className="mb-4">
-                  <Form.Label className="fw-bolder mb-3 text-uppercase text-muted" style={{ fontSize: '11px', letterSpacing: '1px' }}>Export Format</Form.Label>
+                  <Form.Label className="fw-bolder mb-3 text-uppercase text-muted" style={{ fontSize: '11px', letterSpacing: '1px' }}>
+                    Export Format
+                  </Form.Label>
                   <Row className="g-3">
                     <Col xs="12" sm="6">
-                      <Card 
+                      <Card
                         className={`border-2 transition-all cursor-pointer h-100 ${exportFormat === 'excel' ? 'border-primary' : 'border-separator-light'}`}
                         style={{ borderRadius: '1.25rem', cursor: 'pointer', transition: 'all 0.3s ease' }}
                         onClick={() => setExportFormat('excel')}
@@ -1416,17 +1413,12 @@ const OrderHistory = () => {
                             <div className="fw-bold text-dark">Excel Data</div>
                             <div className="text-muted xsmall">Tabular .xlsx</div>
                           </div>
-                          <Form.Check
-                            type="radio"
-                            className="ms-2"
-                            checked={exportFormat === 'excel'}
-                            onChange={() => {}}
-                          />
+                          <Form.Check type="radio" className="ms-2" checked={exportFormat === 'excel'} onChange={() => {}} />
                         </Card.Body>
                       </Card>
                     </Col>
                     <Col xs="12" sm="6">
-                      <Card 
+                      <Card
                         className={`border-2 transition-all cursor-pointer h-100 ${exportFormat === 'pdf' ? 'border-primary' : 'border-separator-light'}`}
                         style={{ borderRadius: '1.25rem', cursor: 'pointer', transition: 'all 0.3s ease' }}
                         onClick={() => setExportFormat('pdf')}
@@ -1439,12 +1431,7 @@ const OrderHistory = () => {
                             <div className="fw-bold text-dark">PDF Report</div>
                             <div className="text-muted xsmall">Document .pdf</div>
                           </div>
-                          <Form.Check
-                            type="radio"
-                            className="ms-2"
-                            checked={exportFormat === 'pdf'}
-                            onChange={() => {}}
-                          />
+                          <Form.Check type="radio" className="ms-2" checked={exportFormat === 'pdf'} onChange={() => {}} />
                         </Card.Body>
                       </Card>
                     </Col>
@@ -1452,7 +1439,9 @@ const OrderHistory = () => {
                 </div>
 
                 {/* Export Filters */}
-                <Form.Label className="fw-bolder mb-3 text-uppercase text-muted" style={{ fontSize: '11px', letterSpacing: '1px' }}>Filter Data</Form.Label>
+                <Form.Label className="fw-bolder mb-3 text-uppercase text-muted" style={{ fontSize: '11px', letterSpacing: '1px' }}>
+                  Filter Data
+                </Form.Label>
 
                 <Card className="border-0 bg-light p-3" style={{ borderRadius: '1rem' }}>
                   <Row className="g-3">
@@ -1479,19 +1468,24 @@ const OrderHistory = () => {
                     <Col xs={12} sm={6}>
                       <Form.Label className="small fw-bold text-muted mb-1">Order Source</Form.Label>
                       <Dropdown className="w-100">
-                        <Dropdown.Toggle 
-                          variant="white" 
+                        <Dropdown.Toggle
+                          variant="white"
                           className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
                           style={{ height: '44px', fontSize: '14px' }}
                         >
                           {exportFilters.orderSource || 'All Sources'}
                         </Dropdown.Toggle>
-                        <Dropdown.Menu className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}>
+                        <Dropdown.Menu
+                          className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                          style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
+                        >
                           <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: '' })}>All Sources</Dropdown.Item>
                           <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: 'Manager' })}>Manager</Dropdown.Item>
                           <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: 'Captain' })}>Captain</Dropdown.Item>
                           <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: 'QSR' })}>QSR</Dropdown.Item>
-                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: 'Restaurant Website' })}>Restaurant Website</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: 'Restaurant Website' })}>
+                            Restaurant Website
+                          </Dropdown.Item>
                         </Dropdown.Menu>
                       </Dropdown>
                     </Col>
@@ -1499,14 +1493,17 @@ const OrderHistory = () => {
                     <Col xs={12} sm={6}>
                       <Form.Label className="small fw-bold text-muted mb-1">Status</Form.Label>
                       <Dropdown className="w-100">
-                        <Dropdown.Toggle 
-                          variant="white" 
+                        <Dropdown.Toggle
+                          variant="white"
                           className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
                           style={{ height: '44px', fontSize: '14px' }}
                         >
                           {exportFilters.orderStatus || 'All Status'}
                         </Dropdown.Toggle>
-                        <Dropdown.Menu className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}>
+                        <Dropdown.Menu
+                          className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                          style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
+                        >
                           <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: '' })}>All Status</Dropdown.Item>
                           <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Paid' })}>Paid</Dropdown.Item>
                           <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Save' })}>Save</Dropdown.Item>
@@ -1519,14 +1516,17 @@ const OrderHistory = () => {
                     <Col xs={12} sm={6}>
                       <Form.Label className="small fw-bold text-muted mb-1">Order Type</Form.Label>
                       <Dropdown className="w-100">
-                        <Dropdown.Toggle 
-                          variant="white" 
+                        <Dropdown.Toggle
+                          variant="white"
                           className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
                           style={{ height: '44px', fontSize: '14px' }}
                         >
                           {exportFilters.orderType || 'All Types'}
                         </Dropdown.Toggle>
-                        <Dropdown.Menu className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}>
+                        <Dropdown.Menu
+                          className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                          style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
+                        >
                           <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: '' })}>All Types</Dropdown.Item>
                           <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Dine In' })}>Dine In</Dropdown.Item>
                           <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Takeaway' })}>Takeaway</Dropdown.Item>
@@ -1538,14 +1538,17 @@ const OrderHistory = () => {
                     <Col xs={12} sm={6}>
                       <Form.Label className="small fw-bold text-muted mb-1">Payment Mode</Form.Label>
                       <Dropdown className="w-100">
-                        <Dropdown.Toggle 
-                          variant="white" 
+                        <Dropdown.Toggle
+                          variant="white"
                           className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
                           style={{ height: '44px', fontSize: '14px' }}
                         >
                           {exportFilters.paymentType || 'All Payment Types'}
                         </Dropdown.Toggle>
-                        <Dropdown.Menu className="w-100 shadow-lg border-0 animate__animated animate__fadeIn" style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}>
+                        <Dropdown.Menu
+                          className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                          style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
+                        >
                           <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: '' })}>All Payment Types</Dropdown.Item>
                           <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Cash' })}>Cash</Dropdown.Item>
                           <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Card' })}>Card</Dropdown.Item>
@@ -1595,9 +1598,9 @@ const OrderHistory = () => {
           <Button variant="light" onClick={() => setShowExportModal(false)} disabled={exporting} className="rounded-pill px-4">
             Close
           </Button>
-          <Button 
-            onClick={handleExportConfirm} 
-            disabled={exporting} 
+          <Button
+            onClick={handleExportConfirm}
+            disabled={exporting}
             className="rounded-pill px-4 hover-scale-up"
             style={{ backgroundColor: '#1ea8e7', borderColor: '#1ea8e7' }}
           >

@@ -11,192 +11,7 @@ import { toast } from 'react-toastify';
 import CreatableSelect from 'react-select/creatable';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-const customStyles = `
-    .inventory-container {
-      background: #f9f9fb;
-      min-height: 100vh;
-      padding-bottom: 5rem;
-    }
-    .page-card {
-      background: #ffffff !important;
-      border-radius: 2rem !important;
-      border: 1px solid rgba(0, 0, 0, 0.05) !important;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.02) !important;
-      overflow: hidden;
-    }
-    .section-label {
-      font-size: 0.75rem;
-      font-weight: 800;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-    .modern-input {
-      border-radius: 12px !important;
-      padding: 0.8rem 1.25rem !important;
-      border: 1.5px solid #f1f5f9 !important;
-      font-weight: 600 !important;
-      color: #334155 !important;
-      transition: all 0.3s ease !important;
-      background: #fcfdfe !important;
-      height: 52px !important;
-    }
-    .modern-input:focus {
-      border-color: #23b3f4 !important;
-      box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
-      background: #ffffff !important;
-    }
-    .input-group-label {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: #64748b;
-      margin-bottom: 0.5rem;
-      padding-left: 0.25rem;
-    }
-    .item-header-row {
-      display: flex;
-      padding: 0 1.5rem;
-      margin-bottom: 1rem;
-      color: #94a3b8;
-      font-size: 0.65rem;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-    .item-row-card {
-      background: #ffffff !important;
-      border-radius: 1.25rem !important;
-      border: 1px solid #f1f5f9 !important;
-      padding: 1.25rem 1.5rem !important;
-      margin-bottom: 1rem;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
-      display: flex;
-      align-items: center;
-      transition: all 0.25s ease;
-    }
-    .item-row-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.05) !important;
-      border-color: rgba(35, 179, 244, 0.2) !important;
-    }
-    .remove-btn {
-      width: 45px;
-      height: 45px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #fff1f2;
-      color: #f43f5e;
-      border: 1px solid #ffe4e6;
-      transition: all 0.2s ease;
-    }
-    .remove-btn:hover {
-      background: #f43f5e;
-      color: #ffffff;
-      border-color: #f43f5e;
-    }
-    .add-btn-premium {
-      background: rgba(35, 179, 244, 0.05) !important;
-      color: #23b3f4 !important;
-      border: 1.5px dashed #23b3f4 !important;
-      border-radius: 15px !important;
-      padding: 1rem !important;
-      font-weight: 800 !important;
-      width: 100%;
-      margin-top: 1rem;
-      transition: all 0.3s ease;
-    }
-    .add-btn-premium:hover {
-      background: #23b3f4 !important;
-      color: #ffffff !important;
-      border-style: solid !important;
-    }
-    .summary-hub {
-      background: #f8fafc;
-      border-radius: 1.5rem;
-      padding: 2.5rem;
-      margin-top: 3rem;
-      border: 1px solid #f1f5f9;
-    }
-    @media (max-width: 768px) {
-      .summary-hub {
-        padding: 1.5rem;
-      }
-    }
-    .total-display {
-      background: #ffffff;
-      border-radius: 1.25rem;
-      padding: 1.5rem;
-      border: 1.5px solid #23b3f4;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-    }
-    .amount-paid-container {
-      width: 300px;
-      text-align: right;
-    }
-    @media (max-width: 768px) {
-      .total-display {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .amount-paid-container {
-        width: 100%;
-        text-align: left;
-      }
-    }
-    .total-val {
-      font-size: 1.75rem;
-      font-weight: 900;
-      color: #23b3f4;
-    }
-    .save-btn-premium {
-      background: #23b3f4 !important;
-      border: none !important;
-      border-radius: 50px !important;
-      padding: 1rem 3rem !important;
-      font-weight: 800 !important;
-      color: #ffffff !important;
-      box-shadow: 0 10px 20px rgba(35, 179, 244, 0.2) !important;
-      transition: all 0.3s ease !important;
-    }
-    .save-btn-premium:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 15px 30px rgba(35, 179, 244, 0.3) !important;
-    }
-    .select-modern .react-select__control {
-      border-radius: 12px !important;
-      border: 1.5px solid #f1f5f9 !important;
-      min-height: 52px !important;
-      background: #fcfdfe !important;
-      font-weight: 600 !important;
-    }
-    .select-modern .react-select__control--is-focused {
-      border-color: #23b3f4 !important;
-      box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
-      background: #ffffff !important;
-    }
-    .file-pill {
-      background: #ffffff;
-      border: 1px solid #f1f5f9;
-      border-radius: 50px;
-      padding: 0.5rem 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-weight: 700;
-      font-size: 0.75rem;
-      color: #64748b;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-    }
-`;
+
 
 const validationSchema = Yup.object().shape({
   bill_date: Yup.date().required('Date required'),
@@ -301,41 +116,51 @@ const AddInventory = () => {
     );
 
   return (
-    <div className="inventory-container">
-      <style>{customStyles}</style>
+    <div className="add-inventory-inventory-container pb-5">
+      
       <HtmlHead title={title} />
-      <div className="container px-lg-5">
-        <div className="mb-5 pt-4 d-flex justify-content-between align-items-center">
-          <div>
-            <h1 className="display-4 fw-bold mb-1" style={{ color: brandColor }}>
-              {title}
-            </h1>
-            <BreadcrumbList
-              items={[
-                { to: '', text: 'Home' },
-                { to: 'operations', text: 'Operations' },
-                { to: 'operations/add-inventory', title: 'Add' },
-              ]}
-            />
+      <div className="container-fluid px-lg-5">
+        <div className="page-title-container mb-4 mt-5 mt-lg-0">
+          <Row className="g-0 align-items-center">
+            <Col xs="auto" className="me-auto">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
+              <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations', text: 'Operations' }, { to: 'operations/add-inventory', title: 'Add' }]} />
+            </Col>
+            <Col xs="auto" className="d-none d-lg-block">
+              <Button 
+                onClick={() => history.goBack()} 
+                className="manage-menu-custom-btn-outline shadow-sm px-4 py-2 d-flex align-items-center"
+                style={{ borderRadius: '50px', border: '2px solid #23b3f4', color: '#23b3f4', fontWeight: '700' }}
+              >
+                <CsLineIcons icon="arrow-left" size="18" className="me-2" /> Back
+              </Button>
+            </Col>
+          </Row>
+          
+          <div className="mt-2 d-lg-none d-flex justify-content-start">
+             <Button 
+                onClick={() => history.goBack()} 
+                className="manage-menu-custom-btn-outline shadow-sm px-4 py-2 d-flex align-items-center"
+                style={{ borderRadius: '50px', border: '2px solid #23b3f4', color: '#23b3f4', fontWeight: '700' }}
+              >
+                <CsLineIcons icon="arrow-left" size="16" className="me-2" /> <span className="small">Back</span>
+              </Button>
           </div>
-          <Button variant="outline-secondary" onClick={() => history.goBack()} className="rounded-pill px-4 fw-bold border-2">
-            <CsLineIcons icon="arrow-left" size="14" className="me-2" /> Cancel
-          </Button>
         </div>
 
         <Form onSubmit={handleSubmit}>
-          <Card className="page-card border-0">
+          <Card className="add-inventory-page-card border-0">
             <Card.Body className="p-4 p-lg-5">
               {/* Purchase Details */}
-              <div className="section-label">
+              <div className="add-inventory-section-label">
                 <CsLineIcons icon="file-text" size="18" /> Purchase Information
               </div>
               <Row className="g-4 mb-5">
                 <Col xs={12} md={3}>
-                  <div className="input-group-label">Bill Date</div>
+                  <div className="add-inventory-input-group-label">Bill Date</div>
                   <Form.Control
                     type="date"
-                    className="modern-input"
+                    className="add-inventory-modern-input"
                     name="bill_date"
                     value={values.bill_date}
                     onChange={handleChange}
@@ -343,10 +168,10 @@ const AddInventory = () => {
                   />
                 </Col>
                 <Col xs={12} md={3}>
-                  <div className="input-group-label">Bill Number</div>
+                  <div className="add-inventory-input-group-label">Bill Number</div>
                   <Form.Control
                     type="text"
-                    className="modern-input"
+                    className="add-inventory-modern-input"
                     name="bill_number"
                     value={values.bill_number}
                     onChange={handleChange}
@@ -355,8 +180,8 @@ const AddInventory = () => {
                   />
                 </Col>
                 <Col xs={12} md={3}>
-                  <div className="input-group-label">Vendor</div>
-                  <div className="select-modern">
+                  <div className="add-inventory-input-group-label">Vendor</div>
+                  <div className="add-inventory-select-modern">
                     <CreatableSelect
                       isClearable
                       menuPlacement="auto"
@@ -370,8 +195,8 @@ const AddInventory = () => {
                   </div>
                 </Col>
                 <Col xs={12} md={3}>
-                  <div className="input-group-label">Category</div>
-                  <div className="select-modern">
+                  <div className="add-inventory-input-group-label">Category</div>
+                  <div className="add-inventory-select-modern">
                     <CreatableSelect
                       isClearable
                       menuPlacement="auto"
@@ -385,7 +210,7 @@ const AddInventory = () => {
                   </div>
                 </Col>
                 <Col md={12}>
-                  <div className="input-group-label">Bill Attachments</div>
+                  <div className="add-inventory-input-group-label">Bill Attachments</div>
                   <Form.Control
                     type="file"
                     multiple
@@ -403,7 +228,7 @@ const AddInventory = () => {
                   </label>
                   <div className="d-flex flex-wrap gap-2 mt-3">
                     {filePreviews.map((f, i) => (
-                      <div key={i} className="file-pill">
+                      <div key={i} className="add-inventory-file-pill">
                         <CsLineIcons icon={f.type.includes('pdf') ? 'file-text' : 'image'} size="14" /> {f.name.substring(0, 15)}...
                       </div>
                     ))}
@@ -412,10 +237,10 @@ const AddInventory = () => {
               </Row>
 
               {/* Item Details */}
-              <div className="section-label">
+              <div className="add-inventory-section-label">
                 <CsLineIcons icon="shopping-basket" size="18" /> Inventory Items
               </div>
-              <div className="item-header-row d-none d-lg-flex">
+              <div className="add-inventory-item-header-row d-none d-lg-flex">
                 <div style={{ flex: 2 }}>Item Description</div>
                 <div style={{ flex: 0.8 }}>Qty</div>
                 <div style={{ flex: 1 }}>Unit</div>
@@ -424,11 +249,11 @@ const AddInventory = () => {
               </div>
 
               {values.items.map((item, idx) => (
-                <div key={idx} className="item-row-card">
+                <div key={idx} className="add-inventory-item-row-card">
                   <Row className="w-100 g-3 align-items-center">
                     <Col xs={12} lg={4}>
-                      <div className="input-group-label d-lg-none">Item Name</div>
-                      <div className="select-modern">
+                      <div className="add-inventory-input-group-label d-lg-none">Item Description</div>
+                      <div className="add-inventory-select-modern">
                         <CreatableSelect
                           isClearable
                           menuPlacement="auto"
@@ -436,23 +261,23 @@ const AddInventory = () => {
                           options={(suggestions.items || []).map((i) => ({ label: i, value: i }))}
                           value={item.item_name ? { label: item.item_name, value: item.item_name } : null}
                           onChange={(s) => handleItemChange(idx, 'item_name', s ? s.value : '')}
-                          placeholder="Select item..."
+                          placeholder="Select or type item..."
                           classNamePrefix="react-select"
                         />
                       </div>
                     </Col>
                     <Col xs={4} lg={1.5}>
-                      <div className="input-group-label d-lg-none">Qty</div>
+                      <div className="add-inventory-input-group-label d-lg-none">Qty</div>
                       <Form.Control
                         type="number"
-                        className="modern-input"
+                        className="add-inventory-modern-input"
                         value={item.item_quantity}
                         onChange={(e) => handleItemChange(idx, 'item_quantity', e.target.value)}
                       />
                     </Col>
                     <Col xs={4} lg={2}>
-                      <div className="input-group-label d-lg-none">Unit</div>
-                      <Form.Select className="modern-input" value={item.unit} onChange={(e) => handleItemChange(idx, 'unit', e.target.value)}>
+                      <div className="add-inventory-input-group-label d-lg-none">Unit</div>
+                      <Form.Select className="add-inventory-modern-input" value={item.unit} onChange={(e) => handleItemChange(idx, 'unit', e.target.value)}>
                         <option value="">Unit</option>
                         <option value="kg">kg</option>
                         <option value="g">g</option>
@@ -462,55 +287,60 @@ const AddInventory = () => {
                       </Form.Select>
                     </Col>
                     <Col xs={4} lg={3}>
-                      <div className="input-group-label d-lg-none">Price</div>
+                      <div className="add-inventory-input-group-label d-lg-none">Price</div>
                       <Form.Control
                         type="number"
-                        className="modern-input"
+                        className="add-inventory-modern-input"
                         value={item.item_price}
                         onChange={(e) => handleItemChange(idx, 'item_price', e.target.value)}
                       />
                     </Col>
                     <Col xs={12} lg="auto" className="text-end">
-                      <button type="button" className="remove-btn ms-auto" onClick={() => removeItem(idx)} disabled={values.items.length === 1}>
+                      <button type="button" className="add-inventory-remove-btn ms-auto" onClick={() => removeItem(idx)} disabled={values.items.length === 1}>
                         <CsLineIcons icon="bin" size="16" />
                       </button>
                     </Col>
                   </Row>
                 </div>
               ))}
-              <div className="text-start">
-                <Button variant="outline-primary" className="rounded-pill px-4 fw-bold border-2" onClick={addItem}>
-                  <CsLineIcons icon="plus" size="16" className="me-2" /> Add Another Item to List
+              <div className="text-start mt-2">
+                <Button 
+                  variant="outline-primary" 
+                  className="manage-menu-custom-btn-outline shadow-sm px-4 py-2 fw-bold d-flex align-items-center" 
+                  onClick={addItem}
+                  style={{ borderRadius: '50px', border: '2px solid #23b3f4', color: '#23b3f4' }}
+                >
+                  <CsLineIcons icon="plus" size="16" className="me-2" /> Add Item
                 </Button>
               </div>
 
               {/* Financial Summary */}
-              <div className="summary-hub">
+              <div className="add-inventory-summary-hub">
                 <Row className="g-4">
                   <Col md={4}>
-                    <div className="input-group-label">Sub Total</div>
+                    <div className="add-inventory-input-group-label">Sub Total</div>
                     <div className="h4 fw-bold text-muted">₹ {values.sub_total}</div>
                   </Col>
                   <Col md={4}>
-                    <div className="input-group-label">Tax Amount</div>
-                    <Form.Control type="number" className="modern-input" name="tax" value={values.tax} onChange={handleChange} />
+                    <div className="add-inventory-input-group-label">Tax Amount</div>
+                    <Form.Control type="number" className="add-inventory-modern-input" name="tax" value={values.tax} onChange={handleChange} />
                   </Col>
                   <Col md={4}>
-                    <div className="input-group-label">Discount</div>
-                    <Form.Control type="number" className="modern-input" name="discount" value={values.discount} onChange={handleChange} />
+                    <div className="add-inventory-input-group-label">Discount</div>
+                    <Form.Control type="number" className="add-inventory-modern-input" name="discount" value={values.discount} onChange={handleChange} />
                   </Col>
 
                   <Col xs={12} md={12}>
-                    <div className="total-display shadow-sm flex-column flex-md-row align-items-stretch align-items-md-center gap-3">
+                    <div className="add-inventory-total-display shadow-sm flex-column flex-md-row align-items-stretch align-items-md-center gap-3">
                       <div>
-                        <div className="input-group-label mb-1">Final Amount Payable</div>
-                        <div className="total-val">₹ {values.total_amount}</div>
+                        <div className="add-inventory-input-group-label mb-1">Final Amount Payable</div>
+                        <div className="add-inventory-total-val">₹ {values.total_amount}</div>
                       </div>
                       <div className="text-start text-md-end" style={{ minWidth: '200px' }}>
-                        <div className="input-group-label">Paid Amount</div>
+                        <div className="add-inventory-input-group-label">Paid Amount</div>
                         <Form.Control
                           type="number"
-                          className="modern-input text-md-center fw-bold text-primary"
+                          className="add-inventory-modern-input text-md-center fw-bold text-primary"
                           style={{ fontSize: '1.25rem' }}
                           name="paid_amount"
                           value={values.paid_amount}
@@ -527,7 +357,13 @@ const AddInventory = () => {
                       <div className="sw-2 sh-2 rounded-circle bg-warning flex-shrink-0" />
                       <span className="fw-bold text-muted">Pending Balance: ₹ {values.unpaid_amount}</span>
                     </div>
-                    <Button type="submit" variant="outline-primary" className="rounded-pill px-4 fw-bold border-2 w-100 w-md-auto ms-md-auto" disabled={isSubmitting}>
+                    <Button 
+                      type="submit" 
+                      variant="primary" 
+                      className="manage-menu-custom-btn-outline border-primary text-primary shadow-sm px-5 py-3 fw-bold d-flex align-items-center justify-content-center" 
+                      style={{ borderRadius: '50px', border: '2px solid #23b3f4', color: '#23b3f4' }}
+                      disabled={isSubmitting}
+                    >
                       {isSubmitting ? <Spinner animation="border" size="sm" className="me-2" /> : <CsLineIcons icon="save" className="me-2" />} Complete & Sync Inventory
                     </Button>
                   </Col>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Button, Row, Col, Card, Form, Badge } from 'react-bootstrap';
+import axios from 'axios';
 import {
-  getOrderById, getUserTaxInfo,
+  getOrderById, getUserTaxInfo, getTableById,
   createOrUpdateDineInOrder,
   createOrUpdateTakeawayOrder,
   createOrUpdateDeliveryOrder,
@@ -19,43 +20,44 @@ import CustomerInfoForm from './components/CustomerInfoForm';
 import PaymentSummaryBox from './components/PaymentSummaryBox';
 import PaymentModal from './components/PaymentModal';
 import BottomCartSheet from './components/BottomCartSheet';
+import MobileCartBar from './components/MobileCartBar';
 import { LeaveConfirmationModal, CancelOrderModal } from './components/ConfirmationModals';
 import useMenuFetcher from './hooks/useMenuFetcher';
 import useOrderCart from './hooks/useOrderCart';
 import useOrderCalculations from './hooks/useOrderCalculations';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-const ORDER_TYPES = ['Takeaway', 'Delivery'];
+const ORDER_TYPES = ['Dine In', 'Takeaway', 'Delivery'];
 
 const DEFAULT_CUSTOMER_INFO = {
   Takeaway: { name: '', phone: '', comment: '' },
   Delivery: { name: '', phone: '', address: '', comment: '' },
-  // 'Dine In': { name: '', total_persons: '', waiter: '', table_no: '', comment: '' },
+  'Dine In': { name: '', total_persons: '', waiter: '', table_no: '', comment: '' },
 };
 
 const VISIBLE_FIELDS = {
   Takeaway: { name: true, phone: true, address: false, total_persons: false, waiter: false },
   Delivery: { name: true, phone: true, address: true, total_persons: false, waiter: false },
-  // 'Dine In': { name: true, phone: false, address: false, total_persons: true, waiter: false },
+  'Dine In': { name: true, phone: false, address: false, total_persons: true, waiter: true },
 };
 
 const REQUIRED_FIELDS = {
   Takeaway: { name: false, phone: false },
   Delivery: { name: true, phone: true, address: true },
-  // 'Dine In': { name: false, total_persons: false },
+  'Dine In': { name: false, total_persons: false, waiter: false },
 };
 
 const API_MAP = {
   Takeaway: createOrUpdateTakeawayOrder,
   Delivery: createOrUpdateDeliveryOrder,
-  // 'Dine In': createOrUpdateDineInOrder,
+  'Dine In': createOrUpdateDineInOrder,
 };
 
 const DEFAULT_PAYMENT_DATA = {
   subTotal: 0, cgstPercent: 0, sgstPercent: 0, vatPercent: 0,
   cgstAmount: 0, sgstAmount: 0, vatAmount: 0,
-  discountType: 'amount', discountValue: 0, discountAmount: 0,
-  total: 0, paidAmount: 0, waveoffAmount: 0, paymentType: 'Cash',
+  discountType: 'amount', discountValue: '', discountAmount: 0,
+  total: 0, paidAmount: '', waveoffAmount: 0, paymentType: 'Cash',
 };
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -66,13 +68,17 @@ const UnifiedOrder = () => {
 
   const urlParams = new URLSearchParams(location.search);
   const orderId = urlParams.get('orderId');
+  const tableId = urlParams.get('tableId');
   const mode = urlParams.get('mode'); // 'new' | 'edit'
 
   const { activePlans } = useContext(AuthContext);
   const canKOT = activePlans ? activePlans.includes('KOT Panel') : false;
 
+  // Default type from URL path
+  const defaultType = location.pathname.includes('dine-in') ? 'Dine In' : location.pathname.includes('delivery') ? 'Delivery' : 'Takeaway';
+
   // ── Order Type ────────────────────────────────────────────────────────────
-  const [orderType, setOrderType] = useState('Takeaway');
+  const [orderType, setOrderType] = useState(defaultType);
   const isEditMode = mode === 'edit';
 
   const title = `${isEditMode ? 'Edit' : 'New'} ${orderType} Order`;
@@ -104,10 +110,14 @@ const UnifiedOrder = () => {
   const [taxRates, setTaxRates] = useState({ cgst: 0, sgst: 0, vat: 0 });
   const [paymentData, setPaymentData] = useState(DEFAULT_PAYMENT_DATA);
   const [orderNo, setOrderNo] = useState('');
+  const [tableInfo, setTableInfo] = useState({});
+  const [waiters, setWaiters] = useState([]);
 
   const initialStateRef = useRef({ orderItems: [], customerInfo: { name: '', phone: '', address: '', total_persons: '', waiter: '', table_no: '', comment: '' } });
   const allowNavigationRef = useRef(false);
   const kotSnapshotRef = useRef([]);
+
+  const waiterOptions = (waiters || []).map((w) => ({ value: w.full_name, label: w.full_name }));
 
   // ── Order Type Switch (new mode only) ─────────────────────────────────────
   const handleOrderTypeChange = (newType) => {
@@ -115,14 +125,40 @@ const UnifiedOrder = () => {
     setOrderType(newType);
     setOrderItems([]);
     const freshCustomerInfo = { ...DEFAULT_CUSTOMER_INFO[newType] };
-    setCustomerInfo({ name: '', phone: '', address: '', total_persons: '', waiter: '', table_no: '', comment: '', ...freshCustomerInfo });
+    setCustomerInfo({ name: '', phone: '', address: '', total_persons: '', waiter: '', table_no: tableInfo.table_no || '', comment: '', ...freshCustomerInfo });
     setPaymentData((prev) => ({ ...DEFAULT_PAYMENT_DATA, cgstPercent: prev.cgstPercent, sgstPercent: prev.sgstPercent, vatPercent: prev.vatPercent }));
     setIsDirty(false);
     // Reset dirty tracking baseline for new type
-    initialStateRef.current = { orderItems: [], customerInfo: { ...freshCustomerInfo } };
+    initialStateRef.current = { orderItems: [], customerInfo: { ...freshCustomerInfo, table_no: tableInfo.table_no || '' } };
   };
 
   // ── Data Fetchers ─────────────────────────────────────────────────────────
+  async function fetchTableInfo() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await getTableById(tableId, token);
+      setTableInfo(response.data.data);
+      if (orderType === 'Dine In' && !isEditMode) {
+        const tableNo = response.data.data.table_no;
+        setCustomerInfo(prev => ({ ...prev, table_no: tableNo }));
+        initialStateRef.current.customerInfo.table_no = tableNo;
+      }
+    } catch (error) {
+      console.error('Error fetching table info:', error);
+    }
+  }
+
+  async function fetchWaiters() {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API}/waiter/get`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      setWaiters(response.data.data);
+    } catch (err) {
+      console.error('Error fetching waiters:', err);
+    }
+  }
+
   async function fetchOrderDetails() {
     try {
       const token = localStorage.getItem('token');
@@ -224,6 +260,9 @@ const UnifiedOrder = () => {
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   useEffect(() => {
+    fetchWaiters();
+    if (tableId) fetchTableInfo();
+
     const token = localStorage.getItem('token');
     if (orderId) {
       fetchOrderDetails();
@@ -238,7 +277,7 @@ const UnifiedOrder = () => {
       setContainerCharges(r.data.containerCharges || []);
       setUserData(r.data);
     }).catch(console.error);
-  }, [orderId]);
+  }, [orderId, tableId]);
 
   // ── Navigation Guard ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -292,15 +331,17 @@ const UnifiedOrder = () => {
   };
 
   // ── Payload Builder ───────────────────────────────────────────────────────
-  const buildPayload = (status) => {
+  const buildPayload = (status, completeAll = false) => {
     const orderData = {
       order_type: orderType,
       order_items: orderItems.map((item) => ({
         dish_name: item.dish_name, quantity: item.quantity, dish_price: item.dish_price,
         special_notes: item.special_notes || '',
-        status: (status === 'KOT' || status === 'Paid')
-          ? (item.status === 'Pending' ? 'Preparing' : item.status)
-          : (status === 'Save' ? (item.status || 'Pending') : item.status),
+        status: completeAll
+          ? 'Completed'
+          : (status === 'KOT' || status === 'Paid')
+            ? (item.status === 'Pending' ? 'Preparing' : item.status)
+            : (status === 'Save' ? (item.status || 'Pending') : item.status),
       })),
       order_status: status,
       customer_name: customerInfo.name,
@@ -317,7 +358,8 @@ const UnifiedOrder = () => {
     if (orderType === 'Dine In') {
       orderData.total_persons = customerInfo.total_persons;
       orderData.waiter = customerInfo.waiter;
-      orderData.table_no = customerInfo.table_no;
+      orderData.table_no = customerInfo.table_no || tableInfo.table_no;
+      if (tableInfo.area) orderData.table_area = tableInfo.area;
     }
 
     const custPayload = { name: customerInfo.name };
@@ -327,6 +369,7 @@ const UnifiedOrder = () => {
     return {
       orderInfo: { ...orderData, order_id: orderId },
       customerInfo: custPayload,
+      tableId: orderType === 'Dine In' ? tableId : undefined,
     };
   };
 
@@ -338,7 +381,7 @@ const UnifiedOrder = () => {
 
     setIsLoading(true);
     try {
-      const payload = buildPayload('KOT');
+      const payload = buildPayload('KOT', true);
       const token = localStorage.getItem('token');
       const response = await API_MAP[orderType](payload, token);
       if (response.data.status === 'success') {
@@ -360,7 +403,7 @@ const UnifiedOrder = () => {
         if (savedId) localStorage.setItem(`kot_history_${savedId}`, JSON.stringify(newHistory));
 
         printKOTSlip(
-          { orderNo, orderType, tokenNumber, tableNo: customerInfo.table_no, items: delta, kotNo, timestamp },
+          { orderNo, orderType, tokenNumber, tableNo: customerInfo.table_no || tableInfo.table_no, items: delta, kotNo, timestamp },
           userData, setKotPrinting
         );
         toast.success(`KOT #${kotNo} sent to kitchen!`);
@@ -368,7 +411,14 @@ const UnifiedOrder = () => {
         // For new orders, update URL so subsequent saves work correctly
         if (!orderId && savedId) {
           allowNavigationRef.current = true;
-          window.location.href = `/order/new?orderId=${savedId}&mode=edit`;
+          // Maintain tableId in URL if Dine In
+          if (orderType === 'Dine In' && tableId) {
+            window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`;
+          } else {
+            window.location.href = `/order/new?orderId=${savedId}&mode=edit`;
+          }
+        } else {
+          fetchOrderDetails();
         }
       }
     } catch (err) {
@@ -381,7 +431,7 @@ const UnifiedOrder = () => {
 
   const handleReprintKOT = (record) => {
     printKOTSlip(
-      { orderNo, orderType, tokenNumber, tableNo: customerInfo.table_no, items: record.items, kotNo: record.kotNo, timestamp: record.timestamp },
+      { orderNo, orderType, tokenNumber, tableNo: customerInfo.table_no || tableInfo.table_no, items: record.items, kotNo: record.kotNo, timestamp: record.timestamp },
       userData, setKotPrinting
     );
   };
@@ -425,6 +475,7 @@ const UnifiedOrder = () => {
         } else {
           fetchOrderDetails();
           toast.success('Order saved and marked as Paid!');
+          history.push('/dashboard');
         }
       }
     } catch (err) {
@@ -445,6 +496,7 @@ const UnifiedOrder = () => {
           order_status: 'Cancelled',
           order_items: orderItems.map((item) => ({ ...item, status: 'Cancelled' })),
         },
+        tableId: orderType === 'Dine In' ? tableId : undefined,
       };
       const token = localStorage.getItem('token');
       const response = await API_MAP[orderType](payload, token);
@@ -489,159 +541,223 @@ const UnifiedOrder = () => {
   return (
     <>
       <HtmlHead title={title} description={description} />
-      <style>{`@media (max-width: 991px) { .mobile-transparent-card { background: transparent !important; border: none !important; box-shadow: none !important; } }`}</style>
 
-      {/* Mobile Top Info */}
-      <div className="d-flex d-lg-none justify-content-between align-items-center mb-2 px-2 mt-2">
-        <div className="d-flex align-items-center gap-2">
-          <h5 className="mb-0 fw-bold">{orderType}</h5>
-          {orderStatus && <Badge bg="secondary">{orderStatus}</Badge>}
-        </div>
-        <div className="d-flex flex-column align-items-end text-muted small">
-          {tokenNumber && <span className="fw-bold text-primary">Token #{tokenNumber}</span>}
-          <span>{new Date().toLocaleDateString('en-IN')}</span>
-        </div>
-      </div>
+      {/* POS Wrapper */}
+      <div className="pos-wrapper">
 
-      <Row className="g-1">
-        {/* Menu Section */}
-        <Col lg="8" xs="12" className="px-1 mb-3 mb-lg-0">
-          <Card className="h-100 position-relative overflow-hidden">
-            <Card.Header>
-              <Row className="align-items-center">
-                <Col className="d-flex align-items-center gap-2"><h5 className="mb-0">Menu Items</h5></Col>
-                <Col className="d-flex justify-content-end">
-                  <Button variant="outline-secondary" size="sm" onClick={() => handleNavigation('/dashboard')}>
-                    Go to Dashboard
-                  </Button>
-                </Col>
-              </Row>
-            </Card.Header>
-            <Card.Body className="p-0 d-flex h-100">
-              <MenuGrid
-                filteredMenuData={filteredMenuData} categories={categories}
-                selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory}
-                searchText={searchText} setSearchText={setSearchText}
-                showSpecial={showSpecial} setShowSpecial={setShowSpecial}
-                showCategories={showCategories} setShowCategories={setShowCategories}
-                addItemToOrder={addItemToOrder}
-                showParcelCharge={showParcelUI ? showParcelCharge : false}
-                setShowParcelCharge={showParcelUI ? setShowParcelCharge : undefined}
-                containerCharges={showParcelUI ? containerCharges : []}
-                addParcelCharge={showParcelUI ? addParcelCharge : undefined}
-              />
-            </Card.Body>
-          </Card>
-        </Col>
-
-        {/* Order Details Section */}
-        <Col lg="4" xs="12" className="pe-lg-0 px-1 px-lg-0">
-          <Card className="h-100 mobile-transparent-card">
-            <Card.Header className="d-none d-lg-block">
-              <Row>
-                <Col md="7">
-                  {tokenNumber && <Badge bg="primary" className="mb-1">Token #{tokenNumber}</Badge>}
-                  <div className="d-flex justify-content-start align-items-start">
-                    <div className="mx-1">Date: </div>
-                    <div className="fw-bold">{new Date().toLocaleDateString('en-IN')}</div>
-                  </div>
-                </Col>
-                <Col md="5" className="d-flex flex-column align-items-end justify-content-start">
-                  {orderStatus && <Badge bg="secondary" className="ms-2">{orderStatus}</Badge>}
-                </Col>
-              </Row>
-            </Card.Header>
-            <Card.Body className="p-0 p-lg-3">
-              {/* Desktop only: type selector + customer form + cart */}
-              <div className="d-none d-lg-block">
-                {/* Order Type Dropdown */}
-                <Form.Group className="mb-3">
-                  <Form.Label>Order Type</Form.Label>
-                  <Form.Select
-                    size="sm"
-                    value={orderType}
-                    onChange={(e) => handleOrderTypeChange(e.target.value)}
-                    disabled={isEditMode}
-                    className="mb-1"
-                  >
-                    {ORDER_TYPES.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-                <hr className="my-3" />
-                <CustomerInfoForm
-                  customerInfo={customerInfo} setCustomerInfo={setCustomerInfo}
-                  orderStatus={orderStatus}
-                  visibleFields={visibleFields}
-                  requiredFields={requiredFields}
-                />
-                <hr className="my-3" />
-                <OrderCartTable orderItems={orderItems} updateItemQuantity={updateItemQuantity} removeItem={removeItem} />
-                <Form.Group className="mb-3 mt-3">
-                  <Form.Label>Special Instructions</Form.Label>
-                  <Form.Control as="textarea" rows={2} value={customerInfo.comment}
-                    onChange={(e) => setCustomerInfo((prev) => ({ ...prev, comment: e.target.value }))}
-                    placeholder="Any special instructions..." />
-                </Form.Group>
-              </div>
-              <PaymentSummaryBox
-                orderItems={orderItems} isDirty={isDirty} orderStatus={orderStatus}
-                isLoading={isLoading} printing={printing} paymentData={paymentData} orderId={orderId}
-                handleSaveOrder={handleSaveOrder} handleOpenPaymentModal={handleOpenPaymentModal}
-                setShowCancelModal={setShowCancelModal} handlePrint={handlePrint}
-                history={history} setShowCartSheet={setShowCartSheet}
-                onKotAndPrint={handleKotAndPrint} kotPrinting={kotPrinting}
-                kotHistory={kotHistory} onReprintKOT={handleReprintKOT}
-                paymentHistory={paymentHistory}
-                alreadyPaid={parseFloat(initialStateRef.current?.paid_amount) || 0}
-                canKOT={canKOT}
-              />
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      <PaymentModal
-        showPaymentModal={showPaymentModal} setShowPaymentModal={setShowPaymentModal}
-        paymentData={paymentData} setPaymentData={setPaymentData} isLoading={isLoading}
-        handleDiscountTypeChange={handleDiscountTypeChange} handleDiscountValueChange={handleDiscountValueChange}
-        handlePaidAmountChange={handlePaidAmountChange} handlePayment={handlePayment}
-        orderItems={orderItems} customerInfo={customerInfo} orderType={orderType}
-        orderId={orderId} orderNo={orderNo}
-        alreadyPaid={parseFloat(initialStateRef.current.paid_amount) || 0}
-      />
-      <LeaveConfirmationModal
-        showLeaveModal={showLeaveModal} setShowLeaveModal={setShowLeaveModal}
-        setNextLocation={setNextLocation} orderStatus={orderStatus} allowNavigationRef={allowNavigationRef}
-        setIsDirty={setIsDirty} nextLocation={nextLocation} history={history}
-        handleSaveOrder={handleSaveOrder} isLoading={isLoading}
-      />
-      <CancelOrderModal showCancelModal={showCancelModal} setShowCancelModal={setShowCancelModal} handleCancelOrder={handleCancelOrder} isLoading={isLoading} />
-
-      {/* Mobile Bottom Sheet */}
-      <BottomCartSheet
-        showCartSheet={showCartSheet} setShowCartSheet={setShowCartSheet}
-        orderItems={orderItems} updateItemQuantity={updateItemQuantity} removeItem={removeItem}
-        isDirty={isDirty} orderStatus={orderStatus} isLoading={isLoading} printing={printing}
-        paymentData={paymentData} orderId={orderId} handleSaveOrder={handleSaveOrder}
-        handleOpenPaymentModal={handleOpenPaymentModal} setShowCancelModal={setShowCancelModal}
-        handlePrint={handlePrint} history={history}
-        alreadyPaid={parseFloat(initialStateRef.current?.paid_amount) || 0}
-        canKOT={canKOT}
-        onKotAndPrint={handleKotAndPrint} kotPrinting={kotPrinting}
-        kotHistory={kotHistory} onReprintKOT={handleReprintKOT}
-        paymentHistory={paymentHistory}
-      >
-        <div className="d-flex align-items-center justify-content-between mb-3">
-          <h6 className="mb-0 fw-bold text-muted border-bottom pb-2 flex-grow-1">Customer Details</h6>
-          {/* Mobile type selector */}
+        {/* Top Bar */}
+        <div className="pos-topbar">
+          <Button
+            className="custom-btn-outline"
+            style={{ padding: '0.35rem 1rem', flexShrink: 0 }}
+            onClick={() => handleNavigation('/dashboard')}
+          >
+            <CsLineIcons icon="arrow-left" size="13" className="me-1" />
+            Back
+          </Button>
+          <div className="pos-title flex-grow-1">
+            {title}
+            {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no) && (
+              <span className="ms-2 fw-normal text-muted" style={{ fontSize: '14px' }}>
+                — Table {tableInfo.table_no || customerInfo.table_no}
+              </span>
+            )}
+          </div>
+          {tokenNumber && (
+            <div style={{ border: '1.5px solid #23b3f4', borderRadius: '50px', padding: '3px 12px', color: '#23b3f4', fontWeight: 700, fontSize: '12px', flexShrink: 0 }}>
+              Token #{tokenNumber}
+            </div>
+          )}
+          {orderStatus && (
+            <div style={{ border: '1.5px solid #6c757d', borderRadius: '50px', padding: '3px 12px', color: '#6c757d', fontWeight: 700, fontSize: '12px', flexShrink: 0 }}>
+              {orderStatus}
+            </div>
+          )}
           <Form.Select
             size="sm"
             value={orderType}
             onChange={(e) => handleOrderTypeChange(e.target.value)}
-            disabled={isEditMode}
-            style={{ maxWidth: '130px' }}
+            disabled={isEditMode || !!tableId}
+            style={{ maxWidth: '130px', borderRadius: '50px', borderColor: 'rgba(35,179,244,0.35)', color: '#23b3f4', fontWeight: 700, fontSize: '13px', flexShrink: 0 }}
+          >
+            {ORDER_TYPES.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </Form.Select>
+          <div className="text-muted small fw-semibold" style={{ flexShrink: 0 }}>
+            {new Date().toLocaleDateString('en-IN')}
+          </div>
+        </div>
+
+        {/* POS Body */}
+        <div className="pos-body">
+          {/* Menu Panel */}
+          <MenuGrid
+            filteredMenuData={filteredMenuData}
+            categories={categories}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            searchText={searchText}
+            setSearchText={setSearchText}
+            showSpecial={showSpecial}
+            setShowSpecial={setShowSpecial}
+            showCategories={showCategories}
+            setShowCategories={setShowCategories}
+            addItemToOrder={addItemToOrder}
+            orderItems={orderItems}
+            showParcelCharge={showParcelUI ? showParcelCharge : false}
+            setShowParcelCharge={showParcelUI ? setShowParcelCharge : undefined}
+            containerCharges={showParcelUI ? containerCharges : []}
+            addParcelCharge={showParcelUI ? addParcelCharge : undefined}
+          />
+
+          {/* Order Panel */}
+          <div className="pos-order-panel">
+            <div className="pos-order-header">
+              <div className="d-flex justify-content-between align-items-center">
+                <div className="fw-bold" style={{ color: '#23b3f4', fontSize: '13px' }}>
+                  {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no)
+                    ? `T-${tableInfo.table_no || customerInfo.table_no}`
+                    : 'Order'} ({orderItems.length})
+                </div>
+                {tokenNumber && (
+                  <div style={{ background: 'rgba(35,179,244,0.1)', borderRadius: '50px', padding: '2px 10px', color: '#23b3f4', fontWeight: 800, fontSize: '11px' }}>
+                    #{tokenNumber}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="pos-customer-section">
+              <CustomerInfoForm
+                customerInfo={customerInfo}
+                setCustomerInfo={setCustomerInfo}
+                tableInfo={tableInfo}
+                waiterOptions={waiterOptions}
+                orderStatus={orderStatus}
+                visibleFields={visibleFields}
+                requiredFields={requiredFields}
+              />
+              {/* Special Instructions - Moved here to save space for cart */}
+              <div className="mt-2">
+                <Form.Control
+                  as="textarea"
+                  rows={1}
+                  value={customerInfo.comment}
+                  onChange={(e) => setCustomerInfo((prev) => ({ ...prev, comment: e.target.value }))}
+                  placeholder="Notes..."
+                  style={{ borderRadius: '6px', border: '1.5px solid rgba(226,232,240,0.9)', fontSize: '11.5px', height: '28px', resize: 'none', color: '#333', background: '#f8fafc' }}
+                />
+              </div>
+            </div>
+
+            <div className="pos-cart-section">
+              <OrderCartTable
+                orderItems={orderItems}
+                updateItemQuantity={updateItemQuantity}
+                removeItem={removeItem}
+              />
+            </div>
+
+            <div className="pos-total-section">
+              <PaymentSummaryBox
+                orderItems={orderItems}
+                isDirty={isDirty}
+                orderStatus={orderStatus}
+                isLoading={isLoading}
+                printing={printing}
+                paymentData={paymentData}
+                orderId={orderId}
+                handleSaveOrder={handleSaveOrder}
+                handleOpenPaymentModal={handleOpenPaymentModal}
+                setShowCancelModal={setShowCancelModal}
+                handlePrint={handlePrint}
+                history={history}
+                setShowCartSheet={setShowCartSheet}
+                onKotAndPrint={handleKotAndPrint}
+                kotPrinting={kotPrinting}
+                kotHistory={kotHistory}
+                onReprintKOT={handleReprintKOT}
+                paymentHistory={paymentHistory}
+                alreadyPaid={parseFloat(initialStateRef.current?.paid_amount) || 0}
+                canKOT={canKOT}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modals */}
+      <PaymentModal
+        showPaymentModal={showPaymentModal}
+        setShowPaymentModal={setShowPaymentModal}
+        paymentData={paymentData}
+        setPaymentData={setPaymentData}
+        isLoading={isLoading}
+        handleDiscountTypeChange={handleDiscountTypeChange}
+        handleDiscountValueChange={handleDiscountValueChange}
+        handlePaidAmountChange={handlePaidAmountChange}
+        handlePayment={handlePayment}
+        orderItems={orderItems}
+        customerInfo={customerInfo}
+        orderType={orderType}
+        orderId={orderId}
+        orderNo={orderNo}
+        alreadyPaid={parseFloat(initialStateRef.current.paid_amount) || 0}
+      />
+      <LeaveConfirmationModal
+        showLeaveModal={showLeaveModal}
+        setShowLeaveModal={setShowLeaveModal}
+        setNextLocation={setNextLocation}
+        orderStatus={orderStatus}
+        allowNavigationRef={allowNavigationRef}
+        setIsDirty={setIsDirty}
+        nextLocation={nextLocation}
+        history={history}
+        handleSaveOrder={handleSaveOrder}
+        isLoading={isLoading}
+      />
+      <CancelOrderModal
+        showCancelModal={showCancelModal}
+        setShowCancelModal={setShowCancelModal}
+        handleCancelOrder={handleCancelOrder}
+        isLoading={isLoading}
+      />
+
+      {/* Mobile Bottom Sheet */}
+      <BottomCartSheet
+        showCartSheet={showCartSheet}
+        setShowCartSheet={setShowCartSheet}
+        orderItems={orderItems}
+        updateItemQuantity={updateItemQuantity}
+        removeItem={removeItem}
+        isDirty={isDirty}
+        orderStatus={orderStatus}
+        isLoading={isLoading}
+        printing={printing}
+        paymentData={paymentData}
+        orderId={orderId}
+        handleSaveOrder={handleSaveOrder}
+        handleOpenPaymentModal={handleOpenPaymentModal}
+        setShowCancelModal={setShowCancelModal}
+        handlePrint={handlePrint}
+        history={history}
+        alreadyPaid={parseFloat(initialStateRef.current?.paid_amount) || 0}
+        canKOT={canKOT}
+        onKotAndPrint={handleKotAndPrint}
+        kotPrinting={kotPrinting}
+        kotHistory={kotHistory}
+        onReprintKOT={handleReprintKOT}
+        paymentHistory={paymentHistory}
+      >
+        <div className="d-flex align-items-center justify-content-between mb-3">
+          <h6 className="mb-0 fw-bold text-muted border-bottom pb-2 flex-grow-1">Customer Details</h6>
+          <Form.Select
+            size="sm"
+            value={orderType}
+            onChange={(e) => handleOrderTypeChange(e.target.value)}
+            disabled={isEditMode || !!tableId}
+            style={{ maxWidth: '130px', borderRadius: '50px', borderColor: 'rgba(35,179,244,0.3)', color: '#23b3f4', fontWeight: 700 }}
           >
             {ORDER_TYPES.map((t) => (
               <option key={t} value={t}>{t}</option>
@@ -649,18 +765,31 @@ const UnifiedOrder = () => {
           </Form.Select>
         </div>
         <CustomerInfoForm
-          customerInfo={customerInfo} setCustomerInfo={setCustomerInfo}
+          customerInfo={customerInfo}
+          setCustomerInfo={setCustomerInfo}
+          tableInfo={tableInfo}
+          waiterOptions={waiterOptions}
           orderStatus={orderStatus}
           visibleFields={visibleFields}
           requiredFields={requiredFields}
         />
         <Form.Group className="mb-3">
-          <Form.Label>Special Instructions</Form.Label>
-          <Form.Control as="textarea" rows={2} value={customerInfo.comment}
+          <Form.Label className="fw-semibold small text-muted">Special Instructions</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={2}
+            value={customerInfo.comment}
             onChange={(e) => setCustomerInfo((prev) => ({ ...prev, comment: e.target.value }))}
-            placeholder="Any special instructions..." />
+            placeholder="Any special instructions..."
+            style={{ borderRadius: '12px', border: '1px solid rgba(35,179,244,0.2)', fontSize: '13px' }}
+          />
         </Form.Group>
       </BottomCartSheet>
+      <MobileCartBar
+        orderItems={orderItems}
+        paymentData={paymentData}
+        setShowCartSheet={setShowCartSheet}
+      />
     </>
   );
 };

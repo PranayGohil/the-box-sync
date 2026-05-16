@@ -47,7 +47,7 @@ const premiumNavStyles = `
 
   /* White underline bar for horizontal active item */
   html[data-placement="horizontal"] .nav-container .menu > li > a.active::after {
-    content: '' !important;
+
     position: absolute !important;
     bottom: 0 !important;
     left: 18% !important;
@@ -107,6 +107,21 @@ const premiumNavStyles = `
   /* Premium nav-shadow glow */
   .nav-container .nav-shadow {
     box-shadow: 0 8px 32px rgba(0,0,0,0.22), 0 1px 0 rgba(255,255,255,0.06) inset !important;
+  }
+
+  /* Fix for strange diagonal lines or artifacts on menu click/focus */
+  .nav-container a, 
+  .nav-container button, 
+  .nav-container .dropdown-toggle,
+  .nav-container [role="button"] {
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  .nav-container .cs-icon {
+    vertical-align: middle !important;
+    transform: none !important;
   }
 `;
 

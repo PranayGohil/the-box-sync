@@ -4,35 +4,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-const customStyles = `
-  .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
-  }
-  .custom-btn-danger {
-    background-color: #ef4444 !important;
-    border: 1px solid #ef4444 !important;
-    color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-  }
-  .custom-btn-danger:hover {
-    background-color: #dc2626 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
-  }
-`;
+
 
 const DeleteStaffModal = ({ show, handleClose, data, onDeleteSuccess }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -63,7 +35,7 @@ const DeleteStaffModal = ({ show, handleClose, data, onDeleteSuccess }) => {
 
   return (
     <Modal show={show} onHide={handleClose} centered className="rounded-4">
-      <style>{customStyles}</style>
+      
       <Modal.Header closeButton className="border-0 pb-0">
         <Modal.Title className="fw-bold text-danger">Delete Staff Member?</Modal.Title>
       </Modal.Header>
@@ -86,14 +58,14 @@ const DeleteStaffModal = ({ show, handleClose, data, onDeleteSuccess }) => {
       </Modal.Body>
       <Modal.Footer className="border-0 pt-0 d-flex gap-3">
         <Button 
-          className="px-4 py-2 custom-btn-outline flex-grow-1 d-flex align-items-center justify-content-center gap-2" 
+          className="px-4 py-2 delete-staff-modal-custom-btn-outline flex-grow-1 d-flex align-items-center justify-content-center gap-2" 
           onClick={handleClose} 
           disabled={isDeleting}
         >
           Cancel
         </Button>
         <Button
-          className="px-4 py-2 custom-btn-danger flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+          className="px-4 py-2 delete-staff-modal-custom-btn-danger flex-grow-1 d-flex align-items-center justify-content-center gap-2"
           onClick={handleDelete}
           disabled={isDeleting}
         >

@@ -17,98 +17,7 @@ const MONTH_NAMES = [
 
 const currentDate = new Date();
 
-const customStyles = `
-  .glass-card {
-    background: #ffffff !important;
-    border: 1px solid #f0f0f0 !important;
-    border-radius: 1.5rem !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
-    transition: all 0.3s ease;
-  }
-  .glass-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.06) !important;
-  }
-  .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
-  }
-  .custom-btn-solid {
-    background-color: #1ea8e7 !important;
-    border: 1px solid #1ea8e7 !important;
-    color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-solid:hover {
-    background-color: #158dc4 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
-  }
-  .stat-card {
-    position: relative;
-    overflow: hidden;
-  }
-  .stat-card::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 100px;
-    height: 100px;
-    background: rgba(30, 168, 231, 0.05);
-    border-radius: 50%;
-    z-index: 0;
-  }
-  .status-badge {
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
-    font-weight: 700;
-    font-size: 0.75rem;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-  }
-  .react-table-modern th {
-    background: #f8fafc !important;
-    color: #64748b !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    font-size: 0.75rem !important;
-    letter-spacing: 0.05em !important;
-    padding: 1.25rem !important;
-    border: none !important;
-  }
-  .react-table-modern td {
-    padding: 1.25rem !important;
-    vertical-align: middle !important;
-    border-bottom: 1px solid #f1f5f9 !important;
-  }
-  .bulk-bar {
-    background: #1ea8e7 !important;
-    color: #fff !important;
-    border-radius: 1rem !important;
-    padding: 1rem 1.5rem !important;
-    margin-bottom: 1.5rem !important;
-    animation: slideDown 0.3s ease-out;
-  }
-  @keyframes slideDown {
-    from { transform: translateY(-20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-`;
+
 
 export default function ManagePayroll() {
     const title = 'Manage Payroll';
@@ -290,7 +199,7 @@ export default function ManagePayroll() {
 
     return (
         <div className="container-fluid pb-5">
-            <style>{customStyles}</style>
+            
             <HtmlHead title={title} description={description} />
 
             <div className="page-title-container mb-5">
@@ -300,11 +209,11 @@ export default function ManagePayroll() {
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
                     <Col md={5} className="d-flex justify-content-md-end gap-2">
-                        <Button className="custom-btn-outline px-4" as={Link} to="/staff/payroll/generate">
+                        <Button className="manage-payroll-custom-btn-outline px-4" as={Link} to="/staff/payroll/generate">
                             <CsLineIcons icon="plus" className="me-2" />
                             Generate New
                         </Button>
-                        <Button className="custom-btn-outline px-4" as={Link} to="/staff/payroll/settings">
+                        <Button className="manage-payroll-custom-btn-outline px-4" as={Link} to="/staff/payroll/settings">
                             <CsLineIcons icon="gear" className="me-2" />
                             Settings
                         </Button>
@@ -312,7 +221,7 @@ export default function ManagePayroll() {
                 </Row>
             </div>
 
-            <Card className="glass-card border-0 mb-4">
+            <Card className="manage-payroll-glass-card border-0 mb-4">
                 <Card.Body className="p-4">
                     <Row className="g-3 align-items-end">
                         <Col xs={12} md={4}>
@@ -330,7 +239,7 @@ export default function ManagePayroll() {
                             </Form.Select>
                         </Col>
                         <Col xs={12} md={5} className="d-flex justify-content-md-end">
-                            <Button className="custom-btn-outline sh-5 d-flex align-items-center gap-2" onClick={fetchSummary} disabled={loading}>
+                            <Button className="manage-payroll-custom-btn-outline sh-5 d-flex align-items-center gap-2" onClick={fetchSummary} disabled={loading}>
                                 <CsLineIcons icon="refresh" size="18" /> Refresh Data
                             </Button>
                         </Col>
@@ -347,7 +256,7 @@ export default function ManagePayroll() {
                         { label: 'Pending Generation', value: totals.count_not_generated || 0, icon: 'info-hexagon', color: 'danger' },
                     ].map((s) => (
                         <Col xs={6} md={3} key={s.label}>
-                            <Card className="glass-card border-0 h-100 stat-card">
+                            <Card className="manage-payroll-glass-card border-0 h-100 manage-payroll-stat-card">
                                 <Card.Body className="p-4">
                                     <div className="d-flex align-items-center gap-3 mb-3">
                                         <div className={`sw-5 sh-5 rounded-circle bg-soft-${s.color} d-flex align-items-center justify-content-center text-${s.color}`}>
@@ -364,14 +273,14 @@ export default function ManagePayroll() {
             )}
 
             {error && (
-                <Alert variant="danger" className="glass-card border-0 mb-4 p-4 d-flex align-items-center gap-3">
+                <Alert variant="danger" className="manage-payroll-glass-card border-0 mb-4 p-4 d-flex align-items-center gap-3">
                     <CsLineIcons icon="error" size="24" className="text-danger" />
                     <span className="fw-bold">{error}</span>
                 </Alert>
             )}
 
             {selectedIds.size > 0 && (
-                <div className="bulk-bar d-flex align-items-center justify-content-between shadow-lg">
+                <div className="manage-payroll-bulk-bar d-flex align-items-center justify-content-between shadow-lg">
                     <div className="d-flex align-items-center gap-3">
                         <div className="sw-5 sh-5 rounded-circle bg-white text-primary d-flex align-items-center justify-content-center fw-bold">
                             {selectedIds.size}
@@ -395,7 +304,7 @@ export default function ManagePayroll() {
                 </div>
             )}
 
-            <Card className="glass-card border-0 overflow-hidden shadow-sm">
+            <Card className="manage-payroll-glass-card border-0 overflow-hidden shadow-sm">
                 <Card.Header className="bg-light border-0 p-4">
                     <div className="d-flex justify-content-between align-items-center">
                         <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
@@ -417,12 +326,12 @@ export default function ManagePayroll() {
                                 <CsLineIcons icon="inbox" size="64" className="text-muted mb-4 opacity-25" />
                                 <h4 className="text-muted fw-bold">No Staff Found</h4>
                                 <p className="text-muted mb-4">Please add staff members to start managing payroll.</p>
-                                <Button className="custom-btn-solid" as={Link} to="/staff/add">Add First Staff Member</Button>
+                                <Button className="manage-payroll-custom-btn-solid" as={Link} to="/staff/add">Add First Staff Member</Button>
                             </div>
                         </div>
                     ) : (
                         <div className="table-responsive">
-                            <Table hover className="react-table-modern mb-0">
+                            <Table hover className="manage-payroll-react-table-modern mb-0">
                                 <thead>
                                     <tr>
                                         <th style={{ width: '60px' }}>
@@ -487,7 +396,7 @@ export default function ManagePayroll() {
                                                     </td>
                                                     <td className="text-end fw-bold text-primary h5 mb-0">₹{payroll.net_salary.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</td>
                                                     <td className="text-center">
-                                                        <Badge bg={payroll.status === 'paid' ? 'success' : 'warning'} className="status-badge">
+                                                        <Badge bg={payroll.status === 'paid' ? 'success' : 'warning'} className="manage-payroll-status-badge">
                                                             <CsLineIcons icon={payroll.status === 'paid' ? 'check' : 'clock'} size="12" className="me-1" />
                                                             {payroll.status}
                                                         </Badge>
@@ -495,21 +404,21 @@ export default function ManagePayroll() {
                                                     <td className="text-center">
                                                         <div className="d-flex justify-content-center gap-2">
                                                             {payroll.status === 'unpaid' ? (
-                                                                <Button className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center" onClick={() => handleMarkPaid(new Set([payroll._id]))} disabled={isMarkingPaid}>
+                                                                <Button className="manage-payroll-custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center" onClick={() => handleMarkPaid(new Set([payroll._id]))} disabled={isMarkingPaid}>
                                                                     <CsLineIcons icon="check" size="16" />
                                                                 </Button>
                                                             ) : (
-                                                                <Button className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center border-warning text-warning" onClick={() => handleMarkUnpaid(new Set([payroll._id]))} disabled={isMarkingPaid}>
+                                                                <Button className="manage-payroll-custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center border-warning text-warning" onClick={() => handleMarkUnpaid(new Set([payroll._id]))} disabled={isMarkingPaid}>
                                                                     <CsLineIcons icon="close" size="16" />
                                                                 </Button>
                                                             )}
-                                                            <Button className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center" onClick={() => openEditModal(payroll, staff)}>
+                                                            <Button className="manage-payroll-custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center" onClick={() => openEditModal(payroll, staff)}>
                                                                 <CsLineIcons icon="edit" size="16" />
                                                             </Button>
-                                                            <Button className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center border-dark text-dark" onClick={() => history.push(`/staff/payroll/view/${staff._id}`)}>
+                                                            <Button className="manage-payroll-custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center border-dark text-dark" onClick={() => history.push(`/staff/payroll/view/${staff._id}`)}>
                                                                 <CsLineIcons icon="eye" size="16" />
                                                             </Button>
-                                                            <Button className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center border-danger text-danger" onClick={() => { setDeletingPayroll(payroll); setShowDeleteModal(true); }}>
+                                                            <Button className="manage-payroll-custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center border-danger text-danger" onClick={() => { setDeletingPayroll(payroll); setShowDeleteModal(true); }}>
                                                                 <CsLineIcons icon="bin" size="16" />
                                                             </Button>
                                                         </div>
@@ -521,7 +430,7 @@ export default function ManagePayroll() {
                                                         <div className="text-muted fw-bold small text-uppercase letter-spacing-1">Payroll Not Generated</div>
                                                     </td>
                                                     <td className="text-center bg-light bg-opacity-10">
-                                                        <Button className="custom-btn-solid sh-5 px-3" onClick={() => history.push(`/staff/payroll/generate?staff_id=${staff._id}&month=${month}&year=${year}`)}>
+                                                        <Button className="manage-payroll-custom-btn-solid sh-5 px-3" onClick={() => history.push(`/staff/payroll/generate?staff_id=${staff._id}&month=${month}&year=${year}`)}>
                                                             <CsLineIcons icon="plus" size="16" className="me-1" /> Generate
                                                         </Button>
                                                     </td>
@@ -570,7 +479,7 @@ export default function ManagePayroll() {
                 <Modal.Body className="p-4">
                     {editingPayroll && (
                         <>
-                            <div className="glass-card bg-light border-0 p-4 mb-4">
+                            <div className="manage-payroll-glass-card bg-light border-0 p-4 mb-4">
                                 <Row className="text-center g-3">
                                     <Col xs={4}>
                                         <div className="text-muted small fw-bold text-uppercase mb-1">Contract Base</div>
@@ -627,8 +536,8 @@ export default function ManagePayroll() {
                     )}
                 </Modal.Body>
                 <Modal.Footer className="border-0 p-4 pt-0 d-flex gap-3">
-                    <Button className="custom-btn-outline flex-grow-1 py-3" onClick={() => setShowEditModal(false)}>Discard Changes</Button>
-                    <Button className="custom-btn-solid flex-grow-1 py-3" onClick={handleSaveEdit} disabled={isSavingEdit}>
+                    <Button className="manage-payroll-custom-btn-outline flex-grow-1 py-3" onClick={() => setShowEditModal(false)}>Discard Changes</Button>
+                    <Button className="manage-payroll-custom-btn-solid flex-grow-1 py-3" onClick={handleSaveEdit} disabled={isSavingEdit}>
                         {isSavingEdit ? <Spinner size="sm" /> : <><CsLineIcons icon="save" className="me-2" /> Commit Updates</>}
                     </Button>
                 </Modal.Footer>
@@ -646,15 +555,15 @@ export default function ManagePayroll() {
                     <p className="text-muted">This will permanently remove the payroll record for this staff member. This action cannot be reversed.</p>
                     
                     {deletingPayroll && (
-                        <div className="glass-card bg-light border-0 p-3 mt-3">
+                        <div className="manage-payroll-glass-card bg-light border-0 p-3 mt-3">
                             <div className="fw-bold text-danger">₹{deletingPayroll.net_salary?.toLocaleString('en-IN')}</div>
                             <small className="text-muted">Status: {deletingPayroll.status.toUpperCase()}</small>
                         </div>
                     )}
                 </Modal.Body>
                 <Modal.Footer className="border-0 d-flex gap-3">
-                    <Button className="custom-btn-outline flex-grow-1" onClick={() => setShowDeleteModal(false)}>Keep Record</Button>
-                    <Button className="custom-btn-solid bg-danger border-danger flex-grow-1" onClick={handleDelete} disabled={isDeleting}>
+                    <Button className="manage-payroll-custom-btn-outline flex-grow-1" onClick={() => setShowDeleteModal(false)}>Keep Record</Button>
+                    <Button className="manage-payroll-custom-btn-solid bg-danger border-danger flex-grow-1" onClick={handleDelete} disabled={isDeleting}>
                         {isDeleting ? <Spinner size="sm" /> : 'Confirm Delete'}
                     </Button>
                 </Modal.Footer>

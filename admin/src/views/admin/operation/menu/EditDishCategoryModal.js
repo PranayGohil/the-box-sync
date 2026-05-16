@@ -6,75 +6,7 @@ import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import CreatableSelect from 'react-select/creatable';
 
-const customStyles = `
-  .pill-input {
-    border-radius: 12px !important;
-    padding: 0.7rem 1.2rem !important;
-    border: 1px solid #e5e7eb !important;
-    background: #ffffff !important;
-    transition: all 0.2s ease !important;
-  }
-  .pill-input:focus {
-    border-color: #1ea8e7 !important;
-    box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
-    outline: none !important;
-  }
-  .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
-  }
-  .custom-btn-outline:hover svg {
-    stroke: #fff !important;
-  }
-  .modal-footer {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: flex-end !important;
-    gap: 0.75rem !important;
-    border-top: none !important;
-    padding: 1.5rem !important;
-  }
-  .custom-check {
-    width: 20px;
-    height: 20px;
-    border-radius: 6px;
-    border: 2px solid #e5e7eb;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-  }
-  .custom-check.active {
-    background: #1ea8e7 !important;
-    border-color: #1ea8e7 !important;
-  }
-  .radio-pill {
-    padding: 0.5rem 1.2rem;
-    border-radius: 50px;
-    border: 1px solid #e5e7eb;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: #6b7280;
-  }
-  .radio-pill.active {
-    background: #1ea8e7;
-    color: #fff;
-    border-color: #1ea8e7;
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.2);
-  }
-`;
+
 
 const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -175,7 +107,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
 
     return (
         <Modal show={show} onHide={handleClose} backdrop="static" centered size="lg">
-            <style>{customStyles}</style>
+            
             <Modal.Header closeButton className="border-0 pb-0">
                 <Modal.Title className="fw-bold" style={{ color: '#1ea8e7' }}>
                     <CsLineIcons icon="edit" className="me-2" />
@@ -192,7 +124,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                                 {['veg', 'egg', 'non-veg'].map((type) => (
                                     <div
                                         key={type}
-                                        className={`radio-pill ${formik.values.meal_type === type ? 'active' : ''}`}
+                                        className={`edit-dish-category-modal-radio-pill ${formik.values.meal_type === type ? 'active' : ''}`}
                                         onClick={() => formik.setFieldValue('meal_type', type)}
                                     >
                                         {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -211,7 +143,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                                     onChange={formik.handleChange}
                                     placeholder="e.g. Main Course"
                                     disabled={isSubmitting}
-                                    className="pill-input shadow-sm"
+                                    className="edit-dish-category-modal-pill-input shadow-sm"
                                 />
                             </Form.Group>
                         </Col>
@@ -239,7 +171,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                                 className="d-flex align-items-center gap-2 cursor-pointer"
                                 onClick={() => formik.setFieldValue('hide_on_kot', !formik.values.hide_on_kot)}
                             >
-                                <div className={`custom-check ${formik.values.hide_on_kot ? 'active' : ''}`}>
+                                <div className={`edit-dish-category-modal-custom-check ${formik.values.hide_on_kot ? 'active' : ''}`}>
                                     {formik.values.hide_on_kot && <CsLineIcons icon="check" size="12" className="text-white" />}
                                 </div>
                                 <span className="fw-bold text-alternate small text-uppercase">Hide on KOT</span>
@@ -254,7 +186,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                     variant="outline-light" 
                     onClick={handleClose} 
                     disabled={isSubmitting}
-                    className="rounded-pill px-4 fw-bold custom-btn-outline btn btn-outline-primary"
+                    className="rounded-pill px-4 fw-bold edit-dish-category-modal-custom-btn-outline btn btn-outline-primary"
                 >
                     Cancel
                 </Button>
@@ -262,7 +194,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                     type="submit"
                     form="edit_category_form"
                     disabled={isSubmitting}
-                    className="px-5 py-2 custom-btn-outline d-flex align-items-center gap-2"
+                    className="px-5 py-2 edit-dish-category-modal-custom-btn-outline d-flex align-items-center gap-2"
                 >
                     {isSubmitting ? (
                         <>

@@ -10,64 +10,6 @@ import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import CreatableSelect from 'react-select/creatable';
 
-const customStyles = `
-  .pill-input {
-    border-radius: 12px !important;
-    padding: 0.7rem 1.2rem !important;
-    border: 1px solid #e5e7eb !important;
-    background: #ffffff !important;
-    transition: all 0.2s ease !important;
-  }
-  .pill-input:focus {
-    border-color: #1ea8e7 !important;
-    box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
-    outline: none !important;
-  }
-  .glass-card {
-    background: #fff !important;
-    border: 1px solid #f0f0f0 !important;
-    border-radius: 1.25rem !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
-    transition: all 0.3s ease;
-  }
-  .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
-  }
-  .custom-btn-outline:hover svg {
-    stroke: #fff !important;
-  }
-  .delete-btn-table {
-    border: 1px solid #cf2637 !important;
-    color: #cf2637 !important;
-    background-color: #fff !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
-    transition: all 0.2s ease !important;
-    width: 38px !important;
-    height: 38px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border-radius: 50% !important;
-    padding: 0 !important;
-  }
-  .delete-btn-table:hover {
-    background-color: #cf2637 !important;
-    color: #fff !important;
-    box-shadow: 0 4px 12px rgba(207, 38, 55, 0.2) !important;
-  }
-`;
-
 const AddTable = () => {
   const history = useHistory();
   const location = useLocation();
@@ -227,7 +169,12 @@ const AddTable = () => {
       ...base,
       borderRadius: '12px',
       padding: '2px',
-      border: (formik.touched.area && formik.errors.area) || (isSubmitting && !formik.values.area) ? '1px solid #ef4444' : state.isFocused ? '1px solid #1ea8e7' : '1px solid #e5e7eb',
+      border:
+        (formik.touched.area && formik.errors.area) || (isSubmitting && !formik.values.area)
+          ? '1px solid #ef4444'
+          : state.isFocused
+          ? '1px solid #1ea8e7'
+          : '1px solid #e5e7eb',
       boxShadow: state.isFocused ? '0 0 0 4px rgba(30, 168, 231, 0.1)' : 'none',
       backgroundColor: '#fff',
       '&:hover': { border: '1px solid #1ea8e7' },
@@ -235,152 +182,163 @@ const AddTable = () => {
   };
 
   return (
-    <>
-      <style>{customStyles}</style>
+    <div className="container-fluid px-lg-5 pb-5">
       <HtmlHead title={title} description={description} />
-      <div className="container-fluid pb-5">
-        <div className="page-title-container mb-4">
-          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
-          <BreadcrumbList items={breadcrumbs} />
-        </div>
-
-        <section className="scroll-section">
-          <Card className="glass-card mb-4 border-0">
-            <Card.Body className="p-4">
-              {loadingAreas ? (
-                <div className="text-center py-5">
-                  <Spinner animation="border" variant="primary" className="mb-3" />
-                  <p className="text-muted">Loading areas...</p>
-                </div>
-              ) : (
-                <Form onSubmit={formik.handleSubmit}>
-                  <Row className="g-3 mb-4">
-                    <Col md="6">
-                      <Form.Label className="fw-bold text-muted small text-uppercase ls-1">Dining Type</Form.Label>
-                      <div className="position-relative">
-                        <CreatableSelect
-                          isClearable
-                          isDisabled={isSubmitting || loadingAreas || isFromManageTable}
-                          options={diningAreasOptions}
-                          value={formik.values.area ? { label: formik.values.area, value: formik.values.area } : null}
-                          onChange={(selected) => {
-                            formik.setFieldValue('area', selected ? selected.value : '');
-                          }}
-                          onBlur={() => formik.setFieldTouched('area', true)}
-                          placeholder="Select or create dining area"
-                          classNamePrefix="react-select"
-                          styles={selectStyles}
-                        />
-                        {formik.touched.area && formik.errors.area && <div className="text-danger mt-1 small">{formik.errors.area}</div>}
-                      </div>
-                    </Col>
-                  </Row>
-
-                  <div className="mt-5 pt-4 border-top">
-                    <h5 className="fw-bold text-dark mb-4">Table Configuration</h5>
-                    <div className="d-flex flex-column gap-3">
-                      {formik.values.tables.map((table, index) => (
-                        <div key={index} className="p-4 rounded-xl border-0 position-relative" style={{ background: '#f8fafc' }}>
-                          <Row className="g-3 align-items-center">
-                            <Col md="5">
-                              <Form.Label className="fw-bold small text-muted mb-1">Table No.</Form.Label>
-                              <div className="position-relative">
-                                <Form.Control
-                                  type="text"
-                                  name={`tables.${index}.tableNo`}
-                                  value={table.tableNo}
-                                  onChange={formik.handleChange}
-                                  onBlur={formik.handleBlur}
-                                  disabled={isSubmitting}
-                                  placeholder="e.g. T-10"
-                                  className="pill-input bg-white"
-                                  isInvalid={formik.touched.tables?.[index]?.tableNo && (!!formik.errors.tables?.[index]?.tableNo || !!tableErrors[index])}
-                                />
-                                {checkingTable[index] && (
-                                  <div className="position-absolute" style={{ right: '35px', top: '50%', transform: 'translateY(-50%)' }}>
-                                    <Spinner animation="border" size="sm" style={{ width: '1rem', height: '1rem', color: '#1ea8e7' }} />
-                                  </div>
-                                )}
-                                <Form.Control.Feedback type="invalid" className="small mt-1">{formik.errors.tables?.[index]?.tableNo || tableErrors[index]}</Form.Control.Feedback>
-                              </div>
-                            </Col>
-                            
-                            <Col md="5">
-                              <Form.Label className="fw-bold small text-muted mb-1">Max Capacity</Form.Label>
-                              <div className="position-relative">
-                                <Form.Control
-                                  type="number"
-                                  name={`tables.${index}.maxPerson`}
-                                  value={table.maxPerson}
-                                  onChange={formik.handleChange}
-                                  onBlur={formik.handleBlur}
-                                  disabled={isSubmitting}
-                                  placeholder="0"
-                                  className="pill-input bg-white"
-                                  isInvalid={formik.touched.tables?.[index]?.maxPerson && !!formik.errors.tables?.[index]?.maxPerson}
-                                />
-                                <Form.Control.Feedback type="invalid" className="small mt-1">{formik.errors.tables?.[index]?.maxPerson}</Form.Control.Feedback>
-                              </div>
-                            </Col>
-
-                            <Col md="2" className="text-end pt-4">
-                              <Button 
-                                variant="outline-danger" 
-                                className="delete-btn-table"
-                                onClick={() => removeTable(index)} 
-                                disabled={isSubmitting || formik.values.tables.length === 1}
-                              >
-                                <CsLineIcons icon="bin" size="18" />
-                              </Button>
-                            </Col>
-                          </Row>
-                        </div>
-                      ))}
-                    </div>
-
-                    {fetchError && (
-                      <Alert variant="danger" className="mt-4 border-0 rounded-lg shadow-sm">
-                        <CsLineIcons icon="error" className="me-2" />
-                        {fetchError}
-                      </Alert>
-                    )}
-
-                    <div className="mt-5 d-flex flex-column flex-sm-row gap-3">
-                      <Button 
-                        onClick={addMoreTable} 
-                        disabled={isSubmitting}
-                        className="px-4 py-2 custom-btn-outline d-flex align-items-center gap-2"
-                      >
-                        <CsLineIcons icon="plus" size="18" stroke="currentColor" /> 
-                        Add More Table
-                      </Button>
-                      
-                      <Button 
-                        type="submit" 
-                        disabled={isSubmitting} 
-                        className="px-5 py-2 custom-btn-outline ms-sm-auto d-flex align-items-center gap-2"
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <Spinner as="span" animation="border" size="sm" className="me-2" />
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            <CsLineIcons icon="save" size="18" stroke="currentColor" />
-                            Save Tables
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </Form>
-              )}
-            </Card.Body>
-          </Card>
-        </section>
+      <div className="page-title-container mb-4 mt-5 mt-lg-0 text-start">
+        <Row className="g-0 align-items-center">
+          <Col xs="auto" className="me-auto text-start">
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
+              {title}
+            </h1>
+            <BreadcrumbList items={breadcrumbs} />
+          </Col>
+        </Row>
       </div>
-    </>
+
+      <section className="scroll-section">
+        <Card className="add-table-glass-card mb-4 border-0">
+          <Card.Body className="p-4">
+            {loadingAreas ? (
+              <div className="text-center py-5">
+                <Spinner animation="border" variant="primary" className="mb-3" />
+                <p className="text-muted">Loading areas...</p>
+              </div>
+            ) : (
+              <Form onSubmit={formik.handleSubmit}>
+                <Row className="g-3 mb-4">
+                  <Col md="6">
+                    <Form.Label className="fw-bold text-muted small text-uppercase ls-1">Dining Type</Form.Label>
+                    <div className="position-relative">
+                      <CreatableSelect
+                        isClearable
+                        isDisabled={isSubmitting || loadingAreas || isFromManageTable}
+                        options={diningAreasOptions}
+                        value={formik.values.area ? { label: formik.values.area, value: formik.values.area } : null}
+                        onChange={(selected) => {
+                          formik.setFieldValue('area', selected ? selected.value : '');
+                        }}
+                        onBlur={() => formik.setFieldTouched('area', true)}
+                        placeholder="Select or create dining area"
+                        classNamePrefix="react-select"
+                        styles={selectStyles}
+                      />
+                      {formik.touched.area && formik.errors.area && <div className="text-danger mt-1 small">{formik.errors.area}</div>}
+                    </div>
+                  </Col>
+                </Row>
+
+                <div className="mt-5 pt-4 border-top">
+                  <h5 className="fw-bold text-dark mb-4">Table Configuration</h5>
+                  <div className="d-flex flex-column gap-3">
+                    {formik.values.tables.map((table, index) => (
+                      <div
+                        key={index}
+                        className="p-3 p-md-4 rounded-xl border-0 shadow-sm"
+                        style={{ background: '#f8fafc', borderRadius: '1.25rem' }}
+                      >
+                        <Row className="g-2 g-md-3 align-items-end">
+                          <Col xs={12} md={5}>
+                            <Form.Label className="fw-bold small text-muted mb-1">Table No.</Form.Label>
+                            <div className="position-relative">
+                              <Form.Control
+                                type="text"
+                                name={`tables.${index}.tableNo`}
+                                value={table.tableNo}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                disabled={isSubmitting}
+                                placeholder="e.g. T-10"
+                                className="add-table-pill-input bg-white"
+                                isInvalid={formik.touched.tables?.[index]?.tableNo && (!!formik.errors.tables?.[index]?.tableNo || !!tableErrors[index])}
+                              />
+                              {checkingTable[index] && (
+                                <div className="position-absolute" style={{ right: '35px', top: '50%', transform: 'translateY(-50%)' }}>
+                                  <Spinner animation="border" size="sm" style={{ width: '1rem', height: '1rem', color: '#1ea8e7' }} />
+                                </div>
+                              )}
+                              <Form.Control.Feedback type="invalid" className="small mt-1">
+                                {formik.errors.tables?.[index]?.tableNo || tableErrors[index]}
+                              </Form.Control.Feedback>
+                            </div>
+                          </Col>
+
+                          <Col xs={9} md={5}>
+                            <Form.Label className="fw-bold small text-muted mb-1">Max Capacity</Form.Label>
+                            <div className="position-relative">
+                              <Form.Control
+                                type="number"
+                                name={`tables.${index}.maxPerson`}
+                                value={table.maxPerson}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                disabled={isSubmitting}
+                                placeholder="0"
+                                className="add-table-pill-input bg-white"
+                                isInvalid={formik.touched.tables?.[index]?.maxPerson && !!formik.errors.tables?.[index]?.maxPerson}
+                              />
+                              <Form.Control.Feedback type="invalid" className="small mt-1">
+                                {formik.errors.tables?.[index]?.maxPerson}
+                              </Form.Control.Feedback>
+                            </div>
+                          </Col>
+
+                          <Col xs={3} md={2} className="d-flex justify-content-end pb-1">
+                            <Button
+                              variant="outline-danger"
+                              className="add-table-delete-btn-table"
+                              onClick={() => removeTable(index)}
+                              disabled={isSubmitting || formik.values.tables.length === 1}
+                            >
+                              <CsLineIcons icon="bin" size="18" />
+                            </Button>
+                          </Col>
+                        </Row>
+                      </div>
+                    ))}
+                  </div>
+
+                  {fetchError && (
+                    <Alert variant="danger" className="mt-4 border-0 rounded-lg shadow-sm">
+                      <CsLineIcons icon="error" className="me-2" />
+                      {fetchError}
+                    </Alert>
+                  )}
+
+                  <div className="mt-5 d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3">
+                    <Button
+                      onClick={addMoreTable}
+                      disabled={isSubmitting}
+                      className="px-4 py-2 add-table-custom-btn-outline d-flex align-items-center justify-content-center gap-2"
+                    >
+                      <CsLineIcons icon="plus" size="18" stroke="currentColor" />
+                      Add More Table
+                    </Button>
+
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="px-5 py-2 add-table-custom-btn-outline d-flex align-items-center justify-content-center gap-2"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Spinner as="span" animation="border" size="sm" className="me-2" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <CsLineIcons icon="save" size="18" stroke="currentColor" />
+                          Save Tables
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </Form>
+            )}
+          </Card.Body>
+        </Card>
+      </section>
+    </div>
   );
 };
 

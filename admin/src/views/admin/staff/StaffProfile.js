@@ -13,117 +13,7 @@ import { enIN } from 'date-fns/locale';
 
 import DeleteStaffModal from './DeleteStaffModal';
 
-const customStyles = `
-  .glass-card {
-    background: #ffffff !important;
-    border: 1px solid #f0f0f0 !important;
-    border-radius: 1.5rem !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
-    transition: all 0.3s ease;
-  }
-  .profile-photo-wrapper {
-    width: 140px;
-    height: 140px;
-    border-radius: 50%;
-    padding: 5px;
-    background: linear-gradient(135deg, #1ea8e7 0%, #007bff 100%);
-    margin-bottom: 1.5rem;
-    box-shadow: 0 10px 25px rgba(30, 168, 231, 0.2);
-  }
-  .profile-photo-inner {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: #fff;
-    padding: 3px;
-    overflow: hidden;
-  }
-  .profile-photo-inner img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-  }
-  .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
-  }
-  .custom-btn-danger-outline {
-    border: 1px solid #ef4444 !important;
-    color: #ef4444 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-danger-outline:hover {
-    background-color: #ef4444 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2) !important;
-  }
-  .nav-pills-premium .nav-link {
-    border-radius: 12px !important;
-    padding: 0.8rem 1.25rem !important;
-    color: #64748b !important;
-    font-weight: 600 !important;
-    margin-bottom: 0.5rem !important;
-    transition: all 0.2s ease !important;
-    border: 1px solid transparent !important;
-  }
-  .nav-pills-premium .nav-link.active {
-    background: #f0f9ff !important;
-    color: #1ea8e7 !important;
-    border: 1px solid #bae6fd !important;
-  }
-  .info-label {
-    color: #94a3b8;
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.25rem;
-  }
-  .info-value {
-    color: #1e293b;
-    font-weight: 600;
-    font-size: 1rem;
-  }
-  .doc-card {
-    border-radius: 1rem;
-    overflow: hidden;
-    border: 1px solid #eef2f6;
-    transition: all 0.3s ease;
-  }
-  .doc-card:hover {
-    border-color: #1ea8e7;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-  }
-  @media (max-width: 768px) {
-    .button-group-responsive {
-      flex-direction: column !important;
-      width: 100% !important;
-      gap: 12px !important;
-    }
-    .button-group-responsive button, .button-group-responsive a {
-      width: 100% !important;
-      justify-content: center !important;
-      padding: 0.75rem 1rem !important;
-    }
-  }
-`;
+
 
 const StaffProfile = () => {
   const { id } = useParams();
@@ -191,10 +81,10 @@ const StaffProfile = () => {
   if (error || !staff) {
     return (
       <div className="container-fluid py-5 text-center">
-        <Alert variant="danger" className="glass-card border-0 p-5 shadow-sm mx-auto" style={{ maxWidth: '600px' }}>
+        <Alert variant="danger" className="staff-profile-glass-card border-0 p-5 shadow-sm mx-auto" style={{ maxWidth: '600px' }}>
           <CsLineIcons icon="error" className="text-danger mb-3" size="48" />
           <h4 className="fw-bold mb-3">{error || 'Staff Not Found'}</h4>
-          <Button className="custom-btn-outline px-4" onClick={() => history.push('/staff/view')}>
+          <Button className="staff-profile-custom-btn-outline px-4" onClick={() => history.push('/staff/view')}>
             <CsLineIcons icon="arrow-left" className="me-2" size="18" /> Back to Staff List
           </Button>
         </Alert>
@@ -204,7 +94,7 @@ const StaffProfile = () => {
 
   return (
     <div className="container-fluid pb-5">
-      <style>{customStyles}</style>
+      
       <HtmlHead title={title} description={description} />
 
       <div className="page-title-container mb-4 mt-5 mt-md-n3">
@@ -215,12 +105,12 @@ const StaffProfile = () => {
             </h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
-          <Col md={5} className="d-flex button-group-responsive justify-content-md-end gap-2">
-            <Button className="custom-btn-outline px-4 py-2 d-flex align-items-center gap-2" as={NavLink} to={`/staff/edit/${id}`}>
+          <Col md={5} className="d-flex staff-profile-button-group-responsive justify-content-md-end gap-2">
+            <Button className="staff-profile-custom-btn-outline px-4 py-2 d-flex align-items-center gap-2" as={NavLink} to={`/staff/edit/${id}`}>
               <CsLineIcons icon="edit-square" size="18" /> <span>Edit Profile</span>
             </Button>
             <Button
-              className="custom-btn-danger-outline px-4 py-2 d-flex align-items-center gap-2"
+              className="staff-profile-custom-btn-danger-outline px-4 py-2 d-flex align-items-center gap-2"
               onClick={() => {
                 setShowDeleteModal(true);
                 setStaffToDelete(staff);
@@ -236,11 +126,11 @@ const StaffProfile = () => {
         <Row className="g-4">
           {/* Sidebar */}
           <Col xl={3}>
-            <Card className="glass-card border-0 shadow-sm mb-4">
+            <Card className="staff-profile-glass-card border-0 shadow-sm mb-4">
               <Card.Body className="p-4">
                 <div className="d-flex flex-column align-items-center text-center">
-                  <div className="profile-photo-wrapper">
-                    <div className="profile-photo-inner">
+                  <div className="staff-profile-profile-photo-wrapper">
+                    <div className="staff-profile-profile-photo-inner">
                       {!staff.photo ? (
                         <div className="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted">
                           <CsLineIcons icon="user" size="48" />
@@ -267,7 +157,7 @@ const StaffProfile = () => {
                   </div>
                 </div>
 
-                <Nav variant="pills" className="flex-column nav-pills-premium">
+                <Nav variant="pills" className="flex-column staff-profile-nav-pills-premium">
                   <Nav.Item>
                     <Nav.Link eventKey="personal" className="d-flex align-items-center gap-2">
                       <CsLineIcons icon="user" size="18" /> Personal Details
@@ -288,7 +178,7 @@ const StaffProfile = () => {
             <Tab.Content>
               {/* Personal Details Tab */}
               <Tab.Pane eventKey="personal">
-                <Card className="glass-card border-0 shadow-sm">
+                <Card className="staff-profile-glass-card border-0 shadow-sm">
                   <Card.Body className="p-4">
                     <div className="d-flex align-items-center gap-2 mb-4">
                       <div className="bg-soft-primary p-2 rounded-3">
@@ -299,42 +189,42 @@ const StaffProfile = () => {
                     
                     <Row className="g-4 mb-4">
                       <Col md={4}>
-                        <div className="info-label">Staff ID</div>
-                        <div className="info-value">#{staff.staff_id}</div>
+                        <div className="staff-profile-info-label">Staff ID</div>
+                        <div className="staff-profile-info-value">#{staff.staff_id}</div>
                       </Col>
                       <Col md={4}>
-                        <div className="info-label">Position</div>
-                        <div className="info-value">{staff.position}</div>
+                        <div className="staff-profile-info-label">Position</div>
+                        <div className="staff-profile-info-value">{staff.position}</div>
                       </Col>
                       <Col md={4}>
-                        <div className="info-label">Current Salary</div>
-                        <div className="info-value text-primary">₹{staff.salary?.toLocaleString('en-IN')}</div>
+                        <div className="staff-profile-info-label">Current Salary</div>
+                        <div className="staff-profile-info-value text-primary">₹{staff.salary?.toLocaleString('en-IN')}</div>
                       </Col>
                     </Row>
 
                     <Row className="g-4 mb-4">
                       <Col md={4}>
-                        <div className="info-label">Joining Date</div>
-                        <div className="info-value">{formatDate(staff.joining_date)}</div>
+                        <div className="staff-profile-info-label">Joining Date</div>
+                        <div className="staff-profile-info-value">{formatDate(staff.joining_date)}</div>
                       </Col>
                       <Col md={4}>
-                        <div className="info-label">Birth Date</div>
-                        <div className="info-value">{formatDate(staff.birth_date)}</div>
+                        <div className="staff-profile-info-label">Birth Date</div>
+                        <div className="staff-profile-info-value">{formatDate(staff.birth_date)}</div>
                       </Col>
                       <Col md={4}>
-                        <div className="info-label">Phone Number</div>
-                        <div className="info-value">{staff.phone_no}</div>
+                        <div className="staff-profile-info-label">Phone Number</div>
+                        <div className="staff-profile-info-value">{staff.phone_no}</div>
                       </Col>
                     </Row>
 
                     <Row className="g-4">
                       <Col md={4}>
-                        <div className="info-label">Email Address</div>
-                        <div className="info-value">{staff.email}</div>
+                        <div className="staff-profile-info-label">Email Address</div>
+                        <div className="staff-profile-info-value">{staff.email}</div>
                       </Col>
                       <Col md={8}>
-                        <div className="info-label">Residential Address</div>
-                        <div className="info-value">{staff.address}, {staff.city}, {staff.state}, {staff.country}</div>
+                        <div className="staff-profile-info-label">Residential Address</div>
+                        <div className="staff-profile-info-value">{staff.address}, {staff.city}, {staff.state}, {staff.country}</div>
                       </Col>
                     </Row>
                   </Card.Body>
@@ -343,7 +233,7 @@ const StaffProfile = () => {
 
               {/* Documents Tab */}
               <Tab.Pane eventKey="documents">
-                <Card className="glass-card border-0 shadow-sm">
+                <Card className="staff-profile-glass-card border-0 shadow-sm">
                   <Card.Body className="p-4">
                     <div className="d-flex align-items-center gap-2 mb-4">
                       <div className="bg-soft-primary p-2 rounded-3">
@@ -354,12 +244,12 @@ const StaffProfile = () => {
 
                     <Row className="g-4 mb-5">
                       <Col md={6}>
-                        <div className="info-label">Document Type</div>
-                        <div className="info-value">{staff.document_type || 'Not Specified'}</div>
+                        <div className="staff-profile-info-label">Document Type</div>
+                        <div className="staff-profile-info-value">{staff.document_type || 'Not Specified'}</div>
                       </Col>
                       <Col md={6}>
-                        <div className="info-label">ID / Document Number</div>
-                        <div className="info-value">{staff.id_number || 'N/A'}</div>
+                        <div className="staff-profile-info-label">ID / Document Number</div>
+                        <div className="staff-profile-info-value">{staff.id_number || 'N/A'}</div>
                       </Col>
                     </Row>
 
@@ -367,7 +257,7 @@ const StaffProfile = () => {
                     <Row className="g-4">
                       {staff.front_image && (
                         <Col md={6}>
-                          <div className="doc-card bg-light">
+                          <div className="staff-profile-doc-card bg-light">
                             <div className="p-3 bg-white border-bottom small fw-bold text-muted d-flex align-items-center gap-2">
                               <CsLineIcons icon="file-image" size="14" /> Front Side
                             </div>
@@ -382,7 +272,7 @@ const StaffProfile = () => {
                       )}
                       {staff.back_image && (
                         <Col md={6}>
-                          <div className="doc-card bg-light">
+                          <div className="staff-profile-doc-card bg-light">
                             <div className="p-3 bg-white border-bottom small fw-bold text-muted d-flex align-items-center gap-2">
                               <CsLineIcons icon="file-image" size="14" /> Back Side
                             </div>

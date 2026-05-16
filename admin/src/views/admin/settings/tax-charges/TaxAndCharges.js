@@ -165,119 +165,7 @@ const TaxAndCharges = () => {
     containerFormik.setFieldValue('containers', updated);
   };
 
-  const customStyles = `
-    .glass-card {
-      background: rgba(255, 255, 255, 0.8) !important;
-      backdrop-filter: blur(12px) !important;
-      border: 1px solid rgba(255, 255, 255, 0.3) !important;
-      border-radius: 20px !important;
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07) !important;
-      transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-    }
-    .custom-btn-outline {
-      background: transparent !important;
-      border: 1px solid #1ea8e7 !important;
-      color: #1ea8e7 !important;
-      border-radius: 50px !important;
-      padding: 0.6rem 1.5rem !important;
-      font-weight: 600 !important;
-      transition: all 0.3s ease !important;
-      display: flex !important;
-      align-items: center !important;
-      gap: 8px !important;
-    }
-    .custom-btn-outline:hover {
-      background: #1ea8e7 !important;
-      color: #ffffff !important;
-    }
-    .section-header {
-      border-left: 4px solid #1ea8e7;
-      padding-left: 15px;
-      margin-bottom: 25px;
-    }
-    .matrix-item {
-      background: rgba(255, 255, 255, 0.4);
-      border: 1px solid rgba(30, 168, 231, 0.1);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-    }
-    .react-select__control {
-      border-radius: 1rem !important;
-      border: 1px solid #e2e8f0 !important;
-      background-color: #f8fafc !important;
-      font-size: 0.9rem !important;
-      min-height: 45px !important;
-      height: 45px !important;
-    }
-    .react-select__value-container {
-      padding: 0 1rem !important;
-    }
-    .react-select__indicators-container {
-      height: 43px !important;
-    }
-    .react-select__placeholder {
-      color: #94a3b8 !important;
-    }
-    .react-select__menu {
-      border-radius: 1rem !important;
-      overflow: hidden !important;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
-      border: 1px solid #e2e8f0 !important;
-      z-index: 1000 !important;
-    }
-    .react-select__option {
-      padding: 0.75rem 1.25rem !important;
-      font-size: 0.9rem !important;
-    }
-    .react-select__option--is-focused {
-      background-color: rgba(35, 179, 244, 0.1) !important;
-      color: #23b3f4 !important;
-    }
-    .react-select__option--is-selected {
-      background-color: #23b3f4 !important;
-      color: white !important;
-    }
-    .form-control, .form-select {
-      height: 45px !important;
-      border-radius: 1rem !important;
-      border: 1px solid #e2e8f0 !important;
-      background-color: #f8fafc !important;
-      font-size: 0.9rem !important;
-      padding: 0.45rem 1rem !important;
-    }
-    @media (max-width: 768px) {
-      .button-group-responsive {
-        flex-direction: column !important;
-        width: 100% !important;
-        gap: 12px !important;
-      }
-      .button-group-responsive button {
-        width: 100% !important;
-        justify-content: center !important;
-        padding: 0.75rem 1rem !important;
-      }
-      .form-control, .form-select, .react-select__control, .react-select__single-value, .react-select__placeholder, .react-select__input {
-        font-size: 16px !important;
-        height: 45px !important;
-      }
-      .react-select__control {
-        padding: 0 !important;
-      }
-      .page-title-container h1 {
-        font-size: 1.75rem !important;
-      }
-    }
-    @media (max-width: 576px) {
-      .glass-card {
-        border-radius: 1rem;
-        padding: 1rem !important;
-      }
-      .matrix-item {
-        padding: 1rem;
-      }
-    }
-  `;
+  
 
   if (loading) {
     return (
@@ -290,10 +178,10 @@ const TaxAndCharges = () => {
 
   return (
     <div className="container-fluid pb-5">
-      <style>{customStyles}</style>
+      
       <HtmlHead title={title} description={description} />
       
-      <Row className="g-3 align-items-center mb-4 page-title-container">
+      <Row className="g-3 align-items-center mb-4 tax-and-charges-page-title-container">
         <Col xs={12} md={7}>
           <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
           <BreadcrumbList items={breadcrumbs} />
@@ -311,17 +199,17 @@ const TaxAndCharges = () => {
           >
             {({ values, errors, touched, handleChange, handleBlur, handleSubmit, resetForm }) => (
               <Form onSubmit={handleSubmit}>
-                <Card className="glass-card border-0 mb-4">
+                <Card className="tax-and-charges-glass-card border-0 mb-4">
                   <Card.Body className="p-4 p-md-5">
-                    <div className="d-flex button-group-responsive align-items-md-center justify-content-between mb-4">
-                      <div className="section-header mb-0">
+                    <div className="d-flex tax-and-charges-button-group-responsive align-items-md-center justify-content-between mb-4">
+                      <div className="tax-and-charges-section-header mb-0">
                         <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                           <CsLineIcons icon="percentage" size="20" className="text-primary" />
                           Tax Configuration (GST)
                         </h5>
                       </div>
                       {!gstEditMode && (
-                        <Button variant="none" className="custom-btn-outline" onClick={() => setGstEditMode(true)}>
+                        <Button variant="none" className="tax-and-charges-custom-btn-outline" onClick={() => setGstEditMode(true)}>
                           <CsLineIcons icon="edit" size="18" /> Edit Tax
                         </Button>
                       )}
@@ -364,9 +252,9 @@ const TaxAndCharges = () => {
                     </Row>
 
                     {gstEditMode && (
-                      <div className="d-flex button-group-responsive gap-3 mt-4">
-                        <Button variant="none" className="custom-btn-outline" onClick={() => { resetForm(); setGstEditMode(false); }}>Cancel</Button>
-                        <Button variant="none" className="custom-btn-outline" type="submit" disabled={gstSaving}>
+                      <div className="d-flex tax-and-charges-button-group-responsive gap-3 mt-4">
+                        <Button variant="none" className="tax-and-charges-custom-btn-outline" onClick={() => { resetForm(); setGstEditMode(false); }}>Cancel</Button>
+                        <Button variant="none" className="tax-and-charges-custom-btn-outline" type="submit" disabled={gstSaving}>
                           {gstSaving ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="save" size="18" />} Save Tax
                         </Button>
                       </div>
@@ -380,25 +268,25 @@ const TaxAndCharges = () => {
 
         {/* CONTAINER SECTION */}
         <Col lg={12}>
-          <Card className="glass-card border-0">
+          <Card className="tax-and-charges-glass-card border-0">
             <Card.Body className="p-4 p-md-5">
               <Form onSubmit={containerFormik.handleSubmit}>
-                <div className="d-flex button-group-responsive align-items-md-center justify-content-between mb-4">
-                  <div className="section-header mb-0">
+                <div className="d-flex tax-and-charges-button-group-responsive align-items-md-center justify-content-between mb-4">
+                  <div className="tax-and-charges-section-header mb-0">
                     <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                       <CsLineIcons icon="box" size="20" className="text-primary" />
                       Container Price Matrix
                     </h5>
                   </div>
                   {!containerEditMode && (
-                    <Button variant="none" className="custom-btn-outline" onClick={() => setContainerEditMode(true)}>
+                    <Button variant="none" className="tax-and-charges-custom-btn-outline" onClick={() => setContainerEditMode(true)}>
                       <CsLineIcons icon="edit" size="18" /> Modify Charges
                     </Button>
                   )}
                 </div>
 
                 {containerFormik.values.containers.map((container, index) => (
-                  <div key={index} className="matrix-item">
+                  <div key={index} className="tax-and-charges-matrix-item">
                     <Row className="g-3">
                       <Col xs={12} md={4}>
                         <Form.Group>
@@ -461,12 +349,12 @@ const TaxAndCharges = () => {
 
                 {containerEditMode && (
                   <div className="mt-4">
-                    <Button variant="none" className="custom-btn-outline mb-3 w-100 w-md-auto" onClick={addContainer} disabled={containerSaving}>
+                    <Button variant="none" className="tax-and-charges-custom-btn-outline mb-3 w-100 w-md-auto" onClick={addContainer} disabled={containerSaving}>
                       <CsLineIcons icon="plus" size="18" /> Add Type
                     </Button>
-                    <div className="d-flex button-group-responsive gap-3">
-                      <Button variant="none" className="custom-btn-outline" onClick={() => setContainerEditMode(false)}>Cancel</Button>
-                      <Button variant="none" className="custom-btn-outline" type="submit" disabled={containerSaving}>
+                    <div className="d-flex tax-and-charges-button-group-responsive gap-3">
+                      <Button variant="none" className="tax-and-charges-custom-btn-outline" onClick={() => setContainerEditMode(false)}>Cancel</Button>
+                      <Button variant="none" className="tax-and-charges-custom-btn-outline" type="submit" disabled={containerSaving}>
                         {containerSaving ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="save" size="18" />} Save Matrix
                       </Button>
                     </div>

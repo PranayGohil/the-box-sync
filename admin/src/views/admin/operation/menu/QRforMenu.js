@@ -6,80 +6,7 @@ import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
 
-const customStyles = `
-  .glass-card {
-    background: #ffffff !important;
-    border: 1px solid #f0f0f0 !important;
-    border-radius: 1.5rem !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
-    transition: all 0.3s ease;
-  }
-  .qr-container-box {
-    background: #f8fafc;
-    border-radius: 1.5rem;
-    padding: 3rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #eef2f6;
-  }
-  .qr-frame {
-    background: #ffffff;
-    padding: 1.5rem;
-    border-radius: 1.25rem;
-    box-shadow: 0 15px 35px rgba(30, 168, 231, 0.08);
-    border: 1px solid #eef2f6;
-    transition: transform 0.3s ease;
-  }
-  .qr-frame:hover {
-    transform: scale(1.02);
-  }
-  .url-pill {
-    background: #ffffff;
-    border-radius: 50px;
-    padding: 0.6rem 1.5rem;
-    border: none !important;
-    color: #64748b;
-    font-size: 0.85rem;
-    font-weight: 500;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-  }
-  .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
-  }
-  .custom-btn-outline:hover svg {
-    stroke: #fff !important;
-  }
-  .custom-btn-solid {
-    background-color: #1ea8e7 !important;
-    border: 1px solid #1ea8e7 !important;
-    color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-  }
-  .custom-btn-solid:hover {
-    background-color: #158dc4 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
-  }
-`;
+
 
 const QRforMenu = ({ setSection }) => {
   const [loading, setLoading] = useState(true);
@@ -119,7 +46,7 @@ const QRforMenu = ({ setSection }) => {
             body { text-align: center; font-family: 'Inter', sans-serif; padding: 40px; }
             .print-container { border: 2px solid #f0f0f0; padding: 40px; border-radius: 20px; display: inline-block; }
             h2 { color: #1ea8e7; margin-bottom: 30px; font-size: 24px; }
-            .url { color: #64748b; margin-top: 20px; font-size: 14px; }
+            .url { color: #64748b; margin-top: 20px; font-size: 14px; font-weight: 600; }
           </style>
         </head>
         <body>
@@ -157,18 +84,18 @@ const QRforMenu = ({ setSection }) => {
 
   return (
     <div className="container-fluid pb-5">
-      <style>{customStyles}</style>
       
-      <div className="page-title-container mb-4">
-        <Row className="g-3 align-items-center">
-          <Col>
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>Menu QR Code</h1>
+      
+      <div className="page-title-container mb-4 mt-5 mt-lg-0">
+        <Row className="g-0 align-items-center">
+          <Col xs="auto" className="me-auto">
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>Menu QR Code</h1>
             <div className="text-muted mt-1 small">Generate and share your restaurant's digital menu</div>
           </Col>
           <Col xs="auto">
             {setSection && (
               <Button
-                className="custom-btn-outline px-4 py-2 d-flex align-items-center gap-2"
+                className="qrfor-menu-custom-btn-outline px-4 py-2 d-flex align-items-center gap-2"
                 onClick={() => setSection("ViewMenu")}
               >
                 <CsLineIcons icon="eye" size="18" />
@@ -181,9 +108,9 @@ const QRforMenu = ({ setSection }) => {
 
       <Row className="justify-content-center mt-5">
         <Col lg={8} xl={7}>
-          <Card className="glass-card border-0 overflow-hidden">
+          <Card className="qrfor-menu-glass-card border-0 overflow-hidden">
             <Card.Body className="p-0">
-              <div className="qr-container-box p-4 p-md-5">
+              <div className="qrfor-menu-qr-container-box p-4 p-md-5">
                 {restaurant_code ? (
                   <>
                     <div className="text-center mb-5">
@@ -191,7 +118,7 @@ const QRforMenu = ({ setSection }) => {
                       <p className="text-muted small">Customers can scan this code to view your menu instantly</p>
                     </div>
 
-                    <div className="qr-frame mb-4" ref={qrCodeRef}>
+                    <div className="qrfor-menu-qr-frame mb-4" ref={qrCodeRef}>
                       <QRCodeSVG 
                         size={220} 
                         value={menuLink} 
@@ -201,7 +128,7 @@ const QRforMenu = ({ setSection }) => {
                     </div>
 
                     <div className="w-100 mb-5 text-center">
-                      <div className="url-pill d-inline-block px-4 mx-auto shadow-sm">
+                      <div className="qrfor-menu-qrfor-menu-url-pill d-inline-block px-4 mx-auto shadow-sm">
                         <CsLineIcons icon="link" size="14" className="me-2 text-primary" />
                         {menuLink}
                       </div>
@@ -209,7 +136,7 @@ const QRforMenu = ({ setSection }) => {
 
                     <div className="d-flex flex-column flex-sm-row justify-content-center gap-3 w-100 px-md-5">
                       <Button
-                        className="custom-btn-outline px-4 py-2 flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                        className="qrfor-menu-custom-btn-outline px-4 py-2 flex-grow-1 d-flex align-items-center justify-content-center gap-2"
                         onClick={printQRCode}
                       >
                         <CsLineIcons icon="print" size="18" />
@@ -217,7 +144,7 @@ const QRforMenu = ({ setSection }) => {
                       </Button>
 
                       <Button
-                        className="custom-btn-outline px-4 py-2 flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                        className="qrfor-menu-custom-btn-outline px-4 py-2 flex-grow-1 d-flex align-items-center justify-content-center gap-2"
                         onClick={copyToClipboard}
                         disabled={copying}
                       >

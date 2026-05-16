@@ -31,17 +31,17 @@ const FilterSelect = ({ value, onChange, options, disabled }) => {
   const selected = options.find((o) => o.value === value);
 
   return (
-    <div className="filter-select" ref={ref}>
-      <div className={`filter-select-value ${disabled ? 'disabled' : ''}`} onClick={() => !disabled && setOpen(!open)}>
-        {selected ? selected.label : 'Select...'}
-        <CsLineIcons icon="chevron-down" size="14" />
+    <div className="inventory-report-filter-select" ref={ref} style={{ position: 'relative', zIndex: open ? 1000 : 1 }}>
+      <div className={`inventory-report-inventory-report-filter-select-value ${disabled ? 'disabled' : ''}`} onClick={() => !disabled && setOpen(!open)}>
+        <span>{selected ? selected.label : 'Select...'}</span>
+        <CsLineIcons icon="chevron-down" size="14" style={{ flexShrink: 0 }} />
       </div>
       {open && (
-        <div className="filter-select-options">
+        <div className="inventory-report-inventory-report-filter-select-options">
           {options.map((opt) => (
             <div
               key={opt.value}
-              className={`filter-select-option${opt.value === value ? ' is-selected' : ''}${opt.disabled ? ' is-disabled' : ''}`}
+              className={`inventory-report-inventory-report-filter-select-option${opt.value === value ? ' inventory-report-is-selected' : ''}${opt.disabled ? ' inventory-report-is-disabled' : ''}`}
               onMouseDown={(e) => {
                 if (opt.disabled) return;
                 e.preventDefault();
@@ -64,158 +64,7 @@ const FilterSelect = ({ value, onChange, options, disabled }) => {
   );
 };
 
-const customStyles = `
-    .interactive-card {
-      background: rgba(255, 255, 255, 0.98) !important;
-      backdrop-filter: blur(15px) !important;
-      border-radius: 1.5rem !important;
-      border: 1px solid rgba(255, 255, 255, 0.8) !important;
-      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05) !important;
-      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
-      overflow: hidden;
-      position: relative;
-    }
-    .interactive-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 20px 40px -10px rgba(35, 179, 244, 0.15) !important;
-      border-color: rgba(35, 179, 244, 0.4) !important;
-    }
-    .filter-card {
-      overflow: visible !important;
-      z-index: 10 !important;
-    }
-    .card-title-container {
-      padding-bottom: 0.75rem;
-      margin-bottom: 1rem;
-      border-bottom: 1.5px solid rgba(35, 179, 244, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .stat-card-inner {
-      background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(35, 179, 244, 0.02) 100%);
-    }
-    .custom-btn-outline {
-      background: #ffffff !important;
-      border: 1.5px solid #23b3f4 !important;
-      color: #23b3f4 !important;
-      border-radius: 50px !important;
-      padding: 0.6rem 1.5rem !important;
-      font-weight: 700 !important;
-      transition: all 0.3s ease !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-    }
-    .custom-btn-outline:hover {
-      background: #23b3f4 !important;
-      color: #ffffff !important;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(35, 179, 244, 0.2) !important;
-    }
-    .preset-pill {
-      border-radius: 50px !important;
-      padding: 0.35rem 1rem !important;
-      font-weight: 700 !important;
-      font-size: 0.75rem !important;
-      border-width: 1.5px !important;
-      margin-right: 0.4rem;
-      margin-bottom: 0.4rem;
-    }
-    .stat-label {
-      font-size: 0.7rem !important;
-      font-weight: 800 !important;
-      color: #64748b !important;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-    .stat-value {
-      font-size: 1.8rem !important;
-      font-weight: 900 !important;
-      color: #0f172a !important;
-      line-height: 1;
-    }
-    .form-control {
-      border-radius: 0.8rem !important;
-      padding: 0.6rem 1rem !important;
-      border: 1.5px solid rgba(0,0,0,0.05) !important;
-      background: rgba(0,0,0,0.01) !important;
-      font-weight: 600 !important;
-    }
-    .data-table thead th {
-      background: #f8fafc !important;
-      color: #475569 !important;
-      font-size: 0.7rem !important;
-      font-weight: 800 !important;
-      text-transform: uppercase;
-      border: none !important;
-      padding: 1rem !important;
-    }
-    
-    /* FilterSelect CSS */
-    .filter-select {
-      position: relative;
-      width: 100%;
-    }
-    .filter-select-value {
-      border-radius: 0.8rem !important;
-      padding: 0.6rem 1rem !important;
-      border: 1.5px solid rgba(0,0,0,0.05) !important;
-      background: rgba(0,0,0,0.01) !important;
-      font-weight: 600 !important;
-      color: #495057;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      min-height: 42px;
-      user-select: none;
-    }
-    .filter-select-value.disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      background: rgba(0,0,0,0.03) !important;
-    }
-    .filter-select-options {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      margin-top: 4px;
-      background: #ffffff;
-      border: 1px solid rgba(0,0,0,0.1);
-      border-radius: 0.8rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      z-index: 9999;
-      max-height: 250px;
-      overflow-y: auto;
-      padding: 0.5rem 0;
-    }
-    .filter-select-option {
-      padding: 0.6rem 1rem;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.85rem;
-      color: #495057;
-      transition: background 0.2s;
-    }
-    .filter-select-option:hover {
-      background: rgba(35, 179, 244, 0.05);
-      color: #23b3f4;
-    }
-    .filter-select-option.is-selected {
-      background: rgba(35, 179, 244, 0.1);
-      color: #23b3f4;
-    }
-    .filter-select-option.is-disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .filter-select-option.is-disabled:hover {
-      background: none;
-      color: inherit;
-    }
-`;
+
 
 const PRESETS = [
   { label: 'Today', getValue: () => ({ from: format(new Date(), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') }) },
@@ -343,30 +192,31 @@ const InventoryReport = () => {
 
   return (
     <>
-      <style>{customStyles}</style>
+      
       <HtmlHead title={title} />
 
-      <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
-        <Row className="g-0 align-items-center">
-          <Col xs="auto" className="me-auto">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>
-              {title}
-            </h1>
-            <BreadcrumbList
-              items={[
-                { to: '', text: 'Home' },
-                { to: 'statistics', text: 'Statistics' },
-                { to: 'reports/inventory', text: 'Unified Hub' },
-              ]}
-            />
-          </Col>
-        </Row>
-      </div>
+      <div className="container-fluid ps-lg-4 pe-lg-5">
+        <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
+          <Row className="g-0 align-items-center">
+            <Col xs="auto" className="me-auto">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>
+                {title}
+              </h1>
+              <BreadcrumbList
+                items={[
+                  { to: '', text: 'Home' },
+                  { to: 'statistics', text: 'Statistics' },
+                  { to: 'reports/inventory', text: 'Unified Hub' },
+                ]}
+              />
+            </Col>
+          </Row>
+        </div>
 
       {/* Hub Filters */}
-      <Card className="interactive-card filter-card border-0 mb-4 no-print shadow-sm">
+      <Card className="inventory-report-interactive-card inventory-report-filter-card border-0 mb-4 no-print shadow-sm">
         <Card.Body className="p-4">
-          <div className="card-title-container">
+          <div className="inventory-report-card-title-container">
             <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
               Intelligence Parameters
             </h2>
@@ -375,15 +225,15 @@ const InventoryReport = () => {
 
           <div className="d-flex flex-wrap mb-4">
             {PRESETS.map((p) => (
-              <Button key={p.label} variant={activePreset === p.label ? 'primary' : 'outline-primary'} className="preset-pill" onClick={() => applyPreset(p)}>
+              <Button key={p.label} variant={activePreset === p.label ? 'primary' : 'outline-primary'} className="inventory-report-preset-pill" onClick={() => applyPreset(p)}>
                 {p.label}
               </Button>
             ))}
           </div>
 
-          <Row className="g-3">
-            <Col xs={12} md={3}>
-              <Form.Label className="stat-label mb-2">Start Date</Form.Label>
+          <Row className="g-4">
+            <Col xs={12} md={6} lg={2}>
+              <Form.Label className="inventory-report-stat-label mb-2">Start Date</Form.Label>
               <Form.Control
                 type="date"
                 value={fromDate}
@@ -393,8 +243,8 @@ const InventoryReport = () => {
                 }}
               />
             </Col>
-            <Col xs={12} md={3}>
-              <Form.Label className="stat-label mb-2">End Date</Form.Label>
+            <Col xs={12} md={6} lg={2}>
+              <Form.Label className="inventory-report-stat-label mb-2">End Date</Form.Label>
               <Form.Control
                 type="date"
                 value={toDate}
@@ -404,16 +254,27 @@ const InventoryReport = () => {
                 }}
               />
             </Col>
-            <Col xs={12} md={2}>
-              <Form.Label className="stat-label mb-2">Status</Form.Label>
-              <FilterSelect value={selectedStatus} onChange={setSelectedStatus} options={statusOptions} />
+            <Col xs={12} md={4} lg={3}>
+              <Form.Label className="inventory-report-stat-label mb-2">Status</Form.Label>
+              <FilterSelect 
+                value={selectedStatus} 
+                onChange={setSelectedStatus} 
+                options={['all', 'Completed', 'Pending', 'Partially Paid'].map((s) => ({ value: s, label: s === 'all' ? 'All Statuses' : s }))} 
+              />
             </Col>
-            <Col xs={12} md={2}>
-              <Form.Label className="stat-label mb-2">Category</Form.Label>
-              <FilterSelect value={selectedCategory} onChange={setSelectedCategory} options={categoryOptions} />
+            <Col xs={12} md={4} lg={3}>
+              <Form.Label className="inventory-report-stat-label mb-2">Category</Form.Label>
+              <FilterSelect 
+                value={selectedCategory} 
+                onChange={setSelectedCategory} 
+                options={['all', ...new Set(statsData?.categoryPerformance?.map((c) => c.category) || [])].map((c) => ({
+                  value: c,
+                  label: c === 'all' ? 'All Categories' : c,
+                }))} 
+              />
             </Col>
-            <Col xs={12} md={2} className="d-flex align-items-end">
-              <Button className="custom-btn-outline w-100" onClick={fetchUnifiedReport} disabled={loading}>
+            <Col xs={12} md={4} lg={2} className="d-flex align-items-end">
+              <Button className="inventory-report-custom-btn-outline w-100" onClick={fetchUnifiedReport} disabled={loading}>
                 <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
                 {loading ? 'Processing...' : 'Generate Hub'}
               </Button>
@@ -423,13 +284,13 @@ const InventoryReport = () => {
       </Card>
 
       {/* Action Bar */}
-      <Card className="interactive-card border-0 mb-4 no-print shadow-sm">
-        <Card.Body className="p-4 d-flex justify-content-between align-items-center">
+      <Card className="inventory-report-interactive-card border-0 mb-4 no-print shadow-sm">
+        <Card.Body className="p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
           <div className="d-flex gap-3 align-items-center">
-            <Button variant="outline-success" className="custom-btn-outline border-success text-success" onClick={handleExportExcel} disabled={exporting}>
+            <Button variant="outline-success" className="inventory-report-custom-btn-outline border-success text-success px-4" onClick={handleExportExcel} disabled={exporting}>
               <CsLineIcons icon="file-text" className="me-2" size="15" /> Excel
             </Button>
-            <Button variant="outline-danger" className="custom-btn-outline border-danger text-danger" onClick={() => window.print()} disabled={!reportData}>
+            <Button variant="outline-danger" className="inventory-report-custom-btn-outline border-danger text-danger px-4" onClick={() => window.print()} disabled={!reportData}>
               <CsLineIcons icon="file-text" className="me-2" size="15" /> PDF
             </Button>
           </div>
@@ -454,12 +315,12 @@ const InventoryReport = () => {
               { label: 'Stock On Hand', value: reportData.summary.total_current_stock, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', icon: 'archive' },
             ].map((c) => (
               <Col key={c.label} xl="3" md="6" xs="12">
-                <Card className="interactive-card border-0 h-100 shadow-sm">
-                  <Card.Body className="p-4 stat-card-inner">
+                <Card className="inventory-report-interactive-card border-0 h-100 shadow-sm">
+                  <Card.Body className="p-4 inventory-report-stat-card-inner">
                     <div className="d-flex justify-content-between align-items-start">
                       <div>
-                        <div className="stat-label mb-2">{c.label}</div>
-                        <div className="stat-value" style={{ color: c.color }}>
+                        <div className="inventory-report-stat-label mb-2">{c.label}</div>
+                        <div className="inventory-report-stat-value" style={{ color: c.color }}>
                           {c.value}
                         </div>
                       </div>
@@ -497,12 +358,14 @@ const InventoryReport = () => {
               { label: 'Avg PO Value', value: formatCurrency(statsData.summary.avgPurchaseValue), color: '#23b3f4', bg: brandBg, icon: 'trend-up' },
             ].map((c) => (
               <Col key={c.label} xl="3" md="6" xs="12">
-                <Card className="interactive-card border-0 h-100 shadow-sm">
-                  <Card.Body className="p-4 stat-card-inner">
+                <Card className="inventory-report-interactive-card border-0 h-100 shadow-sm">
+                  <Card.Body className="p-4 inventory-report-stat-card-inner">
                     <div className="d-flex justify-content-between align-items-start">
                       <div>
-                        <div className="stat-label mb-2">{c.label}</div>
-                        <div className="stat-value text-dark h3">{c.value}</div>
+                        <div className="inventory-report-stat-label mb-2">{c.label}</div>
+                        <div className="inventory-report-stat-value" style={{ color: c.color }}>
+                          {c.value}
+                        </div>
                       </div>
                       <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: c.bg }}>
                         <CsLineIcons icon={c.icon} size="24" style={{ color: c.color }} />
@@ -519,9 +382,9 @@ const InventoryReport = () => {
             <Col xl={4}>
               {/* Reorder Suggestions (Operational) */}
               {reportData.reorderSuggestions?.filter((s) => s.needs_reorder || s.is_below_threshold).length > 0 && (
-                <Card className="interactive-card border-0 shadow-sm mb-4" style={{ border: '2px solid rgba(239, 68, 68, 0.3) !important' }}>
+                <Card className="inventory-report-interactive-card border-0 shadow-sm mb-4" style={{ border: '2px solid rgba(239, 68, 68, 0.3) !important' }}>
                   <Card.Body className="p-4">
-                    <div className="card-title-container border-0 mb-3">
+                    <div className="inventory-report-card-title-container border-0 mb-3">
                       <div className="d-flex align-items-center gap-3">
                         <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center bg-danger shadow-sm">
                           <CsLineIcons icon="notification" className="text-white" size="20" />
@@ -557,9 +420,9 @@ const InventoryReport = () => {
               )}
 
               {/* Daily Trend Chart (Operational) */}
-              <Card className="interactive-card border-0 shadow-sm mb-4">
+              <Card className="inventory-report-interactive-card border-0 shadow-sm mb-4">
                 <Card.Body className="p-4">
-                  <div className="card-title-container">
+                  <div className="inventory-report-card-title-container">
                     <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
                       Stock Movement Trend
                     </h2>
@@ -572,9 +435,9 @@ const InventoryReport = () => {
               </Card>
 
               {/* Category Performance (Statistical) */}
-              <Card className="interactive-card border-0 shadow-sm mb-4">
+              <Card className="inventory-report-interactive-card border-0 shadow-sm mb-4">
                 <Card.Body className="p-4">
-                  <div className="card-title-container">
+                  <div className="inventory-report-card-title-container">
                     <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
                       Category Allocation Insights
                     </h2>
@@ -593,9 +456,9 @@ const InventoryReport = () => {
               </Card>
 
               {/* Executive Insights (Statistical) */}
-              <Card className="interactive-card border-0 shadow-sm mb-4" style={{ backgroundColor: 'rgba(35, 179, 244, 0.03)' }}>
+              <Card className="inventory-report-interactive-card border-0 shadow-sm mb-4" style={{ backgroundColor: 'rgba(35, 179, 244, 0.03)' }}>
                 <Card.Body className="p-4">
-                  <div className="card-title-container">
+                  <div className="inventory-report-card-title-container">
                     <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
                       Executive Stock Intelligence
                     </h2>
@@ -639,9 +502,9 @@ const InventoryReport = () => {
             {/* Right Column: Detailed Tables */}
             <Col xl={8}>
               {/* Ingredient Movement Audit */}
-              <Card className="interactive-card border-0 shadow-sm mb-4">
+              <Card className="inventory-report-interactive-card border-0 shadow-sm mb-4">
                 <Card.Body className="p-4">
-                  <div className="card-title-container">
+                  <div className="inventory-report-card-title-container">
                     <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
                       Ingredient Movement Audit
                     </h2>
@@ -650,7 +513,7 @@ const InventoryReport = () => {
 
                   <div className="d-none d-md-block table-responsive">
                     <Table borderless hover className="align-middle mb-0">
-                      <thead className="stat-label">
+                      <thead className="inventory-report-stat-label">
                         <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
                           <th className="py-3">Ingredient</th>
                           <th className="py-3 text-center">Received</th>
@@ -725,9 +588,9 @@ const InventoryReport = () => {
               </Card>
 
               {/* Top Stock Item Performance */}
-              <Card className="interactive-card border-0 shadow-sm mb-4">
+              <Card className="inventory-report-interactive-card border-0 shadow-sm mb-4">
                 <Card.Body className="p-4">
-                  <div className="card-title-container">
+                  <div className="inventory-report-card-title-container">
                     <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
                       Top Stock Item Performance
                     </h2>
@@ -736,7 +599,7 @@ const InventoryReport = () => {
 
                   <div className="d-none d-md-block table-responsive">
                     <Table borderless hover className="align-middle mb-0">
-                      <thead className="stat-label">
+                      <thead className="inventory-report-stat-label">
                         <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
                           <th className="py-3">Item Details</th>
                           <th className="py-3 text-center">Volume</th>
@@ -799,9 +662,9 @@ const InventoryReport = () => {
               </Card>
 
               {/* Vendor Relationship Audit */}
-              <Card className="interactive-card border-0 shadow-sm mb-4">
+              <Card className="inventory-report-interactive-card border-0 shadow-sm mb-4">
                 <Card.Body className="p-4">
-                  <div className="card-title-container">
+                  <div className="inventory-report-card-title-container">
                     <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
                       Vendor Relationship Audit
                     </h2>
@@ -810,7 +673,7 @@ const InventoryReport = () => {
 
                   <div className="d-none d-md-block table-responsive">
                     <Table borderless hover className="align-middle mb-0">
-                      <thead className="stat-label">
+                      <thead className="inventory-report-stat-label">
                         <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
                           <th className="py-3">Vendor</th>
                           <th className="py-3 text-end">Total PO</th>
@@ -879,9 +742,9 @@ const InventoryReport = () => {
               </Card>
 
               {/* Fiscal Status Ledger */}
-              <Card className="interactive-card border-0 shadow-sm mb-4">
+              <Card className="inventory-report-interactive-card border-0 shadow-sm mb-4">
                 <Card.Body className="p-4">
-                  <div className="card-title-container">
+                  <div className="inventory-report-card-title-container">
                     <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
                       Fiscal Status Ledger
                     </h2>
@@ -890,7 +753,7 @@ const InventoryReport = () => {
 
                   <div className="d-none d-md-block table-responsive">
                     <Table borderless hover className="align-middle mb-0">
-                      <thead className="stat-label">
+                      <thead className="inventory-report-stat-label">
                         <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
                           <th className="py-3">Status</th>
                           <th className="py-3 text-center">Orders</th>
@@ -959,6 +822,7 @@ const InventoryReport = () => {
           <div className="h5 text-muted">Select a range and generate intelligence</div>
         </div>
       )}
+      </div>
     </>
   );
 };
