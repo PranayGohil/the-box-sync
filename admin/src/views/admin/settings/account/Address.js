@@ -210,67 +210,12 @@ const Address = () => {
     }
   };
 
-  const customStyles = `
-    .glass-card {
-      background: rgba(255, 255, 255, 0.8) !important;
-      backdrop-filter: blur(12px) !important;
-      -webkit-backdrop-filter: blur(12px) !important;
-      border: 1px solid rgba(255, 255, 255, 0.3) !important;
-      border-radius: 20px !important;
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07) !important;
-      transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-    }
-    .glass-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.12) !important;
-    }
-    .custom-btn-outline {
-      background: transparent !important;
-      border: 1px solid #1ea8e7 !important;
-      color: #1ea8e7 !important;
-      border-radius: 50px !important;
-      padding: 0.6rem 1.5rem !important;
-      font-weight: 600 !important;
-      transition: all 0.3s ease !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 8px !important;
-    }
-    .custom-btn-outline:hover {
-      background: #1ea8e7 !important;
-      color: #ffffff !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
-    }
-    .custom-btn-outline:hover i, .custom-btn-outline:hover svg {
-      color: #ffffff !important;
-    }
-    .custom-btn-solid {
-      background: #1ea8e7 !important;
-      border: 1px solid #1ea8e7 !important;
-      color: #ffffff !important;
-      border-radius: 50px !important;
-      padding: 0.6rem 1.5rem !important;
-      font-weight: 600 !important;
-      transition: all 0.3s ease !important;
-    }
-    .custom-btn-solid:hover {
-      background: #0091d5 !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
-    }
-    .section-header {
-      border-left: 4px solid #1ea8e7;
-      padding-left: 15px;
-      margin-bottom: 25px;
-    }
-  `;
+  
 
   if (loading) {
     return (
       <div className="container-fluid py-5">
-        <style>{customStyles}</style>
+        
         <HtmlHead title={title} description={description} />
         <div className="d-flex flex-column align-items-center justify-content-center py-5 mt-5">
           <Spinner animation="border" style={{ color: '#1ea8e7' }} className="mb-3" />
@@ -282,7 +227,7 @@ const Address = () => {
 
   return (
     <div className="container-fluid pb-5">
-      <style>{customStyles}</style>
+      
       <HtmlHead title={title} description={description} />
       
       {/* Header Section */}
@@ -309,10 +254,10 @@ const Address = () => {
           <Form onSubmit={handleSubmit}>
             <Row className="justify-content-center">
               <Col lg={10}>
-                <Card className="glass-card border-0">
+                <Card className="address-glass-card border-0">
                   <Card.Body className="p-4 p-md-5">
                     <div className="d-flex align-items-center justify-content-between mb-4">
-                      <div className="section-header mb-0">
+                      <div className="address-section-header mb-0">
                         <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                           <CsLineIcons icon="pin" size="20" className="text-primary" />
                           Physical Location
@@ -322,7 +267,7 @@ const Address = () => {
                       {!editMode && (
                         <Button
                           variant="none"
-                          className="custom-btn-outline"
+                          className="address-custom-btn-outline"
                           onClick={() => setEditMode(true)}
                         >
                           <CsLineIcons icon="edit" size="18" />
@@ -463,7 +408,7 @@ const Address = () => {
                     </Row>
 
                     {error && (
-                      <Alert variant="danger" className="mt-4 glass-card border-0">
+                      <Alert variant="danger" className="mt-4 address-glass-card border-0">
                         <CsLineIcons icon="error" className="me-2" />
                         {error}
                       </Alert>
@@ -473,7 +418,7 @@ const Address = () => {
                       <div className="d-flex gap-3 mt-5">
                         <Button
                           variant="none"
-                          className="custom-btn-outline px-4"
+                          className="address-custom-btn-outline px-4"
                           onClick={() => handleCancel(resetForm)}
                           disabled={saving || isSubmitting}
                         >
@@ -481,7 +426,7 @@ const Address = () => {
                           Cancel
                         </Button>
                         <Button 
-                          className="custom-btn-solid px-5" 
+                          className="address-custom-btn-solid px-5" 
                           type="submit" 
                           disabled={saving || isSubmitting}
                         >
@@ -510,7 +455,7 @@ const Address = () => {
       {/* Modern Saving Overlay */}
       {saving && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}>
-          <Card className="glass-card border-0 p-5 shadow-lg text-center" style={{ maxWidth: '400px' }}>
+          <Card className="address-glass-card border-0 p-5 shadow-lg text-center" style={{ maxWidth: '400px' }}>
             <Spinner animation="grow" variant="primary" className="mb-4" />
             <h4 className="fw-bold">Updating Address</h4>
             <p className="text-muted mb-0">Synchronizing your location data across the platform.</p>

@@ -6,147 +6,6 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import Glide from 'components/carousel/Glide';
 import { toast } from 'react-toastify';
 
-const customStyles = `
-  .staff-container {
-    background: #f9f9fb;
-    min-height: 100vh;
-  }
-  .glass-card {
-    background: rgba(255, 255, 255, 0.8) !important;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 1.5rem !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
-  }
-  .staff-card {
-    background: #ffffff !important;
-    border: 1px solid #f1f5f9 !important;
-    border-radius: 1.5rem !important;
-    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    height: 100% !important;
-    position: relative;
-    overflow: hidden;
-  }
-  .staff-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: linear-gradient(90deg, #23b3f4, #0ea5e9);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  .staff-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(35, 179, 244, 0.12) !important;
-    border-color: rgba(35, 179, 244, 0.3) !important;
-  }
-  .staff-card:hover::before {
-    opacity: 1;
-  }
-  .staff-photo-wrapper {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    padding: 5px;
-    background: linear-gradient(135deg, rgba(35, 179, 244, 0.1) 0%, rgba(35, 179, 244, 0.05) 100%);
-    margin-bottom: 1.5rem;
-    position: relative;
-  }
-  .staff-photo-inner {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: #fff;
-    padding: 3px;
-    overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-  }
-  .staff-photo-inner img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-  }
-  .position-badge {
-    background: #f0f9ff;
-    color: #0369a1;
-    padding: 0.35rem 0.85rem;
-    border-radius: 50px;
-    font-size: 0.65rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 1rem;
-    border: 1px solid #e0f2fe;
-  }
-  .custom-btn-outline {
-    border: 2px solid #23b3f4 !important;
-    color: #23b3f4 !important;
-    background-color: transparent !important;
-    transition: all 0.3s ease !important;
-    border-radius: 50px !important;
-    font-weight: 700 !important;
-    font-size: 0.85rem !important;
-    padding: 0.6rem 1.5rem !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #23b3f4 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(35, 179, 244, 0.2) !important;
-  }
-  .custom-btn-solid {
-    background-color: #23b3f4 !important;
-    border: 2px solid #23b3f4 !important;
-    color: #fff !important;
-    transition: all 0.3s ease !important;
-    border-radius: 50px !important;
-    font-weight: 700 !important;
-    font-size: 0.85rem !important;
-    padding: 0.6rem 1.5rem !important;
-  }
-  .custom-btn-solid:hover {
-    background-color: #1ea8e7 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(35, 179, 244, 0.3) !important;
-  }
-  .group-title {
-    color: #23b3f4;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    position: relative;
-    padding-left: 1.25rem;
-    text-transform: uppercase;
-    font-size: 0.8rem;
-  }
-  .group-title::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 4px;
-    height: 20px;
-    background: #23b3f4;
-    border-radius: 2px;
-  }
-  .profile-link {
-    color: #23b3f4;
-    font-size: 0.75rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    transition: all 0.2s ease;
-  }
-  .profile-link:hover {
-    color: #0ea5e9;
-    letter-spacing: 0.08em;
-  }
-`;
-
 const ViewStaff = () => {
   const history = useHistory();
   const [loading, setLoading] = useState(true);
@@ -194,11 +53,11 @@ const ViewStaff = () => {
   if (error) {
     return (
       <div className="container-fluid py-5">
-        <Alert variant="danger" className="glass-card border-0 p-5 text-center shadow-sm">
+        <Alert variant="danger" className="view-staff-glass-card border-0 p-5 text-center shadow-sm">
           <CsLineIcons icon="error" className="text-danger mb-3" size="48" />
           <h4 className="fw-bold mb-3">Failed to Load Staff</h4>
           <p className="text-muted mb-4">{error}</p>
-          <Button className="custom-btn-solid px-5" onClick={fetchStaff}>
+          <Button className="view-staff-custom-btn-solid px-5" onClick={fetchStaff}>
             <CsLineIcons icon="refresh" className="me-2" size="18" />
             Try Again
           </Button>
@@ -208,10 +67,8 @@ const ViewStaff = () => {
   }
 
   return (
-    <div className="staff-container pb-5">
-      <style>{customStyles}</style>
-
-      <div className="container-fluid px-lg-5">
+    <div className="view-staff-staff-container pb-5">
+      <div className="container-fluid ps-lg-4 pe-lg-5">
         <div className="page-title-container mb-4 mt-5 mt-md-n3">
           <Row className="g-3 align-items-center">
             <Col xs="12" md="7">
@@ -221,7 +78,7 @@ const ViewStaff = () => {
               <div className="text-muted mt-1 small">Overview and management of your restaurant team</div>
             </Col>
             <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
-              <Button className="custom-btn-outline d-flex align-items-center gap-2" onClick={() => history.push('/staff/add')}>
+              <Button className="view-staff-custom-btn-outline d-flex align-items-center gap-2" onClick={() => history.push('/staff/add')}>
                 <CsLineIcons icon="plus" size="18" /> Add Staff
               </Button>
             </Col>
@@ -233,7 +90,7 @@ const ViewStaff = () => {
             <div key={position} className="mb-5">
               <div className="d-flex justify-content-between align-items-end mb-3 px-1">
                 <div>
-                  <h4 className="group-title mb-1">{position}</h4>
+                  <h4 className="view-staff-group-title mb-1">{position}</h4>
                   <div className="text-muted small fw-bold" style={{ letterSpacing: '0.02em', marginLeft: '1.25rem' }}>
                     {members.length} team member{members.length !== 1 ? 's' : ''}
                   </div>
@@ -259,10 +116,10 @@ const ViewStaff = () => {
                 {members.map((staffMember) => (
                   <Link to={`/staff/profile/${staffMember._id}`} key={staffMember._id} className="text-decoration-none">
                     <Glide.Item className="h-100 py-3">
-                      <Card className="staff-card border-0 shadow-sm">
+                      <Card className="view-staff-staff-card border-0 shadow-sm">
                         <Card.Body className="p-4 text-center d-flex flex-column align-items-center">
-                          <div className="staff-photo-wrapper">
-                            <div className="staff-photo-inner">
+                          <div className="view-staff-staff-photo-wrapper">
+                            <div className="view-staff-staff-photo-inner">
                               {!staffMember.photo ? (
                                 <div className="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted">
                                   <CsLineIcons icon="user" size="32" />
@@ -280,14 +137,14 @@ const ViewStaff = () => {
                             </div>
                           </div>
 
-                          <div className="position-badge">{staffMember.position}</div>
+                          <div className="view-staff-position-badge">{staffMember.position}</div>
 
                           <h5 className="mb-0 fw-bold text-dark text-truncate w-100 px-1">
                             {staffMember.f_name} {staffMember.l_name}
                           </h5>
 
                           <div className="mt-4 pt-3 border-top w-100">
-                            <div className="profile-link d-flex align-items-center justify-content-center gap-2">
+                            <div className="view-staff-profile-link d-flex align-items-center justify-content-center gap-2">
                               <span>Profile</span>
                               <CsLineIcons icon="arrow-right" size="14" />
                             </div>
@@ -301,7 +158,7 @@ const ViewStaff = () => {
             </div>
           ))
         ) : (
-          <div className="text-center py-5 my-5 glass-card border-0 mx-auto" style={{ maxWidth: '600px' }}>
+          <div className="text-center py-5 my-5 view-staff-glass-card border-0 mx-auto" style={{ maxWidth: '600px' }}>
             <div className="mb-4">
               <div className="bg-light d-inline-flex p-4 rounded-circle mb-3">
                 <CsLineIcons icon="inbox" size="48" className="text-muted" />
@@ -309,7 +166,7 @@ const ViewStaff = () => {
               <h3 className="fw-bold text-dark">No Staff Found</h3>
               <p className="text-muted px-5">Your staff list is currently empty. Start building your team by adding your first member.</p>
             </div>
-            <Button className="custom-btn-outline px-5 py-2" onClick={() => history.push('/staff/add')}>
+            <Button className="view-staff-custom-btn-outline px-5 py-2" onClick={() => history.push('/staff/add')}>
               <CsLineIcons icon="plus" className="me-2" size="18" />
               Add First Staff Member
             </Button>

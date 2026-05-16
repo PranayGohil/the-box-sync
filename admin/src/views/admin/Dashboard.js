@@ -8,65 +8,7 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import ChartHorizontal from './ChartBar';
 
-const customStyles = `
-    .interactive-card {
-      background: rgba(255, 255, 255, 0.98) !important;
-      backdrop-filter: blur(15px) !important;
-      border-radius: 1.5rem !important;
-      border: 1px solid rgba(255, 255, 255, 0.8) !important;
-      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05) !important;
-      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
-      overflow: hidden;
-      position: relative;
-    }
-    .interactive-card:hover {
-      transform: translateY(-8px) scale(1.01);
-      box-shadow: 0 25px 50px -15px rgba(35, 179, 244, 0.15) !important;
-      border-color: rgba(35, 179, 244, 0.4) !important;
-    }
-    .card-title-container {
-      padding-bottom: 0.75rem;
-      margin-bottom: 1rem;
-      border-bottom: 1.5px solid rgba(35, 179, 244, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .stat-card-inner {
-      background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(35, 179, 244, 0.02) 100%);
-    }
-    .custom-btn-outline {
-      background: #ffffff !important;
-      border: 1.5px solid #23b3f4 !important;
-      color: #23b3f4 !important;
-      border-radius: 50px !important;
-      padding: 0.6rem 1.5rem !important;
-      font-weight: 700 !important;
-      transition: all 0.3s ease !important;
-    }
-    .custom-btn-outline:hover {
-      background: #23b3f4 !important;
-      color: #ffffff !important;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(35, 179, 244, 0.2) !important;
-    }
-    .stat-label {
-      font-size: 0.7rem !important;
-      font-weight: 800 !important;
-      color: #64748b !important;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-    .stat-value {
-      font-size: 2rem !important;
-      font-weight: 900 !important;
-      color: #0f172a !important;
-      line-height: 1;
-    }
-    .dish-row-highlight-0 { background: linear-gradient(90deg, rgba(255, 215, 0, 0.08) 0%, transparent 100%) !important; }
-    .dish-row-highlight-1 { background: linear-gradient(90deg, rgba(192, 192, 192, 0.1) 0%, transparent 100%) !important; }
-    .dish-row-highlight-2 { background: linear-gradient(90deg, rgba(205, 127, 50, 0.06) 0%, transparent 100%) !important; }
-`;
+
 
 const CustomToggle = React.forwardRef(({ children, onClick, style }, ref) => (
   <div
@@ -178,10 +120,10 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <Alert variant="danger" className="m-3 interactive-card border-0">
+      <Alert variant="danger" className="m-3 dashboard-interactive-card border-0">
         <Alert.Heading className="fw-bold"><CsLineIcons icon="error-hexagon" className="me-2" />Error</Alert.Heading>
         <p>{error}</p>
-        <Button variant="danger" className="custom-btn-outline mt-2" onClick={() => fetchDashboardData(selectedPeriod)}>Retry</Button>
+        <Button variant="danger" className="dashboard-custom-btn-outline mt-2" onClick={() => fetchDashboardData(selectedPeriod)}>Retry</Button>
       </Alert>
     );
   }
@@ -191,33 +133,34 @@ const Dashboard = () => {
 
   return (
     <>
-      <style>{customStyles}</style>
+      
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4 mt-5 mt-lg-0">
-        <Row className="g-0 align-items-center">
-          <Col xs="auto" className="me-auto">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
-            <BreadcrumbList items={breadcrumbs} />
-          </Col>
-          <Col xs="auto">
-            <Dropdown className="d-inline-block">
-              <Dropdown.Toggle as={CustomToggle}>
-                <CsLineIcons icon="calendar" className="me-2" size="15" />
-                <span>{periodOptions.find(p => p.value === selectedPeriod)?.label}</span>
-                <CsLineIcons icon="chevron-down" className="ms-2" size="12" />
-              </Dropdown.Toggle>
-              <Dropdown.Menu className="interactive-card border-0 mt-2 shadow-lg">
-                {periodOptions.map((period) => (
-                  <Dropdown.Item key={period.value} onClick={() => setSelectedPeriod(period.value)}>
-                    {period.label}
-                  </Dropdown.Item>
-                ))}
-              </Dropdown.Menu>
-            </Dropdown>
-          </Col>
-        </Row>
-      </div>
+      <div className="container-fluid ps-lg-4 pe-lg-5">
+        <div className="page-title-container mb-4 mt-5 mt-lg-0">
+          <Row className="g-0 align-items-center">
+            <Col xs="auto" className="me-auto">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </Col>
+            <Col xs="auto">
+              <Dropdown className="d-inline-block">
+                <Dropdown.Toggle as={CustomToggle}>
+                  <CsLineIcons icon="calendar" className="me-2" size="15" />
+                  <span>{periodOptions.find(p => p.value === selectedPeriod)?.label}</span>
+                  <CsLineIcons icon="chevron-down" className="ms-2" size="12" />
+                </Dropdown.Toggle>
+                <Dropdown.Menu className="dashboard-interactive-card border-0 mt-2 shadow-lg">
+                  {periodOptions.map((period) => (
+                    <Dropdown.Item key={period.value} onClick={() => setSelectedPeriod(period.value)}>
+                      {period.label}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown.Menu>
+              </Dropdown>
+            </Col>
+          </Row>
+        </div>
 
       <Row className="g-4">
         {/* Main Section (9 Columns) */}
@@ -226,12 +169,12 @@ const Dashboard = () => {
           <div className="mb-4">
             <Row className="g-3">
               <Col md="4" sm="6">
-                <Card className="interactive-card border-0 h-100 shadow-sm" style={{ borderTop: `4px solid ${brandColor}` }}>
-                  <Card.Body className="p-4 stat-card-inner">
+                <Card className="dashboard-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: `4px solid ${brandColor}` }}>
+                  <Card.Body className="p-4 dashboard-stat-card-inner">
                     <div className="d-flex justify-content-between align-items-start">
                       <div>
-                        <div className="stat-label mb-2">Total Orders</div>
-                        <div className="stat-value mb-2">{getTotalOrders()}</div>
+                        <div className="dashboard-stat-label mb-2">Total Orders</div>
+                        <div className="dashboard-stat-value">{getTotalOrders()}</div>
                         <div className="text-muted smaller fw-bold" style={{ color: brandColor }}>
                           Rev: {formatCurrency(overview?.summary?.totalRevenue)}
                         </div>
@@ -245,12 +188,12 @@ const Dashboard = () => {
               </Col>
               
               <Col md="4" sm="6">
-                <Card className="interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #06b6d4' }}>
-                  <Card.Body className="p-4 stat-card-inner">
+                <Card className="dashboard-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #06b6d4' }}>
+                  <Card.Body className="p-4 dashboard-stat-card-inner">
                     <div className="d-flex justify-content-between align-items-start">
                       <div>
-                        <div className="stat-label mb-2">Dine-In</div>
-                        <div className="stat-value mb-2">
+                        <div className="dashboard-stat-label mb-2">Dine-In</div>
+                        <div className="dashboard-stat-value">
                           {orderStats.find(o => o.category === 'Dine In')?.count || 0}
                         </div>
                         <div className="text-muted smaller fw-bold" style={{ color: '#06b6d4' }}>
@@ -266,12 +209,12 @@ const Dashboard = () => {
               </Col>
 
               <Col md="4" sm="6">
-                <Card className="interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #f59e0b' }}>
-                  <Card.Body className="p-4 stat-card-inner">
+                <Card className="dashboard-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #f59e0b' }}>
+                  <Card.Body className="p-4 dashboard-stat-card-inner">
                     <div className="d-flex justify-content-between align-items-start">
                       <div>
-                        <div className="stat-label mb-2">Takeaway</div>
-                        <div className="stat-value mb-2">
+                        <div className="dashboard-stat-label mb-2">Takeaway</div>
+                        <div className="dashboard-stat-value">
                           {orderStats.find(o => o.category === 'Takeaway')?.count || 0}
                         </div>
                         <div className="text-muted smaller fw-bold" style={{ color: '#f59e0b' }}>
@@ -287,12 +230,12 @@ const Dashboard = () => {
               </Col>
 
               <Col md="4" sm="6">
-                <Card className="interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #ef4444' }}>
-                  <Card.Body className="p-4 stat-card-inner">
+                <Card className="dashboard-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #ef4444' }}>
+                  <Card.Body className="p-4 dashboard-stat-card-inner">
                     <div className="d-flex justify-content-between align-items-start">
                       <div>
-                        <div className="stat-label mb-2">Delivery</div>
-                        <div className="stat-value mb-2">
+                        <div className="dashboard-stat-label mb-2">Delivery</div>
+                        <div className="dashboard-stat-value">
                           {orderStats.find(o => o.category === 'Delivery')?.count || 0}
                         </div>
                         <div className="text-muted smaller fw-bold" style={{ color: '#ef4444' }}>
@@ -308,12 +251,12 @@ const Dashboard = () => {
               </Col>
 
               <Col md="4" sm="6">
-                <Card className="interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #10b981' }}>
-                  <Card.Body className="p-4 stat-card-inner">
+                <Card className="dashboard-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #10b981' }}>
+                  <Card.Body className="p-4 dashboard-stat-card-inner">
                     <div className="d-flex justify-content-between align-items-start">
                       <div>
-                        <div className="stat-label mb-2">Avg Value</div>
-                        <div className="stat-value mb-2">
+                        <div className="dashboard-stat-label mb-2">Avg Value</div>
+                        <div className="dashboard-stat-value">
                           {formatCurrency(overview?.summary?.avgOrderValue)}
                         </div>
                         <div className="text-muted smaller fw-bold" style={{ color: '#10b981' }}>Per order avg</div>
@@ -327,12 +270,12 @@ const Dashboard = () => {
               </Col>
 
               <Col md="4" sm="6">
-                <Card className="interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #6366f1' }}>
-                  <Card.Body className="p-4 stat-card-inner">
+                <Card className="dashboard-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #6366f1' }}>
+                  <Card.Body className="p-4 dashboard-stat-card-inner">
                     <div className="d-flex justify-content-between align-items-start">
                       <div>
-                        <div className="stat-label mb-2">Discounts</div>
-                        <div className="stat-value mb-2">
+                        <div className="dashboard-stat-label mb-2">Discounts</div>
+                        <div className="dashboard-stat-value">
                           {formatCurrency(overview?.summary?.totalDiscount)}
                         </div>
                         <div className="text-muted smaller fw-bold" style={{ color: '#6366f1' }}>Total given</div>
@@ -350,9 +293,9 @@ const Dashboard = () => {
           {/* Bottom Grid: Revenue (8/12) and Payments (4/12) */}
           <Row className="g-3">
             <Col lg="8">
-              <Card className="interactive-card border-0 shadow-sm h-100" style={{ borderTop: `4px solid ${brandColor}` }}>
+              <Card className="dashboard-interactive-card border-0 shadow-sm h-100" style={{ borderTop: `4px solid ${brandColor}` }}>
                 <Card.Body className="p-4">
-                  <div className="card-title-container">
+                  <div className="dashboard-card-title-container">
                     <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Last Week Revenue</h2>
                     <CsLineIcons icon="chart-4" size="18" style={{ color: brandColor }} />
                   </div>
@@ -364,9 +307,9 @@ const Dashboard = () => {
             </Col>
 
             <Col lg="4">
-              <Card className="interactive-card border-0 shadow-sm h-100" style={{ borderTop: `4px solid ${brandColor}` }}>
+              <Card className="dashboard-interactive-card border-0 shadow-sm h-100" style={{ borderTop: `4px solid ${brandColor}` }}>
                 <Card.Body className="p-4">
-                  <div className="card-title-container">
+                  <div className="dashboard-card-title-container">
                     <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Payment Methods</h2>
                     <CsLineIcons icon="credit-card" size="18" style={{ color: brandColor }} />
                   </div>
@@ -410,9 +353,9 @@ const Dashboard = () => {
 
         {/* Sidebar (3 Columns) */}
         <Col lg="3">
-          <Card className="interactive-card border-0 h-100 shadow-sm overflow-hidden" style={{ borderTop: `4px solid ${brandColor}` }}>
+          <Card className="dashboard-interactive-card border-0 h-100 shadow-sm overflow-hidden" style={{ borderTop: `4px solid ${brandColor}` }}>
             <Card.Body className="p-0">
-              <div className="p-4 card-title-container" style={{ marginBottom: '0' }}>
+              <div className="p-4 dashboard-card-title-container" style={{ marginBottom: '0' }}>
                 <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Top Selling Dish</h2>
                 <NavLink to="/statistics/menu" className="small fw-bold" style={{ color: brandColor }}>View All</NavLink>
               </div>
@@ -449,7 +392,8 @@ const Dashboard = () => {
             </Card.Body>
           </Card>
         </Col>
-      </Row>
+        </Row>
+      </div>
     </>
   );
 };

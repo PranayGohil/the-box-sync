@@ -17,85 +17,7 @@ const MONTH_NAMES = [
 
 const currentDate = new Date();
 
-const customStyles = `
-  .glass-card {
-    background: #ffffff !important;
-    border: 1px solid #f0f0f0 !important;
-    border-radius: 1.5rem !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
-    transition: all 0.3s ease;
-  }
-  .glass-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.06) !important;
-  }
-  .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
-  }
-  .custom-btn-solid {
-    background-color: #1ea8e7 !important;
-    border: 1px solid #1ea8e7 !important;
-    color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-solid:hover {
-    background-color: #158dc4 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
-  }
-  .status-badge {
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
-    font-weight: 700;
-    font-size: 0.75rem;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-  }
-  .react-table-modern th {
-    background: #f8fafc !important;
-    color: #64748b !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    font-size: 0.75rem !important;
-    letter-spacing: 0.05em !important;
-    padding: 1.25rem !important;
-    border: none !important;
-  }
-  .react-table-modern td {
-    padding: 1.25rem !important;
-    vertical-align: middle !important;
-    border-bottom: 1px solid #f1f5f9 !important;
-  }
-  .input-adjustment {
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 0.75rem !important;
-    padding: 0.5rem 0.75rem !important;
-    font-weight: 600 !important;
-    text-align: right !important;
-    transition: all 0.2s !important;
-    background: #fcfdfe !important;
-  }
-  .input-adjustment:focus {
-    border-color: #1ea8e7 !important;
-    background: #fff !important;
-    box-shadow: 0 0 0 3px rgba(30, 168, 231, 0.1) !important;
-  }
-`;
+
 
 export default function GeneratePayroll() {
     const title = 'Generate Payroll';
@@ -321,7 +243,7 @@ export default function GeneratePayroll() {
 
     return (
         <div className="container-fluid pb-5">
-            <style>{customStyles}</style>
+            
             <HtmlHead title={title} description={description} />
 
             <div className="page-title-container mb-5">
@@ -331,7 +253,7 @@ export default function GeneratePayroll() {
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
                     <Col md={5} className="d-flex justify-content-md-end gap-2">
-                        <Button className="custom-btn-outline px-4" as={Link} to="/staff/payroll">
+                        <Button className="generate-payroll-custom-btn-outline px-4" as={Link} to="/staff/payroll">
                             <CsLineIcons icon="wallet" className="me-2" />
                             Manage Payroll
                         </Button>
@@ -339,7 +261,7 @@ export default function GeneratePayroll() {
                 </Row>
             </div>
 
-            <Card className="glass-card border-0 mb-5">
+            <Card className="generate-payroll-glass-card border-0 mb-5">
                 <Card.Header className="bg-transparent border-0 p-4 pb-0">
                     <Card.Title className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                         <CsLineIcons icon="settings" size="20" className="text-primary" />
@@ -392,7 +314,7 @@ export default function GeneratePayroll() {
                             </Col>
                         )}
                         <Col xs={12} md={generateMode === 'single' ? 12 : 3}>
-                            <Button className="custom-btn-solid w-100 py-2 d-flex align-items-center justify-content-center gap-2" onClick={handlePreview} disabled={isPreviewing || (generateMode === 'single' && !selectedStaffId)}>
+                            <Button className="generate-payroll-custom-btn-solid w-100 py-2 d-flex align-items-center justify-content-center gap-2" onClick={handlePreview} disabled={isPreviewing || (generateMode === 'single' && !selectedStaffId)}>
                                 {isPreviewing ? <Spinner size="sm" /> : <><CsLineIcons icon="eye" size="18" /> Fetch Preview</>}
                             </Button>
                         </Col>
@@ -401,7 +323,7 @@ export default function GeneratePayroll() {
             </Card>
 
             {generateResult && (
-                <Alert variant="success" className="glass-card border-0 mb-4 p-4 d-flex align-items-center justify-content-between flex-wrap gap-3 shadow-lg" onClose={() => setGenerateResult(null)} dismissible>
+                <Alert variant="success" className="generate-payroll-glass-card border-0 mb-4 p-4 d-flex align-items-center justify-content-between flex-wrap gap-3 shadow-lg" onClose={() => setGenerateResult(null)} dismissible>
                     <div className="d-flex align-items-center gap-3">
                         <div className="sw-5 sh-5 rounded-circle bg-soft-success d-flex align-items-center justify-content-center text-success">
                             <CsLineIcons icon="check-circle" size="24" />
@@ -411,12 +333,12 @@ export default function GeneratePayroll() {
                             {generateResult.data?.errors?.length > 0 && <small className="text-danger">Encountered {generateResult.data.errors.length} skipped records.</small>}
                         </div>
                     </div>
-                    <Button className="custom-btn-solid px-4" onClick={() => history.push(`/staff/payroll/${month}/${year}`)}>View Payroll Ledger</Button>
+                    <Button className="generate-payroll-custom-btn-solid px-4" onClick={() => history.push(`/staff/payroll/${month}/${year}`)}>View Payroll Ledger</Button>
                 </Alert>
             )}
 
             {previewFetched && previews.length === 0 && (
-                <div className="text-center py-5 glass-card bg-light border-0">
+                <div className="text-center py-5 generate-payroll-glass-card bg-light border-0">
                     <CsLineIcons icon="info-hexagon" size="64" className="text-muted opacity-25 mb-4" />
                     <h4 className="fw-bold text-muted">No Eligible Staff Found</h4>
                     <p className="text-muted mb-0">Either no staff exists or all have payroll already generated for this period.</p>
@@ -424,7 +346,7 @@ export default function GeneratePayroll() {
             )}
 
             {previewFetched && previews.length > 0 && (
-                <Card className="glass-card border-0 overflow-hidden shadow-sm">
+                <Card className="generate-payroll-glass-card border-0 overflow-hidden shadow-sm">
                     <Card.Header className="bg-light border-0 p-4">
                         <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <div>
@@ -435,10 +357,10 @@ export default function GeneratePayroll() {
                                 <small className="text-muted fw-medium text-uppercase letter-spacing-1">Review adjustments before finalizing disbursement</small>
                             </div>
                             <div className="d-flex gap-2">
-                                <Badge bg="soft-primary" className="text-primary status-badge sh-5 d-flex align-items-center gap-2">
+                                <Badge bg="soft-primary" className="text-primary generate-payroll-status-badge sh-5 d-flex align-items-center gap-2">
                                     <CsLineIcons icon="users" size="14" /> {previews.length} Employees
                                 </Badge>
-                                <Badge bg="primary" className="status-badge sh-5 d-flex align-items-center gap-2 px-3">
+                                <Badge bg="primary" className="generate-payroll-status-badge sh-5 d-flex align-items-center gap-2 px-3">
                                     Net Total: ₹{previewTotals.total_net.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
                                 </Badge>
                             </div>
@@ -447,7 +369,7 @@ export default function GeneratePayroll() {
 
                     <Card.Body className="p-0">
                         <div className="table-responsive">
-                            <Table hover className="react-table-modern mb-0">
+                            <Table hover className="generate-payroll-react-table-modern mb-0">
                                 <thead>
                                     <tr>
                                         <th>Staff Details</th>
@@ -489,29 +411,29 @@ export default function GeneratePayroll() {
                                                 <td className="text-end text-muted fw-medium">₹{(p.staff?.salary || p.base_salary || 0).toLocaleString('en-IN')}</td>
                                                 <td className="text-end text-success fw-bold">₹{(p.earned_breakdown?.total_gross || earned || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</td>
                                                 <td>
-                                                    <Form.Control className="input-adjustment mx-auto" type="number" step={0.5} value={adj.overtime_hours ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'overtime_hours', e.target.value)} />
+                                                    <Form.Control className="generate-payroll-input-adjustment mx-auto" type="number" step={0.5} value={adj.overtime_hours ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'overtime_hours', e.target.value)} />
                                                 </td>
                                                 <td className="text-end text-primary fw-medium">
                                                     <div className="small opacity-50 fw-bold">₹{p.overtime_rate}/hr</div>
                                                     <div>+₹{ot_pay.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>
                                                 </td>
                                                 <td>
-                                                    <Form.Control className="input-adjustment mx-auto text-success" type="number" value={adj.bonus ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'bonus', e.target.value)} />
+                                                    <Form.Control className="generate-payroll-input-adjustment mx-auto text-success" type="number" value={adj.bonus ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'bonus', e.target.value)} />
                                                 </td>
                                                 <td>
                                                     <div className="text-danger small fw-bold text-center mb-1">Stat: ₹{(p.deduction_breakdown?.total_statutory || 0).toLocaleString('en-IN')}</div>
-                                                    <Form.Control className="input-adjustment mx-auto text-danger" type="number" placeholder="Manual" value={adj.deductions ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'deductions', e.target.value)} />
+                                                    <Form.Control className="generate-payroll-input-adjustment mx-auto text-danger" type="number" placeholder="Manual" value={adj.deductions ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'deductions', e.target.value)} />
                                                 </td>
                                                 <td className="text-end">
                                                     <div className={`h5 mb-0 fw-bold ${net < 0 ? 'text-danger' : 'text-primary'}`}>₹{net.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>
                                                 </td>
                                                 <td className="text-center">
                                                     {p.already_exists ? (
-                                                        <Badge bg={p.existing_status === 'paid' ? 'success' : 'warning'} className="status-badge py-1 px-2" style={{ fontSize: '0.65rem' }}>
+                                                        <Badge bg={p.existing_status === 'paid' ? 'success' : 'warning'} className="generate-payroll-status-badge py-1 px-2" style={{ fontSize: '0.65rem' }}>
                                                             {p.existing_status === 'paid' ? 'LOCKED' : 'UPDATE'}
                                                         </Badge>
                                                     ) : (
-                                                        <Badge bg="soft-secondary" className="text-muted status-badge py-1 px-2" style={{ fontSize: '0.65rem' }}>NEW</Badge>
+                                                        <Badge bg="soft-secondary" className="text-muted generate-payroll-status-badge py-1 px-2" style={{ fontSize: '0.65rem' }}>NEW</Badge>
                                                     )}
                                                 </td>
                                             </tr>
@@ -532,7 +454,7 @@ export default function GeneratePayroll() {
                                     Net Salary is calculated as: <strong>(Base/Days × Present) + (OT Hrs × OT Rate) + Bonus - Statutory - Manual Deductions.</strong>
                                 </div>
                             </div>
-                            <Button className="custom-btn-solid sh-6 px-5 h5 mb-0 shadow-lg" onClick={() => setShowConfirmModal(true)} disabled={isGenerating}>
+                            <Button className="generate-payroll-custom-btn-solid sh-6 px-5 h5 mb-0 shadow-lg" onClick={() => setShowConfirmModal(true)} disabled={isGenerating}>
                                 {isGenerating ? <Spinner size="sm" /> : <><CsLineIcons icon="check" className="me-2" /> Finalize & Generate Payroll</>}
                             </Button>
                         </div>
@@ -549,7 +471,7 @@ export default function GeneratePayroll() {
                 </Modal.Header>
                 <Modal.Body className="p-4 pt-0">
                     <p className="text-muted">You are initiating the payroll generation for <strong>{MONTH_NAMES[month]} {year}</strong>.</p>
-                    <div className="glass-card bg-light border-0 p-4 mb-3">
+                    <div className="generate-payroll-glass-card bg-light border-0 p-4 mb-3">
                         <div className="d-flex justify-content-between mb-2">
                             <span className="text-muted fw-bold small text-uppercase">Total Employees</span>
                             <span className="fw-bold">{previews.length}</span>
@@ -572,8 +494,8 @@ export default function GeneratePayroll() {
                     )}
                 </Modal.Body>
                 <Modal.Footer className="border-0 p-4 pt-0 d-flex gap-3">
-                    <Button className="custom-btn-outline flex-grow-1" onClick={() => setShowConfirmModal(false)}>Back to Review</Button>
-                    <Button className="custom-btn-solid flex-grow-1 py-2" onClick={handleGenerate}>Execute Run</Button>
+                    <Button className="generate-payroll-custom-btn-outline flex-grow-1" onClick={() => setShowConfirmModal(false)}>Back to Review</Button>
+                    <Button className="generate-payroll-custom-btn-solid flex-grow-1 py-2" onClick={handleGenerate}>Execute Run</Button>
                 </Modal.Footer>
             </Modal>
         </div>

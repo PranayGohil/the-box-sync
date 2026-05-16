@@ -36,55 +36,14 @@ const NavContent = () => {
   const { activePlans } = useContext(AuthContext);
   return (
     <>
-      <style>{`
-        .operations-sidebar .nav-link {
-          border-radius: 50px !important;
-          padding: 0.6rem 1.25rem !important;
-          margin-bottom: 0.15rem !important;
-          display: flex !important;
-          align-items: center !important;
-          transition: all 0.2s ease !important;
-          border: 1px solid transparent !important;
-          text-decoration: none !important;
-          color: #64748b !important;
-          background: transparent !important;
-          font-size: 0.85rem !important;
-        }
-        .operations-sidebar .nav-link:hover,
-        .operations-sidebar .nav-link.active {
-          color: #23b3f4 !important;
-          background-color: rgba(35, 179, 244, 0.08) !important;
-          border-color: rgba(35, 179, 244, 0.2) !important;
-        }
-        .operations-sidebar .nav-link.active span,
-        .operations-sidebar .nav-link.active svg {
-          color: #23b3f4 !important;
-          font-weight: 700 !important;
-        }
-        .operations-sidebar .section-header {
-          display: flex !important;
-          align-items: center !important;
-          padding: 1.25rem 1.25rem 0.5rem 1.25rem !important;
-          color: #1e293b !important;
-          font-weight: 700 !important;
-          font-size: 0.95rem !important;
-          letter-spacing: -0.01em !important;
-        }
-        .operations-sidebar .section-header svg {
-          color: #94a3b8 !important;
-          margin-right: 12px !important;
-        }
-        .operations-sidebar .sub-menu-container {
-          padding-left: 0.5rem !important;
-        }
-      `}</style>
-      <Nav className="flex-column operations-sidebar">
+      
+      <Nav className="flex-column operations-operations-sidebar">
       <div className="mb-1">
-        <div className="section-header">
+        <div className="operations-section-header">
           <CsLineIcons icon="cart" size="17" />
           <span className="align-middle">Order</span>
         </div>
-        <div className="sub-menu-container">
+        <div className="operations-sub-menu-container">
           <Nav.Link as={NavLink} to="/operations/order-history" className="px-0" isActive={(match, location) => {
             return location.pathname.startsWith('/operations/order-history') || location.pathname.startsWith('/operations/order-details');
           }}>
@@ -95,11 +54,11 @@ const NavContent = () => {
       </div>
 
       <div className="mb-1">
-        <div className="section-header">
+        <div className="operations-section-header">
           <CsLineIcons icon="layout-5" size="17" />
           <span className="align-middle">Table</span>
         </div>
-        <div className="sub-menu-container">
+        <div className="operations-sub-menu-container">
           <Nav.Link as={NavLink} to="/operations/manage-table" className="px-0">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Manage Table</span>
@@ -112,11 +71,11 @@ const NavContent = () => {
       </div>
 
       <div className="mb-1">
-        <div className="section-header">
+        <div className="operations-section-header">
           <CsLineIcons icon="book-open" size="17" />
           <span className="align-middle">Menu</span>
         </div>
-        <div className="sub-menu-container">
+        <div className="operations-sub-menu-container">
           <Nav.Link as={NavLink} to="/operations/manage-menu" className="px-0">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Manage Menu</span>
@@ -136,11 +95,11 @@ const NavContent = () => {
 
       {activePlans.includes('Hotel Manager') && (
         <div className="mb-1">
-          <div className="section-header">
+          <div className="operations-section-header">
             <i className="bi-door-open me-2 sw-3" style={{ fontSize: '17px' }} />
             <span className="align-middle">Rooms</span>
           </div>
-          <div className="sub-menu-container">
+          <div className="operations-sub-menu-container">
             <Nav.Link as={NavLink} to="/operations/manage-rooms" className="px-0">
               <i className="me-2 sw-3 d-inline-block" />
               <span className="align-middle">Manage Rooms</span>
@@ -158,11 +117,11 @@ const NavContent = () => {
       )}
 
       <div className="mb-1">
-        <div className="section-header">
+        <div className="operations-section-header">
           <CsLineIcons icon="boxes" size="17" />
           <span className="align-middle">Inventory</span>
         </div>
-        <div className="sub-menu-container">
+        <div className="operations-sub-menu-container">
           <Nav.Link as={NavLink} to="/operations/inventory-history" className="px-0" isActive={(match, location) => {
             const inventoryPaths = ['/operations/inventory', '/operations/add-inventory', '/operations/edit-inventory', '/operations/complete-inventory', '/operations/stock-management', '/operations/daily-stock-logs', '/operations/wastage-log', '/operations/requested-inventory'];
             return inventoryPaths.some(p => location.pathname.startsWith(p));
@@ -175,11 +134,11 @@ const NavContent = () => {
 
       {activePlans.includes('Feedback') && (
       <div className="mb-1">
-        <div className="section-header">
+        <div className="operations-section-header">
           <CsLineIcons icon="message" size="17" />
           <span className="align-middle">Feedback</span>
         </div>
-        <div className="sub-menu-container">
+        <div className="operations-sub-menu-container">
           <Nav.Link as={NavLink} to="/operations/feedback" className="px-0">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">View Feedbacks</span>
@@ -295,7 +254,7 @@ const Operations = () => {
               <NavContent />
             </div>
           </Col>
-        ) : (<div className="pt-7" />)}
+        ) : (<div className="pt-2" />)}
         <Col>
           <Switch>
             <Route exact path="/operations" render={() => <Redirect to="/operations/order-history" />} />

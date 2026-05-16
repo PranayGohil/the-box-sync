@@ -6,59 +6,7 @@ import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import Select from 'react-select';
 
-const customStyles = `
-  .pill-input {
-    border-radius: 12px !important;
-    padding: 0.7rem 1.2rem !important;
-    border: 1px solid #e5e7eb !important;
-    background: #ffffff !important;
-    transition: all 0.2s ease !important;
-  }
-  .pill-input:focus {
-    border-color: #1ea8e7 !important;
-    box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
-    outline: none !important;
-  }
-  .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
-  }
-  .custom-btn-outline:hover svg {
-    stroke: #fff !important;
-  }
-  .modal-footer {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: flex-end !important;
-    gap: 0.75rem !important;
-    border-top: none !important;
-    padding: 1.5rem !important;
-  }
-  .custom-check {
-    width: 20px;
-    height: 20px;
-    border-radius: 6px;
-    border: 2px solid #e5e7eb;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-  }
-  .custom-check.active {
-    background: #1ea8e7 !important;
-    border-color: #1ea8e7 !important;
-  }
-`;
+
 
 const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
   const [previewImg, setPreviewImg] = useState(null);
@@ -137,7 +85,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
 
   return (
     <Modal show={show} onHide={handleClose} backdrop="static" centered size="lg">
-      <style>{customStyles}</style>
+      
       <Modal.Header closeButton className="border-0 pb-0">
         <Modal.Title className="fw-bold" style={{ color: '#1ea8e7' }}>
           <CsLineIcons icon="edit" className="me-2" />
@@ -156,7 +104,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                   value={formik.values.dish_name}
                   onChange={formik.handleChange}
                   disabled={isSubmitting}
-                  className="pill-input shadow-sm"
+                  className="edit-dish-modal-pill-input shadow-sm"
                   placeholder="Enter dish name"
                 />
               </Form.Group>
@@ -169,7 +117,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                   value={formik.values.dish_price}
                   onChange={formik.handleChange}
                   disabled={isSubmitting}
-                  className="pill-input shadow-sm"
+                  className="edit-dish-modal-pill-input shadow-sm"
                   placeholder="0.00"
                 />
               </Form.Group>
@@ -198,7 +146,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                     }}
                     disabled={isSubmitting}
                   />
-                  <label htmlFor="edit-dish-img" className="custom-btn-outline px-3 py-1 rounded-pill small fw-bold cursor-pointer mb-0 mt-2">
+                  <label htmlFor="edit-dish-img" className="edit-dish-modal-custom-btn-outline px-3 py-1 rounded-pill small fw-bold cursor-pointer mb-0 mt-2">
                     <CsLineIcons icon="upload" size="14" className="me-1" />
                     {previewImg ? 'Change Image' : 'Upload Image'}
                   </label>
@@ -216,7 +164,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                   value={formik.values.description}
                   onChange={formik.handleChange}
                   disabled={isSubmitting}
-                  className="pill-input shadow-sm"
+                  className="edit-dish-modal-pill-input shadow-sm"
                   style={{ paddingLeft: '1.2rem' }}
                   placeholder="Add dish description..."
                 />
@@ -228,7 +176,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                 className="d-flex align-items-center gap-2 cursor-pointer mb-4"
                 onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
               >
-                <div className={`custom-check ${showAdvancedOptions ? 'active' : ''}`}>
+                <div className={`edit-dish-modal-custom-check ${showAdvancedOptions ? 'active' : ''}`}>
                   {showAdvancedOptions && <CsLineIcons icon="check" size="12" className="text-white" />}
                 </div>
                 <span className="fw-bold text-alternate small text-uppercase">Advanced Options</span>
@@ -240,7 +188,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                 className="d-flex align-items-center gap-2 cursor-pointer mb-4"
                 onClick={() => formik.setFieldValue('is_special', !formik.values.is_special)}
               >
-                <div className={`custom-check ${formik.values.is_special ? 'active' : ''}`}>
+                <div className={`edit-dish-modal-custom-check ${formik.values.is_special ? 'active' : ''}`}>
                   {formik.values.is_special && <CsLineIcons icon="check" size="12" className="text-white" />}
                 </div>
                 <span className="fw-bold text-alternate small text-uppercase">Special Dish</span>
@@ -258,7 +206,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                       value={formik.values.quantity}
                       onChange={formik.handleChange}
                       disabled={isSubmitting}
-                      className="pill-input shadow-sm"
+                      className="edit-dish-modal-pill-input shadow-sm"
                       placeholder="e.g. 1"
                     />
                   </Form.Group>
@@ -324,7 +272,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
           variant="outline-light" 
           onClick={handleClose} 
           disabled={isSubmitting}
-          className="rounded-pill px-4 fw-bold custom-btn-outline btn btn-outline-primary"
+          className="rounded-pill px-4 fw-bold edit-dish-modal-custom-btn-outline btn btn-outline-primary"
         >
           Cancel
         </Button>
@@ -332,7 +280,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
           type="submit"
           form="edit_dish_form"
           disabled={isSubmitting}
-          className="px-5 py-2 custom-btn-outline d-flex align-items-center gap-2"
+          className="px-5 py-2 edit-dish-modal-custom-btn-outline d-flex align-items-center gap-2"
         >
           {isSubmitting ? (
             <>

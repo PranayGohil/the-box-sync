@@ -281,199 +281,12 @@ const AddStaff = () => {
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: false }));
   };
 
-  const customStyles = `
-    .staff-container {
-      background: #f9f9fb;
-      min-height: 100vh;
-    }
-    .glass-card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 1.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
-      transition: all 0.3s ease;
-    }
-    .custom-btn-outline {
-      border: 2px solid #23b3f4 !important;
-      color: #23b3f4 !important;
-      background-color: transparent !important;
-      transition: all 0.3s ease !important;
-      border-radius: 50px !important;
-      font-weight: 700 !important;
-      font-size: 0.85rem !important;
-      padding: 0.6rem 1.5rem !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 8px !important;
-    }
-    .custom-btn-outline:hover {
-      background-color: #23b3f4 !important;
-      color: #fff !important;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(35, 179, 244, 0.2) !important;
-    }
-    .custom-btn-solid {
-      background-color: #23b3f4 !important;
-      border: 2px solid #23b3f4 !important;
-      color: #fff !important;
-      transition: all 0.3s ease !important;
-      border-radius: 50px !important;
-      font-weight: 700 !important;
-      font-size: 0.85rem !important;
-      padding: 0.6rem 1.5rem !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 8px !important;
-    }
-    .custom-btn-solid:hover {
-      background-color: #1ea8e7 !important;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(35, 179, 244, 0.3) !important;
-    }
-    .form-label {
-      font-weight: 700;
-      color: #4a5568;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.5rem;
-    }
-    .form-control, .form-select {
-      border-radius: 1rem;
-      padding: 0.75rem 1.25rem;
-      border: 1px solid #e2e8f0;
-      background-color: #f8fafc;
-      transition: all 0.2s ease;
-      font-size: 0.9rem;
-    }
-    .form-control:focus, .form-select:focus {
-      background-color: white;
-      border-color: #23b3f4;
-      box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1);
-    }
-    .section-header {
-      border-left: 4px solid #23b3f4;
-      padding-left: 1rem;
-      margin-bottom: 2rem;
-      color: #2d3748;
-    }
-    .preview-container {
-      width: 140px;
-      height: 140px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 4px solid #fff;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #f8fafc;
-      margin-top: 10px;
-    }
-    .preview-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .id-preview-container {
-      width: 100%;
-      height: 180px;
-      border-radius: 1.25rem;
-      overflow: hidden;
-      border: 2px dashed #e2e8f0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #f8fafc;
-      margin-bottom: 1rem;
-    }
-    .react-select__control {
-      border-radius: 1rem !important;
-      border: 1px solid #e2e8f0 !important;
-      background-color: #f8fafc !important;
-      font-size: 0.9rem !important;
-      min-height: 45px !important;
-      height: 45px !important;
-    }
-    .react-select__value-container {
-      padding: 0 1rem !important;
-    }
-    .react-select__indicators-container {
-      height: 43px !important;
-    }
-    .form-control {
-      height: 45px !important;
-      border-radius: 1rem !important;
-      border: 1px solid #e2e8f0 !important;
-      background-color: #f8fafc !important;
-      font-size: 0.9rem !important;
-      padding: 0.45rem 1rem !important;
-    }
-    .react-select__control--is-focused {
-      border-color: #23b3f4 !important;
-      box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
-      background-color: white !important;
-    }
-    .react-select__placeholder {
-      color: #94a3b8 !important;
-    }
-    .react-select__menu {
-      border-radius: 1rem !important;
-      overflow: hidden !important;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
-      border: 1px solid #e2e8f0 !important;
-      z-index: 1000 !important;
-    }
-    .react-select__option {
-      padding: 0.75rem 1.25rem !important;
-      font-size: 0.9rem !important;
-    }
-    .react-select__option--is-focused {
-      background-color: rgba(35, 179, 244, 0.1) !important;
-      color: #23b3f4 !important;
-    }
-    .react-select__option--is-selected {
-      background-color: #23b3f4 !important;
-      color: white !important;
-    }
-    @media (max-width: 768px) {
-      .button-group-responsive {
-        flex-direction: column !important;
-        width: 100% !important;
-        gap: 12px !important;
-      }
-      .button-group-responsive button, .button-group-responsive label, .button-group-responsive a {
-        width: 100% !important;
-        justify-content: center !important;
-        padding: 0.75rem 1rem !important;
-      }
-      .page-title-container h1 {
-        font-size: 1.75rem !important;
-      }
-      .form-control, .form-select, .react-select__control {
-        font-size: 16px !important;
-        min-height: 45px !important;
-        height: 45px !important;
-      }
-      .react-select__control {
-        padding: 0 !important;
-      }
-    }
-    @media (max-width: 576px) {
-      .glass-card {
-        border-radius: 1rem;
-        padding: 1.25rem !important;
-      }
-    }
-  `;
+  
 
   if (loading.initial) {
     return (
       <div className="container-fluid py-5">
-        <style>{customStyles}</style>
+        
         <HtmlHead title={title} description={description} />
         <div className="d-flex flex-column align-items-center justify-content-center py-5 mt-5">
           <Spinner animation="border" style={{ color: '#1ea8e7' }} className="mb-3" />
@@ -484,12 +297,12 @@ const AddStaff = () => {
   }
 
   return (
-    <div className="staff-container pb-5">
-      <style>{customStyles}</style>
+    <div className="add-staff-staff-container pb-5">
+      
       <HtmlHead title={title} description={description} />
 
       <div className="container-fluid px-lg-5">
-        <div className="page-title-container mb-4 mt-5 mt-md-n3">
+        <div className="add-staff-page-title-container mb-4 mt-5 mt-md-n3">
           <Row className="g-3 align-items-center">
             <Col md={7}>
               <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
@@ -497,8 +310,8 @@ const AddStaff = () => {
               </h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
-            <Col xs="12" md="5" className="d-flex button-group-responsive justify-content-md-end gap-2 mt-3 mt-md-0">
-              <Button className="custom-btn-outline" onClick={() => history.push('/staff/view')} disabled={loading.submitting}>
+            <Col xs="12" md="5" className="d-flex add-staff-button-group-responsive justify-content-md-end gap-2 mt-3 mt-md-0">
+              <Button className="add-staff-custom-btn-outline" onClick={() => history.push('/staff/view')} disabled={loading.submitting}>
                 <CsLineIcons icon="arrow-left" size="18" /> Back to List
               </Button>
             </Col>
@@ -506,7 +319,7 @@ const AddStaff = () => {
         </div>
 
         {fileUploadError && (
-          <Alert variant="danger" className="glass-card border-0 mb-4 p-4 shadow-sm d-flex align-items-center gap-3">
+          <Alert variant="danger" className="add-staff-glass-card border-0 mb-4 p-4 shadow-sm d-flex align-items-center gap-3">
             <CsLineIcons icon="error" size="24" className="text-danger" />
             <span className="fw-bold">{fileUploadError}</span>
           </Alert>
@@ -516,9 +329,9 @@ const AddStaff = () => {
           <Row className="g-4">
             <Col lg={8}>
               {/* Main Details Section */}
-              <Card className="glass-card border-0 mb-4">
+              <Card className="add-staff-glass-card border-0 mb-4">
                 <Card.Body className="p-4">
-                  <div className="section-header">
+                  <div className="add-staff-section-header">
                     <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                       <CsLineIcons icon="user" size="20" className="text-primary" />
                       Personal Information
@@ -702,9 +515,9 @@ const AddStaff = () => {
               </Card>
  
               {/* Employment & Payroll Section */}
-              <Card className="glass-card border-0 mb-4">
+              <Card className="add-staff-glass-card border-0 mb-4">
                 <Card.Body className="p-4">
-                  <div className="section-header">
+                  <div className="add-staff-section-header">
                     <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                       <CsLineIcons icon="briefcase" size="20" className="text-primary" />
                       Employment & Payroll
@@ -750,11 +563,11 @@ const AddStaff = () => {
                     </Col>
 
                     <Col xs={12}>
-                      <div className="d-flex button-group-responsive justify-content-center mt-4">
+                      <div className="d-flex add-staff-button-group-responsive justify-content-center mt-4">
                         <Button
                           variant="primary"
                           type="submit"
-                          className="custom-btn-outline px-5 py-3"
+                          className="add-staff-custom-btn-outline px-5 py-3"
                           disabled={loading.submitting || uploadingFiles.photo || uploadingFiles.front_image}
                         >
                           {loading.submitting ? (
@@ -777,9 +590,9 @@ const AddStaff = () => {
             </Col>
             <Col lg={4}>
               {/* Profile Photo Section */}
-              <Card className="glass-card border-0 mb-4 text-center">
+              <Card className="add-staff-glass-card border-0 mb-4 text-center">
                 <Card.Body className="p-4">
-                  <div className="section-header text-start">
+                  <div className="add-staff-section-header text-start">
                     <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                       <CsLineIcons icon="camera" size="20" className="text-primary" />
                       Profile Photo
@@ -787,9 +600,9 @@ const AddStaff = () => {
                   </div>
 
                   <div className="d-flex flex-column align-items-center">
-                    <div className="preview-container mb-3 shadow-sm border-2">
+                    <div className="add-staff-preview-container mb-3 shadow-sm border-2">
                       {photoPreview ? (
-                        <img src={photoPreview} alt="Preview" className="preview-image" />
+                        <img src={photoPreview} alt="Preview" className="add-staff-preview-image" />
                       ) : (
                         <CsLineIcons icon="user" size="40" className="text-muted opacity-20" />
                       )}
@@ -809,7 +622,7 @@ const AddStaff = () => {
                       <Button
                         as="label"
                         htmlFor="photo-upload"
-                        className="custom-btn-outline px-4 mx-auto"
+                        className="add-staff-custom-btn-outline px-4 mx-auto"
                         style={{ maxWidth: 'fit-content' }}
                         disabled={loading.submitting || uploadingFiles.photo}
                       >
@@ -823,9 +636,9 @@ const AddStaff = () => {
               </Card>
 
               {/* Documents Section */}
-              <Card className="glass-card border-0 mb-4">
+              <Card className="add-staff-glass-card border-0 mb-4">
                 <Card.Body className="p-4">
-                  <div className="section-header">
+                  <div className="add-staff-section-header">
                     <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                       <CsLineIcons icon="notepads" size="20" className="text-primary" />
                       Identification
@@ -879,9 +692,9 @@ const AddStaff = () => {
 
                   <Form.Group className="mb-4">
                     <Form.Label>Front Image</Form.Label>
-                    <div className="id-preview-container mb-2">
+                    <div className="id-add-staff-preview-container mb-2">
                       {frontImagePreview ? (
-                        <img src={frontImagePreview} alt="Front" className="preview-image" />
+                        <img src={frontImagePreview} alt="Front" className="add-staff-preview-image" />
                       ) : (
                         <div className="text-center p-4">
                           <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
@@ -899,7 +712,7 @@ const AddStaff = () => {
                     <Button
                       as="label"
                       htmlFor="front-image-upload"
-                      className="custom-btn-outline px-4 mx-auto"
+                      className="add-staff-custom-btn-outline px-4 mx-auto"
                       style={{ maxWidth: 'fit-content' }}
                       disabled={loading.submitting || uploadingFiles.front_image}
                     >
@@ -912,9 +725,9 @@ const AddStaff = () => {
                   {values.document_type === 'National Identity Card' && (
                     <Form.Group className="mb-4">
                       <Form.Label>Back Image</Form.Label>
-                      <div className="id-preview-container mb-2">
+                      <div className="id-add-staff-preview-container mb-2">
                         {backImagePreview ? (
-                          <img src={backImagePreview} alt="Back" className="preview-image" />
+                          <img src={backImagePreview} alt="Back" className="add-staff-preview-image" />
                         ) : (
                           <div className="text-center p-4">
                             <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
@@ -932,7 +745,7 @@ const AddStaff = () => {
                       <Button
                         as="label"
                         htmlFor="back-image-upload"
-                        className="custom-btn-outline px-4 mx-auto"
+                        className="add-staff-custom-btn-outline px-4 mx-auto"
                         style={{ maxWidth: 'fit-content' }}
                         disabled={loading.submitting || uploadingFiles.back_image}
                       >
@@ -954,7 +767,7 @@ const AddStaff = () => {
             className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
             style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}
           >
-            <Card className="glass-card border-0 p-5 shadow-lg text-center" style={{ maxWidth: '400px' }}>
+            <Card className="add-staff-glass-card border-0 p-5 shadow-lg text-center" style={{ maxWidth: '400px' }}>
               <Spinner animation="grow" variant="primary" className="mb-4" />
               <h4 className="fw-bold">Securing Records</h4>
               <p className="text-muted mb-0">Please wait while we encrypt and store the staff profile and documents.</p>

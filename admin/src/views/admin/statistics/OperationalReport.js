@@ -10,72 +10,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AuthContext } from 'contexts/AuthContext';
 
-const customStyles = `
-    .interactive-card {
-      background: rgba(255, 255, 255, 0.98) !important;
-      backdrop-filter: blur(15px) !important;
-      border-radius: 1.5rem !important;
-      border: 1px solid rgba(255, 255, 255, 0.8) !important;
-      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05) !important;
-      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
-      overflow: hidden;
-      position: relative;
-    }
-    .interactive-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 20px 40px -10px rgba(35, 179, 244, 0.15) !important;
-      border-color: rgba(35, 179, 244, 0.4) !important;
-    }
-    .card-title-container {
-      padding-bottom: 0.75rem;
-      margin-bottom: 1rem;
-      border-bottom: 1.5px solid rgba(35, 179, 244, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .stat-card-inner {
-      background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(35, 179, 244, 0.02) 100%);
-    }
-    .custom-btn-outline {
-      background: #ffffff !important;
-      border: 1.5px solid #23b3f4 !important;
-      color: #23b3f4 !important;
-      border-radius: 50px !important;
-      padding: 0.6rem 1.5rem !important;
-      font-weight: 700 !important;
-      transition: all 0.3s ease !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-    }
-    .custom-btn-outline:hover {
-      background: #23b3f4 !important;
-      color: #ffffff !important;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(35, 179, 244, 0.2) !important;
-    }
-    .stat-label {
-      font-size: 0.7rem !important;
-      font-weight: 800 !important;
-      color: #64748b !important;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-    .stat-value {
-      font-size: 1.8rem !important;
-      font-weight: 900 !important;
-      color: #0f172a !important;
-      line-height: 1;
-    }
-    .form-control, .form-select {
-      border-radius: 0.8rem !important;
-      padding: 0.6rem 1rem !important;
-      border: 1.5px solid rgba(0,0,0,0.05) !important;
-      background: rgba(0,0,0,0.01) !important;
-      font-weight: 600 !important;
-    }
-`;
+
 
 const OperationalReport = () => {
   const brandColor = '#23b3f4';
@@ -529,320 +464,320 @@ const OperationalReport = () => {
 
   return (
     <>
-      <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
-
-      <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
-        <Row className="g-0 align-items-center">
-          <Col xs="auto" className="me-auto">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
-            <BreadcrumbList items={breadcrumbs} />
-          </Col>
-        </Row>
-      </div>
-
-      {activePlans?.includes('Dynamic Reports') && (
-        <Card className="interactive-card border-0 mb-4 no-print shadow-sm">
-          <Card.Body className="p-4">
-            <div className="card-title-container">
-              <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Operational Parameters</h2>
-              <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
-            </div>
-            <Row className="g-3 align-items-end">
-              <Col md={5}>
-                <Form.Label className="stat-label mb-2">Start Date</Form.Label>
-                <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-              </Col>
-              <Col md={5}>
-                <Form.Label className="stat-label mb-2">End Date</Form.Label>
-                <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-              </Col>
-              <Col md={2}>
-                <Button className="custom-btn-outline w-100" onClick={fetchOperationalReport} disabled={loading}>
-                  <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
-                  {loading ? 'Processing...' : 'Generate'}
-                </Button>
-              </Col>
-            </Row>
-          </Card.Body>
-        </Card>
-      )}
-
-      {error && <Alert variant="danger" className="mb-4 interactive-card border-0">{error}</Alert>}
-
-      {reportData && (
-        <>
-          {/* Action Bar */}
-          <Card className="interactive-card border-0 mb-4 no-print shadow-sm">
-            <Card.Body className="p-4 d-flex justify-content-between align-items-center">
-              <div className="d-flex gap-3 align-items-center">
-                <Button variant="outline-success" className="custom-btn-outline border-success text-success" onClick={() => handleExportClick('Excel')} disabled={exporting}>
-                  <CsLineIcons icon="file-text" className="me-2" size="15" /> Excel
-                </Button>
-                <Button variant="outline-danger" className="custom-btn-outline border-danger text-danger" onClick={() => handleExportClick('PDF')} disabled={exporting}>
-                  <CsLineIcons icon="file-text" className="me-2" size="15" /> PDF
-                </Button>
-              </div>
-              {exporting && (
-                <div className="flex-grow-1 ms-4">
-                  <div className="d-flex align-items-center mb-2">
-                    <Spinner animation="border" size="sm" className="me-2" style={{ color: brandColor }} />
-                    <span className="smaller fw-bold text-muted">Generating {exportType}...</span>
-                  </div>
-                  <ProgressBar now={exportProgress} className="progress-sm" variant="info" style={{ height: '6px' }} />
-                </div>
-              )}
-            </Card.Body>
-          </Card>
-
-          {/* Key Insights Row */}
-          <Row className="g-4 mb-4">
-            <Col xl="3" md="6">
-              <Card className="interactive-card border-0 h-100 shadow-sm">
-                <Card.Body className="p-4 stat-card-inner">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div>
-                      <div className="stat-label mb-2">Total Staff</div>
-                      <div className="stat-value text-primary">{reportData.waiterPerformance?.length || 0}</div>
-                      <div className="smaller text-muted fw-bold mt-1">Active waiters</div>
-                    </div>
-                    <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: brandBg }}>
-                      <CsLineIcons icon="user" size="24" style={{ color: brandColor }} />
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col xl="3" md="6">
-              <Card className="interactive-card border-0 h-100 shadow-sm">
-                <Card.Body className="p-4 stat-card-inner">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div>
-                      <div className="stat-label mb-2">Busiest Hour</div>
-                      <div className="stat-value text-warning">{busiestHour ? `${busiestHour.hour}:00` : 'N/A'}</div>
-                      <div className="smaller text-muted fw-bold mt-1">{busiestHour ? `${busiestHour.orderCount} orders` : 'No data'}</div>
-                    </div>
-                    <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
-                      <CsLineIcons icon="clock" size="24" style={{ color: '#f59e0b' }} />
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col xl="3" md="6">
-              <Card className="interactive-card border-0 h-100 shadow-sm">
-                <Card.Body className="p-4 stat-card-inner">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div>
-                      <div className="stat-label mb-2">Busiest Day</div>
-                      <div className="stat-value text-success">{busiestDay ? busiestDay.dayName : 'N/A'}</div>
-                      <div className="smaller text-muted fw-bold mt-1">{busiestDay ? `${busiestDay.orderCount} orders` : 'No data'}</div>
-                    </div>
-                    <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
-                      <CsLineIcons icon="calendar" size="24" style={{ color: '#10b981' }} />
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col xl="3" md="6">
-              <Card className="interactive-card border-0 h-100 shadow-sm">
-                <Card.Body className="p-4 stat-card-inner">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div>
-                      <div className="stat-label mb-2">Active Tables</div>
-                      <div className="stat-value text-info">{reportData.tablePerformance?.length || 0}</div>
-                      <div className="smaller text-muted fw-bold mt-1">Tables served</div>
-                    </div>
-                    <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)' }}>
-                      <CsLineIcons icon="layout-5" size="24" style={{ color: '#06b6d4' }} />
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
+      <div className="container-fluid ps-lg-4 pe-lg-5">
+        <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
+          <Row className="g-0 align-items-center">
+            <Col xs="auto" className="me-auto">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
             </Col>
           </Row>
+        </div>
 
-          {/* Waiter Performance */}
-          <Card className="interactive-card border-0 shadow-sm mb-4">
+        {activePlans?.includes('Dynamic Reports') && (
+          <Card className="operational-report-interactive-card border-0 mb-4 no-print shadow-sm">
             <Card.Body className="p-4">
-              <div className="card-title-container">
-                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Waiter Performance Ranking</h2>
-                <CsLineIcons icon="star" size="18" style={{ color: brandColor }} />
+              <div className="operational-report-card-title-container">
+                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Operational Parameters</h2>
+                <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
               </div>
-              <div className="table-responsive">
-                <Table borderless hover className="align-middle mb-0">
-                  <thead className="stat-label">
-                    <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
-                      <th className="py-3">Rank</th>
-                      <th className="py-3">Waiter Name</th>
-                      <th className="py-3 text-end">Orders</th>
-                      <th className="py-3 text-end">Revenue</th>
-                      <th className="py-3 text-end d-none d-md-table-cell">Avg Ticket</th>
-                      <th className="py-3 text-end d-none d-lg-table-cell">Tables</th>
-                      <th className="py-3 text-center d-none d-sm-table-cell">Efficiency</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reportData.waiterPerformance.map((waiter, idx) => {
-                      const avgRevenue = reportData.waiterPerformance.reduce((sum, w) => sum + w.totalRevenue, 0) / reportData.waiterPerformance.length;
-                      const performance = waiter.totalRevenue >= avgRevenue * 1.2 ? 'excellent' : waiter.totalRevenue >= avgRevenue * 0.8 ? 'good' : 'needs-improvement';
-                      return (
-                        <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
-                          <td className="py-3"><Badge bg={idx < 3 ? 'primary' : 'light'} className={`rounded-pill px-3 py-2 ${idx < 3 ? '' : 'text-dark'}`}>{idx + 1}</Badge></td>
-                          <td className="py-3 fw-bold text-dark">{waiter.waiter}</td>
-                          <td className="py-3 text-end fw-bold text-muted smaller">{waiter.totalOrders}</td>
-                          <td className="py-3 text-end fw-bold text-primary">{formatCurrency(waiter.totalRevenue)}</td>
-                          <td className="py-3 text-end fw-bold text-dark smaller d-none d-md-table-cell">{formatCurrency(waiter.avgOrderValue)}</td>
-                          <td className="py-3 text-end fw-bold text-muted smaller d-none d-lg-table-cell">{waiter.tablesServed}</td>
-                          <td className="py-3 text-center d-none d-sm-table-cell">
-                            <Badge bg={performance === 'excellent' ? 'success' : performance === 'good' ? 'info' : 'warning'} className="rounded-pill px-3 py-2 fw-bold" style={{ fontSize: '0.65rem' }}>
-                              {performance === 'excellent' ? '⭐ TOP PERFORMER' : performance === 'good' ? '👍 STABLE' : '📈 IMPROVING'}
-                            </Badge>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </Table>
-              </div>
+              <Row className="g-3 align-items-end">
+                <Col xs={12} md={5}>
+                  <Form.Label className="operational-report-stat-label mb-2">Start Date</Form.Label>
+                  <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                </Col>
+                <Col xs={12} md={5}>
+                  <Form.Label className="operational-report-stat-label mb-2">End Date</Form.Label>
+                  <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                </Col>
+                <Col xs={12} md={2}>
+                  <Button className="operational-report-custom-btn-outline w-100" onClick={fetchOperationalReport} disabled={loading}>
+                    <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
+                    {loading ? 'Processing...' : 'Generate'}
+                  </Button>
+                </Col>
+              </Row>
             </Card.Body>
           </Card>
+        )}
 
-          {/* Table Performance */}
-          <Card className="interactive-card border-0 shadow-sm mb-4">
-            <Card.Body className="p-4">
-              <div className="card-title-container">
-                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Table Performance Matrix</h2>
-                <CsLineIcons icon="grid-5" size="18" style={{ color: brandColor }} />
-              </div>
-              <div className="table-responsive">
-                <Table borderless hover className="align-middle mb-0">
-                  <thead className="stat-label">
-                    <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
-                      <th className="py-3">Table No</th>
-                      <th className="py-3 d-none d-sm-table-cell">Area</th>
-                      <th className="py-3 text-end">Orders</th>
-                      <th className="py-3 text-end">Revenue</th>
-                      <th className="py-3 text-end d-none d-md-table-cell">Avg Ticket</th>
-                      <th className="py-3 text-end d-none d-lg-table-cell">Footfall</th>
-                      <th className="py-3 text-end d-none d-xl-table-cell">Rev/Person</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reportData.tablePerformance.map((table, idx) => (
-                      <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
-                        <td className="py-3 fw-bold text-dark">{table.tableNo}</td>
-                        <td className="py-3 d-none d-sm-table-cell"><Badge bg="light" className="text-dark rounded-pill px-3 py-2 smaller">{table.tableArea || 'GENERAL'}</Badge></td>
-                        <td className="py-3 text-end fw-bold text-muted smaller">{table.orderCount}</td>
-                        <td className="py-3 text-end fw-bold text-success">{formatCurrency(table.totalRevenue)}</td>
-                        <td className="py-3 text-end fw-bold text-dark smaller d-none d-md-table-cell">{formatCurrency(table.avgOrderValue)}</td>
-                        <td className="py-3 text-end fw-bold text-muted smaller d-none d-lg-table-cell">{table.totalPersons}</td>
-                        <td className="py-3 text-end fw-bold text-info smaller d-none d-xl-table-cell">{formatCurrency(table.revenuePerPerson)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </div>
-            </Card.Body>
-          </Card>
+        {error && <Alert variant="danger" className="mb-4 operational-report-interactive-card border-0">{error}</Alert>}
 
-          {/* Peak Hours & Day Trends */}
-          <Row className="g-4 mb-4">
-            <Col lg="6">
-              <Card className="interactive-card border-0 shadow-sm h-100">
-                <Card.Body className="p-4">
-                  <div className="card-title-container">
-                    <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Hourly Activity Analysis</h2>
-                    <CsLineIcons icon="activity" size="18" style={{ color: brandColor }} />
-                  </div>
-                  <div className="d-flex flex-column gap-3 mt-3">
-                    {reportData.peakHours.map((hour, idx) => {
-                      const maxOrders = Math.max(...reportData.peakHours.map(h => h.orderCount));
-                      const activityPercent = (hour.orderCount / maxOrders) * 100;
-                      const level = activityPercent >= 80 ? 'danger' : activityPercent >= 50 ? 'warning' : 'info';
-                      return (
-                        <div key={idx}>
-                          <div className="d-flex justify-content-between align-items-center mb-1">
-                            <span className="smaller fw-bold text-dark">{hour.hour}:00 - {hour.hour + 1}:00</span>
-                            <span className={`smaller fw-bold text-${level}`}>{hour.orderCount} Orders</span>
-                          </div>
-                          <ProgressBar now={activityPercent} variant={level} className="progress-sm" style={{ height: '4px' }} />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-
-            <Col lg="6">
-              <Card className="interactive-card border-0 shadow-sm h-100">
-                <Card.Body className="p-4">
-                  <div className="card-title-container">
-                    <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Weekly Performance Trends</h2>
-                    <CsLineIcons icon="trend-up" size="18" style={{ color: brandColor }} />
-                  </div>
-                  <div className="d-flex flex-column gap-4 mt-3">
-                    {reportData.dayOfWeekAnalysis.map((day, idx) => (
-                      <div key={idx} className="d-flex align-items-center justify-content-between">
-                        <div className="d-flex align-items-center">
-                          <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3" style={{ backgroundColor: 'rgba(0,0,0,0.02)' }}>
-                            <span className="fw-bold smaller text-muted">{day.dayName.substring(0, 1)}</span>
-                          </div>
-                          <div>
-                            <div className="fw-bold text-dark mb-0">{day.dayName}</div>
-                            <div className="smaller text-muted fw-bold">{day.orderCount} Orders</div>
-                          </div>
-                        </div>
-                        <div className="text-end">
-                          <div className="fw-bold text-primary smaller">{formatCurrency(day.totalRevenue)}</div>
-                          <Badge bg={day.totalRevenue >= 10000 ? 'success' : 'light'} className="rounded-pill px-2 py-1 text-dark" style={{ fontSize: '0.6rem' }}>NORMAL</Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-
-          {/* Area Performance */}
-          {reportData.areaPerformance && reportData.areaPerformance.length > 0 && (
-            <Card className="interactive-card border-0 shadow-sm mb-4">
-              <Card.Body className="p-4">
-                <div className="card-title-container">
-                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Table Area Analytics</h2>
-                  <CsLineIcons icon="pin" size="18" style={{ color: brandColor }} />
+        {reportData && (
+          <>
+            {/* Action Bar */}
+            <Card className="operational-report-interactive-card border-0 mb-4 no-print shadow-sm">
+              <Card.Body className="p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div className="d-flex gap-3 align-items-center">
+                  <Button variant="outline-success" className="operational-report-custom-btn-outline border-success text-success px-4" onClick={() => handleExportClick('Excel')} disabled={exporting}>
+                    <CsLineIcons icon="file-text" className="me-2" size="15" /> Excel
+                  </Button>
+                  <Button variant="outline-danger" className="operational-report-custom-btn-outline border-danger text-danger px-4" onClick={() => handleExportClick('PDF')} disabled={exporting}>
+                    <CsLineIcons icon="file-text" className="me-2" size="15" /> PDF
+                  </Button>
                 </div>
-                <Row className="g-4">
-                  {reportData.areaPerformance.map((area, idx) => (
-                    <Col lg="4" key={idx}>
-                      <Card className="interactive-card border-0 p-3 h-100" style={{ background: 'rgba(0,0,0,0.01) !important', border: '1px solid rgba(0,0,0,0.05) !important' }}>
-                        <div className="d-flex justify-content-between align-items-start mb-3">
-                          <div>
-                            <div className="fw-bold text-dark mb-0">{area.area}</div>
-                            <div className="smaller text-muted fw-bold">{area.tableCount} Tables</div>
-                          </div>
-                          <Badge bg="primary" style={{ backgroundColor: brandColor }}>{area.orderCount} orders</Badge>
-                        </div>
-                        <div className="d-flex justify-content-between mb-1">
-                          <span className="smaller text-muted fw-bold">Revenue:</span>
-                          <span className="smaller text-primary fw-bold">{formatCurrency(area.totalRevenue)}</span>
-                        </div>
-                        <div className="d-flex justify-content-between align-items-center">
-                          <span className="smaller text-muted fw-bold">Avg Order:</span>
-                          <span className="smaller text-success fw-bold">{formatCurrency(area.avgOrderValue)}</span>
-                        </div>
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
+                {exporting && (
+                  <div className="flex-grow-1 ms-md-4 mt-3 mt-md-0">
+                    <div className="d-flex align-items-center mb-2">
+                      <Spinner animation="border" size="sm" className="me-2" style={{ color: brandColor }} />
+                      <span className="smaller fw-bold text-muted">Generating {exportType}... {exportProgress}%</span>
+                    </div>
+                    <ProgressBar now={exportProgress} className="progress-sm" variant="info" style={{ height: '6px' }} />
+                  </div>
+                )}
               </Card.Body>
             </Card>
-          )}
-        </>
-      )}
+
+            {/* Key Insights Row */}
+            <Row className="g-3 mb-4">
+              <Col xl="3" md="6">
+                <Card className="operational-report-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: `4px solid ${brandColor}` }}>
+                  <Card.Body className="p-4 operational-report-stat-card-inner">
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div>
+                        <div className="operational-report-stat-label mb-2">Total Staff</div>
+                        <div className="operational-report-stat-value text-primary">{reportData.waiterPerformance?.length || 0}</div>
+                        <div className="smaller text-muted fw-bold mt-1">Active waiters</div>
+                      </div>
+                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: brandBg }}>
+                        <CsLineIcons icon="user" size="24" style={{ color: brandColor }} />
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col xl="3" md="6">
+                <Card className="operational-report-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #f59e0b' }}>
+                  <Card.Body className="p-4 operational-report-stat-card-inner">
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div>
+                        <div className="operational-report-stat-label mb-2">Busiest Hour</div>
+                        <div className="operational-report-stat-value text-warning">{busiestHour ? `${busiestHour.hour}:00` : 'N/A'}</div>
+                        <div className="smaller text-muted fw-bold mt-1">{busiestHour ? `${busiestHour.orderCount} orders` : 'No data'}</div>
+                      </div>
+                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+                        <CsLineIcons icon="clock" size="24" style={{ color: '#f59e0b' }} />
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col xl="3" md="6">
+                <Card className="operational-report-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #10b981' }}>
+                  <Card.Body className="p-4 operational-report-stat-card-inner">
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div>
+                        <div className="operational-report-stat-label mb-2">Busiest Day</div>
+                        <div className="operational-report-stat-value text-success">{busiestDay ? busiestDay.dayName : 'N/A'}</div>
+                        <div className="smaller text-muted fw-bold mt-1">{busiestDay ? `${busiestDay.orderCount} orders` : 'No data'}</div>
+                      </div>
+                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
+                        <CsLineIcons icon="calendar" size="24" style={{ color: '#10b981' }} />
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col xl="3" md="6">
+                <Card className="operational-report-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #06b6d4' }}>
+                  <Card.Body className="p-4 operational-report-stat-card-inner">
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div>
+                        <div className="operational-report-stat-label mb-2">Active Tables</div>
+                        <div className="operational-report-stat-value text-info">{reportData.tablePerformance?.length || 0}</div>
+                        <div className="smaller text-muted fw-bold mt-1">Tables served</div>
+                      </div>
+                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)' }}>
+                        <CsLineIcons icon="layout-5" size="24" style={{ color: '#06b6d4' }} />
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+
+            {/* Waiter Performance */}
+            <Card className="operational-report-interactive-card border-0 shadow-sm mb-4">
+              <Card.Body className="p-4">
+                <div className="operational-report-card-title-container">
+                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Staff Performance Ranking</h2>
+                  <CsLineIcons icon="star" size="18" style={{ color: brandColor }} />
+                </div>
+                <div className="table-responsive mt-3">
+                  <Table borderless hover className="align-middle mb-0">
+                    <thead className="operational-report-stat-label">
+                      <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
+                        <th className="py-3">Rank</th>
+                        <th className="py-3">Name</th>
+                        <th className="py-3 text-end">Orders</th>
+                        <th className="py-3 text-end">Revenue</th>
+                        <th className="py-3 text-end d-none d-md-table-cell">Avg Ticket</th>
+                        <th className="py-3 text-end d-none d-lg-table-cell">Tables</th>
+                        <th className="py-3 text-center d-none d-sm-table-cell">Efficiency</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.waiterPerformance.map((waiter, idx) => {
+                        const avgRevenue = reportData.waiterPerformance.reduce((sum, w) => sum + w.totalRevenue, 0) / reportData.waiterPerformance.length;
+                        const performance = waiter.totalRevenue >= avgRevenue * 1.2 ? 'excellent' : waiter.totalRevenue >= avgRevenue * 0.8 ? 'good' : 'needs-improvement';
+                        return (
+                          <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
+                            <td className="py-3"><Badge bg={idx < 3 ? 'primary' : 'light'} className={`rounded-pill px-3 py-2 ${idx < 3 ? '' : 'text-dark'}`}>{idx + 1}</Badge></td>
+                            <td className="py-3 fw-bold text-dark">{waiter.waiter}</td>
+                            <td className="py-3 text-end fw-bold text-muted smaller">{waiter.totalOrders}</td>
+                            <td className="py-3 text-end fw-bold text-primary">{formatCurrency(waiter.totalRevenue)}</td>
+                            <td className="py-3 text-end fw-bold text-dark smaller d-none d-md-table-cell">{formatCurrency(waiter.avgOrderValue)}</td>
+                            <td className="py-3 text-end fw-bold text-muted smaller d-none d-lg-table-cell">{waiter.tablesServed}</td>
+                            <td className="py-3 text-center d-none d-sm-table-cell">
+                              <Badge bg={performance === 'excellent' ? 'success' : performance === 'good' ? 'info' : 'warning'} className="rounded-pill px-3 py-2 fw-bold" style={{ fontSize: '0.65rem' }}>
+                                {performance === 'excellent' ? '⭐ TOP PERFORMER' : performance === 'good' ? '👍 STABLE' : '📈 IMPROVING'}
+                              </Badge>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </Table>
+                </div>
+              </Card.Body>
+            </Card>
+
+            {/* Table Performance */}
+            <Card className="operational-report-interactive-card border-0 shadow-sm mb-4">
+              <Card.Body className="p-4">
+                <div className="operational-report-card-title-container">
+                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Table Utilization Matrix</h2>
+                  <CsLineIcons icon="grid-5" size="18" style={{ color: brandColor }} />
+                </div>
+                <div className="table-responsive mt-3">
+                  <Table borderless hover className="align-middle mb-0">
+                    <thead className="operational-report-stat-label">
+                      <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
+                        <th className="py-3">Table No</th>
+                        <th className="py-3 d-none d-sm-table-cell">Area</th>
+                        <th className="py-3 text-end">Orders</th>
+                        <th className="py-3 text-end">Revenue</th>
+                        <th className="py-3 text-end d-none d-md-table-cell">Avg Ticket</th>
+                        <th className="py-3 text-end d-none d-lg-table-cell">Footfall</th>
+                        <th className="py-3 text-end d-none d-xl-table-cell">Rev/Person</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.tablePerformance.map((table, idx) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
+                          <td className="py-3 fw-bold text-dark">{table.tableNo}</td>
+                          <td className="py-3 d-none d-sm-table-cell"><Badge bg="light" className="text-dark rounded-pill px-3 py-2 smaller">{table.tableArea || 'GENERAL'}</Badge></td>
+                          <td className="py-3 text-end fw-bold text-muted smaller">{table.orderCount}</td>
+                          <td className="py-3 text-end fw-bold text-success">{formatCurrency(table.totalRevenue)}</td>
+                          <td className="py-3 text-end fw-bold text-dark smaller d-none d-md-table-cell">{formatCurrency(table.avgOrderValue)}</td>
+                          <td className="py-3 text-end fw-bold text-muted smaller d-none d-lg-table-cell">{table.totalPersons}</td>
+                          <td className="py-3 text-end fw-bold text-info smaller d-none d-xl-table-cell">{formatCurrency(table.revenuePerPerson)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              </Card.Body>
+            </Card>
+
+            {/* Peak Hours & Day Trends */}
+            <Row className="g-3 mb-4">
+              <Col lg="6">
+                <Card className="operational-report-interactive-card border-0 shadow-sm h-100">
+                  <Card.Body className="p-4">
+                    <div className="operational-report-card-title-container">
+                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Hourly Load Analysis</h2>
+                      <CsLineIcons icon="activity" size="18" style={{ color: brandColor }} />
+                    </div>
+                    <div className="d-flex flex-column gap-3 mt-3">
+                      {reportData.peakHours.map((hour, idx) => {
+                        const maxOrders = Math.max(...reportData.peakHours.map(h => h.orderCount));
+                        const activityPercent = (hour.orderCount / maxOrders) * 100;
+                        const level = activityPercent >= 80 ? 'danger' : activityPercent >= 50 ? 'warning' : 'info';
+                        return (
+                          <div key={idx}>
+                            <div className="d-flex justify-content-between align-items-center mb-1">
+                              <span className="smaller fw-bold text-dark">{hour.hour}:00 - {hour.hour + 1}:00</span>
+                              <span className={`smaller fw-bold text-${level}`}>{hour.orderCount} Orders</span>
+                            </div>
+                            <ProgressBar now={activityPercent} variant={level} className="progress-sm" style={{ height: '4px' }} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+
+              <Col lg="6">
+                <Card className="operational-report-interactive-card border-0 shadow-sm h-100">
+                  <Card.Body className="p-4">
+                    <div className="operational-report-card-title-container">
+                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Weekly Performance</h2>
+                      <CsLineIcons icon="trend-up" size="18" style={{ color: brandColor }} />
+                    </div>
+                    <div className="d-flex flex-column gap-4 mt-3">
+                      {reportData.dayOfWeekAnalysis.map((day, idx) => (
+                        <div key={idx} className="d-flex align-items-center justify-content-between">
+                          <div className="d-flex align-items-center overflow-hidden">
+                            <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 flex-shrink-0" style={{ backgroundColor: 'rgba(0,0,0,0.02)' }}>
+                              <span className="fw-bold smaller text-muted">{day.dayName.substring(0, 1)}</span>
+                            </div>
+                            <div className="overflow-hidden">
+                              <div className="fw-bold text-dark mb-0 text-truncate">{day.dayName}</div>
+                              <div className="smaller text-muted fw-bold">{day.orderCount} Orders</div>
+                            </div>
+                          </div>
+                          <div className="text-end ms-2 flex-shrink-0">
+                            <div className="fw-bold text-primary smaller">{formatCurrency(day.totalRevenue)}</div>
+                            <Badge bg={day.totalRevenue >= 10000 ? 'success' : 'light'} className="rounded-pill px-2 py-1 text-dark" style={{ fontSize: '0.6rem' }}>NORMAL</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+
+            {/* Area Performance */}
+            {reportData.areaPerformance && reportData.areaPerformance.length > 0 && (
+              <Card className="operational-report-interactive-card border-0 shadow-sm mb-4">
+                <Card.Body className="p-4">
+                  <div className="operational-report-card-title-container">
+                    <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Area Performance Analytics</h2>
+                    <CsLineIcons icon="pin" size="18" style={{ color: brandColor }} />
+                  </div>
+                  <Row className="g-3 mt-1">
+                    {reportData.areaPerformance.map((area, idx) => (
+                      <Col lg="4" key={idx}>
+                        <Card className="operational-report-interactive-card border-0 p-3 h-100" style={{ background: 'rgba(0,0,0,0.01) !important', border: '1px solid rgba(0,0,0,0.05) !important' }}>
+                          <div className="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                              <div className="fw-bold text-dark mb-0">{area.area}</div>
+                              <div className="smaller text-muted fw-bold">{area.tableCount} Tables</div>
+                            </div>
+                            <Badge bg="primary" style={{ backgroundColor: brandColor }}>{area.orderCount} orders</Badge>
+                          </div>
+                          <div className="d-flex justify-content-between mb-1">
+                            <span className="smaller text-muted fw-bold">Revenue:</span>
+                            <span className="smaller text-primary fw-bold">{formatCurrency(area.totalRevenue)}</span>
+                          </div>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <span className="smaller text-muted fw-bold">Avg Order:</span>
+                            <span className="smaller text-success fw-bold">{formatCurrency(area.avgOrderValue)}</span>
+                          </div>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                </Card.Body>
+              </Card>
+            )}
+          </>
+        )}
+      </div>
 
       {/* Export Modal */}
       <Modal show={showExportModal} onHide={() => setShowExportModal(false)} centered contentClassName="interactive-card border-0 shadow-lg">
@@ -872,13 +807,13 @@ const OperationalReport = () => {
           </Form>
         </Modal.Body>
         <Modal.Footer className="border-0 p-4 pt-0">
-          <Button variant="light" className="custom-btn-outline border-0 text-muted" onClick={() => setShowExportModal(false)}>Cancel</Button>
-          <Button className="custom-btn-outline px-4" onClick={handleExportConfirm}>Generate Intelligence Report</Button>
+          <Button variant="light" className="operational-report-custom-btn-outline border-0 text-muted" onClick={() => setShowExportModal(false)}>Cancel</Button>
+          <Button className="operational-report-custom-btn-outline px-4" onClick={handleExportConfirm}>Generate Intelligence Report</Button>
         </Modal.Footer>
       </Modal>
 
       <ToastContainer position="top-end" className="p-3">
-        <Toast show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide bg="white" className="interactive-card border-0">
+        <Toast show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide bg="white" className="operational-report-interactive-card border-0">
           <Toast.Body className="p-3 d-flex align-items-center">
             <CsLineIcons icon="check-circle" className="text-success me-2" size="20" />
             <span className="fw-bold smaller text-dark">{toastMessage}</span>

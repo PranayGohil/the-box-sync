@@ -10,17 +10,18 @@ const ControlsSearch = ({ tableInstance }) => {
     const [value, setValue] = useState(globalFilter);
     const onChange = useAsyncDebounce((val) => setGlobalFilter(val || undefined), 200);
     return (
-        <div className="search-container">
+        <div className="manage-menu-search-container">
             <input
-                className="form-control pill-input ps-5"
+                className="form-control pill-input manage-menu-pill-input"
                 value={value || ''}
                 onChange={(e) => {
                     setValue(e.target.value);
                     onChange(e.target.value);
                 }}
                 placeholder="Search category..."
+                style={{ height: '40px', borderRadius: '10px', border: '1px solid #eee' }}
             />
-            <div className="search-icon-wrapper">
+            <div className="manage-menu-search-icon-wrapper">
                 <CsLineIcons icon="search" size="14" />
             </div>
             {value && (

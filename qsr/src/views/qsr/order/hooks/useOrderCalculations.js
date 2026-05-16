@@ -19,14 +19,16 @@ const useOrderCalculations = ({
     setPaymentData((prev) => {
       // Calculate discount amount based on type
       let discountAmount = 0;
+      const dValue = parseFloat(prev.discountValue) || 0;
       if (prev.discountType === 'percentage') {
-        discountAmount = (subTotal * prev.discountValue) / 100;
+        discountAmount = (subTotal * dValue) / 100;
       } else {
-        discountAmount = prev.discountValue;
+        discountAmount = dValue;
       }
 
       const total = subTotal + totalTax - discountAmount;
-      const waveoffAmount = prev.paidAmount > 0 ? total - prev.paidAmount : 0;
+      const pAmount = parseFloat(prev.paidAmount) || 0;
+      const waveoffAmount = pAmount > 0 ? total - pAmount : 0;
 
       return {
         ...prev,
@@ -44,32 +46,33 @@ const useOrderCalculations = ({
   // Handle discount type change
   const handleDiscountTypeChange = (type) => {
     setPaymentData((prev) => {
-      const subTotal = parseFloat(prev.subTotal);
-      const cgstAmount = parseFloat(prev.cgstAmount);
-      const sgstAmount = parseFloat(prev.sgstAmount);
-      const vatAmount = parseFloat(prev.vatAmount);
+      const subTotal = parseFloat(prev.subTotal) || 0;
+      const cgstAmount = parseFloat(prev.cgstAmount) || 0;
+      const sgstAmount = parseFloat(prev.sgstAmount) || 0;
+      const vatAmount = parseFloat(prev.vatAmount) || 0;
       let discountAmount = 0;
-      let discountValue = 0;
+      let discountValue = '';
 
       // Convert existing discount to new type
       if (type === 'percentage') {
         // Convert amount to percentage
-        discountValue = prev.discountAmount > 0 ? ((prev.discountAmount / subTotal) * 100).toFixed(2) : 0;
+        discountValue = prev.discountAmount > 0 ? ((prev.discountAmount / subTotal) * 100).toFixed(2) : '';
         discountAmount = prev.discountAmount;
       } else {
         // Keep amount as is
-        discountValue = prev.discountAmount;
+        discountValue = prev.discountAmount > 0 ? prev.discountAmount : '';
         discountAmount = prev.discountAmount;
       }
 
-      const total = subTotal + cgstAmount + sgstAmount + vatAmount - discountAmount;
-      const waveoffAmount = prev.paidAmount > 0 ? total - prev.paidAmount : 0;
+      const total = subTotal + cgstAmount + sgstAmount + vatAmount - (parseFloat(discountAmount) || 0);
+      const pAmount = parseFloat(prev.paidAmount) || 0;
+      const waveoffAmount = pAmount > 0 ? total - pAmount : 0;
 
       return {
         ...prev,
         discountType: type,
-        discountValue: parseFloat(discountValue),
-        discountAmount: parseFloat(discountAmount).toFixed(2),
+        discountValue,
+        discountAmount: parseFloat(discountAmount || 0).toFixed(2),
         total: total.toFixed(2),
         waveoffAmount: waveoffAmount.toFixed(2),
       };
@@ -78,61 +81,61 @@ const useOrderCalculations = ({
 
   // Handle discount value change
   const handleDiscountValueChange = (value) => {
-    const discountValue = parseFloat(value) || 0;
-    const subTotal = parseFloat(paymentData.subTotal);
-    const cgstAmount = parseFloat(paymentData.cgstAmount);
-    const sgstAmount = parseFloat(paymentData.sgstAmount);
-    const vatAmount = parseFloat(paymentData.vatAmount);
+    if (value === '') {
+      setPaymentData((prev) => {
+        const subTotal = parseFloat(prev.subTotal) || 0;
+        const cgstAmount = parseFloat(prev.cgstAmount) || 0;
+        const sgstAmount = parseFloat(prev.sgstAmount) || 0;
+        const vatAmount = parseFloat(prev.vatAmount) || 0;
+        const total = subTotal + cgstAmount + sgstAmount + vatAmount;
+        const pAmount = parseFloat(prev.paidAmount) || 0;
+        return {
+          ...prev,
+          discountValue: '',
+          discountAmount: '0.00',
+          total: total.toFixed(2),
+          waveoffAmount: pAmount > 0 ? (total - pAmount).toFixed(2) : '0.00',
+        };
+      });
+      return;
+    }
+
+    const dValue = parseFloat(value) || 0;
+    const subTotal = parseFloat(paymentData.subTotal) || 0;
+    const cgstAmount = parseFloat(paymentData.cgstAmount) || 0;
+    const sgstAmount = parseFloat(paymentData.sgstAmount) || 0;
+    const vatAmount = parseFloat(paymentData.vatAmount) || 0;
 
     let discountAmount = 0;
     if (paymentData.discountType === 'percentage') {
-      // Limit percentage to 100%
-      const limitedValue = Math.min(discountValue, 100);
+      const limitedValue = Math.min(dValue, 100);
       discountAmount = (subTotal * limitedValue) / 100;
-
       setPaymentData((prev) => {
         const total = subTotal + cgstAmount + sgstAmount + vatAmount - discountAmount;
-        const waveoffAmount = prev.paidAmount > 0 ? total - prev.paidAmount : 0;
-
-        return {
-          ...prev,
-          discountValue: limitedValue,
-          discountAmount: discountAmount.toFixed(2),
-          total: total.toFixed(2),
-          waveoffAmount: waveoffAmount.toFixed(2),
-        };
+        const pAmount = parseFloat(prev.paidAmount) || 0;
+        return { ...prev, discountValue: value, discountAmount: discountAmount.toFixed(2), total: total.toFixed(2), waveoffAmount: pAmount > 0 ? (total - pAmount).toFixed(2) : '0.00' };
       });
     } else {
-      // Limit amount to subtotal
-      const limitedValue = Math.min(discountValue, subTotal);
+      const limitedValue = Math.min(dValue, subTotal);
       discountAmount = limitedValue;
-
       setPaymentData((prev) => {
         const total = subTotal + cgstAmount + sgstAmount + vatAmount - discountAmount;
-        const waveoffAmount = prev.paidAmount > 0 ? total - prev.paidAmount : 0;
-
-        return {
-          ...prev,
-          discountValue: limitedValue,
-          discountAmount: discountAmount.toFixed(2),
-          total: total.toFixed(2),
-          waveoffAmount: waveoffAmount.toFixed(2),
-        };
+        const pAmount = parseFloat(prev.paidAmount) || 0;
+        return { ...prev, discountValue: value, discountAmount: discountAmount.toFixed(2), total: total.toFixed(2), waveoffAmount: pAmount > 0 ? (total - pAmount).toFixed(2) : '0.00' };
       });
     }
   };
 
   // Handle paid amount change
   const handlePaidAmountChange = (value) => {
-    const paidAmount = parseFloat(value) || 0;
-    const total = parseFloat(paymentData.total);
-    const waveoffAmount = total - paidAmount;
-
-    setPaymentData((prev) => ({
-      ...prev,
-      paidAmount,
-      waveoffAmount: waveoffAmount.toFixed(2),
-    }));
+    if (value === '') {
+      setPaymentData((prev) => ({ ...prev, paidAmount: '', waveoffAmount: '0.00' }));
+      return;
+    }
+    const pAmount = parseFloat(value) || 0;
+    const total = parseFloat(paymentData.total) || 0;
+    const waveoffAmount = total - pAmount;
+    setPaymentData((prev) => ({ ...prev, paidAmount: value, waveoffAmount: waveoffAmount.toFixed(2) }));
   };
 
   return {

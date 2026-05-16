@@ -54,146 +54,7 @@ const Subscription = () => {
     redirect: false,
   });
 
-  const customStyles = `
-    .glass-card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 1.25rem;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-      transition: all 0.3s ease;
-    }
-    .glass-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.12) !important;
-    }
-    .custom-btn-outline, .custom-btn-danger {
-      background: #ffffff !important;
-      border: 1px solid #1ea8e7 !important;
-      color: #1ea8e7 !important;
-      border-radius: 50% !important;
-      width: 30px !important;
-      height: 30px !important;
-      padding: 0 !important;
-      transition: all 0.3s ease !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
-    }
-    .custom-btn-danger {
-      border-color: #cf2637 !important;
-      color: #cf2637 !important;
-    }
-    .custom-btn-outline i, .custom-btn-outline svg, 
-    .custom-btn-danger i, .custom-btn-danger svg {
-      color: inherit !important;
-      fill: none !important;
-      stroke: currentColor !important;
-      stroke-width: 1.5px !important;
-      transition: all 0.3s ease !important;
-    }
-    .custom-btn-outline:hover i, .custom-btn-outline:hover svg,
-    .custom-btn-danger:hover i, .custom-btn-danger:hover svg {
-      color: #ffffff !important;
-      fill: none !important;
-      stroke: #ffffff !important;
-    }
-    .custom-btn-outline:hover {
-      background: #1ea8e7 !important;
-      color: #ffffff !important;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(30, 168, 231, 0.2) !important;
-    }
-    .custom-btn-danger:hover {
-      background: #cf2637 !important;
-      color: #ffffff !important;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(207, 38, 55, 0.2) !important;
-    }
-    .custom-btn-solid {
-      background: #1ea8e7 !important;
-      border: 1px solid #1ea8e7 !important;
-      color: #ffffff !important;
-      border-radius: 50px !important;
-      padding: 0.6rem 1.5rem !important;
-      font-weight: 600 !important;
-      transition: all 0.3s ease !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 8px !important;
-    }
-    .custom-btn-solid:hover {
-      background: #0091d5 !important;
-      border-color: #0091d5 !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
-    }
-    .plan-card {
-      transition: all 0.3s ease;
-      overflow: hidden;
-    }
-    .plan-card:hover {
-      border-color: #1ea8e7 !important;
-    }
-    .plan-price {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: #1ea8e7;
-    }
-    .feature-list {
-      list-style: none;
-      padding: 0;
-      margin: 1.5rem 0;
-    }
-    .feature-list li {
-      margin-bottom: 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.9rem;
-      color: #4a5568;
-    }
-    .bg-soft-success { background-color: rgba(5, 150, 105, 0.2) !important; }
-    .bg-soft-warning { background-color: rgba(217, 119, 6, 0.2) !important; }
-    .bg-soft-danger { background-color: rgba(220, 38, 38, 0.2) !important; }
-
-    .mobile-subscription-card {
-      background: #ffffff !important;
-      border: 1px solid #edf2f7 !important;
-      border-radius: 1rem !important;
-      padding: 1.25rem !important;
-      margin-bottom: 1rem !important;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
-      position: relative;
-    }
-    .mobile-label {
-      font-size: 0.75rem !important;
-      font-weight: 700 !important;
-      color: #94a3b8 !important;
-      text-uppercase: true;
-      margin-bottom: 2px !important;
-      display: block;
-    }
-    .mobile-value {
-      font-size: 0.95rem !important;
-      font-weight: 600 !important;
-      color: #1e293b !important;
-      display: block;
-      margin-bottom: 12px !important;
-    }
-    @media (max-width: 991px) {
-      .react-table-container {
-        display: none !important;
-      }
-    }
-    @media (min-width: 992px) {
-      .mobile-cards-container {
-        display: none !important;
-      }
-    }
-  `;
+  
 
   const fetchData = async () => {
     try {
@@ -440,7 +301,7 @@ const Subscription = () => {
                 <Button
                   variant="none"
                   size="sm"
-                  className="custom-btn-outline"
+                  className="subscription-custom-btn-outline"
                   style={{ width: '30px', height: '30px', padding: 0 }}
                   onClick={() => handleEditPanel(original.plan_name)}
                   disabled={loading || actionLoading.renew}
@@ -451,7 +312,7 @@ const Subscription = () => {
                 <Button
                   variant="none"
                   size="sm"
-                  className="custom-btn-danger"
+                  className="subscription-custom-btn-danger"
                   onClick={() => openDeletePanelModal(original.plan_name)}
                   disabled={loading}
                   title="Remove Panel Credentials"
@@ -462,7 +323,7 @@ const Subscription = () => {
                   <Button
                     variant="none"
                     size="sm"
-                    className="custom-btn-outline"
+                    className="subscription-custom-btn-outline"
                     style={{ width: '30px', height: '30px', padding: 0 }}
                     onClick={() => handleRedirect(original.plan_name)}
                     disabled={loading || actionLoading.redirect}
@@ -477,7 +338,7 @@ const Subscription = () => {
                 <Button
                   variant="none"
                   size="sm"
-                  className="custom-btn-outline"
+                  className="subscription-custom-btn-outline"
                   style={{ width: '30px', height: '30px', padding: 0 }}
                   onClick={() => handleAddPanel(original.plan_name)}
                   disabled={loading}
@@ -489,7 +350,7 @@ const Subscription = () => {
                   <Button
                     variant="none"
                     size="sm"
-                    className="custom-btn-outline"
+                    className="subscription-custom-btn-outline"
                     style={{ width: '30px', height: '30px', padding: 0 }}
                     onClick={() => handleRedirect(original.plan_name)}
                     disabled={loading || actionLoading.redirect}
@@ -505,7 +366,7 @@ const Subscription = () => {
               <Button
                 variant="none"
                 size="sm"
-                className="custom-btn-outline"
+                className="subscription-custom-btn-outline"
                 style={{ width: '30px', height: '30px', padding: 0 }}
                 onClick={() => handleRedirect(original.plan_name)}
                 disabled={loading || actionLoading.redirect}
@@ -519,7 +380,7 @@ const Subscription = () => {
               <Button
                 variant="none"
                 size="sm"
-                className="custom-btn-outline"
+                className="subscription-custom-btn-outline"
                 style={{ width: '30px', height: '30px', padding: 0 }}
                 onClick={() => handleRenew(original._id)}
                 disabled={loading || actionLoading.renew}
@@ -531,7 +392,7 @@ const Subscription = () => {
           } else if (isBlocked) {
             if (isBlockedWithQuery) {
               actionButtons = (
-                <Button variant="none" size="sm" className="custom-btn-outline opacity-50" style={{ width: '30px', height: '30px', padding: 0 }} title="Inquiry Pending" disabled>
+                <Button variant="none" size="sm" className="subscription-custom-btn-outline opacity-50" style={{ width: '30px', height: '30px', padding: 0 }} title="Inquiry Pending" disabled>
                   <CsLineIcons icon="hourglass" size="15" />
                 </Button>
               );
@@ -540,7 +401,7 @@ const Subscription = () => {
                 <Button
                   variant="none"
                   size="sm"
-                  className="custom-btn-danger"
+                  className="subscription-custom-btn-danger"
                   onClick={() => handleRaiseInquiry(original.plan_name)}
                   disabled={loading}
                   title="Raise Inquiry"
@@ -593,7 +454,7 @@ const Subscription = () => {
 
   return (
     <div className="container-fluid pb-5">
-      <style>{customStyles}</style>
+      
       <HtmlHead title={title} description={description} />
 
       <div className="page-title-container mb-4">
@@ -605,7 +466,7 @@ const Subscription = () => {
         </Row>
       </div>
 
-      <Card className="glass-card border-0 mb-5">
+      <Card className="subscription-glass-card border-0 mb-5">
         <Card.Body className="p-4">
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h4 className="fw-bold mb-0">Active Subscriptions</h4>
@@ -626,21 +487,21 @@ const Subscription = () => {
             </Alert>
           ) : (
             <>
-              <div className="react-table-container">
+              <div className="subscription-react-table-container">
                 <Table className="react-table rows" tableInstance={tableInstance} />
               </div>
 
               {/* Mobile Card Rendering */}
-              <div className="mobile-cards-container">
+              <div className="subscription-mobile-cards-container">
                 {page.map((row) => {
                   prepareRow(row);
                   const { original } = row;
                   return (
-                    <div key={row.id} className="mobile-subscription-card">
+                    <div key={row.id} className="subscription-mobile-subscription-card">
                       <div className="d-flex justify-content-between align-items-start mb-3">
                         <div>
-                          <span className="mobile-label">Plan Name</span>
-                          <span className="mobile-value mb-0">{original.plan_name}</span>
+                          <span className="subscription-mobile-label">Plan Name</span>
+                          <span className="subscription-mobile-value mb-0">{original.plan_name}</span>
                         </div>
                         <div>
                           {original.status === 'active' && <Badge bg="soft-success" className="text-success rounded-pill">Active</Badge>}
@@ -650,12 +511,12 @@ const Subscription = () => {
                       </div>
                       <Row className="g-2 mb-3">
                         <Col xs={6}>
-                          <span className="mobile-label">Start Date</span>
-                          <span className="mobile-value mb-0">{original.formatted_start}</span>
+                          <span className="subscription-mobile-label">Start Date</span>
+                          <span className="subscription-mobile-value mb-0">{original.formatted_start}</span>
                         </Col>
                         <Col xs={6}>
-                          <span className="mobile-label">End Date</span>
-                          <span className="mobile-value mb-0">{original.formatted_end}</span>
+                          <span className="subscription-mobile-label">End Date</span>
+                          <span className="subscription-mobile-value mb-0">{original.formatted_end}</span>
                         </Col>
                       </Row>
                       <div className="pt-3 border-top d-flex justify-content-end align-items-center gap-2">
@@ -683,13 +544,13 @@ const Subscription = () => {
           <Row className="g-4">
             {inactiveAddOns.map((sub) => (
               <Col key={sub._id} sm="12" md="6" lg="4">
-                <Card className="glass-card border-0 h-100 plan-card">
+                <Card className="subscription-glass-card border-0 h-100 subscription-plan-card">
                   <Card.Body className="p-4 d-flex flex-column">
                     <div className="d-flex justify-content-between align-items-start mb-3">
                       <h5 className="fw-bold mb-0">{sub.plan_name}</h5>
                       <Badge bg="soft-warning" className="text-warning rounded-pill">Expired</Badge>
                     </div>
-                    <div className="plan-price mb-3">₹{sub.plan_price}</div>
+                    <div className="subscription-plan-price mb-3">₹{sub.plan_price}</div>
                     <p className="text-muted small mb-4">
                       Duration: {sub.plan_duration} month(s)
                       <br />
@@ -698,7 +559,7 @@ const Subscription = () => {
                     <div className="mt-auto">
                       <Button 
                         variant="none" 
-                        className="custom-btn-outline w-100" 
+                        className="subscription-custom-btn-outline w-100" 
                         onClick={() => handleRenew(sub._id)} 
                         disabled={actionLoading.renew}
                       >
@@ -732,14 +593,14 @@ const Subscription = () => {
           <Row className="g-4">
             {availablePlans.map((plan) => (
               <Col key={plan._id} sm="12" md="6" lg="4">
-                <Card className="glass-card border-0 h-100 plan-card">
+                <Card className="subscription-glass-card border-0 h-100 subscription-plan-card">
                   <Card.Body className="p-4 d-flex flex-column">
                     <h5 className="fw-bold mb-2">{plan.plan_name}</h5>
-                    <div className="plan-price mb-2">₹{plan.plan_price}</div>
+                    <div className="subscription-plan-price mb-2">₹{plan.plan_price}</div>
                     <div className="text-muted small mb-3">per {plan.plan_duration} month(s)</div>
                     
                     {plan.features?.length > 0 && (
-                      <ul className="feature-list">
+                      <ul className="subscription-feature-list">
                         {plan.features.map((feature, i) => (
                           <li key={i}>
                             <CsLineIcons icon="check" size="14" className="text-success" />
@@ -752,7 +613,7 @@ const Subscription = () => {
                     <div className="mt-auto">
                       <Button 
                         variant="none" 
-                        className="custom-btn-solid w-100" 
+                        className="subscription-custom-btn-solid w-100" 
                         onClick={() => handleBuyPlan(plan._id)} 
                         disabled={actionLoading.buy}
                       >
@@ -805,7 +666,7 @@ const Subscription = () => {
             backdropFilter: 'blur(8px)',
           }}
         >
-          <div className="glass-card border-0" style={{ minWidth: '250px' }}>
+          <div className="subscription-glass-card border-0" style={{ minWidth: '250px' }}>
             <div className="card-body text-center p-5">
               <Spinner animation="border" style={{ color: '#1ea8e7', width: '3rem', height: '3rem' }} className="mb-3" />
               <h5 className="fw-bold mb-1">

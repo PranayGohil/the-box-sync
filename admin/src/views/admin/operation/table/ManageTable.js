@@ -11,20 +11,7 @@ import EditTableModal from './EditTableModal';
 import EditTableAreaModal from './EditTableAreaModal';
 import DeleteTableModal from './DeleteTableModal';
 
-const customStyles = `
-  .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
-  }
-`;
+
 
 const ManageTable = () => {
   const title = 'Manage Tables';
@@ -104,21 +91,21 @@ const ManageTable = () => {
   }
 
   return (
-    <div className="container-fluid pb-5">
-      <style>{customStyles}</style>
+    <div className="container-fluid px-lg-5 pb-5">
+      
       <HtmlHead title={title} description={description} />
       
       {/* Header Section */}
-      <div className="page-title-container mb-4">
-        <Row className="g-3 align-items-center">
-          <Col xs="12" md="7">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
+      <div className="page-title-container mb-4 mt-5 mt-lg-0 text-start">
+        <Row className="g-0 align-items-center">
+          <Col xs="auto" className="me-auto text-start">
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
-          <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2">
+          <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
             <Button 
               href="/operations/add-table"
-              className="px-4 py-2 rounded-pill d-flex align-items-center custom-btn-outline"
+              className="px-4 py-2 rounded-pill d-flex align-items-center manage-table-custom-btn-outline"
             >
               <CsLineIcons icon="plus" className="me-2" size="18" stroke="currentColor" />
               Add New Table
@@ -252,7 +239,7 @@ const ManageTable = () => {
                             </div>
                             
                             <div className="mb-2">
-                              <span className="text-muted small text-uppercase fw-bold ls-1">Table Number</span>
+                              <span className="text-muted small text-uppercase fw-bold manage-table-ls-1">Table Number</span>
                               <h4 className="fw-bold mb-0">#{table.table_no}</h4>
                             </div>
                             
@@ -312,23 +299,7 @@ const ManageTable = () => {
         />
       )}
 
-      <style>
-        {`
-          .hover-elevate {
-            transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-          }
-          .hover-elevate:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
-          }
-          .ls-1 {
-            letter-spacing: 0.5px;
-          }
-          .bg-soft-primary {
-            background-color: rgba(30, 168, 231, 0.1);
-          }
-        `}
-      </style>
+      
     </div>
   );
 };

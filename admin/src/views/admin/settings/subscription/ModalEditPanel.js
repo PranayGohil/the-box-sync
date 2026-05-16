@@ -6,32 +6,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-const customStyles = `
-  .btn-pill-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    padding: 0.6rem 1.5rem !important;
-    font-weight: 600 !important;
-    width: auto !important;
-    height: auto !important;
-  }
-  .btn-pill-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-  }
-  .btn-pill-outline:hover svg {
-    stroke: #fff !important;
-  }
-  .modal-footer {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: flex-end !important;
-    gap: 0.75rem !important;
-  }
-`;
+
 
 function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -138,7 +113,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
 
   return (
     <Modal show={show} onHide={handleClose} backdrop="static" centered>
-      <style>{customStyles}</style>
+      
       <Modal.Header closeButton className="border-0 pb-0">
         <Modal.Title className="fw-bold" style={{ color: '#1ea8e7' }}>
           {isAddMode ? 'Add' : 'Edit'} {planName}
@@ -211,7 +186,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
           {!isAddMode && !showPasswordFields && (
             <Button
               variant="none"
-              className="btn-pill-outline w-100 d-flex justify-content-center align-items-center mb-3"
+              className="modal-edit-panel-btn-pill-outline w-100 d-flex justify-content-center align-items-center mb-3"
               onClick={() => setShowPasswordFields(true)}
               disabled={isLoading}
             >
@@ -280,7 +255,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
         <Button 
           onClick={handleClose} 
           disabled={isLoading}
-          className="rounded-pill px-4 fw-bold btn-pill-outline"
+          className="rounded-pill px-4 fw-bold modal-edit-panel-btn-pill-outline"
         >
           Cancel
         </Button>
@@ -288,7 +263,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
           type="submit"
           form="edit_panel_form"
           disabled={isLoading}
-          className="rounded-pill px-4 fw-bold btn-pill-outline"
+          className="rounded-pill px-4 fw-bold modal-edit-panel-btn-pill-outline"
         >
           {isLoading ? (
             <>

@@ -7,177 +7,7 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-const customStyles = `
-    .details-container {
-      background: #f9f9fb;
-      min-height: 100vh;
-      padding-bottom: 5rem;
-    }
-    .overview-bar {
-      background: #ffffff;
-      border-radius: 1.25rem;
-      padding: 1.5rem 2rem;
-      border: 1px solid rgba(0,0,0,0.05);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-    }
-    @media (max-width: 768px) {
-      .overview-bar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .overview-bar > div {
-        width: 100%;
-      }
-    }
-    .info-label {
-      font-size: 0.65rem;
-      font-weight: 800;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.25rem;
-    }
-    .info-val {
-      font-weight: 700;
-      color: #334155;
-    }
-    .section-card {
-      background: #ffffff !important;
-      border-radius: 2rem !important;
-      border: 1px solid rgba(0,0,0,0.05) !important;
-      padding: 2.5rem !important;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.02) !important;
-      margin-bottom: 2.5rem;
-    }
-    @media (max-width: 768px) {
-      .section-card {
-        padding: 1.5rem !important;
-      }
-    }
-    .item-header-row {
-      display: flex;
-      padding: 0 1.5rem;
-      margin-bottom: 1rem;
-      color: #94a3b8;
-      font-size: 0.65rem;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-    .item-row-card {
-      background: #ffffff !important;
-      border-radius: 1.25rem !important;
-      border: 1px solid #f1f5f9 !important;
-      padding: 1.25rem 1.5rem !important;
-      margin-bottom: 1rem;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
-      display: flex;
-      align-items: center;
-      transition: all 0.25s ease;
-    }
-    @media (max-width: 991px) {
-      .item-row-card {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
-      }
-      .item-row-card > div {
-        width: 100% !important;
-        text-align: left !important;
-      }
-      .item-row-card .mobile-label {
-        display: block !important;
-        font-size: 0.65rem;
-        color: #94a3b8;
-        font-weight: 800;
-        text-transform: uppercase;
-        margin-bottom: 0.15rem;
-      }
-    }
-    @media (min-width: 992px) {
-      .item-row-card .mobile-label {
-        display: none !important;
-      }
-    }
-    .item-row-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.05) !important;
-      border-color: rgba(35, 179, 244, 0.2) !important;
-    }
-    .summary-hub {
-      background: #f8fafc;
-      border-radius: 1.5rem;
-      padding: 2rem;
-      border: 1px solid #f1f5f9;
-    }
-    @media (max-width: 768px) {
-      .summary-hub {
-        padding: 1.5rem;
-      }
-    }
-    .total-display {
-      background: #ffffff;
-      border-radius: 1rem;
-      padding: 1.5rem;
-      border: 1.5px solid #23b3f4;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-    }
-    @media (max-width: 768px) {
-      .total-display {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .total-display > div {
-        width: 100% !important;
-        text-align: left !important;
-      }
-    }
-    .total-val {
-      font-size: 1.5rem;
-      font-weight: 900;
-      color: #23b3f4;
-    }
-    .file-card {
-      background: #ffffff;
-      border-radius: 1rem;
-      padding: 1rem;
-      border: 1px solid #f1f5f9;
-      transition: all 0.2s ease;
-      height: 100%;
-      text-align: center;
-    }
-    .file-card:hover {
-      border-color: #23b3f4;
-      box-shadow: 0 4px 12px rgba(35, 179, 244, 0.1);
-    }
-    .status-badge {
-      padding: 0.5rem 1.25rem;
-      border-radius: 50px;
-      font-weight: 800;
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .btn-action {
-      border-radius: 50px !important;
-      padding: 0.6rem 1.5rem !important;
-      font-weight: 700 !important;
-      border-width: 2px !important;
-      transition: all 0.3s ease !important;
-    }
-    .btn-action:hover {
-      transform: translateY(-2px);
-    }
-`;
+
 
 const InventoryDetails = () => {
   const { id } = useParams();
@@ -237,13 +67,13 @@ const InventoryDetails = () => {
     );
 
   return (
-    <div className="details-container">
-      <style>{customStyles}</style>
+    <div className="inventory-details-details-container">
+      
       <HtmlHead title="Inventory Details" />
       <div className="container px-lg-5">
-        <div className="page-title-container mb-4 mt-n3">
-          <Row className="g-3 align-items-center">
-            <Col xs="12" md="7">
+        <div className="page-title-container mb-4 mt-5 mt-lg-0">
+          <Row className="g-0 align-items-center">
+            <Col xs="auto" className="me-auto">
               <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>Inventory Details</h1>
               <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations/inventory', text: 'Inventory' }, { to: '', title: 'Details' }]} />
             </Col>
@@ -261,21 +91,21 @@ const InventoryDetails = () => {
           </Row>
         </div>
 
-        <div className="overview-bar">
+        <div className="inventory-details-overview-bar">
           <div className="d-flex gap-5">
             <div>
-              <div className="info-label">Bill Date</div>
-              <div className="info-val">{new Date(inventory.bill_date).toLocaleDateString('en-IN')}</div>
+              <div className="inventory-details-info-label">Bill Date</div>
+              <div className="inventory-details-info-val">{new Date(inventory.bill_date).toLocaleDateString('en-IN')}</div>
             </div>
             <div>
-              <div className="info-label">Requested On</div>
-              <div className="info-val">
+              <div className="inventory-details-info-label">Requested On</div>
+              <div className="inventory-details-info-val">
                 {new Date(inventory.request_date).toLocaleDateString('en-IN')} at{' '}
                 {new Date(inventory.request_date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
           </div>
-          <Badge bg={inventory.status === 'Completed' ? 'success' : inventory.status === 'Rejected' ? 'danger' : 'warning'} className="status-badge shadow-sm">
+          <Badge bg={inventory.status === 'Completed' ? 'success' : inventory.status === 'Rejected' ? 'danger' : 'warning'} className="inventory-details-status-badge shadow-sm">
             {inventory.status}
           </Badge>
         </div>
@@ -289,37 +119,37 @@ const InventoryDetails = () => {
           </Alert>
         )}
 
-        <Card className="section-card border-0">
+        <Card className="inventory-details-section-card border-0">
           <div className="section-label">
             <CsLineIcons icon="file-text" size="18" /> Purchase Information
           </div>
           <Row className="g-4">
             <Col xs={12} md={4}>
               <div>
-                <div className="info-label">Bill Number</div>
+                <div className="inventory-details-info-label">Bill Number</div>
                 <div className="h5 fw-bold mb-0">{inventory.bill_number || 'N/A'}</div>
               </div>
             </Col>
             <Col xs={6} md={4}>
               <div>
-                <div className="info-label">Category</div>
+                <div className="inventory-details-info-label">Category</div>
                 <div className="h5 fw-bold mb-0">{inventory.category || 'N/A'}</div>
               </div>
             </Col>
             <Col xs={6} md={4}>
               <div>
-                <div className="info-label">Vendor Name</div>
+                <div className="inventory-details-info-label">Vendor Name</div>
                 <div className="h5 fw-bold mb-0">{inventory.vendor_name || 'N/A'}</div>
               </div>
             </Col>
           </Row>
         </Card>
 
-        <Card className="section-card border-0">
+        <Card className="inventory-details-section-card border-0">
           <div className="section-label">
             <CsLineIcons icon="shopping-basket" size="18" /> Item Manifest
           </div>
-          <div className="item-header-row d-none d-lg-flex">
+          <div className="inventory-details-item-header-row d-none d-lg-flex">
             <div style={{ width: '60px' }}>#</div>
             <div style={{ flex: 2 }}>Description</div>
             <div style={{ flex: 1 }}>Quantity</div>
@@ -329,60 +159,60 @@ const InventoryDetails = () => {
             </div>
           </div>
           {inventory.items.map((item, index) => (
-            <div key={index} className="item-row-card">
+            <div key={index} className="inventory-details-item-row-card">
               <div style={{ width: '60px' }} className="fw-bold text-muted">
-                <span className="mobile-label">#</span>
+                <span className="inventory-details-mobile-label">#</span>
                 {index + 1}
               </div>
               <div style={{ flex: 2 }} className="fw-bold text-dark">
-                <span className="mobile-label">Description</span>
+                <span className="inventory-details-mobile-label">Description</span>
                 {item.item_name}
               </div>
               <div style={{ flex: 1 }} className="fw-bold">
-                <span className="mobile-label">Quantity</span>
+                <span className="inventory-details-mobile-label">Quantity</span>
                 {item.item_quantity} {item.unit}
               </div>
               <div style={{ flex: 1 }} className="text-muted">
-                <span className="mobile-label">Unit Price</span>
+                <span className="inventory-details-mobile-label">Unit Price</span>
                 ₹ {item.item_price || '0.00'}
               </div>
               <div style={{ flex: 1 }} className="text-md-end fw-bold text-primary">
-                <span className="mobile-label">Subtotal</span>
+                <span className="inventory-details-mobile-label">Subtotal</span>
                 ₹ {(item.item_quantity * (item.item_price || 0)).toFixed(2)}
               </div>
             </div>
           ))}
 
-          <div className="summary-hub mt-5">
+          <div className="inventory-details-summary-hub mt-5">
             <Row className="g-4">
               <Col xs={12} md={4}>
                 <div>
-                  <div className="info-label">Net Subtotal</div>
+                  <div className="inventory-details-info-label">Net Subtotal</div>
                   <div className="h5 fw-bold text-muted">₹ {Number(inventory.sub_total || 0).toFixed(2)}</div>
                 </div>
               </Col>
               <Col xs={6} md={4}>
                 <div>
-                  <div className="info-label">Tax (GST/VAT)</div>
+                  <div className="inventory-details-info-label">Tax (GST/VAT)</div>
                   <div className="h5 fw-bold text-muted">₹ {Number(inventory.tax || 0).toFixed(2)}</div>
                 </div>
               </Col>
               <Col xs={6} md={4}>
                 <div>
-                  <div className="info-label">Discount Applied</div>
+                  <div className="inventory-details-info-label">Discount Applied</div>
                   <div className="h5 fw-bold text-success">- ₹ {Number(inventory.discount || 0).toFixed(2)}</div>
                 </div>
               </Col>
 
               <Col md={12}>
-                <div className="total-display shadow-sm">
+                <div className="inventory-details-total-display shadow-sm">
                   <div>
-                    <div className="info-label mb-1">Total Grand Amount</div>
-                    <div className="total-val">₹ {Number(inventory.total_amount || 0).toFixed(2)}</div>
+                    <div className="inventory-details-info-label mb-1">Total Grand Amount</div>
+                    <div className="inventory-details-total-val">₹ {Number(inventory.total_amount || 0).toFixed(2)}</div>
                   </div>
                   <div className="text-md-end">
                     <div>
-                      <div className="info-label">Amount Paid</div>
+                      <div className="inventory-details-info-label">Amount Paid</div>
                       <div className="h3 fw-bold text-success mb-0">₹ {Number(inventory.paid_amount || 0).toFixed(2)}</div>
                     </div>
                   </div>
@@ -403,7 +233,7 @@ const InventoryDetails = () => {
         </Card>
 
         {inventory.bill_files?.length > 0 && (
-          <Card className="section-card border-0">
+          <Card className="inventory-details-section-card border-0">
             <div className="section-label">
               <CsLineIcons icon="file-text" size="18" /> Supporting Documents
             </div>
@@ -413,7 +243,7 @@ const InventoryDetails = () => {
                 const isPdf = file.toLowerCase().endsWith('.pdf');
                 return (
                   <Col key={idx} xs={12} md={3}>
-                    <div className="file-card">
+                    <div className="inventory-details-file-card">
                       <div
                         className="mb-3 d-flex justify-content-center align-items-center"
                         style={{ height: '100px', background: '#f8fafc', borderRadius: '12px' }}
@@ -447,10 +277,10 @@ const InventoryDetails = () => {
           <p className="text-muted mb-0">Are you sure you want to delete this record? This will permanently remove it from the active inventory history.</p>
         </Modal.Body>
         <Modal.Footer className="border-0 pt-0">
-          <Button variant="light" className="btn-action text-muted" onClick={() => setShowDeleteModal(false)} disabled={deleting}>
+          <Button variant="light" className="inventory-details-btn-action text-muted" onClick={() => setShowDeleteModal(false)} disabled={deleting}>
             Cancel
           </Button>
-          <Button variant="danger" className="btn-action" onClick={handleDelete} disabled={deleting}>
+          <Button variant="danger" className="inventory-details-btn-action" onClick={handleDelete} disabled={deleting}>
             {deleting ? <Spinner animation="border" size="sm" /> : 'Confirm Delete'}
           </Button>
         </Modal.Footer>

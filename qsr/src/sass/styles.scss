@@ -173,3 +173,82 @@ body {
 .layout-content {
   overflow-x: hidden;
 }
+
+// Admin Parity Global Styles — page titles follow --title-spacing like admin _nav.scss
+.page-title-container {
+  margin-bottom: var(--title-spacing) !important;
+  margin-top: 1.75rem !important;
+
+  @media (min-width: 992px) {
+    margin-top: 0 !important; 
+  }
+
+  h1 {
+    font-family: var(--font-heading) !important;
+    font-size: 1.4rem !important; // Mobile base
+    font-weight: 650 !important;
+    color: #23b3f4 !important;
+    line-height: 1.2;
+
+    @media (min-width: 768px) {
+      font-size: 1.6rem !important; // Tablet and Laptop
+    }
+  }
+}
+
+.pos-title {
+  font-family: var(--font-heading) !important;
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  color: #23b3f4 !important;
+  letter-spacing: -0.02em;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1.25rem !important;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07) !important;
+}
+
+.custom-btn-outline {
+  border: 1.5px solid #23b3f4 !important;
+  color: #23b3f4 !important;
+  background-color: #fff !important;
+  transition: all 0.2s ease-in-out !important;
+  font-weight: 700 !important;
+  border-radius: 50px !important;
+  padding: 0.6rem 1.5rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+.custom-btn-outline:hover {
+  background-color: #23b3f4 !important;
+  color: #fff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+}
+
+.pill-input {
+  border-radius: 50px !important;
+  padding: 0.6rem 1.2rem !important;
+  border: 1.5px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  transition: all 0.2s ease !important;
+  font-size: 0.9rem !important;
+}
+
+.pill-input:focus {
+  border-color: #23b3f4 !important;
+  box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
+  outline: none !important;
+}
+
+// Font-weight utility extensions (Bootstrap 5 only goes to fw-bolder)
+.fw-800 { font-weight: 800 !important; }
+.fw-900 { font-weight: 900 !important; }
+

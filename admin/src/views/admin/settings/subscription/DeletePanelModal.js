@@ -4,44 +4,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-const customStyles = `
-  .btn-pill-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    padding: 0.6rem 1.5rem !important;
-    font-weight: 600 !important;
-    width: auto !important;
-    height: auto !important;
-  }
-  .btn-pill-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-  }
-  .btn-pill-danger {
-    border: 1px solid #cf2637 !important;
-    color: #cf2637 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    padding: 0.6rem 1.5rem !important;
-    font-weight: 600 !important;
-    width: auto !important;
-    height: auto !important;
-  }
-  .btn-pill-danger:hover {
-    background-color: #cf2637 !important;
-    color: #fff !important;
-  }
-  .modal-footer {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: flex-end !important;
-    gap: 0.75rem !important;
-  }
-`;
+
 
 const DeletePanelModal = ({ show, handleClose, planName, fetchData }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -70,7 +33,7 @@ const DeletePanelModal = ({ show, handleClose, planName, fetchData }) => {
 
   return (
     <Modal show={show} onHide={handleClose} backdrop="static" centered>
-      <style>{customStyles}</style>
+      
       <Modal.Header closeButton className="border-0 pb-0">
         <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>
           Delete Panel Credentials
@@ -91,14 +54,14 @@ const DeletePanelModal = ({ show, handleClose, planName, fetchData }) => {
         <Button 
           onClick={handleClose} 
           disabled={isDeleting}
-          className="rounded-pill px-4 fw-bold btn-pill-outline"
+          className="rounded-pill px-4 fw-bold delete-panel-modal-btn-pill-outline"
         >
           Cancel
         </Button>
         <Button
           onClick={handleDelete}
           disabled={isDeleting}
-          className="rounded-pill px-4 fw-bold btn-pill-danger"
+          className="rounded-pill px-4 fw-bold delete-panel-modal-btn-pill-danger"
         >
           {isDeleting ? (
             <>

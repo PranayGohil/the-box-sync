@@ -19,13 +19,12 @@ const BoxedVariationsStripe = ({ columns, data, category, setEditCategoryModalSh
 
   return (
     <>
-      <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom" style={{ borderColor: '#f3f4f6' }}>
+      <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom" style={{ borderColor: 'rgba(35, 179, 244, 0.1)' }}>
         <div>
           <h5 className="mb-1 fw-bold text-dark" style={{ letterSpacing: '-0.01em' }}>{category.category}</h5>
           <Badge 
             bg="none"
-            className={`badge-meal ${category.meal_type === 'veg' ? 'bg-soft-success text-success' : category.meal_type === 'egg' ? 'bg-soft-warning text-warning' : 'bg-soft-danger text-danger'}`}
-            style={{ border: 'none' }}
+            className={`manage-menu-badge-meal ${category.meal_type === 'veg' ? 'manage-menu-badge-veg' : category.meal_type === 'egg' ? 'manage-menu-badge-egg' : 'manage-menu-badge-non-veg'}`}
           >
             {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
           </Badge>
@@ -34,7 +33,7 @@ const BoxedVariationsStripe = ({ columns, data, category, setEditCategoryModalSh
           <Button
             variant="link"
             size="sm"
-            className="p-1 text-muted custom-icon-btn"
+            className="p-1 text-muted manage-menu-custom-icon-btn"
             onClick={() => {
               setEditCategoryModalShow(true);
               setSelectedCategory(category);
@@ -46,7 +45,7 @@ const BoxedVariationsStripe = ({ columns, data, category, setEditCategoryModalSh
           <Button
             variant="link"
             size="sm"
-            className="p-1 text-primary custom-icon-btn"
+            className="p-1 manage-menu-text-primary manage-menu-custom-icon-btn"
             onClick={() => {
               history.push('/operations/add-dish', {
                 category: category.category,
@@ -56,12 +55,12 @@ const BoxedVariationsStripe = ({ columns, data, category, setEditCategoryModalSh
             }}
             title="Add More Dishes"
           >
-            <CsLineIcons icon="plus" size="16" />
+            <CsLineIcons icon="plus" size="16" stroke="#23b3f4" />
           </Button>
         </div>
       </div>
 
-      <Row className="g-2 mb-3">
+      <Row className="g-2 mb-3 d-none d-md-flex">
         <Col sm="12" md="8">
           <ControlsSearch tableInstance={tableInstance} />
         </Col>

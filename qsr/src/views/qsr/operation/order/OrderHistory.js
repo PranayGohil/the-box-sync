@@ -1,17 +1,53 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useContext } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { Badge, Col, Form, Row, Button, Spinner, Alert, Card, Collapse } from 'react-bootstrap';
+import { Badge, Col, Form, Row, Button, Spinner, Alert, Card, Collapse, Dropdown } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy } from 'react-table';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
+import { AuthContext } from 'contexts/AuthContext';
 
 import ControlsPageSize from './components/ControlsPageSize';
 import ControlsSearch from './components/ControlsSearch';
 import Table from './components/Table';
 import TablePagination from './components/TablePagination';
+
+const customStyles = `
+  .custom-control-btn {
+    position: relative !important;
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+    transition: all 0.2s ease !important;
+    border: 1.5px solid #23b3f4 !important;
+    background-color: #fff !important;
+    color: #23b3f4 !important;
+  }
+  .custom-control-btn:hover {
+    background-color: #23b3f4 !important;
+    color: #fff !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(35, 179, 244, 0.2) !important;
+  }
+  .custom-control-btn:hover svg {
+    color: #fff !important;
+    fill: #fff !important;
+  }
+  .custom-control-btn.active {
+    background-color: #23b3f4 !important;
+    color: #fff !important;
+  }
+  .custom-control-btn.active svg {
+    color: #fff !important;
+    fill: #fff !important;
+  }
+`;
 
 const OrderHistory = () => {
   const title = 'Order History';
@@ -19,11 +55,12 @@ const OrderHistory = () => {
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
-    { to: 'operations/order-history', text: 'Operations' },
+    { to: 'operations', text: 'Operations' },
     { to: 'operations/order-history', title: 'Order History' },
   ];
 
   const history = useHistory();
+  const { currentUser } = useContext(AuthContext);
 
   const [error, setError] = useState(null);
   const [data, setData] = useState([]);
@@ -68,7 +105,6 @@ const OrderHistory = () => {
         params.search = searchTerm;
       }
 
-      // Add filters to params
       if (filters.orderStatus) {
         params.order_status = filters.orderStatus;
       }
@@ -109,7 +145,7 @@ const OrderHistory = () => {
     } catch (err) {
       console.error('Fetch orders error:', err);
       setError(err.message || 'Failed to fetch orders');
-      toast.error('Failed to fetch orders. Please try again.');
+      toast.error('Failed to fetch orders.');
     } finally {
       setLoading(false);
       fetchRef.current = false;
@@ -134,15 +170,23 @@ const OrderHistory = () => {
     setPageIndex(0);
   };
 
-  const handleSearch = useCallback(
-    (value) => {
-      if (value !== searchTerm) {
-        setSearchTerm(value);
-        setPageIndex(0);
-      }
-    },
-    [searchTerm]
-  );
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+
+  const handleSearch = useCallback((term) => {
+    setSearchTerm(term);
+    setPageIndex(0);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleSearch(localSearchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [localSearchTerm, handleSearch]);
+
+  useEffect(() => {
+    setLocalSearchTerm(searchTerm);
+  }, [searchTerm]);
 
   const handleSort = (columnId) => {
     if (sortBy === columnId) {
@@ -186,23 +230,16 @@ const OrderHistory = () => {
   const printCounterBill = (ord, userData, counterName, items) => {
     return `
       <div style="page-break-after: always; font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 10px; border: 1px solid #ccc;">
-        <!-- Restaurant Header -->
         <div style="text-align: center; margin-bottom: 10px;">
           <h3 style="margin: 5px;">${userData.name}</h3>
         </div>
-
         <hr style="border: 0.5px dashed #ccc;" />
-
-        <!-- Counter Badge -->
         <div style="text-align: center; margin: 8px 0;">
           <span style="background: #000; color: #fff; padding: 4px 16px; border-radius: 4px; font-size: 14px; font-weight: bold;">
             ${counterName} Counter
           </span>
         </div>
-
         <hr style="border: 0.5px dashed #ccc;" />
-
-        <!-- Order Info -->
         <table style="width: 100%; font-size: 12px; margin-bottom: 8px;">
           <tr>
             <td><strong>Bill No:</strong> ${ord.order_no || ord._id}</td>
@@ -211,19 +248,10 @@ const OrderHistory = () => {
           <tr>
             <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
             <td style="text-align: right;">
-              ${ord.table_no
-        ? `<strong>Table:</strong> ${ord.table_no}`
-        : ord.token
-          ? `<strong>Token:</strong> ${ord.token}`
-          : ''}
+              ${ord.table_no ? `<strong>Table:</strong> ${ord.table_no}` : ord.token ? `<strong>Token:</strong> ${ord.token}` : ''}
             </td>
           </tr>
-          ${ord.customer_name
-        ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
-        : ''}
         </table>
-
-        <!-- Items Table -->
         <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
           <thead>
             <tr>
@@ -240,7 +268,6 @@ const OrderHistory = () => {
             `).join('')}
           </tbody>
         </table>
-
       </div>
     `;
   };
@@ -248,18 +275,13 @@ const OrderHistory = () => {
   const printFullBill = (ord, userData, items, subTotal) => {
     return `
       <div style="page-break-after: always; font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 10px; border: 1px solid #ccc;">
-        <!-- Restaurant Header -->
         <div style="text-align: center; margin-bottom: 10px;">
           <h2 style="margin: 5px;">${userData.name}</h2>
           <p style="margin: 0; font-size: 14px;">${userData.address}</p>
           <p style="margin: 0; font-size: 14px;">${userData.city}, ${userData.state} - ${userData.pincode}</p>
           <p style="margin: 5px; font-size: 14px;"><strong>Ph:</strong> ${userData.mobile}</p>
-          ${userData.gst_no ? `<p style="font-size: 14px;"><strong>GST:</strong> ${userData.gst_no}</p>` : ''}
         </div>
-
         <hr style="border: 0.5px dashed #ccc;" />
-
-        <!-- Order Info -->
         <table style="width: 100%; font-size: 14px; margin-bottom: 20px;">
           <tr>
             <td><strong>Bill No:</strong> ${ord.order_no || ord._id}</td>
@@ -268,19 +290,10 @@ const OrderHistory = () => {
           <tr>
             <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
             <td style="text-align: right;">
-              ${ord.table_no
-        ? `<strong>Table:</strong> ${ord.table_no}`
-        : ord.token
-          ? `<strong>Token:</strong> ${ord.token}`
-          : ''}
+              ${ord.table_no ? `<strong>Table:</strong> ${ord.table_no}` : ord.token ? `<strong>Token:</strong> ${ord.token}` : ''}
             </td>
           </tr>
-          ${ord.customer_name
-        ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
-        : ''}
         </table>
-
-        <!-- Items Table -->
         <table style="width: 100%; font-size: 14px; margin-bottom: 20px;">
           <thead>
             <tr>
@@ -299,94 +312,28 @@ const OrderHistory = () => {
                 <td style="text-align: right;">₹${(item.dish_price * item.quantity).toFixed(2)}</td>
               </tr>
             `).join('')}
-
             <tr>
-              <td colspan="3" style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
-                <strong>Sub Total:</strong>
-              </td>
-              <td style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
-                <strong>₹${subTotal.toFixed(2)}</strong>
-              </td>
-            </tr>
-
-            ${ord.cgst_amount > 0 ? `
-              <tr>
-                <td colspan="3" style="text-align: right;">
-                  <strong>CGST (${ord.cgst_percent || 0}%):</strong>
-                </td>
-                <td style="text-align: right;">
-                  ₹${parseFloat(ord.cgst_amount).toFixed(2)}
-                </td>
-              </tr>
-            ` : ''}
-
-            ${ord.sgst_amount > 0 ? `
-              <tr>
-                <td colspan="3" style="text-align: right;">
-                  <strong>SGST (${ord.sgst_percent || 0}%):</strong>
-                </td>
-                <td style="text-align: right;">
-                  ₹${parseFloat(ord.sgst_amount).toFixed(2)}
-                </td>
-              </tr>
-            ` : ''}
-
-            ${ord.vat_amount > 0 ? `
-              <tr>
-                <td colspan="3" style="text-align: right;">
-                  <strong>VAT (${ord.vat_percent || 0}%):</strong>
-                </td>
-                <td style="text-align: right;">
-                  ₹${parseFloat(ord.vat_amount).toFixed(2)}
-                </>
-              </tr>
-            ` : ''}
-
-            ${ord.discount_amount > 0 ? `
-              <tr>
-                <td colspan="3" style="text-align: right;">
-                  <strong>Discount:</strong>
-                </td>
-                <td style="text-align: right;">
-                  ₹${parseFloat(ord.discount_amount).toFixed(2)}
-                </td>
-              </tr>
-            ` : ''}
-
-            <tr>
-              <td colspan="3" style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
-                <strong>Total Amount:</strong>
-              </td>
-              <td style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
-                <strong>₹${parseFloat(ord.total_amount).toFixed(2)}</strong>
-              </td>
+              <td colspan="3" style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;"><strong>Total Amount:</strong></td>
+              <td style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;"><strong>₹${parseFloat(ord.total_amount).toFixed(2)}</strong></td>
             </tr>
           </tbody>
         </table>
-
-        <hr style="border: 0.5px dashed #ccc;" />
         <p style="text-align: center; font-size: 12px;"><strong>Thanks, Visit Again</strong></p>
-
       </div>
     `;
   };
 
   const handlePrint = async (orderId) => {
     try {
-      setPrinting(true);
-
+      setPrinting(prev => ({ ...prev, [orderId]: true }));
       const userRes = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
-
       const orderRes = await axios.get(`${process.env.REACT_APP_API}/order/get/${orderId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
-
       const order = orderRes.data.data;
-
       const userData = userRes.data;
-
       const groupedByCounter = {};
       order.order_items.forEach(item => {
         const counterName = item.counter || "Default";
@@ -395,59 +342,23 @@ const OrderHistory = () => {
       });
 
       const printWindow = window.open("", "_blank");
-
       if (!printWindow) {
         toast.error("Popup blocked! Please allow popups.");
         return;
       }
 
-      let allBillsHTML = "";
-
-      allBillsHTML += printFullBill(order, userData, order.order_items, order.sub_total);
-
+      let allBillsHTML = printFullBill(order, userData, order.order_items, order.sub_total);
       Object.entries(groupedByCounter).forEach(([counterName, items]) => {
-        const subTotal = items.reduce(
-          (sum, i) => sum + (i.dish_price * i.quantity),
-          0
-        );
-
         allBillsHTML += printCounterBill(order, userData, counterName, items);
       });
 
-      printWindow.document.write(`
-        <html>
-        <head>
-        <title>Print Bills</title>
-
-        <script>
-        window.onload = function() {
-          window.focus();
-          window.print();
-
-          // close window after print dialog
-          setTimeout(function() {
-            window.close();
-          }, 100);
-        };
-        </script>
-
-        </head>
-
-        <body>
-        ${allBillsHTML}
-        </body>
-        </html>
-        `
-      );
+      printWindow.document.write(`<html><head><title>Print Bills</title></head><body>${allBillsHTML}<script>window.onload=function(){window.focus();window.print();setTimeout(function(){window.close();},100);};</script></body></html>`);
       printWindow.document.close();
-
-      printWindow.focus();
-
     } catch (err) {
       console.error("Print error:", err);
       toast.error("Failed to print bills");
     } finally {
-      setPrinting(false);
+      setPrinting(prev => ({ ...prev, [orderId]: false }));
     }
   };
 
@@ -465,33 +376,19 @@ const OrderHistory = () => {
         id: 'order_date',
         headerClassName: 'text-muted text-small text-uppercase w-15',
         sortable: true,
-        isSorted: sortBy === 'order_date',
-        isSortedDesc: sortBy === 'order_date' && sortOrder === 'desc',
         Cell: ({ value }) => new Date(value).toLocaleDateString('en-IN'),
-      },
-      {
-        Header: 'Order Time',
-        accessor: 'order_date',
-        id: 'order_time',
-        headerClassName: 'text-muted text-small text-uppercase w-15',
-        disableSortBy: true,
-        Cell: ({ value }) => new Date(value).toLocaleTimeString(),
       },
       {
         Header: 'Customer Name',
         accessor: 'customer_name',
         headerClassName: 'text-muted text-small text-uppercase w-15',
         sortable: true,
-        isSorted: sortBy === 'customer_name',
-        isSortedDesc: sortBy === 'customer_name' && sortOrder === 'desc',
       },
       {
         Header: 'Order Type',
         accessor: 'order_type',
         headerClassName: 'text-muted text-small text-uppercase w-10',
         sortable: true,
-        isSorted: sortBy === 'order_type',
-        isSortedDesc: sortBy === 'order_type' && sortOrder === 'desc',
         Cell: ({ value }) => (
           <Badge bg={value === 'Dine In' ? 'primary' : value === 'Takeaway' ? 'warning' : value === 'Delivery' ? 'success' : 'secondary'}>{value}</Badge>
         ),
@@ -501,8 +398,6 @@ const OrderHistory = () => {
         accessor: 'total_amount',
         headerClassName: 'text-muted text-small text-uppercase w-15',
         sortable: true,
-        isSorted: sortBy === 'total_amount',
-        isSortedDesc: sortBy === 'total_amount' && sortOrder === 'desc',
         Cell: ({ value }) => `₹ ${parseFloat(value).toFixed(2)}`,
       },
       {
@@ -510,8 +405,6 @@ const OrderHistory = () => {
         accessor: 'order_status',
         headerClassName: 'text-muted text-small text-uppercase w-10',
         sortable: true,
-        isSorted: sortBy === 'order_status',
-        isSortedDesc: sortBy === 'order_status' && sortOrder === 'desc',
         Cell: ({ value }) => (
           <Badge bg={value === 'Paid' || value === 'Save' ? 'success' : value === 'KOT' ? 'warning' : value === 'Cancelled' ? 'danger' : 'secondary'}>
             {value}
@@ -548,7 +441,7 @@ const OrderHistory = () => {
         ),
       },
     ],
-    [history, printing, sortBy, sortOrder]
+    [history, printing]
   );
 
   const tableInstance = useTable(
@@ -559,8 +452,6 @@ const OrderHistory = () => {
       manualSortBy: true,
       pageCount: totalPages,
       autoResetPage: false,
-      autoResetSortBy: false,
-      autoResetGlobalFilter: false,
     },
     useGlobalFilter,
     useSortBy
@@ -576,168 +467,128 @@ const OrderHistory = () => {
     previousPage: () => handlePageChange(pageIndex - 1),
   };
 
+  const brandColor = '#23b3f4';
+
   if (loading && pageIndex === 0) {
     return (
       <>
         <HtmlHead title={title} description={description} />
-        <Row>
-          <Col>
-            <div className="page-title-container">
-              <Row>
-                <Col xs="12" md="7">
-                  <h1 className="mb-0 pb-0 display-4">{title}</h1>
-                  <BreadcrumbList items={breadcrumbs} />
-                </Col>
-              </Row>
-            </div>
-            <div className="text-center py-5">
-              <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading Order History...</h5>
-              <p className="text-muted">Please wait while we fetch your orders</p>
-            </div>
-          </Col>
-        </Row>
+        <div className="text-center py-5">
+          <Spinner animation="border" style={{ color: brandColor }} className="mb-3" />
+          <h5>Loading Order History...</h5>
+        </div>
       </>
     );
   }
 
   return (
     <>
+      <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
 
-      <Row>
-        <Col>
-          <div className="page-title-container">
-            <Row className="align-items-center">
-              <Col xs="12" md="7">
-                <h1 className="mb-0 pb-0 display-4">{title}</h1>
-                <BreadcrumbList items={breadcrumbs} />
-              </Col>
-            </Row>
+      <div className="page-title-container mb-4 mt-5 mt-lg-0">
+        <Row className="align-items-center">
+          <Col xs="12" md="7">
+            <h1 className="mb-0 pb-0 fw-800" style={{ color: brandColor, fontSize: '1.5rem' }}>{title}</h1>
+            <BreadcrumbList items={breadcrumbs} />
+          </Col>
+        </Row>
+      </div>
+
+      <Row className="mb-3 align-items-center">
+        <Col xs="12" md="5" lg="3">
+          <div className="d-flex gap-2">
+            <div className="flex-grow-1 shadow-sm rounded-pill bg-white border d-flex align-items-center px-3" style={{ height: '40px' }}>
+              <CsLineIcons icon="search" size="16" className="text-primary opacity-75" />
+              <Form.Control 
+                type="text" 
+                placeholder="Search orders..." 
+                className="border-0 bg-transparent shadow-none flex-grow-1 ms-2"
+                style={{ fontSize: '14px' }}
+                value={localSearchTerm}
+                onChange={(e) => setLocalSearchTerm(e.target.value)}
+              />
+            </div>
+            <Button
+              className={`custom-control-btn ${showFilters ? 'active' : ''}`}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <CsLineIcons icon="filter" size="18" />
+              {getActiveFilterCount() > 0 && (
+                <Badge bg="danger" pill className="position-absolute top-0 start-100 translate-middle" style={{ fontSize: '10px' }}>
+                  {getActiveFilterCount()}
+                </Badge>
+              )}
+            </Button>
           </div>
-
-          {error && (
-            <Alert variant="danger" className="mb-4">
-              <CsLineIcons icon="error" className="me-2" />
-              {error}
-            </Alert>
-          )}
-
-          {/* Search and Controls */}
-          <div>
-            <Row className="mb-3">
-              <Col sm="12" md="5" lg="3" xxl="2">
-                <div className="d-flex gap-2">
-                  <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
-                    <ControlsSearch onSearch={handleSearch} />
-                  </div>
-                  <Button
-                    variant={`${showFilters ? 'secondary' : 'outline-secondary'}`}
-                    size="sm"
-                    className="btn-icon btn-icon-only position-relative"
-                    onClick={() => setShowFilters(!showFilters)}
-                    title="Filters"
-                    disabled={loading}
-                  >
-                    <CsLineIcons icon={`${showFilters ? 'close' : 'filter'}`} />
-                    {getActiveFilterCount() > 0 && (
-                      <Badge bg="primary" className="position-absolute top-0 start-100 translate-middle">
-                        {getActiveFilterCount()}
-                      </Badge>
-                    )}
-                  </Button>
-                </div>
-              </Col>
-              <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
-                <div className="d-inline-block me-2 text-muted">
-                  {loading ? (
-                    'Loading...'
-                  ) : (
-                    <>
-                      Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0} to {Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords} entries
-                    </>
-                  )}
-                </div>
-                <div className="d-inline-block">
-                  <ControlsPageSize pageSize={pageSize} onPageSizeChange={handlePageSizeChange} />
-                </div>
-              </Col>
-            </Row>
-            {/* Filter Section */}
-            <Collapse in={showFilters}>
-              <Card className="mb-3">
-                <Card.Body>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5>Filters</h5>
-                    {getActiveFilterCount() > 0 && (
-                      <Button variant="outline-danger" size="sm" onClick={handleClearFilters}>
-                        <CsLineIcons icon="close" className="me-1" />
-                        Clear
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="mt-2">
-                    <Row>
-                      {/* Date Range Filter */}
-                      <Col md={3} className="mb-3">
-                        <Form.Label className="small text-muted">From Date</Form.Label>
-                        <Form.Control type="date" size="sm" value={filters.fromDate} onChange={(e) => handleFilterChange('fromDate', e.target.value)} />
-                      </Col>
-                      <Col md={3} className="mb-3">
-                        <Form.Label className="small text-muted">To Date</Form.Label>
-                        <Form.Control type="date" size="sm" value={filters.toDate} onChange={(e) => handleFilterChange('toDate', e.target.value)} />
-                      </Col>
-
-                      {/* Order Status Filter */}
-                      <Col md={3} className="mb-3">
-                        <Form.Label className="small text-muted">Order Status</Form.Label>
-                        <Form.Select size="sm" value={filters.orderStatus} onChange={(e) => handleFilterChange('orderStatus', e.target.value)}>
-                          <option value="">All</option>
-                          <option value="Paid">Paid</option>
-                          <option value="Save">Save</option>
-                          <option value="KOT">KOT</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </Form.Select>
-                      </Col>
-
-                      {/* Order Type Filter */}
-                      <Col md={3} className="mb-3">
-                        <Form.Label className="small text-muted">Order Type</Form.Label>
-                        <Form.Select size="sm" value={filters.orderType} onChange={(e) => handleFilterChange('orderType', e.target.value)}>
-                          <option value="">All</option>
-                          <option value="Dine In">Dine In</option>
-                          <option value="Takeaway">Takeaway</option>
-                          <option value="Delivery">Delivery</option>
-                        </Form.Select>
-                      </Col>
-                    </Row>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Collapse>
-
-            {/* Show table or "no data" message */}
-            {data.length === 0 && !loading ? (
-              <Alert variant="info" className="text-center">
-                <CsLineIcons icon="inbox" size={24} className="me-2" />
-                No orders found. {searchTerm || getActiveFilterCount() > 0 ? 'Try adjusting your search or filters.' : 'Orders will appear here once created.'}
-              </Alert>
-            ) : (
-              <>
-                <Row>
-                  <Col xs="12" style={{ overflow: 'auto' }}>
-                    <Table className="react-table rows" tableInstance={tableInstance} onSort={handleSort} />
-                  </Col>
-                  <Col xs="12">
-                    <TablePagination paginationProps={paginationProps} />
-                  </Col>
-                </Row>
-              </>
-            )}
+        </Col>
+        <Col xs="12" md="7" lg="9" className="text-end">
+          <div className="d-inline-block me-3 text-muted small fw-bold">
+            Showing {data.length} of {totalRecords} entries
+          </div>
+          <div className="d-inline-block">
+            <ControlsPageSize pageSize={pageSize} onPageSizeChange={handlePageSizeChange} />
           </div>
         </Col>
       </Row>
+
+      <Collapse in={showFilters}>
+        <Card className="border-0 shadow-sm mb-4" style={{ borderRadius: '1.25rem' }}>
+          <Card.Body className="p-4">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="fw-bold mb-0">Advanced Filters</h6>
+              <Button variant="link" className="text-danger p-0 fw-bold text-decoration-none" onClick={handleClearFilters}>Clear All</Button>
+            </div>
+            <Row className="g-3">
+              <Col md={3}>
+                <Form.Label className="small fw-bold text-muted">From Date</Form.Label>
+                <Form.Control type="date" className="rounded-pill" value={filters.fromDate} onChange={(e) => handleFilterChange('fromDate', e.target.value)} />
+              </Col>
+              <Col md={3}>
+                <Form.Label className="small fw-bold text-muted">To Date</Form.Label>
+                <Form.Control type="date" className="rounded-pill" value={filters.toDate} onChange={(e) => handleFilterChange('toDate', e.target.value)} />
+              </Col>
+              <Col md={3}>
+                <Form.Label className="small fw-bold text-muted">Order Status</Form.Label>
+                <Form.Select className="rounded-pill" value={filters.orderStatus} onChange={(e) => handleFilterChange('orderStatus', e.target.value)}>
+                  <option value="">All Status</option>
+                  <option value="Paid">Paid</option>
+                  <option value="KOT">KOT</option>
+                  <option value="Cancelled">Cancelled</option>
+                </Form.Select>
+              </Col>
+              <Col md={3}>
+                <Form.Label className="small fw-bold text-muted">Order Type</Form.Label>
+                <Form.Select className="rounded-pill" value={filters.orderType} onChange={(e) => handleFilterChange('orderType', e.target.value)}>
+                  <option value="">All Types</option>
+                  <option value="Takeaway">Takeaway</option>
+                  <option value="Delivery">Delivery</option>
+                </Form.Select>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
+      </Collapse>
+
+      {data.length === 0 ? (
+        <Card className="border-0 shadow-sm text-center py-5" style={{ borderRadius: '1.25rem' }}>
+          <Card.Body>
+            <CsLineIcons icon="inbox" size="48" className="text-muted mb-3" />
+            <h5 className="fw-bold">No Orders Found</h5>
+          </Card.Body>
+        </Card>
+      ) : (
+        <Card className="border-0 shadow-sm mb-4" style={{ borderRadius: '1.25rem' }}>
+          <Card.Body className="p-0">
+            <div className="table-responsive">
+              <Table className="react-table rows" tableInstance={tableInstance} onSort={handleSort} />
+            </div>
+            <div className="p-3 border-top">
+              <TablePagination paginationProps={paginationProps} />
+            </div>
+          </Card.Body>
+        </Card>
+      )}
     </>
   );
 };

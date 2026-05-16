@@ -13,97 +13,7 @@ import TablePagination from 'components/table/TablePagination';
 import { toast } from 'react-toastify';
 import { getLeavePolicy } from 'api/payrollConfig';
 
-const customStyles = `
-  .glass-card {
-    background: #ffffff !important;
-    border: 1px solid #f0f0f0 !important;
-    border-radius: 1.5rem !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
-    transition: all 0.3s ease;
-  }
-  .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
-  }
-  .custom-btn-solid {
-    background-color: #1ea8e7 !important;
-    border: 1px solid #1ea8e7 !important;
-    color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-solid:hover {
-    background-color: #158dc4 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
-  }
-  .custom-btn-danger-outline {
-    border: 1px solid #ef4444 !important;
-    color: #ef4444 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-danger-outline:hover {
-    background-color: #ef4444 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2) !important;
-  }
-  .custom-btn-info-outline {
-    border: 1px solid #0ea5e9 !important;
-    color: #0ea5e9 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-info-outline:hover {
-    background-color: #0ea5e9 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2) !important;
-  }
-  .status-badge {
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
-    font-weight: 700;
-    font-size: 0.75rem;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-  }
-  .react-table th {
-    background: #f8fafc !important;
-    color: #64748b !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    font-size: 0.75rem !important;
-    letter-spacing: 0.05em !important;
-    padding: 1.25rem !important;
-    border: none !important;
-  }
-  .react-table td {
-    padding: 1.25rem !important;
-    vertical-align: middle !important;
-    border-bottom: 1px solid #f1f5f9 !important;
-  }
-`;
+
 
 export default function ManageAttendance() {
     const title = 'Manage Attendance';
@@ -323,7 +233,7 @@ export default function ManageAttendance() {
                     }
 
                     return (
-                        <Badge bg={statusVariant} className="status-badge d-inline-flex align-items-center gap-1">
+                        <Badge bg={statusVariant} className="manage-attendance-status-badge d-inline-flex align-items-center gap-1">
                             <CsLineIcons icon={statusIcon} size="12" />
                             {status}
                         </Badge>
@@ -353,7 +263,7 @@ export default function ManageAttendance() {
                             {!todayAttendance ? (
                                 <>
                                     <Button
-                                        className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center"
+                                        className="manage-attendance-custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center"
                                         onClick={() => handleAction(row.original, 'checkin')}
                                         title="Check-In"
                                         disabled={actionsDisabled}
@@ -361,7 +271,7 @@ export default function ManageAttendance() {
                                         <CsLineIcons icon="login" size="16" />
                                     </Button>
                                     <Button
-                                        className="custom-btn-danger-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center"
+                                        className="manage-attendance-custom-btn-danger-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center"
                                         onClick={() => handleAction(row.original, 'absent')}
                                         title="Mark Absent"
                                         disabled={actionsDisabled}
@@ -369,7 +279,7 @@ export default function ManageAttendance() {
                                         <CsLineIcons icon="user-block" size="16" />
                                     </Button>
                                     <Button
-                                        className="custom-btn-info-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center"
+                                        className="manage-attendance-custom-btn-info-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center"
                                         onClick={() => handleAction(row.original, 'leave')}
                                         title="Mark Leave"
                                         disabled={actionsDisabled}
@@ -379,7 +289,7 @@ export default function ManageAttendance() {
                                 </>
                             ) : todayAttendance.in_time && !todayAttendance.out_time ? (
                                 <Button
-                                    className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center"
+                                    className="manage-attendance-custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center"
                                     onClick={() => handleAction(row.original, 'checkout')}
                                     title="Check-Out"
                                     disabled={actionsDisabled}
@@ -392,7 +302,7 @@ export default function ManageAttendance() {
                                 </div>
                             )}
                             <Button
-                                className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center"
+                                className="manage-attendance-custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center"
                                 onClick={() => history.push(`/staff/attendance/view/${row.original._id}`)}
                                 title="View History"
                             >
@@ -425,7 +335,7 @@ export default function ManageAttendance() {
 
     return (
         <div className="container-fluid pb-5">
-            <style>{customStyles}</style>
+            
             <HtmlHead title={title} description={description} />
 
             <div className="page-title-container mb-4 mt-5 mt-md-n3">
@@ -435,10 +345,10 @@ export default function ManageAttendance() {
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
                     <Col md={5} className="d-flex justify-content-md-end gap-2">
-                        <Button className="custom-btn-outline px-4 py-2 d-flex align-items-center gap-2" onClick={fetchTodayAttendance} disabled={loading.initial}>
+                        <Button className="manage-attendance-custom-btn-outline px-4 py-2 d-flex align-items-center gap-2" onClick={fetchTodayAttendance} disabled={loading.initial}>
                             <CsLineIcons icon="refresh" size="18" /> Refresh
                         </Button>
-                        <Button className="custom-btn-outline px-4 py-2 d-flex align-items-center gap-2" as={Link} to="/staff/view">
+                        <Button className="manage-attendance-custom-btn-outline px-4 py-2 d-flex align-items-center gap-2" as={Link} to="/staff/view">
                             <CsLineIcons icon="eye" size="18" /> View Team
                         </Button>
                     </Col>
@@ -446,16 +356,16 @@ export default function ManageAttendance() {
             </div>
 
             {error && (
-                <Alert variant="danger" className="glass-card border-0 mb-4 d-flex align-items-center justify-content-between p-4 shadow-sm">
+                <Alert variant="danger" className="manage-attendance-glass-card border-0 mb-4 d-flex align-items-center justify-content-between p-4 shadow-sm">
                     <div className="d-flex align-items-center gap-2 text-danger fw-bold">
                         <CsLineIcons icon="error" size="24" />
                         <span>{error}</span>
                     </div>
-                    <Button className="custom-btn-danger-outline px-4" onClick={fetchTodayAttendance}>Retry</Button>
+                    <Button className="manage-attendance-custom-btn-danger-outline px-4" onClick={fetchTodayAttendance}>Retry</Button>
                 </Alert>
             )}
 
-            <Card className="glass-card border-0 shadow-sm overflow-hidden mb-5">
+            <Card className="manage-attendance-glass-card border-0 shadow-sm overflow-hidden mb-5">
                 <div className="p-4 border-bottom bg-light d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <div>
                         <h5 className="fw-bold text-dark mb-1">
@@ -464,10 +374,10 @@ export default function ManageAttendance() {
                         <div className="text-muted small fw-medium">Tracking {staffList.length} staff members today</div>
                     </div>
                     <div className="d-flex flex-wrap gap-2">
-                        <Badge bg="warning" className="status-badge">Pending</Badge>
-                        <Badge bg="success" className="status-badge">Checked In</Badge>
-                        <Badge bg="primary" className="status-badge">Completed</Badge>
-                        <Badge bg="danger" className="status-badge">Absent</Badge>
+                        <Badge bg="warning" className="manage-attendance-status-badge">Pending</Badge>
+                        <Badge bg="success" className="manage-attendance-status-badge">Checked In</Badge>
+                        <Badge bg="primary" className="manage-attendance-status-badge">Completed</Badge>
+                        <Badge bg="danger" className="manage-attendance-status-badge">Absent</Badge>
                     </div>
                 </div>
 
@@ -480,7 +390,7 @@ export default function ManageAttendance() {
                     </div>
                     
                     <div className="table-responsive">
-                        <Table className="react-table rows mb-0" tableInstance={tableInstance} />
+                        <Table className="manage-attendance-react-table rows mb-0" tableInstance={tableInstance} />
                     </div>
                     
                     <div className="p-4 border-top">
@@ -516,7 +426,7 @@ export default function ManageAttendance() {
                             </p>
                             
                             {actionType === 'leave' && (
-                                <div className="text-start mt-3 glass-card p-4 border-0 shadow-none bg-light">
+                                <div className="text-start mt-3 manage-attendance-glass-card p-4 border-0 shadow-none bg-light">
                                     <Form.Group className="mb-4">
                                         <Form.Label className="small fw-bold text-uppercase letter-spacing-1 text-muted">Leave Reason / Type</Form.Label>
                                         <Form.Select
@@ -556,14 +466,14 @@ export default function ManageAttendance() {
                 </Modal.Body>
                 <Modal.Footer className="border-0 d-flex gap-3 pt-0">
                     <Button
-                        className="custom-btn-outline flex-grow-1"
+                        className="manage-attendance-custom-btn-outline flex-grow-1"
                         onClick={() => setShowActionModal(false)}
                         disabled={loading.actions.checkin || loading.actions.checkout || loading.actions.absent || loading.actions.leave}
                     >
                         Cancel
                     </Button>
                     <Button
-                        className={`${actionType === 'absent' ? 'custom-btn-danger-outline' : 'custom-btn-solid'} flex-grow-1`}
+                        className={`${actionType === 'absent' ? 'manage-attendance-custom-btn-danger-outline' : 'manage-attendance-custom-btn-solid'} flex-grow-1`}
                         onClick={confirmAction}
                         disabled={loading.actions.checkin || loading.actions.checkout || loading.actions.absent || loading.actions.leave}
                     >

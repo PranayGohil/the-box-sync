@@ -10,117 +10,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AuthContext } from 'contexts/AuthContext';
 
-const customStyles = `
-    .interactive-card {
-      background: rgba(255, 255, 255, 0.98) !important;
-      backdrop-filter: blur(15px) !important;
-      border-radius: 1.5rem !important;
-      border: 1px solid rgba(255, 255, 255, 0.8) !important;
-      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05) !important;
-      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
-      overflow: hidden;
-      position: relative;
-    }
-    .interactive-card.filter-card {
-      overflow: visible !important;
-      z-index: 100;
-      position: relative;
-    }
-    .interactive-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 20px 40px -10px rgba(35, 179, 244, 0.15) !important;
-      border-color: rgba(35, 179, 244, 0.4) !important;
-    }
-    .card-title-container {
-      padding-bottom: 0.75rem;
-      margin-bottom: 1rem;
-      border-bottom: 1.5px solid rgba(35, 179, 244, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .stat-card-inner {
-      background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(35, 179, 244, 0.02) 100%);
-    }
-    .custom-btn-outline {
-      background: #ffffff !important;
-      border: 1.5px solid #23b3f4 !important;
-      color: #23b3f4 !important;
-      border-radius: 50px !important;
-      padding: 0.6rem 1.5rem !important;
-      font-weight: 700 !important;
-      transition: all 0.3s ease !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-    }
-    .custom-btn-outline:hover {
-      background: #23b3f4 !important;
-      color: #ffffff !important;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(35, 179, 244, 0.2) !important;
-    }
-    .stat-label {
-      font-size: 0.7rem !important;
-      font-weight: 800 !important;
-      color: #64748b !important;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-    .stat-value {
-      font-size: 1.8rem !important;
-      font-weight: 900 !important;
-      color: #0f172a !important;
-      line-height: 1;
-    }
-    .form-control, .form-select {
-      border-radius: 0.8rem !important;
-      padding: 0.6rem 1rem !important;
-      border: 1.5px solid rgba(0,0,0,0.05) !important;
-      background: rgba(0,0,0,0.01) !important;
-      font-weight: 600 !important;
-    }
-    .filter-select-btn {
-      width: 100%;
-      min-height: var(--input-height, 38px);
-      border: 1px solid var(--separator, #dee2e6);
-      border-radius: var(--border-radius-md, 0.4rem);
-      background: var(--foreground, #fff);
-      color: var(--body, #212529);
-      padding: 0.375rem 2rem 0.375rem 0.75rem;
-      text-align: left;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 1em;
-      transition: border-color 0.15s ease-in-out;
-      line-height: 1.5;
-    }
-    .filter-select-btn:focus { outline: none; border-color: rgba(var(--primary-rgb, 35,179,244), 1); }
-    .filter-select-dropdown {
-      position: absolute;
-      top: calc(100% + 3px);
-      left: 0;
-      right: 0;
-      z-index: 9999;
-      background: var(--foreground, #fff);
-      border: 1px solid var(--separator, #dee2e6);
-      border-radius: var(--border-radius-md, 0.4rem);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-      overflow: hidden;
-    }
-    .filter-select-option {
-      padding: 0.6rem 0.85rem;
-      cursor: pointer;
-      font-size: 0.95em;
-      color: var(--body, #212529);
-      transition: background 0.12s;
-    }
-    .filter-select-option:hover { background: rgba(35,179,244,0.07); }
-    .filter-select-option.is-selected { background: rgba(35,179,244,0.1); color: #23b3f4; font-weight: 700; }
-    .filter-select-option.is-disabled { opacity: 0.4; cursor: not-allowed; }
-`;
+
 
 const FilterSelect = ({ value, onChange, options }) => {
   const [open, setOpen] = useState(false);
@@ -141,17 +31,17 @@ const FilterSelect = ({ value, onChange, options }) => {
   const selected = options.find((o) => o.value === value);
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
-      <button type="button" className="filter-select-btn" onClick={() => setOpen((p) => !p)}>
+    <div ref={ref} style={{ position: 'relative', zIndex: open ? 1000 : 1 }}>
+      <button type="button" className="menu-performance-report-filter-select-btn" onClick={() => setOpen((p) => !p)}>
         <span>{selected?.label || 'Select...'}</span>
         <span style={{ fontSize: '10px', color: 'var(--muted,#6c757d)', flexShrink: 0 }}>{open ? '▲' : '▼'}</span>
       </button>
       {open && (
-        <div className="filter-select-dropdown">
+        <div className="menu-performance-report-filter-select-dropdown">
           {options.map((opt) => (
             <div
               key={opt.value}
-              className={`filter-select-option${opt.value === value ? ' is-selected' : ''}${opt.disabled ? ' is-disabled' : ''}`}
+              className={`menu-performance-report-filter-select-option${opt.value === value ? ' menu-performance-report-is-selected' : ''}${opt.disabled ? ' menu-performance-report-is-disabled' : ''}`}
               onMouseDown={(e) => {
                 if (opt.disabled) return;
                 e.preventDefault();
@@ -370,484 +260,480 @@ const MenuPerformanceReport = () => {
 
   return (
     <>
-      <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
-
-      <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
-        <Row className="g-0 align-items-center">
-          <Col xs="auto" className="me-auto">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>
-              {title}
-            </h1>
-            <BreadcrumbList items={breadcrumbs} />
-          </Col>
-        </Row>
-      </div>
-
-      {activePlans?.includes('Dynamic Reports') && (
-        <Card className="interactive-card filter-card border-0 mb-4 no-print shadow-sm">
-          <Card.Body className="p-4">
-            <div className="card-title-container">
-              <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
-                Menu Analytics Parameters
-              </h2>
-              <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
-            </div>
-            <Row className="g-3">
-              <Col xs={12} md={3}>
-                <Form.Label className="stat-label mb-2">Start Date</Form.Label>
-                <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-              </Col>
-              <Col xs={12} md={3}>
-                <Form.Label className="stat-label mb-2">End Date</Form.Label>
-                <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-              </Col>
-              <Col xs={12} md={2}>
-                <Form.Label className="stat-label mb-2">Category</Form.Label>
-                <FilterSelect
-                  value={selectedCategory}
-                  onChange={setSelectedCategory}
-                  options={categories.map((cat) => ({ value: cat, label: cat === 'all' ? 'All' : cat }))}
-                />
-              </Col>
-              <Col xs={12} md={2}>
-                <Form.Label className="stat-label mb-2">Meal Type</Form.Label>
-                <FilterSelect
-                  value={selectedMealType}
-                  onChange={setSelectedMealType}
-                  options={mealTypes.map((type) => ({ value: type, label: type === 'all' ? 'All' : type }))}
-                />
-              </Col>
-              <Col xs={12} md={2} className="d-flex align-items-end">
-                <Button className="custom-btn-outline w-100" onClick={fetchMenuReport} disabled={loading}>
-                  <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
-                  {loading ? 'Processing...' : 'Generate'}
-                </Button>
-              </Col>
-            </Row>
-          </Card.Body>
-        </Card>
-      )}
-
-      {error && (
-        <Alert variant="danger" className="mb-4 interactive-card border-0">
-          {error}
-        </Alert>
-      )}
-
-      {reportData && (
-        <>
-          {/* Action Bar */}
-          <Card className="interactive-card border-0 mb-4 no-print shadow-sm">
-            <Card.Body className="p-4 d-flex justify-content-between align-items-center">
-              <div className="d-flex gap-3 align-items-center">
-                <Button
-                  variant="outline-success"
-                  className="custom-btn-outline border-success text-success"
-                  onClick={() => handleExportClick('Excel')}
-                  disabled={exporting}
-                >
-                  <CsLineIcons icon="file-text" className="me-2" size="15" /> Excel
-                </Button>
-                <Button
-                  variant="outline-danger"
-                  className="custom-btn-outline border-danger text-danger"
-                  onClick={() => handleExportClick('PDF')}
-                  disabled={exporting}
-                >
-                  <CsLineIcons icon="file-text" className="me-2" size="15" /> PDF
-                </Button>
-              </div>
-              {exporting && (
-                <div className="flex-grow-1 ms-4">
-                  <div className="d-flex align-items-center mb-2">
-                    <Spinner animation="border" size="sm" className="me-2" style={{ color: brandColor }} />
-                    <span className="smaller fw-bold text-muted">Generating {exportType}...</span>
-                  </div>
-                  <ProgressBar now={exportProgress} className="progress-sm" variant="info" style={{ height: '6px' }} />
-                </div>
-              )}
-            </Card.Body>
-          </Card>
-
-          {/* Key Metrics */}
-          <Row className="g-4 mb-4">
-            <Col xl="3" md="6">
-              <Card className="interactive-card border-0 h-100 shadow-sm">
-                <Card.Body className="p-4 stat-card-inner">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div>
-                      <div className="stat-label mb-2">Total Items Sold</div>
-                      <div className="stat-value text-primary">{reportData.dishPerformance.reduce((sum, d) => sum + d.totalQuantity, 0)}</div>
-                      <div className="smaller text-muted fw-bold mt-1">Total quantity sold</div>
-                    </div>
-                    <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: brandBg }}>
-                      <CsLineIcons icon="cart" size="24" style={{ color: brandColor }} />
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col xl="3" md="6">
-              <Card className="interactive-card border-0 h-100 shadow-sm">
-                <Card.Body className="p-4 stat-card-inner">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div>
-                      <div className="stat-label mb-2">Menu Revenue</div>
-                      <div className="stat-value text-success">{formatCurrency(reportData.summary.totalRevenue)}</div>
-                      <div className="smaller text-muted fw-bold mt-1">From all dishes</div>
-                    </div>
-                    <div
-                      className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
-                      style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}
-                    >
-                      <CsLineIcons icon="money" size="24" style={{ color: '#10b981' }} />
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col xl="3" md="6">
-              <Card className="interactive-card border-0 h-100 shadow-sm">
-                <Card.Body className="p-4 stat-card-inner">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div>
-                      <div className="stat-label mb-2">Menu Categories</div>
-                      <div className="stat-value text-info">{reportData.summary.totalCategories}</div>
-                      <div className="smaller text-muted fw-bold mt-1">Unique groups</div>
-                    </div>
-                    <div
-                      className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
-                      style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)' }}
-                    >
-                      <CsLineIcons icon="grid-5" size="24" style={{ color: '#06b6d4' }} />
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col xl="3" md="6">
-              <Card className="interactive-card border-0 h-100 shadow-sm">
-                <Card.Body className="p-4 stat-card-inner">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div>
-                      <div className="stat-label mb-2">Top Performer</div>
-                      <div className="stat-value text-warning" style={{ fontSize: '1.2rem !important' }}>
-                        {reportData.dishPerformance[0]?.dishName || 'N/A'}
-                      </div>
-                      <div className="smaller text-muted fw-bold mt-1">Best selling item</div>
-                    </div>
-                    <div
-                      className="rounded-circle d-flex justify-content-center align-items-center flex-shrink-0"
-                      style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', width: '52px', height: '52px' }}
-                    >
-                      <CsLineIcons icon="star" size="24" style={{ color: '#f59e0b' }} />
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
+      <div className="container-fluid ps-lg-4 pe-lg-5">
+        <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
+          <Row className="g-0 align-items-center">
+            <Col xs="auto" className="me-auto">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>
+                {title}
+              </h1>
+              <BreadcrumbList items={breadcrumbs} />
             </Col>
           </Row>
+        </div>
 
-          {/* Performance Distribution */}
-          <Card className="interactive-card border-0 shadow-sm mb-4">
+        {activePlans?.includes('Dynamic Reports') && (
+          <Card className="menu-performance-report-interactive-card menu-performance-report-filter-card border-0 mb-4 no-print shadow-sm">
             <Card.Body className="p-4">
-              <div className="card-title-container">
+              <div className="menu-performance-report-card-title-container">
                 <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
-                  Performance Distribution Insights
+                  Menu Analytics Parameters
                 </h2>
-                <CsLineIcons icon="activity" size="18" style={{ color: brandColor }} />
+                <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
               </div>
-              <Row className="g-4">
-                <Col md={4}>
-                  <Card className="interactive-card border-0 p-3 h-100" style={{ background: 'rgba(16, 185, 129, 0.05) !important' }}>
-                    <div className="d-flex align-items-center">
-                      <div className="sw-5 sh-5 rounded-circle bg-success d-flex justify-content-center align-items-center me-3">
-                        <CsLineIcons icon="trend-up" className="text-white" size="20" />
-                      </div>
-                      <div>
-                        <div className="stat-label">Top Performers</div>
-                        <div className="h4 mb-0 fw-900 text-success">
-                          {reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'excellent').length}
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
+              <Row className="g-4 mt-1">
+                <Col xs={12} md={6} lg={2}>
+                  <Form.Label className="menu-performance-report-stat-label mb-2">Start Date</Form.Label>
+                  <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                 </Col>
-                <Col md={4}>
-                  <Card className="interactive-card border-0 p-3 h-100" style={{ background: 'rgba(35, 179, 244, 0.05) !important' }}>
-                    <div className="d-flex align-items-center">
-                      <div className="sw-5 sh-5 rounded-circle bg-info d-flex justify-content-center align-items-center me-3">
-                        <CsLineIcons icon="check" className="text-white" size="20" />
-                      </div>
-                      <div>
-                        <div className="stat-label">Stable Items</div>
-                        <div className="h4 mb-0 fw-900 text-info">{reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'good').length}</div>
-                      </div>
-                    </div>
-                  </Card>
+                <Col xs={12} md={6} lg={2}>
+                  <Form.Label className="menu-performance-report-stat-label mb-2">End Date</Form.Label>
+                  <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                 </Col>
-                <Col md={4}>
-                  <Card className="interactive-card border-0 p-3 h-100" style={{ background: 'rgba(244, 63, 94, 0.05) !important' }}>
-                    <div className="d-flex align-items-center">
-                      <div className="sw-5 sh-5 rounded-circle bg-danger d-flex justify-content-center align-items-center me-3">
-                        <CsLineIcons icon="trend-down" className="text-white" size="20" />
-                      </div>
-                      <div>
-                        <div className="stat-label">Low Performers</div>
-                        <div className="h4 mb-0 fw-900 text-danger">{reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'poor').length}</div>
-                      </div>
-                    </div>
-                  </Card>
+                <Col xs={12} md={4} lg={3}>
+                  <Form.Label className="menu-performance-report-stat-label mb-2">Category</Form.Label>
+                  <FilterSelect
+                    value={selectedCategory}
+                    onChange={setSelectedCategory}
+                    options={categories.map((cat) => ({ value: cat, label: cat === 'all' ? 'All Categories' : cat }))}
+                  />
+                </Col>
+                <Col xs={12} md={4} lg={3}>
+                  <Form.Label className="menu-performance-report-stat-label mb-2">Meal Type</Form.Label>
+                  <FilterSelect
+                    value={selectedMealType}
+                    onChange={setSelectedMealType}
+                    options={mealTypes.map((type) => ({ value: type, label: type === 'all' ? 'All Meal Types' : type }))}
+                  />
+                </Col>
+                <Col xs={12} md={4} lg={2} className="d-flex align-items-end">
+                  <Button className="menu-performance-report-custom-btn-outline w-100" onClick={fetchMenuReport} disabled={loading}>
+                    <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
+                    {loading ? 'Processing...' : 'Generate'}
+                  </Button>
                 </Col>
               </Row>
-              <Alert variant="info" className="mt-4 interactive-card border-0 mb-0 shadow-none">
-                <div className="d-flex align-items-center">
-                  <CsLineIcons icon="info-circle" className="text-info me-3" size="24" />
-                  <div>
-                    <div className="fw-bold text-dark">Optimization Recommendation</div>
-                    <div className="smaller text-muted">
-                      Top performers contribute to 65% of your net revenue. Consider highlighting "Low Performers" in daily specials or optimizing their recipe
-                      costs to improve margins.
-                    </div>
-                  </div>
-                </div>
-              </Alert>
             </Card.Body>
           </Card>
+        )}
 
-          {/* Category Overview Grid */}
-          <Card className="interactive-card border-0 shadow-sm mb-4">
-            <Card.Body className="p-4">
-              <div className="card-title-container">
-                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
-                  Category Yield Insights
-                </h2>
-                <CsLineIcons icon="pie-chart" size="18" style={{ color: brandColor }} />
-              </div>
-              <Row className="g-4">
-                {reportData.categoryPerformance.map((category, idx) => (
-                  <Col lg="4" key={idx}>
-                    <Card
-                      className="interactive-card border-0 p-3 h-100"
-                      style={{ background: 'rgba(0,0,0,0.01) !important', border: '1px solid rgba(0,0,0,0.05) !important' }}
-                    >
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <div className="fw-bold text-dark mb-0">{category.category}</div>
-                        <Badge bg="primary" className="rounded-pill px-2" style={{ fontSize: '0.65rem' }}>
-                          {category.orderCount} orders
-                        </Badge>
+        {error && (
+          <Alert variant="danger" className="mb-4 menu-performance-report-interactive-card border-0">
+            {error}
+          </Alert>
+        )}
+
+        {reportData && (
+          <>
+            {/* Action Bar */}
+            <Card className="menu-performance-report-interactive-card border-0 mb-4 no-print shadow-sm">
+              <Card.Body className="p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div className="d-flex gap-3 align-items-center">
+                  <Button
+                    variant="outline-success"
+                    className="menu-performance-report-custom-btn-outline border-success text-success px-4"
+                    onClick={() => handleExportClick('Excel')}
+                    disabled={exporting}
+                  >
+                    <CsLineIcons icon="file-text" className="me-2" size="15" /> Excel
+                  </Button>
+                  <Button
+                    variant="outline-danger"
+                    className="menu-performance-report-custom-btn-outline border-danger text-danger px-4"
+                    onClick={() => handleExportClick('PDF')}
+                    disabled={exporting}
+                  >
+                    <CsLineIcons icon="file-text" className="me-2" size="15" /> PDF
+                  </Button>
+                </div>
+                {exporting && (
+                  <div className="flex-grow-1 ms-md-4 mt-3 mt-md-0">
+                    <div className="d-flex align-items-center mb-2">
+                      <Spinner animation="border" size="sm" className="me-2" style={{ color: brandColor }} />
+                      <span className="smaller fw-bold text-muted">Generating {exportType}... {exportProgress}%</span>
+                    </div>
+                    <ProgressBar now={exportProgress} className="progress-sm" variant="info" style={{ height: '6px' }} />
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+
+            {/* Key Metrics */}
+            <Row className="g-3 mb-4">
+              <Col xl="3" md="6">
+                <Card className="menu-performance-report-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: `4px solid ${brandColor}` }}>
+                  <Card.Body className="p-4 menu-performance-report-stat-card-inner">
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div>
+                        <div className="menu-performance-report-stat-label mb-2">Total Items Sold</div>
+                        <div className="menu-performance-report-stat-value text-primary">{reportData.dishPerformance.reduce((sum, d) => sum + d.totalQuantity, 0)}</div>
+                        <div className="smaller text-muted fw-bold mt-1">Total quantity sold</div>
                       </div>
-                      <div className="d-flex justify-content-between mb-1 smaller">
-                        <span className="text-muted fw-bold">Revenue:</span>
-                        <span className="text-primary fw-bold">{formatCurrency(category.totalRevenue)}</span>
+                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: brandBg }}>
+                        <CsLineIcons icon="cart" size="24" style={{ color: brandColor }} />
                       </div>
-                      <ProgressBar
-                        now={(category.totalRevenue / reportData.summary.totalRevenue) * 100}
-                        variant="info"
-                        className="progress-sm mb-2"
-                        style={{ height: '3px' }}
-                      />
-                      <div className="d-flex justify-content-between smaller">
-                        <span className="text-muted">Yield per Dish:</span>
-                        <span className="fw-bold text-dark">{formatCurrency(category.avgRevenuePerDish)}</span>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col xl="3" md="6">
+                <Card className="menu-performance-report-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #10b981' }}>
+                  <Card.Body className="p-4 menu-performance-report-stat-card-inner">
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div>
+                        <div className="menu-performance-report-stat-label mb-2">Menu Revenue</div>
+                        <div className="menu-performance-report-stat-value text-success">{formatCurrency(reportData.summary.totalRevenue)}</div>
+                        <div className="smaller text-muted fw-bold mt-1">From all dishes</div>
+                      </div>
+                      <div
+                        className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
+                        style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}
+                      >
+                        <CsLineIcons icon="money" size="24" style={{ color: '#10b981' }} />
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col xl="3" md="6">
+                <Card className="menu-performance-report-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #06b6d4' }}>
+                  <Card.Body className="p-4 menu-performance-report-stat-card-inner">
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div>
+                        <div className="menu-performance-report-stat-label mb-2">Menu Categories</div>
+                        <div className="menu-performance-report-stat-value text-info">{reportData.summary.totalCategories}</div>
+                        <div className="smaller text-muted fw-bold mt-1">Unique groups</div>
+                      </div>
+                      <div
+                        className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
+                        style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)' }}
+                      >
+                        <CsLineIcons icon="grid-5" size="24" style={{ color: '#06b6d4' }} />
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col xl="3" md="6">
+                <Card className="menu-performance-report-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #f59e0b' }}>
+                  <Card.Body className="p-4 menu-performance-report-stat-card-inner">
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div className="overflow-hidden">
+                        <div className="menu-performance-report-stat-label mb-2">Top Performer</div>
+                        <div className="menu-performance-report-stat-value text-warning text-truncate" style={{ fontSize: '1.4rem' }}>
+                          {reportData.dishPerformance[0]?.dishName || 'N/A'}
+                        </div>
+                        <div className="smaller text-muted fw-bold mt-1">Best selling item</div>
+                      </div>
+                      <div
+                        className="rounded-circle d-flex justify-content-center align-items-center flex-shrink-0 ms-2"
+                        style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', width: '52px', height: '52px' }}
+                      >
+                        <CsLineIcons icon="star" size="24" style={{ color: '#f59e0b' }} />
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+
+            {/* Performance Distribution */}
+            <Card className="menu-performance-report-interactive-card border-0 shadow-sm mb-4">
+              <Card.Body className="p-4">
+                <div className="menu-performance-report-card-title-container">
+                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                    Performance Distribution Insights
+                  </h2>
+                  <CsLineIcons icon="activity" size="18" style={{ color: brandColor }} />
+                </div>
+                <Row className="g-3 mt-1">
+                  <Col md={4}>
+                    <Card className="menu-performance-report-interactive-card border-0 p-3 h-100" style={{ background: 'rgba(16, 185, 129, 0.05) !important' }}>
+                      <div className="d-flex align-items-center">
+                        <div className="sw-5 sh-5 rounded-circle bg-success d-flex justify-content-center align-items-center me-3">
+                          <CsLineIcons icon="trend-up" className="text-white" size="20" />
+                        </div>
+                        <div>
+                          <div className="menu-performance-report-stat-label">Top Performers</div>
+                          <div className="h4 mb-0 fw-900 text-success">
+                            {reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'excellent').length}
+                          </div>
+                        </div>
                       </div>
                     </Card>
                   </Col>
-                ))}
-              </Row>
-            </Card.Body>
-          </Card>
-
-          {/* Meal Type Performance */}
-          <Card className="interactive-card border-0 shadow-sm mb-4">
-            <Card.Body className="p-4">
-              <div className="card-title-container">
-                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
-                  Meal Type Utilization Trends
-                </h2>
-                <CsLineIcons icon="compass" size="18" style={{ color: brandColor }} />
-              </div>
-              <div className="d-none d-md-block table-responsive">
-                <Table borderless hover className="align-middle mb-0">
-                  <thead className="stat-label">
-                    <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
-                      <th className="py-3">Meal Type</th>
-                      <th className="py-3 text-end">Qty Sold</th>
-                      <th className="py-3 text-end">Revenue</th>
-                      <th className="py-3 text-end">Orders</th>
-                      <th className="py-3 text-end">% Revenue</th>
-                      <th className="py-3 text-center">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reportData.mealTypePerformance.map((mealType, idx) => {
-                      const percent = (mealType.totalRevenue / reportData.summary.totalRevenue) * 100;
-                      return (
-                        <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
-                          <td className="py-3 fw-bold text-dark">{mealType.mealType || 'Not Specified'}</td>
-                          <td className="py-3 text-end fw-bold text-muted smaller">{mealType.totalQuantity}</td>
-                          <td className="py-3 text-end fw-bold text-primary">{formatCurrency(mealType.totalRevenue)}</td>
-                          <td className="py-3 text-end fw-bold text-dark smaller">{mealType.orderCount}</td>
-                          <td className="py-3 text-end fw-bold text-info smaller">{percent.toFixed(1)}%</td>
-                          <td className="py-3 text-center">
-                            <Badge
-                              bg={percent >= 40 ? 'success' : percent >= 20 ? 'info' : 'secondary'}
-                              className="rounded-pill px-3 py-2 fw-bold"
-                              style={{ fontSize: '0.65rem' }}
-                            >
-                              {percent >= 40 ? '🔥 HIGH LOAD' : percent >= 20 ? '📊 BALANCED' : '📉 LIGHT'}
-                            </Badge>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </Table>
-              </div>
-              <div className="d-md-none d-flex flex-column gap-3 mt-2">
-                {reportData.mealTypePerformance.map((mealType, idx) => {
-                  const percent = (mealType.totalRevenue / reportData.summary.totalRevenue) * 100;
-                  return (
-                    <div key={idx} className="p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}>
-                      <div className="d-flex justify-content-between align-items-center mb-3">
-                        <span className="fw-bold text-dark fs-6">{mealType.mealType || 'Not Specified'}</span>
-                        <Badge
-                          bg={percent >= 40 ? 'success' : percent >= 20 ? 'info' : 'secondary'}
-                          className="rounded-pill px-2 py-1"
-                          style={{ fontSize: '0.65rem' }}
-                        >
-                          {percent >= 40 ? '🔥 HIGH LOAD' : percent >= 20 ? '📊 BALANCED' : '📉 LIGHT'}
-                        </Badge>
+                  <Col md={4}>
+                    <Card className="menu-performance-report-interactive-card border-0 p-3 h-100" style={{ background: 'rgba(35, 179, 244, 0.05) !important' }}>
+                      <div className="d-flex align-items-center">
+                        <div className="sw-5 sh-5 rounded-circle bg-info d-flex justify-content-center align-items-center me-3">
+                          <CsLineIcons icon="check" className="text-white" size="20" />
+                        </div>
+                        <div>
+                          <div className="menu-performance-report-stat-label">Stable Items</div>
+                          <div className="h4 mb-0 fw-900 text-info">{reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'good').length}</div>
+                        </div>
                       </div>
-                      <div className="d-flex justify-content-between align-items-center mb-2 smaller">
-                        <span className="text-muted fw-bold">Qty Sold:</span>
-                        <span className="fw-bold text-dark">{mealType.totalQuantity}</span>
+                    </Card>
+                  </Col>
+                  <Col md={4}>
+                    <Card className="menu-performance-report-interactive-card border-0 p-3 h-100" style={{ background: 'rgba(244, 63, 94, 0.05) !important' }}>
+                      <div className="d-flex align-items-center">
+                        <div className="sw-5 sh-5 rounded-circle bg-danger d-flex justify-content-center align-items-center me-3">
+                          <CsLineIcons icon="trend-down" className="text-white" size="20" />
+                        </div>
+                        <div>
+                          <div className="menu-performance-report-stat-label">Low Performers</div>
+                          <div className="h4 mb-0 fw-900 text-danger">{reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'poor').length}</div>
+                        </div>
                       </div>
-                      <div className="d-flex justify-content-between align-items-center mb-2 smaller">
-                        <span className="text-muted fw-bold">Orders:</span>
-                        <span className="fw-bold text-dark">{mealType.orderCount}</span>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center mb-2 smaller">
-                        <span className="text-muted fw-bold">Revenue:</span>
-                        <span className="fw-bold text-primary">{formatCurrency(mealType.totalRevenue)}</span>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center smaller">
-                        <span className="text-muted fw-bold">% of Total:</span>
-                        <span className="fw-bold text-info">{percent.toFixed(1)}%</span>
+                    </Card>
+                  </Col>
+                </Row>
+                <Alert variant="info" className="mt-4 menu-performance-report-interactive-card border-0 mb-0 shadow-none">
+                  <div className="d-flex align-items-center">
+                    <CsLineIcons icon="info-circle" className="text-info me-3 flex-shrink-0" size="24" />
+                    <div>
+                      <div className="fw-bold text-dark smaller">Optimization Recommendation</div>
+                      <div className="smaller text-muted">
+                        Top performers contribute to {((reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'excellent').reduce((sum, d) => sum + d.totalRevenue, 0) / reportData.summary.totalRevenue) * 100).toFixed(0)}% of your net revenue. Consider highlighting "Low Performers" in daily specials or optimizing their recipe
+                        costs.
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </Card.Body>
-          </Card>
+                  </div>
+                </Alert>
+              </Card.Body>
+            </Card>
 
-          {/* Detailed Audit Table */}
-          <Card className="interactive-card border-0 shadow-sm mb-4">
-            <Card.Body className="p-4">
-              <div className="card-title-container">
-                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
-                  Menu Item Performance Audit
-                </h2>
-                <CsLineIcons icon="list" size="18" style={{ color: brandColor }} />
-              </div>
-              <div className="d-none d-md-block table-responsive">
-                <Table borderless hover className="align-middle mb-0">
-                  <thead className="stat-label">
-                    <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
-                      <th className="py-3">Rank</th>
-                      <th className="py-3">Dish Name</th>
-                      <th className="py-3">Category</th>
-                      <th className="py-3 text-end">Qty Sold</th>
-                      <th className="py-3 text-end">Revenue</th>
-                      <th className="py-3 text-end">Avg Price</th>
-                      <th className="py-3 text-center">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredDishes.map((dish, idx) => {
-                      const performance = getPerformanceLevel(dish);
-                      return (
-                        <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
-                          <td className="py-3">
-                            <Badge bg={idx < 10 ? 'primary' : 'light'} className={`rounded-pill px-3 py-2 ${idx < 10 ? '' : 'text-dark'}`}>
+            {/* Category Overview Grid */}
+            <Card className="menu-performance-report-interactive-card border-0 shadow-sm mb-4">
+              <Card.Body className="p-4">
+                <div className="menu-performance-report-card-title-container">
+                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                    Category Yield Insights
+                  </h2>
+                  <CsLineIcons icon="pie-chart" size="18" style={{ color: brandColor }} />
+                </div>
+                <Row className="g-3 mt-1">
+                  {reportData.categoryPerformance.map((category, idx) => (
+                    <Col lg="4" key={idx}>
+                      <Card
+                        className="menu-performance-report-interactive-card border-0 p-3 h-100"
+                        style={{ background: 'rgba(0,0,0,0.01) !important', border: '1px solid rgba(0,0,0,0.05) !important' }}
+                      >
+                        <div className="d-flex justify-content-between align-items-start mb-2">
+                          <div className="fw-bold text-dark mb-0 text-truncate">{category.category}</div>
+                          <Badge bg="primary" className="rounded-pill px-2 flex-shrink-0 ms-2" style={{ fontSize: '0.65rem', backgroundColor: brandColor }}>
+                            {category.orderCount} orders
+                          </Badge>
+                        </div>
+                        <div className="d-flex justify-content-between mb-1 smaller">
+                          <span className="text-muted fw-bold">Revenue:</span>
+                          <span className="text-primary fw-bold">{formatCurrency(category.totalRevenue)}</span>
+                        </div>
+                        <ProgressBar
+                          now={(category.totalRevenue / reportData.summary.totalRevenue) * 100}
+                          variant="info"
+                          className="progress-sm mb-2"
+                          style={{ height: '3px' }}
+                        />
+                        <div className="d-flex justify-content-between smaller">
+                          <span className="text-muted">Yield per Dish:</span>
+                          <span className="fw-bold text-dark">{formatCurrency(category.avgRevenuePerDish)}</span>
+                        </div>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </Card.Body>
+            </Card>
+
+            {/* Meal Type Performance */}
+            <Card className="menu-performance-report-interactive-card border-0 shadow-sm mb-4">
+              <Card.Body className="p-4">
+                <div className="menu-performance-report-card-title-container">
+                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                    Meal Type Utilization Trends
+                  </h2>
+                  <CsLineIcons icon="compass" size="18" style={{ color: brandColor }} />
+                </div>
+                <div className="d-none d-md-block table-responsive mt-3">
+                  <Table borderless hover className="align-middle mb-0">
+                    <thead className="menu-performance-report-stat-label">
+                      <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
+                        <th className="py-3">Meal Type</th>
+                        <th className="py-3 text-end">Qty Sold</th>
+                        <th className="py-3 text-end">Revenue</th>
+                        <th className="py-3 text-end">Orders</th>
+                        <th className="py-3 text-end">% Revenue</th>
+                        <th className="py-3 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.mealTypePerformance.map((mealType, idx) => {
+                        const percent = (mealType.totalRevenue / reportData.summary.totalRevenue) * 100;
+                        return (
+                          <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
+                            <td className="py-3 fw-bold text-dark">{mealType.mealType || 'Not Specified'}</td>
+                            <td className="py-3 text-end fw-bold text-muted smaller">{mealType.totalQuantity}</td>
+                            <td className="py-3 text-end fw-bold text-primary">{formatCurrency(mealType.totalRevenue)}</td>
+                            <td className="py-3 text-end fw-bold text-dark smaller">{mealType.orderCount}</td>
+                            <td className="py-3 text-end fw-bold text-info smaller">{percent.toFixed(1)}%</td>
+                            <td className="py-3 text-center">
+                              <Badge
+                                bg={percent >= 40 ? 'success' : percent >= 20 ? 'info' : 'secondary'}
+                                className="rounded-pill px-3 py-2 fw-bold"
+                                style={{ fontSize: '0.65rem' }}
+                              >
+                                {percent >= 40 ? '🔥 HIGH LOAD' : percent >= 20 ? '📊 BALANCED' : '📉 LIGHT'}
+                              </Badge>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </Table>
+                </div>
+                <div className="d-md-none d-flex flex-column gap-3 mt-2">
+                  {reportData.mealTypePerformance.map((mealType, idx) => {
+                    const percent = (mealType.totalRevenue / reportData.summary.totalRevenue) * 100;
+                    return (
+                      <div key={idx} className="p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1.5px solid rgba(0,0,0,0.05)' }}>
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <span className="fw-bold text-dark fs-6">{mealType.mealType || 'Not Specified'}</span>
+                          <Badge
+                            bg={percent >= 40 ? 'success' : percent >= 20 ? 'info' : 'secondary'}
+                            className="rounded-pill px-2 py-1"
+                            style={{ fontSize: '0.65rem' }}
+                          >
+                            {percent >= 40 ? '🔥 HIGH LOAD' : percent >= 20 ? '📊 BALANCED' : '📉 LIGHT'}
+                          </Badge>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                          <span className="text-muted fw-bold">Qty Sold:</span>
+                          <span className="fw-bold text-dark">{mealType.totalQuantity}</span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                          <span className="text-muted fw-bold">Orders:</span>
+                          <span className="fw-bold text-dark">{mealType.orderCount}</span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                          <span className="text-muted fw-bold">Revenue:</span>
+                          <span className="fw-bold text-primary">{formatCurrency(mealType.totalRevenue)}</span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center smaller">
+                          <span className="text-muted fw-bold">% Revenue:</span>
+                          <span className="fw-bold text-info">{percent.toFixed(1)}%</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card.Body>
+            </Card>
+
+            {/* Detailed Audit Table */}
+            <Card className="menu-performance-report-interactive-card border-0 shadow-sm mb-4">
+              <Card.Body className="p-4">
+                <div className="menu-performance-report-card-title-container">
+                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                    Menu Item Performance Audit
+                  </h2>
+                  <CsLineIcons icon="list" size="18" style={{ color: brandColor }} />
+                </div>
+                <div className="d-none d-md-block table-responsive mt-3">
+                  <Table borderless hover className="align-middle mb-0">
+                    <thead className="menu-performance-report-stat-label">
+                      <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
+                        <th className="py-3">Rank</th>
+                        <th className="py-3">Dish Name</th>
+                        <th className="py-3">Category</th>
+                        <th className="py-3 text-end">Qty Sold</th>
+                        <th className="py-3 text-end">Revenue</th>
+                        <th className="py-3 text-end">Avg Price</th>
+                        <th className="py-3 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredDishes.map((dish, idx) => {
+                        const performance = getPerformanceLevel(dish);
+                        return (
+                          <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
+                            <td className="py-3">
+                              <Badge bg={idx < 10 ? 'primary' : 'light'} className={`rounded-pill px-3 py-2 ${idx < 10 ? '' : 'text-dark'}`}>
+                                {idx + 1}
+                              </Badge>
+                            </td>
+                            <td className="py-3 fw-bold text-dark">{dish.dishName}</td>
+                            <td className="py-3">
+                              <Badge bg="light" className="text-dark rounded-pill px-3 py-2 smaller fw-bold">
+                                {dish.category || 'N/A'}
+                              </Badge>
+                            </td>
+                            <td className="py-3 text-end fw-bold text-muted smaller">{dish.totalQuantity}</td>
+                            <td className="py-3 text-end fw-bold text-primary">{formatCurrency(dish.totalRevenue)}</td>
+                            <td className="py-3 text-end fw-bold text-dark smaller">{formatCurrency(dish.avgPrice)}</td>
+                            <td className="py-3 text-center">
+                              <Badge
+                                bg={performance === 'excellent' ? 'success' : performance === 'good' ? 'info' : 'danger'}
+                                className="rounded-pill px-3 py-2 fw-bold"
+                                style={{ fontSize: '0.65rem' }}
+                              >
+                                {performance === 'excellent' ? '🔥 TOP SELLER' : performance === 'good' ? '👍 HEALTHY' : '📈 IMPROVING'}
+                              </Badge>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </Table>
+                </div>
+                <div className="d-md-none d-flex flex-column gap-3 mt-3">
+                  {filteredDishes.map((dish, idx) => {
+                    const performance = getPerformanceLevel(dish);
+                    return (
+                      <div key={idx} className="p-3 rounded position-relative" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1.5px solid rgba(0,0,0,0.05)' }}>
+                        <div className="d-flex justify-content-between align-items-start mb-2">
+                          <div className="d-flex align-items-center">
+                            <Badge bg={idx < 10 ? 'primary' : 'light'} className={`rounded-pill px-2 py-1 me-2 ${idx < 10 ? '' : 'text-dark'}`}>
                               {idx + 1}
                             </Badge>
-                          </td>
-                          <td className="py-3 fw-bold text-dark">{dish.dishName}</td>
-                          <td className="py-3">
-                            <Badge bg="light" className="text-dark rounded-pill px-3 py-2 smaller fw-bold">
-                              {dish.category || 'N/A'}
-                            </Badge>
-                          </td>
-                          <td className="py-3 text-end fw-bold text-muted smaller">{dish.totalQuantity}</td>
-                          <td className="py-3 text-end fw-bold text-primary">{formatCurrency(dish.totalRevenue)}</td>
-                          <td className="py-3 text-end fw-bold text-dark smaller">{formatCurrency(dish.avgPrice)}</td>
-                          <td className="py-3 text-center">
-                            <Badge
-                              bg={performance === 'excellent' ? 'success' : performance === 'good' ? 'info' : 'danger'}
-                              className="rounded-pill px-3 py-2 fw-bold"
-                              style={{ fontSize: '0.65rem' }}
-                            >
-                              {performance === 'excellent' ? '🔥 TOP SELLER' : performance === 'good' ? '👍 HEALTHY' : '📈 IMPROVING'}
-                            </Badge>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </Table>
-              </div>
-              <div className="d-md-none d-flex flex-column gap-3 mt-2">
-                {filteredDishes.map((dish, idx) => {
-                  const performance = getPerformanceLevel(dish);
-                  return (
-                    <div
-                      key={idx}
-                      className="p-3 rounded position-relative"
-                      style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}
-                    >
-                      <div className="d-flex justify-content-between align-items-start mb-3">
-                        <div className="d-flex align-items-center">
-                          <Badge bg={idx < 10 ? 'primary' : 'light'} className={`rounded-pill px-2 py-1 me-2 ${idx < 10 ? '' : 'text-dark'}`}>
-                            {idx + 1}
+                            <span className="fw-bold text-dark">{dish.dishName}</span>
+                          </div>
+                          <Badge
+                            bg={performance === 'excellent' ? 'success' : performance === 'good' ? 'info' : 'danger'}
+                            className="rounded-pill px-2 py-1 fw-bold"
+                            style={{ fontSize: '0.65rem' }}
+                          >
+                            {performance === 'excellent' ? '🔥 TOP SELLER' : performance === 'good' ? '👍 HEALTHY' : '📈 IMPROVING'}
                           </Badge>
-                          <div className="fw-bold text-dark">{dish.dishName}</div>
                         </div>
-                        <Badge
-                          bg={performance === 'excellent' ? 'success' : performance === 'good' ? 'info' : 'danger'}
-                          className="rounded-pill px-2 py-1"
-                          style={{ fontSize: '0.65rem' }}
-                        >
-                          {performance === 'excellent' ? '🔥 TOP SELLER' : performance === 'good' ? '👍 HEALTHY' : '📈 IMPROVING'}
-                        </Badge>
+                        <div className="mb-2">
+                          <Badge bg="white" className="text-dark border px-2 py-1 smaller fw-bold">
+                            {dish.category || 'N/A'}
+                          </Badge>
+                        </div>
+                        <div className="d-flex justify-content-between mb-1 smaller">
+                          <span className="text-muted fw-bold">Qty Sold:</span>
+                          <span className="fw-bold text-dark">{dish.totalQuantity}</span>
+                        </div>
+                        <div className="d-flex justify-content-between mb-1 smaller">
+                          <span className="text-muted fw-bold">Revenue:</span>
+                          <span className="fw-bold text-primary">{formatCurrency(dish.totalRevenue)}</span>
+                        </div>
+                        <div className="d-flex justify-content-between smaller">
+                          <span className="text-muted fw-bold">Avg Price:</span>
+                          <span className="fw-bold text-dark">{formatCurrency(dish.avgPrice)}</span>
+                        </div>
                       </div>
-                      <div className="mb-3">
-                        <Badge bg="white" className="text-dark border px-2 py-1 smaller fw-bold">
-                          {dish.category || 'N/A'}
-                        </Badge>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center mb-2 smaller">
-                        <span className="text-muted fw-bold">Qty Sold:</span>
-                        <span className="fw-bold text-dark">{dish.totalQuantity}</span>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center mb-2 smaller">
-                        <span className="text-muted fw-bold">Avg Price:</span>
-                        <span className="fw-bold text-dark">{formatCurrency(dish.avgPrice)}</span>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center smaller">
-                        <span className="text-muted fw-bold">Revenue:</span>
-                        <span className="fw-bold text-primary">{formatCurrency(dish.totalRevenue)}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </Card.Body>
-          </Card>
-        </>
-      )}
+                    );
+                  })}
+                </div>
+              </Card.Body>
+            </Card>
+          </>
+        )}
+      </div>
 
       {/* Export Modal */}
       <Modal show={showExportModal} onHide={() => setShowExportModal(false)} centered contentClassName="interactive-card border-0 shadow-lg">
@@ -878,17 +764,17 @@ const MenuPerformanceReport = () => {
           </Form>
         </Modal.Body>
         <Modal.Footer className="border-0 p-4 pt-0">
-          <Button variant="light" className="custom-btn-outline border-0 text-muted" onClick={() => setShowExportModal(false)}>
+          <Button variant="light" className="menu-performance-report-custom-btn-outline border-0 text-muted" onClick={() => setShowExportModal(false)}>
             Cancel
           </Button>
-          <Button className="custom-btn-outline px-4" onClick={handleExportConfirm}>
+          <Button className="menu-performance-report-custom-btn-outline px-4" onClick={handleExportConfirm}>
             Generate Audit Report
           </Button>
         </Modal.Footer>
       </Modal>
 
       <ToastContainer position="top-end" className="p-3">
-        <Toast show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide bg="white" className="interactive-card border-0">
+        <Toast show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide bg="white" className="menu-performance-report-interactive-card border-0">
           <Toast.Body className="p-3 d-flex align-items-center">
             <CsLineIcons icon="check-circle" className="text-success me-2" size="20" />
             <span className="fw-bold smaller text-dark">{toastMessage}</span>

@@ -116,41 +116,12 @@ const ChartDoughnut = ({ orderCategoryWise }) => {
 
   return (
     <div className="d-flex flex-column h-100">
-      <style>{`
-        .premium-scroll::-webkit-scrollbar {
-          width: 4px;
-        }
-        .premium-scroll::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .premium-scroll::-webkit-scrollbar-thumb {
-          background: rgba(0, 0, 0, 0.05);
-          border-radius: 10px;
-        }
-        .premium-scroll:hover::-webkit-scrollbar-thumb {
-          background: rgba(35, 179, 244, 0.2);
-        }
-        .legend-mask {
-          position: relative;
-        }
-        .legend-mask::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 25px;
-          background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));
-          pointer-events: none;
-          opacity: ${orderCategoryWise.length > 5 ? 1 : 0};
-          transition: opacity 0.3s;
-        }
-      `}</style>
+      
       <div style={{ position: 'relative', height: '240px' }} className="mb-2">
         <canvas ref={chartContainer} />
       </div>
-      <div className="mt-4 pt-3 border-top w-100 legend-mask">
-        <div className="d-flex flex-column gap-2 px-1 premium-scroll overflow-auto" style={{ maxHeight: '160px', paddingBottom: '15px' }}>
+      <div className="mt-4 pt-3 border-top w-100 chart-doughnut-legend-mask" style={{ '--mask-opacity': orderCategoryWise.length > 5 ? 1 : 0 }}>
+        <div className="d-flex flex-column gap-2 px-1 chart-doughnut-premium-scroll overflow-auto" style={{ maxHeight: '160px', paddingBottom: '15px' }}>
           {orderCategoryWise.map((item, idx) => (
             <div key={idx} className="d-flex align-items-center justify-content-between py-1">
               <div className="d-flex align-items-center overflow-hidden">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getMenuData as fetchMenuDataService, getCategories as fetchCategoriesService } from 'api/orderService';
+import { getMenuData as fetchMenuDataService, getCategories as fetchCategoriesService } from '../../../../api/orderService';
 
 const useMenuFetcher = () => {
   const [menuData, setMenuData] = useState([]);

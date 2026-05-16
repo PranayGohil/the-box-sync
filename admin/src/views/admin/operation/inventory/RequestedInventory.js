@@ -265,10 +265,10 @@ const RequestedInventory = () => {
 
       <Row>
         <Col>
-          <div className="page-title-container">
-            <Row>
-              <Col xs="12" md="7">
-                <h1 className="mb-0 pb-0 display-4">{title}</h1>
+          <div className="page-title-container mb-4 mt-5 mt-lg-0">
+            <Row className="g-0 align-items-center">
+              <Col xs="auto" className="me-auto">
+                <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
             </Row>

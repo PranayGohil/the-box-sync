@@ -243,174 +243,12 @@ const Profile = () => {
     return '';
   };
 
-  const customStyles = `
-    .glass-card {
-      background: rgba(255, 255, 255, 0.8) !important;
-      backdrop-filter: blur(12px) !important;
-      -webkit-backdrop-filter: blur(12px) !important;
-      border: 1px solid rgba(255, 255, 255, 0.3) !important;
-      border-radius: 20px !important;
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07) !important;
-      transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-    }
-    .glass-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.12) !important;
-    }
-    .custom-btn-outline {
-      background: transparent !important;
-      border: 1px solid #1ea8e7 !important;
-      color: #1ea8e7 !important;
-      border-radius: 50px !important;
-      padding: 0.6rem 1.5rem !important;
-      font-weight: 600 !important;
-      transition: all 0.3s ease !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 8px !important;
-    }
-    .custom-btn-outline:hover {
-      background: #1ea8e7 !important;
-      color: #ffffff !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
-    }
-    .custom-btn-danger {
-      background: transparent !important;
-      border: 1px solid #cf2637 !important;
-      color: #cf2637 !important;
-      border-radius: 50px !important;
-      padding: 0.6rem 1.5rem !important;
-      font-weight: 600 !important;
-      transition: all 0.3s ease !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-    }
-    .custom-btn-danger i, .custom-btn-danger svg {
-      color: #cf2637 !important;
-      transition: color 0.3s ease !important;
-    }
-    .custom-btn-danger:hover {
-      background: #cf2637 !important;
-      color: #ffffff !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 4px 12px rgba(207, 38, 55, 0.3) !important;
-    }
-    .custom-btn-danger:hover i, .custom-btn-danger:hover svg {
-      color: #ffffff !important;
-    }
-    .section-header {
-      border-left: 4px solid #1ea8e7;
-      padding-left: 15px;
-      margin-bottom: 25px;
-    }
-    .appearance-none {
-      appearance: none;
-      -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%231ea8e7' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 1rem center;
-      background-size: 12px;
-    }
-    .form-select.appearance-none {
-      padding-right: 2.5rem !important;
-    }
-    .react-select__control {
-      border-radius: 1rem !important;
-      border: 1px solid #e2e8f0 !important;
-      background-color: #f8fafc !important;
-      font-size: 0.9rem !important;
-      min-height: 45px !important;
-      height: 45px !important;
-    }
-    .react-select__value-container {
-      padding: 0 1rem !important;
-    }
-    .react-select__indicators-container {
-      height: 43px !important;
-    }
-    .form-control {
-      height: 45px !important;
-      border-radius: 1rem !important;
-      border: 1px solid #e2e8f0 !important;
-      background-color: #f8fafc !important;
-      font-size: 0.9rem !important;
-      padding: 0.45rem 1rem !important;
-    }
-    .react-select__control--is-focused {
-      border-color: #23b3f4 !important;
-      box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
-      background-color: white !important;
-    }
-    .react-select__placeholder {
-      color: #94a3b8 !important;
-    }
-    .react-select__menu {
-      border-radius: 1rem !important;
-      overflow: hidden !important;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
-      border: 1px solid #e2e8f0 !important;
-      z-index: 1000 !important;
-    }
-    .react-select__option {
-      padding: 0.75rem 1.25rem !important;
-      font-size: 0.9rem !important;
-    }
-    .react-select__option--is-focused {
-      background-color: rgba(35, 179, 244, 0.1) !important;
-      color: #23b3f4 !important;
-    }
-    .react-select__option--is-selected {
-      background-color: #23b3f4 !important;
-      color: white !important;
-    }
-    .react-select__single-value {
-      color: #1e293b !important;
-      font-weight: 600 !important;
-    }
-    @media (max-width: 768px) {
-      .form-control, .form-select, .react-select__control, .react-select__single-value, .react-select__placeholder, .react-select__input {
-        font-size: 16px !important;
-        min-height: 45px !important;
-        height: 45px !important;
-      }
-      .react-select__control {
-        padding: 0 !important;
-      }
-      .react-select__value-container {
-        padding: 2px 8px !important;
-      }
-      .react-select__indicators-container {
-        height: 48px !important;
-      }
-      .react-select {
-        width: 100% !important;
-      }
-      .profile-header-container {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 15px !important;
-      }
-      .profile-header-container .section-header {
-        margin-bottom: 0 !important;
-      }
-      .button-group-responsive {
-        flex-direction: column !important;
-        width: 100% !important;
-      }
-      .button-group-responsive button, .button-group-responsive label {
-        width: 100% !important;
-        justify-content: center !important;
-      }
-    }
-  `;
+  
 
   if (loading) {
     return (
       <div className="container-fluid py-5">
-        <style>{customStyles}</style>
+        
         <HtmlHead title={title} description={description} />
         <div className="d-flex flex-column align-items-center justify-content-center py-5 mt-5">
           <Spinner animation="border" style={{ color: '#1ea8e7' }} className="mb-3" />
@@ -422,7 +260,7 @@ const Profile = () => {
 
   return (
     <div className="container-fluid pb-5">
-      <style>{customStyles}</style>
+      
       <HtmlHead title={title} description={description} />
       
       <Row className="g-3 align-items-center mb-4">
@@ -453,9 +291,9 @@ const Profile = () => {
           <Form onSubmit={handleSubmit}>
             <Row className="g-4">
               <Col lg={4}>
-                <Card className="glass-card border-0 mb-4 text-center">
+                <Card className="profile-glass-card border-0 mb-4 text-center">
                   <Card.Body className="p-4 d-flex flex-column align-items-center">
-                    <div className="section-header text-start w-100 mb-4">
+                    <div className="profile-section-header text-start w-100 mb-4">
                       <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                         <CsLineIcons icon="image" size="20" className="text-primary" />
                         Brand Identity
@@ -475,7 +313,7 @@ const Profile = () => {
                     {editMode ? (
                       <div className="w-100 mt-auto">
                         <input type="file" id="logo-upload" className="d-none" accept="image/*" onChange={handleLogoChange} disabled={uploadingLogo || saving} />
-                        <Button as="label" htmlFor="logo-upload" className="custom-btn-outline w-100 mb-2" disabled={uploadingLogo || saving}>
+                        <Button as="label" htmlFor="logo-upload" className="profile-custom-btn-outline w-100 mb-2" disabled={uploadingLogo || saving}>
                           {uploadingLogo ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
                           {getLogoSrc() ? 'Change Logo' : 'Upload Logo'}
                         </Button>
@@ -493,17 +331,17 @@ const Profile = () => {
               </Col>
 
               <Col lg={8}>
-                <Card className="glass-card border-0 h-100">
+                <Card className="profile-glass-card border-0 h-100">
                   <Card.Body className="p-4">
-                    <div className="d-flex profile-header-container align-items-center justify-content-between mb-4">
-                      <div className="section-header mb-0">
+                    <div className="d-flex profile-profile-header-container align-items-center justify-content-between mb-4">
+                      <div className="profile-section-header mb-0">
                         <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                           <CsLineIcons icon="user" size="20" className="text-primary" />
                           Business Credentials
                         </h5>
                       </div>
                       {!editMode && (
-                        <Button variant="none" className="custom-btn-outline w-md-auto w-100 mt-md-0 mt-2" onClick={() => setEditMode(true)}>
+                        <Button variant="none" className="profile-custom-btn-outline w-md-auto w-100 mt-md-0 mt-2" onClick={() => setEditMode(true)}>
                           <CsLineIcons icon="edit" size="18" />
                           Edit Profile
                         </Button>
@@ -547,7 +385,7 @@ const Profile = () => {
                       </Col>
                     </Row>
 
-                    <div className="section-header mt-5">
+                    <div className="profile-section-header mt-5">
                       <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                         <CsLineIcons icon="pin" size="20" className="text-primary" />
                         Physical Location
@@ -631,15 +469,15 @@ const Profile = () => {
                       </Col>
                     </Row>
 
-                    {error && <Alert variant="danger" className="mt-4 glass-card border-0">{error}</Alert>}
+                    {error && <Alert variant="danger" className="mt-4 profile-glass-card border-0">{error}</Alert>}
 
                     {editMode && (
-                      <div className="d-flex button-group-responsive gap-3 mt-5">
-                        <Button variant="none" className="custom-btn-outline px-4" onClick={() => handleCancel(resetForm)} disabled={saving || isSubmitting}>
+                      <div className="d-flex profile-button-group-responsive gap-3 mt-5">
+                        <Button variant="none" className="profile-custom-btn-outline px-4" onClick={() => handleCancel(resetForm)} disabled={saving || isSubmitting}>
                           <CsLineIcons icon="close" size="18" />
                           Cancel
                         </Button>
-                        <Button variant="none" className="custom-btn-outline px-5" type="submit" disabled={saving || isSubmitting}>
+                        <Button variant="none" className="profile-custom-btn-outline px-5" type="submit" disabled={saving || isSubmitting}>
                           {saving || isSubmitting ? (
                             <>
                               <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
@@ -664,7 +502,7 @@ const Profile = () => {
 
       {saving && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}>
-          <Card className="glass-card border-0 p-5 shadow-lg text-center">
+          <Card className="profile-glass-card border-0 p-5 shadow-lg text-center">
             <Spinner animation="grow" variant="primary" className="mb-4" />
             <h4 className="fw-bold">Updating Data</h4>
             <p className="text-muted mb-0">Synchronizing your credentials and location.</p>

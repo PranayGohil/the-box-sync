@@ -6,23 +6,7 @@ import * as Yup from 'yup';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-const customStyles = `
-  .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-  }
-  .custom-btn-outline:hover svg {
-    stroke: #fff !important;
-  }
-  .modal-footer {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: flex-end !important;
-    gap: 0.75rem !important;
-  }
-`;
+
 
 const EditTableAreaModal = ({ show, handleClose, data, onUpdateSuccess }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,7 +44,7 @@ const EditTableAreaModal = ({ show, handleClose, data, onUpdateSuccess }) => {
 
   return (
     <Modal show={show} onHide={handleClose} backdrop="static" centered>
-      <style>{customStyles}</style>
+      
       <Modal.Header closeButton className="border-0 pb-0">
         <Modal.Title className="fw-bold" style={{ color: '#1ea8e7' }}>
           Edit Dining Area
@@ -89,7 +73,7 @@ const EditTableAreaModal = ({ show, handleClose, data, onUpdateSuccess }) => {
         <Button 
           onClick={handleClose} 
           disabled={isSubmitting}
-          className="rounded-pill px-4 fw-bold custom-btn-outline"
+          className="rounded-pill px-4 fw-bold edit-table-area-modal-custom-btn-outline"
         >
           Cancel
         </Button>
@@ -97,7 +81,7 @@ const EditTableAreaModal = ({ show, handleClose, data, onUpdateSuccess }) => {
           type="submit"
           form="edit_table_area_form"
           disabled={isSubmitting}
-          className="rounded-pill px-4 fw-bold custom-btn-outline"
+          className="rounded-pill px-4 fw-bold edit-table-area-modal-custom-btn-outline"
         >
           {isSubmitting ? (
             <>
