@@ -11,16 +11,17 @@ import { layoutShowingNavMenu } from 'layout/layoutSlice';
 import { menuChangeCollapseAll } from './menuSlice';
 
 const HorizontalMenuDropdownToggle = memo(
-  forwardRef(({ children, onClick, href = '#', active = false }, ref) => (
+  forwardRef(({ children, onClick, href = '#', active = false, isActive = false, className, ...props }, ref) => (
     <a
       ref={ref}
-      className={classNames('dropdown-toggle', { active })}
+      className={classNames('dropdown-toggle', className, { active: active || isActive })}
       data-toggle="dropdown"
       href={href}
       onClick={(e) => {
         e.preventDefault();
         onClick(e);
       }}
+      {...props}
     >
       {children}
     </a>
@@ -75,7 +76,7 @@ const MainMenuItem = memo(({ item, id, isSubItem = false, menuPlacement = DEFAUL
   if (item.subs && menuPlacement === MENU_PLACEMENT.Horizontal && !item.megaParent) {
     return (
       <Dropdown as="li" key={id} onToggle={onToggleItem} className={classNames({ mega: item.mega })} show={horizontalDropdownIsOpen}>
-        <Dropdown.Toggle as={HorizontalMenuDropdownToggle} onClick={onHorizontalMenuDropdownToggleClick} href={item.path} active={isActive}>
+        <Dropdown.Toggle as={HorizontalMenuDropdownToggle} onClick={onHorizontalMenuDropdownToggleClick} href={item.path} active={isActive} isActive={isActive}>
           {getLabel(item.icon, item.label)}
         </Dropdown.Toggle>
         <Dropdown.Menu
