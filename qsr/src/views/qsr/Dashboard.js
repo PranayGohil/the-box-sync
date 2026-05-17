@@ -97,13 +97,24 @@ const Dashboard = () => {
         <Row className="g-4">
           {/* Section 1: Takeaways & Deliveries */}
           <Col xs="12" lg="6">
-            <h3 className="section-title">
-              <CsLineIcons icon="bag" size="22" style={{ color: '#23b3f4' }} className="me-2" />
-              Takeaways & Deliveries
-              <span className="ms-2 status-badge qsr-badge-active">
-                {activeTakeawaysAndDeliveries.length} Active
-              </span>
-            </h3>
+            <div className="d-flex align-items-center mb-4">
+              <div
+                style={{
+                  width: '8px',
+                  height: '24px',
+                  background: '#23b3f4',
+                  borderRadius: '4px',
+                  marginRight: '12px',
+                  boxShadow: '0 2px 5px rgba(35,179,244,0.3)',
+                }}
+              />
+              <h3 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4', letterSpacing: '0.5px' }}>
+                Takeaways & Deliveries
+                <span className="ms-2 status-badge qsr-badge-active" style={{ fontSize: '12px', padding: '4px 10px', height: 'fit-content' }}>
+                  {activeTakeawaysAndDeliveries.length} Active
+                </span>
+              </h3>
+            </div>
 
             <div className="custom-scrollbar pe-2 pt-2 pb-2" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
               {activeTakeawaysAndDeliveries.length === 0 ? (
@@ -165,13 +176,24 @@ const Dashboard = () => {
 
           {/* Section 2: Online Partners */}
           <Col xs="12" lg="6">
-            <h3 className="section-title">
-              <CsLineIcons icon="external-link" size="22" style={{ color: '#ef4444' }} className="me-2" />
-              Online Partners
-              <span className="ms-2 status-badge qsr-badge-incoming">
-                1 Incoming
-              </span>
-            </h3>
+            <div className="d-flex align-items-center mb-4">
+              <div
+                style={{
+                  width: '8px',
+                  height: '24px',
+                  background: '#23b3f4',
+                  borderRadius: '4px',
+                  marginRight: '12px',
+                  boxShadow: '0 2px 5px rgba(35,179,244,0.3)',
+                }}
+              />
+              <h3 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4', letterSpacing: '0.5px' }}>
+                Online Partners
+                <span className="ms-2 status-badge qsr-badge-incoming" style={{ fontSize: '12px', padding: '4px 10px', height: 'fit-content' }}>
+                  1 Incoming
+                </span>
+              </h3>
+            </div>
 
             <div className="custom-scrollbar pe-2 pt-2 pb-2" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
               <Card className="order-card incoming-pulse-card mb-3 cursor-pointer">
