@@ -87,14 +87,14 @@ const Login = () => {
         <div className="login-login-left-panel">
           <div className="login-login-brand-logo">THE <span>BOX</span></div>
           <h1 className="login-login-hero-title">
-            Your Restaurant,<br />
+            Your Workforce,<br />
             <span>Perfectly Managed.</span>
           </h1>
           <p className="login-login-hero-sub">
-            A powerful admin platform to manage orders, inventory, staff, and operations — all in one place.
+            A powerful payroll and staff management platform to streamline tracking, holidays, advances, and payouts — all in one place.
           </p>
           <div className="login-login-feature-pills">
-            {['Real-time Order Tracking', 'Inventory Intelligence', 'Staff & Payroll Management', 'Financial Reporting'].map((f) => (
+            {['Comprehensive Leave Policy', 'Smart Attendance & Shifts', 'Salary Advances & Payouts', 'Disbursement & HR Reports'].map((f) => (
               <div key={f} className="login-login-feature-pill">
                 <div className="login-login-feature-pill-dot" />
                 {f}
@@ -194,7 +194,5 @@ const Login = () => {
     </>
   );
 };
-
-export default Login;
 
 export default Login;
