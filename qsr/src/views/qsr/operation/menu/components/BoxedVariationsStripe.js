@@ -11,7 +11,7 @@ import ControlsPageSize from './ControlsPageSize';
 const BoxedVariationsStripe = ({ columns, data, category, setEditCategoryModalShow, setSelectedCategory }) => {
   const history = useHistory();
   const tableInstance = useTable(
-    { columns, data, initialState: { pageIndex: 0, sortBy: [{ id: 'name', desc: true }] } },
+    { columns, data, initialState: { pageIndex: 0, sortBy: [{ id: 'dish_name', asc: true }] } },
     useGlobalFilter,
     useSortBy,
     usePagination
@@ -19,62 +19,63 @@ const BoxedVariationsStripe = ({ columns, data, category, setEditCategoryModalSh
 
   return (
     <>
-      <Row>
-        <Col sm="12" md="12" lg="12" xxl="12" className="mb-2 d-flex align-items-center justify-content-between">
-          {category && <h5 className="mb-0">{category.category}</h5>}
-          <div className="text-end">
-            <Badge
-              variant="outline"
-              className={`text-white mb-2 ${category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'}`}
-            >
-              {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
-            </Badge>
-            <div className="d-flex gap-2">
-              <Button
-                variant="outline-primary"
-                size="sm"
-                className="btn-icon btn-icon-only"
-                onClick={() => {
-                  setEditCategoryModalShow(true);
-                  setSelectedCategory(category);
-                }}
-                title="Edit"
-              >
-                <CsLineIcons icon="edit" />
-              </Button>
-              <Button
-                variant="outline-success"
-                size="sm"
-                className="btn-icon btn-icon-only"
-                onClick={() => {
-                  history.push('/operations/add-dish', {
-                    category: category.category,
-                    mealType: category.meal_type,
-                    fromManageMenu: true, // flag to lock fields
-                  });
-                }}
-                title="Add More"
-              >
-                <CsLineIcons icon="plus" />
-              </Button>
-            </div>
-          </div>
-        </Col>
-        <Col sm="12" md="5" lg="3" xxl="2" className="mb-1">
-          <div className="d-inline-block float-md-start me-1 search-input-container border border-separator bg-foreground search-sm" style={{ width: '100px' }}>
-            <ControlsSearch tableInstance={tableInstance} />
-          </div>
-        </Col>
-        <Col sm="12" md="7" lg="9" xxl="10" className="text-end mb-1">
-          <div className="d-inline-block">
-            <ControlsPageSize tableInstance={tableInstance} />
-          </div>
-        </Col>
+      <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom" style={{ borderColor: 'rgba(35, 179, 244, 0.1)' }}>
+        <div>
+          <h5 className="mb-1 fw-bold text-dark" style={{ letterSpacing: '-0.01em' }}>{category.category}</h5>
+          <Badge 
+            bg="none"
+            className={`manage-menu-badge-meal ${category.meal_type === 'veg' ? 'manage-menu-badge-veg' : category.meal_type === 'egg' ? 'manage-menu-badge-egg' : 'manage-menu-badge-non-veg'}`}
+          >
+            {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
+          </Badge>
+        </div>
+        <div className="d-flex gap-2">
+          <Button
+            variant="link"
+            size="sm"
+            className="p-1 text-muted manage-menu-custom-icon-btn"
+            onClick={() => {
+              setEditCategoryModalShow(true);
+              setSelectedCategory(category);
+            }}
+            title="Edit Category"
+          >
+            <CsLineIcons icon="edit" size="16" />
+          </Button>
+          <Button
+            variant="link"
+            size="sm"
+            className="p-1 manage-menu-text-primary manage-menu-custom-icon-btn"
+            onClick={() => {
+              history.push('/operations/add-dish', {
+                category: category.category,
+                mealType: category.meal_type,
+                fromManageMenu: true,
+              });
+            }}
+            title="Add More Dishes"
+          >
+            <CsLineIcons icon="plus" size="16" stroke="#23b3f4" />
+          </Button>
+        </div>
+      </div>
 
-        <Col xs="12">
-          <Table className="react-table nowrap stripe" tableInstance={tableInstance} />
+      <Row className="g-2 mb-3">
+        <Col xs="12" md="8">
+          <ControlsSearch tableInstance={tableInstance} />
         </Col>
+        <Col xs="12" md="4" className="d-flex justify-content-md-end mt-2 mt-md-0">
+          <ControlsPageSize tableInstance={tableInstance} />
+        </Col>
+      </Row>
+
+      <Row>
         <Col xs="12">
+          <div className="table-responsive border-0">
+            <Table className="react-table nowrap stripe manage-menu-responsive-table" tableInstance={tableInstance} />
+          </div>
+        </Col>
+        <Col xs="12" className="mt-3">
           <TablePagination tableInstance={tableInstance} />
         </Col>
       </Row>

@@ -105,6 +105,89 @@ const NavContent = () => {
   );
 };
 
+const MobileBottomNav = () => {
+  const { pathname } = useLocation();
+
+  const navItems = [
+    { label: 'Order', icon: 'cart', to: '/operations/order-history' },
+    { label: 'Menu', icon: 'book-open', to: '/operations/manage-menu' },
+  ];
+
+  return (
+    <div className="bottom-nav-wrapper d-lg-none">
+      <style>{`
+        .bottom-nav-wrapper {
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1050;
+          width: 95%;
+          max-width: 500px;
+          display: flex;
+          justify-content: center;
+          pointer-events: none;
+        }
+
+        .bottom-nav-pill {
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(25px) saturate(200%);
+          -webkit-backdrop-filter: blur(25px) saturate(200%);
+          border: 1px solid rgba(255, 255, 255, 0.45);
+          border-radius: 40px;
+          padding: 6px 10px;
+          display: flex;
+          align-items: center;
+          justify-content: space-around;
+          width: 100%;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+          pointer-events: auto;
+        }
+
+        .bottom-nav-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-decoration: none !important;
+          color: #64748b;
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bottom-nav-item.active {
+          color: #1ea8e7;
+          background: rgba(30, 168, 231, 0.12);
+          transform: translateY(-5px);
+        }
+
+        @media (max-width: 991px) {
+          body {
+            padding-bottom: 90px !important;
+          }
+        }
+      `}</style>
+
+      <div className="bottom-nav-pill">
+        {navItems.map((item) => {
+          const isActive = pathname.startsWith(item.to);
+          return (
+            <NavLink
+              key={item.label}
+              to={item.to}
+              className={`bottom-nav-item ${isActive ? 'active' : ''}`}
+            >
+              <CsLineIcons icon={item.icon} size="20" />
+            </NavLink>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const Operations = () => {
   useCustomLayout({ layout: LAYOUT.Boxed });
   const { width } = useWindowSize();
@@ -116,6 +199,7 @@ const Operations = () => {
 
   return (
     <div className="position-relative pb-7 pb-lg-0">
+      {width && width < lgBreakpoint && <MobileBottomNav />}
       <Row>
         {(width && width >= lgBreakpoint) ? (
           <Col xs="auto" className="d-none d-lg-flex">

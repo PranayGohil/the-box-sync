@@ -1,138 +1,125 @@
 import React from 'react';
-import { Table, Button, Badge } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
-  return (
-    <div style={{ maxHeight: '300px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', overflowX: 'hidden' }}>
-      {/* Desktop & Tablet View */}
-      <div className="d-none d-md-block">
-        <Table striped bordered hover size="sm" className="mb-0 align-middle" style={{ fontSize: '0.85rem' }}>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th className="text-center">Qty</th>
-              <th className="text-center">Price</th>
-              <th className="text-center">Total</th>
-              <th className="text-center">Status</th>
-              <th className="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orderItems.map((item, index) => (
-              <tr key={index}>
-                <td>{item.dish_name}</td>
-                <td className="text-center" style={{ whiteSpace: 'nowrap' }}>
-                  <div className="d-flex align-items-center justify-content-center gap-1">
-                    <Button
-                      variant="outline-secondary"
-                      size="sm"
-                      onClick={() => updateItemQuantity(index, -1)}
-                      disabled={item.quantity <= 1 || item.status === 'Completed'}
-                    >
-                      -
-                    </Button>
-                    <span className="mx-2">{item.quantity}</span>
-                    <Button
-                      variant="outline-secondary"
-                      size="sm"
-                      onClick={() => updateItemQuantity(index, 1)}
-                      disabled={item.status === 'Completed'}
-                    >
-                      +
-                    </Button>
-                  </div>
-                </td>
-                <td className="text-center">₹{item.dish_price}</td>
-                <td className="text-center">₹{item.dish_price * item.quantity}</td>
-                <td className="text-center">
-                  {item.status === 'Completed' ? (
-                    <Badge bg="success">Completed</Badge>
-                  ) : item.status === 'Preparing' ? (
-                    <Badge bg="primary">Preparing</Badge>
-                  ) : item.status === 'Pending' ? (
-                    <Badge bg="dark">Pending</Badge>
-                  ) : (
-                    <></>
-                  )}
-                </td>
-                <td className="text-center">
-                  <Button variant="outline-danger" size="sm" onClick={() => removeItem(index)}>
-                    <CsLineIcons icon="bin" />
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      </div>
+const statusConfig = {
+  Completed: { label: 'Done', bg: '#dcfce7', color: '#16a34a' },
+  Preparing: { label: 'Prep', bg: '#dbeafe', color: '#2563eb' },
+  Pending:   { label: 'Pend',  bg: '#fef9c3', color: '#ca8a04' },
+};
 
-      {/* Mobile Stacked View */}
-      <div className="d-block d-md-none px-2">
-        {orderItems.length === 0 ? (
-          <div className="text-center text-muted p-3 small">No items in cart</div>
-        ) : (
-          orderItems.map((item, index) => (
-            <div key={index} className="border-bottom py-3">
-              <div className="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                  <strong style={{ fontSize: '0.95rem' }}>{item.dish_name}</strong>
-                  <div className="text-muted mt-1" style={{ fontSize: '0.85rem' }}>
-                    ₹{item.dish_price} × {item.quantity} = <strong className="text-dark">₹{item.dish_price * item.quantity}</strong>
-                  </div>
-                </div>
-                <div>
-                  {item.status === 'Completed' ? (
-                    <Badge bg="success">Completed</Badge>
-                  ) : item.status === 'Preparing' ? (
-                    <Badge bg="primary">Preparing</Badge>
-                  ) : item.status === 'Pending' ? (
-                    <Badge bg="dark">Pending</Badge>
-                  ) : null}
-                </div>
-              </div>
-              
-              <div className="d-flex justify-content-between align-items-center mt-3">
-                <div className="d-flex align-items-center gap-2">
-                  <Button
-                    variant="outline-secondary"
-                    size="sm"
-                    onClick={() => updateItemQuantity(index, -1)}
-                    disabled={item.quantity <= 1 || item.status === 'Completed'}
-                    style={{ width: '32px', height: '32px', padding: '0' }}
-                    className="d-flex align-items-center justify-content-center"
-                  >
-                    -
-                  </Button>
-                  <span className="mx-1 fw-bold" style={{ minWidth: '20px', textAlign: 'center' }}>
-                    {item.quantity}
-                  </span>
-                  <Button
-                    variant="outline-secondary"
-                    size="sm"
-                    onClick={() => updateItemQuantity(index, 1)}
-                    disabled={item.status === 'Completed'}
-                    style={{ width: '32px', height: '32px', padding: '0' }}
-                    className="d-flex align-items-center justify-content-center"
-                  >
-                    +
-                  </Button>
-                </div>
-                
-                <Button 
-                  variant="outline-danger" 
-                  size="sm" 
-                  onClick={() => removeItem(index)}
-                  className="d-flex align-items-center justify-content-center"
-                  style={{ height: '32px' }}
-                >
-                  <CsLineIcons icon="bin" />
-                </Button>
-              </div>
-            </div>
-          ))
-        )}
+const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
+  if (orderItems.length === 0) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 16px', color: '#94a3b8' }}>
+        <div style={{ fontSize: '32px', marginBottom: '8px', opacity: 0.5 }}><span role="img" aria-label="cart">🛒</span></div>
+        <p style={{ fontWeight: 700, color: '#64748b', margin: 0, fontSize: '13px' }}>Cart is empty</p>
       </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      {orderItems.map((item, index) => {
+        const st = statusConfig[item.status] || null;
+        const isLocked = item.status === 'Completed';
+        return (
+          <div
+            key={index}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '3px 10px',
+              borderBottom: '1px solid rgba(226,232,240,0.6)',
+              background: index % 2 === 0 ? '#ffffff' : '#f8fafc',
+              transition: 'background 0.15s',
+            }}
+          >
+            {/* Name + Status Pill */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ 
+                fontSize: '11px', 
+                fontWeight: 700, 
+                color: '#1e293b', 
+                lineHeight: 1.1, 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis', 
+                whiteSpace: 'nowrap' 
+              }}>
+                {item.dish_name}
+              </div>
+              {st && (
+                <span style={{ 
+                  display: 'inline-block', 
+                  fontSize: '9px', 
+                  fontWeight: 800, 
+                  padding: '0px 6px', 
+                  borderRadius: '4px', 
+                  background: st.bg, 
+                  color: st.color,
+                  textTransform: 'uppercase'
+                }}>
+                  {st.label}
+                </span>
+              )}
+            </div>
+
+            {/* Price & Qty Stepper */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <button
+                  type="button"
+                  onClick={() => updateItemQuantity(index, -1)}
+                  disabled={item.quantity <= 1 || isLocked}
+                  style={{
+                    width: '20px', height: '20px', borderRadius: '5px',
+                    border: '1px solid rgba(226,232,240,0.9)',
+                    background: '#fff', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '12px', fontWeight: 700, color: '#475569',
+                    padding: 0,
+                  }}
+                >−</button>
+
+                <span style={{ minWidth: '14px', textAlign: 'center', fontWeight: 800, fontSize: '12px', color: '#1e293b' }}>
+                  {item.quantity}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => updateItemQuantity(index, 1)}
+                  disabled={isLocked}
+                  style={{
+                    width: '20px', height: '20px', borderRadius: '5px',
+                    border: '1px solid rgba(35,179,244,0.3)',
+                    background: 'rgba(35,179,244,0.05)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '12px', fontWeight: 700, color: '#23b3f4',
+                    padding: 0,
+                  }}
+                >+</button>
+              </div>
+
+              <div style={{ minWidth: '35px', textAlign: 'right', fontWeight: 800, fontSize: '11.5px', color: '#23b3f4' }}>
+                ₹{(item.dish_price * item.quantity).toFixed(0)}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => removeItem(index)}
+                style={{
+                  width: '20px', height: '20px', borderRadius: '5px',
+                  border: 'none', background: 'transparent',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#ef4444', padding: 0, opacity: 0.6
+                }}
+              >
+                <CsLineIcons icon="bin" size="11" />
+              </button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };

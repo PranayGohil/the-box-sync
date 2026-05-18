@@ -42,12 +42,15 @@ const premiumNavStyles = `
 
   /* ── HORIZONTAL — Active state ── */
   html[data-placement="horizontal"] .nav-container .menu > li > a.active,
-  html[data-placement="horizontal"] .nav-container .menu > li > a.active:hover {
+  html[data-placement="horizontal"] .nav-container .menu > li > a.active:hover,
+  html[data-placement="horizontal"] .nav-container .menu > li.show > a,
+  html[data-placement="horizontal"] .nav-container .menu > li.show > a:hover {
     background: rgba(255,255,255,0.2) !important;
     box-shadow: 0 2px 16px rgba(0,0,0,0.15) !important;
     color: #ffffff !important;
     font-weight: 700 !important;
     position: relative;
+    z-index: 1010 !important;
   }
 
   /* White underline bar for horizontal active item */
@@ -60,6 +63,15 @@ const premiumNavStyles = `
     height: 3px !important;
     background: rgba(255,255,255,0.95) !important;
     border-radius: 3px 3px 0 0 !important;
+    z-index: 1011 !important;
+    border: none !important;
+    display: block !important;
+    transform: none !important;
+  }
+
+  html[data-placement="horizontal"] .nav-container .menu > li.show > a::after {
+    content: none !important;
+    border: none !important;
   }
 
   /* Hover for horizontal items */
@@ -68,7 +80,8 @@ const premiumNavStyles = `
   }
 
   /* ── VERTICAL — Active state ── */
-  html[data-placement="vertical"] .nav-container .menu li a.active {
+  html[data-placement="vertical"] .nav-container .menu li a.active,
+  html[data-placement="vertical"] .nav-container .menu li.show > a {
     background: rgba(255,255,255,0.22) !important;
     box-shadow: 0 2px 12px rgba(0,0,0,0.12) !important;
     color: #ffffff !important;
@@ -88,6 +101,10 @@ const premiumNavStyles = `
     border-radius: 0 3px 3px 0 !important;
   }
 
+  html[data-placement="vertical"] .nav-container .menu li.show > a::before {
+    content: none !important;
+  }
+
   /* Icon brightness on active */
   html[data-placement="horizontal"] .nav-container .menu > li > a.active .icon,
   html[data-placement="vertical"] .nav-container .menu li a.active .icon {
@@ -95,12 +112,14 @@ const premiumNavStyles = `
   }
 
   /* Logo text — premium polish */
+  /*
   .nav-container .logo h1 {
     font-size: 1.35rem !important;
     letter-spacing: 0.14em !important;
     text-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
     font-weight: 900 !important;
   }
+  */
 
   /* User name — subtle polish */
   .nav-container .user .name {
@@ -112,6 +131,16 @@ const premiumNavStyles = `
   /* Premium nav-shadow glow */
   .nav-container .nav-shadow {
     box-shadow: 0 8px 32px rgba(0,0,0,0.22), 0 1px 0 rgba(255,255,255,0.06) inset !important;
+  }
+
+  /* Ensure both the mouse cursor and blinking text caret are always 100% visible and responsive */
+  input, textarea, .form-control {
+    cursor: text !important;
+    caret-color: currentColor !important;
+  }
+
+  select, select.form-control {
+    cursor: pointer !important;
   }
 `;
 

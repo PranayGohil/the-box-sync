@@ -11,7 +11,7 @@ const ControlsPageSize = ({ tableInstance }) => {
     const options = [2, 5, 10];
     return (
         <Dropdown size="sm" as={ButtonGroup} className="d-inline-block" align="end">
-            <Dropdown.Toggle variant="outline-muted">{pageSize} Items</Dropdown.Toggle>
+            <Dropdown.Toggle className="manage-menu-dropdown-toggle">{pageSize} Items</Dropdown.Toggle>
             <Dropdown.Menu>
                 {options.map((size) => (
                     <Dropdown.Item

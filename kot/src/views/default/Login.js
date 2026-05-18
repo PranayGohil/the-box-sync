@@ -1,153 +1,204 @@
 import React, { useState, useContext } from 'react';
-import { NavLink } from 'react-router-dom';
-import { Button, Form } from 'react-bootstrap';
+import { Button, Form, Spinner } from 'react-bootstrap';
+import axios from 'axios';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import LayoutFullpage from 'layout/LayoutFullpage';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
-import axios from 'axios';
 import { AuthContext } from 'contexts/AuthContext';
+import { toast } from 'react-toastify';
+import './Login.css';
 
 const Login = () => {
-  const title = 'Login';
-  const description = 'Login Page';
+  const title = 'Login — The Box KOT';
+  const description = 'Secure kitchen display login to The Box KOT panel.';
 
   const { login } = useContext(AuthContext);
-  const [showPassword, setShowPassword] = useState(false);
-  const [wrongMsg, setWrongMsg] = useState('');
 
-  // ✅ Validation Schema
+  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Validation Schema
   const validationSchema = Yup.object().shape({
     restaurant_code: Yup.string().required('Restaurant Code is required'),
     username: Yup.string().required('Username is required'),
     password: Yup.string().required('Password is required'),
   });
 
-  // ✅ Initial form values
-  const initialValues = { restaurant_code: '', username: '', password: '' };
-
-  // ✅ Submit handler
-  const onSubmit = async (values, { setSubmitting }) => {
+  // Submit Handler
+  const onSubmit = async (values) => {
+    setIsLoading(true);
+    setError('');
     try {
       const res = await axios.post(`${process.env.REACT_APP_API}/panel-user/login/KOT Panel`, values);
       if (res.data.message === 'Logged In') {
-        login(res.data.token, res.data.user);
-        window.location.href = '/dashboard';
+        setTimeout(() => {
+          login(res.data.token, res.data.user);
+          window.location.href = '/dashboard';
+        }, 500);
       } else {
-        setWrongMsg(res.data.message);
+        setError(res.data.message);
+        setIsLoading(false);
       }
     } catch (err) {
-      console.error(err);
-      setWrongMsg('Login failed. Please try again.');
+      const errorMessage = err.response?.data?.message || 'Login failed. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      setIsLoading(false);
     }
-    setSubmitting(false);
   };
 
-  // ✅ Formik integration
-  const formik = useFormik({ initialValues, validationSchema, onSubmit });
-  const { handleSubmit, handleChange, values, touched, errors, isSubmitting } = formik;
+  const formik = useFormik({
+    initialValues: { restaurant_code: '', username: '', password: '' },
+    validationSchema,
+    onSubmit,
+  });
 
-  // Left Side Content (unchanged)
-  const leftSide = (
-    <div className="min-h-100 d-flex align-items-center">
-      <div className="w-100 w-lg-75 w-xxl-50">
-        {/* <div>
-          <div className="mb-5">
-            <h1 className="display-3 text-white">Multiple Niches</h1>
-            <h1 className="display-3 text-white">Ready for Your Project</h1>
-          </div>
-          <p className="h6 text-white lh-1-5 mb-5">
-            Dynamically target high-payoff intellectual capital for customized
-            technologies. Objectively integrate emerging core competencies
-            before process-centric communities...
-          </p>
-          <div className="mb-5">
-            <Button size="lg" variant="outline-white" href="/">
-              Learn More
-            </Button>
-          </div>
-        </div> */}
-      </div>
-    </div>
-  );
-
-  // Right Side (integrated with login fields)
-  const rightSide = (
-    <div className="sw-lg-70 min-h-100 bg-foreground d-flex justify-content-center align-items-center shadow-deep py-5 full-page-content-right-border">
-      <div className="sw-lg-50 px-5">
-        <div className="mb-3">
-          <h2 className="cta-1 mb-0 text-primary">KOT Panel, Login!</h2>
-        </div>
-        <div className="mb-3">
-          <p className="h6">Secure access to your control panel.</p>
-        </div>
-
-        {/* ✅ Login Form */}
-        <form id="loginForm" className="tooltip-end-bottom" onSubmit={handleSubmit}>
-          {/* Restaurant Code */}
-          <div className="mb-3 filled form-group tooltip-end-top">
-            <CsLineIcons icon="building" />
-            <Form.Control type="text" name="restaurant_code" placeholder="Restaurant Code" value={values.restaurant_code} onChange={handleChange} />
-            {errors.restaurant_code && touched.restaurant_code && <div className="d-block invalid-tooltip">{errors.restaurant_code}</div>}
-          </div>
-
-          {/* Username */}
-          <div className="mb-3 filled form-group tooltip-end-top">
-            <CsLineIcons icon="user" />
-            <Form.Control type="text" name="username" placeholder="Username" value={values.username} onChange={handleChange} />
-            {errors.username && touched.username && <div className="d-block invalid-tooltip">{errors.username}</div>}
-          </div>
-
-          {/* Password */}
-          <div className="mb-3 filled form-group tooltip-end-top">
-            <CsLineIcons icon="lock-off" />
-            <Form.Control type={showPassword ? 'text' : 'password'} name="password" placeholder="Password" value={values.password} onChange={handleChange} />
-            {showPassword ? (
-              <div
-                className="t-2 e-3 text-end cursor-pointer position-absolute right-3"
-                onClick={() => setShowPassword(false)}
-                style={{ top: '50%', transform: 'translateY(-50%)', marginTop: '14px' }}
-              >
-                <CsLineIcons icon="eye-off" />
-              </div>
-            ) : (
-              <div
-                className="t-2 e-3 text-end cursor-pointer position-absolute right-3"
-                onClick={() => setShowPassword(true)}
-                style={{ top: '50%', transform: 'translateY(-50%)', marginTop: '14px' }}
-              >
-                <CsLineIcons icon="eye" />
-              </div>
-            )}
-            {errors.password && touched.password && <div className="d-block invalid-tooltip">{errors.password}</div>}
-          </div>
-
-          {/* Submit */}
-          <Button size="lg" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Logging in...' : 'Login'}
-          </Button>
-
-          {/* Wrong Message */}
-          {wrongMsg && (
-            <div className="text-danger mt-3">
-              <b>{wrongMsg}</b>
-            </div>
-          )}
-        </form>
-        <div className="mt-auto text-center pt-4">
-          <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
-            Powered by <strong>TheBoxSync</strong>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+  const { handleSubmit, handleChange, values, touched, errors } = formik;
 
   return (
     <>
       <HtmlHead title={title} description={description} />
-      <LayoutFullpage left={leftSide} right={rightSide} />
+
+      <div className="login-login-page-wrapper">
+        {/* Left Panel */}
+        <div className="login-login-left-panel">
+          <div className="login-login-brand-logo">THE <span>BOX</span></div>
+          <h1 className="login-login-hero-title">
+            Your KOT Panel,<br />
+            <span>Synchronized.</span>
+          </h1>
+          <p className="login-login-hero-sub">
+            Real-time kitchen order ticket synchronization, instant prep notifications, and seamless dining-in & takeaway management.
+          </p>
+          <div className="login-login-feature-pills">
+            {[
+              'Real-Time KOT Synchronization',
+              'Instant Kitchen Alerts',
+              'Dine In & Takeaway Management',
+              'Seamless Order Status Tracking',
+            ].map((f) => (
+              <div key={f} className="login-login-feature-pill">
+                <div className="login-login-feature-pill-dot" />
+                {f}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Panel — Login Form */}
+        <div className="login-login-right-panel">
+          <div className="login-login-form-header">
+            <div className="login-login-form-eyebrow">Kitchen Display Portal</div>
+            <h2 className="login-login-form-title">Kitchen Access</h2>
+            <p className="login-login-form-subtitle">Sign in to your kitchen control screen</p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            {error && (
+              <div className="login-auth-alert-error">
+                <CsLineIcons icon="warning-hexagon" size="18" />
+                {error}
+              </div>
+            )}
+
+            {/* Restaurant Code */}
+            <div className="login-auth-input-group">
+              <label className="login-auth-input-label">Restaurant Code</label>
+              <div style={{ position: 'relative' }}>
+                <span className="login-auth-input-icon">
+                  <CsLineIcons icon="building" size="18" />
+                </span>
+                <input
+                  type="text"
+                  name="restaurant_code"
+                  placeholder="e.g. TBOX101"
+                  value={values.restaurant_code}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="login-auth-input form-control"
+                />
+              </div>
+              {errors.restaurant_code && touched.restaurant_code && (
+                <div className="login-auth-error-msg">
+                  <CsLineIcons icon="warning" size="13" />
+                  {errors.restaurant_code}
+                </div>
+              )}
+            </div>
+
+            {/* Username */}
+            <div className="login-auth-input-group">
+              <label className="login-auth-input-label">Username</label>
+              <div style={{ position: 'relative' }}>
+                <span className="login-auth-input-icon">
+                  <CsLineIcons icon="user" size="18" />
+                </span>
+                <input
+                  type="text"
+                  name="username"
+                  placeholder="Kitchen operator username"
+                  value={values.username}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="login-auth-input form-control"
+                />
+              </div>
+              {errors.username && touched.username && (
+                <div className="login-auth-error-msg">
+                  <CsLineIcons icon="warning" size="13" />
+                  {errors.username}
+                </div>
+              )}
+            </div>
+
+            {/* Password */}
+            <div className="login-auth-input-group">
+              <label className="login-auth-input-label">Password</label>
+              <div style={{ position: 'relative' }}>
+                <span className="login-auth-input-icon">
+                  <CsLineIcons icon="lock-off" size="18" />
+                </span>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  placeholder="••••••••"
+                  value={values.password}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="login-auth-input form-control"
+                />
+                <span className="login-auth-input-icon-right" onClick={() => setShowPassword(!showPassword)}>
+                  <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="18" />
+                </span>
+              </div>
+              {errors.password && touched.password && (
+                <div className="login-auth-error-msg">
+                  <CsLineIcons icon="warning" size="13" />
+                  {errors.password}
+                </div>
+              )}
+            </div>
+
+            <button type="submit" className="login-btn-auth-primary" disabled={isLoading}>
+              {isLoading ? (
+                <><Spinner as="span" animation="border" size="sm" className="me-2" />Signing in...</>
+              ) : (
+                <><CsLineIcons icon="login" size="17" className="me-2" />Sign In</>
+              )}
+            </button>
+          </form>
+
+          <div className="login-auth-footer-link" style={{ fontSize: '0.8rem', lineHeight: '1.5' }}>
+            To create or manage kitchen display credentials, please use your <strong>Admin Dashboard</strong>.
+          </div>
+
+          <div className="login-auth-powered">
+            Powered by <strong>TheBoxSync</strong>
+          </div>
+        </div>
+      </div>
     </>
   );
 };

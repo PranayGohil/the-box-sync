@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Form, Spinner } from 'react-bootstrap';
+import { Modal, Button, Form, Spinner, Row, Col } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import Select from 'react-select';
 
 const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
   const [previewImg, setPreviewImg] = useState(null);
@@ -81,144 +82,214 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
   }
 
   return (
-    <Modal className="modal-right large" show={show} onHide={handleClose} backdrop="static">
-      <Modal.Header closeButton>
-        <Modal.Title>
+    <Modal show={show} onHide={handleClose} backdrop="static" centered size="lg">
+      
+      <Modal.Header closeButton className="border-0 pb-0">
+        <Modal.Title className="fw-bold" style={{ color: '#1ea8e7' }}>
           <CsLineIcons icon="edit" className="me-2" />
-          Edit Dish
+          Edit Dish Details
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body>
+      <Modal.Body className="py-4">
         <Form id="edit_dish_form" onSubmit={formik.handleSubmit}>
-          <Form.Group className="mb-3">
-            <Form.Label>Dish Name</Form.Label>
-            <Form.Control
-              type="text"
-              name="dish_name"
-              value={formik.values.dish_name}
-              onChange={formik.handleChange}
-              disabled={isSubmitting}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Dish Price</Form.Label>
-            <Form.Control
-              type="text"
-              name="dish_price"
-              value={formik.values.dish_price}
-              onChange={formik.handleChange}
-              disabled={isSubmitting}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Description</Form.Label>
-            <Form.Control
-              as="textarea"
-              name="description"
-              value={formik.values.description}
-              onChange={formik.handleChange}
-              disabled={isSubmitting}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Dish Image</Form.Label>
-            <Form.Control
-              type="file"
-              name="dish_img"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.currentTarget.files[0];
-                formik.setFieldValue('dish_img', file);
-                if (file) setPreviewImg(URL.createObjectURL(file));
-              }}
-              disabled={isSubmitting}
-            />
-            {previewImg && (
-              <div className="mt-2">
-                <img src={previewImg} alt="Preview" className="img-thumbnail" style={{ maxWidth: '100px' }} />
-                <small className="text-muted d-block">Image preview</small>
-              </div>
-            )}
-          </Form.Group>
-
-          <Form.Check
-            type="checkbox"
-            label="Advanced Options"
-            checked={showAdvancedOptions}
-            onChange={() => setShowAdvancedOptions(!showAdvancedOptions)}
-            className="mb-3"
-            disabled={isSubmitting}
-          />
-
-          {showAdvancedOptions && (
-            <>
-              <Form.Group className="mb-3">
-                <Form.Label>Quantity</Form.Label>
+          <Row className="g-3">
+            <Col md={8}>
+              <Form.Group className="mb-4">
+                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Dish Name</Form.Label>
                 <Form.Control
                   type="text"
-                  name="quantity"
-                  value={formik.values.quantity}
+                  name="dish_name"
+                  value={formik.values.dish_name}
                   onChange={formik.handleChange}
                   disabled={isSubmitting}
+                  className="edit-dish-modal-pill-input shadow-sm"
+                  placeholder="Enter dish name"
                 />
               </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Unit</Form.Label>
-                <Form.Select
-                  name="unit"
-                  value={formik.values.unit}
+
+              <Form.Group className="mb-4">
+                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Dish Price</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="dish_price"
+                  value={formik.values.dish_price}
                   onChange={formik.handleChange}
                   disabled={isSubmitting}
-                >
-                  <option value="">Select Unit</option>
-                  <option value="kg">kg</option>
-                  <option value="g">g</option>
-                  <option value="litre">litre</option>
-                  <option value="ml">ml</option>
-                  <option value="piece">piece</option>
-                </Form.Select>
+                  className="edit-dish-modal-pill-input shadow-sm"
+                  placeholder="0.00"
+                />
               </Form.Group>
-            </>
-          )}
+            </Col>
 
-          <Form.Check
-            type="checkbox"
-            label="Special Dish"
-            checked={formik.values.is_special}
-            onChange={(e) => formik.setFieldValue('is_special', e.target.checked)}
-            className="mb-3"
-            disabled={isSubmitting}
-          />
+            <Col md={4}>
+              <Form.Group className="mb-4">
+                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Dish Image</Form.Label>
+                <div className="d-flex flex-column align-items-center gap-2 p-3 rounded-xl border-dashed" style={{ border: '2px dashed #e5e7eb' }}>
+                  {previewImg ? (
+                    <img src={previewImg} alt="Preview" className="rounded shadow-sm" style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
+                  ) : (
+                    <div className="bg-light rounded d-flex align-items-center justify-content-center" style={{ width: '100px', height: '100px' }}>
+                      <CsLineIcons icon="image" size="40" className="text-muted" />
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    id="edit-dish-img"
+                    className="d-none"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.currentTarget.files[0];
+                      formik.setFieldValue('dish_img', file);
+                      if (file) setPreviewImg(URL.createObjectURL(file));
+                    }}
+                    disabled={isSubmitting}
+                  />
+                  <label htmlFor="edit-dish-img" className="edit-dish-modal-custom-btn-outline px-3 py-1 rounded-pill small fw-bold cursor-pointer mb-0 mt-2">
+                    <CsLineIcons icon="upload" size="14" className="me-1" />
+                    {previewImg ? 'Change Image' : 'Upload Image'}
+                  </label>
+                </div>
+              </Form.Group>
+            </Col>
+
+            <Col md={12}>
+              <Form.Group className="mb-4">
+                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Description</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={2}
+                  name="description"
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
+                  disabled={isSubmitting}
+                  className="edit-dish-modal-pill-input shadow-sm"
+                  style={{ paddingLeft: '1.2rem' }}
+                  placeholder="Add dish description..."
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <div 
+                className="d-flex align-items-center gap-2 cursor-pointer mb-4"
+                onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+              >
+                <div className={`edit-dish-modal-custom-check ${showAdvancedOptions ? 'active' : ''}`}>
+                  {showAdvancedOptions && <CsLineIcons icon="check" size="12" className="text-white" />}
+                </div>
+                <span className="fw-bold text-alternate small text-uppercase">Advanced Options</span>
+              </div>
+            </Col>
+
+            <Col md={6}>
+              <div 
+                className="d-flex align-items-center gap-2 cursor-pointer mb-4"
+                onClick={() => formik.setFieldValue('is_special', !formik.values.is_special)}
+              >
+                <div className={`edit-dish-modal-custom-check ${formik.values.is_special ? 'active' : ''}`}>
+                  {formik.values.is_special && <CsLineIcons icon="check" size="12" className="text-white" />}
+                </div>
+                <span className="fw-bold text-alternate small text-uppercase">Special Dish</span>
+              </div>
+            </Col>
+
+            {showAdvancedOptions && (
+              <>
+                <Col xs={6} md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="small fw-bold text-muted text-uppercase mb-1">Quantity</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="quantity"
+                      value={formik.values.quantity}
+                      onChange={formik.handleChange}
+                      disabled={isSubmitting}
+                      className="edit-dish-modal-pill-input shadow-sm"
+                      placeholder="e.g. 1"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={6} md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="small fw-bold text-muted text-uppercase mb-1">Unit</Form.Label>
+                    <Select
+                      classNamePrefix="react-select"
+                      menuPlacement="auto"
+                      menuPortalTarget={document.body}
+                      options={[
+                        { value: 'kg', label: 'kg' },
+                        { value: 'g', label: 'g' },
+                        { value: 'litre', label: 'litre' },
+                        { value: 'ml', label: 'ml' },
+                        { value: 'piece', label: 'piece' },
+                        { value: 'plate', label: 'Plate' },
+                        { value: 'portion', label: 'Portion' },
+                      ]}
+                      value={formik.values.unit ? { value: formik.values.unit, label: formik.values.unit } : null}
+                      onChange={(selected) => formik.setFieldValue('unit', selected ? selected.value : '')}
+                      placeholder="Select Unit"
+                      isDisabled={isSubmitting}
+                      styles={{
+                        control: (base, state) => ({
+                          ...base,
+                          borderRadius: '12px',
+                          minHeight: '45px',
+                          border: state.isFocused ? '1px solid #1ea8e7' : '1px solid #e5e7eb',
+                          boxShadow: state.isFocused ? '0 0 0 4px rgba(30, 168, 231, 0.1)' : 'none',
+                          backgroundColor: '#fff',
+                          '&:hover': { border: '1px solid #1ea8e7' },
+                        }),
+                        menu: (base) => ({
+                          ...base,
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                          border: '1px solid #e5e7eb',
+                          zIndex: 9999,
+                        }),
+                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                        option: (base, state) => ({
+                          ...base,
+                          backgroundColor: state.isSelected ? '#1ea8e7' : state.isFocused ? '#f0f9ff' : 'white',
+                          color: state.isSelected ? 'white' : '#333',
+                          padding: '10px 15px',
+                          '&:active': { backgroundColor: '#1ea8e7', color: 'white' },
+                        })
+                      }}
+                    />
+                  </Form.Group>
+                </Col>
+              </>
+            )}
+          </Row>
         </Form>
       </Modal.Body>
 
-      <Modal.Footer>
-        <Button variant="dark" onClick={handleClose} disabled={isSubmitting}>
+      <Modal.Footer className="border-0">
+        <Button 
+          variant="outline-light" 
+          onClick={handleClose} 
+          disabled={isSubmitting}
+          className="rounded-pill px-4 fw-bold edit-dish-modal-custom-btn-outline btn btn-outline-primary"
+        >
           Cancel
         </Button>
         <Button
-          variant="primary"
           type="submit"
           form="edit_dish_form"
           disabled={isSubmitting}
+          className="px-5 py-2 edit-dish-modal-custom-btn-outline d-flex align-items-center gap-2"
         >
           {isSubmitting ? (
             <>
-              <Spinner
-                as="span"
-                animation="border"
-                size="sm"
-                role="status"
-                aria-hidden="true"
-                className="me-2"
-              />
+              <Spinner as="span" animation="border" size="sm" />
               Updating...
             </>
           ) : (
-            'Update'
+            <>
+              <CsLineIcons icon="save" size="18" />
+              Update Dish
+            </>
           )}
         </Button>
       </Modal.Footer>

@@ -27,34 +27,49 @@ const DeleteDishModal = ({ show, handleClose, data, fetchMenuData }) => {
   };
 
   return (
-    <Modal show={show} onHide={handleClose} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>
-          Delete Dish?
+    <Modal show={show} onHide={handleClose} centered backdrop="static">
+      
+      <Modal.Header closeButton className="border-0 pb-0">
+        <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>
+          Confirm Delete
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        <p>This dish will be permanently deleted from your menu.</p>
+      <Modal.Body className="py-4">
+        <div className="d-flex align-items-center mb-3">
+          <div className="p-3 rounded-circle me-3" style={{ backgroundColor: 'rgba(207, 38, 55, 0.1)' }}>
+            <CsLineIcons icon="bin" size="24" style={{ color: '#cf2637' }} />
+          </div>
+          <div>
+            <p className="mb-0 fw-bold text-dark">Are you sure you want to delete this dish?</p>
+            <p className="mb-0 text-muted small">This action cannot be undone and will permanently remove "{data?.dish_name}" from your menu.</p>
+          </div>
+        </div>
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose} disabled={isDeleting}>
+      <Modal.Footer className="border-0 pt-0">
+        <Button 
+          variant="outline-primary" 
+          onClick={handleClose} 
+          disabled={isDeleting}
+          className="rounded-pill px-4 fw-bold delete-dish-modal-custom-btn-outline"
+        >
           Cancel
         </Button>
-        <Button variant="danger" onClick={handleDelete} disabled={isDeleting}>
+        <Button 
+          variant="outline-danger" 
+          onClick={handleDelete} 
+          disabled={isDeleting}
+          className="rounded-pill px-4 fw-bold shadow-sm delete-dish-modal-custom-btn-delete"
+        >
           {isDeleting ? (
             <>
-              <Spinner
-                as="span"
-                animation="border"
-                size="sm"
-                role="status"
-                aria-hidden="true"
-                className="me-2"
-              />
+              <Spinner as="span" animation="border" size="sm" className="me-2" />
               Deleting...
             </>
           ) : (
-            'Delete'
+            <div className="d-flex align-items-center">
+              <CsLineIcons icon="bin" size="16" className="me-2" stroke="currentColor" />
+              Delete
+            </div>
           )}
         </Button>
       </Modal.Footer>
