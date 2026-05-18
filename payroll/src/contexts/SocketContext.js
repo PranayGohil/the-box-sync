@@ -56,65 +56,9 @@ const AudioManager = {
   }
 };
 
-// Audio Enabler Component
+// Audio Enabler Component (Disabled)
 const AudioEnabler = () => {
-  const [show, setShow] = useState(false);
-  const [testing, setTesting] = useState(false);
-
-  useEffect(() => {
-    // Show banner if audio not yet enabled
-    if (!AudioManager.isEnabled()) {
-      setShow(true);
-    }
-  }, []);
-
-  const handleEnableAudio = async () => {
-    setTesting(true);
-    const success = await AudioManager.play();
-
-    if (success) {
-      toast.success('🔊 Audio enabled! You will hear alerts for new orders.');
-      setTimeout(() => {
-        AudioManager.stop();
-        setShow(false);
-      }, 2000); // Stop test audio after 2 seconds
-    } else {
-      toast.error('Failed to enable audio. Please check browser permissions.');
-    }
-    setTesting(false);
-  };
-
-  if (!show) return null;
-
-  return (
-    <Alert variant="danger" className="position-absolute bg-white m-3 shadow-sm" style={{ zIndex: "10000", top: "10px", right: "10px" }}>
-      <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <div>
-          <strong>🔔 Enable Audio Alerts for New Orders</strong>
-          {/* <p className="mb-0 small mt-1">
-            Click the button to enable sound notifications. You'll hear a test sound, then audio will work automatically for all new orders.
-          </p> */}
-        </div>
-        <div className="d-flex gap-2">
-          <Button
-            size="sm"
-            variant="warning"
-            onClick={handleEnableAudio}
-            disabled={testing}
-          >
-            {testing ? '🔊 Playing Test...' : '🔊 Enable Audio'}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline-secondary"
-            onClick={() => setShow(false)}
-          >
-            Later
-          </Button>
-        </div>
-      </div>
-    </Alert>
-  );
+  return null;
 };
 
 // Order Modal Component

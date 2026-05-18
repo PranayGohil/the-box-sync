@@ -18,34 +18,64 @@ import ForgotPassword from './forgot-password/ForgotPassword';
 const NavContent = ({ activePlans }) => {
   return (
     <>
-      
-      <Nav className="flex-column settings-settings-sidebar mt-2">
-        <Nav.Link as={NavLink} to="/settings/profile" className="settings-nav-link">
-          <CsLineIcons icon="user" size="18" />
-          <span className="align-middle">Profile</span>
-        </Nav.Link>
+      <Nav className="flex-column operations-operations-sidebar">
+        <div className="mb-1">
+          <div className="operations-section-header">
+            <CsLineIcons icon="user" size="17" />
+            <span className="align-middle">Account</span>
+          </div>
+          <div className="operations-sub-menu-container">
+            <Nav.Link as={NavLink} to="/settings/profile" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Profile</span>
+            </Nav.Link>
+          </div>
+        </div>
 
-        <Nav.Link as={NavLink} to="/settings/tax-charges" className="settings-nav-link">
-          <CsLineIcons icon="dollar" size="18" />
-          <span className="align-middle">Tax & Charges</span>
-        </Nav.Link>
-
-        <Nav.Link as={NavLink} to="/settings/subscription" className="settings-nav-link">
-          <CsLineIcons icon="star" size="18" />
-          <span className="align-middle">Subscription</span>
-        </Nav.Link>
+        <div className="mb-1">
+          <div className="operations-section-header">
+            <CsLineIcons icon="dollar" size="17" />
+            <span className="align-middle">Billing & Access</span>
+          </div>
+          <div className="operations-sub-menu-container">
+            <Nav.Link as={NavLink} to="/settings/tax-charges" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Tax & Charges</span>
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/settings/subscription" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Subscription</span>
+            </Nav.Link>
+          </div>
+        </div>
 
         {activePlans.includes('Restaurant Website') && (
-          <Nav.Link as={NavLink} to="/settings/manage-website" className="settings-nav-link">
-            <CsLineIcons icon="web-page" size="18" />
-            <span className="align-middle">Manage Website</span>
-          </Nav.Link>
+          <div className="mb-1">
+            <div className="operations-section-header">
+              <CsLineIcons icon="web-page" size="17" />
+              <span className="align-middle">Customization</span>
+            </div>
+            <div className="operations-sub-menu-container">
+              <Nav.Link as={NavLink} to="/settings/manage-website" className="px-0">
+                <i className="me-2 sw-3 d-inline-block" />
+                <span className="align-middle">Manage Website</span>
+              </Nav.Link>
+            </div>
+          </div>
         )}
 
-        <Nav.Link as={NavLink} to="/settings/forgot-password" className="settings-nav-link">
-          <CsLineIcons icon="key" size="18" />
-          <span className="align-middle">Forgot Password</span>
-        </Nav.Link>
+        <div className="mb-1">
+          <div className="operations-section-header">
+            <CsLineIcons icon="key" size="17" />
+            <span className="align-middle">Security</span>
+          </div>
+          <div className="operations-sub-menu-container">
+            <Nav.Link as={NavLink} to="/settings/forgot-password" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Forgot Password</span>
+            </Nav.Link>
+          </div>
+        </div>
       </Nav>
     </>
   );

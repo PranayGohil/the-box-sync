@@ -4,18 +4,16 @@ import { Button, Form, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import LayoutFullpage from 'layout/LayoutFullpage';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import { AuthContext } from 'contexts/AuthContext';
 import { toast } from 'react-toastify';
 
 const Login = () => {
-  const title = 'Login';
-  const description = 'Login Page';
+  const title = 'Login — The Box';
+  const description = 'Secure payroll & staff login to The Box management panel.';
 
   const { login } = useContext(AuthContext);
-  const location = useLocation();
 
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -25,24 +23,21 @@ const Login = () => {
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('impersonate_token');
-    
     if (token) {
       setIsLoading(true);
-      toast.info("Logging in via Super Admin...");
-      
-      // Fetch user data for this token
+      toast.info('Logging in via Super Admin...');
       axios.get(`${process.env.REACT_APP_API}/user/get`, {
-        headers: { Authorization: `Bearer ${token}` }
-      }).then(res => {
-        if (res.data && res.data !== "Null") {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then((res) => {
+        if (res.data && res.data !== 'Null') {
           login(token, res.data);
           window.location.href = '/';
         } else {
-          toast.error("Impersonation token invalid or expired.");
+          toast.error('Impersonation token invalid or expired.');
           setIsLoading(false);
         }
-      }).catch(err => {
-        toast.error("Failed to fetch user data for impersonation.");
+      }).catch(() => {
+        toast.error('Failed to fetch user data for impersonation.');
         setIsLoading(false);
       });
     }
@@ -52,17 +47,13 @@ const Login = () => {
     email: Yup.string().email().required('Email is required'),
     password: Yup.string().min(6, 'Must be at least 6 chars!').required('Password is required'),
   });
-  const initialValues = { email: '', password: '' };
 
   const onSubmit = async (values) => {
     setIsLoading(true);
-    setError(''); // Clear previous errors
-
+    setError('');
     try {
       const res = await axios.post(`${process.env.REACT_APP_API}/user/login`, values);
-
       if (res.data.success) {
-        // Add small delay for better UX feedback
         setTimeout(() => {
           login(res.data.token, res.data.user);
           window.location.href = '/';
@@ -72,7 +63,6 @@ const Login = () => {
         setIsLoading(false);
       }
     } catch (err) {
-      console.log('Login Error:', err.response?.data?.message);
       const errorMessage = err.response?.data?.message || 'Something went wrong';
       setError(errorMessage);
       toast.error(errorMessage);
@@ -81,150 +71,126 @@ const Login = () => {
   };
 
   const formik = useFormik({
-    initialValues,
+    initialValues: { email: '', password: '' },
     validationSchema,
     onSubmit,
   });
 
   const { handleSubmit, handleChange, values, touched, errors } = formik;
 
-  const leftSide = (
-    <div className="min-h-100 d-flex align-items-center">
-      <div className="w-100 w-lg-75 w-xxl-50">{/* Optional content */}</div>
-    </div>
-  );
+  return (
+    <>
+      <HtmlHead title={title} description={description} />
 
-  const rightSide = (
-    <div className="sw-lg-70 min-h-100 bg-foreground d-flex justify-content-center align-items-center shadow-deep py-5 full-page-content-right-border">
-      <div className="sw-lg-50 px-5">
-        <div className="mb-3">
-          <h2 className="cta-1 mb-0 text-primary">Admin Login</h2>
+      <div className="login-login-page-wrapper">
+        {/* Left Panel */}
+        <div className="login-login-left-panel">
+          <div className="login-login-brand-logo">THE <span>BOX</span></div>
+          <h1 className="login-login-hero-title">
+            Your Workforce,<br />
+            <span>Perfectly Managed.</span>
+          </h1>
+          <p className="login-login-hero-sub">
+            A powerful payroll and staff management platform to streamline tracking, holidays, advances, and payouts — all in one place.
+          </p>
+          <div className="login-login-feature-pills">
+            {['Comprehensive Leave Policy', 'Smart Attendance & Shifts', 'Salary Advances & Payouts', 'Disbursement & HR Reports'].map((f) => (
+              <div key={f} className="login-login-feature-pill">
+                <div className="login-login-feature-pill-dot" />
+                {f}
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="mb-3">
-          <p className="h6">Secure access to your control panel.</p>
-        </div>
-        <div>
-          <form id="loginForm" className="tooltip-end-bottom" onSubmit={handleSubmit}>
-            <div className="mb-3 filled form-group tooltip-end-top">
-              <CsLineIcons icon="email" />
-              <Form.Control
-                type="text"
-                name="email"
-                placeholder="Email"
-                value={values.email}
-                onChange={handleChange}
-                disabled={isLoading}
-                className={isLoading ? 'bg-light' : ''}
-              />
-              {errors.email && touched.email && <div className="d-block invalid-tooltip">{errors.email}</div>}
-            </div>
 
-            <div className="mb-3 filled form-group tooltip-end-top position-relative">
-              <CsLineIcons icon="lock-off" />
-              <Form.Control
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                onChange={handleChange}
-                value={values.password}
-                placeholder="Password"
-                disabled={isLoading}
-                className={isLoading ? 'bg-light' : ''}
-              />
+        {/* Right Panel — Login Form */}
+        <div className="login-login-right-panel">
+          <div className="login-login-form-header">
+            <div className="login-login-form-eyebrow">Staff Portal</div>
+            <h2 className="login-login-form-title">Welcome back</h2>
+            <p className="login-login-form-subtitle">Sign in to your control panel</p>
+          </div>
 
-              {!isLoading && (
-                <>
-                  {showPassword ? (
-                    <div
-                      className="t-2 e-3 text-end cursor-pointer position-absolute right-3"
-                      onClick={() => setShowPassword(false)}
-                      style={{ top: '50%', transform: 'translateY(-50%)', marginTop: '14px' }}
-                    >
-                      <CsLineIcons icon="eye-off" />
-                    </div>
-                  ) : (
-                    <div
-                      className="t-2 e-3 text-end cursor-pointer position-absolute right-3"
-                      onClick={() => setShowPassword(true)}
-                      style={{ top: '50%', transform: 'translateY(-50%)', marginTop: '14px' }}
-                    >
-                      <CsLineIcons icon="eye" />
-                    </div>
-                  )}
-                </>
-              )}
+          <form onSubmit={handleSubmit}>
+            {error && (
+              <div className="login-auth-alert-error">
+                <CsLineIcons icon="warning-hexagon" size="18" />
+                {error}
+              </div>
+            )}
 
-              {errors.password && touched.password && <div className="d-block invalid-tooltip">{errors.password}</div>}
-            </div>
-
-            <div className="mb-3 mx-2">
-              {error && (
-                <div className="text-danger text-medium d-flex align-items-center">
-                  <CsLineIcons icon="warning" className="me-1" />
-                  {error}
+            {/* Email */}
+            <div className="login-auth-input-group">
+              <label className="login-auth-input-label">Email Address</label>
+              <div style={{ position: 'relative' }}>
+                <span className="login-auth-input-icon">
+                  <CsLineIcons icon="email" size="18" />
+                </span>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="you@restaurant.com"
+                  value={values.email}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="login-auth-input form-control"
+                />
+              </div>
+              {errors.email && touched.email && (
+                <div className="login-auth-error-msg">
+                  <CsLineIcons icon="warning" size="13" />
+                  {errors.email}
                 </div>
               )}
             </div>
 
-            <div className="d-flex justify-content-between align-items-center">
-              <Button size="lg" type="submit" disabled={isLoading} className="position-relative" style={{ minWidth: '100px' }}>
-                {isLoading ? (
-                  <>
-                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                    Logging in...
-                  </>
-                ) : (
-                  'Login'
-                )}
-              </Button>
-
-              <NavLink
-                className={`t-3 e-3 ${isLoading ? 'disabled-link' : ''}`}
-                to="/forgot-password"
-                style={{ fontSize: '12px' }}
-                onClick={(e) => isLoading && e.preventDefault()}
-              >
-                Forgot Password ?
-              </NavLink>
+            {/* Password */}
+            <div className="login-auth-input-group">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <label className="login-auth-input-label mb-0">Password</label>
+                <NavLink to="/forgot-password" style={{ fontSize: '0.75rem', fontWeight: '700' }} className="login-auth-forgot-link" onClick={(e) => isLoading && e.preventDefault()}>
+                  Forgot password?
+                </NavLink>
+              </div>
+              <div style={{ position: 'relative' }}>
+                <span className="login-auth-input-icon">
+                  <CsLineIcons icon="lock-off" size="18" />
+                </span>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  placeholder="••••••••"
+                  value={values.password}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="login-auth-input form-control"
+                />
+                <span className="login-auth-input-icon-right" onClick={() => setShowPassword(!showPassword)}>
+                  <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="18" />
+                </span>
+              </div>
+              {errors.password && touched.password && (
+                <div className="login-auth-error-msg">
+                  <CsLineIcons icon="warning" size="13" />
+                  {errors.password}
+                </div>
+              )}
             </div>
+
+            <button type="submit" className="login-btn-auth-primary" disabled={isLoading}>
+              {isLoading ? (
+                <><Spinner as="span" animation="border" size="sm" className="me-2" />Signing in...</>
+              ) : (
+                <><CsLineIcons icon="login" size="17" className="me-2" />Sign In</>
+              )}
+            </button>
           </form>
-        </div>
-        <div className="mt-auto text-center pt-4">
-          <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
-            Don't have an account? <NavLink to="/register">Register</NavLink>
-          </p>
-        </div>
-        <div className="mt-auto text-center pt-4">
-          <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
+
+          <div className="login-auth-powered">
             Powered by <strong>TheBoxSync</strong>
-          </p>
+          </div>
         </div>
       </div>
-    </div>
-  );
-
-  // Add CSS for disabled links
-  const style = `
-    .disabled-link {
-      pointer-events: none;
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    
-    .spinner-container {
-      display: inline-flex;
-      align-items: center;
-    }
-    
-    .login-spinner {
-      margin-right: 8px;
-    }
-  `;
-
-  return (
-    <>
-      <style>{style}</style>
-      <HtmlHead title={title} description={description} />
-      <LayoutFullpage left={leftSide} right={rightSide} />
     </>
   );
 };

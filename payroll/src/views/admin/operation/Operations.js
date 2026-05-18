@@ -190,33 +190,19 @@ const MobileBottomNav = () => {
               <div 
                 className="d-flex align-items-center justify-content-center transition-all"
                 style={{ 
-                  width: isActive ? '60px' : '38px',
-                  height: isActive ? '60px' : '38px',
-                  background: isActive ? 'linear-gradient(135deg, #1ea8e7 0%, #007bff 100%)' : 'transparent',
+                  width: '46px',
+                  height: '46px',
+                  background: isActive ? 'rgba(30, 168, 231, 0.12)' : 'transparent',
                   borderRadius: '50%',
-                  transform: isActive ? 'translateY(-28px) scale(1.1)' : 'scale(1)',
-                  boxShadow: isActive ? '0 10px 25px rgba(30, 168, 231, 0.4)' : 'none',
-                  border: isActive ? '5px solid #fff' : 'none',
-                  transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                  zIndex: isActive ? 5 : 1
+                  transition: 'all 0.3s ease'
                 }}
               >
-                <div 
-                  style={{ 
-                    filter: isActive ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' : 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <CsLineIcons 
-                    icon={item.icon} 
-                    size={isActive ? 32 : 28} 
-                    stroke={isActive ? '#ffffff' : '#94a3b8'}
-                    fill={isActive ? 'rgba(255,255,255,0.2)' : 'none'}
-                  />
-                </div>
+                <CsLineIcons 
+                  icon={item.icon} 
+                  size="24" 
+                  stroke={isActive ? '#1ea8e7' : '#94a3b8'}
+                  fill={isActive ? 'rgba(30, 168, 231, 0.1)' : 'none'}
+                />
               </div>
             </NavLink>
           );

@@ -5,6 +5,7 @@ import {
     Row, Col, Card, Button, Badge, Alert, Modal,
     Form, Spinner, Table, InputGroup,
 } from 'react-bootstrap';
+import Select from 'react-select';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -29,7 +30,7 @@ const customStyles = `
     transform: translateY(-2px);
     box-shadow: 0 15px 45px rgba(0, 0, 0, 0.06) !important;
   }
-  .custom-btn-outline {
+  .custom-btn-primary-outline {
     border: 1px solid #1ea8e7 !important;
     color: #1ea8e7 !important;
     background-color: #fff !important;
@@ -37,8 +38,13 @@ const customStyles = `
     border-radius: 50px !important;
     font-weight: 600 !important;
     font-size: 0.85rem !important;
+    height: 40px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
   }
-  .custom-btn-outline:hover {
+  .custom-btn-primary-outline:hover {
     background-color: #1ea8e7 !important;
     color: #fff !important;
     transform: translateY(-2px);
@@ -58,43 +64,54 @@ const customStyles = `
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
   }
-  .stat-card {
-    position: relative;
-    overflow: hidden;
+  .react-table-modern {
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    width: 100% !important;
   }
-  .stat-card::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 100px;
-    height: 100px;
-    background: rgba(30, 168, 231, 0.05);
-    border-radius: 50%;
-    z-index: 0;
-  }
-  .status-badge {
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
-    font-weight: 700;
-    font-size: 0.75rem;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-  }
-  .react-table-modern th {
-    background: #f8fafc !important;
+  .react-table-modern thead th {
+    border-bottom: 2px solid #edf2f7 !important;
+    background: transparent !important;
+    font-size: 0.85rem !important;
     color: #64748b !important;
+    letter-spacing: 0.05em;
+    padding: 1rem 1.5rem;
     font-weight: 700 !important;
-    text-transform: uppercase !important;
-    font-size: 0.75rem !important;
-    letter-spacing: 0.05em !important;
-    padding: 1.25rem !important;
-    border: none !important;
   }
-  .react-table-modern td {
-    padding: 1.25rem !important;
+  .react-table-modern tbody tr {
+    background: transparent !important;
+    transition: all 0.2s ease;
+  }
+  .react-table-modern tbody tr:hover {
+    background: #f8fafc !important;
+  }
+  .react-table-modern tbody td {
+    border-top: none !important;
+    border-bottom: 1px solid #edf2f7 !important;
+    padding: 1.25rem 1.5rem !important;
     vertical-align: middle !important;
-    border-bottom: 1px solid #f1f5f9 !important;
+    background: transparent !important;
+    font-size: 0.95rem !important;
+  }
+  .react-table-modern tbody td:first-child {
+    border-left: none !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+  }
+  .react-table-modern tbody td:last-child {
+    border-right: none !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+  @media (min-width: 1200px) {
+    .hide-on-desktop {
+      display: none !important;
+    }
+  }
+  @media (max-width: 1199px) {
+    .hide-on-mobile {
+      display: none !important;
+    }
   }
   .bulk-bar {
     background: #1ea8e7 !important;
@@ -289,24 +306,24 @@ export default function ManagePayroll() {
     const allSelected = payrollRows.length > 0 && selectedIds.size === payrollRows.length;
 
     return (
-        <div className="container-fluid pb-5">
+        <div className="container-fluid px-lg-4 px-xl-5 pb-5">
             <style>{customStyles}</style>
             <HtmlHead title={title} description={description} />
 
-            <div className="page-title-container mb-5">
+            <div className="page-title-container mb-4 mb-lg-5 mt-5 mt-lg-0">
                 <Row className="g-3 align-items-center">
-                    <Col md={7}>
+                    <Col xs="12" md="6">
                         <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
-                    <Col md={5} className="d-flex justify-content-md-end gap-2">
-                        <Button className="custom-btn-outline px-4" as={Link} to="/staff/payroll/generate">
-                            <CsLineIcons icon="plus" className="me-2" />
-                            Generate New
+                    <Col xs="12" md="6" className="d-flex flex-wrap justify-content-md-end align-items-center gap-3">
+                        <Button className="custom-btn-primary-outline px-4 rounded-pill shadow-sm d-flex align-items-center" style={{ height: '40px' }} as={Link} to="/staff/payroll/generate">
+                            <CsLineIcons icon="plus" className="me-2" size="18" />
+                            <span>Generate New</span>
                         </Button>
-                        <Button className="custom-btn-outline px-4" as={Link} to="/staff/payroll/settings">
-                            <CsLineIcons icon="gear" className="me-2" />
-                            Settings
+                        <Button className="custom-btn-primary-outline px-4 rounded-pill shadow-sm d-flex align-items-center" style={{ height: '40px' }} as={Link} to="/payroll/settings">
+                            <CsLineIcons icon="gear" className="me-2" size="18" />
+                            <span>Settings</span>
                         </Button>
                     </Col>
                 </Row>
@@ -317,22 +334,27 @@ export default function ManagePayroll() {
                     <Row className="g-3 align-items-end">
                         <Col xs={12} md={4}>
                             <Form.Label className="small fw-bold text-muted text-uppercase">Financial Month</Form.Label>
-                            <Form.Select className="rounded-3 border-0 shadow-sm py-2" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
-                                {MONTH_NAMES.slice(1).map((m, i) => (
-                                    <option key={i + 1} value={i + 1}>{m}</option>
-                                ))}
-                            </Form.Select>
+                            <Select 
+                                classNamePrefix="react-select"
+                                className="react-select-premium shadow-sm"
+                                options={MONTH_NAMES.slice(1).map((m, i) => ({ value: i + 1, label: m }))}
+                                value={{ value: month, label: MONTH_NAMES[month] }}
+                                onChange={(opt) => setMonth(opt.value)}
+                                menuPortalTarget={document.body}
+                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                            />
                         </Col>
                         <Col xs={12} md={3}>
                             <Form.Label className="small fw-bold text-muted text-uppercase">Financial Year</Form.Label>
-                            <Form.Select className="rounded-3 border-0 shadow-sm py-2" value={year} onChange={(e) => setYear(Number(e.target.value))}>
-                                {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
-                            </Form.Select>
-                        </Col>
-                        <Col xs={12} md={5} className="d-flex justify-content-md-end">
-                            <Button className="custom-btn-outline sh-5 d-flex align-items-center gap-2" onClick={fetchSummary} disabled={loading}>
-                                <CsLineIcons icon="refresh" size="18" /> Refresh Data
-                            </Button>
+                            <Select 
+                                classNamePrefix="react-select"
+                                className="react-select-premium shadow-sm"
+                                options={yearOptions.map(y => ({ value: y, label: y }))}
+                                value={{ value: year, label: year }}
+                                onChange={(opt) => setYear(opt.value)}
+                                menuPortalTarget={document.body}
+                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                            />
                         </Col>
                     </Row>
                 </Card.Body>
@@ -398,8 +420,8 @@ export default function ManagePayroll() {
             <Card className="glass-card border-0 overflow-hidden shadow-sm">
                 <Card.Header className="bg-light border-0 p-4">
                     <div className="d-flex justify-content-between align-items-center">
-                        <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                            <CsLineIcons icon="layout" size="20" className="text-primary" />
+                        <h5 className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: '#1ea8e7' }}>
+                            <CsLineIcons icon="layout" size="20" />
                             {MONTH_NAMES[month]} {year} Payroll Summary
                         </h5>
                     </div>
@@ -423,7 +445,7 @@ export default function ManagePayroll() {
                     ) : (
                         <div className="table-responsive">
                             <Table hover className="react-table-modern mb-0">
-                                <thead>
+                                <thead className="hide-on-mobile">
                                     <tr>
                                         <th style={{ width: '60px' }}>
                                             <Form.Check
@@ -446,7 +468,8 @@ export default function ManagePayroll() {
                                 </thead>
                                 <tbody>
                                     {summary.map(({ staff, payroll }) => (
-                                        <tr key={staff._id} className={selectedIds.has(payroll?._id) ? 'bg-soft-primary' : ''}>
+                                        <React.Fragment key={staff._id}>
+                                        <tr className={`hide-on-mobile ${selectedIds.has(payroll?._id) ? 'bg-soft-primary' : ''}`}>
                                             <td>
                                                 {payroll ? (
                                                     <Form.Check
@@ -495,22 +518,22 @@ export default function ManagePayroll() {
                                                     <td className="text-center">
                                                         <div className="d-flex justify-content-center gap-2">
                                                             {payroll.status === 'unpaid' ? (
-                                                                <Button className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center" onClick={() => handleMarkPaid(new Set([payroll._id]))} disabled={isMarkingPaid}>
-                                                                    <CsLineIcons icon="check" size="16" />
+                                                                <Button variant="outline-success" className="btn-icon btn-icon-only rounded-circle" style={{ width: '38px', height: '38px' }} onClick={() => handleMarkPaid(new Set([payroll._id]))} disabled={isMarkingPaid}>
+                                                                    <CsLineIcons icon="check" size="18" />
                                                                 </Button>
                                                             ) : (
-                                                                <Button className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center border-warning text-warning" onClick={() => handleMarkUnpaid(new Set([payroll._id]))} disabled={isMarkingPaid}>
-                                                                    <CsLineIcons icon="close" size="16" />
+                                                                <Button variant="outline-warning" className="btn-icon btn-icon-only rounded-circle" style={{ width: '38px', height: '38px' }} onClick={() => handleMarkUnpaid(new Set([payroll._id]))} disabled={isMarkingPaid}>
+                                                                    <CsLineIcons icon="close" size="18" />
                                                                 </Button>
                                                             )}
-                                                            <Button className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center" onClick={() => openEditModal(payroll, staff)}>
-                                                                <CsLineIcons icon="edit" size="16" />
+                                                            <Button variant="outline-primary" className="btn-icon btn-icon-only rounded-circle" style={{ width: '38px', height: '38px' }} onClick={() => openEditModal(payroll, staff)}>
+                                                                <CsLineIcons icon="edit" size="18" />
                                                             </Button>
-                                                            <Button className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center border-dark text-dark" onClick={() => history.push(`/staff/payroll/view/${staff._id}`)}>
-                                                                <CsLineIcons icon="eye" size="16" />
+                                                            <Button variant="outline-dark" className="btn-icon btn-icon-only rounded-circle" style={{ width: '38px', height: '38px' }} onClick={() => history.push(`/staff/payroll/view/${staff._id}`)}>
+                                                                <CsLineIcons icon="eye" size="18" />
                                                             </Button>
-                                                            <Button className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center border-danger text-danger" onClick={() => { setDeletingPayroll(payroll); setShowDeleteModal(true); }}>
-                                                                <CsLineIcons icon="bin" size="16" />
+                                                            <Button variant="outline-danger" className="btn-icon btn-icon-only rounded-circle" style={{ width: '38px', height: '38px' }} onClick={() => { setDeletingPayroll(payroll); setShowDeleteModal(true); }}>
+                                                                <CsLineIcons icon="bin" size="18" />
                                                             </Button>
                                                         </div>
                                                     </td>
@@ -521,13 +544,114 @@ export default function ManagePayroll() {
                                                         <div className="text-muted fw-bold small text-uppercase letter-spacing-1">Payroll Not Generated</div>
                                                     </td>
                                                     <td className="text-center bg-light bg-opacity-10">
-                                                        <Button className="custom-btn-solid sh-5 px-3" onClick={() => history.push(`/staff/payroll/generate?staff_id=${staff._id}&month=${month}&year=${year}`)}>
-                                                            <CsLineIcons icon="plus" size="16" className="me-1" /> Generate
+                                                        <Button className="custom-btn-solid rounded-pill shadow-sm px-4" style={{ height: '40px' }} onClick={() => history.push(`/staff/payroll/generate?staff_id=${staff._id}&month=${month}&year=${year}`)}>
+                                                            <CsLineIcons icon="plus" size="18" className="me-2" /> Generate
                                                         </Button>
                                                     </td>
                                                 </>
                                             )}
                                         </tr>
+                                        {/* Mobile View */}
+                                        <tr className="hide-on-desktop">
+                                            <td colSpan="9" className="p-0 border-0">
+                                                <div className="p-3 border-bottom">
+                                                    <div className="d-flex justify-content-between align-items-start mb-3">
+                                                        <div className="d-flex align-items-center gap-3">
+                                                            {payroll && (
+                                                                <Form.Check
+                                                                    className="custom-check"
+                                                                    type="checkbox"
+                                                                    checked={selectedIds.has(payroll._id)}
+                                                                    onChange={() => toggleSelect(payroll._id)}
+                                                                />
+                                                            )}
+                                                            <div className="sw-5 sh-5 rounded-circle bg-soft-primary d-flex align-items-center justify-content-center text-primary fw-bold">
+                                                                {staff.f_name?.[0]}{staff.l_name?.[0]}
+                                                            </div>
+                                                            <div>
+                                                                <div className="fw-bold text-dark">{staff.f_name} {staff.l_name}</div>
+                                                                <small className="text-muted fw-medium">{staff.position} • #{staff.staff_id}</small>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            {payroll ? (
+                                                                <Badge bg={payroll.status === 'paid' ? 'success' : 'warning'} className="status-badge py-1 px-2" style={{ fontSize: '0.65rem' }}>
+                                                                    <CsLineIcons icon={payroll.status === 'paid' ? 'check' : 'clock'} size="10" className="me-1" />
+                                                                    {payroll.status}
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge bg="soft-secondary" className="text-muted status-badge py-1 px-2" style={{ fontSize: '0.65rem' }}>UNGENERATED</Badge>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {payroll ? (
+                                                        <>
+                                                            <Row className="g-3 mb-3">
+                                                                <Col xs={6}>
+                                                                    <div className="text-muted small fw-bold text-uppercase mb-1">Days (P/A)</div>
+                                                                    <div className="d-flex align-items-center gap-2">
+                                                                        <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill fw-bold" style={{ fontSize: '0.8rem' }}>{payroll.present_days}P</Badge>
+                                                                        <Badge bg={payroll.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${payroll.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill fw-bold`} style={{ fontSize: '0.8rem' }}>{payroll.absent_days}A</Badge>
+                                                                    </div>
+                                                                </Col>
+                                                                <Col xs={6} className="text-end">
+                                                                    <div className="text-muted small fw-bold text-uppercase mb-1">Base Salary</div>
+                                                                    <div className="fw-bold text-dark fs-6">₹{(staff.salary || payroll.base_salary || 0).toLocaleString('en-IN')}</div>
+                                                                </Col>
+                                                            </Row>
+
+                                                            <div className="p-3 bg-light rounded-3 mt-2 mb-4 border border-light shadow-sm">
+                                                                <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom" style={{ borderColor: 'rgba(0,0,0,0.05) !important' }}>
+                                                                    <div className="small fw-medium text-muted">Gross Earned</div>
+                                                                    <div className="text-success fw-bold">₹{(payroll.earned_breakdown?.total_gross || payroll.earned_salary || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>
+                                                                </div>
+                                                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                                                    <div className="small fw-medium text-muted">OT / Deductions</div>
+                                                                    <div className="fw-bold">
+                                                                        <span className="text-primary">+₹{(payroll.overtime_pay || 0).toLocaleString('en-IN')}</span>
+                                                                        <span className="text-muted mx-1">/</span>
+                                                                        <span className="text-danger">-₹{((payroll.deduction_breakdown?.total_statutory || 0) + (payroll.deductions || 0)).toLocaleString('en-IN')}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="d-flex justify-content-between align-items-center pt-2">
+                                                                    <div className="small fw-bold text-uppercase text-muted" style={{ letterSpacing: '0.05em' }}>Net Payable</div>
+                                                                    <div className="h4 mb-0 fw-bold text-primary">₹{payroll.net_salary.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div className="d-flex justify-content-end gap-2">
+                                                                {payroll.status === 'unpaid' ? (
+                                                                    <Button variant="outline-success" className="btn-icon btn-icon-only rounded-circle" style={{ width: '38px', height: '38px' }} onClick={() => handleMarkPaid(new Set([payroll._id]))} disabled={isMarkingPaid}>
+                                                                        <CsLineIcons icon="check" size="18" />
+                                                                    </Button>
+                                                                ) : (
+                                                                    <Button variant="outline-warning" className="btn-icon btn-icon-only rounded-circle" style={{ width: '38px', height: '38px' }} onClick={() => handleMarkUnpaid(new Set([payroll._id]))} disabled={isMarkingPaid}>
+                                                                        <CsLineIcons icon="close" size="18" />
+                                                                    </Button>
+                                                                )}
+                                                                <Button variant="outline-primary" className="btn-icon btn-icon-only rounded-circle" style={{ width: '38px', height: '38px' }} onClick={() => openEditModal(payroll, staff)}>
+                                                                    <CsLineIcons icon="edit" size="18" />
+                                                                </Button>
+                                                                <Button variant="outline-dark" className="btn-icon btn-icon-only rounded-circle" style={{ width: '38px', height: '38px' }} onClick={() => history.push(`/staff/payroll/view/${staff._id}`)}>
+                                                                    <CsLineIcons icon="eye" size="18" />
+                                                                </Button>
+                                                                <Button variant="outline-danger" className="btn-icon btn-icon-only rounded-circle" style={{ width: '38px', height: '38px' }} onClick={() => { setDeletingPayroll(payroll); setShowDeleteModal(true); }}>
+                                                                    <CsLineIcons icon="bin" size="18" />
+                                                                </Button>
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <div className="text-center p-3 bg-light rounded-3">
+                                                            <Button className="custom-btn-solid rounded-pill shadow-sm px-4" style={{ height: '40px' }} onClick={() => history.push(`/staff/payroll/generate?staff_id=${staff._id}&month=${month}&year=${year}`)}>
+                                                                <CsLineIcons icon="plus" size="18" className="me-2" /> Generate Payroll
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        </React.Fragment>
                                     ))}
                                 </tbody>
                             </Table>
@@ -590,27 +714,27 @@ export default function ManagePayroll() {
                             <Row className="g-4">
                                 <Col xs={12} md={6}>
                                     <Form.Label className="small fw-bold text-muted text-uppercase">Working Days</Form.Label>
-                                    <Form.Control className="rounded-3 border-0 shadow-sm py-2 px-3" type="number" value={editForm.working_days_in_month} onChange={(e) => setEditForm({ ...editForm, working_days_in_month: e.target.value })} />
+                                    <Form.Control className="rounded-3 border-0 bg-light py-2 px-3" type="number" value={editForm.working_days_in_month} onChange={(e) => setEditForm({ ...editForm, working_days_in_month: e.target.value })} />
                                 </Col>
                                 <Col xs={12} md={6}>
                                     <Form.Label className="small fw-bold text-muted text-uppercase">Overtime Hours</Form.Label>
-                                    <Form.Control className="rounded-3 border-0 shadow-sm py-2 px-3" type="number" value={editForm.overtime_hours} onChange={(e) => setEditForm({ ...editForm, overtime_hours: e.target.value })} />
+                                    <Form.Control className="rounded-3 border-0 bg-light py-2 px-3" type="number" value={editForm.overtime_hours} onChange={(e) => setEditForm({ ...editForm, overtime_hours: e.target.value })} />
                                 </Col>
                                 <Col xs={12} md={6}>
                                     <Form.Label className="small fw-bold text-muted text-uppercase">Bonus Amount (₹)</Form.Label>
-                                    <Form.Control className="rounded-3 border-0 shadow-sm py-2 px-3 text-success fw-bold" type="number" value={editForm.bonus} onChange={(e) => setEditForm({ ...editForm, bonus: e.target.value })} />
+                                    <Form.Control className="rounded-3 border-0 bg-light py-2 px-3 text-success fw-bold" type="number" value={editForm.bonus} onChange={(e) => setEditForm({ ...editForm, bonus: e.target.value })} />
                                 </Col>
                                 <Col xs={12} md={6}>
                                     <Form.Label className="small fw-bold text-muted text-uppercase">Extra Deductions (₹)</Form.Label>
-                                    <Form.Control className="rounded-3 border-0 shadow-sm py-2 px-3 text-danger fw-bold" type="number" value={editForm.deductions} onChange={(e) => setEditForm({ ...editForm, deductions: e.target.value })} />
+                                    <Form.Control className="rounded-3 border-0 bg-light py-2 px-3 text-danger fw-bold" type="number" value={editForm.deductions} onChange={(e) => setEditForm({ ...editForm, deductions: e.target.value })} />
                                 </Col>
                                 <Col xs={12}>
                                     <Form.Label className="small fw-bold text-muted text-uppercase">Adjustment Reason</Form.Label>
-                                    <Form.Control className="rounded-3 border-0 shadow-sm py-2 px-3" type="text" placeholder="e.g. Performance bonus or late fine" value={editForm.deduction_reason} onChange={(e) => setEditForm({ ...editForm, deduction_reason: e.target.value })} />
+                                    <Form.Control className="rounded-3 border-0 bg-light py-2 px-3" type="text" placeholder="e.g. Performance bonus or late fine" value={editForm.deduction_reason} onChange={(e) => setEditForm({ ...editForm, deduction_reason: e.target.value })} />
                                 </Col>
                                 <Col xs={12}>
                                     <Form.Label className="small fw-bold text-muted text-uppercase">Internal Notes</Form.Label>
-                                    <Form.Control className="rounded-3 border-0 shadow-sm py-2 px-3" as="textarea" rows={2} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
+                                    <Form.Control className="rounded-3 border-0 bg-light py-2 px-3" as="textarea" rows={2} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
                                 </Col>
                             </Row>
 
@@ -627,9 +751,9 @@ export default function ManagePayroll() {
                     )}
                 </Modal.Body>
                 <Modal.Footer className="border-0 p-4 pt-0 d-flex gap-3">
-                    <Button className="custom-btn-outline flex-grow-1 py-3" onClick={() => setShowEditModal(false)}>Discard Changes</Button>
-                    <Button className="custom-btn-solid flex-grow-1 py-3" onClick={handleSaveEdit} disabled={isSavingEdit}>
-                        {isSavingEdit ? <Spinner size="sm" /> : <><CsLineIcons icon="save" className="me-2" /> Commit Updates</>}
+                    <Button className="custom-btn-primary-outline rounded-pill shadow-sm flex-grow-1" style={{ height: '40px' }} onClick={() => setShowEditModal(false)}>Discard Changes</Button>
+                    <Button className="custom-btn-primary-outline rounded-pill shadow-sm flex-grow-1" style={{ height: '40px' }} onClick={handleSaveEdit} disabled={isSavingEdit}>
+                        {isSavingEdit ? <Spinner size="sm" /> : <><CsLineIcons icon="save" className="me-2" size="18" /> Commit Updates</>}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -652,10 +776,10 @@ export default function ManagePayroll() {
                         </div>
                     )}
                 </Modal.Body>
-                <Modal.Footer className="border-0 d-flex gap-3">
-                    <Button className="custom-btn-outline flex-grow-1" onClick={() => setShowDeleteModal(false)}>Keep Record</Button>
-                    <Button className="custom-btn-solid bg-danger border-danger flex-grow-1" onClick={handleDelete} disabled={isDeleting}>
-                        {isDeleting ? <Spinner size="sm" /> : 'Confirm Delete'}
+                <Modal.Footer className="border-0 p-4 pt-0 d-flex gap-3">
+                    <Button className="custom-btn-primary-outline rounded-pill shadow-sm flex-grow-1" style={{ height: '40px' }} onClick={() => setShowDeleteModal(false)}>Keep Record</Button>
+                    <Button variant="outline-danger" className="rounded-pill shadow-sm flex-grow-1 d-flex align-items-center justify-content-center gap-2" style={{ height: '40px', fontWeight: '600' }} onClick={handleDelete} disabled={isDeleting}>
+                        {isDeleting ? <Spinner size="sm" /> : <><CsLineIcons icon="bin" size="18" /> Confirm Delete</>}
                     </Button>
                 </Modal.Footer>
             </Modal>

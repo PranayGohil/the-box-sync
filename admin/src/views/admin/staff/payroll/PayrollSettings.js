@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
+import Select from 'react-select';
 import { getPayrollConfig, updatePayrollConfig } from 'api/payrollConfig';
 
 const EARNING_OPTIONS = [
@@ -25,6 +26,150 @@ const WEEK_DAYS = [
     { value: 5, label: 'Friday' },
     { value: 6, label: 'Saturday' },
 ];
+
+const INDIAN_STATES = [
+    { value: 'Andhra Pradesh', label: 'Andhra Pradesh' },
+    { value: 'Assam', label: 'Assam' },
+    { value: 'Bihar', label: 'Bihar' },
+    { value: 'Chhattisgarh', label: 'Chhattisgarh' },
+    { value: 'Goa', label: 'Goa' },
+    { value: 'Gujarat', label: 'Gujarat' },
+    { value: 'Haryana', label: 'Haryana' },
+    { value: 'Himachal Pradesh', label: 'Himachal Pradesh' },
+    { value: 'Jharkhand', label: 'Jharkhand' },
+    { value: 'Karnataka', label: 'Karnataka' },
+    { value: 'Kerala', label: 'Kerala' },
+    { value: 'Madhya Pradesh', label: 'Madhya Pradesh' },
+    { value: 'Maharashtra', label: 'Maharashtra' },
+    { value: 'Manipur', label: 'Manipur' },
+    { value: 'Meghalaya', label: 'Meghalaya' },
+    { value: 'Mizoram', label: 'Mizoram' },
+    { value: 'Nagaland', label: 'Nagaland' },
+    { value: 'Odisha', label: 'Odisha' },
+    { value: 'Punjab', label: 'Punjab' },
+    { value: 'Rajasthan', label: 'Rajasthan' },
+    { value: 'Sikkim', label: 'Sikkim' },
+    { value: 'Tamil Nadu', label: 'Tamil Nadu' },
+    { value: 'Telangana', label: 'Telangana' },
+    { value: 'Tripura', label: 'Tripura' },
+    { value: 'Uttar Pradesh', label: 'Uttar Pradesh' },
+    { value: 'Uttarakhand', label: 'Uttarakhand' },
+    { value: 'West Bengal', label: 'West Bengal' }
+];
+
+const PREDEFINED_PT_SLABS = {
+    'Andhra Pradesh': [
+        { min_salary: 0, max_salary: 15000, amount: 0 },
+        { min_salary: 15001, max_salary: 20000, amount: 150 },
+        { min_salary: 20001, max_salary: 9999999, amount: 200 }
+    ],
+    'Arunachal Pradesh': [{ min_salary: 0, max_salary: 9999999, amount: 0 }],
+    'Assam': [
+        { min_salary: 0, max_salary: 10000, amount: 0 },
+        { min_salary: 10001, max_salary: 15000, amount: 150 },
+        { min_salary: 15001, max_salary: 25000, amount: 180 },
+        { min_salary: 25001, max_salary: 9999999, amount: 208 }
+    ],
+    'Bihar': [
+        { min_salary: 0, max_salary: 25000, amount: 0 },
+        { min_salary: 25001, max_salary: 9999999, amount: 208 }
+    ],
+    'Chhattisgarh': [
+        { min_salary: 0, max_salary: 18000, amount: 0 },
+        { min_salary: 18001, max_salary: 9999999, amount: 208 }
+    ],
+    'Goa': [
+        { min_salary: 0, max_salary: 5000, amount: 0 },
+        { min_salary: 5001, max_salary: 9999999, amount: 200 }
+    ],
+    'Gujarat': [
+        { min_salary: 0, max_salary: 11999, amount: 0 },
+        { min_salary: 12000, max_salary: 9999999, amount: 200 }
+    ],
+    'Haryana': [{ min_salary: 0, max_salary: 9999999, amount: 0 }],
+    'Himachal Pradesh': [{ min_salary: 0, max_salary: 9999999, amount: 0 }],
+    'Jharkhand': [
+        { min_salary: 0, max_salary: 25000, amount: 0 },
+        { min_salary: 25001, max_salary: 9999999, amount: 208 }
+    ],
+    'Karnataka': [
+        { min_salary: 0, max_salary: 14999, amount: 0 },
+        { min_salary: 15000, max_salary: 9999999, amount: 200 }
+    ],
+    'Kerala': [
+        { min_salary: 0, max_salary: 11999, amount: 0 },
+        { min_salary: 12000, max_salary: 9999999, amount: 208 }
+    ],
+    'Madhya Pradesh': [
+        { min_salary: 0, max_salary: 18750, amount: 0 },
+        { min_salary: 18751, max_salary: 25000, amount: 125 },
+        { min_salary: 25001, max_salary: 33333, amount: 167 },
+        { min_salary: 33334, max_salary: 9999999, amount: 212 }
+    ],
+    'Maharashtra': [
+        { min_salary: 0, max_salary: 7500, amount: 0 },
+        { min_salary: 7501, max_salary: 10000, amount: 175 },
+        { min_salary: 10001, max_salary: 9999999, amount: 200 }
+    ],
+    'Manipur': [
+        { min_salary: 0, max_salary: 4999, amount: 0 },
+        { min_salary: 5000, max_salary: 7000, amount: 100 },
+        { min_salary: 7001, max_salary: 9999999, amount: 208 }
+    ],
+    'Meghalaya': [
+        { min_salary: 0, max_salary: 4166, amount: 0 },
+        { min_salary: 4167, max_salary: 9999999, amount: 208 }
+    ],
+    'Mizoram': [
+        { min_salary: 0, max_salary: 4999, amount: 0 },
+        { min_salary: 5000, max_salary: 9999999, amount: 208 }
+    ],
+    'Nagaland': [
+        { min_salary: 0, max_salary: 3999, amount: 0 },
+        { min_salary: 4000, max_salary: 9999999, amount: 208 }
+    ],
+    'Odisha': [
+        { min_salary: 0, max_salary: 13333, amount: 0 },
+        { min_salary: 13334, max_salary: 25000, amount: 125 },
+        { min_salary: 25001, max_salary: 9999999, amount: 200 }
+    ],
+    'Punjab': [
+        { min_salary: 0, max_salary: 9999999, amount: 200 }
+    ],
+    'Rajasthan': [{ min_salary: 0, max_salary: 9999999, amount: 0 }],
+    'Sikkim': [
+        { min_salary: 0, max_salary: 19999, amount: 0 },
+        { min_salary: 20000, max_salary: 29999, amount: 125 },
+        { min_salary: 30000, max_salary: 39999, amount: 150 },
+        { min_salary: 40000, max_salary: 9999999, amount: 200 }
+    ],
+    'Tamil Nadu': [
+        { min_salary: 0, max_salary: 3500, amount: 0 },
+        { min_salary: 3501, max_salary: 5000, amount: 22 },
+        { min_salary: 5001, max_salary: 7500, amount: 52 },
+        { min_salary: 7501, max_salary: 10000, amount: 115 },
+        { min_salary: 10001, max_salary: 12500, amount: 171 },
+        { min_salary: 12501, max_salary: 9999999, amount: 208 }
+    ],
+    'Telangana': [
+        { min_salary: 0, max_salary: 15000, amount: 0 },
+        { min_salary: 15001, max_salary: 20000, amount: 150 },
+        { min_salary: 20001, max_salary: 9999999, amount: 200 }
+    ],
+    'Tripura': [
+        { min_salary: 0, max_salary: 7499, amount: 0 },
+        { min_salary: 7500, max_salary: 9999999, amount: 208 }
+    ],
+    'Uttar Pradesh': [{ min_salary: 0, max_salary: 9999999, amount: 0 }],
+    'Uttarakhand': [{ min_salary: 0, max_salary: 9999999, amount: 0 }],
+    'West Bengal': [
+        { min_salary: 0, max_salary: 10000, amount: 0 },
+        { min_salary: 10001, max_salary: 15000, amount: 110 },
+        { min_salary: 15001, max_salary: 25000, amount: 130 },
+        { min_salary: 25001, max_salary: 40000, amount: 150 },
+        { min_salary: 40001, max_salary: 9999999, amount: 200 }
+    ]
+};
 
 const PayrollSettings = () => {
     const title = 'Payroll Global Settings';
@@ -137,6 +282,21 @@ const PayrollSettings = () => {
         }));
     };
 
+    const handleStateChange = (selected) => {
+        const stateName = selected ? selected.value : '';
+        const defaultSlabs = PREDEFINED_PT_SLABS[stateName] || [];
+        
+        setConfig(prev => ({
+            ...prev, statutory_config: {
+                ...prev.statutory_config, pt: { 
+                    ...prev.statutory_config.pt, 
+                    state: stateName,
+                    slabs: defaultSlabs.length > 0 ? defaultSlabs : prev.statutory_config.pt.slabs
+                }
+            }
+        }));
+    };
+
     const updateOrg = (key, value) => {
         setConfig(prev => ({
             ...prev, org_rules: { ...prev.org_rules, [key]: value }
@@ -163,21 +323,189 @@ const PayrollSettings = () => {
 
     if (loading) return <div className="text-center my-5"><Spinner animation="border" /></div>;
 
+    const customStyles = `
+      .custom-btn-primary-outline {
+        border: 1px solid #1ea8e7 !important;
+        color: #1ea8e7 !important;
+        background-color: #ffffff !important;
+        transition: all 0.2s ease-in-out !important;
+        font-weight: 600 !important;
+      }
+      .custom-btn-primary-outline:hover {
+        background-color: #1ea8e7 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
+        transform: translateY(-2px);
+      }
+      .custom-btn-primary-outline:hover svg {
+        stroke: #ffffff !important;
+        color: #ffffff !important;
+      }
+      .custom-btn-primary-outline:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+      }
+      .react-select-premium {
+        font-weight: 600 !important;
+      }
+      .react-select-premium .react-select__control {
+        border-radius: 10px !important;
+        border: 1px solid #dee2e6 !important;
+        background-color: #ffffff !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        cursor: pointer !important;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+        box-shadow: none !important;
+      }
+      .react-select-premium .react-select__control:hover {
+        border-color: #cbd5e1 !important;
+      }
+      .react-select-premium .react-select__control--is-focused,
+      .react-select-premium .react-select__control--menu-is-open {
+        border-color: #1ea8e7 !important;
+        box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
+      }
+      .react-select-premium .react-select__single-value {
+        color: #334155 !important;
+        font-size: 0.9rem !important;
+        padding-left: 0.25rem !important;
+      }
+      .react-select-premium .react-select__placeholder {
+        color: #94a3b8 !important;
+        font-size: 0.9rem !important;
+        padding-left: 0.25rem !important;
+      }
+      .react-select-premium .react-select__indicator-separator {
+        display: none !important;
+      }
+      .react-select-premium .react-select__dropdown-indicator {
+        color: #94a3b8 !important;
+        padding-right: 0.75rem !important;
+        transition: color 0.15s ease !important;
+      }
+      .react-select-premium .react-select__dropdown-indicator:hover {
+        color: #64748b !important;
+      }
+      .react-select-premium .react-select__menu {
+        border-radius: 10px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+        border: 1px solid #1ea8e7 !important;
+        overflow: hidden !important;
+        z-index: 9999 !important;
+        margin-top: 5px !important;
+        background-color: #ffffff !important;
+      }
+      .react-select-premium .react-select__menu-list {
+        padding: 4px !important;
+      }
+      .react-select-premium .react-select__option {
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        padding: 0.5rem 0.75rem !important;
+        border-radius: 6px !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+        background-color: transparent !important;
+      }
+      .react-select-premium .react-select__option--is-focused {
+        background-color: #f1f5f9 !important;
+        color: #1ea8e7 !important;
+      }
+      .react-select-premium .react-select__option--is-selected {
+        background-color: #f1f5f9 !important;
+        color: #1ea8e7 !important;
+      }
+      .custom-table-glass {
+        border-collapse: separate !important;
+        border-spacing: 0 0.5rem !important;
+      }
+      .custom-table-glass thead th {
+        border-bottom: none !important;
+        background: transparent !important;
+        font-size: 0.72rem !important;
+        color: #64748b !important;
+        letter-spacing: 0.05em;
+        padding: 0.9rem 1.5rem;
+      }
+      .custom-table-glass tbody tr {
+        background: #ffffff !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03) !important;
+        transition: all 0.2s ease;
+      }
+      .custom-table-glass tbody tr:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.05) !important;
+      }
+      .custom-table-glass tbody td {
+        border-top: 1px solid #edf2f7 !important;
+        border-bottom: 1px solid #edf2f7 !important;
+        padding: 1rem 1.5rem !important;
+        vertical-align: middle !important;
+        background: transparent !important;
+      }
+      .custom-table-glass tbody td:first-child {
+        border-left: 1px solid #edf2f7 !important;
+        border-top-left-radius: 12px !important;
+        border-bottom-left-radius: 12px !important;
+      }
+      .custom-table-glass tbody td:last-child {
+        border-right: 1px solid #edf2f7 !important;
+        border-top-right-radius: 12px !important;
+        border-bottom-right-radius: 12px !important;
+      }
+      .hover-scale {
+        transition: transform 0.2s ease;
+      }
+      .hover-scale:hover {
+        transform: scale(1.15);
+      }
+      .glass-card {
+        background: #ffffff !important;
+        border: 1px solid #edf2f7 !important;
+        border-radius: 1.5rem !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      }
+      .glass-card:hover {
+        box-shadow: 0 15px 40px rgba(30, 168, 231, 0.08) !important;
+        border-color: rgba(30, 168, 231, 0.2) !important;
+      }
+      /* Custom Form Controls inputs */
+      .form-control-premium {
+        border-radius: 10px !important;
+        border: 1px solid #dee2e6 !important;
+        box-shadow: none !important;
+        padding: 0.6rem 1rem !important;
+        transition: all 0.2s ease !important;
+      }
+      .form-control-premium:focus {
+        border-color: #1ea8e7 !important;
+        box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
+      }
+    `;
+
     return (
-        <>
+        <div className="container-fluid pb-5">
+            <style>{customStyles}</style>
             <HtmlHead title={title} description={description} />
-            <div className="page-title-container">
-                <Row className="g-0">
-                    <Col className="col-auto mb-3 mb-sm-0 me-auto">
-                        <h1 className="mb-0 pb-0 display-4">{title}</h1>
+            {/* Header Title & Controls aligned beautifully in one row */}
+            <div className="page-title-container mb-4 mt-3 mt-lg-0">
+                <Row className="g-3 align-items-center">
+                    <Col xs="12" md="6">
+                        <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
+                            {title}
+                        </h1>
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
-                    <Col xs="auto" className="d-flex align-items-end gap-2 mb-2">
-                        <Button variant="outline-primary" onClick={() => history.go(-1)} className="btn-icon btn-icon-start">
-                            <CsLineIcons icon="arrow-left" /> <span>Back</span>
+                    
+                    <Col xs="12" md="6" className="d-flex flex-wrap justify-content-md-end align-items-center gap-3">
+                        <Button variant="none" onClick={() => history.go(-1)} className="btn-icon btn-icon-start custom-btn-primary-outline rounded-pill shadow-sm" style={{ height: '40px' }}>
+                            <CsLineIcons icon="arrow-left" size="18" /> <span>Back</span>
                         </Button>
-                        <Button variant="primary" onClick={handleSave} disabled={saving} className="btn-icon btn-icon-start">
-                            {saving ? <Spinner size="sm" animation="border" /> : <CsLineIcons icon="save" />} <span>Save Settings</span>
+                        <Button variant="none" onClick={handleSave} disabled={saving} className="btn-icon btn-icon-start custom-btn-primary-outline rounded-pill shadow-sm" style={{ height: '40px' }}>
+                            {saving ? <Spinner size="sm" animation="border" /> : <CsLineIcons icon="save" size="18" />} <span>Save Settings</span>
                         </Button>
                     </Col>
                 </Row>
@@ -186,33 +514,38 @@ const PayrollSettings = () => {
             <Row className="g-4 mb-5">
                 {/* ── Organizational Rules ── */}
                 <Col xl="6">
-                    <h2 className="small-title">Organizational Rules</h2>
-                    <Card className="h-100">
-                        <Card.Body>
-                            <Row className="g-3">
+                    <Card className="h-100 glass-card">
+                        <Card.Body className="p-4">
+                            <h5 className="fw-bold mb-4 text-primary">Organizational Rules</h5>
+                            <Row className="g-4">
                                 <Col md="6">
                                     <Form.Group>
-                                        <Form.Label>Leave Cycle Start Month</Form.Label>
-                                        <Form.Select 
-                                            value={config.org_rules.leave_year_start} 
-                                            onChange={(e) => updateOrg('leave_year_start', e.target.value)}
-                                        >
-                                            <option value="january">January (Jan - Dec)</option>
-                                            <option value="april">April (Apr - Mar)</option>
-                                        </Form.Select>
-                                        <Form.Text className="text-muted">Common in India: April</Form.Text>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Leave Cycle Start Month</Form.Label>
+                                        <Select
+                                            options={[
+                                                { value: 'january', label: 'January (Jan - Dec)' },
+                                                { value: 'april', label: 'April (Apr - Mar)' }
+                                            ]}
+                                            value={[{ value: 'january', label: 'January (Jan - Dec)' }, { value: 'april', label: 'April (Apr - Mar)' }].find(opt => opt.value === config.org_rules.leave_year_start)}
+                                            onChange={(selected) => updateOrg('leave_year_start', selected ? selected.value : 'january')}
+                                            classNamePrefix="react-select"
+                                            className="react-select-premium shadow-sm"
+                                            isSearchable={false}
+                                        />
+                                        <Form.Text className="text-muted ms-1">Common in India: April</Form.Text>
                                     </Form.Group>
                                 </Col>
                                 <Col md="6">
                                     <Form.Group>
-                                        <Form.Label>Weekly Off Days</Form.Label>
-                                        <div className="d-flex flex-wrap gap-2">
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Weekly Off Days</Form.Label>
+                                        <div className="d-flex flex-wrap gap-2 mt-1">
                                             {WEEK_DAYS.map(day => (
                                                 <Badge 
                                                     key={day.value}
                                                     bg={config.org_rules.weekly_off_days.includes(day.value) ? 'primary' : 'light'}
                                                     text={config.org_rules.weekly_off_days.includes(day.value) ? 'white' : 'dark'}
-                                                    className="cursor-pointer border py-2 px-3"
+                                                    className="cursor-pointer border py-2 px-3 shadow-sm"
+                                                    style={{ borderRadius: '8px', transition: 'all 0.2s' }}
                                                     onClick={() => toggleWeekDay(day.value)}
                                                 >
                                                     {day.label}
@@ -223,14 +556,14 @@ const PayrollSettings = () => {
                                 </Col>
                                 <Col md="6">
                                     <Form.Group>
-                                        <Form.Label>Full Day Hours</Form.Label>
-                                        <Form.Control type="number" value={config.org_rules.full_day_hours} onChange={e => updateOrg('full_day_hours', Number(e.target.value))} />
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Full Day Hours</Form.Label>
+                                        <Form.Control type="number" value={config.org_rules.full_day_hours} onChange={e => updateOrg('full_day_hours', Number(e.target.value))} className="form-control-premium shadow-sm" />
                                     </Form.Group>
                                 </Col>
                                 <Col md="6">
                                     <Form.Group>
-                                        <Form.Label>Half Day Hours</Form.Label>
-                                        <Form.Control type="number" value={config.org_rules.half_day_hours} onChange={e => updateOrg('half_day_hours', Number(e.target.value))} />
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Half Day Hours</Form.Label>
+                                        <Form.Control type="number" value={config.org_rules.half_day_hours} onChange={e => updateOrg('half_day_hours', Number(e.target.value))} className="form-control-premium shadow-sm" />
                                     </Form.Group>
                                 </Col>
                             </Row>
@@ -240,17 +573,17 @@ const PayrollSettings = () => {
 
                 {/* ── Active Earnings ── */}
                 <Col xl="6">
-                    <h2 className="small-title">Active Earnings Components</h2>
-                    <Card className="h-100">
-                        <Card.Body>
-                            <p className="text-muted mb-4">Select which earning components are actively used. Unchecking these will hide them from Staff creation forms.</p>
-                            <Row className="g-2">
+                    <Card className="h-100 glass-card">
+                        <Card.Body className="p-4">
+                            <h5 className="fw-bold mb-4 text-primary">Active Earnings Components</h5>
+                            <p className="text-muted mb-4 small fw-medium">Select which earning components are actively used. Unchecking these will hide them from Staff creation forms.</p>
+                            <Row className="g-4">
                                 {EARNING_OPTIONS.map((opt) => (
                                     <Col md="6" key={opt.id}>
                                         <Form.Check
                                             type="switch"
                                             id={`switch-${opt.id}`}
-                                            label={<span className="fw-bold">{opt.label}</span>}
+                                            label={<span className="fw-bold ms-1 text-dark">{opt.label}</span>}
                                             checked={config.active_earnings.includes(opt.id)}
                                             onChange={() => toggleEarning(opt.id)}
                                         />
@@ -263,37 +596,37 @@ const PayrollSettings = () => {
 
                 {/* ── EPF Configuration ── */}
                 <Col xl="6">
-                    <h2 className="small-title">Provident Fund (EPF)</h2>
-                    <Card className="h-100">
-                        <Card.Body>
-                            <Form.Group className="mb-4">
+                    <Card className="h-100 glass-card">
+                        <Card.Body className="p-4">
+                            <h5 className="fw-bold mb-4 text-primary">Provident Fund (EPF)</h5>
+                            <Form.Group className="mb-4 bg-light p-3 rounded-lg border">
                                 <Form.Check 
                                     type="switch" 
-                                    label={<span className="fw-bold ms-1 fs-5">Enable PF Deduction</span>} 
+                                    label={<span className="fw-bold ms-2 fs-6 text-primary">Enable PF Deduction</span>} 
                                     checked={config.statutory_config.pf.is_mandatory} 
                                     onChange={e => updatePF('is_mandatory', e.target.checked)} 
                                 />
                             </Form.Group>
                             
                             {config.statutory_config.pf.is_mandatory && (
-                                <Row className="g-3">
+                                <Row className="g-4 mt-2">
                                     <Col md="6">
                                         <Form.Group>
-                                            <Form.Label>Employee Contribution (%)</Form.Label>
-                                            <Form.Control type="number" step="0.01" value={config.statutory_config.pf.employee_percentage} onChange={e => updatePF('employee_percentage', Number(e.target.value))} />
+                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Employee Contribution (%)</Form.Label>
+                                            <Form.Control type="number" step="0.01" value={config.statutory_config.pf.employee_percentage} onChange={e => updatePF('employee_percentage', Number(e.target.value))} className="form-control-premium shadow-sm" />
                                         </Form.Group>
                                     </Col>
                                     <Col md="6">
                                         <Form.Group>
-                                            <Form.Label>Employer Contribution (%)</Form.Label>
-                                            <Form.Control type="number" step="0.01" value={config.statutory_config.pf.employer_percentage} onChange={e => updatePF('employer_percentage', Number(e.target.value))} />
+                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Employer Contribution (%)</Form.Label>
+                                            <Form.Control type="number" step="0.01" value={config.statutory_config.pf.employer_percentage} onChange={e => updatePF('employer_percentage', Number(e.target.value))} className="form-control-premium shadow-sm" />
                                         </Form.Group>
                                     </Col>
                                     <Col md="12">
                                         <Form.Group>
-                                            <Form.Label>Basic Salary Limit (₹)</Form.Label>
-                                            <Form.Control type="number" value={config.statutory_config.pf.salary_limit} onChange={e => updatePF('salary_limit', Number(e.target.value))} />
-                                            <Form.Text className="text-muted">Statutory limit is ₹15,000. Set to 0 to apply to all basic salaries without a cap.</Form.Text>
+                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Basic Salary Limit (₹)</Form.Label>
+                                            <Form.Control type="number" value={config.statutory_config.pf.salary_limit} onChange={e => updatePF('salary_limit', Number(e.target.value))} className="form-control-premium shadow-sm" />
+                                            <Form.Text className="text-muted ms-1">Statutory limit is ₹15,000. Set to 0 to apply to all basic salaries without a cap.</Form.Text>
                                         </Form.Group>
                                     </Col>
                                 </Row>
@@ -304,37 +637,37 @@ const PayrollSettings = () => {
 
                 {/* ── ESI Configuration ── */}
                 <Col xl="6">
-                    <h2 className="small-title">Employee State Insurance (ESI)</h2>
-                    <Card className="h-100">
-                        <Card.Body>
-                            <Form.Group className="mb-4">
+                    <Card className="h-100 glass-card">
+                        <Card.Body className="p-4">
+                            <h5 className="fw-bold mb-4 text-primary">Employee State Insurance (ESI)</h5>
+                            <Form.Group className="mb-4 bg-light p-3 rounded-lg border">
                                 <Form.Check 
                                     type="switch" 
-                                    label={<span className="fw-bold ms-1 fs-5">Enable ESI Deduction</span>} 
+                                    label={<span className="fw-bold ms-2 fs-6 text-primary">Enable ESI Deduction</span>} 
                                     checked={config.statutory_config.esi.is_mandatory} 
                                     onChange={e => updateESI('is_mandatory', e.target.checked)} 
                                 />
                             </Form.Group>
 
                             {config.statutory_config.esi.is_mandatory && (
-                                <Row className="g-3">
+                                <Row className="g-4 mt-2">
                                     <Col md="6">
                                         <Form.Group>
-                                            <Form.Label>Employee Contribution (%)</Form.Label>
-                                            <Form.Control type="number" step="0.01" value={config.statutory_config.esi.employee_percentage} onChange={e => updateESI('employee_percentage', Number(e.target.value))} />
+                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Employee Contribution (%)</Form.Label>
+                                            <Form.Control type="number" step="0.01" value={config.statutory_config.esi.employee_percentage} onChange={e => updateESI('employee_percentage', Number(e.target.value))} className="form-control-premium shadow-sm" />
                                         </Form.Group>
                                     </Col>
                                     <Col md="6">
                                         <Form.Group>
-                                            <Form.Label>Employer Contribution (%)</Form.Label>
-                                            <Form.Control type="number" step="0.01" value={config.statutory_config.esi.employer_percentage} onChange={e => updateESI('employer_percentage', Number(e.target.value))} />
+                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Employer Contribution (%)</Form.Label>
+                                            <Form.Control type="number" step="0.01" value={config.statutory_config.esi.employer_percentage} onChange={e => updateESI('employer_percentage', Number(e.target.value))} className="form-control-premium shadow-sm" />
                                         </Form.Group>
                                     </Col>
                                     <Col md="12">
                                         <Form.Group>
-                                            <Form.Label>Gross Salary Limit (₹)</Form.Label>
-                                            <Form.Control type="number" value={config.statutory_config.esi.gross_limit} onChange={e => updateESI('gross_limit', Number(e.target.value))} />
-                                            <Form.Text className="text-muted">ESI applies only if gross salary is ≤ ₹21,000.</Form.Text>
+                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Gross Salary Limit (₹)</Form.Label>
+                                            <Form.Control type="number" value={config.statutory_config.esi.gross_limit} onChange={e => updateESI('gross_limit', Number(e.target.value))} className="form-control-premium shadow-sm" />
+                                            <Form.Text className="text-muted ms-1">ESI applies only if gross salary is ≤ ₹21,000.</Form.Text>
                                         </Form.Group>
                                     </Col>
                                 </Row>
@@ -345,14 +678,14 @@ const PayrollSettings = () => {
 
                 {/* ── Professional Tax (PT) ── */}
                 <Col xl="12">
-                    <h2 className="small-title">Professional Tax (PT) Config</h2>
-                    <Card>
-                        <Card.Body>
-                            <Row className="align-items-center mb-4">
+                    <Card className="glass-card">
+                        <Card.Body className="p-4">
+                            <h5 className="fw-bold mb-4 text-primary">Professional Tax (PT) Config</h5>
+                            <Row className="align-items-center mb-4 g-4">
                                 <Col>
                                     <Form.Check 
                                         type="switch" 
-                                        label={<span className="fw-bold ms-1 fs-5">Enable Professional Tax</span>} 
+                                        label={<span className="fw-bold ms-2 fs-5 text-primary">Enable Professional Tax</span>} 
                                         checked={config.statutory_config.pt.is_applicable} 
                                         onChange={e => updatePT('is_applicable', e.target.checked)} 
                                     />
@@ -360,8 +693,15 @@ const PayrollSettings = () => {
                                 {config.statutory_config.pt.is_applicable && (
                                     <Col md="4">
                                         <Form.Group>
-                                            <Form.Label>State</Form.Label>
-                                            <Form.Control placeholder="e.g. Karnataka" value={config.statutory_config.pt.state} onChange={e => updatePT('state', e.target.value)} />
+                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">State</Form.Label>
+                                            <Select
+                                                options={INDIAN_STATES}
+                                                value={INDIAN_STATES.find(opt => opt.value === config.statutory_config.pt.state)}
+                                                onChange={handleStateChange}
+                                                placeholder="Select State"
+                                                classNamePrefix="react-select"
+                                                className="react-select-premium shadow-sm"
+                                            />
                                         </Form.Group>
                                     </Col>
                                 )}
@@ -369,43 +709,80 @@ const PayrollSettings = () => {
 
                             {config.statutory_config.pt.is_applicable && (
                                 <>
-                                    <h6 className="mb-3">Tax Slabs (Monthly)</h6>
+                                    <h6 className="mb-3 mt-4 text-primary fw-bold">Tax Slabs (Monthly)</h6>
                                     {config.statutory_config.pt.slabs.length === 0 ? (
-                                        <div className="text-muted mb-3">No slabs added. Click below to add a salary range.</div>
+                                        <div className="text-muted mb-3 bg-light p-3 rounded text-center border">No slabs added. Click below to add a salary range.</div>
                                     ) : (
-                                        <Table bordered hover size="sm">
-                                            <thead className="table-light">
-                                                <tr>
-                                                    <th>Min Salary (₹)</th>
-                                                    <th>Max Salary (₹)</th>
-                                                    <th>PT Amount (₹/mo)</th>
-                                                    <th className="text-center" style={{ width: '80px' }}>Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
+                                        <>
+                                            {/* Desktop View */}
+                                            <div className="table-responsive d-none d-md-block mb-4">
+                                                <Table hover className="mb-0 custom-table-glass">
+                                                    <thead>
+                                                        <tr>
+                                                            <th className="text-muted fw-bold small text-uppercase ps-4">Min Salary (₹)</th>
+                                                            <th className="text-muted fw-bold small text-uppercase">Max Salary (₹)</th>
+                                                            <th className="text-muted fw-bold small text-uppercase">PT Amount (₹/mo)</th>
+                                                            <th className="text-muted fw-bold small text-uppercase text-center pe-4" style={{ width: '100px' }}>Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {config.statutory_config.pt.slabs.map((slab, idx) => (
+                                                            <tr key={idx}>
+                                                                <td className="align-middle ps-4"><Form.Control type="number" size="sm" value={slab.min_salary} onChange={e => updateSlab(idx, 'min_salary', e.target.value)} className="form-control-premium shadow-sm" style={{ height: '35px', minHeight: '35px' }} /></td>
+                                                                <td className="align-middle"><Form.Control type="number" size="sm" value={slab.max_salary} onChange={e => updateSlab(idx, 'max_salary', e.target.value)} className="form-control-premium shadow-sm" style={{ height: '35px', minHeight: '35px' }} /></td>
+                                                                <td className="align-middle"><Form.Control type="number" size="sm" value={slab.amount} onChange={e => updateSlab(idx, 'amount', e.target.value)} className="form-control-premium shadow-sm" style={{ height: '35px', minHeight: '35px' }} /></td>
+                                                                <td className="text-center align-middle pe-4">
+                                                                    <Button variant="none" size="sm" className="text-danger p-1 hover-scale" onClick={() => removePTSlab(idx)}>
+                                                                        <CsLineIcons icon="bin" size="18" />
+                                                                    </Button>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </Table>
+                                            </div>
+
+                                            {/* Mobile View */}
+                                            <div className="d-block d-md-none mb-4">
                                                 {config.statutory_config.pt.slabs.map((slab, idx) => (
-                                                    <tr key={idx}>
-                                                        <td><Form.Control type="number" size="sm" value={slab.min_salary} onChange={e => updateSlab(idx, 'min_salary', e.target.value)} /></td>
-                                                        <td><Form.Control type="number" size="sm" value={slab.max_salary} onChange={e => updateSlab(idx, 'max_salary', e.target.value)} /></td>
-                                                        <td><Form.Control type="number" size="sm" value={slab.amount} onChange={e => updateSlab(idx, 'amount', e.target.value)} /></td>
-                                                        <td className="text-center align-middle">
-                                                            <Button variant="link" size="sm" className="text-danger p-0" onClick={() => removePTSlab(idx)}>
-                                                                <CsLineIcons icon="bin" size="15" />
-                                                            </Button>
-                                                        </td>
-                                                    </tr>
+                                                    <Card key={idx} className="mb-3 border bg-light shadow-none" style={{ borderRadius: '12px' }}>
+                                                        <Card.Body className="p-3">
+                                                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                                                <span className="fw-bold text-primary small">Slab {idx + 1}</span>
+                                                                <Button variant="none" size="sm" className="text-danger p-0 m-0" onClick={() => removePTSlab(idx)}>
+                                                                    <CsLineIcons icon="bin" size="18" />
+                                                                </Button>
+                                                            </div>
+                                                            <Row className="g-3">
+                                                                <Col xs="6">
+                                                                    <Form.Label className="small fw-bold text-muted text-uppercase mb-1">Min (₹)</Form.Label>
+                                                                    <Form.Control type="number" size="sm" value={slab.min_salary} onChange={e => updateSlab(idx, 'min_salary', e.target.value)} className="form-control-premium shadow-sm" />
+                                                                </Col>
+                                                                <Col xs="6">
+                                                                    <Form.Label className="small fw-bold text-muted text-uppercase mb-1">Max (₹)</Form.Label>
+                                                                    <Form.Control type="number" size="sm" value={slab.max_salary} onChange={e => updateSlab(idx, 'max_salary', e.target.value)} className="form-control-premium shadow-sm" />
+                                                                </Col>
+                                                                <Col xs="12">
+                                                                    <Form.Label className="small fw-bold text-muted text-uppercase mb-1">PT Amount (₹/mo)</Form.Label>
+                                                                    <Form.Control type="number" size="sm" value={slab.amount} onChange={e => updateSlab(idx, 'amount', e.target.value)} className="form-control-premium shadow-sm" />
+                                                                </Col>
+                                                            </Row>
+                                                        </Card.Body>
+                                                    </Card>
                                                 ))}
-                                            </tbody>
-                                        </Table>
+                                            </div>
+                                        </>
                                     )}
-                                    <Button variant="outline-primary" size="sm" onClick={addPTSlab}>+ Add New Slab</Button>
+                                    <Button variant="none" size="sm" onClick={addPTSlab} className="custom-btn-primary-outline rounded-pill px-4 mt-2 shadow-sm">
+                                        <CsLineIcons icon="plus" size="14" className="me-2" /> Add New Slab
+                                    </Button>
                                 </>
                             )}
                         </Card.Body>
                     </Card>
                 </Col>
             </Row>
-        </>
+        </div>
     );
 };
 

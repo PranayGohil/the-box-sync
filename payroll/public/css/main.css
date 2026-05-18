@@ -1,1 +1,12 @@
 /* This file is reserved for overriding and extending the template styles. */
+
+/* Explicit Mobile Title Sizing Override to match Admin Manage Staff exactly */
+@media (max-width: 768px) {
+  h1.display-4,
+  .display-4,
+  .view-staff-staff-container h1 {
+    font-size: 1.75rem !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+  }
+}

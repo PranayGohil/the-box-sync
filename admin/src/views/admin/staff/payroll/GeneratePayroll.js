@@ -5,6 +5,7 @@ import {
     Row, Col, Card, Button, Badge, Alert, Modal,
     Form, Spinner, Table,
 } from 'react-bootstrap';
+import Select from 'react-select';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -17,7 +18,189 @@ const MONTH_NAMES = [
 
 const currentDate = new Date();
 
-
+const customStyles = `
+  .glass-card {
+    background: #ffffff !important;
+    border: 1px solid #f0f0f0 !important;
+    border-radius: 1.5rem !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.3s ease;
+  }
+  .glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.06) !important;
+  }
+  .custom-btn-primary-outline {
+    border: 1px solid #1ea8e7 !important;
+    color: #1ea8e7 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    height: 40px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+  }
+  .custom-btn-primary-outline:hover {
+    background-color: #1ea8e7 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
+  }
+  .custom-btn-solid {
+    background-color: #1ea8e7 !important;
+    border: 1px solid #1ea8e7 !important;
+    color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    height: 40px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+  }
+  .custom-btn-solid:hover {
+    background-color: #158dc4 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
+  }
+  .status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .react-table-modern {
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    width: 100% !important;
+  }
+  .react-table-modern thead th {
+    border-bottom: 2px solid #edf2f7 !important;
+    background: transparent !important;
+    font-size: 0.85rem !important;
+    color: #64748b !important;
+    letter-spacing: 0.05em;
+    padding: 1rem 1.5rem;
+    font-weight: 700 !important;
+  }
+  .react-table-modern tbody tr {
+    background: transparent !important;
+    transition: all 0.2s ease;
+  }
+  .react-table-modern tbody tr:hover {
+    background: #f8fafc !important;
+  }
+  .react-table-modern tbody td {
+    border-top: none !important;
+    border-bottom: 1px solid #edf2f7 !important;
+    padding: 1.25rem 1.5rem !important;
+    vertical-align: middle !important;
+    background: transparent !important;
+    font-size: 0.95rem !important;
+  }
+  .react-table-modern tbody td:first-child {
+    border-left: none !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+  }
+  .react-table-modern tbody td:last-child {
+    border-right: none !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+  @media (min-width: 1200px) {
+    .hide-on-desktop {
+      display: none !important;
+    }
+  }
+  @media (max-width: 1199px) {
+    .hide-on-mobile {
+      display: none !important;
+    }
+  }
+  .input-adjustment {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.75rem !important;
+    padding: 0.5rem 0.75rem !important;
+    font-weight: 600 !important;
+    text-align: right !important;
+    transition: all 0.2s !important;
+    background: #fcfdfe !important;
+  }
+  .input-adjustment:focus {
+    border-color: #1ea8e7 !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 3px rgba(30, 168, 231, 0.1) !important;
+  }
+  /* Custom Form Controls */
+  .form-control-premium {
+    border-radius: 10px !important;
+    border: 1px solid #dee2e6 !important;
+    box-shadow: none !important;
+    padding: 0.6rem 1rem !important;
+    transition: all 0.2s ease !important;
+  }
+  .form-control-premium:focus {
+    border-color: #1ea8e7 !important;
+    box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
+  }
+  .react-select-premium {
+    font-weight: 600 !important;
+  }
+  .react-select-premium .react-select__control {
+    border-radius: 10px !important;
+    border: 1px solid #dee2e6 !important;
+    background-color: #ffffff !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    cursor: pointer !important;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    box-shadow: none !important;
+  }
+  .react-select-premium .react-select__control:hover {
+    border-color: #cbd5e1 !important;
+  }
+  .react-select-premium .react-select__control--is-focused,
+  .react-select-premium .react-select__control--menu-is-open {
+    border-color: #1ea8e7 !important;
+    box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
+  }
+  .react-select-premium .react-select__single-value,
+  .react-select-premium .react-select__placeholder {
+    font-size: 0.9rem !important;
+    padding-left: 0.25rem !important;
+  }
+  .react-select-premium .react-select__indicator-separator {
+    display: none !important;
+  }
+  .react-select-premium .react-select__menu {
+    border-radius: 10px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid #1ea8e7 !important;
+    overflow: hidden !important;
+    z-index: 9999 !important;
+    margin-top: 5px !important;
+  }
+  .react-select-premium .react-select__option {
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    padding: 0.5rem 0.75rem !important;
+    cursor: pointer !important;
+  }
+  .react-select-premium .react-select__option--is-focused,
+  .react-select-premium .react-select__option--is-selected {
+    background-color: #f1f5f9 !important;
+    color: #1ea8e7 !important;
+  }
+`;
 
 export default function GeneratePayroll() {
     const title = 'Generate Payroll';
@@ -242,63 +425,84 @@ export default function GeneratePayroll() {
     );
 
     return (
-        <div className="container-fluid pb-5">
-            
+        <div className="container-fluid px-lg-4 px-xl-5 pb-5">
+            <style>{customStyles}</style>
             <HtmlHead title={title} description={description} />
 
-            <div className="page-title-container mb-5">
+            <div className="page-title-container mb-4 mb-lg-5 mt-5 mt-lg-0">
                 <Row className="g-3 align-items-center">
-                    <Col md={7}>
+                    <Col xs="12" md="6">
                         <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
-                    <Col md={5} className="d-flex justify-content-md-end gap-2">
-                        <Button className="generate-payroll-custom-btn-outline px-4" as={Link} to="/staff/payroll">
-                            <CsLineIcons icon="wallet" className="me-2" />
-                            Manage Payroll
+                    <Col xs="12" md="6" className="d-flex flex-wrap justify-content-md-end align-items-center gap-3">
+                        <Button className="custom-btn-primary-outline px-4 rounded-pill shadow-sm d-flex align-items-center" style={{ height: '40px' }} as={Link} to="/staff/payroll">
+                            <CsLineIcons icon="wallet" className="me-2" size="18" />
+                            <span>Manage Payroll</span>
                         </Button>
                     </Col>
                 </Row>
             </div>
 
-            <Card className="generate-payroll-glass-card border-0 mb-5">
+            <Card className="glass-card border-0 mb-5">
                 <Card.Header className="bg-transparent border-0 p-4 pb-0">
-                    <Card.Title className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                        <CsLineIcons icon="settings" size="20" className="text-primary" />
+                    <Card.Title className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: '#1ea8e7' }}>
+                        <CsLineIcons icon="settings" size="20" />
                         Payroll Configuration
                     </Card.Title>
                 </Card.Header>
                 <Card.Body className="p-4">
                     <Row className="g-4 align-items-end">
-                        <Col xs={12} md={3}>
+                        <Col xs={12} md={2}>
                             <Form.Label className="small fw-bold text-muted text-uppercase">Month</Form.Label>
-                            <Form.Select className="rounded-3 border-0 shadow-sm py-2" value={month} onChange={(e) => { setMonth(Number(e.target.value)); setPreviewFetched(false); }}>
-                                {MONTH_NAMES.slice(1).map((m, i) => (
-                                    <option key={i + 1} value={i + 1}>{m}</option>
-                                ))}
-                            </Form.Select>
-                        </Col>
-                        <Col xs={12} md={2}>
-                            <Form.Label className="small fw-bold text-muted text-uppercase">Year</Form.Label>
-                            <Form.Select className="rounded-3 border-0 shadow-sm py-2" value={year} onChange={(e) => { setYear(Number(e.target.value)); setPreviewFetched(false); }}>
-                                {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
-                            </Form.Select>
-                        </Col>
-                        <Col xs={12} md={2}>
-                            <Form.Label className="small fw-bold text-muted text-uppercase">Working Days</Form.Label>
-                            <Form.Control
-                                className="rounded-3 border-0 shadow-sm py-2"
-                                type="number" min={1} max={31}
-                                value={workingDays}
-                                onChange={(e) => { setWorkingDays(Number(e.target.value) || 26); setPreviewFetched(false); }}
+                            <Select 
+                                classNamePrefix="react-select"
+                                className="react-select-premium shadow-sm"
+                                options={MONTH_NAMES.slice(1).map((m, i) => ({ value: i + 1, label: m }))}
+                                value={{ value: month, label: MONTH_NAMES[month] }}
+                                onChange={(opt) => { setMonth(opt.value); setPreviewFetched(false); }}
+                                menuPortalTarget={document.body}
+                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                             />
                         </Col>
                         <Col xs={12} md={2}>
+                            <Form.Label className="small fw-bold text-muted text-uppercase">Year</Form.Label>
+                            <Select 
+                                classNamePrefix="react-select"
+                                className="react-select-premium shadow-sm"
+                                options={yearOptions.map(y => ({ value: y, label: y }))}
+                                value={{ value: year, label: year }}
+                                onChange={(opt) => { setYear(opt.value); setPreviewFetched(false); }}
+                                menuPortalTarget={document.body}
+                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                            />
+                        </Col>
+                        <Col xs={12} md={2}>
+                            <Form.Label className="small fw-bold text-muted text-uppercase">Working Days</Form.Label>
+                            <Select 
+                                classNamePrefix="react-select"
+                                className="react-select-premium shadow-sm"
+                                options={Array.from({length: 31}, (_, i) => ({ value: i + 1, label: i + 1 }))}
+                                value={{ value: workingDays, label: workingDays }}
+                                onChange={(opt) => { setWorkingDays(opt.value); setPreviewFetched(false); }}
+                                menuPortalTarget={document.body}
+                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                            />
+                        </Col>
+                        <Col xs={12} md={3}>
                             <Form.Label className="small fw-bold text-muted text-uppercase">Batch Mode</Form.Label>
-                            <Form.Select className="rounded-3 border-0 shadow-sm py-2" value={generateMode} onChange={(e) => handleModeChange(e.target.value)}>
-                                <option value="all">All Staff</option>
-                                <option value="single">Single Staff</option>
-                            </Form.Select>
+                            <Select 
+                                classNamePrefix="react-select"
+                                className="react-select-premium shadow-sm"
+                                options={[
+                                    { value: 'all', label: 'All Staff' },
+                                    { value: 'single', label: 'Single Staff' }
+                                ]}
+                                value={{ value: generateMode, label: generateMode === 'all' ? 'All Staff' : 'Single Staff' }}
+                                onChange={(opt) => handleModeChange(opt.value)}
+                                menuPortalTarget={document.body}
+                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                            />
                         </Col>
                         {generateMode === 'single' && (
                             <Col xs={12} md={3}>
@@ -306,24 +510,39 @@ export default function GeneratePayroll() {
                                 {staffLoading ? (
                                     <div className="sh-5 d-flex align-items-center"><Spinner size="sm" animation="border" /></div>
                                 ) : (
-                                    <Form.Select className="rounded-3 border-0 shadow-sm py-2" value={selectedStaffId} onChange={(e) => { setSelectedStaffId(e.target.value); setPreviewFetched(false); }}>
-                                        <option value="">— Select Staff —</option>
-                                        {staffList.map((s) => <option key={s._id} value={s._id}>{s.f_name} {s.l_name} ({s.staff_id})</option>)}
-                                    </Form.Select>
+                                    <Select 
+                                        options={staffList.map(s => ({value: s._id, label: `${s.f_name} ${s.l_name} (${s.staff_id})`}))}
+                                        value={selectedStaffId ? staffList.filter(s => s._id === selectedStaffId).map(s => ({value: s._id, label: `${s.f_name} ${s.l_name} (${s.staff_id})`}))[0] : null}
+                                        onChange={(opt) => { setSelectedStaffId(opt ? opt.value : ''); setPreviewFetched(false); }}
+                                        placeholder="— Select Staff —"
+                                        isSearchable
+                                        classNamePrefix="react-select"
+                                        className="react-select-premium shadow-sm"
+                                        menuPortalTarget={document.body}
+                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                    />
                                 )}
                             </Col>
                         )}
-                        <Col xs={12} md={generateMode === 'single' ? 12 : 3}>
-                            <Button className="generate-payroll-custom-btn-solid w-100 py-2 d-flex align-items-center justify-content-center gap-2" onClick={handlePreview} disabled={isPreviewing || (generateMode === 'single' && !selectedStaffId)}>
-                                {isPreviewing ? <Spinner size="sm" /> : <><CsLineIcons icon="eye" size="18" /> Fetch Preview</>}
-                            </Button>
-                        </Col>
+                        {generateMode === 'single' ? (
+                            <Col xs={12} className="d-flex justify-content-end mt-4">
+                                <Button className="custom-btn-primary-outline px-5 rounded-pill shadow-sm" style={{ height: '40px' }} onClick={handlePreview} disabled={isPreviewing || !selectedStaffId}>
+                                    {isPreviewing ? <Spinner size="sm" /> : <><CsLineIcons icon="eye" size="18" className="me-2" /> Fetch Preview</>}
+                                </Button>
+                            </Col>
+                        ) : (
+                            <Col xs={12} md={3}>
+                                <Button className="custom-btn-primary-outline w-100 rounded-pill shadow-sm" style={{ height: '40px' }} onClick={handlePreview} disabled={isPreviewing}>
+                                    {isPreviewing ? <Spinner size="sm" /> : <><CsLineIcons icon="eye" size="18" className="me-2" /> Fetch Preview</>}
+                                </Button>
+                            </Col>
+                        )}
                     </Row>
                 </Card.Body>
             </Card>
 
             {generateResult && (
-                <Alert variant="success" className="generate-payroll-glass-card border-0 mb-4 p-4 d-flex align-items-center justify-content-between flex-wrap gap-3 shadow-lg" onClose={() => setGenerateResult(null)} dismissible>
+                <Alert variant="success" className="glass-card border-0 mb-4 p-4 d-flex align-items-center justify-content-between flex-wrap gap-3 shadow-lg" onClose={() => setGenerateResult(null)} dismissible>
                     <div className="d-flex align-items-center gap-3">
                         <div className="sw-5 sh-5 rounded-circle bg-soft-success d-flex align-items-center justify-content-center text-success">
                             <CsLineIcons icon="check-circle" size="24" />
@@ -333,12 +552,15 @@ export default function GeneratePayroll() {
                             {generateResult.data?.errors?.length > 0 && <small className="text-danger">Encountered {generateResult.data.errors.length} skipped records.</small>}
                         </div>
                     </div>
-                    <Button className="generate-payroll-custom-btn-solid px-4" onClick={() => history.push(`/staff/payroll/${month}/${year}`)}>View Payroll Ledger</Button>
+                    <Button className="custom-btn-primary-outline px-4 rounded-pill shadow-sm" style={{ height: '40px' }} onClick={() => history.push(`/staff/payroll/${month}/${year}`)}>
+                        <CsLineIcons icon="eye" className="me-2" size="18" />
+                        View Payroll Ledger
+                    </Button>
                 </Alert>
             )}
 
             {previewFetched && previews.length === 0 && (
-                <div className="text-center py-5 generate-payroll-glass-card bg-light border-0">
+                <div className="text-center py-5 glass-card bg-light border-0">
                     <CsLineIcons icon="info-hexagon" size="64" className="text-muted opacity-25 mb-4" />
                     <h4 className="fw-bold text-muted">No Eligible Staff Found</h4>
                     <p className="text-muted mb-0">Either no staff exists or all have payroll already generated for this period.</p>
@@ -346,21 +568,21 @@ export default function GeneratePayroll() {
             )}
 
             {previewFetched && previews.length > 0 && (
-                <Card className="generate-payroll-glass-card border-0 overflow-hidden shadow-sm">
-                    <Card.Header className="bg-light border-0 p-4">
+                <Card className="glass-card border-0 overflow-hidden mb-5">
+                    <Card.Header className="bg-transparent border-0 p-4 pb-3" style={{ borderBottom: '1px solid #f1f5f9 !important' }}>
                         <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <div>
-                                <h5 className="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
-                                    <CsLineIcons icon="file-text" size="20" className="text-primary" />
+                                <h5 className="fw-bold mb-1 d-flex align-items-center gap-2" style={{ color: '#1ea8e7' }}>
+                                    <CsLineIcons icon="file-text" size="20" />
                                     Payroll Ledger Preview: {MONTH_NAMES[month]} {year}
                                 </h5>
-                                <small className="text-muted fw-medium text-uppercase letter-spacing-1">Review adjustments before finalizing disbursement</small>
+                                <small className="text-muted fw-medium text-uppercase" style={{ letterSpacing: '0.05em' }}>Review adjustments before finalizing disbursement</small>
                             </div>
                             <div className="d-flex gap-2">
-                                <Badge bg="soft-primary" className="text-primary generate-payroll-status-badge sh-5 d-flex align-items-center gap-2">
+                                <Badge bg="soft-primary" className="text-primary status-badge d-flex align-items-center gap-2" style={{ padding: '0.5rem 1rem' }}>
                                     <CsLineIcons icon="users" size="14" /> {previews.length} Employees
                                 </Badge>
-                                <Badge bg="primary" className="generate-payroll-status-badge sh-5 d-flex align-items-center gap-2 px-3">
+                                <Badge bg="primary" className="status-badge d-flex align-items-center gap-2 px-3 shadow-sm" style={{ padding: '0.5rem 1rem' }}>
                                     Net Total: ₹{previewTotals.total_net.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
                                 </Badge>
                             </div>
@@ -369,8 +591,8 @@ export default function GeneratePayroll() {
 
                     <Card.Body className="p-0">
                         <div className="table-responsive">
-                            <Table hover className="generate-payroll-react-table-modern mb-0">
-                                <thead>
+                            <Table hover className="react-table-modern mb-0">
+                                <thead className="hide-on-mobile">
                                     <tr>
                                         <th>Staff Details</th>
                                         <th className="text-center">Days (P/A)</th>
@@ -390,7 +612,8 @@ export default function GeneratePayroll() {
                                         const { earned, ot_pay, net } = recalculate(p, adj);
 
                                         return (
-                                            <tr key={p.staff_id}>
+                                            <React.Fragment key={p.staff_id}>
+                                            <tr className="hide-on-mobile">
                                                 <td>
                                                     <div className="d-flex align-items-center gap-3">
                                                         <div className="sw-5 sh-5 rounded-circle bg-soft-primary d-flex align-items-center justify-content-center text-primary fw-bold">
@@ -411,32 +634,108 @@ export default function GeneratePayroll() {
                                                 <td className="text-end text-muted fw-medium">₹{(p.staff?.salary || p.base_salary || 0).toLocaleString('en-IN')}</td>
                                                 <td className="text-end text-success fw-bold">₹{(p.earned_breakdown?.total_gross || earned || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</td>
                                                 <td>
-                                                    <Form.Control className="generate-payroll-input-adjustment mx-auto" type="number" step={0.5} value={adj.overtime_hours ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'overtime_hours', e.target.value)} />
+                                                    <Form.Control className="input-adjustment mx-auto" type="number" step={0.5} value={adj.overtime_hours ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'overtime_hours', e.target.value)} />
                                                 </td>
                                                 <td className="text-end text-primary fw-medium">
                                                     <div className="small opacity-50 fw-bold">₹{p.overtime_rate}/hr</div>
                                                     <div>+₹{ot_pay.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>
                                                 </td>
                                                 <td>
-                                                    <Form.Control className="generate-payroll-input-adjustment mx-auto text-success" type="number" value={adj.bonus ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'bonus', e.target.value)} />
+                                                    <Form.Control className="input-adjustment mx-auto text-success" type="number" value={adj.bonus ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'bonus', e.target.value)} />
                                                 </td>
                                                 <td>
                                                     <div className="text-danger small fw-bold text-center mb-1">Stat: ₹{(p.deduction_breakdown?.total_statutory || 0).toLocaleString('en-IN')}</div>
-                                                    <Form.Control className="generate-payroll-input-adjustment mx-auto text-danger" type="number" placeholder="Manual" value={adj.deductions ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'deductions', e.target.value)} />
+                                                    <Form.Control className="input-adjustment mx-auto text-danger" type="number" placeholder="Manual" value={adj.deductions ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'deductions', e.target.value)} />
                                                 </td>
                                                 <td className="text-end">
                                                     <div className={`h5 mb-0 fw-bold ${net < 0 ? 'text-danger' : 'text-primary'}`}>₹{net.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>
                                                 </td>
                                                 <td className="text-center">
                                                     {p.already_exists ? (
-                                                        <Badge bg={p.existing_status === 'paid' ? 'success' : 'warning'} className="generate-payroll-status-badge py-1 px-2" style={{ fontSize: '0.65rem' }}>
+                                                        <Badge bg={p.existing_status === 'paid' ? 'success' : 'warning'} className="status-badge py-1 px-2" style={{ fontSize: '0.65rem' }}>
                                                             {p.existing_status === 'paid' ? 'LOCKED' : 'UPDATE'}
                                                         </Badge>
                                                     ) : (
-                                                        <Badge bg="soft-secondary" className="text-muted generate-payroll-status-badge py-1 px-2" style={{ fontSize: '0.65rem' }}>NEW</Badge>
+                                                        <Badge bg="soft-secondary" className="text-muted status-badge py-1 px-2" style={{ fontSize: '0.65rem' }}>NEW</Badge>
                                                     )}
                                                 </td>
                                             </tr>
+                                            {/* Mobile View */}
+                                            <tr className="hide-on-desktop">
+                                                <td colSpan="10" className="p-0 border-0">
+                                                    <div className="p-3 border-bottom">
+                                                        <div className="d-flex justify-content-between align-items-start mb-3">
+                                                            <div className="d-flex align-items-center gap-3">
+                                                                <div className="sw-5 sh-5 rounded-circle bg-soft-primary d-flex align-items-center justify-content-center text-primary fw-bold">
+                                                                    {p.f_name?.[0]}{p.l_name?.[0]}
+                                                                </div>
+                                                                <div>
+                                                                    <div className="fw-bold text-dark">{p.f_name} {p.l_name}</div>
+                                                                    <small className="text-muted fw-medium">{p.position} • #{p.staff_ref_id}</small>
+                                                                </div>
+                                                            </div>
+                                                            <div>
+                                                                {p.already_exists ? (
+                                                                    <Badge bg={p.existing_status === 'paid' ? 'success' : 'warning'} className="status-badge py-1 px-2" style={{ fontSize: '0.65rem' }}>
+                                                                        {p.existing_status === 'paid' ? 'LOCKED' : 'UPDATE'}
+                                                                    </Badge>
+                                                                ) : (
+                                                                    <Badge bg="soft-secondary" className="text-muted status-badge py-1 px-2" style={{ fontSize: '0.65rem' }}>NEW</Badge>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <Row className="g-3 mb-3">
+                                                            <Col xs={6}>
+                                                                <div className="text-muted small fw-bold text-uppercase mb-1">Days (P/A)</div>
+                                                                <div className="d-flex align-items-center gap-2">
+                                                                    <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill fw-bold" style={{ fontSize: '0.8rem' }}>{p.present_days}P</Badge>
+                                                                    <Badge bg={p.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${p.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill fw-bold`} style={{ fontSize: '0.8rem' }}>{p.absent_days}A</Badge>
+                                                                </div>
+                                                            </Col>
+                                                            <Col xs={6} className="text-end">
+                                                                <div className="text-muted small fw-bold text-uppercase mb-1">Base Rate</div>
+                                                                <div className="fw-bold text-dark fs-6">₹{(p.staff?.salary || p.base_salary || 0).toLocaleString('en-IN')}</div>
+                                                            </Col>
+                                                        </Row>
+
+                                                        <Row className="g-2 mb-3">
+                                                            <Col xs={4}>
+                                                                <Form.Label className="small fw-bold text-muted mb-1 text-truncate w-100">OT Hrs</Form.Label>
+                                                                <Form.Control className="input-adjustment px-2" type="number" step={0.5} value={adj.overtime_hours ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'overtime_hours', e.target.value)} />
+                                                            </Col>
+                                                            <Col xs={4}>
+                                                                <Form.Label className="small fw-bold text-muted mb-1 text-truncate w-100">Bonus</Form.Label>
+                                                                <Form.Control className="input-adjustment text-success px-2" type="number" value={adj.bonus ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'bonus', e.target.value)} />
+                                                            </Col>
+                                                            <Col xs={4}>
+                                                                <Form.Label className="small fw-bold text-muted mb-1 text-truncate w-100">Man. Ded</Form.Label>
+                                                                <Form.Control className="input-adjustment text-danger px-2" type="number" value={adj.deductions ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'deductions', e.target.value)} />
+                                                                <div className="text-danger text-end mt-1 fw-bold" style={{ fontSize: '0.65rem' }}>Stat: ₹{(p.deduction_breakdown?.total_statutory || 0).toLocaleString('en-IN')}</div>
+                                                            </Col>
+                                                        </Row>
+
+                                                        <div className="p-3 bg-light rounded-3 mt-2 mb-2 border border-light shadow-sm">
+                                                            <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom" style={{ borderColor: 'rgba(0,0,0,0.05) !important' }}>
+                                                                <div className="small fw-medium text-muted">Gross Earned</div>
+                                                                <div className="text-success fw-bold">₹{(p.earned_breakdown?.total_gross || earned || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>
+                                                            </div>
+                                                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                                                <div className="small fw-medium text-muted">OT Pay</div>
+                                                                <div className="fw-bold">
+                                                                    <span className="text-primary">+₹{ot_pay.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
+                                                                    <span className="text-muted ms-1 opacity-50 fw-normal small">(₹{p.overtime_rate}/hr)</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="d-flex justify-content-between align-items-center pt-2">
+                                                                <div className="small fw-bold text-uppercase text-muted" style={{ letterSpacing: '0.05em' }}>Net Payable</div>
+                                                                <div className={`h4 mb-0 fw-bold ${net < 0 ? 'text-danger' : 'text-primary'}`}>₹{net.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            </React.Fragment>
                                         );
                                     })}
                                 </tbody>
@@ -454,8 +753,8 @@ export default function GeneratePayroll() {
                                     Net Salary is calculated as: <strong>(Base/Days × Present) + (OT Hrs × OT Rate) + Bonus - Statutory - Manual Deductions.</strong>
                                 </div>
                             </div>
-                            <Button className="generate-payroll-custom-btn-solid sh-6 px-5 h5 mb-0 shadow-lg" onClick={() => setShowConfirmModal(true)} disabled={isGenerating}>
-                                {isGenerating ? <Spinner size="sm" /> : <><CsLineIcons icon="check" className="me-2" /> Finalize & Generate Payroll</>}
+                            <Button className="custom-btn-primary-outline px-5 rounded-pill shadow-sm d-flex align-items-center" style={{ height: '40px' }} onClick={() => setShowConfirmModal(true)} disabled={isGenerating}>
+                                {isGenerating ? <Spinner size="sm" /> : <><CsLineIcons icon="check" className="me-2" size="18" /> Finalize & Generate Payroll</>}
                             </Button>
                         </div>
                     </Card.Footer>
@@ -471,7 +770,7 @@ export default function GeneratePayroll() {
                 </Modal.Header>
                 <Modal.Body className="p-4 pt-0">
                     <p className="text-muted">You are initiating the payroll generation for <strong>{MONTH_NAMES[month]} {year}</strong>.</p>
-                    <div className="generate-payroll-glass-card bg-light border-0 p-4 mb-3">
+                    <div className="glass-card bg-light border-0 p-4 mb-3">
                         <div className="d-flex justify-content-between mb-2">
                             <span className="text-muted fw-bold small text-uppercase">Total Employees</span>
                             <span className="fw-bold">{previews.length}</span>
@@ -494,8 +793,8 @@ export default function GeneratePayroll() {
                     )}
                 </Modal.Body>
                 <Modal.Footer className="border-0 p-4 pt-0 d-flex gap-3">
-                    <Button className="generate-payroll-custom-btn-outline flex-grow-1" onClick={() => setShowConfirmModal(false)}>Back to Review</Button>
-                    <Button className="generate-payroll-custom-btn-solid flex-grow-1 py-2" onClick={handleGenerate}>Execute Run</Button>
+                    <Button className="custom-btn-primary-outline flex-grow-1 rounded-pill shadow-sm" style={{ height: '40px' }} onClick={() => setShowConfirmModal(false)}>Back to Review</Button>
+                    <Button className="custom-btn-primary-outline flex-grow-1 rounded-pill shadow-sm" style={{ height: '40px' }} onClick={handleGenerate}>{isGenerating ? <Spinner size="sm" /> : 'Execute Run'}</Button>
                 </Modal.Footer>
             </Modal>
         </div>

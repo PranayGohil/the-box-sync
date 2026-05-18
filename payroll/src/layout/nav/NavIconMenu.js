@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import { Modal, Button } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
-import { settingsChangeColor } from 'settings/settingsSlice';
 import IconMenuNotifications from './notifications/Notifications';
 import SearchModal from './search/SearchModal';
 
@@ -50,15 +48,8 @@ const customStyles = `
 
 const NavIconMenu = () => {
   const history = useHistory();
-  const { color } = useSelector((state) => state.settings);
-  const dispatch = useDispatch();
   const brandColor = '#23b3f4';
   
-  const onLightDarkModeClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dispatch(settingsChangeColor(color.includes('light') ? color.replace('light', 'dark') : color.replace('dark', 'light')));
-  };
   const [showSearchModal, setShowSearchModal] = useState(false);
   
   const onSearchIconClick = (e) => {
@@ -87,12 +78,6 @@ const NavIconMenu = () => {
         <li className="list-inline-item" title="Logout">
           <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
             <CsLineIcons icon="logout" size="18" />
-          </a>
-        </li>
-        <li className="list-inline-item" title={`${color.includes('light') ? 'Light Mode' : 'Dark Mode'}`}>
-          <a href="#/" id="colorButton" onClick={onLightDarkModeClick}>
-            <CsLineIcons icon="light-on" size="18" className="light" />
-            <CsLineIcons icon="light-off" size="18" className="dark" title="Dark Mode" />
           </a>
         </li>
         <IconMenuNotifications />
