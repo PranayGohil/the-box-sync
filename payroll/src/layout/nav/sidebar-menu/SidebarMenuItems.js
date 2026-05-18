@@ -14,7 +14,15 @@ const SidebarMenuItem = ({ item, id }) => {
   const { pathname } = useLocation();
   const { formatMessage: f } = useIntl();
 
-  const isActive = item.path.startsWith('#') ? false : pathname === item.path || pathname.indexOf(`${item.path}/`) > -1;
+  let isActive = item.path.startsWith('#') ? false : pathname === item.path || pathname.indexOf(`${item.path}/`) > -1;
+
+  if (pathname.includes('/staff/attendance')) {
+    if (item.path === '/staff') {
+      isActive = false;
+    } else if (item.path === '/attendance') {
+      isActive = true;
+    }
+  }
 
   const getLabel = (icon, label) => (
     <>

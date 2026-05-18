@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
+import Select from 'react-select';
 import { getHolidays, addHoliday, updateHoliday, deleteHoliday } from 'api/payrollConfig';
 import { format } from 'date-fns';
 
@@ -24,6 +25,17 @@ const Holidays = () => {
     const [showModal, setShowModal] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [editingId, setEditingId] = useState(null);
+
+    const payTypeOptions = [
+        { value: 'true', label: 'Paid Holiday' },
+        { value: 'false', label: 'Unpaid Holiday' }
+    ];
+
+    const holidayTypeOptions = [
+        { value: 'national', label: 'National Holiday' },
+        { value: 'public', label: 'Public / Regional Holiday' },
+        { value: 'company', label: 'Company Specific Holiday' }
+    ];
 
     const [form, setForm] = useState({
         name: '',
@@ -108,9 +120,87 @@ const Holidays = () => {
 
     const yearOptions = [];
     for (let i = currentYear - 2; i <= currentYear + 2; i++) yearOptions.push(i);
+    const yearOptionsList = yearOptions.map(y => ({ value: y, label: String(y) }));
+
+    const customStyles = `
+      /* React Select same design as Job Position from screenshot */
+      .react-select-premium {
+        font-weight: 600 !important;
+      }
+      .react-select-premium .react-select__control {
+        border-radius: 10px !important;
+        border: 1px solid #dee2e6 !important;
+        background-color: #ffffff !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        cursor: pointer !important;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+        box-shadow: none !important;
+      }
+      .react-select-premium .react-select__control:hover {
+        border-color: #cbd5e1 !important;
+      }
+      .react-select-premium .react-select__control--is-focused,
+      .react-select-premium .react-select__control--menu-is-open {
+        border-color: #1ea8e7 !important;
+        box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
+      }
+      .react-select-premium .react-select__single-value {
+        color: #334155 !important;
+        font-size: 0.9rem !important;
+        padding-left: 0.25rem !important;
+      }
+      .react-select-premium .react-select__placeholder {
+        color: #94a3b8 !important;
+        font-size: 0.9rem !important;
+        padding-left: 0.25rem !important;
+      }
+      .react-select-premium .react-select__indicator-separator {
+        display: none !important;
+      }
+      .react-select-premium .react-select__dropdown-indicator {
+        color: #94a3b8 !important;
+        padding-right: 0.75rem !important;
+        transition: color 0.15s ease !important;
+      }
+      .react-select-premium .react-select__dropdown-indicator:hover {
+        color: #64748b !important;
+      }
+      .react-select-premium .react-select__menu {
+        border-radius: 10px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+        border: 1px solid #1ea8e7 !important;
+        overflow: hidden !important;
+        z-index: 9999 !important;
+        margin-top: 5px !important;
+        background-color: #ffffff !important;
+      }
+      .react-select-premium .react-select__menu-list {
+        padding: 4px !important;
+      }
+      .react-select-premium .react-select__option {
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        padding: 0.5rem 0.75rem !important;
+        border-radius: 6px !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+        background-color: transparent !important;
+      }
+      .react-select-premium .react-select__option--is-focused {
+        background-color: #f1f5f9 !important;
+        color: #1ea8e7 !important;
+      }
+      .react-select-premium .react-select__option--is-selected {
+        background-color: #f1f5f9 !important;
+        color: #1ea8e7 !important;
+      }
+    `;
 
     return (
         <>
+            <style>{customStyles}</style>
             <HtmlHead title={title} description={description} />
             
             <div className="page-title-container">
@@ -120,13 +210,14 @@ const Holidays = () => {
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
                     <Col xs="auto" className="d-flex align-items-end gap-2 mb-2">
-                        <Form.Select 
-                            value={year} 
-                            onChange={(e) => setYear(Number(e.target.value))}
-                            style={{ width: '120px' }}
-                        >
-                            {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
-                        </Form.Select>
+                        <Select 
+                            options={yearOptionsList}
+                            value={yearOptionsList.find(opt => opt.value === year)}
+                            onChange={selected => setYear(selected ? Number(selected.value) : currentYear)}
+                            isSearchable={false}
+                            classNamePrefix="react-select"
+                            className="holiday-year-select-container react-select-premium shadow-sm"
+                        />
                         <Button variant="primary" onClick={() => handleShowModal()} className="btn-icon btn-icon-start">
                             <CsLineIcons icon="plus" /> <span>Add Holiday</span>
                         </Button>
@@ -201,19 +292,24 @@ const Holidays = () => {
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Type</Form.Label>
-                            <Form.Select value={form.holiday_type} onChange={e => setForm({...form, holiday_type: e.target.value})}>
-                                <option value="national">National Holiday</option>
-                                <option value="public">Public / Regional Holiday</option>
-                                <option value="company">Company Specific Holiday</option>
-                            </Form.Select>
+                            <Select 
+                                options={holidayTypeOptions} 
+                                value={holidayTypeOptions.find(opt => opt.value === form.holiday_type)}
+                                onChange={selected => setForm({...form, holiday_type: selected ? selected.value : 'public'})}
+                                isSearchable={false}
+                                classNamePrefix="react-select"
+                                className="react-select-premium shadow-sm"
+                            />
                         </Form.Group>
                         <Form.Group className="mb-3">
-                            <Form.Check 
-                                type="switch" 
-                                id="is-paid-switch" 
-                                label="Is this a Paid Holiday?" 
-                                checked={form.is_paid} 
-                                onChange={e => setForm({...form, is_paid: e.target.checked})} 
+                            <Form.Label>Pay Type</Form.Label>
+                            <Select 
+                                options={payTypeOptions} 
+                                value={payTypeOptions.find(opt => opt.value === (form.is_paid ? 'true' : 'false'))}
+                                onChange={selected => setForm({...form, is_paid: selected ? (selected.value === 'true') : true})}
+                                isSearchable={false}
+                                classNamePrefix="react-select"
+                                className="react-select-premium shadow-sm"
                             />
                         </Form.Group>
                         <Form.Group>

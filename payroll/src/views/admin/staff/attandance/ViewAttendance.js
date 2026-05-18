@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -17,6 +17,8 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Document, Packer, Paragraph, Table as DocTable, TableCell, TableRow, TextRun, AlignmentType, WidthType } from 'docx';
 import { format } from 'date-fns';
+import { getLeavePolicy } from 'api/payrollConfig';
+import Select from 'react-select';
 
 const customStyles = `
   .glass-card {
@@ -30,7 +32,7 @@ const customStyles = `
     transform: translateY(-2px);
     box-shadow: 0 15px 45px rgba(0, 0, 0, 0.06) !important;
   }
-  .custom-btn-outline {
+  .custom-btn-primary-outline {
     border: 1px solid #1ea8e7 !important;
     color: #1ea8e7 !important;
     background-color: #fff !important;
@@ -39,11 +41,56 @@ const customStyles = `
     font-weight: 600 !important;
     font-size: 0.85rem !important;
   }
-  .custom-btn-outline:hover {
+  .custom-btn-primary-outline:hover {
     background-color: #1ea8e7 !important;
     color: #fff !important;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
+  }
+  .custom-btn-success-outline {
+    border: 1px solid #10b981 !important;
+    color: #10b981 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+  }
+  .custom-btn-success-outline:hover {
+    background-color: #10b981 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+  }
+  .custom-btn-danger-outline {
+    border: 1px solid #ef4444 !important;
+    color: #ef4444 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+  }
+  .custom-btn-danger-outline:hover {
+    background-color: #ef4444 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
+  }
+  .custom-btn-info-outline {
+    border: 1px solid #0ea5e9 !important;
+    color: #0ea5e9 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+  }
+  .custom-btn-info-outline:hover {
+    background-color: #0ea5e9 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25) !important;
   }
   .custom-btn-solid {
     background-color: #1ea8e7 !important;
@@ -75,12 +122,15 @@ const customStyles = `
     z-index: 0;
   }
   .status-badge {
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
-    font-weight: 700;
-    font-size: 0.75rem;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
+    padding: 0.4rem 0.85rem !important;
+    border-radius: 50px !important;
+    font-weight: 700 !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
   }
   .fc .fc-button-primary {
     background-color: #1ea8e7 !important;
@@ -97,20 +147,280 @@ const customStyles = `
     font-weight: 600 !important;
     color: #64748b !important;
   }
-  .react-table-modern th {
+  
+  table.react-table.rows {
+    border-collapse: separate !important;
+    border-spacing: 0 12px !important;
+    width: 100% !important;
+  }
+  .react-table th {
     background: #f8fafc !important;
-    color: #64748b !important;
+    color: #475569 !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    font-size: 0.8rem !important;
+    letter-spacing: 0.06em !important;
+    padding: 1.1rem 1.5rem !important;
+    border-top: none !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
+  .react-table tbody tr {
+    transition: all 0.2s ease-in-out !important;
+    background-color: transparent !important;
+  }
+  .react-table tbody tr:hover td {
+    background-color: rgba(30, 168, 231, 0.015) !important;
+  }
+  .react-table td {
+    padding: 1.1rem 1.5rem !important;
+    vertical-align: middle !important;
+    border: none !important;
+    background-color: #ffffff !important;
+  }
+  .react-table td:first-child {
+    border-top-left-radius: 15px !important;
+    border-bottom-left-radius: 15px !important;
+  }
+  .react-table td:last-child {
+    border-top-right-radius: 15px !important;
+    border-bottom-right-radius: 15px !important;
+  }
+  
+  .calendar-container {
+    padding: 1rem !important;
+    border-radius: 1.5rem !important;
+  }
+  .fc {
+    font-family: inherit !important;
+  }
+  .fc .fc-toolbar {
+    margin-bottom: 1.5rem !important;
+  }
+  .fc .fc-button {
+    background: #ffffff !important;
+    border: 1.5px solid #edf2f7 !important;
+    color: #475569 !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    padding: 0.4rem 1rem !important;
+    font-size: 0.85rem !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02) !important;
+  }
+  .fc .fc-button:hover {
+    background: #edf2f7 !important;
+    border-color: #cbd5e1 !important;
+    color: #1e293b !important;
+  }
+  .fc .fc-button-active {
+    background: #1ea8e7 !important;
+    border-color: #1ea8e7 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(30, 168, 231, 0.2) !important;
+  }
+  .fc .fc-button-primary:not(:disabled).fc-button-active, 
+  .fc .fc-button-primary:not(:disabled):active {
+    background: #1ea8e7 !important;
+    border-color: #1ea8e7 !important;
+    color: #ffffff !important;
+  }
+  .fc .fc-col-header-cell {
+    background: #f8fafc !important;
+    padding: 0.75rem 0 !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     font-size: 0.75rem !important;
     letter-spacing: 0.05em !important;
-    padding: 1.25rem !important;
-    border: none !important;
+    color: #64748b !important;
+    border: 1px solid #e2e8f0 !important;
   }
-  .react-table-modern td {
-    padding: 1.25rem !important;
-    vertical-align: middle !important;
-    border-bottom: 1px solid #f1f5f9 !important;
+  .fc td, .fc th {
+    border-color: #edf2f7 !important;
+  }
+  .fc .fc-daygrid-day:hover {
+    background-color: rgba(30, 168, 231, 0.02) !important;
+  }
+  .fc .fc-daygrid-day.fc-day-today {
+    background-color: rgba(30, 168, 231, 0.05) !important;
+  }
+  .fc-event {
+    border-radius: 8px !important;
+    border: none !important;
+    padding: 0.2rem 0.4rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+  }
+  
+  .filter-pill-input {
+    border-radius: 50px !important;
+    padding: 0.6rem 1.25rem !important;
+    border: 1.5px solid #edf2f7 !important;
+    background-color: #f8fafc !important;
+    color: #475569 !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    height: 44px !important;
+    transition: all 0.25s ease-in-out !important;
+    box-shadow: none !important;
+  }
+  .filter-pill-input:focus {
+    border-color: #1ea8e7 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(30, 168, 231, 0.15) !important;
+    outline: none !important;
+  }
+  .filter-pill-input.form-select {
+    cursor: pointer !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%231ea8e7' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+    background-size: 12px 12px !important;
+  }
+  .filter-pill-input::-webkit-calendar-picker-indicator {
+    cursor: pointer !important;
+    filter: invert(53%) sepia(82%) saturate(1987%) hue-rotate(176deg) brightness(97%) contrast(93%);
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+  }
+  .filter-pill-input::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+
+  /* react-select custom styling overrides */
+  .react-select__control {
+    border-radius: 50px !important;
+    border: 1.5px solid #edf2f7 !important;
+    background-color: #f8fafc !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    box-shadow: none !important;
+    transition: all 0.25s ease-in-out !important;
+    cursor: pointer !important;
+  }
+  .react-select__control:hover {
+    border-color: #cbd5e1 !important;
+  }
+  .react-select__control--is-focused {
+    border-color: #1ea8e7 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(30, 168, 231, 0.15) !important;
+  }
+  .react-select__value-container {
+    padding-left: 1.25rem !important;
+    background-color: transparent !important;
+  }
+  .react-select__indicators-container {
+    padding-right: 0.5rem !important;
+    background-color: transparent !important;
+  }
+  .react-select__indicator {
+    color: #1ea8e7 !important;
+    padding: 4px !important;
+  }
+  .react-select__indicator:hover {
+    color: #1ea8e7 !important;
+  }
+  .react-select__indicator-separator {
+    display: none !important;
+  }
+  .react-select__single-value {
+    color: #475569 !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+  }
+  .react-select__placeholder {
+    color: #94a3b8 !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+  }
+  .react-select__menu {
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid #e2e8f0 !important;
+    overflow: hidden !important;
+    z-index: 9999 !important;
+    margin-top: 4px !important;
+  }
+  .react-select__option {
+    cursor: pointer !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    padding: 0.6rem 1.25rem !important;
+    color: #475569 !important;
+  }
+  .react-select__option--is-focused {
+    background-color: rgba(30, 168, 231, 0.08) !important;
+    color: #475569 !important;
+  }
+  .react-select__option--is-selected {
+    background-color: #1ea8e7 !important;
+    color: #ffffff !important;
+  }
+
+  @media (max-width: 767.98px) {
+    .page-title-container {
+      margin-top: 2rem !important;
+    }
+    .filter-pill-input {
+      font-size: 0.8rem !important;
+      padding: 0.5rem 1rem !important;
+      height: 38px !important;
+      border-radius: 20px !important;
+    }
+    .react-select__control {
+      height: 38px !important;
+      min-height: 38px !important;
+      border-radius: 20px !important;
+    }
+    .react-select__value-container {
+      padding-left: 1rem !important;
+    }
+    .react-select__single-value,
+    .react-select__placeholder {
+      font-size: 0.8rem !important;
+    }
+    .fc .fc-toolbar {
+      flex-direction: column !important;
+      gap: 0.75rem !important;
+      align-items: center !important;
+    }
+    .fc .fc-toolbar-chunk {
+      display: flex !important;
+      justify-content: center !important;
+      width: 100% !important;
+      flex-wrap: wrap !important;
+      gap: 0.25rem !important;
+    }
+    .fc .fc-toolbar-title {
+      font-size: 1.1rem !important;
+      text-align: center !important;
+      margin: 0.25rem 0 !important;
+    }
+    .fc .fc-button {
+      padding: 0.35rem 0.65rem !important;
+      font-size: 0.7rem !important;
+      min-height: 28px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    .calendar-container {
+      padding: 0.25rem !important;
+    }
+    .fc .fc-col-header-cell {
+      padding: 0.35rem 0 !important;
+      font-size: 0.65rem !important;
+    }
+    .fc .fc-daygrid-day-number {
+      font-size: 0.7rem !important;
+      padding: 2px 4px !important;
+    }
+    .fc-event {
+      font-size: 0.65rem !important;
+      padding: 1px 3px !important;
+      border-radius: 4px !important;
+    }
   }
 `;
 
@@ -130,7 +440,97 @@ const ViewAttendance = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [leaveTypes, setLeaveTypes] = useState([]);
+
+  const statusOptions = [
+    { value: 'all', label: 'All Records' },
+    { value: 'present', label: 'Present' },
+    { value: 'absent', label: 'Absent' },
+  ];
+
+  const selectStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      borderRadius: window.innerWidth <= 767.98 ? '20px' : '50px',
+      border: state.isFocused ? '1.5px solid #1ea8e7' : '1.5px solid #edf2f7',
+      backgroundColor: '#f8fafc',
+      color: '#475569',
+      fontSize: window.innerWidth <= 767.98 ? '0.8rem' : '0.85rem',
+      fontWeight: '600',
+      height: window.innerWidth <= 767.98 ? '38px' : '44px',
+      minHeight: window.innerWidth <= 767.98 ? '38px' : '44px',
+      paddingLeft: '0.5rem',
+      paddingRight: '0.5rem',
+      boxShadow: state.isFocused ? '0 0 0 3px rgba(30, 168, 231, 0.15)' : 'none',
+      transition: 'all 0.25s ease-in-out',
+      cursor: 'pointer',
+      '&:hover': {
+        borderColor: state.isFocused ? '#1ea8e7' : '#cbd5e1',
+      },
+    }),
+    valueContainer: (provided) => ({
+      ...provided,
+      backgroundColor: '#f8fafc',
+      borderRadius: window.innerWidth <= 767.98 ? '20px' : '50px',
+      paddingLeft: '4px',
+    }),
+    indicatorsContainer: (provided) => ({
+      ...provided,
+      backgroundColor: '#f8fafc',
+      borderRadius: window.innerWidth <= 767.98 ? '20px' : '50px',
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: '#475569',
+      fontWeight: '600',
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: '#94a3b8',
+      fontWeight: '600',
+    }),
+    dropdownIndicator: (provided) => ({
+      ...provided,
+      color: '#1ea8e7',
+      padding: '4px',
+      '&:hover': {
+        color: '#1ea8e7',
+      }
+    }),
+    indicatorSeparator: () => ({
+      display: 'none',
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: '12px',
+      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.08)',
+      border: '1px solid #e2e8f0',
+      overflow: 'hidden',
+      zIndex: 9999,
+      marginTop: '4px',
+    }),
+    menuPortal: (provided) => ({
+      ...provided,
+      zIndex: 9999,
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected 
+        ? '#1ea8e7' 
+        : state.isFocused 
+        ? 'rgba(30, 168, 231, 0.08)' 
+        : '#ffffff',
+      color: state.isSelected ? '#ffffff' : '#475569',
+      cursor: 'pointer',
+      fontSize: '0.85rem',
+      fontWeight: '600',
+      padding: '0.6rem 1.25rem',
+      '&:active': {
+        backgroundColor: '#1ea8e7',
+        color: '#ffffff',
+      }
+    }),
+  };
 
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
@@ -149,13 +549,7 @@ const ViewAttendance = () => {
     recordsLimit: 'all',
   });
 
-  const [stats, setStats] = useState({
-    totalPresent: 0,
-    totalAbsent: 0,
-    totalDays: 0,
-    attendanceRate: 0,
-    avgHoursWorked: 0,
-  });
+  // Stats are dynamically computed via useMemo depending on filteredAttendance
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
@@ -211,59 +605,67 @@ const ViewAttendance = () => {
   };
 
   const filteredAttendance = attendance.filter((att) => {
-    if (startDate && endDate) {
+    // If date filters are set, filter by those dates
+    if (startDate || endDate) {
       const date = new Date(att.date);
-      if (date < new Date(startDate) || date > new Date(endDate)) return false;
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        if (date < start) return false;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        if (date > end) return false;
+      }
+    } else {
+      // DEFAULT: only show current month
+      const recordDate = new Date(att.date);
+      const today = new Date();
+      if (recordDate.getMonth() !== today.getMonth() || recordDate.getFullYear() !== today.getFullYear()) {
+        return false;
+      }
     }
     if (statusFilter !== 'all' && att.status !== statusFilter) return false;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      return (
-        att.date.includes(q) ||
-        att.status?.toLowerCase().includes(q) ||
-        att.in_time?.toLowerCase().includes(q) ||
-        att.out_time?.toLowerCase().includes(q)
-      );
-    }
     return true;
   });
 
-  useEffect(() => {
-    if (attendance.length === 0) return;
-
-    const present = attendance.filter((a) => a.status === 'present').length;
-    const absent = attendance.filter((a) => a.status === 'absent').length;
-    const total = attendance.length;
+  const stats = useMemo(() => {
+    const present = filteredAttendance.filter((a) => a.status === 'present').length;
+    const absent = filteredAttendance.filter((a) => a.status === 'absent').length;
+    const total = filteredAttendance.length;
 
     let totalHours = 0;
     let validShifts = 0;
-    attendance.forEach((att) => {
+    filteredAttendance.forEach((att) => {
       const hours = calculateWorkingHours(att.in_time, att.out_time);
       if (hours) { totalHours += hours.total; validShifts++; }
     });
 
-    setStats({
+    return {
       totalPresent: present,
       totalAbsent: absent,
       totalDays: total,
-      attendanceRate: total > 0 ? ((present / total) * 100).toFixed(1) : 0,
-      avgHoursWorked: validShifts > 0 ? (totalHours / validShifts).toFixed(1) : 0,
-    });
-  }, [attendance]);
+      attendanceRate: total > 0 ? ((present / total) * 100).toFixed(1) : '0',
+      avgHoursWorked: validShifts > 0 ? (totalHours / validShifts).toFixed(1) : '0',
+    };
+  }, [filteredAttendance]);
 
   const fetchAttendance = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(
-        `${process.env.REACT_APP_API}/attendance/get/${id}`,
-        authHeader()
-      );
+      const [response, polRes] = await Promise.all([
+        axios.get(`${process.env.REACT_APP_API}/attendance/get/${id}`, authHeader()),
+        getLeavePolicy()
+      ]);
 
       const { attendance: records, ...staff } = response.data.data;
+      const types = (polRes.success && polRes.data?.leave_types) ? polRes.data.leave_types : [];
 
       setStaffData(staff);
       setAttendance(records || []);
+      setLeaveTypes(types);
 
       const events = (records || []).map((att) => {
         let title = '';
@@ -285,6 +687,20 @@ const ViewAttendance = () => {
         } else if (att.status === 'absent') {
           title = '✗ Absent';
           backgroundColor = '#ef4444';
+        } else if (att.status === 'leave') {
+          const leaveType = types.find((lt) => lt.leave_type_id === att.leave_type_id);
+          title = leaveType ? `🍃 ${leaveType.name}` : '🍃 On Leave';
+          backgroundColor = '#0ea5e9';
+        } else if (att.status === 'half_day') {
+          const leaveType = types.find((lt) => lt.leave_type_id === att.leave_type_id);
+          title = leaveType ? `🌓 Half Day: ${leaveType.name}` : '🌓 Half Day';
+          backgroundColor = '#f59e0b';
+        } else if (att.status === 'week_off') {
+          title = '🏖 Week Off';
+          backgroundColor = '#94a3b8';
+        } else if (att.status === 'holiday') {
+          title = '🎉 Holiday';
+          backgroundColor = '#ec4899';
         }
 
         return {
@@ -319,7 +735,6 @@ const ViewAttendance = () => {
     setStartDate('');
     setEndDate('');
     setStatusFilter('all');
-    setSearchQuery('');
   };
 
   const exportToExcel = async () => {
@@ -492,77 +907,11 @@ const ViewAttendance = () => {
     }
   };
 
-  const exportToWord = async () => {
-    if (!staffData) return;
-    setExporting(true); setExportProgress(10); setExportType('Word');
-    try {
-      setExportProgress(30);
-      const records = exportOptions.recordsLimit === 'all'
-        ? filteredAttendance
-        : filteredAttendance.slice(0, parseInt(exportOptions.recordsLimit, 10));
-
-      const rows = [
-        new TableRow({
-          children: ['Check-In Date', 'Status', 'In Time', 'Out Time', 'Out Date', 'Hours'].map(
-            (heading) => new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: heading, bold: true })], alignment: AlignmentType.CENTER })],
-              width: { size: 14, type: WidthType.PERCENTAGE },
-            })
-          ),
-        }),
-        ...records.map((att) => {
-          const hours = calculateWorkingHours(att.in_time, att.out_time);
-          const overnight = isOvernightShift(att.in_time, att.out_time);
-          const checkoutDate = overnight ? getCheckoutDisplayDate(att.date, att.in_time, att.out_time) : null;
-          return new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph(formatDateDisplay(att.date))] }),
-              new TableCell({ children: [new Paragraph(att.status.toUpperCase())] }),
-              new TableCell({ children: [new Paragraph(att.in_time || '-')] }),
-              new TableCell({ children: [new Paragraph(att.out_time || '-')] }),
-              new TableCell({ children: [new Paragraph(checkoutDate ? formatDateDisplay(checkoutDate) : 'Same Day')] }),
-              new TableCell({ children: [new Paragraph(hours ? `${hours.hours}h ${hours.minutes}m` : '-')] }),
-            ],
-          });
-        }),
-      ];
-
-      setExportProgress(60);
-      const doc = new Document({
-        sections: [{
-          properties: {},
-          children: [
-            new Paragraph({ text: 'Attendance Report', heading: 'Heading1', alignment: AlignmentType.CENTER }),
-            new Paragraph({ text: `${staffData.f_name} ${staffData.l_name} (${staffData.staff_id})`, alignment: AlignmentType.CENTER }),
-            new Paragraph({ text: `Position: ${staffData.position}`, alignment: AlignmentType.CENTER }),
-            new Paragraph({ text: '' }),
-            new Paragraph({ text: `Total Days: ${stats.totalDays} | Present: ${stats.totalPresent} | Absent: ${stats.totalAbsent} | Rate: ${stats.attendanceRate}%` }),
-            new Paragraph({ text: '' }),
-            new DocTable({ rows }),
-          ],
-        }],
-      });
-
-      setExportProgress(90);
-      Packer.toBlob(doc).then((blob) => {
-        saveAs(blob, `${staffData.staff_id}_Attendance_Report.docx`);
-        setExportProgress(100);
-        showSuccessToast('Word report exported successfully!');
-      });
-    } catch (err) {
-      console.error(err);
-      showSuccessToast('Error exporting Word file');
-    } finally {
-      setTimeout(() => { setExporting(false); setExportProgress(0); setExportType(''); }, 500);
-    }
-  };
-
   const handleExportClick = (type) => { setShowExportModal(true); setExportType(type); };
   const handleExportConfirm = () => {
     setShowExportModal(false);
     if (exportType === 'Excel') exportToExcel();
     else if (exportType === 'PDF') exportToPDF();
-    else if (exportType === 'Word') exportToWord();
   };
 
   if (loading && !staffData) {
@@ -588,8 +937,8 @@ const ViewAttendance = () => {
             <BreadcrumbList items={breadcrumbs} />
           </Col>
           <Col md={5} className="d-flex justify-content-md-end">
-            <Button className="custom-btn-outline px-4 py-2 d-flex align-items-center gap-2" onClick={() => history.push('/attendance')}>
-              <CsLineIcons icon="arrow-left" size="18" /> Back to Dashboard
+            <Button variant="none" className="custom-btn-primary-outline px-4 py-2 d-flex align-items-center gap-2" onClick={() => history.push('/staff/attendance')}>
+              <CsLineIcons icon="arrow-left" size="18" /> Manage Attendance
             </Button>
           </Col>
         </Row>
@@ -644,37 +993,38 @@ const ViewAttendance = () => {
 
       <Card className="glass-card border-0 mb-4">
         <Card.Body className="p-4">
-          <Row className="g-3 align-items-end">
-            <Col md={3}>
-              <Form.Label className="small fw-bold text-muted text-uppercase">Start Date</Form.Label>
-              <Form.Control className="rounded-3 border-0 shadow-sm py-2" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-            </Col>
-            <Col md={3}>
-              <Form.Label className="small fw-bold text-muted text-uppercase">End Date</Form.Label>
-              <Form.Control className="rounded-3 border-0 shadow-sm py-2" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-            </Col>
-            <Col md={2}>
-              <Form.Label className="small fw-bold text-muted text-uppercase">Status</Form.Label>
-              <Form.Select className="rounded-3 border-0 shadow-sm py-2" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                <option value="all">All Records</option>
-                <option value="present">Present</option>
-                <option value="absent">Absent</option>
-              </Form.Select>
-            </Col>
-            <Col md={3}>
-              <Form.Label className="small fw-bold text-muted text-uppercase">Search</Form.Label>
+          <Row className="g-3 align-items-center">
+            <Col md={4}>
+              <Form.Label className="small fw-bold text-muted text-uppercase ms-3 mb-2">Start Date</Form.Label>
               <Form.Control
-                className="rounded-3 border-0 shadow-sm py-2"
-                type="text"
-                placeholder="Filter by date or time..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                className="filter-pill-input shadow-sm"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
               />
             </Col>
-            <Col md={1}>
-              <Button className="custom-btn-outline w-100 sh-5 p-0 d-flex align-items-center justify-content-center" onClick={clearFilters} title="Reset Filters">
-                <CsLineIcons icon="rotate-left" size="18" />
-              </Button>
+            <Col md={4}>
+              <Form.Label className="small fw-bold text-muted text-uppercase ms-3 mb-2">End Date</Form.Label>
+              <Form.Control
+                className="filter-pill-input shadow-sm"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </Col>
+            <Col md={4}>
+              <Form.Label className="small fw-bold text-muted text-uppercase ms-3 mb-2">Status</Form.Label>
+              <Select
+                classNamePrefix="react-select"
+                styles={selectStyles}
+                options={statusOptions}
+                value={statusOptions.find((opt) => opt.value === statusFilter)}
+                onChange={(selected) => setStatusFilter(selected ? selected.value : 'all')}
+                placeholder="Select Status"
+                isSearchable={false}
+                menuPortalTarget={document.body}
+                menuPlacement="bottom"
+              />
             </Col>
           </Row>
         </Card.Body>
@@ -692,14 +1042,21 @@ const ViewAttendance = () => {
             <Card.Body className="p-4">
               <p className="text-muted small mb-4">Generate detailed attendance reports in various formats for payroll or compliance.</p>
               <div className="d-grid gap-3">
-                <Button className="custom-btn-solid bg-success border-success py-3 d-flex align-items-center justify-content-center gap-2" onClick={() => handleExportClick('Excel')} disabled={exporting}>
+                <Button
+                  variant="none"
+                  className="custom-btn-success-outline py-3 d-flex align-items-center justify-content-center gap-2"
+                  onClick={() => handleExportClick('Excel')}
+                  disabled={exporting}
+                >
                   <CsLineIcons icon="file-text" size="18" /> Excel Document
                 </Button>
-                <Button className="custom-btn-solid bg-danger border-danger py-3 d-flex align-items-center justify-content-center gap-2" onClick={() => handleExportClick('PDF')} disabled={exporting}>
+                <Button
+                  variant="none"
+                  className="custom-btn-danger-outline py-3 d-flex align-items-center justify-content-center gap-2"
+                  onClick={() => handleExportClick('PDF')}
+                  disabled={exporting}
+                >
                   <CsLineIcons icon="file-text" size="18" /> PDF Report
-                </Button>
-                <Button className="custom-btn-solid bg-info border-info py-3 d-flex align-items-center justify-content-center gap-2" onClick={() => handleExportClick('Word')} disabled={exporting}>
-                  <CsLineIcons icon="file-text" size="18" /> Word Document
                 </Button>
               </div>
               
@@ -721,7 +1078,7 @@ const ViewAttendance = () => {
 
         <Col lg={8}>
           <Card className="glass-card border-0 mb-4">
-            <Card.Header className="bg-transparent border-0 p-4 pb-0 d-flex justify-content-between align-items-center">
+            <Card.Header className="bg-transparent border-0 p-4 pb-0 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
               <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                 <CsLineIcons icon="calendar" size="20" className="text-primary" />
                 Attendance Calendar
@@ -750,15 +1107,16 @@ const ViewAttendance = () => {
       </Row>
 
       <Card className="glass-card border-0 mt-4 overflow-hidden">
-        <Card.Header className="bg-light border-0 p-4">
+        <Card.Header className="bg-transparent border-0 p-4 pb-0">
           <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
             <CsLineIcons icon="layout" size="20" className="text-primary" />
             Detailed Logs
           </h5>
         </Card.Header>
-        <Card.Body className="p-0">
-          <div className="table-responsive">
-            <table className="table table-hover react-table-modern mb-0">
+        <Card.Body className="p-4 pt-0">
+          {/* Desktop View (Table Layout) */}
+          <div className="table-responsive d-none d-md-block" style={{ overflow: 'auto' }}>
+            <table className="react-table rows mb-0">
               <thead>
                 <tr>
                   <th>Date & Weekday</th>
@@ -795,10 +1153,40 @@ const ViewAttendance = () => {
                             <small className="text-muted fw-medium">{new Date(att.date).toLocaleDateString('en-IN', { weekday: 'long' })}</small>
                           </td>
                           <td>
-                            <Badge bg={att.status === 'present' ? 'success' : 'danger'} className="status-badge d-inline-flex align-items-center gap-1">
-                              <CsLineIcons icon={att.status === 'present' ? 'check' : 'close-circle'} size="12" />
-                              {att.status}
-                            </Badge>
+                            {(() => {
+                              let bg = 'danger';
+                              let icon = 'close-circle';
+                              let label = att.status;
+                              if (att.status === 'present') {
+                                bg = 'success';
+                                icon = 'check';
+                                label = 'Present';
+                              } else if (att.status === 'leave') {
+                                bg = 'info';
+                                icon = 'calendar';
+                                const leaveType = leaveTypes.find((lt) => lt.leave_type_id === att.leave_type_id);
+                                label = leaveType ? `On Leave (${leaveType.short_code || leaveType.name})` : 'On Leave';
+                              } else if (att.status === 'half_day') {
+                                bg = 'warning';
+                                icon = 'clock';
+                                const leaveType = leaveTypes.find((lt) => lt.leave_type_id === att.leave_type_id);
+                                label = leaveType ? `Half Day (${leaveType.short_code || leaveType.name})` : 'Half Day';
+                              } else if (att.status === 'week_off') {
+                                bg = 'secondary';
+                                icon = 'sun';
+                                label = 'Week Off';
+                              } else if (att.status === 'holiday') {
+                                bg = 'pink';
+                                icon = 'gift';
+                                label = 'Holiday';
+                              }
+                              return (
+                                <Badge bg={bg} className="status-badge d-inline-flex align-items-center gap-1 text-capitalize">
+                                  <CsLineIcons icon={icon} size="12" />
+                                  {label}
+                                </Badge>
+                              );
+                            })()}
                           </td>
                           <td>
                             <div className="d-flex align-items-center gap-2 text-dark fw-medium">
@@ -825,8 +1213,15 @@ const ViewAttendance = () => {
                             ) : '—'}
                           </td>
                           <td className="text-center">
-                            <Button className="custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center mx-auto" onClick={() => { setSelectedAttendance(att); setShowDetailModal(true); }}>
-                              <CsLineIcons icon="eye" size="16" />
+                            <Button
+                              variant="none"
+                              size="sm"
+                              className="btn-icon btn-icon-only rounded-circle custom-btn-primary-outline mx-auto"
+                              onClick={() => { setSelectedAttendance(att); setShowDetailModal(true); }}
+                              title="View Detail"
+                              style={{ width: '36px', height: '36px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                              <CsLineIcons icon="eye" size="14" />
                             </Button>
                           </td>
                         </tr>
@@ -835,6 +1230,121 @@ const ViewAttendance = () => {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile View (Premium Space-Saving Card Grid) */}
+          <div className="d-md-none d-flex flex-column gap-3 mt-2">
+            {filteredAttendance.length === 0 ? (
+              <div className="text-center py-5">
+                <CsLineIcons icon="info-hexagon" size="48" className="text-muted mb-3" />
+                <h5 className="text-muted">No records found matching filters</h5>
+              </div>
+            ) : (
+              filteredAttendance
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .map((att, index) => {
+                  const hours = calculateWorkingHours(att.in_time, att.out_time);
+                  const overnight = isOvernightShift(att.in_time, att.out_time);
+                  const checkoutDate = overnight ? getCheckoutDisplayDate(att.date, att.in_time, att.out_time) : null;
+
+                  return (
+                    <Card key={att._id || index} className="border-0 shadow-sm" style={{ borderRadius: '1.25rem', background: '#f8fafc', border: '1px solid #edf2f7' }}>
+                      <Card.Body className="p-3">
+                        {/* Top: Date & Status */}
+                        <div className="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                          <div>
+                            <div className="fw-bold text-dark">{formatDateDisplay(att.date)}</div>
+                            <small className="text-muted fw-medium">
+                              {new Date(att.date).toLocaleDateString('en-IN', { weekday: 'long' })}
+                            </small>
+                          </div>
+                          {(() => {
+                            let bg = 'danger';
+                            let icon = 'close-circle';
+                            let label = att.status;
+                            if (att.status === 'present') {
+                              bg = 'success';
+                              icon = 'check';
+                              label = 'Present';
+                            } else if (att.status === 'leave') {
+                              bg = 'info';
+                              icon = 'calendar';
+                              const leaveType = leaveTypes.find((lt) => lt.leave_type_id === att.leave_type_id);
+                              label = leaveType ? `On Leave (${leaveType.short_code || leaveType.name})` : 'On Leave';
+                            } else if (att.status === 'half_day') {
+                              bg = 'warning';
+                              icon = 'clock';
+                              const leaveType = leaveTypes.find((lt) => lt.leave_type_id === att.leave_type_id);
+                              label = leaveType ? `Half Day (${leaveType.short_code || leaveType.name})` : 'Half Day';
+                            } else if (att.status === 'week_off') {
+                              bg = 'secondary';
+                              icon = 'sun';
+                              label = 'Week Off';
+                            } else if (att.status === 'holiday') {
+                              bg = 'pink';
+                              icon = 'gift';
+                              label = 'Holiday';
+                            }
+                            return (
+                              <Badge bg={bg} className="status-badge d-inline-flex align-items-center gap-1 text-capitalize">
+                                <CsLineIcons icon={icon} size="12" />
+                                {label}
+                              </Badge>
+                            );
+                          })()}
+                        </div>
+
+                        {/* Middle: Shift & Times */}
+                        <Row className="g-3 mb-3 text-start">
+                          <Col xs={6}>
+                            <div className="small text-muted text-uppercase fw-bold" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>Check-In</div>
+                            <div className="d-flex align-items-center gap-1 text-dark fw-bold mt-1" style={{ fontSize: '13px' }}>
+                              <CsLineIcons icon="login" size="14" className="text-success" />
+                              {att.in_time || '—'}
+                            </div>
+                          </Col>
+                          <Col xs={6}>
+                            <div className="small text-muted text-uppercase fw-bold" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>Check-Out</div>
+                            <div className="d-flex align-items-center gap-1 text-dark fw-bold mt-1" style={{ fontSize: '13px' }}>
+                              <CsLineIcons icon="logout" size="14" className="text-danger" />
+                              {att.out_time ? att.out_time : att.in_time ? 'Active' : '—'}
+                            </div>
+                            {checkoutDate && <div className="small text-muted mt-1" style={{ fontSize: '10px' }}>🌙 Out: {formatDateDisplay(checkoutDate)}</div>}
+                          </Col>
+                          <Col xs={6}>
+                            <div className="small text-muted text-uppercase fw-bold" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>Total Hours</div>
+                            <div className="fw-bold text-primary mt-1" style={{ fontSize: '13px' }}>
+                              {hours ? `${hours.hours}h ${hours.minutes}m` : '—'}
+                            </div>
+                          </Col>
+                          <Col xs={6}>
+                            <div className="small text-muted text-uppercase fw-bold" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>Shift Type</div>
+                            <div className="mt-1">
+                              {att.in_time && att.out_time ? (
+                                <Badge bg={overnight ? 'soft-purple' : 'soft-info'} className={`text-${overnight ? 'purple' : 'info'} px-2 py-1 rounded-pill fw-bold`} style={{ fontSize: '10px' }}>
+                                  {overnight ? '🌙 Night' : '☀️ Day'}
+                                </Badge>
+                              ) : '—'}
+                            </div>
+                          </Col>
+                        </Row>
+
+                        {/* Bottom Action */}
+                        <div className="d-grid mt-2">
+                          <Button
+                            variant="none"
+                            className="custom-btn-primary-outline w-100 py-2 d-flex align-items-center justify-content-center gap-2"
+                            onClick={() => { setSelectedAttendance(att); setShowDetailModal(true); }}
+                            style={{ fontSize: '12px' }}
+                          >
+                            <CsLineIcons icon="eye" size="14" /> View Details
+                          </Button>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  );
+                })
+            )}
           </div>
         </Card.Body>
       </Card>
@@ -884,7 +1394,7 @@ const ViewAttendance = () => {
           )}
         </Modal.Body>
         <Modal.Footer className="border-0">
-          <Button className="custom-btn-solid w-100 py-3" onClick={() => setShowDetailModal(false)}>Close Detail</Button>
+          <Button className="custom-btn-solid rounded-pill w-100 py-3" onClick={() => setShowDetailModal(false)}>Close Detail</Button>
         </Modal.Footer>
       </Modal>
 
@@ -917,10 +1427,22 @@ const ViewAttendance = () => {
               <option value="180">Recent 180 Days</option>
             </Form.Select>
           </Form>
-          <Button variant="primary" onClick={handleExportConfirm}>
-            <CsLineIcons icon="download" className="me-2" />Export {exportType}
-          </Button>
         </Modal.Body>
+        <Modal.Footer className="border-0 d-flex gap-3 pt-0">
+          <Button
+            variant="none"
+            className="custom-btn-primary-outline flex-grow-1 py-3"
+            onClick={() => setShowExportModal(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="custom-btn-solid flex-grow-1 py-3 d-flex align-items-center justify-content-center gap-2"
+            onClick={handleExportConfirm}
+          >
+            <CsLineIcons icon="download" size="18" /> Export {exportType}
+          </Button>
+        </Modal.Footer>
       </Modal>
 
       {/* Toast */}

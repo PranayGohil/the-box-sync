@@ -562,28 +562,7 @@ const AddStaff = () => {
                       </Form.Group>
                     </Col>
 
-                    <Col xs={12}>
-                      <div className="d-flex add-staff-button-group-responsive justify-content-center mt-4">
-                        <Button
-                          variant="primary"
-                          type="submit"
-                          className="add-staff-custom-btn-outline px-5 py-3"
-                          disabled={loading.submitting || uploadingFiles.photo || uploadingFiles.front_image}
-                        >
-                          {loading.submitting ? (
-                            <>
-                              <Spinner animation="border" size="sm" />
-                              Processing...
-                            </>
-                          ) : (
-                            <>
-                              <CsLineIcons icon="save" size="20" />
-                              Register Staff Member
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </Col>
+
                   </Row>
                 </Card.Body>
               </Card>
@@ -709,17 +688,40 @@ const AddStaff = () => {
                       accept="image/*"
                       onChange={(e) => handleFileChange('front_image', e.target.files[0], setFrontImagePreview)}
                     />{' '}
-                    <Button
-                      as="label"
-                      htmlFor="front-image-upload"
-                      className="add-staff-custom-btn-outline px-4 mx-auto"
-                      style={{ maxWidth: 'fit-content' }}
-                      disabled={loading.submitting || uploadingFiles.front_image}
-                    >
-                      {uploadingFiles.front_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
-                      {frontImagePreview ? 'Change Front Image' : 'Upload Front Image'}
-                    </Button>
-                    {touched.front_image && errors.front_image && <div className="text-danger mt-1 small fw-bold">{errors.front_image}</div>}
+                    <div className="d-flex flex-column gap-3 align-items-start w-100">
+                      <Button
+                        as="label"
+                        htmlFor="front-image-upload"
+                        className="add-staff-custom-btn-outline px-4"
+                        style={{ maxWidth: 'fit-content' }}
+                        disabled={loading.submitting || uploadingFiles.front_image}
+                      >
+                        {uploadingFiles.front_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                        {frontImagePreview ? 'Change Front Image' : 'Upload Front Image'}
+                      </Button>
+                      {touched.front_image && errors.front_image && <div className="text-danger mt-1 small fw-bold">{errors.front_image}</div>}
+                      
+                      {values.document_type !== 'National Identity Card' && (
+                        <Button
+                          variant="primary"
+                          type="submit"
+                          className="add-staff-custom-btn-outline w-100 py-3 mt-2"
+                          disabled={loading.submitting || uploadingFiles.photo || uploadingFiles.front_image}
+                        >
+                          {loading.submitting ? (
+                            <>
+                              <Spinner animation="border" size="sm" className="me-2" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <CsLineIcons icon="save" size="20" className="me-2" />
+                              Register Staff Member
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </Form.Group>
 
                   {values.document_type === 'National Identity Card' && (
@@ -742,17 +744,38 @@ const AddStaff = () => {
                         accept="image/*"
                         onChange={(e) => handleFileChange('back_image', e.target.files[0], setBackImagePreview)}
                       />
-                      <Button
-                        as="label"
-                        htmlFor="back-image-upload"
-                        className="add-staff-custom-btn-outline px-4 mx-auto"
-                        style={{ maxWidth: 'fit-content' }}
-                        disabled={loading.submitting || uploadingFiles.back_image}
-                      >
-                        {uploadingFiles.back_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
-                        {backImagePreview ? 'Change Back Image' : 'Upload Back Image'}
-                      </Button>
-                      {touched.back_image && errors.back_image && <div className="text-danger mt-1 small fw-bold">{errors.back_image}</div>}
+                      <div className="d-flex flex-column gap-3 align-items-start w-100">
+                        <Button
+                          as="label"
+                          htmlFor="back-image-upload"
+                          className="add-staff-custom-btn-outline px-4"
+                          style={{ maxWidth: 'fit-content' }}
+                          disabled={loading.submitting || uploadingFiles.back_image}
+                        >
+                          {uploadingFiles.back_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                          {backImagePreview ? 'Change Back Image' : 'Upload Back Image'}
+                        </Button>
+                        {touched.back_image && errors.back_image && <div className="text-danger mt-1 small fw-bold">{errors.back_image}</div>}
+                        
+                        <Button
+                          variant="primary"
+                          type="submit"
+                          className="add-staff-custom-btn-outline w-100 py-3 mt-2"
+                          disabled={loading.submitting || uploadingFiles.photo || uploadingFiles.front_image || uploadingFiles.back_image}
+                        >
+                          {loading.submitting ? (
+                            <>
+                              <Spinner animation="border" size="sm" className="me-2" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <CsLineIcons icon="save" size="20" className="me-2" />
+                              Register Staff Member
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </Form.Group>
                   )}
                 </Card.Body>

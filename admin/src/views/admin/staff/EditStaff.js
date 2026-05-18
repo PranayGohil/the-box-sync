@@ -646,26 +646,7 @@ const EditStaff = () => {
 
                 </Row>
 
-                {/* Submit Button inside Card */}
-                <div className="d-flex edit-staff-button-group-responsive justify-content-center mt-4">
-                  <Button
-                    className="edit-staff-custom-btn-outline px-5 py-3"
-                    type="submit"
-                    disabled={loading.submitting}
-                  >
-                    {loading.submitting ? (
-                      <>
-                        <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                        Updating...
-                      </>
-                    ) : (
-                      <>
-                        <CsLineIcons icon="save" size="20" />
-                        Update Staff Member
-                      </>
-                    )}
-                  </Button>
-                </div>
+
               </Card.Body>
             </Card>
           </Col>
@@ -781,16 +762,38 @@ const EditStaff = () => {
                         if (file) handleFileChange('front_image', file, setFrontImagePreview);
                       }}
                     />
-                    <Button 
-                      as="label" 
-                      htmlFor="front-image-upload" 
-                      className="edit-staff-custom-btn-outline px-4 mx-auto"
-                      style={{ maxWidth: 'fit-content' }}
-                      disabled={loading.submitting || uploadingFiles.front_image}
-                    >
-                      {uploadingFiles.front_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
-                      {frontImagePreview ? 'Change Front Image' : 'Upload Front Image'}
-                    </Button>
+                    <div className="d-flex flex-column gap-3 align-items-start w-100">
+                      <Button 
+                        as="label" 
+                        htmlFor="front-image-upload" 
+                        className="edit-staff-custom-btn-outline px-4"
+                        style={{ maxWidth: 'fit-content' }}
+                        disabled={loading.submitting || uploadingFiles.front_image}
+                      >
+                        {uploadingFiles.front_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                        {frontImagePreview ? 'Change Front Image' : 'Upload Front Image'}
+                      </Button>
+                      
+                      {values.document_type !== 'National Identity Card' && (
+                        <Button
+                          className="edit-staff-custom-btn-outline w-100 py-3 mt-2"
+                          type="submit"
+                          disabled={loading.submitting}
+                        >
+                          {loading.submitting ? (
+                            <>
+                              <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                              Updating...
+                            </>
+                          ) : (
+                            <>
+                              <CsLineIcons icon="save" size="20" className="me-2" />
+                              Update Staff Member
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   {values.document_type === 'National Identity Card' && (
@@ -813,16 +816,36 @@ const EditStaff = () => {
                           if (file) handleFileChange('back_image', file, setBackImagePreview);
                         }}
                       />
-                      <Button 
-                        as="label" 
-                        htmlFor="back-image-upload" 
-                        className="edit-staff-custom-btn-outline px-4 mx-auto"
-                        style={{ maxWidth: 'fit-content' }}
-                        disabled={loading.submitting || uploadingFiles.back_image}
-                      >
-                        {uploadingFiles.back_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
-                        {backImagePreview ? 'Change Back Image' : 'Upload Back Image'}
-                      </Button>
+                      <div className="d-flex flex-column gap-3 align-items-start w-100">
+                        <Button 
+                          as="label" 
+                          htmlFor="back-image-upload" 
+                          className="edit-staff-custom-btn-outline px-4"
+                          style={{ maxWidth: 'fit-content' }}
+                          disabled={loading.submitting || uploadingFiles.back_image}
+                        >
+                          {uploadingFiles.back_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                          {backImagePreview ? 'Change Back Image' : 'Upload Back Image'}
+                        </Button>
+                        
+                        <Button
+                          className="edit-staff-custom-btn-outline w-100 py-3 mt-2"
+                          type="submit"
+                          disabled={loading.submitting}
+                        >
+                          {loading.submitting ? (
+                            <>
+                              <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                              Updating...
+                            </>
+                          ) : (
+                            <>
+                              <CsLineIcons icon="save" size="20" className="me-2" />
+                              Update Staff Member
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>

@@ -306,12 +306,17 @@ const AddStaff = () => {
       }
     };
     if (showFaceModal) {
-      setTimeout(() => { interval = setInterval(detectFace, 300); }, 100);
+      setTimeout(() => {
+        interval = setInterval(detectFace, 300);
+      }, 100);
     }
     return () => {
       if (interval) clearInterval(interval);
       const canvas = document.getElementById('faceCanvas');
-      if (canvas) { const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height); }
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
     };
   }, [showFaceModal]);
 
@@ -404,32 +409,33 @@ const AddStaff = () => {
     .glass-card {
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
-      border-radius: 1.25rem;
+      border-radius: 1.5rem;
       border: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
       transition: all 0.3s ease;
     }
     .custom-btn-outline {
-      background: #ffffff !important;
-      border: 1px solid #1ea8e7 !important;
-      color: #1ea8e7 !important;
-      border-radius: 50px !important;
-      padding: 0.5rem 1.5rem !important;
-      font-weight: 500 !important;
+      border: 2px solid #23b3f4 !important;
+      color: #23b3f4 !important;
+      background-color: transparent !important;
       transition: all 0.3s ease !important;
+      border-radius: 50px !important;
+      font-weight: 700 !important;
+      font-size: 0.85rem !important;
+      padding: 0.6rem 1.5rem !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       gap: 8px !important;
     }
     .custom-btn-outline:hover {
-      background: #1ea8e7 !important;
-      color: #ffffff !important;
-      border-color: #1ea8e7 !important;
-      transform: translateY(-1px) !important;
+      background-color: #23b3f4 !important;
+      color: #fff !important;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(35, 179, 244, 0.2) !important;
     }
     .custom-btn-outline i, .custom-btn-outline svg {
-      color: #1ea8e7 !important;
+      color: #23b3f4 !important;
       transition: color 0.3s ease !important;
     }
     .custom-btn-outline:hover i, .custom-btn-outline:hover svg {
@@ -437,11 +443,11 @@ const AddStaff = () => {
     }
     .custom-btn-danger {
       background: transparent !important;
-      border: 1px solid #cf2637 !important;
+      border: 2px solid #cf2637 !important;
       color: #cf2637 !important;
       border-radius: 50px !important;
       padding: 0.6rem 1.5rem !important;
-      font-weight: 600 !important;
+      font-weight: 700 !important;
       transition: all 0.3s ease !important;
       display: flex !important;
       align-items: center !important;
@@ -454,66 +460,70 @@ const AddStaff = () => {
     .custom-btn-danger:hover {
       background: #cf2637 !important;
       color: #ffffff !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 4px 12px rgba(207, 38, 55, 0.3) !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 8px 20px rgba(207, 38, 55, 0.2) !important;
     }
     .custom-btn-danger:hover i, .custom-btn-danger:hover svg {
       color: #ffffff !important;
     }
     .custom-btn-solid {
-      background: #1ea8e7 !important;
-      border: 1px solid #1ea8e7 !important;
-      color: #ffffff !important;
-      border-radius: 50px !important;
-      padding: 0.6rem 1.5rem !important;
-      font-weight: 600 !important;
+      background-color: #23b3f4 !important;
+      border: 2px solid #23b3f4 !important;
+      color: #fff !important;
       transition: all 0.3s ease !important;
+      border-radius: 50px !important;
+      font-weight: 700 !important;
+      font-size: 0.85rem !important;
+      padding: 0.6rem 1.5rem !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       gap: 8px !important;
     }
     .custom-btn-solid:hover {
-      background: #0091d5 !important;
-      border-color: #0091d5 !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
+      background-color: #1ea8e7 !important;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(35, 179, 244, 0.3) !important;
     }
     .custom-btn-solid i, .custom-btn-solid svg {
       color: #ffffff !important;
     }
     .form-label {
-      font-weight: 700;
-      color: #4a5568;
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.025em;
-      margin-bottom: 0.5rem;
+      font-weight: 500 !important;
+      color: #64748b !important;
+      font-size: 0.85rem !important;
+      text-transform: none !important;
+      letter-spacing: normal !important;
+      margin-bottom: 0.4rem !important;
+      display: inline-block;
     }
     .form-control, .form-select {
-      border-radius: 0.75rem;
-      padding: 0.75rem 1rem;
-      border: 1px solid #e2e8f0;
-      background-color: #f8fafc;
-      transition: all 0.2s ease;
+      border-radius: 10px !important;
+      padding: 0.5rem 0.75rem !important;
+      border: 1px solid #dee2e6 !important;
+      background-color: #ffffff !important;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+      font-size: 0.9rem !important;
+      height: 40px !important;
     }
     .form-control:focus, .form-select:focus {
-      background-color: white;
-      border-color: #1ea8e7;
-      box-shadow: 0 0 0 3px rgba(30, 168, 231, 0.1);
+      background-color: white !important;
+      border-color: #23b3f4 !important;
+      box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
     }
     .section-header {
-      border-left: 4px solid #1ea8e7;
+      border-left: 4px solid #23b3f4;
       padding-left: 1rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 2rem;
       color: #2d3748;
     }
     .preview-container {
-      width: 120px;
-      height: 120px;
-      border-radius: 1rem;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
       overflow: hidden;
-      border: 2px dashed #e2e8f0;
+      border: 4px solid #fff;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -527,16 +537,33 @@ const AddStaff = () => {
     }
     .id-preview-container {
       width: 100%;
-      max-width: 300px;
       height: 180px;
-      border-radius: 1rem;
+      border-radius: 1.25rem;
       overflow: hidden;
       border: 2px dashed #e2e8f0;
       display: flex;
       align-items: center;
       justify-content: center;
       background: #f8fafc;
-      margin-top: 10px;
+      margin-bottom: 1rem;
+    }
+    @media (max-width: 768px) {
+      .add-staff-button-group-responsive {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 12px !important;
+      }
+      .add-staff-button-group-responsive button, .add-staff-button-group-responsive label, .add-staff-button-group-responsive a {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 0.75rem 1rem !important;
+      }
+    }
+    @media (max-width: 576px) {
+      .glass-card {
+        border-radius: 1rem;
+        padding: 1.25rem !important;
+      }
     }
   `;
 
@@ -554,23 +581,27 @@ const AddStaff = () => {
   }
 
   return (
-    <div className="container-fluid pb-5">
+    <div className="add-staff-staff-container pb-5">
       <style>{customStyles}</style>
+
       <HtmlHead title={title} description={description} />
-      
-      <div className="page-title-container mb-5">
-        <Row className="g-3 align-items-center">
-          <Col md={7}>
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
-            <BreadcrumbList items={breadcrumbs} />
-          </Col>
-          <Col md={5} className="d-flex justify-content-md-end">
-            <Button className="custom-btn-outline" onClick={() => history.push('/staff/view')} disabled={loading.submitting}>
-              <CsLineIcons icon="arrow-left" size="18" /> Back to List
-            </Button>
-          </Col>
-        </Row>
-      </div>
+
+      <div className="container-fluid px-lg-5">
+        <div className="add-staff-page-title-container mb-4 mt-5 mt-md-n3">
+          <Row className="g-3 align-items-center">
+            <Col md={7}>
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
+                {title}
+              </h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </Col>
+            <Col xs="12" md="5" className="d-flex add-staff-button-group-responsive justify-content-md-end gap-2 mt-3 mt-md-0">
+              <Button className="custom-btn-outline" onClick={() => history.push('/staff/view')} disabled={loading.submitting}>
+                <CsLineIcons icon="arrow-left" size="18" /> Back to List
+              </Button>
+            </Col>
+          </Row>
+        </div>
 
       {fileUploadError && (
         <Alert variant="danger" className="glass-card border-0 mb-4 p-4 shadow-sm d-flex align-items-center gap-3">
@@ -697,7 +728,9 @@ const AddStaff = () => {
                       >
                         <option value="">Select Country</option>
                         {countries.map((country) => (
-                          <option key={country.isoCode} value={country.name}>{country.name}</option>
+                          <option key={country.isoCode} value={country.name}>
+                            {country.name}
+                          </option>
                         ))}
                       </Form.Select>
                       <Form.Control.Feedback type="invalid">{errors.country}</Form.Control.Feedback>
@@ -715,7 +748,9 @@ const AddStaff = () => {
                       >
                         <option value="">Select State</option>
                         {states.map((state) => (
-                          <option key={state.isoCode} value={state.name}>{state.name}</option>
+                          <option key={state.isoCode} value={state.name}>
+                            {state.name}
+                          </option>
                         ))}
                       </Form.Select>
                       <Form.Control.Feedback type="invalid">{errors.state}</Form.Control.Feedback>
@@ -733,7 +768,9 @@ const AddStaff = () => {
                       >
                         <option value="">Select City</option>
                         {cities.map((city) => (
-                          <option key={city.name} value={city.name}>{city.name}</option>
+                          <option key={city.name} value={city.name}>
+                            {city.name}
+                          </option>
                         ))}
                       </Form.Select>
                       <Form.Control.Feedback type="invalid">{errors.city}</Form.Control.Feedback>
@@ -798,9 +835,7 @@ const AddStaff = () => {
                         placeholder="Select or type..."
                         classNamePrefix="react-select"
                       />
-                      {touched.position && errors.position && (
-                        <div className="text-danger mt-1 small fw-bold">{errors.position}</div>
-                      )}
+                      {touched.position && errors.position && <div className="text-danger mt-1 small fw-bold">{errors.position}</div>}
                     </Form.Group>
                   </Col>
                   <Col md={6}>
@@ -901,30 +936,6 @@ const AddStaff = () => {
               </Card.Body>
             </Card>
 
-            <div className="d-flex justify-content-center mt-4">
-                      <Button 
-                        variant="primary" 
-                        type="submit" 
-                        className="custom-btn-outline px-5 py-3"
-                        disabled={loading.submitting || uploadingFiles.photo || uploadingFiles.front_image}
-                      >
-                        {loading.submitting ? (
-                          <>
-                            <Spinner animation="border" size="sm" />
-                            Processing...
-                          </>
-                        ) : (
-                          <>
-                            <CsLineIcons icon="save" size="20" />
-                            Register Staff Member
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
           </Col>
           <Col lg={4}>
             {/* Profile Photo Section */}
@@ -936,7 +947,7 @@ const AddStaff = () => {
                     Profile Photo
                   </h5>
                 </div>
-                
+
                 <div className="d-flex flex-column align-items-center">
                   <div className="preview-container mb-3 shadow-sm border-2">
                     {photoPreview ? (
@@ -945,7 +956,7 @@ const AddStaff = () => {
                       <CsLineIcons icon="user" size="40" className="text-muted opacity-20" />
                     )}
                   </div>
-                  
+
                   <Form.Group className="w-100">
                     <Form.Control
                       type="file"
@@ -957,9 +968,9 @@ const AddStaff = () => {
                         if (file) handleFileChange('photo', file, setPhotoPreview);
                       }}
                     />
-                    <Button 
-                      as="label" 
-                      htmlFor="photo-upload" 
+                    <Button
+                      as="label"
+                      htmlFor="photo-upload"
                       className="custom-btn-outline px-4 mx-auto"
                       style={{ maxWidth: 'fit-content' }}
                       disabled={loading.submitting || uploadingFiles.photo}
@@ -967,9 +978,7 @@ const AddStaff = () => {
                       {uploadingFiles.photo ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
                       {photoPreview ? 'Change Photo' : 'Upload Photo'}
                     </Button>
-                    {touched.photo && errors.photo && (
-                      <div className="text-danger mt-2 small fw-bold">{errors.photo}</div>
-                    )}
+                    {touched.photo && errors.photo && <div className="text-danger mt-2 small fw-bold">{errors.photo}</div>}
                   </Form.Group>
                 </div>
               </Card.Body>
@@ -1016,38 +1025,60 @@ const AddStaff = () => {
                   <Form.Control.Feedback type="invalid">{errors.id_number}</Form.Control.Feedback>
                 </Form.Group>
 
-                  <Form.Group className="mb-4">
-                    <Form.Label>Front Image</Form.Label>
-                    <div className="id-preview-container mb-2">
-                      {frontImagePreview ? (
-                        <img src={frontImagePreview} alt="Front" className="preview-image" />
-                      ) : (
-                        <div className="text-center p-4">
-                          <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
-                          <div className="small text-muted">No Image Selected</div>
-                        </div>
-                      )}
-                    </div>
-                    <Form.Control
-                      type="file"
-                      id="front-image-upload"
-                      className="d-none"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange('front_image', e.target.files[0], setFrontImagePreview)}
-                    />                    <Button 
-                      as="label" 
-                      htmlFor="front-image-upload" 
-                      className="custom-btn-outline px-4 mx-auto"
+                <Form.Group className="mb-4">
+                  <Form.Label>Front Image</Form.Label>
+                  <div className="id-preview-container mb-2">
+                    {frontImagePreview ? (
+                      <img src={frontImagePreview} alt="Front" className="preview-image" />
+                    ) : (
+                      <div className="text-center p-4">
+                        <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
+                        <div className="small text-muted">No Image Selected</div>
+                      </div>
+                    )}
+                  </div>
+                  <Form.Control
+                    type="file"
+                    id="front-image-upload"
+                    className="d-none"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange('front_image', e.target.files[0], setFrontImagePreview)}
+                  />{' '}
+                  <div className="d-flex flex-column gap-3 align-items-start w-100">
+                    <Button
+                      as="label"
+                      htmlFor="front-image-upload"
+                      className="custom-btn-outline px-4"
                       style={{ maxWidth: 'fit-content' }}
                       disabled={loading.submitting || uploadingFiles.front_image}
                     >
                       {uploadingFiles.front_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
                       {frontImagePreview ? 'Change Front Image' : 'Upload Front Image'}
                     </Button>
-                    {touched.front_image && errors.front_image && (
-                      <div className="text-danger mt-1 small fw-bold">{errors.front_image}</div>
+                    {touched.front_image && errors.front_image && <div className="text-danger mt-1 small fw-bold">{errors.front_image}</div>}
+                    
+                    {values.document_type !== 'National Identity Card' && (
+                      <Button
+                        variant="primary"
+                        type="submit"
+                        className="custom-btn-outline w-100 py-3 mt-2"
+                        disabled={loading.submitting || uploadingFiles.photo || uploadingFiles.front_image}
+                      >
+                        {loading.submitting ? (
+                          <>
+                            <Spinner animation="border" size="sm" className="me-2" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <CsLineIcons icon="save" size="20" className="me-2" />
+                            Register Staff Member
+                          </>
+                        )}
+                      </Button>
                     )}
-                  </Form.Group>
+                  </div>
+                </Form.Group>
 
                 {values.document_type === 'National Identity Card' && (
                   <Form.Group className="mb-4">
@@ -1069,31 +1100,52 @@ const AddStaff = () => {
                       accept="image/*"
                       onChange={(e) => handleFileChange('back_image', e.target.files[0], setBackImagePreview)}
                     />
-                    <Button 
-                      as="label" 
-                      htmlFor="back-image-upload" 
-                      className="custom-btn-outline px-4 mx-auto"
-                      style={{ maxWidth: 'fit-content' }}
-                      disabled={loading.submitting || uploadingFiles.back_image}
-                    >
-                      {uploadingFiles.back_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
-                      {backImagePreview ? 'Change Back Image' : 'Upload Back Image'}
-                    </Button>
-                    {touched.back_image && errors.back_image && (
-                      <div className="text-danger mt-1 small fw-bold">{errors.back_image}</div>
-                    )}
+                    <div className="d-flex flex-column gap-3 align-items-start w-100">
+                      <Button
+                        as="label"
+                        htmlFor="back-image-upload"
+                        className="custom-btn-outline px-4"
+                        style={{ maxWidth: 'fit-content' }}
+                        disabled={loading.submitting || uploadingFiles.back_image}
+                      >
+                        {uploadingFiles.back_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                        {backImagePreview ? 'Change Back Image' : 'Upload Back Image'}
+                      </Button>
+                      {touched.back_image && errors.back_image && <div className="text-danger mt-1 small fw-bold">{errors.back_image}</div>}
+                      
+                      <Button
+                        variant="primary"
+                        type="submit"
+                        className="custom-btn-outline w-100 py-3 mt-2"
+                        disabled={loading.submitting || uploadingFiles.photo || uploadingFiles.front_image || uploadingFiles.back_image}
+                      >
+                        {loading.submitting ? (
+                          <>
+                            <Spinner animation="border" size="sm" className="me-2" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <CsLineIcons icon="save" size="20" className="me-2" />
+                            Register Staff Member
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </Form.Group>
                 )}
               </Card.Body>
             </Card>
-
           </Col>
         </Row>
       </Form>
 
       {/* Modern Overlay */}
       {loading.submitting && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}>
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}
+        >
           <Card className="glass-card border-0 p-5 shadow-lg text-center" style={{ maxWidth: '400px' }}>
             <Spinner animation="grow" variant="primary" className="mb-4" />
             <h4 className="fw-bold">Securing Records</h4>
@@ -1193,8 +1245,8 @@ const AddStaff = () => {
         </Modal>
       )}
     </div>
-  );
+  </div>
+);
 };
 
 export default AddStaff;
-

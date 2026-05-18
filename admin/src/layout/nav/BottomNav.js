@@ -64,17 +64,18 @@ const BottomNav = () => {
         }
 
         .bottom-nav-pill {
-          background: rgba(255, 255, 255, 0.85);
+          background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(25px) saturate(200%);
           -webkit-backdrop-filter: blur(25px) saturate(200%);
-          border: 1px solid rgba(255, 255, 255, 0.45);
-          border-radius: 40px;
-          padding: 6px 10px;
+          border: 1px solid rgba(255, 255, 255, 0.4);
+          border-radius: 35px;
+          padding: 0px 10px;
           display: flex;
           align-items: center;
           justify-content: space-around;
           width: 100%;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+          height: 65px;
+          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
           pointer-events: auto;
         }
 
@@ -84,65 +85,94 @@ const BottomNav = () => {
           align-items: center;
           justify-content: center;
           text-decoration: none !important;
-          color: #64748b;
-          width: 48px;
-          height: 48px;
-          border-radius: 50%;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          color: #94a3b8;
+          flex: 1;
+          height: 100%;
+          position: relative;
+          transition: all 0.3s ease;
         }
 
-        .bottom-nav-item.active {
-          color: #1ea8e7;
-          background: rgba(30, 168, 231, 0.12);
-          transform: translateY(-5px);
-        }
-
-        .main-action-btn {
-          width: 52px;
-          height: 52px;
-          background: linear-gradient(135deg, #1ea8e7 0%, #007bff 100%);
-          border-radius: 50%;
+        .bottom-nav-bubble {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white !important;
-          box-shadow: 0 8px 16px rgba(30, 168, 231, 0.3);
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          background: transparent;
+          transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          z-index: 1;
+        }
+
+        .bottom-nav-item.active-bubble .bottom-nav-bubble {
+          width: 60px;
+          height: 60px;
+          background: linear-gradient(135deg, #1ea8e7 0%, #007bff 100%);
+          transform: translateY(-26px) scale(1.05);
+          box-shadow: 0 10px 25px rgba(30, 168, 231, 0.4);
+          border: 5px solid #ffffff;
+          z-index: 5;
+        }
+
+        .bottom-nav-icon-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
           transition: all 0.3s ease;
+        }
+
+        .bottom-nav-item.active-bubble .bottom-nav-icon-container {
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
         }
 
         /* Adjust main layout for bottom nav space */
         @media (max-width: 991px) {
           body {
-            padding-bottom: 90px !important;
+            padding-bottom: 95px !important;
           }
         }
       `}</style>
 
       <div className="bottom-nav-pill">
         {navItems.map((item) => {
-          const customIsActive = (match, location) => {
+          const checkIsActive = () => {
             if (item.to === '/operations/order-history') {
-              return location.pathname.startsWith('/operations/order-history') || location.pathname.startsWith('/operations/order-details');
+              return pathname.startsWith('/operations/order-history') || pathname.startsWith('/operations/order-details');
             }
             if (item.to === '/operations/manage-table') {
-              return location.pathname.startsWith('/operations/manage-table') || location.pathname.startsWith('/operations/add-table');
+              return pathname.startsWith('/operations/manage-table') || pathname.startsWith('/operations/add-table');
             }
             if (item.to === '/operations/manage-menu') {
-              return location.pathname.startsWith('/operations/manage-menu') || location.pathname.startsWith('/operations/add-dish') || location.pathname.startsWith('/operations/qr-for-menu');
+              return pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu');
             }
             if (item.to === '/operations/inventory-history') {
               const inventoryPaths = ['/operations/inventory', '/operations/add-inventory', '/operations/edit-inventory', '/operations/complete-inventory', '/operations/stock-management', '/operations/daily-stock-logs', '/operations/wastage-log', '/operations/requested-inventory'];
-              return inventoryPaths.some(p => location.pathname.startsWith(p));
+              return inventoryPaths.some(p => pathname.startsWith(p));
             }
             if (item.to === '/operations/feedback') {
-              return location.pathname.startsWith('/operations/feedback') || location.pathname.startsWith('/operations/qr-for-feedback');
+              return pathname.startsWith('/operations/feedback') || pathname.startsWith('/operations/qr-for-feedback');
             }
-            return location.pathname.startsWith(item.to);
+            return pathname.startsWith(item.to);
           };
 
+          const isActive = checkIsActive();
+
           return (
-            <NavLink key={item.to} to={item.to} className="bottom-nav-item" activeClassName="active" isActive={customIsActive}>
-              <CsLineIcons icon={item.icon} size="20" />
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={`bottom-nav-item ${isActive ? 'active-bubble' : ''}`}
+            >
+              <div className="bottom-nav-bubble">
+                <div className="bottom-nav-icon-container">
+                  <CsLineIcons
+                    icon={item.icon}
+                    size={isActive ? "26" : "24"}
+                    stroke={isActive ? '#ffffff' : '#94a3b8'}
+                    fill={isActive ? 'rgba(255,255,255,0.2)' : 'none'}
+                  />
+                </div>
+              </div>
             </NavLink>
           );
         })}
