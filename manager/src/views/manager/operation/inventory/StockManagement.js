@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Col, Row, Modal, Form, Spinner, Card, Table, Alert, Badge } from 'react-bootstrap';
+import { useHistory } from 'react-router-dom';
+import { Button, Col, Row, Modal, Form, Spinner, Alert } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -45,20 +46,111 @@ const customStyles = `
       align-items: center;
       gap: 0.75rem;
     }
-    .stock-badge {
-      font-size: 0.85rem;
-      font-weight: 800;
-      padding: 0.5rem 1rem;
-      border-radius: 50px;
-    }
-    .track-pill {
+    .stock-management-item-header-row {
+      display: flex;
+      padding: 0 1rem;
+      margin-bottom: 1rem;
+      color: #94a3b8;
       font-size: 0.65rem;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      padding: 0.4rem 0.8rem;
+    }
+    .stock-management-item-row-card {
+      background: #ffffff !important;
+      border-radius: 1.25rem !important;
+      border: 1px solid rgba(0, 0, 0, 0.05) !important;
+      padding: 1.25rem !important;
+      margin-bottom: 1.25rem !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02) !important;
+      transition: all 0.3s ease;
+    }
+    .stock-management-item-row-card:hover {
+      border-color: rgba(35, 179, 244, 0.4) !important;
+      box-shadow: 0 10px 25px rgba(35, 179, 244, 0.06) !important;
+      transform: translateY(-2px);
+    }
+    .stock-management-item-row-card.stock-management-low-stock {
+      border-left: 4px solid #f43f5e !important;
+      background: #fffafa !important;
+    }
+    .stock-management-stock-val {
+      font-size: 1.25rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .stock-management-unit-text {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+    .stock-management-status-pill {
+      padding: 0.35rem 0.75rem;
       border-radius: 50px;
-      border: 1px solid rgba(0,0,0,0.05);
+      font-weight: 700;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .stock-management-status-pill.stock-management-auto { background: #f1f5f9; color: #64748b; }
+    .stock-management-status-pill.stock-management-critical { background: #fff1f2; color: #f43f5e; }
+    .stock-management-status-pill.active-min { background: #f0f9ff; color: #0ea5e9; }
+    
+    .stock-management-btn-pill-action {
+      border-radius: 50px !important;
+      padding: 0.45rem 1.25rem !important;
+      font-weight: 700 !important;
+      border-width: 2px !important;
+      font-size: 0.75rem !important;
+    }
+    .stock-management-btn-icon-round {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid #f1f5f9;
+      color: #64748b;
+      background: #ffffff;
+    }
+    .stock-management-alert-premium {
+      border-radius: 1rem !important;
+      padding: 1rem 1.5rem !important;
+    }
+    .stock-management-header-btn {
+       border-radius: 50px !important;
+       padding: 0.5rem 1.25rem !important;
+       font-weight: 700 !important;
+       font-size: 0.8rem !important;
+    }
+    .stock-management-info-label-xs {
+      font-size: 0.6rem;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .ms-stock-management-auto {
+      margin-left: auto !important;
+    }
+
+    @media (max-width: 991px) {
+      .stock-management-main-workstation { padding: 1rem !important; }
+      .stock-management-item-row-card { padding: 1.25rem !important; margin-bottom: 1rem; }
+      .stock-management-mobile-info-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+      .stock-management-mobile-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.25rem;
+        width: 100%;
+      }
+      .stock-management-mobile-actions .stock-management-btn-pill-action { flex: 1; }
     }
 `;
 
@@ -70,6 +162,7 @@ const TRACKING_LEVELS = [
 ];
 
 const StockManagement = () => {
+  const history = useHistory();
   const title = 'Stock Management';
   const description = 'Monitor current stock levels, configure alert thresholds, and deduct stock.';
   const breadcrumbs = [
@@ -106,17 +199,30 @@ const StockManagement = () => {
     }
   };
 
-  useEffect(() => { fetchStock(); }, []);
+  useEffect(() => {
+    fetchStock();
+  }, []);
 
   const handleUseSubmit = async (e) => {
     e.preventDefault();
-    if (!quantityUsed || Number(quantityUsed) <= 0) { toast.error('Please enter a valid quantity'); return; }
+    if (!quantityUsed || Number(quantityUsed) <= 0) {
+      toast.error('Please enter a valid quantity');
+      return;
+    }
     try {
       setIsSubmitting(true);
-      const res = await useInventoryStock({ item_name: selectedItem._id, quantity_used: quantityUsed, comment: useComment });
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const res = await useInventoryStock({
+        item_name: selectedItem._id,
+        quantity_used: quantityUsed,
+        comment: useComment,
+      });
       if (res.data.success) {
         toast.success('Stock deducted successfully');
-        setShowUseModal(false); setSelectedItem(null); setQuantityUsed(''); setUseComment('');
+        setShowUseModal(false);
+        setSelectedItem(null);
+        setQuantityUsed('');
+        setUseComment('');
         fetchStock();
       }
     } catch (err) {
@@ -136,7 +242,11 @@ const StockManagement = () => {
   const handleThresholdSave = async () => {
     try {
       setIsSubmitting(true);
-      await updateItemSettings({ item_name: thresholdItem._id, low_stock_threshold: threshold, tracking_level: trackingLevel });
+      await updateItemSettings({
+        item_name: thresholdItem._id,
+        low_stock_threshold: threshold,
+        tracking_level: trackingLevel,
+      });
       toast.success('Item settings saved');
       setShowThresholdModal(false);
       fetchStock();
@@ -155,139 +265,261 @@ const StockManagement = () => {
         <style>{customStyles}</style>
         <HtmlHead title={title} description={description} />
         <div className="container-fluid px-lg-5">
-          <div className="page-title-container mb-3 mt-n3">
+          <div className="page-title-container mb-4 mt-n3">
             <Row className="g-3 align-items-center">
-              <Col xs="12" md="7">
-                <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+              <Col xs="12" md="6">
+                <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
+                  {title}
+                </h1>
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
-              <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
-                <Button variant="outline-danger" className="rounded-pill fw-bold px-4" href="/operations/wastage-log">
-                  <CsLineIcons icon="bin" size="14" className="me-2" /> Log Wastage
+              <Col xs="12" md="6" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
+                <Button onClick={() => history.goBack()} variant="outline-primary" className="rounded-pill px-4 fw-bold border-2 shadow-sm">
+                  <CsLineIcons icon="arrow-left" size="14" className="me-2" /> Back
+                </Button>
+                <Button href="/operations/daily-stock-logs" variant="outline-primary" className="rounded-pill px-4 fw-bold border-2 shadow-sm">
+                  <CsLineIcons icon="file-text" size="14" className="me-2" /> Audit Logs
+                </Button>
+                <Button href="/operations/wastage-log" variant="outline-danger" className="rounded-pill px-4 fw-bold border-2 shadow-sm">
+                  <CsLineIcons icon="bin" size="14" className="me-2" /> Wastage
                 </Button>
               </Col>
             </Row>
           </div>
 
-      {lowStockCount > 0 && (
-        <Alert variant="warning" className="border-0 shadow-sm rounded-4 d-flex align-items-center gap-3 mb-4 p-3 bg-white">
-          <div className="bg-warning text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
-            <CsLineIcons icon="warning-hexagon" size="20" />
-          </div>
-          <div>
-            <div className="fw-bold text-dark">{lowStockCount} item{lowStockCount > 1 ? 's are' : ' is'} below threshold!</div>
-            <div className="text-muted small">Please restock or verify critical inventory levels.</div>
-          </div>
-        </Alert>
-      )}
-
-      <Row>
-        <Col xs={12}>
-          {loading ? (
-            <div className="d-flex justify-content-center py-5">
-              <Spinner animation="border" variant="primary" />
-            </div>
-          ) : stockData.length === 0 ? (
-            <Alert variant="light" className="text-center py-5 rounded-4 border-0 shadow-sm">
-              <CsLineIcons icon="info-circle" size="30" className="text-muted mb-2" />
-              <div className="fw-bold text-muted">No inventory data found.</div>
+          {lowStockCount > 0 && (
+            <Alert variant="warning" className="border-0 shadow-sm rounded-4 d-flex align-items-center gap-3 mb-4 p-3 bg-white">
+              <div
+                className="bg-warning text-white rounded-circle p-2 d-flex align-items-center justify-content-center"
+                style={{ width: '40px', height: '40px' }}
+              >
+                <CsLineIcons icon="warning-hexagon" size="20" />
+              </div>
+              <div>
+                <div className="fw-bold text-dark">
+                  {lowStockCount} item{lowStockCount > 1 ? 's are' : ' is'} below threshold!
+                </div>
+                <div className="text-muted small">Please restock or verify critical inventory levels.</div>
+              </div>
             </Alert>
-          ) : (
-            <Card className="page-card border-0 overflow-hidden">
-              <Card.Body className="p-0">
-                <div className="p-4 bg-white border-bottom">
-                  <div className="section-label mb-0"><CsLineIcons icon="box" size="18" /> Inventory List</div>
-                </div>
-                <div className="table-responsive">
-                  <Table hover className="mb-0 align-middle">
-                    <thead className="bg-light text-muted small text-uppercase fw-bold">
-                      <tr>
-                        <th className="ps-4 py-3">Item Name</th>
-                        <th className="py-3">Current Stock</th>
-                        <th className="py-3">Alert Threshold</th>
-                        <th className="py-3">Tracking</th>
-                        <th className="py-3 pe-4 text-end">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {stockData.map((item, index) => {
-                        const isBelowThreshold = item.low_stock_threshold > 0 && item.totalStock < item.low_stock_threshold;
-                        return (
-                          <tr key={index} className={isBelowThreshold ? 'bg-danger-subtle' : ''}>
-                            <td className="ps-4">
-                              <div className="fw-bold text-dark">
-                                {isBelowThreshold && <span className="text-danger me-2">⚠️</span>}
-                                {item._id}
-                              </div>
-                            </td>
-                            <td>
-                              <Badge className={`stock-badge bg-${item.totalStock <= 0 ? 'danger' : isBelowThreshold ? 'warning' : 'success'}-subtle text-${item.totalStock <= 0 ? 'danger' : isBelowThreshold ? 'warning' : 'success'}`}>
-                                {item.totalStock} <small className="fw-normal">{item.unit}</small>
-                              </Badge>
-                            </td>
-                            <td>
-                              {item.low_stock_threshold > 0 ? (
-                                <div className="d-flex align-items-center text-muted fw-bold small">
-                                  <CsLineIcons icon="notification" size="12" className="me-1" />
-                                  Min: {item.low_stock_threshold}
-                                </div>
-                              ) : <span className="text-light-emphasis small italic">Not set</span>}
-                            </td>
-                            <td>
-                              <span className="track-pill bg-white text-muted">{item.tracking_level || 'auto'}</span>
-                            </td>
-                            <td className="pe-4 text-end">
-                              <div className="d-flex gap-2 justify-content-end">
-                                <Button size="sm" variant="light" className="rounded-pill border shadow-sm p-2" onClick={() => openThresholdModal(item)}>
-                                  <CsLineIcons icon="gear" size="14" />
-                                </Button>
-                                <Button size="sm" variant="primary" className="rounded-pill px-3 fw-bold shadow-sm" disabled={item.totalStock <= 0} onClick={() => { setSelectedItem(item); setShowUseModal(true); }}>
-                                  Mark Used
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </Table>
-                </div>
-              </Card.Body>
-            </Card>
           )}
-        </Col>
-      </Row>
-    </div>
-  </div>
+
+          <Row>
+            <Col xs={12}>
+              {loading ? (
+                <div className="d-flex justify-content-center py-5">
+                  <Spinner animation="border" variant="primary" />
+                </div>
+              ) : stockData.length === 0 ? (
+                <Alert variant="light" className="text-center py-5 rounded-4 border-0 shadow-sm">
+                  <CsLineIcons icon="info-circle" size="30" className="text-muted mb-2" />
+                  <div className="fw-bold text-muted">No inventory data found.</div>
+                </Alert>
+              ) : (
+                <div className="stock-management-main-workstation">
+                  <div className="stock-management-item-header-row d-none d-lg-flex">
+                    <div style={{ flex: 2 }}>Item</div>
+                    <div style={{ flex: 1 }}>In Stock</div>
+                    <div style={{ flex: 1 }}>Safety Min</div>
+                    <div style={{ flex: 1 }}>Tracking Strategy</div>
+                    <div style={{ width: '180px' }} className="text-end">
+                      Actions
+                    </div>
+                  </div>
+
+                  {stockData.map((item, idx) => {
+                    const isBelow = item.low_stock_threshold > 0 && item.totalStock < item.low_stock_threshold;
+                    return (
+                      <div key={idx} className={`stock-management-item-row-card ${isBelow ? 'stock-management-low-stock' : ''}`}>
+                        <Row className="w-100 g-0 align-items-center">
+                          <Col lg={4} className="d-flex align-items-center gap-3" style={{ flex: 2 }}>
+                            <div
+                              className={`p-2 rounded-xl d-flex align-items-center justify-content-center shadow-sm ${
+                                isBelow ? 'bg-danger text-white' : 'bg-light text-muted'
+                              }`}
+                              style={{ width: '44px', height: '44px', borderRadius: '12px' }}
+                            >
+                              <CsLineIcons icon={isBelow ? 'warning-hexagon' : 'box'} size="20" />
+                            </div>
+                            <div>
+                              <div className="fw-bold text-dark h6 mb-0">{item._id}</div>
+                              {isBelow && (
+                                <div className="text-danger mt-1" style={{ fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.05em' }}>
+                                  CRITICAL ALERT
+                                </div>
+                              )}
+                            </div>
+                            <div className="ms-stock-management-auto d-lg-none text-end">
+                              <div
+                                className={`stock-management-stock-val h5 mb-0 fw-bold ${
+                                  item.totalStock <= 0 ? 'text-danger' : isBelow ? 'text-warning' : 'text-success'
+                                }`}
+                              >
+                                {item.totalStock}
+                              </div>
+                              <div className="stock-management-unit-text small text-muted fw-bold">{item.unit}</div>
+                            </div>
+                          </Col>
+
+                          <Col lg={2} className="d-none d-lg-block" style={{ flex: 1 }}>
+                            <div className={`stock-management-stock-val ${item.totalStock <= 0 ? 'text-danger' : isBelow ? 'text-warning' : 'text-success'}`}>
+                              {item.totalStock}
+                            </div>
+                            <div className="stock-management-unit-text">{item.unit}</div>
+                          </Col>
+
+                          <Col lg={2} className="d-none d-lg-block" style={{ flex: 1 }}>
+                            {item.low_stock_threshold > 0 ? (
+                              <span className={`stock-management-status-pill ${isBelow ? 'stock-management-critical' : 'active-min'}`}>
+                                Min: {item.low_stock_threshold}
+                              </span>
+                            ) : (
+                              <span className="text-muted small fw-bold">Not Set</span>
+                            )}
+                          </Col>
+
+                          <Col lg={2} className="d-none d-lg-block" style={{ flex: 1 }}>
+                            <span className="stock-management-status-pill stock-management-auto">{item.tracking_level || 'auto'}</span>
+                          </Col>
+
+                          <div className="stock-management-mobile-info-grid d-lg-none mt-3 p-3 bg-light rounded-3">
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                              <div className="stock-management-info-label-xs mb-0">Safety Min</div>
+                              {item.low_stock_threshold > 0 ? (
+                                <span className={`stock-management-status-pill ${isBelow ? 'stock-management-critical' : 'active-min'}`}>
+                                  Min: {item.low_stock_threshold}
+                                </span>
+                              ) : (
+                                <span className="text-muted small fw-bold">N/A</span>
+                              )}
+                            </div>
+                            <div className="d-flex justify-content-between align-items-center">
+                              <div className="stock-management-info-label-xs mb-0">Tracking</div>
+                              <span className="stock-management-status-pill stock-management-auto">{item.tracking_level || 'auto'}</span>
+                            </div>
+                          </div>
+
+                          <Col
+                            lg="auto"
+                            style={{ width: '180px' }}
+                            className="ms-stock-management-auto d-none d-lg-flex gap-2 justify-content-end align-items-center"
+                          >
+                            <button type="button" className="stock-management-btn-icon-round" title="Settings" onClick={() => openThresholdModal(item)}>
+                              <CsLineIcons icon="gear" size="16" />
+                            </button>
+                            <Button
+                              variant="outline-primary"
+                              className="stock-management-btn-pill-action border-2 px-3 fw-bold"
+                              disabled={item.totalStock <= 0}
+                              onClick={() => {
+                                setSelectedItem(item);
+                                setShowUseModal(true);
+                              }}
+                            >
+                              Mark Used
+                            </Button>
+                          </Col>
+
+                          <div className="stock-management-mobile-actions d-lg-none">
+                            <button type="button" className="stock-management-btn-icon-round" onClick={() => openThresholdModal(item)}>
+                              <CsLineIcons icon="gear" size="18" />
+                            </button>
+                            <Button
+                              variant="outline-primary"
+                              className="stock-management-btn-pill-action border-2 flex-grow-1 fw-bold"
+                              disabled={item.totalStock <= 0}
+                              onClick={() => {
+                                setSelectedItem(item);
+                                setShowUseModal(true);
+                              }}
+                            >
+                              Mark Used
+                            </Button>
+                          </div>
+                        </Row>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Col>
+          </Row>
+        </div>
+      </div>
 
       {/* Use Stock Modal */}
-      <Modal show={showUseModal} onHide={() => !isSubmitting && setShowUseModal(false)} centered contentClassName="rounded-4">
-        <Modal.Header closeButton={!isSubmitting} className="border-0 pb-0"><Modal.Title className="fw-bold">Deduct Stock</Modal.Title></Modal.Header>
+      <Modal
+        show={showUseModal}
+        onHide={() => !isSubmitting && setShowUseModal(false)}
+        centered
+        dialogClassName="modal-dialog-centered"
+        contentClassName="border-0 shadow-lg"
+        style={{ backdropFilter: 'blur(5px)' }}
+      >
+        <Modal.Header closeButton={!isSubmitting} className="border-0 bg-light p-4">
+          <Modal.Title className="fw-bold d-flex align-items-center">
+            <CsLineIcons icon="box" className="text-primary me-2" size="20" />
+            Deduct Stock
+          </Modal.Title>
+        </Modal.Header>
         <Modal.Body className="p-4">
           {selectedItem && (
             <Form onSubmit={handleUseSubmit}>
-              <div className="mb-4 bg-light p-3 rounded-3 d-flex justify-content-between align-items-center">
+              <div className="mb-4 bg-light p-3 rounded-4 d-flex justify-content-between align-items-center">
                 <div>
                   <div className="text-muted small fw-bold">ITEM</div>
                   <div className="fw-bold h5 mb-0 text-primary">{selectedItem._id}</div>
                 </div>
                 <div className="text-end">
                   <div className="text-muted small fw-bold">AVAILABLE</div>
-                  <div className="fw-bold h5 mb-0 text-success">{selectedItem.totalStock} {selectedItem.unit}</div>
+                  <div className="fw-bold h5 mb-0 text-success">
+                    {selectedItem.totalStock} {selectedItem.unit}
+                  </div>
                 </div>
               </div>
               <Form.Group className="mb-4">
                 <Form.Label className="fw-bold small text-muted">QUANTITY TO DEDUCT ({selectedItem.unit})</Form.Label>
-                <Form.Control type="number" step="0.01" min="0.01" max={selectedItem.totalStock} className="modern-input" value={quantityUsed} onChange={(e) => setQuantityUsed(e.target.value)} required />
+                <Form.Control
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max={selectedItem.totalStock}
+                  className="modern-input"
+                  value={quantityUsed}
+                  onChange={(e) => setQuantityUsed(e.target.value)}
+                  required
+                />
               </Form.Group>
               <Form.Group className="mb-4">
                 <Form.Label className="fw-bold small text-muted">COMMENTS / REASON</Form.Label>
-                <Form.Control as="textarea" rows={3} className="modern-input" style={{ height: 'auto' }} value={useComment} onChange={(e) => setUseComment(e.target.value)} placeholder="Why is this stock being deducted?" />
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  className="modern-input"
+                  style={{ height: 'auto' }}
+                  value={useComment}
+                  onChange={(e) => setUseComment(e.target.value)}
+                  placeholder="Why is this stock being deducted?"
+                />
               </Form.Group>
-              <div className="d-flex gap-2">
-                <Button variant="light" className="w-100 rounded-pill fw-bold py-3" onClick={() => setShowUseModal(false)} disabled={isSubmitting}>Cancel</Button>
-                <Button variant="primary" type="submit" className="w-100 rounded-pill fw-bold py-3 shadow-sm" disabled={isSubmitting}>
-                  {isSubmitting ? <Spinner animation="border" size="sm" /> : 'Confirm Deduction'}
+              <div className="d-flex gap-3 justify-content-center">
+                <Button
+                  variant="secondary"
+                  className="rounded-pill px-4 fw-bold shadow-sm flex-grow-1"
+                  onClick={() => setShowUseModal(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button variant="primary" type="submit" className="rounded-pill px-4 fw-bold shadow-sm flex-grow-1" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                      Deducting...
+                    </>
+                  ) : (
+                    'Confirm'
+                  )}
                 </Button>
               </div>
             </Form>
@@ -296,19 +528,37 @@ const StockManagement = () => {
       </Modal>
 
       {/* Threshold / Settings Modal */}
-      <Modal show={showThresholdModal} onHide={() => !isSubmitting && setShowThresholdModal(false)} centered contentClassName="rounded-4">
-        <Modal.Header closeButton={!isSubmitting} className="border-0 pb-0"><Modal.Title className="fw-bold">Item Settings — {thresholdItem?._id}</Modal.Title></Modal.Header>
+      <Modal
+        show={showThresholdModal}
+        onHide={() => !isSubmitting && setShowThresholdModal(false)}
+        centered
+        dialogClassName="modal-dialog-centered"
+        contentClassName="border-0 shadow-lg"
+        style={{ backdropFilter: 'blur(5px)' }}
+      >
+        <Modal.Header closeButton={!isSubmitting} className="border-0 bg-light p-4">
+          <Modal.Title className="fw-bold d-flex align-items-center">
+            <CsLineIcons icon="gear" className="text-primary me-2" size="20" />
+            Item Settings
+          </Modal.Title>
+        </Modal.Header>
         <Modal.Body className="p-4">
+          <div className="h5 fw-bold mb-4 text-primary">{thresholdItem?._id}</div>
           <Form.Group className="mb-4">
-            <Form.Label className="fw-bold small text-muted text-uppercase mb-2">🔔 Low Stock Alert Threshold</Form.Label>
+            <Form.Label className="fw-bold small text-muted text-uppercase mb-2">Low Stock Alert Threshold</Form.Label>
             <Form.Control type="number" min="0" step="0.01" className="modern-input" value={threshold} onChange={(e) => setThreshold(e.target.value)} />
             <small className="text-muted mt-2 d-block px-1">Warn when stock drops below this value. Set 0 to disable.</small>
           </Form.Group>
           <Form.Group>
-            <Form.Label className="fw-bold small text-muted text-uppercase mb-3">📊 Tracking Level</Form.Label>
+            <Form.Label className="fw-bold small text-muted text-uppercase mb-3">Tracking Strategy</Form.Label>
             <div className="d-flex flex-column gap-2">
               {TRACKING_LEVELS.map((t) => (
-                <div key={t.value} className={`border rounded-3 p-3 transition-all ${trackingLevel === t.value ? 'border-primary bg-primary-subtle' : 'bg-light'}`} style={{ cursor: 'pointer' }} onClick={() => setTrackingLevel(t.value)}>
+                <div
+                  key={t.value}
+                  className={`border rounded-3 p-3 transition-all ${trackingLevel === t.value ? 'border-primary bg-primary-subtle' : 'bg-light'}`}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => setTrackingLevel(t.value)}
+                >
                   <div className="d-flex align-items-center gap-2 mb-1">
                     <input type="radio" className="form-check-input mt-0" name="tracking_level" checked={trackingLevel === t.value} readOnly />
                     <span className="fw-bold text-dark">{t.label}</span>
@@ -319,10 +569,24 @@ const StockManagement = () => {
             </div>
           </Form.Group>
         </Modal.Body>
-        <Modal.Footer className="border-0 p-4 pt-0">
-          <Button variant="light" className="w-100 rounded-pill fw-bold py-3" onClick={() => setShowThresholdModal(false)} disabled={isSubmitting}>Cancel</Button>
-          <Button variant="primary" className="w-100 rounded-pill fw-bold py-3 shadow-sm" onClick={handleThresholdSave} disabled={isSubmitting}>
-            {isSubmitting ? <Spinner animation="border" size="sm" /> : 'Save Settings'}
+        <Modal.Footer className="border-0 p-4 pt-0 justify-content-center gap-3">
+          <Button
+            variant="secondary"
+            className="rounded-pill px-4 fw-bold shadow-sm flex-grow-1"
+            onClick={() => setShowThresholdModal(false)}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button variant="primary" className="rounded-pill px-4 fw-bold shadow-sm flex-grow-1" onClick={handleThresholdSave} disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                Saving...
+              </>
+            ) : (
+              'Save Settings'
+            )}
           </Button>
         </Modal.Footer>
       </Modal>

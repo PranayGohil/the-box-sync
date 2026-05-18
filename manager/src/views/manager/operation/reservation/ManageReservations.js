@@ -29,9 +29,223 @@ const STATUS_META = {
 const STATUS_COLORS = {
   pending: '#ffc107',
   approved: '#198754',
-  reserved: '#0dcaf0',
+  reserved: '#23b3f4',
   seated: '#0d6efd',
 };
+
+const customStyles = `
+  /* Navigation Tabs */
+  .reservations-tabs.nav-tabs {
+    border-bottom: 2px solid #f1f5f9 !important;
+    gap: 0.5rem;
+    margin-bottom: 2rem !important;
+  }
+  .reservations-tabs .nav-link {
+    border: none !important;
+    background: transparent !important;
+    color: #64748b !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    padding: 0.75rem 1.25rem !important;
+    border-radius: 50px !important;
+    transition: all 0.2s ease-in-out !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .reservations-tabs .nav-link:hover {
+    color: #23b3f4 !important;
+    background: #f0f9ff !important;
+  }
+  .reservations-tabs .nav-link.active {
+    color: #ffffff !important;
+    background: #23b3f4 !important;
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+  }
+  .reservations-tabs .nav-link svg {
+    stroke: currentColor;
+    transition: stroke 0.2s ease;
+  }
+  .reservations-tabs .nav-link:hover svg {
+    stroke: #23b3f4;
+  }
+  .reservations-tabs .nav-link.active svg {
+    stroke: #ffffff;
+  }
+
+  /* Filters Panel */
+  .reservations-filter-card {
+    background: #ffffff !important;
+    border: 1px solid #f0f0f0 !important;
+    border-radius: 1.25rem !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02) !important;
+    margin-bottom: 1.5rem !important;
+  }
+  .reservations-status-pill {
+    border-radius: 50px !important;
+    font-weight: 700 !important;
+    font-size: 0.8rem !important;
+    padding: 8px 16px !important;
+    transition: all 0.2s ease !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
+    background: #ffffff !important;
+  }
+  .reservations-status-pill:hover {
+    border-color: #23b3f4 !important;
+    color: #23b3f4 !important;
+    background: #f0f9ff !important;
+  }
+  .reservations-status-pill.active {
+    background: #23b3f4 !important;
+    border-color: #23b3f4 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(35, 179, 244, 0.2) !important;
+  }
+
+  /* Separate row cards styling */
+  .reservations-table-container {
+    background: transparent !important;
+    border: none !important;
+  }
+  .reservations-table {
+    border-collapse: separate !important;
+    border-spacing: 0 10px !important;
+  }
+  .reservations-table thead th {
+    border: none !important;
+    background: transparent !important;
+    color: #64748b !important;
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    padding: 0.75rem 1.5rem !important;
+  }
+  .reservations-row-card {
+    transition: all 0.2s ease-in-out !important;
+  }
+  .reservations-row-card:hover {
+    transform: translateY(-2px);
+  }
+  .reservations-row-card td {
+    background: #ffffff !important;
+    border-top: 1px solid #f1f5f9 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    padding: 1.25rem 1.5rem !important;
+    vertical-align: middle !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01) !important;
+  }
+  .reservations-row-card td:first-child {
+    border-left: 1px solid #f1f5f9 !important;
+    border-top-left-radius: 1rem !important;
+    border-bottom-left-radius: 1rem !important;
+  }
+  .reservations-row-card td:last-child {
+    border-right: 1px solid #f1f5f9 !important;
+    border-top-right-radius: 1rem !important;
+    border-bottom-right-radius: 1rem !important;
+  }
+
+  /* Modals */
+  .reservations-modal-btn-outline {
+    border: 1px solid #23b3f4 !important;
+    color: #23b3f4 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+  }
+  .reservations-modal-btn-outline:hover {
+    background-color: #23b3f4 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+  }
+  .reservations-modal-btn-solid {
+    background-color: #23b3f4 !important;
+    border: 1px solid #23b3f4 !important;
+    color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+  }
+  .reservations-modal-btn-solid:hover {
+    background-color: #179edb !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.3) !important;
+  }
+  .reservations-modal-btn-success {
+    background-color: #198754 !important;
+    border: 1px solid #198754 !important;
+    color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+  }
+  .reservations-modal-btn-success:hover {
+    background-color: #146c43 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3) !important;
+  }
+  .reservations-modal-btn-danger {
+    background-color: #cf2637 !important;
+    border: 1px solid #cf2637 !important;
+    color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+  }
+  .reservations-modal-btn-danger:hover {
+    background-color: #a91f2d !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(207, 38, 55, 0.3) !important;
+  }
+
+  .reservations-pill-input {
+    border-radius: 12px !important;
+    padding: 0.6rem 1.2rem !important;
+    border: 1px solid #e5e7eb !important;
+    background: #ffffff !important;
+    transition: all 0.2s ease !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+  }
+  .reservations-pill-input:focus {
+    border-color: #23b3f4 !important;
+    box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
+    outline: none !important;
+  }
+
+  .reservations-action-btn {
+    border-radius: 50px !important;
+    padding: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+  }
+  .reservations-action-btn:hover {
+    transform: translateY(-2px);
+  }
+  
+  /* Timeline custom scrollbar */
+  .timeline-grid-wrapper::-webkit-scrollbar {
+    height: 8px;
+  }
+  .timeline-grid-wrapper::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+  }
+  .timeline-grid-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+  }
+  .timeline-grid-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+`;
 
 // ─── Approve Modal ─────────────────────────────────────────────────────────
 const ApproveModal = ({ show, reservation, onClose, onSuccess }) => {
@@ -75,52 +289,84 @@ const ApproveModal = ({ show, reservation, onClose, onSuccess }) => {
 
   if (!reservation) return null;
   return (
-    <Modal show={show} onHide={onClose} size="lg" centered>
-      <Modal.Header closeButton>
-        <Modal.Title>
-          <CsLineIcons icon="check-circle" className="me-2 text-success" />
+    <Modal show={show} onHide={onClose} size="lg" centered className="rounded-4">
+      <style>{customStyles}</style>
+      <Modal.Header closeButton className="border-0 pb-0">
+        <Modal.Title className="fw-bold" style={{ color: '#198754' }}>
+          <CsLineIcons icon="check-circle" className="me-2" />
           Approve — {reservation.customer_name}
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        <Alert variant="light" className="border py-2 mb-3">
-          <Row className="g-1 small">
-            <Col xs={6} className="text-muted"><CsLineIcons icon="calendar" className="me-1" />{fmtDate(reservation.reservation_date)}</Col>
-            <Col xs={6} className="text-muted"><CsLineIcons icon="clock" className="me-1" />{slotLabel || `${reservation.slot_start}–${reservation.slot_end}`}</Col>
-            <Col xs={6} className="text-muted"><CsLineIcons icon="user" className="me-1" />{reservation.num_persons} guest{reservation.num_persons > 1 ? 's' : ''}</Col>
-            {reservation.notes && <Col xs={12} className="text-muted"><CsLineIcons icon="message" className="me-1" />{reservation.notes}</Col>}
+      <Modal.Body className="py-4 text-start">
+        <Alert variant="light" className="border py-3 mb-4 bg-light rounded-3">
+          <Row className="g-3 small fw-bold">
+            <Col xs={6} md={4} className="text-muted d-flex align-items-center gap-1">
+              <CsLineIcons icon="calendar" size="14" style={{ color: '#23b3f4' }} />
+              {fmtDate(reservation.reservation_date)}
+            </Col>
+            <Col xs={6} md={4} className="text-muted d-flex align-items-center gap-1">
+              <CsLineIcons icon="clock" size="14" style={{ color: '#23b3f4' }} />
+              {slotLabel || `${reservation.slot_start}–${reservation.slot_end}`}
+            </Col>
+            <Col xs={6} md={4} className="text-muted d-flex align-items-center gap-1">
+              <CsLineIcons icon="user" size="14" style={{ color: '#23b3f4' }} />
+              {reservation.num_persons} guest{reservation.num_persons > 1 ? 's' : ''}
+            </Col>
+            {reservation.notes && (
+              <Col xs={12} className="text-muted d-flex align-items-start gap-1 mt-2">
+                <CsLineIcons icon="message" size="14" style={{ color: '#23b3f4' }} className="mt-1" />
+                <span className="fw-medium">{reservation.notes}</span>
+              </Col>
+            )}
           </Row>
         </Alert>
 
-        <h6 className="fw-semibold mb-2">Assign Table(s) — free for this slot</h6>
+        <h6 className="fw-bold text-dark mb-3">Assign Table(s) — free for this slot</h6>
         {fetching ? (
-          <div className="text-center py-3"><Spinner size="sm" /> Loading…</div>
+          <div className="text-center py-4">
+            <Spinner animation="border" style={{ color: '#23b3f4' }} className="mb-2" />
+            <p className="text-muted small fw-bold">Loading available tables…</p>
+          </div>
         ) : areas.length === 0 ? (
-          <Alert variant="warning">No tables available for this slot.</Alert>
+          <Alert variant="warning" className="rounded-3 fw-bold">No tables available for this slot.</Alert>
         ) : (
           areas.map((area) => (
-            <div key={area.area_id} className="mb-3">
-              <p className="text-uppercase text-muted mb-2" style={{ fontSize: 10, letterSpacing: 1 }}>{area.area_name}</p>
+            <div key={area.area_id} className="mb-4">
+              <p className="text-uppercase text-muted fw-bold mb-2 small" style={{ letterSpacing: 1 }}>{area.area_name}</p>
               <div className="d-flex flex-wrap gap-2">
-                {area.tables.map((tbl) => (
-                  <Button key={tbl.table_id} size="sm"
-                    variant={isSelected(tbl) ? 'primary' : 'outline-secondary'}
-                    onClick={() => toggle(area, tbl)}
-                    className='btn-icon'
-                  >
-                    <CsLineIcons icon="grid-1" className="me-1" />
-                    Table {tbl.table_no}
-                    <span className="ms-1 small opacity-75">({tbl.max_person}p)</span>
-                  </Button>
-                ))}
+                {area.tables.map((tbl) => {
+                  const active = isSelected(tbl);
+                  return (
+                    <Button 
+                      key={tbl.table_id} 
+                      size="sm"
+                      onClick={() => toggle(area, tbl)}
+                      style={{
+                        borderRadius: '50px',
+                        padding: '8px 16px',
+                        fontWeight: 700,
+                        fontSize: '0.8rem',
+                        transition: 'all 0.2s ease',
+                        backgroundColor: active ? '#23b3f4' : 'transparent',
+                        borderColor: active ? '#23b3f4' : '#cbd5e1',
+                        color: active ? '#fff' : '#475569',
+                      }}
+                      className="d-flex align-items-center gap-1"
+                    >
+                      <CsLineIcons icon="grid-1" size="14" />
+                      Table {tbl.table_no}
+                      <span className="ms-1 small opacity-75">({tbl.max_person}p)</span>
+                    </Button>
+                  );
+                })}
               </div>
             </div>
           ))
         )}
 
         {selectedTables.length > 0 && (
-          <Alert variant="success" className="py-2 mt-2">
-            <small>
+          <Alert variant={capacity < reservation.num_persons ? 'danger' : 'success'} className="py-3 mt-3 rounded-3 border-0">
+            <small className="fw-bold">
               Selected: {selectedTables.map((t) => `T${t.table_no}`).join(', ')}
               &nbsp;·&nbsp; Capacity: <strong>{capacity}p</strong>
               {capacity < reservation.num_persons && <span className="text-danger ms-2">⚠ Below required {reservation.num_persons}</span>}
@@ -128,15 +374,23 @@ const ApproveModal = ({ show, reservation, onClose, onSuccess }) => {
           </Alert>
         )}
 
-        <Form.Group className="mt-3">
-          <Form.Label className="small fw-semibold">Note to Customer (optional)</Form.Label>
-          <Form.Control as="textarea" rows={2} placeholder="e.g. Please arrive 10 min early." value={managerNotes} onChange={(e) => setNotes(e.target.value)} />
+        <Form.Group className="mt-4">
+          <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Note to Customer (optional)</Form.Label>
+          <Form.Control 
+            as="textarea" 
+            rows={2} 
+            placeholder="e.g. Please arrive 10 min early." 
+            value={managerNotes} 
+            onChange={(e) => setNotes(e.target.value)} 
+            className="reservations-pill-input shadow-sm bg-white"
+            style={{ resize: 'none', borderRadius: '12px' }}
+          />
         </Form.Group>
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="outline-secondary" onClick={onClose}>Cancel</Button>
-        <Button variant="success" onClick={handleApprove} disabled={loading || !selectedTables.length}>
-          {loading ? 'Approving…' : <><CsLineIcons icon="check" className="me-1" />Approve</>}
+      <Modal.Footer className="border-0 pt-0">
+        <Button className='reservations-modal-btn-outline px-4 py-2' variant="outline-light" onClick={onClose}>Cancel</Button>
+        <Button className='reservations-modal-btn-success px-5 py-2' variant="success" onClick={handleApprove} disabled={loading || !selectedTables.length}>
+          {loading ? 'Approving…' : <><CsLineIcons icon="check" size="18" className="me-1" />Approve</>}
         </Button>
       </Modal.Footer>
     </Modal>
@@ -160,18 +414,29 @@ const RejectModal = ({ show, reservation, onClose, onSuccess }) => {
 
   if (!reservation) return null;
   return (
-    <Modal show={show} onHide={onClose} centered>
-      <Modal.Header closeButton><Modal.Title className="text-danger">Reject Reservation</Modal.Title></Modal.Header>
-      <Modal.Body>
-        <p className="text-muted">Rejecting for <strong>{reservation.customer_name}</strong> on {fmtDate(reservation.reservation_date)}, {reservation.slot_start}–{reservation.slot_end}.</p>
-        <Form.Group>
-          <Form.Label className="small fw-semibold">Reason (optional)</Form.Label>
-          <Form.Control as="textarea" rows={3} placeholder="e.g. Fully booked for that slot." value={note} onChange={(e) => setNote(e.target.value)} />
+    <Modal show={show} onHide={onClose} centered className="rounded-4">
+      <style>{customStyles}</style>
+      <Modal.Header closeButton className="border-0 pb-0">
+        <Modal.Title className="fw-bold text-danger">Reject Reservation</Modal.Title>
+      </Modal.Header>
+      <Modal.Body className="py-4 text-start">
+        <p className="text-muted fw-bold">Rejecting for <strong>{reservation.customer_name}</strong> on {fmtDate(reservation.reservation_date)}, {reservation.slot_start}–{reservation.slot_end}.</p>
+        <Form.Group className="mt-3">
+          <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Reason (optional)</Form.Label>
+          <Form.Control 
+            as="textarea" 
+            rows={3} 
+            placeholder="e.g. Fully booked for that slot." 
+            value={note} 
+            onChange={(e) => setNote(e.target.value)} 
+            className="reservations-pill-input shadow-sm bg-white"
+            style={{ resize: 'none', borderRadius: '12px' }}
+          />
         </Form.Group>
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="outline-secondary" onClick={onClose}>Cancel</Button>
-        <Button variant="danger" onClick={handleReject} disabled={loading}>{loading ? 'Rejecting…' : 'Reject'}</Button>
+      <Modal.Footer className="border-0 pt-0">
+        <Button className='reservations-modal-btn-outline px-4 py-2' variant="outline-light" onClick={onClose}>Cancel</Button>
+        <Button className='reservations-modal-btn-danger px-5 py-2' onClick={handleReject} disabled={loading}>{loading ? 'Rejecting…' : 'Reject'}</Button>
       </Modal.Footer>
     </Modal>
   );
@@ -181,7 +446,7 @@ const RejectModal = ({ show, reservation, onClose, onSuccess }) => {
 const TimelineGrid = ({ date }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [activeGroup, setActiveGroup] = useState(null); // selected period tab
+  const [activeGroup, setActiveGroup] = useState(null);
 
   const fetchTimeline = useCallback(() => {
     if (!date) return;
@@ -191,7 +456,6 @@ const TimelineGrid = ({ date }) => {
       .then((r) => {
         const d = r.data.data;
         setData(d);
-        // Auto-select first group
         if (d?.groups?.length) setActiveGroup(d.groups[0].group_id);
       })
       .catch(() => toast.error('Failed to load timeline.'))
@@ -200,61 +464,75 @@ const TimelineGrid = ({ date }) => {
 
   useEffect(() => { fetchTimeline(); }, [fetchTimeline]);
 
-  if (loading) return <div className="text-center py-5"><Spinner /> Loading timeline…</div>;
+  if (loading) {
+    return (
+      <div className="text-center py-5">
+        <Spinner animation="border" style={{ color: '#23b3f4' }} className="mb-2" />
+        <p className="text-muted fw-bold">Loading timeline…</p>
+      </div>
+    );
+  }
   if (!data) return null;
 
   const { groups, areas } = data;
 
-  // Guard: no groups configured yet
   if (!groups || groups.length === 0) {
-    return <Alert variant="info">No service periods configured. Add periods in the Slot Settings tab.</Alert>;
+    return <Alert variant="info" className="rounded-3 fw-bold text-start">No service periods configured. Add periods in the Slot Settings tab.</Alert>;
   }
 
   const currentGroup = groups.find((g) => g.group_id === activeGroup) || groups[0];
-  // Slots for the selected period
   const periodSlots = currentGroup?.slots || [];
 
   return (
-    <div>
-      {/* Period tabs */}
-      <div className="d-flex flex-wrap gap-2 mb-3">
-        {groups.map((g) => (
-          <Button
-            key={g.group_id}
-            size="sm"
-            variant={activeGroup === g.group_id ? 'primary' : 'outline-secondary'}
-            onClick={() => setActiveGroup(g.group_id)}
-            style={activeGroup === g.group_id ? { background: g.color, borderColor: g.color } : {}}
-            className="btn-icon d-flex align-items-center gap-1"
-          >
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: activeGroup === g.group_id ? '#fff' : (g.color || '#6b7280'), display: 'inline-block' }} />
-            {g.name}
-          </Button>
-        ))}
+    <div className="text-start">
+      <div className="d-flex flex-wrap gap-2 mb-4">
+        {groups.map((g) => {
+          const isActive = activeGroup === g.group_id;
+          return (
+            <Button
+              key={g.group_id}
+              size="sm"
+              onClick={() => setActiveGroup(g.group_id)}
+              style={{
+                borderRadius: '50px',
+                padding: '8px 18px',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                transition: 'all 0.2s ease',
+                backgroundColor: isActive ? g.color : 'transparent',
+                borderColor: isActive ? g.color : '#e2e8f0',
+                color: isActive ? '#fff' : '#475569',
+                boxShadow: isActive ? `0 4px 12px ${g.color}33` : 'none'
+              }}
+              className="d-flex align-items-center gap-2"
+            >
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: isActive ? '#fff' : (g.color || '#6b7280'), display: 'inline-block' }} />
+              {g.name}
+            </Button>
+          );
+        })}
       </div>
 
       {periodSlots.length === 0 ? (
-        <Alert variant="light" className="border">No slots in this period for the selected date.</Alert>
+        <Alert variant="light" className="border rounded-3 fw-bold text-center py-4">No slots in this period for the selected date.</Alert>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <Table bordered size="sm" className="mb-0" style={{ minWidth: Math.max(600, periodSlots.length * 88 + 120) }}>
+        <div className="timeline-grid-wrapper" style={{ overflowX: 'auto', borderRadius: '1rem', border: '1px solid #f1f5f9' }}>
+          <Table bordered size="sm" className="mb-0" style={{ minWidth: Math.max(600, periodSlots.length * 88 + 120), borderCollapse: 'collapse' }}>
             <thead>
-              {/* Period header row */}
               <tr>
                 <th
                   colSpan={periodSlots.length + 1}
-                  style={{ background: currentGroup.color || '#6b7280', color: '#fff', fontSize: 12, letterSpacing: 1, padding: '6px 10px' }}
+                  style={{ background: currentGroup.color || '#23b3f4', color: '#fff', fontSize: 13, fontWeight: 700, padding: '12px 16px', border: 'none' }}
                 >
                   {currentGroup.name} &nbsp;·&nbsp; {periodSlots[0]?.slot_start || '–'} – {periodSlots[periodSlots.length - 1]?.slot_end || '–'}
                 </th>
               </tr>
-              {/* Slot time headers */}
-              <tr className="table-light">
-                <th style={{ minWidth: 110, position: 'sticky', left: 0, background: '#f8f9fa', zIndex: 1 }}>Table</th>
+              <tr className="table-light" style={{ background: '#f8fafc' }}>
+                <th style={{ minWidth: 110, position: 'sticky', left: 0, background: '#f8fafc', zIndex: 1, padding: '10px 14px', border: '1px solid #eef2f6', fontWeight: 700, color: '#475569', fontSize: 11, textTransform: 'uppercase' }}>Table</th>
                 {periodSlots.map((s) => (
-                  <th key={s.slot_start} className="text-center" style={{ minWidth: 80, fontSize: 11 }}>
+                  <th key={s.slot_start} className="text-center" style={{ minWidth: 80, fontSize: 11, padding: '10px 14px', border: '1px solid #eef2f6', fontWeight: 700, color: '#475569' }}>
                     <div>{s.slot_start}</div>
-                    <div className="text-muted" style={{ fontSize: 10 }}>–{s.slot_end}</div>
+                    <div className="text-muted" style={{ fontSize: 9 }}>–{s.slot_end}</div>
                   </th>
                 ))}
               </tr>
@@ -263,24 +541,23 @@ const TimelineGrid = ({ date }) => {
               {(areas || []).map((area) => (
                 <React.Fragment key={area.area_id}>
                   <tr>
-                    <td colSpan={periodSlots.length + 1} className="bg-light py-1">
-                      <small className="text-uppercase text-muted fw-semibold" style={{ letterSpacing: 1, fontSize: 10 }}>
+                    <td colSpan={periodSlots.length + 1} className="bg-light py-2 px-3" style={{ border: '1px solid #eef2f6' }}>
+                      <small className="text-uppercase text-muted fw-bold" style={{ letterSpacing: 1, fontSize: 10 }}>
                         {area.area_name}
                       </small>
                     </td>
                   </tr>
                   {(area.tables || []).map((tbl) => (
                     <tr key={tbl.table_id}>
-                      <td style={{ position: 'sticky', left: 0, background: '#fff', zIndex: 1, fontSize: 13 }}>
-                        <div className="fw-semibold">T{tbl.table_no}</div>
-                        <small className="text-muted">{tbl.max_person}p</small>
+                      <td style={{ position: 'sticky', left: 0, background: '#fff', zIndex: 1, fontSize: 13, padding: '10px 14px', border: '1px solid #eef2f6' }}>
+                        <div className="fw-bold text-dark">T{tbl.table_no}</div>
+                        <small className="text-muted fw-medium">{tbl.max_person}p</small>
                       </td>
                       {periodSlots.map((s) => {
-                        // Key in grid is "groupId::slotStart"
                         const cellKey = `${currentGroup.group_id}::${s.slot_start}`;
                         const booking = tbl.slots?.[cellKey];
                         return (
-                          <td key={s.slot_start} className="p-1 text-center" style={{ verticalAlign: 'middle' }}>
+                          <td key={s.slot_start} className="p-1 text-center" style={{ verticalAlign: 'middle', border: '1px solid #eef2f6' }}>
                             {booking ? (
                               <OverlayTrigger
                                 placement="top"
@@ -293,11 +570,12 @@ const TimelineGrid = ({ date }) => {
                                 }
                               >
                                 <div
-                                  className="rounded text-white d-flex align-items-center justify-content-center"
+                                  className="rounded text-white d-flex align-items-center justify-content-center fw-bold"
                                   style={{
                                     background: STATUS_COLORS[booking.status] || '#6c757d',
                                     height: 36, fontSize: 10, cursor: 'default',
                                     overflow: 'hidden', padding: '0 4px',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                                   }}
                                 >
                                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -321,11 +599,11 @@ const TimelineGrid = ({ date }) => {
       )}
 
       {/* Legend */}
-      <div className="d-flex gap-3 mt-3 flex-wrap">
+      <div className="d-flex gap-4 mt-4 flex-wrap">
         {Object.entries(STATUS_COLORS).map(([status, color]) => (
-          <div key={status} className="d-flex align-items-center gap-1">
-            <div style={{ width: 12, height: 12, background: color, borderRadius: 3 }} />
-            <small className="text-muted">{STATUS_META[status]?.label}</small>
+          <div key={status} className="d-flex align-items-center gap-2">
+            <div style={{ width: 14, height: 14, background: color, borderRadius: 4 }} />
+            <small className="text-muted fw-bold" style={{ fontSize: '0.8rem' }}>{STATUS_META[status]?.label}</small>
           </div>
         ))}
       </div>
@@ -356,7 +634,6 @@ const ManageReservations = () => {
 
   const STATUS_FILTERS = ['pending', 'approved', 'reserved', 'seated', 'completed', 'rejected', 'cancelled', 'no_show', 'all'];
 
-  // ── fetch list ─────────────────────────────────────────────────────────
   const fetchReservations = useCallback(async (page = 1) => {
     setLoading(true);
     try {
@@ -372,7 +649,6 @@ const ManageReservations = () => {
 
   useEffect(() => { fetchReservations(1); }, [fetchReservations]);
 
-  // ── quick action ───────────────────────────────────────────────────────
   const quickAction = async (endpoint, id, msg) => {
     try {
       await axios.patch(`${API}/reservation/${endpoint}/${id}`, {}, { headers: auth() });
@@ -381,23 +657,84 @@ const ManageReservations = () => {
     } catch (err) { toast.error(err.response?.data?.message || 'Action failed.'); }
   };
 
-  // ── per-row action buttons ─────────────────────────────────────────────
   const ActionButtons = ({ r }) => (
     <div className="d-flex gap-1 flex-wrap">
       {r.status === 'pending' && <>
-        <Button size="sm" variant="success" title="Approve" className='btn-icon' onClick={() => setApproveTarget(r)}><CsLineIcons icon="check" /></Button>
-        <Button size="sm" variant="outline-danger" title="Reject" className='btn-icon' onClick={() => setRejectTarget(r)}><CsLineIcons icon="close" /></Button>
+        <Button 
+          size="sm" 
+          variant="success" 
+          title="Approve" 
+          className='reservations-action-btn btn btn-success' 
+          onClick={() => setApproveTarget(r)}
+        >
+          <CsLineIcons icon="check" size="14" style={{ stroke: '#fff' }} />
+        </Button>
+        <Button 
+          size="sm" 
+          variant="outline-danger" 
+          title="Reject" 
+          className='reservations-action-btn btn btn-outline-danger' 
+          style={{ border: '1px solid #cf2637', color: '#cf2637' }}
+          onClick={() => setRejectTarget(r)}
+        >
+          <CsLineIcons icon="close" size="14" />
+        </Button>
       </>}
       {r.status === 'approved' && <>
-        <Button size="sm" variant="info" title="Activate (Reserve Tables)" className='btn-icon' onClick={() => quickAction('activate', r._id, 'Tables reserved!')}><CsLineIcons icon="bookmark" /></Button>
-        <Button size="sm" variant="outline-danger" title="Cancel" className='btn-icon' onClick={() => quickAction('cancel', r._id, 'Cancelled.')}><CsLineIcons icon="slash" /></Button>
+        <Button 
+          size="sm" 
+          variant="info" 
+          title="Activate (Reserve Tables)" 
+          className='reservations-action-btn btn btn-info' 
+          style={{ backgroundColor: '#23b3f4', borderColor: '#23b3f4' }}
+          onClick={() => quickAction('activate', r._id, 'Tables reserved!')}
+        >
+          <CsLineIcons icon="bookmark" size="14" style={{ stroke: '#fff' }} />
+        </Button>
+        <Button 
+          size="sm" 
+          variant="outline-danger" 
+          title="Cancel" 
+          className='reservations-action-btn btn btn-outline-danger' 
+          style={{ border: '1px solid #cf2637', color: '#cf2637' }}
+          onClick={() => quickAction('cancel', r._id, 'Cancelled.')}
+        >
+          <CsLineIcons icon="slash" size="14" />
+        </Button>
       </>}
       {r.status === 'reserved' && <>
-        <Button size="sm" variant="primary" title="Seat" className='btn-icon' onClick={() => quickAction('seat', r._id, 'Customer seated!')}><CsLineIcons icon="check-circle" /></Button>
-        <Button size="sm" variant="outline-secondary" title="No-Show" className='btn-icon' onClick={() => quickAction('no-show', r._id, 'Marked no-show.')}><CsLineIcons icon="close-circle" /></Button>
+        <Button 
+          size="sm" 
+          variant="primary" 
+          title="Seat" 
+          className='reservations-action-btn btn btn-primary' 
+          style={{ backgroundColor: '#0d6efd', borderColor: '#0d6efd' }}
+          onClick={() => quickAction('seat', r._id, 'Customer seated!')}
+        >
+          <CsLineIcons icon="check-circle" size="14" style={{ stroke: '#fff' }} />
+        </Button>
+        <Button 
+          size="sm" 
+          variant="outline-secondary" 
+          title="No-Show" 
+          className='reservations-action-btn btn btn-outline-secondary' 
+          style={{ border: '1px solid #64748b', color: '#64748b' }}
+          onClick={() => quickAction('no-show', r._id, 'Marked no-show.')}
+        >
+          <CsLineIcons icon="close-circle" size="14" />
+        </Button>
       </>}
       {r.status === 'seated' && (
-        <Button size="sm" variant="secondary" title="Complete" className='btn-icon' onClick={() => quickAction('complete', r._id, 'Completed!')}><CsLineIcons icon="check-square" /></Button>
+        <Button 
+          size="sm" 
+          variant="secondary" 
+          title="Complete" 
+          className='reservations-action-btn btn btn-secondary' 
+          style={{ backgroundColor: '#475569', borderColor: '#475569' }}
+          onClick={() => quickAction('complete', r._id, 'Completed!')}
+        >
+          <CsLineIcons icon="check-square" size="14" style={{ stroke: '#fff' }} />
+        </Button>
       )}
     </div>
   );
@@ -407,183 +744,252 @@ const ManageReservations = () => {
   return (
     <>
       <HtmlHead title={title} />
-      <Row>
-        <Col>
-          <div className="page-title-container mb-4">
-            <Row className="align-items-center">
-              <Col xs="12" md="8">
-                <h1 className="mb-0 pb-0 display-4">{title}</h1>
-                <BreadcrumbList items={breadcrumbs} />
-              </Col>
-              <Col xs="12" md="4" className="text-end">
-                <Button className='btn-icon' variant="outline-primary" size="sm" onClick={() => fetchReservations(pagination.page)}>
-                  <CsLineIcons icon="refresh-horizontal" className="me-1" /> Refresh
-                </Button>
-              </Col>
-            </Row>
-          </div>
+      <style>{customStyles}</style>
 
-          <Tab.Container defaultActiveKey="list" onSelect={(k) => setActiveTab(k)}>
-            <Nav variant="tabs" className="mb-3">
-              <Nav.Item><Nav.Link eventKey="list"><CsLineIcons icon="list" className="me-1" />Reservations</Nav.Link></Nav.Item>
-              <Nav.Item>
-                <Nav.Link eventKey="timeline">
-                  <CsLineIcons icon="grid-1" className="me-1" />Timeline Grid
-                </Nav.Link>
-              </Nav.Item>
-              <Nav.Item><Nav.Link eventKey="config"><CsLineIcons icon="settings-1" className="me-1" />Slot Settings</Nav.Link></Nav.Item>
-            </Nav>
+      <div className="container-fluid px-lg-5 pb-5 text-start">
+        <div className="page-title-container mb-4 mt-5 mt-lg-0">
+          <Row className="g-0 align-items-center">
+            <Col xs="12" md="8">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </Col>
+            <Col xs="12" md="4" className="text-end mt-3 mt-md-0">
+              <Button 
+                className='reservations-modal-btn-outline px-4 py-2 d-inline-flex align-items-center gap-2' 
+                onClick={() => fetchReservations(pagination.page)}
+              >
+                <CsLineIcons icon="refresh-horizontal" size="18" /> Refresh
+              </Button>
+            </Col>
+          </Row>
+        </div>
 
-            <Tab.Content>
+        <Tab.Container defaultActiveKey="list" onSelect={(k) => setActiveTab(k)}>
+          <Nav variant="tabs" className="reservations-tabs mb-4">
+            <Nav.Item>
+              <Nav.Link eventKey="list">
+                <CsLineIcons icon="list" size="18" /> Reservations
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link eventKey="timeline">
+                <CsLineIcons icon="grid-1" size="18" /> Timeline Grid
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link eventKey="config">
+                <CsLineIcons icon="settings-1" size="18" /> Slot Settings
+              </Nav.Link>
+            </Nav.Item>
+          </Nav>
 
-              {/* ── LIST TAB ── */}
-              <Tab.Pane eventKey="list">
-                {/* Filters */}
-                <Card body className="mb-3">
-                  <Row className="g-2 align-items-end">
-                    <Col xs={12} md={7}>
-                      <div className="text-muted text-uppercase mb-1" style={{ fontSize: 10, letterSpacing: 1 }}>Status</div>
-                      <div className="d-flex flex-wrap gap-1">
-                        {STATUS_FILTERS.map((s) => (
-                          <Button key={s} size="sm"
-                            variant={statusFilter === s ? 'primary' : 'outline-secondary'}
-                            onClick={() => setStatusFilter(s)}
-                            className="btn-icon position-relative"
-                          >
-                            {s === 'all' ? 'All' : STATUS_META[s]?.label || s}
-                            {s === 'pending' && pendingCount > 0 && (
-                              <Badge bg="danger" pill className="position-absolute top-0 start-100 translate-middle" style={{ fontSize: 9 }}>{pendingCount}</Badge>
-                            )}
-                          </Button>
-                        ))}
+          <Tab.Content>
+            
+            {/* ── LIST TAB ── */}
+            <Tab.Pane eventKey="list">
+              {/* Filters */}
+              <Card className="reservations-filter-card border-0 p-4">
+                <Card.Body className="p-0">
+                  <Row className="g-4 align-items-end">
+                    <Col xs={12} lg={8}>
+                      <span className="small fw-bold text-muted text-uppercase mb-2 d-block" style={{ letterSpacing: '0.05em' }}>Status Filter</span>
+                      <div className="d-flex flex-wrap gap-2">
+                        {STATUS_FILTERS.map((s) => {
+                          const isActive = statusFilter === s;
+                          return (
+                            <Button 
+                              key={s} 
+                              className={`reservations-status-pill ${isActive ? 'active' : ''}`}
+                              onClick={() => setStatusFilter(s)}
+                            >
+                              {s === 'all' ? 'All' : STATUS_META[s]?.label || s}
+                              {s === 'pending' && pendingCount > 0 && (
+                                <Badge bg="danger" pill className="ms-2" style={{ fontSize: 9 }}>{pendingCount}</Badge>
+                              )}
+                            </Button>
+                          );
+                        })}
                       </div>
                     </Col>
-                    <Col xs={12} md={3}>
-                      <Form.Label className="text-muted text-uppercase mb-1" style={{ fontSize: 10, letterSpacing: 1 }}>Date</Form.Label>
-                      <Form.Control type="date" size="sm" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
+                    
+                    <Col xs={12} sm={8} lg={3}>
+                      <Form.Label className="small fw-bold text-muted text-uppercase mb-2" style={{ letterSpacing: '0.05em' }}>Date</Form.Label>
+                      <Form.Control 
+                        type="date" 
+                        value={dateFilter} 
+                        onChange={(e) => setDateFilter(e.target.value)} 
+                        className="reservations-pill-input shadow-sm bg-white w-100"
+                        style={{ height: '44px' }}
+                      />
                     </Col>
-                    <Col xs={12} md={2}>
-                      <Button size="sm" variant="outline-secondary" className="btn-icon w-100" onClick={() => { setDateFilter(''); setStatusFilter('pending'); }}>
-                        Clear
+                    
+                    <Col xs={12} sm={4} lg={1}>
+                      <Button 
+                        className="reservations-modal-btn-outline w-100 py-2 d-flex align-items-center justify-content-center"
+                        style={{ height: '44px' }}
+                        onClick={() => { setDateFilter(''); setStatusFilter('pending'); }}
+                      >
+                        Reset
                       </Button>
                     </Col>
                   </Row>
-                </Card>
+                </Card.Body>
+              </Card>
 
-                {/* Table */}
-                <Card className="mb-4">
-                  {loading ? (
-                    <div className="text-center py-5"><Spinner /> Loading…</div>
-                  ) : reservations.length === 0 ? (
-                    <Alert variant="info" className="m-3 text-center">
-                      <CsLineIcons icon="inbox" size={24} className="me-2" /> No reservations found.
-                    </Alert>
-                  ) : (
-                    <div className="table-responsive">
-                      <Table hover className="mb-0">
-                        <thead className="table-light">
-                          <tr>
-                            <th>Customer</th>
-                            <th>Date</th>
-                            <th>Time Slot</th>
-                            <th>Guests</th>
-                            <th>Tables</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {reservations.map((r) => (
-                            <tr key={r._id}>
-                              <td>
-                                <div className="fw-semibold">{r.customer_name}</div>
-                                <small className="text-muted">{r.customer_phone}</small>
-                              </td>
-                              <td><small>{fmtDate(r.reservation_date)}</small></td>
-                              <td>
-                                {r.group_name && (
-                                  <Badge bg="light" text="dark" className="border mb-1 d-inline-flex align-items-center gap-1" style={{ fontSize: 11 }}>
-                                    {r.group_name}
-                                  </Badge>
-                                )}
-                                <div>
-                                  <Badge bg="light" text="dark" className="border fw-normal">
-                                    <CsLineIcons icon="clock" size={11} className="me-1" />
-                                    {r.slot_start} – {r.slot_end}
-                                  </Badge>
-                                </div>
-                                <div style={{ fontSize: 10 }} className="text-muted mt-1">{r.slots?.length} slot{r.slots?.length > 1 ? 's' : ''}</div>
-                              </td>
-                              <td><CsLineIcons icon="user" size={13} className="me-1 text-muted" />{r.num_persons}</td>
-                              <td>
-                                {r.assigned_tables?.length ? (
-                                  <div className="d-flex flex-wrap gap-1">
-                                    {r.assigned_tables.map((t) => (
-                                      <Badge key={t.table_id} bg="light" text="dark" className="border">
-                                        {t.area_name} · T{t.table_no}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                ) : <span className="text-muted small">—</span>}
-                              </td>
-                              <td>
-                                <Badge bg={STATUS_META[r.status]?.variant || 'secondary'} style={{ width: 'fit-content' }}>
-                                  {r.auto_activated && r.status === 'reserved' && '⚡ '}
-                                  {STATUS_META[r.status]?.label || r.status}
+              {/* Table */}
+              <Card className="reservations-table-container border-0 bg-transparent mb-4">
+                {loading ? (
+                  <div className="text-center py-5">
+                    <Spinner animation="border" style={{ color: '#23b3f4' }} className="mb-2" />
+                    <p className="text-muted fw-bold">Loading reservations…</p>
+                  </div>
+                ) : reservations.length === 0 ? (
+                  <Card className="border-0 shadow-sm text-center py-5 rounded-4 bg-white">
+                    <Card.Body>
+                      <div className="mb-3">
+                        <CsLineIcons icon="inbox" size="48" className="text-muted opacity-50" />
+                      </div>
+                      <h5 className="text-muted fw-bold">No reservations found</h5>
+                      <p className="text-muted small mb-0">Try adjusting your filters or date selection.</p>
+                    </Card.Body>
+                  </Card>
+                ) : (
+                  <div className="table-responsive">
+                    <Table hover className="reservations-table mb-0">
+                      <thead>
+                        <tr>
+                          <th>Customer</th>
+                          <th>Date</th>
+                          <th>Time Slot</th>
+                          <th>Guests</th>
+                          <th>Tables</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reservations.map((r) => (
+                          <tr key={r._id} className="reservations-row-card">
+                            <td>
+                              <div className="fw-bold text-dark">{r.customer_name}</div>
+                              <small className="text-muted fw-medium">{r.customer_phone}</small>
+                            </td>
+                            <td><small className="fw-bold text-alternate">{fmtDate(r.reservation_date)}</small></td>
+                            <td>
+                              {r.group_name && (
+                                <Badge bg="light" text="dark" className="border mb-2 d-inline-flex align-items-center gap-1 fw-bold text-secondary px-2 py-1" style={{ fontSize: 10, borderRadius: '50px' }}>
+                                  {r.group_name}
                                 </Badge>
-                              </td>
-                              <td><ActionButtons r={r} /></td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                    </div>
-                  )}
-                </Card>
-
-                {pagination.pages > 1 && (
-                  <div className="d-flex justify-content-center gap-2 mb-4">
-                    <Button size="sm" variant="outline-secondary" className='btn-icon' disabled={pagination.page === 1} onClick={() => fetchReservations(pagination.page - 1)}>‹ Prev</Button>
-                    <span className="align-self-center small text-muted">Page {pagination.page} of {pagination.pages}</span>
-                    <Button size="sm" variant="outline-secondary" className='btn-icon' disabled={pagination.page === pagination.pages} onClick={() => fetchReservations(pagination.page + 1)}>Next ›</Button>
+                              )}
+                              <div>
+                                <Badge bg="light" text="dark" className="border fw-bold text-alternate px-2 py-1" style={{ borderRadius: '50px' }}>
+                                  <CsLineIcons icon="clock" size={11} className="me-1" style={{ stroke: '#23b3f4' }} />
+                                  {r.slot_start} – {r.slot_end}
+                                </Badge>
+                              </div>
+                              <div style={{ fontSize: 10 }} className="text-muted mt-1 fw-medium">{r.slots?.length} slot{r.slots?.length > 1 ? 's' : ''}</div>
+                            </td>
+                            <td>
+                              <div className="d-flex align-items-center gap-1 fw-bold text-dark">
+                                <CsLineIcons icon="user" size={14} style={{ color: '#23b3f4' }} />
+                                {r.num_persons}
+                              </div>
+                            </td>
+                            <td>
+                              {r.assigned_tables?.length ? (
+                                <div className="d-flex flex-wrap gap-1">
+                                  {r.assigned_tables.map((t) => (
+                                    <Badge key={t.table_id} bg="light" text="dark" className="border fw-bold text-dark px-2 py-1" style={{ borderRadius: '50px' }}>
+                                      {t.area_name} · T{t.table_no}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              ) : <span className="text-muted small fw-medium">—</span>}
+                            </td>
+                            <td>
+                              <Badge bg={STATUS_META[r.status]?.variant || 'secondary'} style={{ borderRadius: '50px', padding: '6px 14px', fontSize: '0.8rem' }}>
+                                {r.auto_activated && r.status === 'reserved' && '⚡ '}
+                                {STATUS_META[r.status]?.label || r.status}
+                              </Badge>
+                            </td>
+                            <td><ActionButtons r={r} /></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
                   </div>
                 )}
-              </Tab.Pane>
+              </Card>
 
-              {/* ── TIMELINE TAB ── */}
-              <Tab.Pane eventKey="timeline">
-                <Card body className="mb-3">
-                  <Row className="g-2 align-items-end">
+              {pagination.pages > 1 && (
+                <div className="d-flex justify-content-center align-items-center gap-3 mb-4">
+                  <Button 
+                    size="sm" 
+                    variant="outline-secondary" 
+                    className='reservations-action-btn btn btn-outline-secondary' 
+                    disabled={pagination.page === 1} 
+                    onClick={() => fetchReservations(pagination.page - 1)}
+                  >
+                    <CsLineIcons icon="chevron-left" size="14" />
+                  </Button>
+                  <span className="align-self-center small text-muted fw-bold">Page {pagination.page} of {pagination.pages}</span>
+                  <Button 
+                    size="sm" 
+                    variant="outline-secondary" 
+                    className='reservations-action-btn btn btn-outline-secondary' 
+                    disabled={pagination.page === pagination.pages} 
+                    onClick={() => fetchReservations(pagination.page + 1)}
+                  >
+                    <CsLineIcons icon="chevron-right" size="14" />
+                  </Button>
+                </div>
+              )}
+            </Tab.Pane>
+
+            {/* ── TIMELINE TAB ── */}
+            <Tab.Pane eventKey="timeline">
+              <Card className="reservations-filter-card border-0 p-4">
+                <Card.Body className="p-0">
+                  <Row className="g-3 align-items-center">
                     <Col xs="auto">
-                      <Form.Group>
-                        <Form.Label className="small fw-semibold">Date</Form.Label>
-                        <Form.Control type="date" size="sm" value={timelineDate} onChange={(e) => setTimelineDate(e.target.value)} />
+                      <Form.Group className="d-flex align-items-center gap-3">
+                        <Form.Label className="small fw-bold text-muted text-uppercase mb-0" style={{ letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Timeline Date</Form.Label>
+                        <Form.Control 
+                          type="date" 
+                          value={timelineDate} 
+                          onChange={(e) => setTimelineDate(e.target.value)} 
+                          className="reservations-pill-input shadow-sm bg-white"
+                          style={{ height: '40px', width: '180px' }}
+                        />
                       </Form.Group>
                     </Col>
-                    <Col xs="auto">
-                      <p className="text-muted small mb-0">
+                    <Col xs="auto" className="ms-md-auto">
+                      <p className="text-muted small mb-0 fw-medium">
                         Visual slot × table grid. Hover cells to see customer details.
                       </p>
                     </Col>
                   </Row>
-                </Card>
-                <Card body>
+                </Card.Body>
+              </Card>
+              <Card className="reservations-filter-card border-0 p-4">
+                <Card.Body className="p-0">
                   <TimelineGrid date={timelineDate} />
-                </Card>
-              </Tab.Pane>
+                </Card.Body>
+              </Card>
+            </Tab.Pane>
 
-              {/* ── CONFIG TAB ── */}
-              <Tab.Pane eventKey="config">
-                <Card body>
-                  <h6 className="fw-semibold mb-3"><CsLineIcons icon="settings-1" className="me-2 text-primary" />Slot Configuration</h6>
+            {/* ── CONFIG TAB ── */}
+            <Tab.Pane eventKey="config">
+              <Card className="reservations-filter-card border-0 p-4">
+                <Card.Body className="p-0">
                   <SlotConfigPanel onSaved={() => fetchReservations(1)} active={activeTab === 'config'} />
-                </Card>
-              </Tab.Pane>
+                </Card.Body>
+              </Card>
+            </Tab.Pane>
 
-            </Tab.Content>
-          </Tab.Container>
-        </Col>
-      </Row>
+          </Tab.Content>
+        </Tab.Container>
+      </div>
 
       <ApproveModal show={!!approveTarget} reservation={approveTarget} onClose={() => setApproveTarget(null)} onSuccess={() => fetchReservations(pagination.page)} />
       <RejectModal show={!!rejectTarget} reservation={rejectTarget} onClose={() => setRejectTarget(null)} onSuccess={() => fetchReservations(pagination.page)} />

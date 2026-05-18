@@ -6,7 +6,7 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import useCustomLayout from 'hooks/useCustomLayout';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useWindowSize } from 'hooks/useWindowSize';
-import { Switch, Route, Redirect, NavLink } from 'react-router-dom';
+import { Switch, Route, Redirect, NavLink, useLocation } from 'react-router-dom';
 import { AuthContext } from 'contexts/AuthContext';
 import OrderHistory from './order/OrderHistory';
 import OrderDetails from './order/OrderDetails';
@@ -21,8 +21,6 @@ import AddTable from './table/AddTable';
 import ManageMenu from './menu/ManageMenu';
 import AddDishes from './menu/AddDishes';
 import QRforMenu from './menu/QRforMenu';
-
-import RequestedInventory from './inventory/RequestedInventory';
 import AddInventory from './inventory/AddInventory';
 import EditInventory from './inventory/EditInventory';
 import InventoryHistory from './inventory/InventoryHistory';
@@ -39,251 +37,219 @@ import QRforFeedback from './feedback/QRforFeedback';
 const NavContent = () => {
   const { activePlans } = useContext(AuthContext);
   return (
-    <Nav className="flex-column">
-      <div className="mb-2">
-        <Nav.Link as={NavLink} to="/operations/order-history" className="px-0">
-          <CsLineIcons icon="handbag" className="me-2 sw-3" size="17" />
+    <Nav className="flex-column operations-operations-sidebar">
+      {/* Order Section */}
+      <div className="mb-1">
+        <div className="operations-section-header">
+          <CsLineIcons icon="cart" size="17" />
           <span className="align-middle">Order</span>
-        </Nav.Link>
-        <div>
-          <Nav.Link as={NavLink} to="/operations/order-history" className="px-0 pt-1">
+        </div>
+        <div className="operations-sub-menu-container">
+          <Nav.Link as={NavLink} to="/operations/order-history" className="px-0" isActive={(match, location) => {
+            return location.pathname.startsWith('/operations/order-history') || location.pathname.startsWith('/operations/order-details');
+          }}>
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Order History</span>
           </Nav.Link>
         </div>
       </div>
 
+      {/* Reservation Section - Manager Exclusive */}
       {activePlans.includes('Reservation Manager') && (
-      <div className="mb-2">
-        <Nav.Link as={NavLink} to="/operations/manage-reservations" className="px-0">
-          <CsLineIcons icon="calendar" className="me-2 sw-3" size="17" />
-          <span className="align-middle">Reservation</span>
-        </Nav.Link>
-        <div>
-          <Nav.Link as={NavLink} to="/operations/manage-reservations" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Manage Reservations</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/reservation-form" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Reservation Form</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/qr-for-reservation" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">QR for Reservation</span>
-          </Nav.Link>
+        <div className="mb-1">
+          <div className="operations-section-header">
+            <CsLineIcons icon="calendar" size="17" />
+            <span className="align-middle">Reservation</span>
+          </div>
+          <div className="operations-sub-menu-container">
+            <Nav.Link as={NavLink} to="/operations/manage-reservations" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Manage Reservations</span>
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/operations/reservation-form" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Reservation Form</span>
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/operations/qr-for-reservation" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">QR for Reservation</span>
+            </Nav.Link>
+          </div>
         </div>
-      </div>
       )}
 
-      <div className="mb-2">
-        <Nav.Link as={NavLink} to="/operations/manage-table" className="px-0">
-          <CsLineIcons icon="square" className="me-2 sw-3" size="17" />
+      {/* Table Section */}
+      <div className="mb-1">
+        <div className="operations-section-header">
+          <CsLineIcons icon="layout-5" size="17" />
           <span className="align-middle">Table</span>
-        </Nav.Link>
-        <div>
-          <Nav.Link as={NavLink} to="/operations/manage-table" className="px-0 pt-1">
+        </div>
+        <div className="operations-sub-menu-container">
+          <Nav.Link as={NavLink} to="/operations/manage-table" className="px-0">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Manage Table</span>
           </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/add-table" className="px-0 pt-1">
+          <Nav.Link as={NavLink} to="/operations/add-table" className="px-0">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Add Table</span>
           </Nav.Link>
         </div>
       </div>
 
-      <div className="mb-2">
-        <Nav.Link as={NavLink} to="/operations/manage-menu" className="px-0">
-          <CsLineIcons icon="list" className="me-2 sw-3" size="17" />
+      {/* Menu Section */}
+      <div className="mb-1">
+        <div className="operations-section-header">
+          <CsLineIcons icon="book-open" size="17" />
           <span className="align-middle">Menu</span>
-        </Nav.Link>
-        <div>
-          <Nav.Link as={NavLink} to="/operations/manage-menu" className="px-0 pt-1">
+        </div>
+        <div className="operations-sub-menu-container">
+          <Nav.Link as={NavLink} to="/operations/manage-menu" className="px-0">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Manage Menu</span>
           </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/add-dish" className="px-0 pt-1">
+          <Nav.Link as={NavLink} to="/operations/add-dish" className="px-0">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Add Dish</span>
           </Nav.Link>
           {activePlans.includes('Scan For Menu') && (
-          <Nav.Link as={NavLink} to="/operations/qr-for-menu" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">QR for Menu</span>
-          </Nav.Link>
+            <Nav.Link as={NavLink} to="/operations/qr-for-menu" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">QR for Menu</span>
+            </Nav.Link>
           )}
         </div>
       </div>
 
-      <div className="mb-2">
-        <Nav.Link as={NavLink} to="/operations/requested-inventory" className="px-0">
-          <CsLineIcons icon="boxes" className="me-2 sw-3" size="17" />
+      {/* Inventory Section */}
+      <div className="mb-1">
+        <div className="operations-section-header">
+          <CsLineIcons icon="boxes" size="17" />
           <span className="align-middle">Inventory</span>
-        </Nav.Link>
-        <div>
-          <Nav.Link as={NavLink} to="/operations/requested-inventory" className="px-0 pt-1">
+        </div>
+        <div className="operations-sub-menu-container">
+          <Nav.Link as={NavLink} to="/operations/inventory-history" className="px-0" isActive={(match, location) => {
+            const inventoryPaths = [
+              '/operations/inventory-history',
+              '/operations/requested-inventory',
+              '/operations/add-inventory',
+              '/operations/edit-inventory',
+              '/operations/inventory-details',
+              '/operations/stock-management',
+              '/operations/daily-opening-stock',
+              '/operations/daily-closing-stock',
+              '/operations/wastage-log',
+              '/operations/inventory-report'
+            ];
+            return inventoryPaths.some(p => location.pathname.startsWith(p));
+          }}>
             <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Requested Inventory</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/inventory-history" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Inventory History</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/add-inventory" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Add Inventory</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/stock-management" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Stock Management</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/daily-opening-stock" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Opening Stock</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/daily-closing-stock" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Closing Stock</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/wastage-log" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Wastage Log</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/inventory-report" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Inventory Report</span>
+            <span className="align-middle">Manage Inventory</span>
           </Nav.Link>
         </div>
       </div>
 
+      {/* Feedback Section */}
       {activePlans.includes('Feedback') && (
-      <div className="mb-2">
-        <Nav.Link as={NavLink} to="/operations/feedback" className="px-0">
-          <i className="bi-chat-text me-2 ms-1 sw-3" size="17" />
-          <span className="align-middle">Feedback</span>
-        </Nav.Link>
-        <div>
-          <Nav.Link as={NavLink} to="/operations/feedback" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">View Feedbacks</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/qr-for-feedback" className="px-0 pt-1">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Feedback QR</span>
-          </Nav.Link>
+        <div className="mb-1">
+          <div className="operations-section-header">
+            <CsLineIcons icon="message" size="17" />
+            <span className="align-middle">Feedback</span>
+          </div>
+          <div className="operations-sub-menu-container">
+            <Nav.Link as={NavLink} to="/operations/feedback" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">View Feedbacks</span>
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/operations/qr-for-feedback" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Feedback QR</span>
+            </Nav.Link>
+          </div>
         </div>
-      </div>
       )}
     </Nav>
   );
 };
 
-const mobileNavItems = [
-  {
-    label: 'Order',
-    icon: 'handbag',
-    items: [{ to: '/operations/order-history', label: 'Order History' }],
-  },
-  {
-    label: 'Reservation',
-    icon: 'calendar',
-    items: [
-      { to: '/operations/manage-reservations', label: 'Manage Reservations' },
-      { to: '/operations/reservation-form', label: 'Reservation Form' },
-      { to: '/operations/qr-for-reservation', label: 'QR for Reservation' }
-    ],
-  },
-  {
-    label: 'Table',
-    icon: 'square',
-    items: [
-      { to: '/operations/manage-table', label: 'Manage Table' },
-      { to: '/operations/add-table', label: 'Add Table' },
-    ],
-  },
-  {
-    label: 'Menu',
-    icon: 'list',
-    items: [
-      { to: '/operations/manage-menu', label: 'Manage Menu' },
-      { to: '/operations/add-dish', label: 'Add Dish' },
-      { to: '/operations/qr-for-menu', label: 'QR for Menu' },
-    ],
-  },
-  {
-    label: 'Inventory',
-    icon: 'boxes',
-    items: [
-      { to: '/operations/requested-inventory', label: 'Requested Inventory' },
-      { to: '/operations/inventory-history', label: 'Inventory History' },
-      { to: '/operations/add-inventory', label: 'Add Inventory' },
-      { to: '/operations/stock-management', label: 'Stock Management' },
-      { to: '/operations/daily-opening-stock', label: '🌅 Opening Stock' },
-      { to: '/operations/daily-closing-stock', label: '🌙 Closing Stock' },
-      { to: '/operations/wastage-log', label: '🗑 Wastage Log' },
-      { to: '/operations/inventory-report', label: '📊 Inventory Report' },
-    ],
-  },
-  {
-    label: 'Feedback',
-    icon: 'chat-text',
-    items: [
-      { to: '/operations/feedback', label: 'View Feedbacks' },
-      { to: '/operations/qr-for-feedback', label: 'Feedback QR' },
-    ],
-  },
-];
-
-const MobileNavbar = () => {
+const MobileBottomNav = () => {
   const { activePlans } = useContext(AuthContext);
+  const { pathname } = useLocation();
 
-  const filteredNavItems = mobileNavItems.filter(nav => {
-    if (nav.label === 'Reservation' && !activePlans.includes('Reservation Manager')) return false;
-    if (nav.label === 'Feedback' && !activePlans.includes('Feedback')) return false;
-    return true;
-  }).map(nav => {
-    if (nav.label === 'Menu') {
-      return {
-        ...nav,
-        items: nav.items.filter(item => {
-          if (item.label === 'QR for Menu' && !activePlans.includes('Scan For Menu')) return false;
-          return true;
-        })
-      };
-    }
-    return nav;
-  });
+  const navItems = [
+    { label: 'Order', icon: 'cart', to: '/operations/order-history' },
+    { label: 'Reserv.', icon: 'calendar', to: '/operations/manage-reservations', hide: !activePlans.includes('Reservation Manager') },
+    { label: 'Table', icon: 'layout-5', to: '/operations/manage-table' },
+    { label: 'Menu', icon: 'book-open', to: '/operations/manage-menu' },
+    { label: 'Inventory', icon: 'boxes', to: '/operations/inventory-history' },
+  ].filter(item => !item.hide);
 
   return (
-    <div className="d-flex gap-2 overflow-auto pb-2">
-      {filteredNavItems.map((nav) => (
-        <Dropdown key={nav.label} container="body" className="position-static">
-          <Dropdown.Toggle variant="outline-primary" size="sm" className="d-flex align-items-center gap-1">
-            <CsLineIcons icon={nav.icon} size="16" />
-            {nav.label}
-          </Dropdown.Toggle>
-
-          <Dropdown.Menu
-            style={{
-              position: 'absolute',
-              minWidth: '150px',
-              maxHeight: '300px',
-              overflowY: 'auto',
-              marginTop: '5px',
-            }}
-          >
-            {nav.items.map((item) => (
-              <Dropdown.Item as={NavLink} key={item.to} to={item.to}>
-                {item.label}
-              </Dropdown.Item>
-            ))}
-          </Dropdown.Menu>
-        </Dropdown>
-      ))}
+    <div 
+      className="position-fixed bottom-0 start-0 end-0 d-lg-none px-4" 
+      style={{ 
+        zIndex: 1050, 
+        paddingBottom: 'calc(20px + env(safe-area-inset-bottom))',
+      }}
+    >
+      <div 
+        className="d-flex justify-content-around align-items-center position-relative shadow-lg"
+        style={{ 
+          height: '65px',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(25px)',
+          borderRadius: '35px',
+          border: '1px solid rgba(255, 255, 255, 0.4)',
+          boxShadow: '0 15px 40px rgba(0,0,0,0.12)'
+        }}
+      >
+        {navItems.map((item) => {
+          const isActive = pathname.startsWith(item.to);
+          return (
+            <NavLink
+              key={item.label}
+              to={item.to}
+              className="d-flex flex-column align-items-center text-decoration-none"
+              style={{ flex: 1, height: '100%', position: 'relative', justifyContent: 'center' }}
+            >
+              <div 
+                className="d-flex align-items-center justify-content-center transition-all"
+                style={{ 
+                  width: isActive ? '60px' : '38px',
+                  height: isActive ? '60px' : '38px',
+                  background: isActive ? 'linear-gradient(135deg, #1ea8e7 0%, #007bff 100%)' : 'transparent',
+                  borderRadius: '50%',
+                  transform: isActive ? 'translateY(-28px) scale(1.1)' : 'scale(1)',
+                  boxShadow: isActive ? '0 10px 25px rgba(30, 168, 231, 0.4)' : 'none',
+                  border: isActive ? '5px solid #fff' : 'none',
+                  transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                  zIndex: isActive ? 5 : 1
+                }}
+              >
+                <div 
+                  style={{ 
+                    filter: isActive ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <CsLineIcons 
+                    icon={item.icon} 
+                    size={isActive ? 32 : 28} 
+                    stroke={isActive ? '#ffffff' : '#94a3b8'}
+                    fill={isActive ? 'rgba(255,255,255,0.2)' : 'none'}
+                  />
+                </div>
+              </div>
+            </NavLink>
+          );
+        })}
+      </div>
     </div>
   );
 };
+
 
 const Operations = () => {
   useCustomLayout({ layout: LAYOUT.Boxed });
@@ -294,21 +260,18 @@ const Operations = () => {
   const { activePlans } = useContext(AuthContext);
 
   return (
-    <div className="position-relative">
-      {/* ✅ MOBILE NAVBAR — OUTSIDE SCROLL */}
-      {width && width < lgBreakpoint && (
-        <div className="position-absolute top-0 start-0 end-0 d-lg-none">
-          <MobileNavbar />
-        </div>
-      )}
+    <div className="position-relative pb-7 pb-lg-0">
+      {/* MODERN MOBILE BOTTOM NAV */}
+      {width && width < lgBreakpoint && <MobileBottomNav />}
+      
       <Row>
         {(width && width >= lgBreakpoint) ? (
           <Col xs="auto" className="d-none d-lg-flex">
-            <div className="nav flex-column sw-25 mt-2">
+            <div className="nav flex-column sw-25">
               <NavContent />
             </div>
           </Col>
-        ) : (<div className="pt-7" />)}
+        ) : (<div className="pt-2" />)}
         <Col>
           <Switch>
             <Route exact path="/operations" render={() => <Redirect to="/operations/order-history" />} />
@@ -358,7 +321,7 @@ const Operations = () => {
               </>
             )} />
 
-            <Route path="/operations/requested-inventory" component={RequestedInventory} />
+            <Route path="/operations/requested-inventory" render={() => <Redirect to="/operations/inventory-history" />} />
             <Route path="/operations/inventory-history" component={InventoryHistory} />
             <Route path="/operations/add-inventory" component={AddInventory} />
             <Route path="/operations/edit-inventory/:id" component={EditInventory} />

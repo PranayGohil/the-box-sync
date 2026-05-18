@@ -7,9 +7,13 @@ const ControlsSearch = ({ onSearch, initialValue = '' }) => {
   const isInitialMount = useRef(true);
 
   useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
-      return () => { }; // ✅ always return something
+      return () => { };
     }
 
     if (debounceTimerRef.current) {
@@ -36,20 +40,66 @@ const ControlsSearch = ({ onSearch, initialValue = '' }) => {
     onSearch('');
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      onSearch(value);
+    }
+  };
+
+  const handleSearchClick = () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    onSearch(value);
+  };
+
   return (
-    <div className="custom-search-container shadow-sm d-flex align-items-center px-2 bg-white" style={{ borderRadius: '10px', height: '40px', border: '1px solid #eee' }}>
-      <CsLineIcons icon="search" size="18" className="text-primary opacity-75 ms-1" />
+    <div className="position-relative w-100 h-100 d-flex align-items-center">
+      <div 
+        className="position-absolute d-flex align-items-center justify-content-center"
+        onClick={handleSearchClick}
+        style={{
+          left: '12px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          color: '#1ea8e7',
+          zIndex: 5,
+          cursor: 'pointer'
+        }}
+      >
+        <CsLineIcons icon="search" size="16" />
+      </div>
       <input
-        className="border-0 bg-transparent shadow-none flex-grow-1 px-2"
-        style={{ height: '38px', fontSize: '14px', outline: 'none' }}
+        className="form-control datatable-search border-0 bg-white w-100"
+        style={{ 
+          height: '100%', 
+          fontSize: '14px', 
+          paddingLeft: '40px',
+          paddingRight: '40px',
+          outline: 'none',
+          boxShadow: 'none'
+        }}
         value={value}
         onChange={(e) => setValue(e.target.value)}
+        onKeyDown={handleKeyDown}
         placeholder="Search orders..."
       />
       {value && value.length > 0 && (
         <span
-          className="cursor-pointer text-muted px-1"
+          className="search-delete-icon"
           onClick={handleClear}
+          style={{
+            cursor: 'pointer',
+            position: 'absolute',
+            right: '12px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: '#1ea8e7',
+            zIndex: 5
+          }}
         >
           <CsLineIcons icon="close" size="14" />
         </span>

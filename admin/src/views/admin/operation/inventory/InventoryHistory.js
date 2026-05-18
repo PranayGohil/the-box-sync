@@ -24,15 +24,15 @@ const TableControls = ({ onSearch, showFilters, setShowFilters, activeFilterCoun
         </div>
       </Col>
       <Col xs="auto">
-        <Button 
-          variant={showFilters ? 'primary' : 'outline-primary'} 
-          className="btn-icon btn-icon-only position-relative rounded-circle border-2" 
+        <Button
+          variant={showFilters ? 'primary' : 'outline-primary'}
+          className="btn-icon btn-icon-only position-relative rounded-circle border-2"
           style={{ width: '40px', height: '40px' }}
           onClick={() => setShowFilters(!showFilters)}
         >
           <CsLineIcons icon={showFilters ? 'close' : 'filter'} size="16" />
           {activeFilterCount > 0 && (
-            <Badge bg="danger" className="position-absolute top-0 start-100 translate-middle rounded-circle border border-2 border-white" style={{fontSize: '0.6rem', padding: '0.3em 0.5em'}}>
+            <Badge bg="danger" className="position-absolute top-0 start-100 translate-middle rounded-circle border border-2 border-white" style={{ fontSize: '0.6rem', padding: '0.3em 0.5em' }}>
               {activeFilterCount}
             </Badge>
           )}
@@ -110,8 +110,8 @@ const RequestedInventory = ({ brandColor, onRejectClick, refreshKey }) => {
     <Card className="inventory-history-interactive-card border-0">
       <Card.Body className="p-4 p-lg-5">
         <div className="inventory-history-section-title-wrapper mb-4">
-          <div className="sw-6 sh-6 rounded-xl d-flex align-items-center justify-content-center shadow-sm" style={{background: 'rgba(35, 179, 244, 0.12)', borderRadius: '1rem'}}>
-            <CsLineIcons icon="boxes" size="24" style={{color: brandColor}} />
+          <div className="sw-6 sh-6 rounded-xl d-flex align-items-center justify-content-center shadow-sm" style={{ background: 'rgba(35, 179, 244, 0.12)', borderRadius: '1rem' }}>
+            <CsLineIcons icon="boxes" size="24" style={{ color: brandColor }} />
           </div>
           <div>
             <h2 className="h4 mb-0 fw-bold">Requested Inventory</h2>
@@ -170,8 +170,8 @@ const CompletedInventory = ({ history, onDeleteClick, refreshKey }) => {
     <Card className="inventory-history-interactive-card border-0">
       <Card.Body className="p-4 p-lg-5">
         <div className="inventory-history-section-title-wrapper mb-4">
-          <div className="sw-6 sh-6 rounded-xl d-flex align-items-center justify-content-center shadow-sm" style={{background: 'rgba(16, 185, 129, 0.12)', borderRadius: '1rem'}}>
-            <CsLineIcons icon="check-circle" size="24" style={{color: '#10b981'}} />
+          <div className="sw-6 sh-6 rounded-xl d-flex align-items-center justify-content-center shadow-sm" style={{ background: 'rgba(16, 185, 129, 0.12)', borderRadius: '1rem' }}>
+            <CsLineIcons icon="check-circle" size="24" style={{ color: '#10b981' }} />
           </div>
           <div>
             <h2 className="h4 mb-0 fw-bold">Completed Requests</h2>
@@ -228,8 +228,8 @@ const RejectedInventory = ({ history, onDeleteClick, refreshKey }) => {
     <Card className="inventory-history-interactive-card border-0">
       <Card.Body className="p-4 p-lg-5">
         <div className="inventory-history-section-title-wrapper mb-4">
-          <div className="sw-6 sh-6 rounded-xl d-flex align-items-center justify-content-center shadow-sm" style={{background: 'rgba(244, 63, 94, 0.12)', borderRadius: '1rem'}}>
-            <CsLineIcons icon="close" size="24" style={{color: '#f43f5e'}} />
+          <div className="sw-6 sh-6 rounded-xl d-flex align-items-center justify-content-center shadow-sm" style={{ background: 'rgba(244, 63, 94, 0.12)', borderRadius: '1rem' }}>
+            <CsLineIcons icon="close" size="24" style={{ color: '#f43f5e' }} />
           </div>
           <div>
             <h2 className="h4 mb-0 fw-bold">Rejected Requests</h2>
@@ -255,7 +255,7 @@ const InventoryHistory = () => {
   const { activePlans } = useContext(AuthContext);
   const title = 'Manage Inventory';
   const brandColor = '#23b3f4';
-  const breadcrumbs = [ { to: '', text: 'Home' }, { to: 'operations/inventory-history', text: 'Operations' }, { to: 'operations/inventory-history', title: 'Manage Inventory' } ];
+  const breadcrumbs = [{ to: '', text: 'Home' }, { to: 'operations/inventory-history', text: 'Operations' }, { to: 'operations/inventory-history', title: 'Manage Inventory' }];
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -289,7 +289,7 @@ const InventoryHistory = () => {
 
   return (
     <div className="inventory-history-inventory-container">
-      
+
       <HtmlHead title={title} description="Manage your inventory hub." />
       <div className="container-fluid px-lg-5">
         <div className="page-title-container mb-4 mt-5 mt-lg-0">
@@ -313,8 +313,8 @@ const InventoryHistory = () => {
         <CompletedInventory refreshKey={refreshKey} history={history} onDeleteClick={(item) => { setSelectedItem(item); setShowDeleteModal(true); }} />
         <RejectedInventory refreshKey={refreshKey} history={history} onDeleteClick={(item) => { setSelectedItem(item); setShowDeleteModal(true); }} />
 
-        <Modal show={rejectInventoryModal} onHide={() => setRejectInventoryModal(false)} centered contentClassName="border-0 shadow-lg" style={{backdropFilter: 'blur(5px)'}}><div className="bg-white p-4 rounded-3"><Modal.Header closeButton className="border-0 p-0 mb-3"><Modal.Title className="fw-bold text-danger">Reject Request</Modal.Title></Modal.Header><Modal.Body className="p-0"><p className="fw-bold text-muted mb-3">Reason for rejection:</p><Form.Control as="textarea" rows={4} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Reason..." /></Modal.Body><Modal.Footer className="border-0 p-0 d-flex gap-2 justify-content-end mt-4"><Button variant="light" className="inventory-history-custom-btn-outline border-0 text-muted" onClick={() => setRejectInventoryModal(false)}>Cancel</Button><Button variant="danger" className="inventory-history-custom-btn-outline border-danger text-danger px-4" onClick={handleReject} disabled={rejecting}>{rejecting ? 'Processing...' : 'Confirm Reject'}</Button></Modal.Footer></div></Modal>
-        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered contentClassName="border-0 shadow-lg" style={{backdropFilter: 'blur(5px)'}}><div className="bg-white p-4 rounded-3"><Modal.Header closeButton className="border-0 p-0 mb-3"><Modal.Title className="fw-bold text-danger">Confirm Deletion</Modal.Title></Modal.Header><Modal.Body className="p-0"><p className="fw-bold text-muted mb-0">Permanently delete this record?</p></Modal.Body><Modal.Footer className="border-0 p-0 d-flex gap-2 justify-content-end mt-4"><Button variant="light" className="inventory-history-custom-btn-outline border-0 text-muted" onClick={() => setShowDeleteModal(false)}>Cancel</Button><Button variant="danger" className="inventory-history-custom-btn-outline border-danger text-danger px-4" onClick={handleDelete} disabled={isDeleting}>{isDeleting ? 'Deleting...' : 'Delete Permanently'}</Button></Modal.Footer></div></Modal>
+        <Modal show={rejectInventoryModal} onHide={() => setRejectInventoryModal(false)} centered contentClassName="border-0 shadow-lg" style={{ backdropFilter: 'blur(5px)' }}><div className="bg-white p-4 rounded-3"><Modal.Header closeButton className="border-0 p-0 mb-3"><Modal.Title className="fw-bold text-danger">Reject Request</Modal.Title></Modal.Header><Modal.Body className="p-0"><p className="fw-bold text-muted mb-3">Reason for rejection:</p><Form.Control as="textarea" rows={4} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Reason..." /></Modal.Body><Modal.Footer className="border-0 p-0 d-flex gap-2 justify-content-end mt-4"><Button variant="light" className="inventory-history-custom-btn-outline border-0 text-muted" onClick={() => setRejectInventoryModal(false)}>Cancel</Button><Button variant="danger" className="inventory-history-custom-btn-outline border-danger text-danger px-4" onClick={handleReject} disabled={rejecting}>{rejecting ? 'Processing...' : 'Confirm Reject'}</Button></Modal.Footer></div></Modal>
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered contentClassName="border-0 shadow-lg" style={{ backdropFilter: 'blur(5px)' }}><div className="bg-white p-4 rounded-3"><Modal.Header closeButton className="border-0 p-0 mb-3"><Modal.Title className="fw-bold text-danger">Confirm Deletion</Modal.Title></Modal.Header><Modal.Body className="p-0"><p className="fw-bold text-muted mb-0">Permanently delete this record?</p></Modal.Body><Modal.Footer className="border-0 p-0 d-flex gap-2 justify-content-end mt-4"><Button variant="light" className="inventory-history-custom-btn-outline border-0 text-muted" onClick={() => setShowDeleteModal(false)}>Cancel</Button><Button variant="danger" className="inventory-history-custom-btn-outline border-danger text-danger px-4" onClick={handleDelete} disabled={isDeleting}>{isDeleting ? 'Deleting...' : 'Delete Permanently'}</Button></Modal.Footer></div></Modal>
       </div>
     </div>
   );

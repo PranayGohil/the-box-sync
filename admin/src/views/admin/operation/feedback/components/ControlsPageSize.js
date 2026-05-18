@@ -1,25 +1,23 @@
 import React from 'react';
 import { Dropdown, OverlayTrigger, Tooltip } from 'react-bootstrap';
 
-const ControlsPageSize = ({ tableInstance }) => {
-  const {
-    setPageSize,
-    gotoPage,
-    state: { pageSize },
-  } = tableInstance;
+const ControlsPageSize = ({ tableInstance, pageSize: propPageSize, onPageSizeChange: propOnPageSizeChange }) => {
+  const options = [5, 10, 20, 50, 100];
 
-  const options = [5, 10, 20];
-
-  const onSelectPageSize = (size) => {
-    setPageSize(size);
-    gotoPage(0); 
-  };
+  const pageSize = tableInstance ? tableInstance.state.pageSize : propPageSize;
+  const setPageSize = tableInstance ? tableInstance.setPageSize : propOnPageSizeChange;
 
   return (
     <OverlayTrigger placement="top" delay={{ show: 1000, hide: 0 }} overlay={<Tooltip>Item Count</Tooltip>}>
       {({ ref, ...triggerHandler }) => (
         <Dropdown className="d-inline-block" align="end">
-          <Dropdown.Toggle ref={ref} {...triggerHandler} variant="foreground-alternate" className="shadow">
+          <Dropdown.Toggle
+            ref={ref}
+            {...triggerHandler}
+            variant="outline-primary"
+            className="rounded-pill px-3 py-1 fw-bold border-2 small"
+            style={{ height: '40px', display: 'flex', alignItems: 'center' }}
+          >
             {pageSize} Items
           </Dropdown.Toggle>
           <Dropdown.Menu
@@ -36,7 +34,7 @@ const ControlsPageSize = ({ tableInstance }) => {
             }}
           >
             {options.map((pSize) => (
-              <Dropdown.Item key={`pageSize.${pSize}`} active={pSize === pageSize} onClick={() => onSelectPageSize(pSize)}>
+              <Dropdown.Item key={`pageSize.${pSize}`} active={pSize === pageSize} onClick={() => setPageSize(pSize)}>
                 {pSize} Items
               </Dropdown.Item>
             ))}

@@ -7,9 +7,13 @@ const ControlsSearch = ({ onSearch, initialValue = '' }) => {
   const isInitialMount = useRef(true);
 
   useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
-      return () => { }; // ✅ always return something
+      return () => { };
     }
 
     if (debounceTimerRef.current) {
@@ -36,39 +40,69 @@ const ControlsSearch = ({ onSearch, initialValue = '' }) => {
     onSearch('');
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      onSearch(value);
+    }
+  };
+
+  const handleSearchClick = () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    onSearch(value);
+  };
+
   return (
-    <div className="position-relative">
+    <div className="position-relative w-100 h-100 d-flex align-items-center">
+      <div 
+        className="position-absolute d-flex align-items-center justify-content-center"
+        onClick={handleSearchClick}
+        style={{
+          left: '12px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          color: '#1ea8e7',
+          zIndex: 5,
+          cursor: 'pointer'
+        }}
+      >
+        <CsLineIcons icon="search" size="16" />
+      </div>
       <input
-        className="form-control datatable-search"
+        className="form-control datatable-search border-0 bg-white w-100"
+        style={{ 
+          height: '100%', 
+          fontSize: '14px', 
+          paddingLeft: '40px',
+          paddingRight: '40px',
+          outline: 'none',
+          boxShadow: 'none',
+          color: '#333'
+        }}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Search"
+        onKeyDown={handleKeyDown}
+        placeholder="Search inventory..."
       />
-      {value && value.length > 0 ? (
+      {value && value.length > 0 && (
         <span
           className="search-delete-icon"
           onClick={handleClear}
           style={{
             cursor: 'pointer',
             position: 'absolute',
-            right: '10px',
+            right: '12px',
             top: '50%',
-            transform: 'translateY(-50%)'
+            transform: 'translateY(-50%)',
+            color: '#1ea8e7',
+            zIndex: 5
           }}
         >
-          <CsLineIcons icon="close" />
-        </span>
-      ) : (
-        <span
-          className="search-magnifier-icon pe-none"
-          style={{
-            position: 'absolute',
-            right: '10px',
-            top: '50%',
-            transform: 'translateY(-50%)'
-          }}
-        >
-          <CsLineIcons icon="search" />
+          <CsLineIcons icon="close" size="14" />
         </span>
       )}
     </div>

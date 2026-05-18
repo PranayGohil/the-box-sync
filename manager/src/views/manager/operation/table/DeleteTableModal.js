@@ -1,8 +1,38 @@
 import React, { useState } from 'react';
-import { Button, Modal, Spinner, Alert } from 'react-bootstrap';
+import { Button, Modal, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+
+const customStyles = `
+  .delete-table-modal-custom-btn-outline {
+    border: 1px solid #23b3f4 !important;
+    color: #23b3f4 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+  }
+  .delete-table-modal-custom-btn-outline:hover {
+    background-color: #23b3f4 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+  }
+  .delete-table-modal-custom-btn-delete {
+    border: 1px solid #cf2637 !important;
+    color: #cf2637 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+  }
+  .delete-table-modal-custom-btn-delete:hover {
+    background-color: #cf2637 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(207, 38, 55, 0.25) !important;
+  }
+  .delete-table-modal-custom-btn-delete:hover svg {
+    stroke: #fff !important;
+  }
+`;
 
 const DeleteTableModal = ({ show, handleClose, data, onDeleteSuccess }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -10,7 +40,7 @@ const DeleteTableModal = ({ show, handleClose, data, onDeleteSuccess }) => {
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      const res = await axios.delete(
+      await axios.delete(
         `${process.env.REACT_APP_API}/table/delete/${data.id}`,
         {
           headers: {
@@ -18,7 +48,6 @@ const DeleteTableModal = ({ show, handleClose, data, onDeleteSuccess }) => {
           },
         }
       );
-      console.log('Table deleted:', res.data);
       handleClose();
       toast.success('Table deleted successfully!');
       onDeleteSuccess();
@@ -31,33 +60,50 @@ const DeleteTableModal = ({ show, handleClose, data, onDeleteSuccess }) => {
   };
 
   return (
-    <Modal show={show} onHide={handleClose} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>
-          Delete Table?
+    <Modal show={show} onHide={handleClose} centered backdrop="static">
+      <style>{customStyles}</style>
+      <Modal.Header closeButton className="border-0 pb-0">
+        <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>
+          Confirm Delete
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        <p>This will permanently remove the table from your restaurant layout.</p>
+      <Modal.Body className="py-4">
+        <div className="d-flex align-items-center mb-3">
+          <div className="p-3 rounded-circle me-3" style={{ backgroundColor: 'rgba(207, 38, 55, 0.1)' }}>
+            <CsLineIcons icon="bin" size="24" style={{ color: '#cf2637' }} />
+          </div>
+          <div>
+            <p className="mb-0 fw-bold text-dark">Are you sure you want to delete this table?</p>
+            <p className="mb-0 text-muted small">This action cannot be undone and will permanently remove the table from your restaurant layout.</p>
+          </div>
+        </div>
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="dark" onClick={handleClose} disabled={isDeleting}>
+      <Modal.Footer className="border-0 pt-0">
+        <Button 
+          variant="outline-primary" 
+          onClick={handleClose} 
+          disabled={isDeleting}
+          className="rounded-pill px-4 fw-bold delete-table-modal-custom-btn-outline"
+        >
           Cancel
         </Button>
-        <Button variant="danger" onClick={handleDelete} disabled={isDeleting}>
+        <Button 
+          variant="outline-danger" 
+          onClick={handleDelete} 
+          disabled={isDeleting}
+          className="rounded-pill px-4 fw-bold shadow-sm delete-table-modal-custom-btn-delete"
+        >
           {isDeleting ? (
             <>
-              <Spinner
-                as="span"
-                animation="border"
-                size="sm"
-                role="status"
-                aria-hidden="true"
-                className="me-2"
-              />
+              <Spinner as="span" animation="border" size="sm" className="me-2" />
               Deleting...
             </>
-          ) : 'Delete'}
+          ) : (
+            <div className="d-flex align-items-center">
+              <CsLineIcons icon="bin" size="16" className="me-2" stroke="currentColor" />
+              Delete
+            </div>
+          )}
         </Button>
       </Modal.Footer>
     </Modal>

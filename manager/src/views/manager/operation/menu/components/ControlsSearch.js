@@ -10,29 +10,30 @@ const ControlsSearch = ({ tableInstance }) => {
     const [value, setValue] = useState(globalFilter);
     const onChange = useAsyncDebounce((val) => setGlobalFilter(val || undefined), 200);
     return (
-        <div className="search-input-container w-100 border border-separator bg-foreground search-sm">
+        <div className="manage-menu-search-container">
             <input
-                className="form-control form-control-sm datatable-search"
+                className="form-control pill-input manage-menu-pill-input"
                 value={value || ''}
                 onChange={(e) => {
                     setValue(e.target.value);
                     onChange(e.target.value);
                 }}
-                placeholder="Search"
+                placeholder="Search category..."
+                style={{ height: '40px', borderRadius: '10px', border: '1px solid #eee' }}
             />
-            {value ? (
+            <div className="manage-menu-search-icon-wrapper">
+                <CsLineIcons icon="search" size="14" />
+            </div>
+            {value && (
                 <span
-                    className="search-delete-icon"
+                    className="position-absolute"
+                    style={{ right: '1rem', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: '#6b7280', zIndex: 10 }}
                     onClick={() => {
                         setValue('');
                         onChange('');
                     }}
                 >
-                    <CsLineIcons icon="close" />
-                </span>
-            ) : (
-                <span className="search-magnifier-icon pe-none">
-                    <CsLineIcons icon="search" />
+                    <CsLineIcons icon="close" size="14" />
                 </span>
             )}
         </div>

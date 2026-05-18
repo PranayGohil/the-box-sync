@@ -18,10 +18,20 @@ const customStyles = `
     border: 1px solid #e5e7eb !important;
     background: #ffffff !important;
     transition: all 0.2s ease !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+  }
+  input.pill-input {
+    height: 48px !important;
+  }
+  textarea.pill-input {
+    min-height: 60px !important;
+    height: auto !important;
   }
   .pill-input:focus {
-    border-color: #1ea8e7 !important;
-    box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
+    border-color: #23b3f4 !important;
+    box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
     outline: none !important;
   }
   .glass-card {
@@ -32,18 +42,18 @@ const customStyles = `
     transition: all 0.3s ease;
   }
   .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
+    border: 1px solid #23b3f4 !important;
+    color: #23b3f4 !important;
     background-color: #fff !important;
     transition: all 0.2s ease-in-out !important;
     border-radius: 50px !important;
     font-weight: 600 !important;
   }
   .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
+    background-color: #23b3f4 !important;
     color: #fff !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
   }
   .custom-btn-outline:hover svg {
     stroke: #fff !important;
@@ -110,8 +120,8 @@ const customStyles = `
     box-shadow: 0 4px 12px rgba(207, 38, 55, 0.2) !important;
   }
   .custom-check.active {
-    background: #1ea8e7 !important;
-    border-color: #1ea8e7 !important;
+    background: #23b3f4 !important;
+    border-color: #23b3f4 !important;
   }
 `;
 
@@ -262,10 +272,10 @@ const AddDishes = () => {
       ...base,
       borderRadius: '12px',
       padding: '2px',
-      border: state.isFocused ? '1px solid #1ea8e7' : '1px solid #e5e7eb',
-      boxShadow: state.isFocused ? '0 0 0 4px rgba(30, 168, 231, 0.1)' : 'none',
+      border: state.isFocused ? '1px solid #23b3f4' : '1px solid #e5e7eb',
+      boxShadow: state.isFocused ? '0 0 0 4px rgba(35, 179, 244, 0.1)' : 'none',
       backgroundColor: '#fff',
-      '&:hover': { border: '1px solid #1ea8e7' },
+      '&:hover': { border: '1px solid #23b3f4' },
     }),
   };
 
@@ -273,10 +283,14 @@ const AddDishes = () => {
     <>
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
-      <div className="container-fluid pb-5">
-        <div className="page-title-container mb-4">
-          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
-          <BreadcrumbList items={breadcrumbs} />
+      <div className="container-fluid px-lg-5 pb-5">
+        <div className="page-title-container mb-4 mt-5 mt-lg-0 text-start">
+          <Row className="g-0 align-items-center">
+            <Col xs="auto" className="me-auto text-start">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </Col>
+          </Row>
         </div>
 
         <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit} enableReinitialize>
@@ -287,7 +301,7 @@ const AddDishes = () => {
                   <Row className="g-4">
                     <Col lg={4}>
                       <BForm.Label className="fw-bold text-muted text-uppercase small mb-3">Meal Type</BForm.Label>
-                      <div className="d-flex gap-2">
+                      <div className="d-flex flex-wrap gap-2">
                         {['veg', 'egg', 'non-veg'].map((type) => (
                           <div
                             key={type}
@@ -317,8 +331,8 @@ const AddDishes = () => {
                               ...selectStyles,
                               control: (base, state) => ({
                                 ...selectStyles.control(base, state),
-                                borderColor: values.category === '' && isSubmitting ? '#ef4444' : state.isFocused ? '#1ea8e7' : '#e5e7eb',
-                                minHeight: '45px',
+                                borderColor: values.category === '' && isSubmitting ? '#ef4444' : state.isFocused ? '#23b3f4' : '#e5e7eb',
+                                minHeight: '48px',
                               })
                             }}
                             isClearable
@@ -346,7 +360,7 @@ const AddDishes = () => {
                             ...selectStyles,
                             control: (base, state) => ({
                               ...selectStyles.control(base, state),
-                              minHeight: '45px',
+                              minHeight: '48px',
                             })
                           }}
                           isClearable
@@ -379,7 +393,7 @@ const AddDishes = () => {
                       {({ push, remove }) => (
                         <div className="d-flex flex-column gap-3">
                           {values.dishes.map((dish, index) => (
-                            <div key={index} className="p-4 rounded-xl border-0 position-relative shadow-sm mb-3" style={{ background: '#f8fafc', borderRadius: '1.25rem' }}>
+                            <div key={index} className="p-3 p-md-4 rounded-xl border-0 position-relative shadow-sm mb-3" style={{ background: '#f8fafc', borderRadius: '1.25rem' }}>
                               <Button 
                                 variant="outline-danger" 
                                 className="delete-btn-table"
@@ -389,18 +403,18 @@ const AddDishes = () => {
                               >
                                 <CsLineIcons icon="bin" size="16" />
                               </Button>
-                              <Row className="g-3">
+                              <Row className="g-2 g-md-3 align-items-end">
                                 <Col xs={12} md={4}>
                                   <BForm.Group>
-                                    <BForm.Label className="text-muted text-small fw-bold mb-1">Dish Name</BForm.Label>
+                                    <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>Dish Name</BForm.Label>
                                     <div className="position-relative">
                                       <CreatableSelect
                                         styles={{
                                           ...selectStyles,
                                           control: (base, state) => ({
                                             ...selectStyles.control(base, state),
-                                            borderColor: values.dishes[index].dish_name === '' && isSubmitting ? '#ef4444' : state.isFocused ? '#1ea8e7' : '#e5e7eb',
-                                            minHeight: '45px',
+                                            borderColor: values.dishes[index].dish_name === '' && isSubmitting ? '#ef4444' : state.isFocused ? '#23b3f4' : '#e5e7eb',
+                                            minHeight: '48px',
                                           })
                                         }}
                                         isClearable
@@ -415,9 +429,9 @@ const AddDishes = () => {
                                     </div>
                                   </BForm.Group>
                                 </Col>
-                                <Col xs={4} md={2}>
+                                <Col xs={6} md={2}>
                                   <BForm.Group>
-                                    <BForm.Label className="text-muted text-small fw-bold mb-1">Price</BForm.Label>
+                                    <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>Price</BForm.Label>
                                     <BForm.Control
                                       type="text"
                                       name={`dishes[${index}].dish_price`}
@@ -430,9 +444,9 @@ const AddDishes = () => {
                                     <ErrorMessage name={`dishes[${index}].dish_price`} component="div" className="text-danger small mt-1" />
                                   </BForm.Group>
                                 </Col>
-                                <Col xs={3} md={2}>
+                                <Col xs={6} md={2}>
                                   <BForm.Group>
-                                    <BForm.Label className="text-muted text-small fw-bold mb-1">Qty</BForm.Label>
+                                    <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>Qty</BForm.Label>
                                     <BForm.Control
                                       type="text"
                                       name={`dishes[${index}].quantity`}
@@ -443,9 +457,9 @@ const AddDishes = () => {
                                     />
                                   </BForm.Group>
                                 </Col>
-                                <Col xs={5} md={4}>
+                                <Col xs={12} md={4}>
                                   <BForm.Group>
-                                    <BForm.Label className="text-muted text-small fw-bold mb-1">Unit</BForm.Label>
+                                    <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>Unit</BForm.Label>
                                     <Select
                                       classNamePrefix="react-select"
                                       menuPlacement="auto"
@@ -464,14 +478,10 @@ const AddDishes = () => {
                                       placeholder="Select Unit"
                                       isDisabled={isSubmitting}
                                       styles={{
+                                        ...selectStyles,
                                         control: (base, state) => ({
-                                          ...base,
-                                          borderRadius: '12px',
-                                          minHeight: '45px',
-                                          border: state.isFocused ? '1px solid #1ea8e7' : '1px solid #e5e7eb',
-                                          boxShadow: state.isFocused ? '0 0 0 4px rgba(30, 168, 231, 0.1)' : 'none',
-                                          backgroundColor: '#fff',
-                                          '&:hover': { border: '1px solid #1ea8e7' },
+                                          ...selectStyles.control(base, state),
+                                          minHeight: '48px',
                                         }),
                                         menu: (base) => ({
                                           ...base,
@@ -484,18 +494,18 @@ const AddDishes = () => {
                                         menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                                         option: (base, state) => ({
                                           ...base,
-                                          backgroundColor: state.isSelected ? '#1ea8e7' : state.isFocused ? '#f0f9ff' : 'white',
+                                          backgroundColor: state.isSelected ? '#23b3f4' : state.isFocused ? '#f0f9ff' : 'white',
                                           color: state.isSelected ? 'white' : '#333',
                                           padding: '10px 15px',
-                                          '&:active': { backgroundColor: '#1ea8e7', color: 'white' },
+                                          '&:active': { backgroundColor: '#23b3f4', color: 'white' },
                                         })
                                       }}
                                     />
                                   </BForm.Group>
                                 </Col>
 
-                                <Col xs={12} md={4} className="pt-2">
-                                  <div className="d-flex align-items-center">
+                                <Col xs={12} md={4} className="pt-md-2">
+                                  <div className="d-flex align-items-center h-100">
                                     <input
                                       type="file"
                                       id={`file-${index}`}
@@ -503,17 +513,24 @@ const AddDishes = () => {
                                       accept="image/*"
                                       onChange={(e) => handleImageChange(e, index, setFieldValue)}
                                     />
-                                    <label htmlFor={`file-${index}`} className="custom-btn-outline px-3 py-2 rounded-pill small fw-bold cursor-pointer mb-0 d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0">
+                                    <label htmlFor={`file-${index}`} className="custom-btn-outline px-3 py-2 rounded-pill small fw-bold cursor-pointer mb-0 d-flex align-items-center justify-content-center w-100" style={{ height: '48px' }}>
                                       <CsLineIcons icon="upload" size="14" className="me-2" />
                                       {dish.dish_img ? 'Change Image' : 'Add Image'}
                                     </label>
                                     {imagePreviews[index] && (
-                                      <img src={imagePreviews[index]} alt="Preview" className="ms-2 rounded shadow-sm" style={{ width: '40px', height: '40px', objectFit: 'cover' }} />
+                                      <img src={imagePreviews[index]} alt="Preview" className="ms-2 rounded shadow-sm" style={{ width: '45px', height: '45px', objectFit: 'cover' }} />
                                     )}
                                   </div>
                                 </Col>
-                                <Col xs={12} md={8} className="pt-2">
-                                  <Field name={`dishes[${index}].description`} className="form-control pill-input bg-white" placeholder="Add description (optional)..." />
+                                <Col xs={12} md={8} className="pt-md-2">
+                                  <Field 
+                                    as="textarea" 
+                                    rows={2} 
+                                    style={{ resize: 'none' }}
+                                    name={`dishes[${index}].description`} 
+                                    className="form-control pill-input bg-white" 
+                                    placeholder="Add description (optional)..." 
+                                  />
                                 </Col>
                               </Row>
                             </div>
@@ -553,7 +570,7 @@ const AddDishes = () => {
         {isSubmitting && (
           <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ background: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(4px)' }}>
             <Card className="glass-card border-0 shadow-lg text-center p-5">
-              <Spinner animation="grow" variant="primary" className="mb-4" />
+              <Spinner animation="grow" style={{ color: '#23b3f4' }} className="mb-4" />
               <h4 className="fw-bold mb-1">Finalizing Menu</h4>
               <p className="text-muted mb-0">Saving your delicious dishes...</p>
             </Card>

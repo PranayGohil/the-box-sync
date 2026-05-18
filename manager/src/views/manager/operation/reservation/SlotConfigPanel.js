@@ -17,11 +17,76 @@ const PRESET_ICONS = {
     'Late Night': { bg: '#1e293b', text: '#f1f5f9' },
 };
 
+const customStyles = `
+  .slot-config-custom-btn-outline {
+    border: 1px solid #23b3f4 !important;
+    color: #23b3f4 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+  }
+  .slot-config-custom-btn-outline:hover {
+    background-color: #23b3f4 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+  }
+  .slot-config-custom-btn-outline:hover svg {
+    stroke: #fff !important;
+  }
+  .slot-config-custom-btn-solid {
+    background-color: #23b3f4 !important;
+    border: 1px solid #23b3f4 !important;
+    color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+  }
+  .slot-config-custom-btn-solid:hover {
+    background-color: #179edb !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.3) !important;
+  }
+  .slot-config-glass-card {
+    background: #ffffff !important;
+    border: 1px solid #f0f0f0 !important;
+    border-radius: 1.25rem !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+    transition: all 0.3s ease;
+  }
+  .slot-config-glass-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06) !important;
+  }
+  .slot-config-pill-input {
+    border-radius: 12px !important;
+    padding: 0.7rem 1.2rem !important;
+    border: 1px solid #e5e7eb !important;
+    background: #ffffff !important;
+    transition: all 0.2s ease !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+  }
+  .slot-config-pill-input:focus {
+    border-color: #23b3f4 !important;
+    box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
+    outline: none !important;
+  }
+  .slot-config-day-pill {
+    border-radius: 50px !important;
+    padding: 8px 18px !important;
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+    transition: all 0.2s ease !important;
+  }
+`;
+
 const colorDot = (color) => (
     <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: color || '#6b7280', marginRight: 6, flexShrink: 0 }} />
 );
 
-// ─── Slot count helper ──────────────────────────────────────────────────────
 const calcSlotCount = (open_time, close_time, slot_duration) => {
     try {
         const toM = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
@@ -32,30 +97,27 @@ const calcSlotCount = (open_time, close_time, slot_duration) => {
     } catch { return 0; }
 };
 
-// ─── GroupFormModal ─────────────────────────────────────────────────────────
 const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
-    const blank = { name: '', open_time: '12:00', close_time: '15:00', slot_duration: 30, max_slots_per_booking: 1, color: '#06b6d4', is_active: true };
+    const blank = { name: '', open_time: '12:00', close_time: '15:00', slot_duration: 30, max_slots_per_booking: 1, color: '#23b3f4', is_active: true };
     const [form, setForm] = useState(blank);
     const [saving, setSaving] = useState(false);
     const [presets, setPresets] = useState([]);
     const [presetsLoading, setPresetsLoading] = useState(false);
 
-    // Reset form when modal opens
     useEffect(() => {
         if (show) {
             setForm(initial ? { ...blank, ...initial } : blank);
         }
-    }, [show, initial]); // eslint-disable-line
+    }, [show, initial]);
 
-    // Fetch presets when modal first opens
     useEffect(() => {
         if (!show || presets.length > 0) return;
         setPresetsLoading(true);
         axios.get(`${API}/reservation/config`, { headers: auth() })
             .then((r) => setPresets(r.data.presets || []))
-            .catch(() => { }) // presets are optional, don't block
+            .catch(() => { })
             .finally(() => setPresetsLoading(false));
-    }, [show]); // eslint-disable-line
+    }, [show]);
 
     const applyPreset = (p) => setForm((f) => ({ ...f, name: p.name, open_time: p.open_time, close_time: p.close_time, slot_duration: p.slot_duration, color: p.color }));
     const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
@@ -83,22 +145,22 @@ const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
     };
 
     return (
-        <Modal show={show} onHide={onClose} centered size="md">
-            <Modal.Header closeButton>
-                <Modal.Title>
-                    <CsLineIcons icon={isEdit ? 'edit' : 'plus'} className="me-2 text-primary" />
+        <Modal show={show} onHide={onClose} centered size="md" className="rounded-4">
+            <style>{customStyles}</style>
+            <Modal.Header closeButton className="border-0 pb-0">
+                <Modal.Title className="fw-bold" style={{ color: '#23b3f4' }}>
+                    <CsLineIcons icon={isEdit ? 'edit' : 'plus'} className="me-2" />
                     {isEdit ? 'Edit Slot Group' : 'Add Slot Group'}
                 </Modal.Title>
             </Modal.Header>
-            <Modal.Body>
-                {/* Quick preset suggestions */}
+            <Modal.Body className="py-4">
                 {!isEdit && (
                     <div className="mb-4">
                         <p className="small fw-semibold text-muted text-uppercase mb-2" style={{ letterSpacing: 1, fontSize: 10 }}>
                             Quick Suggestions
                         </p>
                         {presetsLoading ? (
-                            <Spinner size="sm" />
+                            <Spinner size="sm" style={{ color: '#23b3f4' }} />
                         ) : presets.length > 0 ? (
                             <>
                                 <div className="d-flex flex-wrap gap-2">
@@ -110,10 +172,11 @@ const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
                                                 style={{
                                                     background: meta.bg,
                                                     border: 'none',
-                                                    fontWeight: 500,
-                                                    color: `${meta.text} !important`,
-                                                    '--bs-btn-color': meta.text,
-                                                    '--bs-btn-hover-color': meta.text,
+                                                    fontWeight: 700,
+                                                    color: meta.text,
+                                                    borderRadius: '50px',
+                                                    padding: '6px 14px',
+                                                    fontSize: '0.8rem'
                                                 }}
                                                 onClick={() => applyPreset(p)}
                                             >
@@ -124,9 +187,6 @@ const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
                                         );
                                     })}
                                 </div>
-                                <p className="text-muted mt-2 mb-0" style={{ fontSize: 11 }}>
-                                    Click a suggestion to prefill, then customise below.
-                                </p>
                             </>
                         ) : (
                             <p className="text-muted small mb-0">Fill in the details below.</p>
@@ -135,21 +195,39 @@ const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
                 )}
 
                 <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold small">Period Name <span className="text-danger">*</span></Form.Label>
-                    <Form.Control placeholder="e.g. Lunch, Dinner, Brunch…" value={form.name} onChange={(e) => set('name', e.target.value)} />
+                    <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Period Name *</Form.Label>
+                    <Form.Control 
+                        placeholder="e.g. Lunch, Dinner, Brunch…" 
+                        value={form.name} 
+                        onChange={(e) => set('name', e.target.value)} 
+                        className="slot-config-pill-input shadow-sm bg-white"
+                        style={{ height: '48px' }}
+                    />
                 </Form.Group>
 
                 <Row className="g-3 mb-3">
                     <Col>
                         <Form.Group>
-                            <Form.Label className="fw-semibold small">Opening Time</Form.Label>
-                            <Form.Control type="time" value={form.open_time} onChange={(e) => set('open_time', e.target.value)} />
+                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Opening Time</Form.Label>
+                            <Form.Control 
+                                type="time" 
+                                value={form.open_time} 
+                                onChange={(e) => set('open_time', e.target.value)} 
+                                className="slot-config-pill-input shadow-sm bg-white"
+                                style={{ height: '48px' }}
+                            />
                         </Form.Group>
                     </Col>
                     <Col>
                         <Form.Group>
-                            <Form.Label className="fw-semibold small">Closing Time</Form.Label>
-                            <Form.Control type="time" value={form.close_time} onChange={(e) => set('close_time', e.target.value)} />
+                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Closing Time</Form.Label>
+                            <Form.Control 
+                                type="time" 
+                                value={form.close_time} 
+                                onChange={(e) => set('close_time', e.target.value)} 
+                                className="slot-config-pill-input shadow-sm bg-white"
+                                style={{ height: '48px' }}
+                            />
                         </Form.Group>
                     </Col>
                 </Row>
@@ -157,53 +235,56 @@ const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
                 <Row className="g-3 mb-3">
                     <Col>
                         <Form.Group>
-                            <Form.Label className="fw-semibold small">Slot Duration</Form.Label>
-                            <Form.Select value={form.slot_duration} onChange={(e) => set('slot_duration', Number(e.target.value))}>
+                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Slot Duration</Form.Label>
+                            <Form.Select 
+                                value={form.slot_duration} 
+                                onChange={(e) => set('slot_duration', Number(e.target.value))}
+                                className="slot-config-pill-input shadow-sm bg-white"
+                                style={{ height: '48px' }}
+                            >
                                 <option value={15}>15 minutes</option>
                                 <option value={30}>30 minutes</option>
                                 <option value={60}>60 minutes</option>
                             </Form.Select>
                         </Form.Group>
                     </Col>
-                    {/* <Col>
-                        <Form.Group>
-                            <Form.Label className="fw-semibold small">Max Slots / Booking</Form.Label>
-                            <Form.Control type="number" min={1} max={12} value={form.max_slots_per_booking}
-                                onChange={(e) => set('max_slots_per_booking', Number(e.target.value))} />
-                            <Form.Text className="text-muted">= max {form.max_slots_per_booking * form.slot_duration} min</Form.Text>
-                        </Form.Group>
-                    </Col> */}
                 </Row>
 
                 <Row className="g-3 mb-3">
                     <Col xs="auto">
                         <Form.Group>
-                            <Form.Label className="fw-semibold small">Label Colour</Form.Label>
+                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Label Colour</Form.Label>
                             <div className="d-flex align-items-center gap-2">
-                                <Form.Control type="color" value={form.color || '#06b6d4'}
+                                <Form.Control 
+                                    type="color" 
+                                    value={form.color || '#23b3f4'}
                                     onChange={(e) => set('color', e.target.value)}
-                                    style={{ width: 44, height: 38, padding: 2 }} />
-                                <span className="small text-muted">{form.color}</span>
+                                    style={{ width: 44, height: 38, padding: 2, borderRadius: '8px' }} 
+                                />
+                                <span className="small text-muted fw-bold">{form.color}</span>
                             </div>
                         </Form.Group>
                     </Col>
                     <Col>
                         <Form.Group>
-                            <Form.Label className="fw-semibold small">Status</Form.Label>
+                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Status</Form.Label>
                             <div className="d-flex align-items-center gap-2 mt-2">
-                                <Form.Check type="switch" id="is_active_switch"
+                                <Form.Check 
+                                    type="switch" 
+                                    id="is_active_switch"
                                     checked={form.is_active}
-                                    onChange={(e) => set('is_active', e.target.checked)} />
-                                <span className="small">{form.is_active ? 'Active' : 'Inactive'}</span>
+                                    onChange={(e) => set('is_active', e.target.checked)} 
+                                />
+                                <span className="small fw-bold text-alternate">{form.is_active ? 'Active' : 'Inactive'}</span>
                             </div>
                         </Form.Group>
                     </Col>
                 </Row>
 
                 {previewCount > 0 && (
-                    <Alert variant="light" className="border py-2 mb-0">
-                        <small className="text-muted">
-                            <CsLineIcons icon="clock" className="me-1" />
+                    <Alert variant="light" className="border py-2 mb-0 rounded-3 bg-light">
+                        <small className="text-muted fw-bold">
+                            <CsLineIcons icon="clock" className="me-1" size="14" />
                             Generates <strong>{previewCount} slots</strong> of {form.slot_duration} min each
                             &nbsp;({form.open_time} – {form.close_time})
                             {isOvernightPreview && <Badge bg="warning" text="dark" className="ms-2">Overnight</Badge>}
@@ -211,20 +292,36 @@ const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
                     </Alert>
                 )}
             </Modal.Body>
-            <Modal.Footer>
-                <Button className='btn-icon' variant="outline-secondary" onClick={onClose}>Cancel</Button>
-                <Button className='btn-icon' variant="primary" onClick={handleSave} disabled={saving}>
-                    {saving ? 'Saving…' : <><CsLineIcons icon="save" className="me-1" />{isEdit ? 'Update' : 'Add Group'}</>}
+            <Modal.Footer className="border-0 pt-0">
+                <Button 
+                    className='rounded-pill px-4 fw-bold slot-config-custom-btn-outline btn btn-outline-primary' 
+                    variant="outline-light" 
+                    onClick={onClose}
+                >
+                    Cancel
+                </Button>
+                <Button 
+                    className='px-5 py-2 slot-config-custom-btn-outline d-flex align-items-center gap-2' 
+                    onClick={handleSave} 
+                    disabled={saving}
+                >
+                    {saving ? (
+                        <>
+                            <Spinner as="span" animation="border" size="sm" />
+                            Saving...
+                        </>
+                    ) : (
+                        <>
+                            <CsLineIcons icon="save" size="18" />
+                            {isEdit ? 'Update' : 'Add Period'}
+                        </>
+                    )}
                 </Button>
             </Modal.Footer>
         </Modal>
     );
 };
 
-// ─── Main SlotConfigPanel ───────────────────────────────────────────────────
-// FIX: accepts `active` prop from parent — only fetches when tab becomes active
-// This solves the blank tab issue caused by React-Bootstrap not mounting
-// Tab.Pane content until first click, combined with useEffect firing on mount.
 const SlotConfigPanel = ({ onSaved, active }) => {
     const [config, setConfig] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -253,12 +350,11 @@ const SlotConfigPanel = ({ onSaved, active }) => {
             .finally(() => setLoading(false));
     };
 
-    // KEY FIX: only fetch when the tab is actually active (or on first render if already active)
     useEffect(() => {
         if (active && !hasFetched) {
             fetchConfig();
         }
-    }, [active]); // eslint-disable-line
+    }, [active]);
 
     const toggleDay = (d) => setOpenDays((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort());
 
@@ -290,12 +386,11 @@ const SlotConfigPanel = ({ onSaved, active }) => {
         } catch { toast.error('Failed to update.'); }
     };
 
-    // ── Render states ──────────────────────────────────────────────────────
     if (loading) {
         return (
             <div className="text-center py-5">
-                <Spinner size="sm" className="me-2" />
-                Loading configuration…
+                <Spinner animation="border" style={{ color: '#23b3f4' }} className="mb-2" />
+                <p className="text-muted fw-bold">Loading configuration…</p>
             </div>
         );
     }
@@ -312,39 +407,47 @@ const SlotConfigPanel = ({ onSaved, active }) => {
         );
     }
 
-    // Not yet fetched (tab hasn't been clicked yet) — show nothing
     if (!hasFetched) return null;
 
     const groups = config?.slot_groups || [];
 
     return (
-        <div>
-            {/* ── Service Periods ── */}
-            <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="py-2 text-start">
+            <style>{customStyles}</style>
+            
+            <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
                 <div>
-                    <h6 className="fw-bold mb-0">Service Periods</h6>
-                    <small className="text-muted">
-                        Define your Lunch, Dinner, Brunch sessions. Each generates its own bookable time slots.
-                    </small>
+                    <h5 className="fw-bold mb-1 text-dark">Service Periods</h5>
+                    <p className="text-muted small mb-0">
+                        Define your Lunch, Dinner, Brunch sessions. Each session generates bookable time slots.
+                    </p>
                 </div>
-                <Button variant="primary" className='btn-icon' size="sm" onClick={() => { setEditTarget(null); setShowModal(true); }}>
-                    <CsLineIcons icon="plus" className="me-1" /> Add Period
+                <Button 
+                    className='px-4 py-2 slot-config-custom-btn-solid d-flex align-items-center gap-2' 
+                    onClick={() => { setEditTarget(null); setShowModal(true); }}
+                >
+                    <CsLineIcons icon="plus" size="18" /> Add Period
                 </Button>
             </div>
 
             {groups.length === 0 ? (
-                <Alert variant="light" className="border text-center py-4 mb-4">
-                    <CsLineIcons icon="clock" size={28} className="text-muted d-block mx-auto mb-2" />
-                    <p className="mb-2 fw-semibold">No service periods configured yet.</p>
-                    <p className="text-muted small mb-3">
-                        Add Lunch, Dinner or any custom period to start accepting reservations.
-                    </p>
-                    <Button variant="primary" className='btn-icon' size="sm" onClick={() => { setEditTarget(null); setShowModal(true); }}>
-                        <CsLineIcons icon="plus" className="me-1" /> Add Your First Period
-                    </Button>
-                </Alert>
+                <Card className="border-0 shadow-sm text-center py-5 rounded-4 mb-5">
+                    <Card.Body>
+                        <div className="mb-3">
+                            <CsLineIcons icon="clock" size="48" className="text-muted opacity-50" />
+                        </div>
+                        <h5 className="text-muted fw-bold">No service periods configured yet</h5>
+                        <p className="text-muted small mb-4">Add Lunch, Dinner or custom periods to start accepting reservations.</p>
+                        <Button 
+                            className='px-4 py-2 slot-config-custom-btn-solid d-inline-flex align-items-center gap-2'
+                            onClick={() => { setEditTarget(null); setShowModal(true); }}
+                        >
+                            <CsLineIcons icon="plus" size="18" /> Add Your First Period
+                        </Button>
+                    </Card.Body>
+                </Card>
             ) : (
-                <Row className="g-3 mb-4">
+                <Row className="g-4 mb-5">
                     {groups.map((group) => {
                         const slotCount = calcSlotCount(group.open_time, group.close_time, group.slot_duration);
                         const toM = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
@@ -353,46 +456,53 @@ const SlotConfigPanel = ({ onSaved, active }) => {
                         return (
                             <Col md={6} xl={4} key={group._id}>
                                 <Card
-                                    className={`h-100 ${!group.is_active ? 'opacity-50' : ''}`}
-                                    style={{ borderLeft: `4px solid ${group.color || '#6b7280'}` }}
+                                    className={`slot-config-glass-card border-0 h-100 ${!group.is_active ? 'opacity-50' : ''}`}
+                                    style={{ borderLeft: `5px solid ${group.color || '#6b7280'}` }}
                                 >
-                                    <Card.Body className="p-3">
-                                        <div className="d-flex justify-content-between align-items-start mb-2">
-                                            <div className="d-flex align-items-center gap-2">
-                                                {colorDot(group.color)}
-                                                <span className="fw-bold">{group.name}</span>
-                                                {isON && <Badge bg="warning" text="dark" style={{ fontSize: 9 }}>Overnight</Badge>}
+                                    <Card.Body className="p-4 d-flex flex-column justify-content-between">
+                                        <div>
+                                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                                <div className="d-flex align-items-center gap-2">
+                                                    {colorDot(group.color)}
+                                                    <span className="fw-bold text-dark">{group.name}</span>
+                                                    {isON && <Badge bg="warning" text="dark" style={{ fontSize: 9 }}>Overnight</Badge>}
+                                                </div>
+                                                <Form.Check
+                                                    type="switch"
+                                                    checked={group.is_active}
+                                                    onChange={() => handleToggleActive(group)}
+                                                    title={group.is_active ? 'Active — click to deactivate' : 'Inactive — click to activate'}
+                                                />
                                             </div>
-                                            <Form.Check
-                                                type="switch"
-                                                checked={group.is_active}
-                                                onChange={() => handleToggleActive(group)}
-                                                title={group.is_active ? 'Active — click to deactivate' : 'Inactive — click to activate'}
-                                            />
+
+                                            <div className="d-flex flex-column gap-2 mb-4">
+                                                <small className="text-muted d-flex align-items-center gap-2 fw-medium">
+                                                    <CsLineIcons icon="clock" size={14} style={{ color: '#23b3f4' }} />
+                                                    {group.open_time} – {group.close_time}
+                                                </small>
+                                                <small className="text-muted d-flex align-items-center gap-2 fw-medium">
+                                                    <CsLineIcons icon="grid-1" size={14} style={{ color: '#23b3f4' }} />
+                                                    {slotCount} slots · {group.slot_duration} min each
+                                                </small>
+                                            </div>
                                         </div>
 
-                                        <div className="d-flex flex-column gap-1 mb-3">
-                                            <small className="text-muted">
-                                                <CsLineIcons icon="clock" size={12} className="me-1" />
-                                                {group.open_time} – {group.close_time}
-                                            </small>
-                                            <small className="text-muted">
-                                                <CsLineIcons icon="grid-1" size={12} className="me-1" />
-                                                {slotCount} slots · {group.slot_duration} min each
-                                            </small>
-                                            {/* <small className="text-muted">
-                                                <CsLineIcons icon="grid-1" size={12} className="me-1" />
-                                                Max {group.max_slots_per_booking} slots / booking ({group.max_slots_per_booking * group.slot_duration} min)
-                                            </small> */}
-                                        </div>
-
-                                        <div className="d-flex gap-2">
-                                            <Button size="sm" variant="outline-primary" className="btn-icon flex-grow-1"
-                                                onClick={() => { setEditTarget(group); setShowModal(true); }}>
+                                        <div className="d-flex gap-2 pt-3 border-top">
+                                            <Button 
+                                                size="sm" 
+                                                variant="outline-primary" 
+                                                className="slot-config-custom-btn-outline flex-grow-1 py-2"
+                                                onClick={() => { setEditTarget(group); setShowModal(true); }}
+                                            >
                                                 <CsLineIcons icon="edit" size={13} className="me-1" /> Edit
                                             </Button>
-                                            <Button size="sm" variant="outline-danger" className='btn-icon'
-                                                onClick={() => handleDelete(group._id, group.name)}>
+                                            <Button 
+                                                size="sm" 
+                                                variant="outline-danger" 
+                                                className='slot-config-custom-btn-outline btn btn-outline-danger py-2 px-3'
+                                                style={{ border: '1px solid #cf2637 !important', color: '#cf2637 !important' }}
+                                                onClick={() => handleDelete(group._id, group.name)}
+                                            >
                                                 <CsLineIcons icon="bin" size={13} />
                                             </Button>
                                         </div>
@@ -404,26 +514,47 @@ const SlotConfigPanel = ({ onSaved, active }) => {
                 </Row>
             )}
 
-            {/* ── Open Days ── */}
-            <Card body className="mb-0">
-                <h6 className="fw-bold mb-1">Open Days</h6>
-                <small className="text-muted d-block mb-3">
-                    Select which days the restaurant accepts reservations.
-                </small>
-                <div className="d-flex flex-wrap gap-2 mb-3">
-                    {DAYS.map((day, i) => (
-                        <Button key={i} size="sm" className='btn-icon'
-                            variant={openDays.includes(i) ? 'primary' : 'outline-secondary'}
-                            onClick={() => toggleDay(i)}
-                            style={{ minWidth: 52 }}
-                        >
-                            {day}
-                        </Button>
-                    ))}
-                </div>
-                <Button variant="primary" className='btn-icon' size="sm" onClick={handleSaveDays} disabled={savingDays}>
-                    {savingDays ? 'Saving…' : <><CsLineIcons icon="save" className="me-1" />Save Open Days</>}
-                </Button>
+            <Card className="slot-config-glass-card border-0 p-4 mb-4">
+                <Card.Body className="p-0">
+                    <h5 className="fw-bold mb-1 text-dark">Open Days</h5>
+                    <p className="text-muted small mb-4">
+                        Select which days the restaurant accepts reservations.
+                    </p>
+                    <div className="d-flex flex-wrap gap-2 mb-4">
+                        {DAYS.map((day, i) => (
+                            <Button 
+                                key={i} 
+                                className={`slot-config-day-pill ${openDays.includes(i) ? 'btn btn-primary' : 'btn btn-outline-secondary'}`}
+                                style={{ 
+                                    minWidth: 60,
+                                    backgroundColor: openDays.includes(i) ? '#23b3f4' : 'transparent',
+                                    borderColor: openDays.includes(i) ? '#23b3f4' : '#cbd5e1',
+                                    color: openDays.includes(i) ? '#fff' : '#475569',
+                                }}
+                                onClick={() => toggleDay(i)}
+                            >
+                                {day}
+                            </Button>
+                        ))}
+                    </div>
+                    <Button 
+                        className='px-4 py-2 slot-config-custom-btn-solid d-inline-flex align-items-center gap-2'
+                        onClick={handleSaveDays} 
+                        disabled={savingDays}
+                    >
+                        {savingDays ? (
+                            <>
+                                <Spinner animation="border" size="sm" />
+                                Saving…
+                            </>
+                        ) : (
+                            <>
+                                <CsLineIcons icon="save" size="18" />
+                                Save Open Days
+                            </>
+                        )}
+                    </Button>
+                </Card.Body>
             </Card>
 
             <GroupFormModal

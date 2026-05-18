@@ -15,23 +15,23 @@ const customStyles = `
     transition: all 0.2s ease !important;
   }
   .pill-input:focus {
-    border-color: #1ea8e7 !important;
-    box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
+    border-color: #23b3f4 !important;
+    box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
     outline: none !important;
   }
   .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
+    border: 1px solid #23b3f4 !important;
+    color: #23b3f4 !important;
     background-color: #fff !important;
     transition: all 0.2s ease-in-out !important;
     border-radius: 50px !important;
     font-weight: 600 !important;
   }
   .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
+    background-color: #23b3f4 !important;
     color: #fff !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
   }
   .custom-btn-outline:hover svg {
     stroke: #fff !important;
@@ -55,8 +55,8 @@ const customStyles = `
     transition: all 0.2s ease;
   }
   .custom-check.active {
-    background: #1ea8e7 !important;
-    border-color: #1ea8e7 !important;
+    background: #23b3f4 !important;
+    border-color: #23b3f4 !important;
   }
 `;
 
@@ -141,7 +141,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
     <Modal show={show} onHide={handleClose} backdrop="static" centered size="lg">
       <style>{customStyles}</style>
       <Modal.Header closeButton className="border-0 pb-0">
-        <Modal.Title className="fw-bold" style={{ color: '#1ea8e7' }}>
+        <Modal.Title className="fw-bold" style={{ color: '#23b3f4' }}>
           <CsLineIcons icon="edit" className="me-2" />
           Edit Dish Details
         </Modal.Title>
@@ -302,10 +302,10 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                           ...base,
                           borderRadius: '12px',
                           minHeight: '45px',
-                          border: state.isFocused ? '1px solid #1ea8e7' : '1px solid #e5e7eb',
-                          boxShadow: state.isFocused ? '0 0 0 4px rgba(30, 168, 231, 0.1)' : 'none',
+                          border: state.isFocused ? '1px solid #23b3f4' : '1px solid #e5e7eb',
+                          boxShadow: state.isFocused ? '0 0 0 4px rgba(35, 179, 244, 0.1)' : 'none',
                           backgroundColor: '#fff',
-                          '&:hover': { border: '1px solid #1ea8e7' },
+                          '&:hover': { border: '1px solid #23b3f4' },
                         }),
                         menu: (base) => ({
                           ...base,
@@ -318,10 +318,10 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                         menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                         option: (base, state) => ({
                           ...base,
-                          backgroundColor: state.isSelected ? '#1ea8e7' : state.isFocused ? '#f0f9ff' : 'white',
+                          backgroundColor: state.isSelected ? '#23b3f4' : state.isFocused ? '#f0f9ff' : 'white',
                           color: state.isSelected ? 'white' : '#333',
                           padding: '10px 15px',
-                          '&:active': { backgroundColor: '#1ea8e7', color: 'white' },
+                          '&:active': { backgroundColor: '#23b3f4', color: 'white' },
                         })
                       }}
                     />

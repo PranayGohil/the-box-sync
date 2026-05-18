@@ -552,8 +552,8 @@
   cursor: pointer;
   &:hover {
     @include shadow-and-border-active-before;
+    border-radius: var(--border-radius-md);
   }
-  border-radius: 20px !important;
 }
 
 .hover-img-scale-up {
