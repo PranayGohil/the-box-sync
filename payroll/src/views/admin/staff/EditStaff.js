@@ -183,17 +183,38 @@ const EditStaff = () => {
 
     salary_structure: Yup.object().shape({
       earnings: Yup.object({
-        basic: Yup.number().min(0, 'Must be 0 or more').required('Basic is required'),
-        hra: Yup.number().min(0),
-        conveyance: Yup.number().min(0),
-        medical: Yup.number().min(0),
-        special: Yup.number().min(0),
-        other: Yup.number().min(0),
+        basic: Yup.number()
+          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
+          .min(0, 'Must be 0 or more')
+          .required('Basic is required'),
+        hra: Yup.number()
+          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
+          .min(0),
+        conveyance: Yup.number()
+          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
+          .min(0),
+        medical: Yup.number()
+          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
+          .min(0),
+        special: Yup.number()
+          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
+          .min(0),
+        other: Yup.number()
+          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
+          .min(0),
       }),
       deductions: Yup.object({
-        pf_percentage: Yup.number().min(0).max(100),
-        esi_percentage: Yup.number().min(0).max(100),
-        pt: Yup.number().min(0),
+        pf_percentage: Yup.number()
+          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
+          .min(0)
+          .max(100),
+        esi_percentage: Yup.number()
+          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
+          .min(0)
+          .max(100),
+        pt: Yup.number()
+          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
+          .min(0),
       }),
     }),
   });
@@ -317,7 +338,11 @@ const EditStaff = () => {
         const formData = new FormData();
         Object.keys(values).forEach((key) => {
           if (!['photo', 'front_image', 'back_image'].includes(key)) {
-            formData.append(key, values[key]);
+            if (key === 'salary_structure') {
+              formData.append(key, JSON.stringify(values[key]));
+            } else {
+              formData.append(key, values[key]);
+            }
           }
         });
 
@@ -336,7 +361,12 @@ const EditStaff = () => {
         history.push('/staff/view');
       } catch (err) {
         console.error('Error updating staff:', err);
-        setFileUploadError(err.response?.data?.message || 'Update failed. Please try again.');
+        const serverError = err.response?.data?.error;
+        const serverMessage = err.response?.data?.message;
+        const errorMsg = Array.isArray(serverError)
+          ? serverError.join(', ')
+          : (serverError || serverMessage || 'Update failed. Please try again.');
+        setFileUploadError(errorMsg);
         toast.error('Update failed.');
       } finally {
         setLoading((prev) => ({ ...prev, submitting: false }));
@@ -372,35 +402,40 @@ const EditStaff = () => {
         setFieldValue('birth_date', staff.birth_date);
         setFieldValue('joining_date', staff.joining_date);
         setFieldValue('address', staff.address);
-        setFieldValue('country', staff.country);
-        setFieldValue('state', staff.state);
-        setFieldValue('city', staff.city);
-        setFieldValue('phone_no', staff.phone_no);
-        setFieldValue('email', staff.email);
-        setFieldValue('salary', staff.salary);
-        setFieldValue('position', staff.position);
-        setFieldValue('document_type', staff.document_type);
-        setFieldValue('id_number', staff.id_number);
-        setFieldValue('photo', staff.photo || '');
-        setFieldValue('front_image', staff.front_image || '');
-        setFieldValue('back_image', staff.back_image || '');
+        const selectedCountry = Country.getAllCountries().find(
+          (c) => c.name.toLowerCase() === staff.country?.toLowerCase() || c.isoCode.toLowerCase() === staff.country?.toLowerCase()
+        );
+        const countryVal = selectedCountry ? selectedCountry.name : (staff.country || '');
+        setFieldValue('country', countryVal);
 
-        if (staff.salary_structure) {
-          setFieldValue('salary_structure', staff.salary_structure);
-        }
-
-        const selectedCountry = Country.getAllCountries().find((c) => c.name === staff.country);
-
+        let stateVal = staff.state || '';
         if (selectedCountry) {
           const countryStates = State.getStatesOfCountry(selectedCountry.isoCode);
           setStates(countryStates);
 
-          const selectedState = countryStates.find((s) => s.name === staff.state);
+          const selectedState = countryStates.find(
+            (s) => s.name.toLowerCase() === staff.state?.toLowerCase() || s.isoCode.toLowerCase() === staff.state?.toLowerCase()
+          );
 
           if (selectedState) {
+            stateVal = selectedState.name;
             setCities(City.getCitiesOfState(selectedCountry.isoCode, selectedState.isoCode));
           }
         }
+        setFieldValue('state', stateVal);
+        setFieldValue('city', staff.city || '');
+        if (staff.salary_structure) {
+          setFieldValue('salary_structure', staff.salary_structure);
+        }
+        setFieldValue('phone_no', staff.phone_no || '');
+        setFieldValue('email', staff.email || '');
+        setFieldValue('salary', staff.salary || '');
+        setFieldValue('position', staff.position || '');
+        setFieldValue('document_type', staff.document_type || '');
+        setFieldValue('id_number', staff.id_number || '');
+        setFieldValue('photo', staff.photo || '');
+        setFieldValue('front_image', staff.front_image || '');
+        setFieldValue('back_image', staff.back_image || '');
 
         setPhotoPreview(staff.photo ? `${process.env.REACT_APP_UPLOAD_DIR}/${staff.photo}` : null);
         setFrontImagePreview(staff.front_image ? `${process.env.REACT_APP_UPLOAD_DIR}/${staff.front_image}` : null);
@@ -467,6 +502,17 @@ const EditStaff = () => {
       border: 1px solid rgba(255, 255, 255, 0.4);
       box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
       transition: all 0.3s ease;
+    }
+    .date-input-container input[type="date"]::-webkit-calendar-picker-indicator {
+      position: absolute !important;
+      right: 12px !important;
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+      width: 24px !important;
+      height: 24px !important;
+      cursor: pointer !important;
+      opacity: 0 !important;
+      z-index: 5 !important;
     }
     .custom-btn-outline {
       border: 2px solid #23b3f4 !important;
@@ -728,29 +774,51 @@ const EditStaff = () => {
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">Birthday</Form.Label>
-                      <Form.Control
-                        type="date"
-                        name="birth_date"
-                        value={values.birth_date}
-                        onChange={handleChange}
-                        isInvalid={touched.birth_date && errors.birth_date}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.birth_date}</Form.Control.Feedback>
+                      <div className="position-relative date-input-container">
+                        <Form.Control
+                          type="date"
+                          name="birth_date"
+                          value={values.birth_date}
+                          onChange={handleChange}
+                          isInvalid={touched.birth_date && errors.birth_date}
+                          disabled={loading.submitting}
+                          className="pe-5"
+                        />
+                        <div 
+                          className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
+                          style={{ pointerEvents: 'none', zIndex: 4 }}
+                        >
+                          <CsLineIcons icon="calendar" size="18" className="text-primary" />
+                        </div>
+                      </div>
+                      {touched.birth_date && errors.birth_date && (
+                        <div className="text-danger mt-1 small">{errors.birth_date}</div>
+                      )}
                     </Form.Group>
                   </Col>
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">Joining Date</Form.Label>
-                      <Form.Control
-                        type="date"
-                        name="joining_date"
-                        value={values.joining_date}
-                        onChange={handleChange}
-                        isInvalid={touched.joining_date && errors.joining_date}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.joining_date}</Form.Control.Feedback>
+                      <div className="position-relative date-input-container">
+                        <Form.Control
+                          type="date"
+                          name="joining_date"
+                          value={values.joining_date}
+                          onChange={handleChange}
+                          isInvalid={touched.joining_date && errors.joining_date}
+                          disabled={loading.submitting}
+                          className="pe-5"
+                        />
+                        <div 
+                          className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
+                          style={{ pointerEvents: 'none', zIndex: 4 }}
+                        >
+                          <CsLineIcons icon="calendar" size="18" className="text-primary" />
+                        </div>
+                      </div>
+                      {touched.joining_date && errors.joining_date && (
+                        <div className="text-danger mt-1 small">{errors.joining_date}</div>
+                      )}
                     </Form.Group>
                   </Col>
                 </Row>
@@ -932,8 +1000,12 @@ const EditStaff = () => {
                           name="salary_structure.earnings.basic"
                           value={values.salary_structure?.earnings?.basic}
                           onChange={handleChange}
+                          isInvalid={touched.salary_structure?.earnings?.basic && !!errors.salary_structure?.earnings?.basic}
                           size="sm"
                         />
+                        {touched.salary_structure?.earnings?.basic && errors.salary_structure?.earnings?.basic && (
+                          <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.earnings.basic}</div>
+                        )}
                       </Form.Group>
                       <Form.Group className="mb-2">
                         <Form.Label className="x-small fw-bold">HRA</Form.Label>
@@ -942,8 +1014,12 @@ const EditStaff = () => {
                           name="salary_structure.earnings.hra"
                           value={values.salary_structure?.earnings?.hra}
                           onChange={handleChange}
+                          isInvalid={touched.salary_structure?.earnings?.hra && !!errors.salary_structure?.earnings?.hra}
                           size="sm"
                         />
+                        {touched.salary_structure?.earnings?.hra && errors.salary_structure?.earnings?.hra && (
+                          <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.earnings.hra}</div>
+                        )}
                       </Form.Group>
                       <Form.Group className="mb-0">
                         <Form.Label className="x-small fw-bold">Special Allowance</Form.Label>
@@ -952,8 +1028,12 @@ const EditStaff = () => {
                           name="salary_structure.earnings.special"
                           value={values.salary_structure?.earnings?.special}
                           onChange={handleChange}
+                          isInvalid={touched.salary_structure?.earnings?.special && !!errors.salary_structure?.earnings?.special}
                           size="sm"
                         />
+                        {touched.salary_structure?.earnings?.special && errors.salary_structure?.earnings?.special && (
+                          <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.earnings.special}</div>
+                        )}
                       </Form.Group>
                     </div>
                   </Col>
@@ -967,8 +1047,12 @@ const EditStaff = () => {
                           name="salary_structure.deductions.pf_percentage"
                           value={values.salary_structure?.deductions?.pf_percentage}
                           onChange={handleChange}
+                          isInvalid={touched.salary_structure?.deductions?.pf_percentage && !!errors.salary_structure?.deductions?.pf_percentage}
                           size="sm"
                         />
+                        {touched.salary_structure?.deductions?.pf_percentage && errors.salary_structure?.deductions?.pf_percentage && (
+                          <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.pf_percentage}</div>
+                        )}
                       </Form.Group>
                       <Form.Group className="mb-2">
                         <Form.Label className="x-small fw-bold">ESI (%)</Form.Label>
@@ -977,8 +1061,12 @@ const EditStaff = () => {
                           name="salary_structure.deductions.esi_percentage"
                           value={values.salary_structure?.deductions?.esi_percentage}
                           onChange={handleChange}
+                          isInvalid={touched.salary_structure?.deductions?.esi_percentage && !!errors.salary_structure?.deductions?.esi_percentage}
                           size="sm"
                         />
+                        {touched.salary_structure?.deductions?.esi_percentage && errors.salary_structure?.deductions?.esi_percentage && (
+                          <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.esi_percentage}</div>
+                        )}
                       </Form.Group>
                       <Form.Group className="mb-0">
                         <Form.Label className="x-small fw-bold">PT (Monthly)</Form.Label>
@@ -987,8 +1075,12 @@ const EditStaff = () => {
                           name="salary_structure.deductions.pt"
                           value={values.salary_structure?.deductions?.pt}
                           onChange={handleChange}
+                          isInvalid={touched.salary_structure?.deductions?.pt && !!errors.salary_structure?.deductions?.pt}
                           size="sm"
                         />
+                        {touched.salary_structure?.deductions?.pt && errors.salary_structure?.deductions?.pt && (
+                          <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.pt}</div>
+                        )}
                       </Form.Group>
                     </div>
                   </Col>

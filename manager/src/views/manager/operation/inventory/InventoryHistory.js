@@ -890,23 +890,52 @@ const InventoryHistory = () => {
           <CompletedInventory refreshKey={refreshKey} history={history} />
           <RejectedInventory refreshKey={refreshKey} history={history} onShowRejectReason={(reason) => { setSelectedRejectReason(reason); setShowRejectReasonModal(true); }} />
 
-          <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered contentClassName="border-0 shadow-lg" style={{ backdropFilter: 'blur(5px)' }}>
-            <div className="bg-white p-4 rounded-3">
-              <Modal.Header closeButton className="border-0 p-0 mb-3">
-                <Modal.Title className="fw-bold text-danger">Confirm Deletion</Modal.Title>
-              </Modal.Header>
-              <Modal.Body className="p-0">
-                <p className="fw-bold text-muted mb-0">Permanently delete this record?</p>
-              </Modal.Body>
-              <Modal.Footer className="border-0 p-0 d-flex gap-2 justify-content-end mt-4">
-                <Button variant="light" className="inventory-history-custom-btn-outline border-0 text-muted" onClick={() => setShowDeleteModal(false)}>
-                  Cancel
-                </Button>
-                <Button variant="danger" className="inventory-history-custom-btn-outline border-danger text-danger px-4" onClick={handleDelete} disabled={isDeleting}>
-                  {isDeleting ? 'Deleting...' : 'Delete Permanently'}
-                </Button>
-              </Modal.Footer>
-            </div>
+          <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered backdrop="static">
+            <Modal.Header closeButton className="border-0 pb-0">
+              <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>
+                Confirm Deletion
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="py-4">
+              <div className="d-flex align-items-center mb-3">
+                <div className="p-3 rounded-circle me-3" style={{ backgroundColor: 'rgba(207, 38, 55, 0.1)' }}>
+                  <CsLineIcons icon="bin" size="24" style={{ color: '#cf2637' }} />
+                </div>
+                <div>
+                  <p className="mb-0 fw-bold text-dark">Permanently delete this record?</p>
+                  <p className="mb-1 text-muted small">This clears the inventory log from your historical logs.</p>
+                  <p className="mb-0 text-success small fw-semibold">Don't worry, your physical stock quantities remain perfectly safe.</p>
+                </div>
+              </div>
+            </Modal.Body>
+            <Modal.Footer className="border-0 pt-0">
+              <Button 
+                variant="light" 
+                onClick={() => setShowDeleteModal(false)} 
+                disabled={isDeleting}
+                className="rounded-pill px-4 fw-bold inventory-history-custom-btn-outline border-0 text-muted"
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="danger" 
+                onClick={handleDelete} 
+                disabled={isDeleting}
+                className="rounded-pill px-4 fw-bold shadow-sm inventory-history-custom-btn-outline border-danger text-danger"
+              >
+                {isDeleting ? (
+                  <>
+                    <Spinner as="span" animation="border" size="sm" className="me-2" />
+                    Deleting...
+                  </>
+                ) : (
+                  <div className="d-flex align-items-center">
+                    <CsLineIcons icon="bin" size="16" className="me-2" stroke="currentColor" />
+                    Delete
+                  </div>
+                )}
+              </Button>
+            </Modal.Footer>
           </Modal>
 
           <Modal show={showRejectReasonModal} onHide={() => setShowRejectReasonModal(false)} centered contentClassName="border-0 shadow-lg" style={{ backdropFilter: 'blur(5px)' }}>

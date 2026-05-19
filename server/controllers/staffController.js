@@ -5,7 +5,8 @@ const path = require("path");
 // ── GET /staff/get-positions ──────────────────────────────────────────────────
 const getStaffPositions = async (req, res) => {
   try {
-    const positions = await Staff.distinct("position", { user_id: req.user });
+    const userId = req.user?._id || req.user;
+    const positions = await Staff.distinct("position", { user_id: userId });
     res.json({ success: true, data: positions });
   } catch (error) {
     console.error(error);
@@ -16,7 +17,7 @@ const getStaffPositions = async (req, res) => {
 // ── GET /staff/get-all ────────────────────────────────────────────────────────
 const getStaffData = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user?._id || req.user;
     const { page = 1, limit = 50 } = req.query;
     const pageNumber = parseInt(page, 10) || 1;
     const pageSize = parseInt(limit, 10) || 50;
@@ -64,7 +65,7 @@ const getStaffData = async (req, res) => {
 const getStaffDataById = async (req, res) => {
   try {
     const staffId = req.params.id;
-    const userId = req.user;
+    const userId = req.user?._id || req.user;
 
     const staff = await Staff.findOne({ _id: staffId, user_id: userId }).lean();
 
@@ -82,9 +83,10 @@ const getStaffDataById = async (req, res) => {
 // ── POST /staff/add ───────────────────────────────────────────────────────────
 const addStaff = async (req, res) => {
   try {
+    const userId = req.user?._id || req.user;
     const staffData = {
       ...req.body,
-      user_id: req.user,
+      user_id: userId,
     };
 
     if (staffData.salary_structure && typeof staffData.salary_structure === "string") {
@@ -109,7 +111,7 @@ const addStaff = async (req, res) => {
     res.json({ success: true, data: staff });
   } catch (error) {
     console.error("Error adding staff:", error);
-    res.status(500).json({ success: false, error: "Server error" });
+    res.status(500).json({ success: false, error: error.message || "Server error" });
   }
 };
 
@@ -117,7 +119,7 @@ const addStaff = async (req, res) => {
 const updateStaff = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user;
+    const userId = req.user?._id || req.user;
 
     const existingStaff = await Staff.findOne({ _id: id, user_id: userId });
     if (!existingStaff) {
@@ -177,7 +179,7 @@ const updateStaff = async (req, res) => {
     res.json({ success: true, message: "Staff updated successfully", staff: updatedStaff });
   } catch (error) {
     console.error("Error updating staff:", error);
-    res.status(500).json({ success: false, error: "Server error" });
+    res.status(500).json({ success: false, error: error.message || "Server error" });
   }
 };
 
@@ -185,7 +187,7 @@ const updateStaff = async (req, res) => {
 const deleteStaff = async (req, res) => {
   try {
     const staffId = req.params.id;
-    const userId = req.user;
+    const userId = req.user?._id || req.user;
 
     const staffData = await Staff.findOne({ _id: staffId, user_id: userId });
     if (!staffData) {
@@ -219,8 +221,9 @@ const deleteStaff = async (req, res) => {
 // ── GET /staff/face-data ──────────────────────────────────────────────────────
 const getAllFaceEncodings = async (req, res) => {
   try {
+    const userId = req.user?._id || req.user;
     const staff = await Staff.find({
-      user_id: req.user,
+      user_id: userId,
       face_encoding: { $exists: true, $ne: null, $not: { $size: 0 } },
     })
       .select("_id staff_id f_name l_name email position face_encoding")

@@ -416,11 +416,11 @@ const Subscription = () => {
         accessor: 'status',
         Cell: ({ value }) => {
           if (value === 'active') {
-            return <Badge bg="soft-success" className="text-success px-3 py-2 rounded-pill">Active</Badge>;
+            return <Badge bg="none" className="bg-soft-success text-success px-3 py-2 rounded-pill">Active</Badge>;
           } else if (value === 'inactive') {
-            return <Badge bg="soft-warning" className="text-warning px-3 py-2 rounded-pill">Inactive</Badge>;
+            return <Badge bg="none" className="bg-soft-warning text-warning px-3 py-2 rounded-pill">Inactive</Badge>;
           }
-          return <Badge bg="soft-danger" className="text-danger px-3 py-2 rounded-pill">{value}</Badge>;
+          return <Badge bg="none" className="bg-soft-danger text-danger px-3 py-2 rounded-pill">{value}</Badge>;
         },
       },
       {
@@ -607,10 +607,10 @@ const Subscription = () => {
 
       <Card className="glass-card border-0 mb-5">
         <Card.Body className="p-4">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h4 className="fw-bold mb-0">Active Subscriptions</h4>
-            <div className="d-flex gap-2">
-              <div className="search-input-container shadow-sm">
+          <div className="d-flex flex-column flex-sm-row justify-content-sm-between align-items-start align-items-sm-center gap-3 mb-4">
+            <h4 className="fw-bold mb-0 text-nowrap">Active Subscriptions</h4>
+            <div className="d-flex gap-2 w-100 w-sm-auto">
+              <div className="search-input-container shadow-sm w-100 w-sm-auto">
                 <ControlsSearch tableInstance={tableInstance} />
               </div>
               <div className="d-none d-lg-block">
@@ -643,9 +643,9 @@ const Subscription = () => {
                           <span className="mobile-value mb-0">{original.plan_name}</span>
                         </div>
                         <div>
-                          {original.status === 'active' && <Badge bg="soft-success" className="text-success rounded-pill">Active</Badge>}
-                          {original.status === 'inactive' && <Badge bg="soft-warning" className="text-warning rounded-pill">Inactive</Badge>}
-                          {original.status === 'blocked' && <Badge bg="soft-danger" className="text-danger rounded-pill">Blocked</Badge>}
+                          {original.status === 'active' && <Badge bg="none" className="bg-soft-success text-success rounded-pill">Active</Badge>}
+                          {original.status === 'inactive' && <Badge bg="none" className="bg-soft-warning text-warning rounded-pill">Inactive</Badge>}
+                          {original.status === 'blocked' && <Badge bg="none" className="bg-soft-danger text-danger rounded-pill">Blocked</Badge>}
                         </div>
                       </div>
                       <Row className="g-2 mb-3">
@@ -687,7 +687,7 @@ const Subscription = () => {
                   <Card.Body className="p-4 d-flex flex-column">
                     <div className="d-flex justify-content-between align-items-start mb-3">
                       <h5 className="fw-bold mb-0">{sub.plan_name}</h5>
-                      <Badge bg="soft-warning" className="text-warning rounded-pill">Expired</Badge>
+                      <Badge bg="none" className="bg-soft-warning text-warning rounded-pill">Expired</Badge>
                     </div>
                     <div className="plan-price mb-3">₹{sub.plan_price}</div>
                     <p className="text-muted small mb-4">

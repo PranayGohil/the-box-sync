@@ -67,6 +67,13 @@ const Profile = () => {
     pincode: Yup.string()
       .required('Pin code is required')
       .matches(/^[0-9]{6}$/, 'Pin code must be exactly 6 digits'),
+    password: Yup.string().when(['email', 'mobile'], {
+      is: (email, mobile) => {
+        return (email && email !== profile.email) || (mobile && mobile !== profile.mobile);
+      },
+      then: (schema) => schema.required('Current password is required to change Email or Phone number'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
   });
 
   // Load countries on mount
@@ -199,6 +206,9 @@ const Profile = () => {
       formData.append('state', values.state);
       formData.append('city', values.city);
       formData.append('pincode', values.pincode);
+      if (values.password) {
+        formData.append('password', values.password);
+      }
 
       if (logoFile) {
         formData.append('logo', logoFile);
@@ -212,7 +222,8 @@ const Profile = () => {
       });
 
       const updatedData = response.data.user || response.data;
-      setProfile({ ...values, logo: updatedData.logo || profile.logo });
+      const { password, ...profileFields } = values;
+      setProfile({ ...profileFields, logo: updatedData.logo || profile.logo });
       setLogoFile(null);
       setLogoPreview('');
       setEditMode(false);
@@ -282,6 +293,7 @@ const Profile = () => {
           state: profile.state,
           city: profile.city,
           pincode: profile.pincode,
+          password: '',
         }}
         validationSchema={validationSchema}
         onSubmit={handleEditSubmit}
@@ -310,7 +322,7 @@ const Profile = () => {
                       </div>
                     </div>
 
-                    {editMode ? (
+                    {editMode && (
                       <div className="w-100 mt-auto">
                         <input type="file" id="logo-upload" className="d-none" accept="image/*" onChange={handleLogoChange} disabled={uploadingLogo || saving} />
                         <Button as="label" htmlFor="logo-upload" className="profile-custom-btn-outline w-100 mb-2" disabled={uploadingLogo || saving}>
@@ -318,12 +330,6 @@ const Profile = () => {
                           {getLogoSrc() ? 'Change Logo' : 'Upload Logo'}
                         </Button>
                         <small className="text-muted d-block">JPG/PNG (Max 5MB)</small>
-                      </div>
-                    ) : (
-                      <div className="mt-auto py-2 text-center">
-                        <Badge bg="soft-primary" className="text-primary px-4 py-2 rounded-pill fw-bold">
-                          Official Store
-                        </Badge>
                       </div>
                     )}
                   </Card.Body>
@@ -383,12 +389,30 @@ const Profile = () => {
                           <Form.Control.Feedback type="invalid">{errors.fssai_no}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
+                      {(editMode && (values.email !== profile.email || values.mobile !== profile.mobile)) && (
+                        <Col md={12}>
+                          <Form.Group className="mt-2 animate__animated animate__fadeIn">
+                            <Form.Label className="small fw-bold text-danger">Current Password * (Required to change Email or Phone Number)</Form.Label>
+                            <Form.Control 
+                              type="password" 
+                              name="password" 
+                              placeholder="Enter your current password to authorize this change" 
+                              value={values.password} 
+                              onChange={handleChange} 
+                              onBlur={handleBlur} 
+                              disabled={saving}
+                              isInvalid={touched.password && !!errors.password} 
+                            />
+                            <Form.Control.Feedback type="invalid">{errors.password}</Form.Control.Feedback>
+                          </Form.Group>
+                        </Col>
+                      )}
                     </Row>
 
                     <div className="profile-section-header mt-5">
                       <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                         <CsLineIcons icon="pin" size="20" className="text-primary" />
-                        Physical Location
+                        Location
                       </h5>
                     </div>
 
