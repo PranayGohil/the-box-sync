@@ -263,12 +263,19 @@ const ManageMenu = () => {
                 sortable: true,
                 headerClassName: 'text-muted text-small text-uppercase',
                 Cell: ({ row }) => (
-                  <div className="d-flex align-items-center">
-                    <span className="fw-bold text-dark">{row.original.dish_name}</span>
-                    {row.original.is_special && (
-                      <Badge bg="soft-warning" className="ms-2 rounded-pill p-1">
-                        <CsLineIcons icon="star" size="12" fill="#f6c343" stroke="#f6c343" />
-                      </Badge>
+                  <div className="d-flex flex-column align-items-start">
+                    <div className="d-flex align-items-center">
+                      <span className="fw-bold text-dark">{row.original.dish_name}</span>
+                      {row.original.is_special && (
+                        <Badge bg="soft-warning" className="ms-2 rounded-pill p-1">
+                          <CsLineIcons icon="star" size="12" fill="#f6c343" stroke="#f6c343" />
+                        </Badge>
+                      )}
+                    </div>
+                    {(row.original.has_variants || (Array.isArray(row.original.addons) && row.original.addons.length > 0)) && (
+                      <span className="text-primary fw-bold" style={{ fontSize: '9px', marginTop: '2px', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                        ★ Customizable
+                      </span>
                     )}
                   </div>
                 ),
@@ -278,7 +285,20 @@ const ManageMenu = () => {
                 accessor: 'dish_price',
                 sortable: true,
                 headerClassName: 'text-muted text-small text-uppercase',
-                Cell: ({ value }) => <span className="fw-bold manage-menu-text-black">₹{value}</span>,
+                Cell: ({ row }) => {
+                  const dish = row.original;
+                  if (dish.has_variants && Array.isArray(dish.variants) && dish.variants.length > 0) {
+                    const prices = dish.variants.map((v) => Number(v.price) || 0);
+                    const min = Math.min(...prices);
+                    const max = Math.max(...prices);
+                    return (
+                      <span className="fw-bold manage-menu-text-black">
+                        ₹{min === max ? min : `${min} - ₹${max}`}
+                      </span>
+                    );
+                  }
+                  return <span className="fw-bold manage-menu-text-black">₹{dish.dish_price || 0}</span>;
+                },
               },
               {
                 Header: 'Actions',

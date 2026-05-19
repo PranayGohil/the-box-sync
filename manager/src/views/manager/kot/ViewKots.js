@@ -136,6 +136,7 @@ const ViewKots = () => {
       const response = await axios.get(`${process.env.REACT_APP_API}/kot/show?order_source=Manager,Captain`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
+      console.log('Response:', response);
       setKotData(response.data.data);
     } catch (err) {
       console.log('Error fetching order data:', err);
@@ -318,11 +319,18 @@ const ViewKots = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {data.order_items.map((dish) => 
+                          {data.order_items.map((dish, index) =>
                             dish.special_notes !== 'Parcel Charge' ? (
-                              <tr key={dish._id} className="border-bottom-light">
+                              <tr key={dish._id || index} className="border-bottom-light">
                                 <td className="px-0 py-3 fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
                                   {dish.dish_name}
+                                  {((dish.selected_variant && dish.selected_variant.size_name) || (Array.isArray(dish.selected_addons) && dish.selected_addons.filter(a => a && a.addon_name).length > 0)) && (
+                                    <div style={{ fontSize: '10px', fontWeight: 600, color: '#64748b', marginTop: '2px', lineHeight: 1.2, whiteSpace: 'normal' }}>
+                                      {dish.selected_variant && dish.selected_variant.size_name && `Size: ${dish.selected_variant.size_name}`}
+                                      {dish.selected_variant && dish.selected_variant.size_name && Array.isArray(dish.selected_addons) && dish.selected_addons.filter(a => a && a.addon_name).length > 0 && ' • '}
+                                      {Array.isArray(dish.selected_addons) && dish.selected_addons.filter(a => a && a.addon_name).map(addon => addon.addon_name).join(' • ')}
+                                    </div>
+                                  )}
                                 </td>
                                 <td className="text-center fw-bold text-dark">{dish.quantity}</td>
                                 <td className="text-end px-0">

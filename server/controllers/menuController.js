@@ -46,17 +46,65 @@ const addMenu = async (req, res) => {
       }
     });
 
-    parsedDishes = parsedDishes.map((dish) => ({
-      ...dish,
-      dish_price:
-        dish.dish_price !== "" && dish.dish_price != null
-          ? Number(dish.dish_price)
+    parsedDishes = parsedDishes.map((dish) => {
+      let parsedVariants;
+      if (dish.variants) {
+        if (typeof dish.variants === "string") {
+          try {
+            parsedVariants = JSON.parse(dish.variants);
+          } catch (e) {
+            // ignore invalid
+          }
+        } else if (Array.isArray(dish.variants)) {
+          parsedVariants = dish.variants;
+        }
+      }
+
+      let parsedAddons;
+      if (dish.addons) {
+        if (typeof dish.addons === "string") {
+          try {
+            parsedAddons = JSON.parse(dish.addons);
+          } catch (e) {
+            // ignore invalid
+          }
+        } else if (Array.isArray(dish.addons)) {
+          parsedAddons = dish.addons;
+        }
+      }
+
+      return {
+        ...dish,
+        dish_price:
+          dish.dish_price !== "" && dish.dish_price != null
+            ? Number(dish.dish_price)
+            : undefined,
+        quantity:
+          dish.quantity !== "" && dish.quantity != null
+            ? Number(dish.quantity)
+            : undefined,
+        has_variants:
+          typeof dish.has_variants === "string"
+            ? dish.has_variants === "true"
+            : !!dish.has_variants,
+        variants: Array.isArray(parsedVariants)
+          ? parsedVariants.map((v) => ({
+              size_name: v.size_name,
+              price: v.price != null && v.price !== "" ? Number(v.price) : 0,
+              quantity: v.quantity != null && v.quantity !== "" ? Number(v.quantity) : undefined,
+              unit: v.unit,
+              is_available: v.is_available !== false,
+            }))
           : undefined,
-      quantity:
-        dish.quantity !== "" && dish.quantity != null
-          ? Number(dish.quantity)
+        addons: Array.isArray(parsedAddons)
+          ? parsedAddons.map((a) => ({
+              addon_name: a.addon_name,
+              price: a.price != null && a.price !== "" ? Number(a.price) : 0,
+              is_available: a.is_available !== false,
+            }))
           : undefined,
-    }));
+      };
+    });
 
     const filter = { user_id, category, counter, hide_on_kot, meal_type };
 
@@ -342,9 +390,38 @@ const updateMenu = async (req, res) => {
       unit,
       is_special,
       is_available,
+      has_variants,
+      variants,
+      addons,
     } = req.body;
 
     const userId = req.user;
+
+    let parsedVariants;
+    if (variants) {
+      if (typeof variants === "string") {
+        try {
+          parsedVariants = JSON.parse(variants);
+        } catch (e) {
+          // ignore
+        }
+      } else if (Array.isArray(variants)) {
+        parsedVariants = variants;
+      }
+    }
+
+    let parsedAddons;
+    if (addons) {
+      if (typeof addons === "string") {
+        try {
+          parsedAddons = JSON.parse(addons);
+        } catch (e) {
+          // ignore
+        }
+      } else if (Array.isArray(addons)) {
+        parsedAddons = addons;
+      }
+    }
 
     const updateFields = {
       "dishes.$.dish_name": dish_name,
@@ -357,11 +434,33 @@ const updateMenu = async (req, res) => {
         quantity !== "" && quantity != null ? Number(quantity) : undefined,
       "dishes.$.unit": unit,
       "dishes.$.is_special":
-        typeof is_special === "string" ? is_special === "true" : !!is_special,
+        is_special !== undefined
+          ? typeof is_special === "string" ? is_special === "true" : !!is_special
+          : undefined,
       "dishes.$.is_available":
-        typeof is_available === "string"
-          ? is_available === "true"
-          : !!is_available,
+        is_available !== undefined
+          ? typeof is_available === "string" ? is_available === "true" : !!is_available
+          : undefined,
+      "dishes.$.has_variants":
+        has_variants !== undefined
+          ? typeof has_variants === "string" ? has_variants === "true" : !!has_variants
+          : undefined,
+      "dishes.$.variants": Array.isArray(parsedVariants)
+        ? parsedVariants.map((v) => ({
+            size_name: v.size_name,
+            price: v.price != null && v.price !== "" ? Number(v.price) : 0,
+            quantity: v.quantity != null && v.quantity !== "" ? Number(v.quantity) : undefined,
+            unit: v.unit,
+            is_available: v.is_available !== false,
+          }))
+        : undefined,
+      "dishes.$.addons": Array.isArray(parsedAddons)
+        ? parsedAddons.map((a) => ({
+            addon_name: a.addon_name,
+            price: a.price != null && a.price !== "" ? Number(a.price) : 0,
+            is_available: a.is_available !== false,
+          }))
+        : undefined,
     };
 
     if (req.file) {

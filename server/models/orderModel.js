@@ -45,6 +45,16 @@ const orderSchema = new Schema({
         type: String, //Preparing, Completed
         default: "Pending",
       },
+      selected_variant: {
+        size_name: { type: String },
+        price: { type: Number },
+      },
+      selected_addons: [
+        {
+          addon_name: { type: String },
+          price: { type: Number },
+        },
+      ],
     },
   ],
   order_status: {

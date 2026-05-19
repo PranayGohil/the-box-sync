@@ -55,7 +55,16 @@ export const printCounterBill = (ord, userData, counterName, items) => {
     <tbody>
           ${items.map(item => `
             <tr>
-              <td>${item.dish_name}</td>
+              <td>
+                 ${item.dish_name}
+                ${((item.selected_variant && item.selected_variant.size_name) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) ? `
+                  <div style="font-size: 10px; color: #555; margin-top: 2px;">
+                    ${item.selected_variant && item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}
+                    ${item.selected_variant && item.selected_variant.size_name && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 ? ' • ' : ''}
+                    ${Array.isArray(item.selected_addons) ? item.selected_addons.filter(a => a && a.addon_name).map(addon => addon.addon_name).join(' • ') : ''}
+                  </div>
+                ` : ''}
+              </td>
               <td style="text-align: center;">${item.quantity}</td>
             </tr>
           `).join('')}
@@ -115,8 +124,17 @@ export const printFullBill = (ord, userData, items, subTotal) => {
         </thead>
         <tbody>
           ${items.map(item => `
-            <tr>
-              <td>${item.dish_name}</td>
+             <tr>
+              <td>
+                ${item.dish_name}
+                ${((item.selected_variant && item.selected_variant.size_name) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) ? `
+                  <div style="font-size: 10px; color: #555; margin-top: 2px;">
+                    ${item.selected_variant && item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}
+                    ${item.selected_variant && item.selected_variant.size_name && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 ? ' • ' : ''}
+                    ${Array.isArray(item.selected_addons) ? item.selected_addons.filter(a => a && a.addon_name).map(addon => `${addon.addon_name} (+₹${addon.price})`).join(' • ') : ''}
+                  </div>
+                ` : ''}
+              </td>
               <td style="text-align: center;">${item.quantity}</td>
               <td style="text-align: center;">₹${item.dish_price}</td>
               <td style="text-align: right;">₹${(item.dish_price * item.quantity).toFixed(2)}</td>
@@ -177,13 +195,20 @@ export const printFullBill = (ord, userData, items, subTotal) => {
   `;
 };
 
-/**
- * Orchestrates fetching order + user data, then opens a print window
- * with both the full bill and per-counter KOT slips.
- */
 export const openPrintWindow = async (order_id, setPrinting) => {
   try {
-    setPrinting({ [order_id]: true });
+    if (typeof setPrinting === 'function') {
+      try {
+        setPrinting((prev) => {
+          if (prev && typeof prev === 'object') {
+            return { ...prev, [order_id]: true };
+          }
+          return true;
+        });
+      } catch (e) {
+        setPrinting(true);
+      }
+    }
 
     const token = localStorage.getItem('token');
     const [userRes, orderRes] = await Promise.all([
@@ -233,7 +258,18 @@ export const openPrintWindow = async (order_id, setPrinting) => {
     console.error('Print error:', err);
     toast.error('Failed to print bills');
   } finally {
-    setPrinting(false);
+    if (typeof setPrinting === 'function') {
+      try {
+        setPrinting((prev) => {
+          if (prev && typeof prev === 'object') {
+            return { ...prev, [order_id]: false };
+          }
+          return false;
+        });
+      } catch (e) {
+        setPrinting(false);
+      }
+    }
   }
 };
 
@@ -360,7 +396,14 @@ export const printKOTSlip = (slipData, userData, setPrinting) => {
               <tr>
                 <td style="padding:4px 0;">
                   ${item.dish_name}
-                  ${item.special_notes ? `<div style="font-size:11px;color:#666;">${item.special_notes}</div>` : ''}
+                  ${((item.selected_variant && item.selected_variant.size_name) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) ? `
+                    <div style="font-size: 11px; color: #555; margin-top: 2px; font-weight: bold;">
+                      ${item.selected_variant && item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}
+                      ${item.selected_variant && item.selected_variant.size_name && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 ? ' • ' : ''}
+                      ${Array.isArray(item.selected_addons) ? item.selected_addons.filter(a => a && a.addon_name).map(addon => addon.addon_name).join(' • ') : ''}
+                    </div>
+                  ` : ''}
+                  ${item.special_notes ? `<div style="font-size:11px;color:#666;font-style:italic;">Note: ${item.special_notes}</div>` : ''}
                 </td>
                 <td style="text-align:center;font-size:16px;font-weight:bold;">${item.quantity}</td>
         </tr>`).join('')}

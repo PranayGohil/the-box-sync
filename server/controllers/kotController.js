@@ -12,6 +12,7 @@ const showKOTs = async (req, res) => {
       order_source,
       sort = "-order_date"
     } = req.query;
+    console.log("order_source", order_source);
 
     const match = {
       user_id: userId,
@@ -25,6 +26,8 @@ const showKOTs = async (req, res) => {
         },
       ],
     };
+
+    console.log("match", match);
 
     if (order_source) {
       const sources = order_source.split(",").map(s => s.trim());
@@ -64,7 +67,11 @@ const showKOTs = async (req, res) => {
       },
       { $sort: { [sortField]: sortOrder } },
     ];
+
+    console.log("pipeline", pipeline);
+
     const orders = await Order.aggregate(pipeline).exec();
+    console.log("orders", orders);
 
     return res.json({
       success: true,
