@@ -10,6 +10,7 @@ import { Switch, Route, Redirect, NavLink, useLocation } from 'react-router-dom'
 import { AuthContext } from 'contexts/AuthContext';
 import OrderHistory from './order/OrderHistory';
 import OrderDetails from './order/OrderDetails';
+// Trigger hot reload compilation bust
 
 import ReservationForm from './reservation/ReservationForm';
 import ManageReservations from './reservation/ManageReservations';

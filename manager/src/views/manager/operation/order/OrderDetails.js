@@ -66,78 +66,8 @@ const OrderDetails = () => {
   }, [id]);
 
   const handlePrint = async () => {
-    try {
-      setPrinting(true);
-
-      const userRes = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-
-      const userData = userRes.data;
-
-      const groupedByCounter = {};
-      order.order_items.forEach(item => {
-        const counterName = item.counter || "Default";
-        if (!groupedByCounter[counterName]) groupedByCounter[counterName] = [];
-        groupedByCounter[counterName].push(item);
-      });
-
-      const printWindow = window.open("", "_blank");
-
-      if (!printWindow) {
-        toast.error("Popup blocked! Please allow popups.");
-        return;
-      }
-
-      let allBillsHTML = "";
-
-      allBillsHTML += printFullBill(order, userData, order.order_items, order.sub_total);
-
-      Object.entries(groupedByCounter).forEach(([counterName, items]) => {
-        const subTotal = items.reduce(
-          (sum, i) => sum + (i.dish_price * i.quantity),
-          0
-        );
-
-        allBillsHTML += printCounterBill(order, userData, counterName, items);
-      });
-
-
-      printWindow.document.write(`
-        <html>
-        <head>
-        <title>Print Bills</title>
-
-        <script>
-        window.onload = function() {
-          window.focus();
-          window.print();
-
-          // close window after print dialog
-          setTimeout(function() {
-            window.close();
-          }, 100);
-        };
-        </script>
-
-        </head>
-
-        <body>
-        ${allBillsHTML}
-        </body>
-        </html>
-        `
-      );
-      printWindow.document.close();
-
-      printWindow.focus();
-
-    } catch (err) {
-      console.error("Print error:", err);
-      toast.error("Failed to print bills");
-    } finally {
-      setPrinting(false);
-    }
+    // Trigger compilation reload
+    await openPrintWindow(id, setPrinting);
   };
 
   const handleWhatsAppShare = async () => {

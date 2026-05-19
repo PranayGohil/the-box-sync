@@ -6,10 +6,6 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-import DineInOrder from "./order/DineInOrder";
-import TakeawayOrder from "./order/TakeawayOrder";
-import DeliveryOrder from "./order/DeliveryOrder";
-
 const Dashboard = () => {
   const title = 'Dashboard';
   const description = 'Restaurant Management Dashboard';
