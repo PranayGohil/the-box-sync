@@ -99,8 +99,10 @@ const AddTable = () => {
     value: cat,
   }));
 
-  const isFromManageTable = location.state?.fromManageTable || false;
-  const prefilledArea = isFromManageTable ? location.state?.area || '' : '';
+  const queryParams = new URLSearchParams(location.search);
+  const queryArea = queryParams.get('area') || '';
+  const isFromManageTable = (location.state?.fromManageTable || false) || !!queryArea;
+  const prefilledArea = isFromManageTable ? (location.state?.area || queryArea) : '';
 
   useEffect(() => {
     const fetchDiningAreas = async () => {
@@ -281,7 +283,9 @@ const AddTable = () => {
                         options={diningAreasOptions}
                         value={formik.values.area ? { label: formik.values.area, value: formik.values.area } : null}
                         onChange={(selected) => {
-                          formik.setFieldValue('area', selected ? selected.value : '');
+                          const val = selected ? selected.value : '';
+                          formik.setFieldValue('area', val);
+                          formik.setFieldTouched('area', !val);
                         }}
                         onBlur={() => formik.setFieldTouched('area', true)}
                         placeholder="Select or create dining area"
