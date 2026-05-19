@@ -9,7 +9,7 @@ import { toast } from 'react-toastify';
 
 const OrderDetails = () => {
   const title = 'Order Details';
-  const description = 'Detailed view of a specific order including customer, billing, and ordered items.';
+  const description = 'Detailed view of a specific order including customer, billing, and order items.';
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
@@ -270,55 +270,53 @@ const OrderDetails = () => {
         groupedByCounter[counterName].push(item);
       });
 
-      const printWindow = window.open("", "_blank");
-
-      if (!printWindow) {
-        toast.error("Popup blocked! Please allow popups.");
-        return;
-      }
-
       let allBillsHTML = "";
-
       allBillsHTML += printFullBill(order, userData, order.order_items, order.sub_total);
-
       Object.entries(groupedByCounter).forEach(([counterName, items]) => {
-        const subTotal = items.reduce(
-          (sum, i) => sum + (i.dish_price * i.quantity),
-          0
-        );
-
         allBillsHTML += printCounterBill(order, userData, counterName, items);
       });
 
+      // Create a hidden iframe for print
+      let iframe = document.getElementById("print-iframe");
+      if (!iframe) {
+        iframe = document.createElement("iframe");
+        iframe.id = "print-iframe";
+        iframe.style.position = "absolute";
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.border = "none";
+        document.body.appendChild(iframe);
+      }
 
-      printWindow.document.write(`
+      const doc = iframe.contentWindow.document || iframe.contentDocument;
+      doc.open();
+      doc.write(`
         <html>
         <head>
-        <title>Print Bills</title>
-
-        <script>
-        window.onload = function() {
-          window.focus();
-          window.print();
-
-          // close window after print dialog
-          setTimeout(function() {
-            window.close();
-          }, 100);
-        };
-        </script>
-
+          <title>Print Bills</title>
+          <style>
+            @media print {
+              body { margin: 0; }
+            }
+          </style>
         </head>
-
         <body>
-        ${allBillsHTML}
+          ${allBillsHTML}
+          <script>
+            window.onload = function() {
+              window.focus();
+              window.print();
+            };
+          </script>
         </body>
         </html>
-        `
-      );
-      printWindow.document.close();
+      `);
+      doc.close();
 
-      printWindow.focus();
+      setTimeout(() => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      }, 500);
 
     } catch (err) {
       console.error("Print error:", err);
@@ -328,28 +326,63 @@ const OrderDetails = () => {
     }
   };
 
-  const handleWhatsAppShare = () => {
+  const handleWhatsAppShare = async () => {
     if (!order) return;
     setSharing(true);
     
     try {
-      let message = `*${order.restaurant_name || 'Restaurant'}*\n\n`;
-      message += `🧾 *Bill No:* ${order.order_no || order.id}\n`;
-      message += `📅 *Date:* ${new Date(order.order_date).toLocaleString()}\n\n`;
-      message += `*Items:*\n`;
+      // Fetch restaurant profile
+      let restaurantName = 'Restaurant';
+      let restaurantMobile = '';
+      try {
+        const userRes = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (userRes.data) {
+          restaurantName = userRes.data.name || 'Restaurant';
+          restaurantMobile = userRes.data.mobile || '';
+        }
+      } catch (fetchErr) {
+        console.error("Failed to fetch restaurant info:", fetchErr);
+      }
+
+      let message = `*${restaurantName}*\n\n`;
+      message += `*Bill No:* ${order.order_no || order.id}\n`;
+      message += `*Date:* ${new Date(order.order_date).toLocaleString()}\n`;
+      if (order.customer_name) {
+        message += `*Customer:* ${order.customer_name}\n`;
+      }
+      message += `\n*Items:*\n`;
       order.order_items.forEach(item => {
-        message += `▫️ ${item.quantity} x ${item.dish_name} - ₹${(item.dish_price * item.quantity).toFixed(2)}\n`;
+        message += `- ${item.quantity} x ${item.dish_name} - ₹${(item.dish_price * item.quantity).toFixed(2)}\n`;
       });
-      message += `\n💵 *Sub Total:* ₹${parseFloat(order.sub_total || 0).toFixed(2)}\n`;
+      message += `\n*Sub Total:* ₹${parseFloat(order.sub_total || 0).toFixed(2)}\n`;
       if (order.cgst_amount > 0) message += `CGST: ₹${parseFloat(order.cgst_amount).toFixed(2)}\n`;
       if (order.sgst_amount > 0) message += `SGST: ₹${parseFloat(order.sgst_amount).toFixed(2)}\n`;
       if (order.vat_amount > 0) message += `VAT: ₹${parseFloat(order.vat_amount).toFixed(2)}\n`;
-      if (order.discount_amount > 0) message += `🎁 *Discount:* -₹${parseFloat(order.discount_amount).toFixed(2)}\n`;
-      message += `💰 *Total Amount:* ₹${parseFloat(order.total_amount || 0).toFixed(2)}\n\n`;
-      message += `Thank you for your visit! 😊`;
+      if (order.discount_amount > 0) message += `*Discount:* -₹${parseFloat(order.discount_amount).toFixed(2)}\n`;
+      if (order.waveoff_amount > 0) message += `*Waveoff:* -₹${parseFloat(order.waveoff_amount).toFixed(2)}\n`;
+      message += `*Total Amount:* ₹${parseFloat(order.total_amount || 0).toFixed(2)}\n\n`;
+      message += `Thank you for your visit!`;
 
       const encodedMessage = encodeURIComponent(message);
-      const phoneNumber = order.customer_phone ? order.customer_phone.replace(/\D/g, '') : '';
+      
+      let customerPhone = '';
+      if (order.customer_details && order.customer_details.phone) {
+        customerPhone = order.customer_details.phone;
+      } else if (order.customer_phone) {
+        customerPhone = order.customer_phone;
+      }
+
+      let phoneNumber = customerPhone ? String(customerPhone).replace(/\D/g, '') : '';
+      if (!phoneNumber && restaurantMobile) {
+        phoneNumber = String(restaurantMobile).replace(/\D/g, '');
+      }
+      
+      if (phoneNumber && phoneNumber.length === 10) {
+        phoneNumber = `91${phoneNumber}`;
+      }
+      
       const whatsappUrl = phoneNumber ? `https://wa.me/${phoneNumber}?text=${encodedMessage}` : `https://wa.me/?text=${encodedMessage}`;
       
       window.open(whatsappUrl, '_blank');
@@ -534,8 +567,8 @@ const OrderDetails = () => {
                   <div className="text-small text-muted mb-1">STATUS</div>
                   <div className="h6 mb-0">
                     <Badge bg={
-                      order.order_status === 'Completed' ? 'success' :
-                        order.order_status === 'Pending' ? 'warning' :
+                      order.order_status === 'Paid' || order.order_status === 'Completed' || order.order_status === 'Save' ? 'success' :
+                        order.order_status === 'KOT' ? 'warning' :
                           order.order_status === 'Cancelled' ? 'danger' : 'secondary'
                     } className="rounded-pill px-3">
                       {order.order_status || '-'}
@@ -603,7 +636,7 @@ const OrderDetails = () => {
             <Card.Header className="border-0 bg-transparent pt-4 px-4">
               <h4 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4' }}>
                 <CsLineIcons icon="restaurant" className="me-2" size="20" />
-                Ordered Items
+                Order Items
               </h4>
             </Card.Header>
         <Card.Body>
@@ -630,9 +663,9 @@ const OrderDetails = () => {
                     <td className="text-end fw-medium text-primary">₹ {(parseFloat(item.dish_price) * parseFloat(item.quantity)).toFixed(2)}</td>
                     <td className="text-center">
                       <Badge bg={
-                        item.status === 'Served' ? 'success' :
-                          item.status === 'Preparing' ? 'warning' :
-                            item.status === 'Pending' ? 'secondary' : 'info'
+                        item.status === 'Served' || item.status === 'Completed' || item.status === 'Paid' ? 'success' :
+                          item.status === 'Preparing' || item.status === 'KOT' ? 'warning' :
+                            item.status === 'Cancelled' ? 'danger' : 'secondary'
                       } className="rounded-pill px-3">
                         {item.status || 'Pending'}
                       </Badge>
@@ -659,9 +692,9 @@ const OrderDetails = () => {
                     </div>
                   </div>
                   <Badge bg={
-                    item.status === 'Served' ? 'success' :
-                      item.status === 'Preparing' ? 'warning' :
-                        item.status === 'Pending' ? 'secondary' : 'info'
+                    item.status === 'Served' || item.status === 'Completed' || item.status === 'Paid' ? 'success' :
+                      item.status === 'Preparing' || item.status === 'KOT' ? 'warning' :
+                        item.status === 'Cancelled' ? 'danger' : 'secondary'
                   } className="rounded-pill px-2">
                     {item.status || 'Pending'}
                   </Badge>

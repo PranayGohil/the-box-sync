@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
-import { getDailyLogHistory, updateDailyLog, getCorrectionRequests, resolveCorrectionRequest } from 'api/inventory';
+import { getDailyLogHistory, updateDailyLog, createCorrectionRequest } from 'api/inventory';
 import { format, subDays } from 'date-fns';
 
 const STATUS_CONFIG = {
@@ -14,7 +14,7 @@ const STATUS_CONFIG = {
   auto_generated: { bg: 'info', label: 'Auto Verified', class: 'auto' },
 };
 
-const AdminDailyStockLogs = () => {
+const DailyStockLogs = () => {
   const history = useHistory();
   const title = 'Stock Audit Logs';
   const brandColor = '#23b3f4';
@@ -30,8 +30,35 @@ const AdminDailyStockLogs = () => {
   const [editNotes, setEditNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const [correctionRequests, setCorrectionRequests] = useState([]);
-  const [loadingRequests, setLoadingRequests] = useState(false);
+  // Correction request states
+  const [showCorrectionModal, setShowCorrectionModal] = useState(false);
+  const [correctionLog, setCorrectionLog] = useState(null);
+  const [correctionNote, setCorrectionNote] = useState('');
+  const [sendingCorrection, setSendingCorrection] = useState(false);
+
+  const handleRequestCorrection = (log) => {
+    setCorrectionLog(log);
+    setCorrectionNote('');
+    setShowCorrectionModal(true);
+  };
+
+  const handleCorrectionSubmit = async () => {
+    if (!correctionNote.trim()) { toast.error('Please describe what needs to be corrected.'); return; }
+    try {
+      setSendingCorrection(true);
+      await createCorrectionRequest({
+        log_id: correctionLog._id,
+        reason: correctionNote,
+      });
+      toast.success('Correction request sent to Admin. They will update the record.');
+      setShowCorrectionModal(false);
+      setCorrectionNote('');
+    } catch (err) {
+      toast.error('Failed to send correction request');
+    } finally {
+      setSendingCorrection(false);
+    }
+  };
 
   const fetchLogs = useCallback(async () => {
     try {
@@ -45,22 +72,7 @@ const AdminDailyStockLogs = () => {
     }
   }, [fromDate, toDate]);
 
-  const fetchCorrectionRequests = useCallback(async () => {
-    try {
-      setLoadingRequests(true);
-      const res = await getCorrectionRequests();
-      setCorrectionRequests((res.data.data || []).filter((r) => r.status === 'pending'));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingRequests(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchLogs();
-    fetchCorrectionRequests();
-  }, [fetchLogs, fetchCorrectionRequests]);
+  useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
   const openEdit = (log) => {
     setEditLog(log);
@@ -80,30 +92,10 @@ const AdminDailyStockLogs = () => {
       toast.success('Audit finalized');
       setShowEdit(false);
       fetchLogs();
-      fetchCorrectionRequests();
     } catch (err) {
       toast.error('Update failed');
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleResolveRequest = async (reqId, status) => {
-    try {
-      await resolveCorrectionRequest(reqId, { status });
-      toast.success(`Request marked as ${status}`);
-      fetchCorrectionRequests();
-    } catch (err) {
-      toast.error("Failed to update request");
-    }
-  };
-
-  const handleRequestAdjust = (reqItem) => {
-    const logObj = logs.find((l) => l._id === reqItem.log_id);
-    if (logObj) {
-      openEdit(logObj);
-    } else {
-      toast.error("Corresponding stock log is not in the loaded date range. Adjust date filters to locate it.");
     }
   };
 
@@ -221,69 +213,6 @@ const AdminDailyStockLogs = () => {
           </Row>
         </div>
 
-        {/* Correction Requests Section */}
-        {correctionRequests.length > 0 && (
-          <Card className="border-0 shadow-sm mb-4 p-4" style={{ borderRadius: '1.5rem', background: 'rgba(255, 193, 7, 0.08)', border: '1px solid rgba(255, 193, 7, 0.2)' }}>
-            <div className="d-flex align-items-center gap-2 mb-3">
-              <div className="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
-                <CsLineIcons icon="warning-hexagon" size="18" />
-              </div>
-              <h5 className="mb-0 fw-bold text-dark" style={{ letterSpacing: '-0.02em' }}>Pending Stock Correction Requests</h5>
-              <Badge pill bg="warning" text="dark" className="ms-2 fw-bold">{correctionRequests.length}</Badge>
-            </div>
-            <Row className="g-3">
-              {correctionRequests.map((req) => (
-                <Col xs={12} key={req._id}>
-                  <Card className="border-0 shadow-none bg-white p-3" style={{ borderRadius: '1rem', border: '1.5px solid #f1f5f9' }}>
-                    <Row className="align-items-center g-3">
-                      <Col xs={12} md={7}>
-                        <div className="d-flex align-items-center gap-2 mb-1">
-                          <Badge bg={req.shift === 'opening' ? 'primary' : 'dark'} className="text-capitalize">{req.shift} Stock</Badge>
-                          <span className="text-muted small fw-semibold">
-                            Requested for: {format(new Date(req.log_date), 'dd MMM yyyy')}
-                          </span>
-                        </div>
-                        <div className="text-dark fw-bold mb-1">
-                          Reason: <span className="fw-normal text-secondary">"{req.reason}"</span>
-                        </div>
-                        <div className="text-muted small">
-                          By: Manager · Raised: {format(new Date(req.createdAt), 'dd MMM yyyy, hh:mm a')}
-                        </div>
-                      </Col>
-                      <Col xs={12} md={5} className="d-flex justify-content-md-end gap-2">
-                        <Button
-                          variant="warning"
-                          size="sm"
-                          className="rounded-pill px-3 fw-bold"
-                          onClick={() => handleRequestAdjust(req)}
-                        >
-                          <CsLineIcons icon="edit" size="14" className="me-1" /> Adjust Stock
-                        </Button>
-                        <Button
-                          variant="outline-success"
-                          size="sm"
-                          className="rounded-pill px-3 fw-bold border-2"
-                          onClick={() => handleResolveRequest(req._id, 'approved')}
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          variant="outline-danger"
-                          size="sm"
-                          className="rounded-pill px-3 fw-bold border-2"
-                          onClick={() => handleResolveRequest(req._id, 'rejected')}
-                        >
-                          Dismiss
-                        </Button>
-                      </Col>
-                    </Row>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          </Card>
-        )}
-
         <Card className="admin-daily-stock-logs-filter-bar border-0">
           <Row className="g-2 align-items-end">
             <Col md={3}><div><div className="admin-daily-stock-logs-log-header-text mb-1">From</div><Form.Control type="date" className="admin-daily-stock-logs-modern-input w-100" value={fromDate} onChange={(e) => setFromDate(e.target.value)} /></div></Col>
@@ -399,11 +328,29 @@ const AdminDailyStockLogs = () => {
                   })}
 
                   <div className="mt-4 pt-3 border-top px-3 d-flex gap-2">
-                    {opening && <Button variant="outline-primary" className="admin-daily-stock-logs-btn-pill-action border-2 px-4 rounded-pill fw-bold" onClick={() => openEdit(opening)}><CsLineIcons icon="edit" size="14" className="me-2" /> Adjust Opening</Button>}
-                    {closing && <Button variant="outline-success" className="admin-daily-stock-logs-btn-pill-action border-2 px-4 rounded-pill fw-bold" onClick={() => openEdit(closing)}><CsLineIcons icon="edit" size="14" className="me-2" /> Adjust Closing</Button>}
-                  </div>
+                  {opening && opening.log_status !== 'manager_verified' && (
+                    <Button variant="outline-primary" className="admin-daily-stock-logs-btn-pill-action border-2" onClick={() => openEdit(opening)}>
+                      <CsLineIcons icon="edit" size="14" className="me-2" /> Adjust Opening
+                    </Button>
+                  )}
+                  {opening && opening.log_status === 'manager_verified' && (
+                    <Button variant="outline-warning" className="admin-daily-stock-logs-btn-pill-action border-2" onClick={() => handleRequestCorrection(opening)}>
+                      <CsLineIcons icon="edit" size="14" className="me-2" /> Request Opening Correction
+                    </Button>
+                  )}
+                  {closing && closing.log_status !== 'manager_verified' && (
+                    <Button variant="outline-success" className="admin-daily-stock-logs-btn-pill-action border-2" onClick={() => openEdit(closing)}>
+                      <CsLineIcons icon="edit" size="14" className="me-2" /> Adjust Closing
+                    </Button>
+                  )}
+                  {closing && closing.log_status === 'manager_verified' && (
+                    <Button variant="outline-warning" className="admin-daily-stock-logs-btn-pill-action border-2" onClick={() => handleRequestCorrection(closing)}>
+                      <CsLineIcons icon="edit" size="14" className="me-2" /> Request Closing Correction
+                    </Button>
+                  )}
                 </div>
               </div>
+            </div>
             );
           })
         )}
@@ -439,8 +386,36 @@ const AdminDailyStockLogs = () => {
           <Button variant="outline-primary" className="admin-daily-stock-logs-btn-pill-action border-2 px-4" onClick={handleSaveEdit} disabled={saving}>{saving ? <Spinner animation="border" size="sm" /> : 'Save Changes'}</Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Correction Request Modal */}
+      <Modal show={showCorrectionModal} onHide={() => !sendingCorrection && setShowCorrectionModal(false)} centered>
+        <Modal.Header closeButton={!sendingCorrection}>
+          <Modal.Title className="fw-bold">Request Stock Correction</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          <Alert variant="warning" className="py-2">
+            <strong>Only Admin can modify verified daily stock logs.</strong> Describe the correction details below, and Admin will update the record.
+          </Alert>
+          <Form.Group className="mt-3">
+            <Form.Label className="fw-semibold">Correction Reason / Details <span className="text-danger">*</span></Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={4}
+              value={correctionNote}
+              onChange={(e) => setCorrectionNote(e.target.value)}
+              placeholder="Explain what was recorded wrong and what the correct quantities are..."
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0 px-4 pb-4">
+          <Button variant="outline-secondary" className="rounded-pill px-4" onClick={() => setShowCorrectionModal(false)} disabled={sendingCorrection}>Cancel</Button>
+          <Button variant="warning" className="rounded-pill px-4 text-dark fw-bold" onClick={handleCorrectionSubmit} disabled={sendingCorrection}>
+            {sendingCorrection ? <Spinner animation="border" size="sm" /> : 'Send to Admin'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
 
-export default AdminDailyStockLogs;
+export default DailyStockLogs;

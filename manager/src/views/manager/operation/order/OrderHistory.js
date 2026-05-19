@@ -609,10 +609,12 @@ const OrderHistory = () => {
   };
 
   const exportToExcel = async () => {
-    try {
-      setExporting(true);
-      setExportProgress(10);
+    setExporting(true);
+    setExportProgress(10);
 
+    try {
+      setExportProgress(20);
+      
       // Build query string from export filters
       const params = new URLSearchParams();
       if (exportFilters.orderSource) params.append('order_source', exportFilters.orderSource);
@@ -622,7 +624,7 @@ const OrderHistory = () => {
       if (exportFilters.fromDate) params.append('startDate', exportFilters.fromDate);
       if (exportFilters.toDate) params.append('endDate', exportFilters.toDate);
       if (exportFilters.paymentType) params.append('payment_type', exportFilters.paymentType);
-      params.append('limit', 10000); // Fetch all records for export
+      params.append('limit', 10000);
 
       setExportProgress(30);
 
@@ -630,7 +632,7 @@ const OrderHistory = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
 
-      setExportProgress(60);
+      setExportProgress(50);
 
       if (!response.data.success) {
         throw new Error(response.data.message || 'Failed to fetch orders for export');
@@ -641,37 +643,116 @@ const OrderHistory = () => {
         throw new Error('No orders found for the selected filters');
       }
 
-      setExportProgress(80);
+      const wb = XLSX.utils.book_new();
 
-      // Transform data for Excel
-      const excelData = orders.map((order) => ({
-        'Order No': order.order_no || order._id,
-        Date: format(new Date(order.order_date), 'dd-MMM-yyyy'),
-        Time: format(new Date(order.order_date), 'HH:mm'),
-        'Customer Name': order.customer_name || 'Guest',
-        'Customer Phone': order.customer_phone || '-',
-        'Order Type': order.order_type,
-        'Order Source': order.order_source,
-        'Table No': order.table_no || '-',
-        'Table Area': order.table_area || '-',
-        'Payment Type': order.payment_type || '-',
-        'Sub Total': order.sub_total,
-        CGST: order.cgst_amount || 0,
-        SGST: order.sgst_amount || 0,
-        'Total Amount': order.total_amount,
-        Status: order.order_status,
-      }));
+      const totalAmount = orders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+      const avgOrderValue = totalAmount / orders.length;
 
-      const worksheet = XLSX.utils.json_to_sheet(excelData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders');
+      // Combined Single Sheet AOA Data
+      const sheetData = [
+        ['ORDER HISTORY REPORT'],
+        [],
+        ['Company:', COMPANY_NAME, '', 'Export Date:', format(new Date(), 'dd MMM yyyy HH:mm')],
+        [],
+        ['KPI SUMMARY'],
+        ['Total Orders', 'Total Revenue', 'Average Order Value'],
+        [orders.length, totalAmount, avgOrderValue],
+        [],
+        ['FILTERS APPLIED'],
+      ];
+
+      // Dynamic Filters
+      if (exportFilters.fromDate || exportFilters.toDate) {
+        sheetData.push([
+          'Date Range:',
+          `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${
+            exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
+          }`,
+        ]);
+      }
+      if (exportFilters.orderSource) sheetData.push(['Order Source:', exportFilters.orderSource]);
+      if (exportFilters.orderStatus) sheetData.push(['Order Status:', exportFilters.orderStatus]);
+      if (exportFilters.orderType) sheetData.push(['Order Type:', exportFilters.orderType]);
+      if (exportFilters.paymentType) sheetData.push(['Payment Type:', exportFilters.paymentType]);
+
+      // Spacer before Main Table
+      sheetData.push([]);
+      sheetData.push([]);
+
+      // Main Table Header
+      const tableHeaderRowIndex = sheetData.length;
+      sheetData.push(['Order No', 'Date & Time', 'Customer', 'Type', 'Table Area', 'Source', 'Payment Mode', 'Total Amount', 'Status']);
+
+      // Main Table Rows
+      orders.forEach((order) => {
+        const orderDate = new Date(order.order_date);
+        const tableDetails = order.table_area ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}` : (order.table_no ? `T${order.table_no}` : (order.token ? `Token ${order.token}` : 'N/A'));
+        sheetData.push([
+          order.order_no || order._id || '',
+          format(orderDate, 'dd-MM-yyyy HH:mm'),
+          order.customer_name || 'Guest',
+          order.order_type || 'N/A',
+          tableDetails,
+          order.order_source || 'N/A',
+          order.payment_type || 'N/A',
+          order.total_amount || 0,
+          order.order_status || 'N/A',
+        ]);
+      });
+
+      const sheet = XLSX.utils.aoa_to_sheet(sheetData);
+
+      // Set column widths to accommodate all columns beautifully
+      sheet['!cols'] = [
+        { wch: 20 }, // Order No / KPI Label 1
+        { wch: 18 }, // Date & Time / KPI Label 2
+        { wch: 20 }, // Customer / KPI Label 3
+        { wch: 12 }, // Type
+        { wch: 18 }, // Table Area
+        { wch: 12 }, // Source
+        { wch: 15 }, // Payment Mode
+        { wch: 15 }, // Total Amount
+        { wch: 12 }  // Status
+      ];
+
+      // Format KPI Summary cells (Row 7, index 6)
+      if (sheet.A7) {
+        sheet.A7.t = 'n';
+        sheet.A7.z = '#,##0';
+      }
+      if (sheet.B7) {
+        sheet.B7.t = 'n';
+        sheet.B7.z = '"Rs. "#,##0.00';
+      }
+      if (sheet.C7) {
+        sheet.C7.t = 'n';
+        sheet.C7.z = '"Rs. "#,##0.00';
+      }
+
+      // Format Main Table Total Amount column (Column H is index 7)
+      const range = XLSX.utils.decode_range(sheet['!ref']);
+      const startTableDataRow = tableHeaderRowIndex + 1;
+      for (let R = startTableDataRow; R <= range.e.r; R += 1) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: 7 }); // Column H
+        if (sheet[cellAddress] && typeof sheet[cellAddress].v === 'number') {
+          sheet[cellAddress].z = '"Rs. "#,##0.00';
+          sheet[cellAddress].t = 'n';
+        }
+      }
+
+      // Enable auto-filter for the table header down to the last row
+      sheet['!autofilter'] = { ref: `A${tableHeaderRowIndex + 1}:I${range.e.r + 1}` };
+
+      XLSX.utils.book_append_sheet(wb, sheet, 'Order History');
+
+      setExportProgress(90);
 
       // Generate filename
       const fromDateStr = exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd-MMM-yyyy') : 'All';
       const toDateStr = exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd-MMM-yyyy') : 'All';
       const filename = `Order_History_${fromDateStr}_to_${toDateStr}.xlsx`;
 
-      XLSX.writeFile(workbook, filename);
+      XLSX.writeFile(wb, filename);
 
       setExportProgress(100);
     } catch (err) {
@@ -719,103 +800,216 @@ const OrderHistory = () => {
         throw new Error('No orders found for the selected filters');
       }
 
-      const doc = new jsPDF();
-      let yPosition = 20;
+      const doc = new jsPDF('portrait', 'mm', 'a4');
+      const docWidth = doc.internal.pageSize.getWidth(); // 210
+      const docHeight = doc.internal.pageSize.getHeight(); // 297
 
-      // Header
-      doc.setFontSize(20);
-      doc.setTextColor(35, 179, 244);
-      doc.text(COMPANY_NAME, 105, yPosition, { align: 'center' });
-      yPosition += 10;
+      let yPosition = 0;
 
-      doc.setFontSize(14);
-      doc.setTextColor(0, 0, 0);
-      doc.text('Order History Report', 105, yPosition, { align: 'center' });
-      yPosition += 10;
+      // 1. BRAND BORDER ACCENT
+      doc.setFillColor(35, 179, 244); // Brand Cyan
+      doc.rect(0, 0, docWidth, 4, 'F');
+      yPosition += 4;
 
-      // Filter info
+      // 2. HEADER BANNER
+      doc.setFillColor(31, 41, 55); // Premium Charcoal dark grey
+      doc.rect(0, yPosition, docWidth, 38, 'F');
+      
+      // Brand Logo Text / Title
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(22);
+      doc.text('THE BOX', 15, yPosition + 15);
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(156, 163, 175); // Lighter muted grey
+      doc.text('PREMIUM ORDER MANAGEMENT SYSTEM', 15, yPosition + 20);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(35, 179, 244); // Accent color for document title
+      doc.text('ORDER HISTORY REPORT', 15, yPosition + 29);
+
+      // Header Metadata (Right Aligned)
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
-      doc.setTextColor(100, 100, 100);
-      const filterText = `Period: ${exportFilters.fromDate || 'All'} to ${exportFilters.toDate || 'All'} | Source: ${exportFilters.orderSource || 'All'} | Status: ${exportFilters.orderStatus || 'All'}`;
-      doc.text(filterText, 105, yPosition, { align: 'center' });
-      yPosition += 15;
+      doc.text('REPORT GENERATED', docWidth - 15, yPosition + 12, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(209, 213, 219);
+      doc.text(format(new Date(), 'dd MMM yyyy HH:mm'), docWidth - 15, yPosition + 17, { align: 'right' });
 
-      // Summary
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 255, 255);
+      doc.text('BUSINESS NAME', docWidth - 15, yPosition + 25, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(209, 213, 219);
+      doc.text(COMPANY_NAME, docWidth - 15, yPosition + 30, { align: 'right' });
+
+      yPosition += 38; // Now at 42
+
+      // 3. STATS CARDS SECTION
+      yPosition += 10; // 52
+      
       const totalAmount = orders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
       const avgOrderValue = totalAmount / orders.length;
 
-      doc.setFontSize(10);
-      doc.setFont(undefined, 'bold');
-      doc.text('Summary Statistics:', 15, yPosition);
-      yPosition += 6;
+      // Draw three nice KPI cards side-by-side
+      const cardWidth = 56;
+      const cardHeight = 22;
+      const cardGap = 6;
+      const startX = 15;
 
-      doc.setFontSize(8);
-      doc.setFont(undefined, 'normal');
-      doc.text(`Total Revenue: ${formatCurrencyPDF(totalAmount)}`, 20, yPosition);
+      const formatCurrencyForCard = (amount) => {
+        const val = new Intl.NumberFormat('en-IN', {
+          maximumFractionDigits: 0,
+        }).format(amount || 0);
+        return `Rs. ${val}`;
+      };
+
+      const kpiCards = [
+        { title: 'TOTAL ORDERS', value: orders.length.toString(), color: [35, 179, 244] },
+        { title: 'TOTAL REVENUE', value: formatCurrencyForCard(totalAmount), color: [16, 185, 129] }, // Green
+        { title: 'AVG ORDER VALUE', value: formatCurrencyForCard(avgOrderValue), color: [245, 158, 11] } // Orange
+      ];
+
+      kpiCards.forEach((card, idx) => {
+        const xPos = startX + idx * (cardWidth + cardGap);
+        
+        // Card Background
+        doc.setFillColor(248, 250, 252); // extremely soft slate grey/white
+        doc.roundedRect(xPos, yPosition, cardWidth, cardHeight, 3, 3, 'F');
+
+        // Left Highlight bar in card
+        doc.setFillColor(card.color[0], card.color[1], card.color[2]);
+        doc.rect(xPos, yPosition, 1.5, cardHeight, 'F');
+
+        // Card Text
+        doc.setTextColor(100, 116, 139); // Slate 500
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.text(card.title, xPos + 5, yPosition + 7);
+
+        doc.setTextColor(15, 23, 42); // Slate 900
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.text(card.value, xPos + 5, yPosition + 15);
+      });
+
+      yPosition += cardHeight + 8; // Now at 82
+
+      // 4. FILTERS SECTION
+      const activeFilters = [];
+      if (exportFilters.fromDate || exportFilters.toDate) {
+        activeFilters.push({ label: 'Date Period', val: `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'}` });
+      }
+      if (exportFilters.orderSource) activeFilters.push({ label: 'Source', val: exportFilters.orderSource });
+      if (exportFilters.orderStatus) activeFilters.push({ label: 'Status', val: exportFilters.orderStatus });
+      if (exportFilters.orderType) activeFilters.push({ label: 'Type', val: exportFilters.orderType });
+      if (exportFilters.paymentType) activeFilters.push({ label: 'Payment', val: exportFilters.paymentType });
+
+      if (activeFilters.length > 0) {
+        doc.setFillColor(243, 244, 246); // Light gray
+        doc.roundedRect(15, yPosition, docWidth - 30, 12 + Math.ceil(activeFilters.length / 2) * 5, 2, 2, 'F');
+        
+        doc.setTextColor(75, 85, 99);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.text('ACTIVE FILTERS', 20, yPosition + 6);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        
+        activeFilters.forEach((filt, idx) => {
+          const col = idx % 2;
+          const row = Math.floor(idx / 2);
+          const xFilt = col === 0 ? 55 : 130;
+          const yFilt = yPosition + 6 + row * 5;
+          doc.text(`${filt.label}: `, xFilt, yFilt, { align: 'left' });
+          doc.setFont('helvetica', 'bold');
+          doc.text(filt.val, xFilt + doc.getTextWidth(`${filt.label}: `), yFilt);
+          doc.setFont('helvetica', 'normal');
+        });
+
+        yPosition += 12 + Math.ceil(activeFilters.length / 2) * 5 + 6;
+      } else {
+        yPosition += 2;
+      }
+
+      // 5. ORDERS TABLE TITLE
+      doc.setTextColor(31, 41, 55);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text('TRANSACTION LOG', 15, yPosition);
       yPosition += 4;
-      doc.text(`Average Order Value: ${formatCurrencyPDF(avgOrderValue)}`, 20, yPosition);
-      yPosition += 8;
 
       setExportProgress(70);
 
-      // Orders Table
-      doc.setFontSize(11);
-      doc.setFont(undefined, 'bold');
-      doc.text('Order Details', 15, yPosition);
-      yPosition += 5;
-
       autoTable(doc, {
         startY: yPosition,
-        head: [['Order No', 'Date', 'Customer', 'Type', 'Amount', 'Status']],
+        head: [['Order No', 'Date & Time', 'Customer', 'Type', 'Table Area', 'Source', 'Payment Mode', 'Total Amount', 'Status']],
         body: orders.map((order) => {
           const orderDate = new Date(order.order_date);
+          const tableDetails = order.table_area ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}` : (order.table_no ? `T${order.table_no}` : (order.token ? `Token ${order.token}` : 'N/A'));
           return [
-            (order.order_no || order._id || '').substring(0, 15),
-            format(orderDate, 'dd-MM-yy\nHH:mm'),
-            (order.customer_name || 'Guest').substring(0, 20),
-            (order.order_type || 'N/A').substring(0, 8),
+            order.order_no || (order._id || '').substring(18),
+            format(orderDate, 'dd-MM-yy HH:mm'),
+            (order.customer_name || 'Guest').substring(0, 15),
+            order.order_type || 'N/A',
+            tableDetails,
+            order.order_source || 'N/A',
+            order.payment_type || 'N/A',
             formatCurrencyPDF(order.total_amount),
-            (order.order_status || 'N/A').substring(0, 8),
+            order.order_status || 'N/A',
           ];
         }),
-        theme: 'grid',
+        theme: 'striped',
         headStyles: {
-          fillColor: [35, 179, 244],
+          fillColor: [31, 41, 55], // Deep charcoal headers
+          textColor: [255, 255, 255],
           fontSize: 8,
           fontStyle: 'bold',
           halign: 'center',
+          cellPadding: 2.5,
         },
-        styles: {
+        bodyStyles: {
           fontSize: 7,
-          cellPadding: 1.5,
-          lineColor: [200, 200, 200],
-          lineWidth: 0.1,
+          cellPadding: 2,
+          textColor: [55, 65, 81],
         },
         columnStyles: {
-          0: { cellWidth: 28 },
-          1: { cellWidth: 22, halign: 'center', fontSize: 6.5 },
-          2: { cellWidth: 35 },
-          3: { cellWidth: 18, halign: 'center' },
-          4: { cellWidth: 25, halign: 'right', fontStyle: 'bold' },
+          0: { cellWidth: 20, fontStyle: 'bold', textColor: [31, 41, 55] },
+          1: { cellWidth: 24, halign: 'center' },
+          2: { cellWidth: 24 },
+          3: { cellWidth: 16, halign: 'center' },
+          4: { cellWidth: 24, halign: 'center' },
           5: { cellWidth: 18, halign: 'center' },
+          6: { cellWidth: 22, halign: 'center' },
+          7: { cellWidth: 24, halign: 'right', fontStyle: 'bold', textColor: [35, 179, 244] },
+          8: { cellWidth: 18, halign: 'center' },
         },
-        margin: { left: 10, right: 10, top: yPosition },
+        alternateRowStyles: {
+          fillColor: [249, 250, 251],
+        },
+        margin: { left: 10, right: 10 },
+        didDrawPage: (pageData) => {
+          const totalPagesCount = doc.internal.getNumberOfPages();
+          doc.setPage(pageData.pageNumber);
+          
+          doc.setDrawColor(229, 231, 235);
+          doc.line(10, docHeight - 15, docWidth - 10, docHeight - 15);
+          
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(7.5);
+          doc.setTextColor(156, 163, 175);
+          doc.text(`${COMPANY_NAME}   |   Order History Report   |   Page ${pageData.pageNumber} of ${totalPagesCount}`, docWidth / 2, docHeight - 9, { align: 'center' });
+        }
       });
-
-      setExportProgress(90);
-
-      // Footer
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i += 1) {
-        doc.setPage(i);
-        doc.setFontSize(7);
-        doc.setTextColor(128, 128, 128);
-        doc.text(`${COMPANY_NAME} | Order History | Page ${i} of ${pageCount}`, 105, 285, { align: 'center' });
-        doc.text(`Generated: ${format(new Date(), 'dd MMM yyyy HH:mm')}`, 105, 289, { align: 'center' });
-      }
 
       setExportProgress(95);
 
+      // Generate filename
       const fromDateStr = exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd-MMM-yyyy') : 'All';
       const toDateStr = exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd-MMM-yyyy') : 'All';
       const filename = `Order_History_${fromDateStr}_to_${toDateStr}.pdf`;
@@ -848,7 +1042,11 @@ const OrderHistory = () => {
     setShowExportModal(true);
   };
 
-  const handleExportConfirm = () => {
+  const handleExportConfirm = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (exportFormat === 'excel') {
       exportToExcel();
     } else {
@@ -1460,7 +1658,7 @@ const OrderHistory = () => {
                 <>
                   <p className="text-muted mb-4">Select your preferred format and filters to generate the report.</p>
 
-                  <Form>
+                  <Form onSubmit={(e) => e.preventDefault()}>
                     {/* Export Format Selection */}
                     <div className="mb-4">
                       <Form.Label className="fw-bolder mb-3 text-uppercase text-muted" style={{ fontSize: '11px', letterSpacing: '1px' }}>
@@ -1688,11 +1886,12 @@ const OrderHistory = () => {
               )}
             </Modal.Body>
             <Modal.Footer className="border-0 pt-0 pb-4 px-4">
-              <Button variant="light" onClick={() => setShowExportModal(false)} disabled={exporting} className="rounded-pill px-4">
+              <Button type="button" variant="light" onClick={() => setShowExportModal(false)} disabled={exporting} className="rounded-pill px-4">
                 Close
               </Button>
               {!exporting && (
                 <Button
+                  type="button"
                   onClick={handleExportConfirm}
                   className="px-4 py-2 rounded-pill d-flex align-items-center manage-table-custom-btn-outline"
                 >

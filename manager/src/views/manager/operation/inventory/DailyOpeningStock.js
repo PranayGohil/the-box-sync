@@ -3,14 +3,14 @@ import { Button, Col, Row, Card, Table, Form, Spinner, Alert, Badge, Modal } fro
 import { toast } from 'react-toastify';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
-import { getTodayLog, saveOpeningStock, autoGenerateOpening } from 'api/inventory';
+import { getTodayLog, saveOpeningStock, autoGenerateOpening, createCorrectionRequest } from 'api/inventory';
 import { format } from 'date-fns';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const STATUS_BADGE = {
-  manager_verified: { bg: 'success', label: 'Manager Verified' },
+  manager_verified: { bg: 'success', label: 'Manager Verify' },
   partial: { bg: 'warning', label: 'Partial' },
-  auto_generated: { bg: 'secondary', label: 'Auto Generated' },
+  auto_generated: { bg: 'secondary', label: 'Auto Verified' },
 };
 const customStyles = `
     .inventory-container {
@@ -77,6 +77,8 @@ const DailyOpeningStock = () => {
   const [correctionNote, setCorrectionNote] = useState('');
   const [sendingCorrection, setSendingCorrection] = useState(false);
 
+  const isLocked = opening && opening.log_status === 'manager_verified';
+
   const fetchToday = useCallback(async () => {
     try {
       setLoading(true);
@@ -121,13 +123,12 @@ const DailyOpeningStock = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Already submitted — manager cannot re-submit
-    if (opening) return;
+    if (isLocked) return;
     try {
       setSubmitting(true);
       const res = await saveOpeningStock({ items, notes, date: today });
       if (res.data.success) {
-        toast.success('Opening stock saved successfully!');
+        toast.success('Opening stock verified and saved successfully!');
         fetchToday();
       }
     } catch (err) {
@@ -154,8 +155,10 @@ const DailyOpeningStock = () => {
     if (!correctionNote.trim()) { toast.error('Please describe what needs to be corrected.'); return; }
     try {
       setSendingCorrection(true);
-      // For now store as a note — Admin will see it in AdminDailyStockLogs
-      // Future: dedicated correction request model
+      await createCorrectionRequest({
+        log_id: opening._id,
+        reason: correctionNote,
+      });
       toast.success('Correction request sent to Admin. They will update the record.');
       setShowCorrectionModal(false);
       setCorrectionNote('');
@@ -183,7 +186,7 @@ const DailyOpeningStock = () => {
                   <CsLineIcons icon="calendar" size="15" className="me-2 text-primary" />
                   {format(new Date(), 'dd MMM yyyy')}
                 </div>
-                {opening && (
+                {isLocked && (
                   <Button variant="outline-warning" className="rounded-pill fw-bold" size="sm" onClick={() => setShowCorrectionModal(true)}>
                     <CsLineIcons icon="edit" size="14" className="me-1" /> Correction
                   </Button>
@@ -198,15 +201,15 @@ const DailyOpeningStock = () => {
         </div>
       ) : (
         <>
-          {/* Submitted Banner */}
-          {opening && (
+          {/* Submitted/Verified Banner */}
+          {opening && opening.log_status === 'manager_verified' && (
             <Alert
-              variant={opening.log_status === 'manager_verified' ? 'success' : 'secondary'}
+              variant="success"
               className="d-flex align-items-center gap-2 mb-3"
             >
               <span>✅</span>
               <div>
-                <strong>Opening stock already submitted for today.</strong>
+                <strong>Opening stock is verified and locked for today.</strong>
                 <span className="ms-2">
                   <Badge bg={STATUS_BADGE[opening.log_status]?.bg}>{STATUS_BADGE[opening.log_status]?.label}</Badge>
                 </span>
@@ -219,8 +222,18 @@ const DailyOpeningStock = () => {
                   <span className="ms-2 text-muted small">· Edited by Admin ({opening.edited_by})</span>
                 )}
                 <div className="mt-1 text-muted small">
-                  To make a correction, use the <strong>"Request Correction"</strong> button above. Only Admin can modify submitted logs.
+                  To request a change, use the <strong>"Correction"</strong> button at the top right. Only Admin can modify verified logs.
                 </div>
+              </div>
+            </Alert>
+          )}
+
+          {/* Auto Verified Banner (Editable by Manager) */}
+          {opening && opening.log_status === 'auto_generated' && (
+            <Alert variant="warning" className="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <strong>⚡ Opening stock has been auto-verified based on yesterday's closing stock.</strong>
+                <div className="text-muted small mt-1">If these quantities are correct, click <strong>"Verify &amp; Save"</strong>. Otherwise, adjust the quantities below and save.</div>
               </div>
             </Alert>
           )}
@@ -238,8 +251,8 @@ const DailyOpeningStock = () => {
             </Alert>
           )}
 
-          {/* Quick Verify Banner — only when not submitted */}
-          {!opening && items.length > 0 && (
+          {/* Quick Verify Banner — only when not submitted / verified */}
+          {!isLocked && items.length > 0 && (
             <Alert variant="light" className="border mb-3 py-2">
               <div className="d-flex justify-content-between align-items-center">
                 <span className="text-muted small">
@@ -260,20 +273,20 @@ const DailyOpeningStock = () => {
                         <th className="text-uppercase text-muted text-small ps-4 py-3">Item Name</th>
                         <th className="text-uppercase text-muted text-small py-3">Unit</th>
                         <th className="text-uppercase text-muted text-small py-3">Opening Quantity</th>
-                        {!opening && <th className="text-uppercase text-muted text-small text-center py-3">Status</th>}
+                        {!isLocked && <th className="text-uppercase text-muted text-small text-center py-3">Status</th>}
                       </tr>
                     </thead>
                     <tbody>
                       {items.length === 0 ? (
                         <tr><td colSpan={4} className="text-center text-muted py-5">No stock items found. Add inventory first.</td></tr>
                       ) : items.map((item, idx) => (
-                        <tr key={idx} className={!opening && item.verified ? 'bg-success-subtle' : ''}>
+                        <tr key={idx} className={!isLocked && item.verified ? 'bg-success-subtle' : ''}>
                           <td className="ps-4 py-3">
                             <div className="fw-bold text-dark">{item.item_name}</div>
                           </td>
                           <td className="text-muted py-3">{item.unit || '—'}</td>
                           <td className="py-3" style={{ width: 180 }}>
-                            {opening ? (
+                            {isLocked ? (
                               <div className="fw-bold fs-5">
                                 {item.quantity} <small className="text-muted fw-normal">{item.unit}</small>
                               </div>
@@ -289,7 +302,7 @@ const DailyOpeningStock = () => {
                               />
                             )}
                           </td>
-                          {!opening && (
+                          {!isLocked && (
                             <td className="text-center py-3">
                               {item.verified
                                 ? <Badge pill bg="success" className="px-3">Verified</Badge>
@@ -305,7 +318,7 @@ const DailyOpeningStock = () => {
             </Card>
 
             {/* Submit only if not yet done */}
-            {!opening && (
+            {!isLocked && (
               <>
                 <Card className="mb-3">
                   <Card.Body>
@@ -322,7 +335,7 @@ const DailyOpeningStock = () => {
                   </Card.Body>
                 </Card>
                 <Button variant="primary" type="submit" disabled={submitting || items.length === 0}>
-                  {submitting ? <Spinner animation="border" size="sm" /> : 'Save Opening Stock'}
+                  {submitting ? <Spinner animation="border" size="sm" /> : opening ? 'Verify & Save Opening Stock' : 'Save Opening Stock'}
                 </Button>
               </>
             )}
