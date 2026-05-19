@@ -395,6 +395,14 @@
       .complete-inventory-summary-hub {
         padding: 1.5rem;
       }
+      .complete-inventory-item-row-card {
+        padding: 1rem 0.75rem !important;
+      }
+      .complete-inventory-modern-input {
+        padding: 0.6rem 0.75rem !important;
+        height: 44px !important;
+        font-size: 0.85rem !important;
+      }
     }
     .complete-inventory-total-display {
       background: #ffffff;

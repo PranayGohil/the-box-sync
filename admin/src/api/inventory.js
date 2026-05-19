@@ -72,3 +72,16 @@ export const exportDailyReportExcel = async (params = {}) => {
     responseType: 'blob',
   });
 };
+
+// ── Correction Requests ──────────────────────────────────────────────────────
+export const createCorrectionRequest = async (payload) => {
+  return await axios.post(`${API_URL}/daily-stock/correction-request`, payload, getHeaders());
+};
+
+export const getCorrectionRequests = async () => {
+  return await axios.get(`${API_URL}/daily-stock/correction-request`, getHeaders());
+};
+
+export const resolveCorrectionRequest = async (id, payload) => {
+  return await axios.put(`${API_URL}/daily-stock/correction-request/${id}`, payload, getHeaders());
+};

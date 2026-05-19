@@ -232,33 +232,44 @@ const CompleteInventory = () => {
                     </Row>
 
                     <div className="complete-inventory-section-label"><CsLineIcons icon="shopping-basket" size="18" /> Verification List</div>
-                    <div className="complete-inventory-item-header-row d-none d-lg-flex">
-                      <div style={{width: '60px'}} />
-                      <div style={{flex: 2}}>Item Description</div>
-                      <div style={{flex: 0.8}}>Qty</div>
-                      <div style={{flex: 1}}>Unit</div>
-                      <div style={{flex: 1.2}}>Price (₹)</div>
-                    </div>
 
                     {values.items.map((item, idx) => (
                       <div key={idx} className={`complete-inventory-item-row-card ${item.completed ? 'completed' : ''}`}>
                         <Row className="w-100 g-3 align-items-center">
-                          <Col xs="auto" style={{width: '60px'}} className="text-center"><Field type="checkbox" name={`items[${idx}].completed`} className="form-check-input complete-inventory-custom-check" /></Col>
-                          <Col xs={10} lg={4}>
-                            <div className="complete-inventory-input-group-label d-lg-none">Item Name</div>
-                            <Field name={`items[${idx}].item_name`} readOnly className="complete-inventory-modern-input form-control border-0 bg-transparent fw-bold" />
+                          {/* Left Column: Checkbox & Item Description */}
+                          <Col xs={12} lg={5} className="d-flex align-items-center">
+                            <div className="d-flex align-items-center w-100">
+                              <Field type="checkbox" name={`items[${idx}].completed`} className="form-check-input complete-inventory-custom-check flex-shrink-0" />
+                              <div className="ms-3 flex-grow-1">
+                                <div className="complete-inventory-input-group-label text-muted small text-uppercase fw-bold mb-1">Item Description</div>
+                                <Field name={`items[${idx}].item_name`} readOnly className="complete-inventory-modern-input form-control border-0 bg-transparent fw-bold p-0 h-auto" />
+                              </div>
+                            </div>
                           </Col>
-                          <Col xs={4} lg={1.5}>
-                            <div className="complete-inventory-input-group-label d-lg-none">Qty</div>
-                            <Field type="number" name={`items[${idx}].item_quantity`} className="complete-inventory-modern-input form-control" disabled={!item.completed} />
-                          </Col>
-                          <Col xs={4} lg={2}>
-                            <div className="complete-inventory-input-group-label d-lg-none">Unit</div>
-                            <Field as="select" name={`items[${idx}].unit`} className="complete-inventory-modern-input form-control" disabled={!item.completed}><option value="">Unit</option><option value="kg">kg</option><option value="g">g</option><option value="litre">ltr</option><option value="ml">ml</option><option value="piece">pc</option></Field>
-                          </Col>
-                          <Col xs={4} lg={3}>
-                            <div className="complete-inventory-input-group-label d-lg-none">Price</div>
-                            <Field type="number" name={`items[${idx}].item_price`} className="complete-inventory-modern-input form-control" disabled={!item.completed} />
+
+                          {/* Right Column: Input Textboxes (Qty, Unit, Price) */}
+                          <Col xs={12} lg={7}>
+                            <Row className="g-2 g-lg-3">
+                              <Col xs={3}>
+                                <div className="complete-inventory-input-group-label text-muted small text-uppercase fw-bold mb-1">Qty</div>
+                                <Field type="number" name={`items[${idx}].item_quantity`} className="complete-inventory-modern-input form-control" disabled={!item.completed} />
+                              </Col>
+                              <Col xs={4}>
+                                <div className="complete-inventory-input-group-label text-muted small text-uppercase fw-bold mb-1">Unit</div>
+                                <Field as="select" name={`items[${idx}].unit`} className="complete-inventory-modern-input form-control" disabled={!item.completed}>
+                                  <option value="">Unit</option>
+                                  <option value="kg">kg</option>
+                                  <option value="g">g</option>
+                                  <option value="litre">ltr</option>
+                                  <option value="ml">ml</option>
+                                  <option value="piece">pc</option>
+                                </Field>
+                              </Col>
+                              <Col xs={5}>
+                                <div className="complete-inventory-input-group-label text-muted small text-uppercase fw-bold mb-1">Price (₹)</div>
+                                <Field type="number" name={`items[${idx}].item_price`} className="complete-inventory-modern-input form-control" disabled={!item.completed} />
+                              </Col>
+                            </Row>
                           </Col>
                         </Row>
                       </div>

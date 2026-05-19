@@ -28,6 +28,7 @@ import InventoryDetails from './inventory/InventoryDetails';
 import StockManagement from './inventory/StockManagement';
 import DailyOpeningStock from './inventory/DailyOpeningStock';
 import DailyClosingStock from './inventory/DailyClosingStock';
+import DailyStockLogs from './inventory/DailyStockLogs';
 import WastageLog from './inventory/WastageLog';
 import InventoryReport from './inventory/InventoryReport';
 
@@ -137,6 +138,7 @@ const NavContent = () => {
               '/operations/stock-management',
               '/operations/daily-opening-stock',
               '/operations/daily-closing-stock',
+              '/operations/daily-stock-logs',
               '/operations/wastage-log',
               '/operations/inventory-report'
             ];
@@ -337,6 +339,7 @@ const Operations = () => {
             <Route path="/operations/stock-management" component={StockManagement} />
             <Route path="/operations/daily-opening-stock" component={DailyOpeningStock} />
             <Route path="/operations/daily-closing-stock" component={DailyClosingStock} />
+            <Route path="/operations/daily-stock-logs" component={DailyStockLogs} />
             <Route path="/operations/wastage-log" component={WastageLog} />
             <Route path="/operations/inventory-report" component={InventoryReport} />
 

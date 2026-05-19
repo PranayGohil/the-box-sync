@@ -875,11 +875,11 @@ const InventoryHistory = () => {
                 </h1>
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
-              <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
-                <Button as={Link} to="/operations/stock-management" className="manage-menu-custom-btn-outline shadow-sm border-0 px-4 py-2">
+              <Col xs="12" md="5" className="d-flex flex-column flex-md-row gap-2 mt-3 mt-md-0 justify-content-md-end">
+                <Button as={Link} to="/operations/stock-management" className="manage-menu-custom-btn-outline shadow-sm border-0 px-4 py-2 w-100 w-md-auto">
                   <CsLineIcons icon="activity" size="18" className="me-2" /> Manage Stock
                 </Button>
-                <Button as={Link} to="/operations/add-inventory" className="manage-menu-custom-btn-outline shadow-sm border-0 px-4 py-2">
+                <Button as={Link} to="/operations/add-inventory" className="manage-menu-custom-btn-outline shadow-sm border-0 px-4 py-2 w-100 w-md-auto">
                   <CsLineIcons icon="plus" size="18" className="me-2" /> Add Inventory
                 </Button>
               </Col>

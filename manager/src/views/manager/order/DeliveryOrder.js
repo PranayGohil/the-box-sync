@@ -34,13 +34,13 @@ const ORDER_TYPES = ['Dine In', 'Takeaway', 'Delivery'];
 const DEFAULT_CUSTOMER_INFO = {
   Takeaway: { name: '', phone: '', comment: '' },
   Delivery: { name: '', phone: '', address: '', comment: '' },
-  'Dine In': { name: '', total_persons: '', waiter: '', table_no: '', comment: '' },
+  'Dine In': { name: '', phone: '', total_persons: '', waiter: '', table_no: '', comment: '' },
 };
 
 const VISIBLE_FIELDS = {
   Takeaway: { name: true, phone: true, address: false, total_persons: false, waiter: false },
   Delivery: { name: true, phone: true, address: true, total_persons: false, waiter: false },
-  'Dine In': { name: true, phone: false, address: false, total_persons: true, waiter: true },
+  'Dine In': { name: true, phone: true, address: false, total_persons: true, waiter: true },
 };
 
 const REQUIRED_FIELDS = {
@@ -172,15 +172,7 @@ const DeliveryOrder = () => {
 
       let custInfo;
       if (detectedType === 'Dine In') {
-        custInfo = {
-          name: order.customer_name || '',
-          total_persons: order.total_persons || '',
-          waiter: order.waiter || '',
-          table_no: order.table_no || '',
-          phone: '',
-          address: '',
-          comment: order.comment || '',
-        };
+        custInfo = { name: order.customer_name || '', total_persons: order.total_persons || '', waiter: order.waiter || '', table_no: order.table_no || '', phone: '', address: '', comment: order.comment || '' };
       } else if (detectedType === 'Delivery') {
         custInfo = {
           name: order.customer_details?.name || order.customer_name || '',
@@ -363,12 +355,12 @@ const DeliveryOrder = () => {
         status: completeAll
           ? 'Completed'
           : status === 'KOT' || status === 'Paid'
-          ? item.status === 'Pending'
-            ? 'Preparing'
-            : item.status
-          : status === 'Save'
-          ? item.status || 'Pending'
-          : item.status,
+            ? item.status === 'Pending'
+              ? 'Preparing'
+              : item.status
+            : status === 'Save'
+              ? item.status || 'Pending'
+              : item.status,
         selected_variant: item.selected_variant,
         selected_addons: item.selected_addons,
       })),
@@ -397,7 +389,7 @@ const DeliveryOrder = () => {
       if (tableInfo.area) orderData.table_area = tableInfo.area;
     }
     const custPayload = { name: customerInfo.name };
-    if (orderType !== 'Dine In') custPayload.phone = customerInfo.phone;
+    if (customerInfo.phone) custPayload.phone = customerInfo.phone;
     if (orderType === 'Delivery') custPayload.address = customerInfo.address;
     return { orderInfo: { ...orderData, order_id: orderId }, customerInfo: custPayload, tableId: orderType === 'Dine In' ? tableId : undefined };
   };

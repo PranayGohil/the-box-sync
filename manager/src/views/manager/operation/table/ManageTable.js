@@ -169,11 +169,11 @@ const ManageTable = () => {
             <div key={areaGroup.id} className="mb-4">
               {/* Area Header */}
               <div
-                className="d-flex justify-content-between align-items-center mb-2 px-3 py-3 bg-white shadow-sm cursor-pointer hover-light"
+                className="d-flex justify-content-between align-items-center gap-2 gap-sm-3 mb-2 px-2 px-sm-3 py-3 bg-white shadow-sm cursor-pointer hover-light"
                 style={{ borderRadius: '15px', border: '1px solid rgba(0,0,0,0.03)' }}
                 onClick={() => toggleArea(areaGroup.id)}
               >
-                <div className="d-flex align-items-center gap-3">
+                <div className="d-flex align-items-center gap-2 gap-sm-3 min-width-0">
                   <div
                     className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
                     style={{
@@ -187,10 +187,12 @@ const ManageTable = () => {
                   >
                     <CsLineIcons icon="chevron-down" size="16" />
                   </div>
-                  <h2 className="h5 mb-0 fw-bold text-dark">{areaGroup.area}</h2>
+                  <h2 className="h5 mb-0 fw-bold text-dark text-truncate" style={{ maxWidth: '150px' }}>{areaGroup.area}</h2>
+                </div>
+                <div className="d-flex align-items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                   <Badge
                     bg="none"
-                    className="ms-1 rounded-pill px-3 py-2"
+                    className="rounded-pill px-2 px-sm-3 py-2 flex-shrink-0"
                     style={{
                       backgroundColor: 'rgba(35, 179, 244, 0.1)',
                       color: '#23b3f4',
@@ -200,8 +202,6 @@ const ManageTable = () => {
                   >
                     {areaGroup.tables.length} {areaGroup.tables.length === 1 ? 'Table' : 'Tables'}
                   </Badge>
-                </div>
-                <div className="d-flex gap-2" onClick={(e) => e.stopPropagation()}>
                   <Button
                     variant="light"
                     size="sm"
@@ -276,7 +276,7 @@ const ManageTable = () => {
                               <div className="d-flex align-items-center gap-2">
                                 <CsLineIcons icon="user" size="14" className="text-muted" />
                                 <span className="text-muted small">Max Capacity:</span>
-                                <span className="fw-bold small">{table.max_person} Persons</span>
+                                <span className="fw-bold small">{table.max_person} Person</span>
                               </div>
                             </div>
                           </Card.Body>
