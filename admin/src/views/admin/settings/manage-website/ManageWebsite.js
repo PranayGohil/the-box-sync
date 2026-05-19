@@ -14,10 +14,36 @@ const validationSchema = Yup.object().shape({
   restaurant_name: Yup.string().required('Restaurant name is required'),
   restaurant_address: Yup.string().required('Restaurant address is required'),
   contact_email: Yup.string().email('Invalid email').required('Email is required'),
-  contact_phone: Yup.string().required('Phone is required'),
+  contact_phone: Yup.string()
+    .matches(/^[0-9]+$/, 'Phone number must contain only digits')
+    .required('Phone is required'),
   open_days: Yup.string().required('Open days are required'),
   open_time_from: Yup.string().required('Opening time is required'),
   open_time_to: Yup.string().required('Closing time is required'),
+  social_links: Yup.array().of(
+    Yup.object().shape({
+      platform: Yup.string().required('Platform is required'),
+      url: Yup.string()
+        .required('URL or Phone number is required')
+        .test('social-type-validation', 'Invalid format', function (value) {
+          const { platform } = this.parent;
+          if (!value) return true;
+
+          if (platform === 'WhatsApp') {
+            const phoneRegex = /^[0-9]{10,15}$/;
+            if (!phoneRegex.test(value)) {
+              return this.createError({ message: 'WhatsApp must be a 10 to 15 digit phone number' });
+            }
+          } else {
+            const urlRegex = /^(https?:\/\/)?(www\.)?[a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)$/;
+            if (!urlRegex.test(value)) {
+              return this.createError({ message: `Must be a valid ${platform || 'social'} link (e.g. https://${(platform || 'social').toLowerCase()}.com/username)` });
+            }
+          }
+          return true;
+        }),
+    })
+  ),
 });
 
 const ManageWebsite = () => {
@@ -34,6 +60,8 @@ const ManageWebsite = () => {
   const [saving, setSaving] = useState(false);
   const [allDishes, setAllDishes] = useState([]);
   const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [heroImageFile, setHeroImageFile] = useState(null);
   const [aboutImageFile, setAboutImageFile] = useState(null);
   const [legacyImageFile, setLegacyImageFile] = useState(null);
@@ -166,6 +194,9 @@ const ManageWebsite = () => {
               }
             }
           });
+          if (settingsRes.data.logo) {
+            setLogoPreview(`${process.env.REACT_APP_UPLOAD_DIR}/${settingsRes.data.logo}`);
+          }
         }
 
         const dishesRes = await axios.get(`${process.env.REACT_APP_API}/website/dishes`, {
@@ -185,6 +216,89 @@ const ManageWebsite = () => {
   const handleDishSelect = (id) => {
     const ids = values.featured_dish_ids.includes(id) ? values.featured_dish_ids.filter((d) => d !== id) : [...values.featured_dish_ids, id];
     setFieldValue('featured_dish_ids', ids);
+  };
+
+  const convertToWebPAndResize = (file, maxSizeBytes = 500 * 1024) => {
+    return new Promise((resolve) => {
+      if (!file || !file.type.startsWith('image/')) {
+        resolve(file);
+        return;
+      }
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+
+            const maxDimension = 1920;
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              } else {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            let quality = 0.9;
+            const attemptCompression = (q) => {
+              canvas.toBlob(
+                (blob) => {
+                  if (!blob) {
+                    resolve(file);
+                    return;
+                  }
+                  if (blob.size <= maxSizeBytes || q <= 0.1) {
+                    const originalName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                    const newFileName = `${originalName}.webp`;
+                    const compressedFile = new File([blob], newFileName, {
+                      type: 'image/webp',
+                      lastModified: Date.now(),
+                    });
+                    resolve(compressedFile);
+                  } else {
+                    attemptCompression(q - 0.1);
+                  }
+                },
+                'image/webp',
+                q
+              );
+            };
+
+            attemptCompression(quality);
+          } catch (e) {
+            console.error('Error during canvas processing:', e);
+            resolve(file);
+          }
+        };
+        img.onerror = () => resolve(file);
+      };
+      reader.onerror = () => resolve(file);
+    });
+  };
+
+  const handleLogoChange = async (file) => {
+    if (!file) return;
+    setUploadingLogo(true);
+    let processedFile = file;
+    try {
+      processedFile = await convertToWebPAndResize(file);
+    } catch (err) {
+      console.error('Failed to process logo image:', err);
+    }
+    setLogoFile(processedFile);
+    setLogoPreview(URL.createObjectURL(processedFile));
+    setUploadingLogo(false);
   };
 
   const addOpeningSlot = () => setFieldValue('opening_hours', [...values.opening_hours, { day: '', from: '', to: '' }]);
@@ -269,37 +383,87 @@ const ManageWebsite = () => {
                     <Col xs={12} md={6}>
                       <Form.Group>
                         <Form.Label className="small fw-bold text-muted">Restaurant Name</Form.Label>
-                        <Form.Control className="manage-website-pill-input" name="restaurant_name" value={values.restaurant_name} onChange={handleChange} />
+                        <Form.Control
+                          className="manage-website-pill-input"
+                          name="restaurant_name"
+                          value={values.restaurant_name}
+                          onChange={handleChange}
+                          isInvalid={touched.restaurant_name && errors.restaurant_name}
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.restaurant_name}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                     <Col xs={12} md={6}>
                       <Form.Group>
                         <Form.Label className="small fw-bold text-muted">Address</Form.Label>
                         <Form.Control
+                          as="textarea"
+                          rows={2}
                           className="manage-website-pill-input"
                           name="restaurant_address"
                           value={values.restaurant_address}
                           onChange={handleChange}
+                          isInvalid={touched.restaurant_address && errors.restaurant_address}
                         />
+                        <Form.Control.Feedback type="invalid">{errors.restaurant_address}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                     <Col xs={12} md={6}>
                       <Form.Group>
                         <Form.Label className="small fw-bold text-muted">Email</Form.Label>
-                        <Form.Control className="manage-website-pill-input" name="contact_email" value={values.contact_email} onChange={handleChange} />
+                        <Form.Control
+                          className="manage-website-pill-input"
+                          name="contact_email"
+                          value={values.contact_email}
+                          onChange={handleChange}
+                          isInvalid={touched.contact_email && errors.contact_email}
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.contact_email}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                     <Col xs={12} md={6}>
                       <Form.Group>
                         <Form.Label className="small fw-bold text-muted">Phone</Form.Label>
-                        <Form.Control className="manage-website-pill-input" name="contact_phone" value={values.contact_phone} onChange={handleChange} />
+                        <Form.Control
+                          className="manage-website-pill-input"
+                          name="contact_phone"
+                          value={values.contact_phone}
+                          onChange={handleChange}
+                          isInvalid={touched.contact_phone && errors.contact_phone}
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.contact_phone}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                     <Col xs={12}>
-                      <Form.Group>
-                        <Form.Label className="small fw-bold text-muted">Logo Image</Form.Label>
-                        <Form.Control className="manage-website-pill-input" type="file" onChange={(e) => setLogoFile(e.target.files[0])} />
-                        {values.logo && <div className="mt-1 small text-muted">Current: {values.logo}</div>}
+                      <Form.Group className="d-flex flex-column align-items-center mb-3">
+                        <Form.Label className="small fw-bold text-muted text-center w-100 mb-3">Logo Image</Form.Label>
+                        <div 
+                          className="rounded-circle border border-3 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center mb-3"
+                          style={{ width: '120px', height: '120px' }}
+                        >
+                          {logoPreview ? (
+                            <img src={logoPreview} alt="Logo" className="w-100 h-100 object-fit-cover" />
+                          ) : (
+                            <CsLineIcons icon="image" size="48" className="text-muted opacity-20" />
+                          )}
+                        </div>
+                        <Form.Control
+                          type="file"
+                          id="logo-upload"
+                          className="d-none"
+                          accept="image/*"
+                          onChange={(e) => handleLogoChange(e.target.files[0])}
+                        />
+                        <Button
+                          as="label"
+                          htmlFor="logo-upload"
+                          className="manage-website-custom-btn-outline px-4 py-2 border-2 d-inline-flex align-items-center"
+                          style={{ borderRadius: '50px', borderColor: '#1ea8e7', color: '#1ea8e7', fontWeight: '700', cursor: 'pointer', maxWidth: 'fit-content' }}
+                          disabled={saving || uploadingLogo}
+                        >
+                          {uploadingLogo ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" className="me-2" />}
+                          {logoPreview ? 'Change Logo' : 'Upload Logo'}
+                        </Button>
                       </Form.Group>
                     </Col>
                   </Row>
@@ -414,9 +578,6 @@ const ManageWebsite = () => {
                       onChange={handleChange}
                       placeholder="Paste the <iframe src='...'> or just the map link here"
                     />
-                    <div className="text-muted small mt-1">
-                      To get this: Go to Google Maps → Search your restaurant → Share → Embed a map → Copy the 'src' link inside the iframe.
-                    </div>
                   </Form.Group>
                 </Card.Body>
               </Card>
@@ -430,51 +591,66 @@ const ManageWebsite = () => {
                       <CsLineIcons icon="plus" size="15" className="me-2" /> Add Account
                     </Button>
                   </div>
-                  {values.social_links.map((s, index) => (
-                    <div key={index} className="p-3 mb-3 rounded-xl border bg-light position-relative">
-                      <Row className="g-3 align-items-center">
-                        <Col xs={12} md={4}>
-                          <Form.Select
-                            className="manage-website-pill-input"
-                            value={s.platform}
-                            onChange={(e) => {
-                              const newSocials = [...values.social_links];
-                              newSocials[index].platform = e.target.value;
-                              setFieldValue('social_links', newSocials);
-                            }}
-                          >
-                            <option value="">Select Platform</option>
-                            <option value="WhatsApp">WhatsApp</option>
-                            <option value="Facebook">Facebook</option>
-                            <option value="Instagram">Instagram</option>
-                            <option value="Twitter">Twitter (X)</option>
-                            <option value="Youtube">Youtube</option>
-                          </Form.Select>
-                        </Col>
-                        <Col xs={12} md={6}>
-                          <Form.Control
-                            className="manage-website-pill-input"
-                            placeholder="Profile URL / Phone Number"
-                            value={s.url}
-                            onChange={(e) => {
-                              const newSocials = [...values.social_links];
-                              newSocials[index].url = e.target.value;
-                              setFieldValue('social_links', newSocials);
-                            }}
-                          />
-                        </Col>
-                        <Col xs={12} md={2} className="text-md-end">
-                          <Button
-                            variant="none"
-                            className="manage-website-custom-btn-danger manage-website-custom-btn-circle ms-md-auto w-100 w-md-auto"
-                            onClick={() => removeSocial(index)}
-                          >
-                            <CsLineIcons icon="bin" size="15" />
-                          </Button>
-                        </Col>
-                      </Row>
-                    </div>
-                  ))}
+                  {values.social_links.map((s, index) => {
+                    const platformError = errors.social_links?.[index]?.platform;
+                    const platformTouched = touched.social_links?.[index]?.platform;
+                    const urlError = errors.social_links?.[index]?.url;
+                    const urlTouched = touched.social_links?.[index]?.url;
+
+                    return (
+                      <div key={index} className="p-3 mb-3 rounded-xl border bg-light position-relative">
+                        <Row className="g-3 align-items-center">
+                          <Col xs={12} md={4}>
+                            <Form.Select
+                              className="manage-website-pill-input"
+                              value={s.platform}
+                              onChange={(e) => {
+                                const newSocials = [...values.social_links];
+                                newSocials[index].platform = e.target.value;
+                                setFieldValue('social_links', newSocials);
+                              }}
+                              isInvalid={platformTouched && platformError}
+                            >
+                              <option value="">Select Platform</option>
+                              <option value="WhatsApp">WhatsApp</option>
+                              <option value="Facebook">Facebook</option>
+                              <option value="Instagram">Instagram</option>
+                              <option value="Twitter">Twitter (X)</option>
+                              <option value="Youtube">Youtube</option>
+                            </Form.Select>
+                            {platformTouched && platformError && (
+                              <div className="text-danger mt-1 small ms-2">{platformError}</div>
+                            )}
+                          </Col>
+                          <Col xs={12} md={6}>
+                            <Form.Control
+                              className="manage-website-pill-input"
+                              placeholder="Profile URL / Phone Number"
+                              value={s.url}
+                              onChange={(e) => {
+                                const newSocials = [...values.social_links];
+                                newSocials[index].url = e.target.value;
+                                setFieldValue('social_links', newSocials);
+                              }}
+                              isInvalid={urlTouched && urlError}
+                            />
+                            {urlTouched && urlError && (
+                              <div className="text-danger mt-1 small ms-2">{urlError}</div>
+                            )}
+                          </Col>
+                          <Col xs={12} md={2} className="text-md-end">
+                            <Button
+                              variant="none"
+                              className="manage-website-custom-btn-danger manage-website-custom-btn-circle ms-md-auto w-100 w-md-auto"
+                              onClick={() => removeSocial(index)}
+                            >
+                              <CsLineIcons icon="bin" size="15" />
+                            </Button>
+                          </Col>
+                        </Row>
+                      </div>
+                    );
+                  })}
                 </Card.Body>
               </Card>
             </Col>

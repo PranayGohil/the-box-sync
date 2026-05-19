@@ -269,19 +269,50 @@ const InventoryDetails = () => {
         )}
       </div>
 
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered className="modal-premium">
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered backdrop="static">
         <Modal.Header closeButton className="border-0 pb-0">
-          <Modal.Title className="fw-bold">Delete Inventory?</Modal.Title>
+          <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>
+            Confirm Deletion
+          </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="p-4">
-          <p className="text-muted mb-0">Are you sure you want to delete this record? This will permanently remove it from the active inventory history.</p>
+        <Modal.Body className="py-4">
+          <div className="d-flex align-items-center mb-3">
+            <div className="p-3 rounded-circle me-3" style={{ backgroundColor: 'rgba(207, 38, 55, 0.1)' }}>
+              <CsLineIcons icon="bin" size="24" style={{ color: '#cf2637' }} />
+            </div>
+            <div>
+              <p className="mb-0 fw-bold text-dark">Permanently delete this record?</p>
+              <p className="mb-1 text-muted small">This clears the inventory log from your historical logs.</p>
+              <p className="mb-0 text-success small fw-semibold">Don't worry, your physical stock quantities remain perfectly safe.</p>
+            </div>
+          </div>
         </Modal.Body>
         <Modal.Footer className="border-0 pt-0">
-          <Button variant="light" className="inventory-details-btn-action text-muted" onClick={() => setShowDeleteModal(false)} disabled={deleting}>
+          <Button 
+            variant="light" 
+            onClick={() => setShowDeleteModal(false)} 
+            disabled={deleting}
+            className="rounded-pill px-4 fw-bold inventory-details-btn-action text-muted border-0"
+          >
             Cancel
           </Button>
-          <Button variant="danger" className="inventory-details-btn-action" onClick={handleDelete} disabled={deleting}>
-            {deleting ? <Spinner animation="border" size="sm" /> : 'Confirm Delete'}
+          <Button 
+            variant="danger" 
+            onClick={handleDelete} 
+            disabled={deleting}
+            className="rounded-pill px-4 fw-bold shadow-sm inventory-details-btn-action text-danger border-danger"
+          >
+            {deleting ? (
+              <>
+                <Spinner as="span" animation="border" size="sm" className="me-2" />
+                Deleting...
+              </>
+            ) : (
+              <div className="d-flex align-items-center">
+                <CsLineIcons icon="bin" size="16" className="me-2" stroke="currentColor" />
+                Delete
+              </div>
+            )}
           </Button>
         </Modal.Footer>
       </Modal>

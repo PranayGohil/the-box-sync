@@ -62,40 +62,48 @@ const DeleteFeedbackModal = ({ show, handleClose, data, fetchFeedbacks }) => {
   };
 
   return (
-    <Modal show={show} onHide={handleClose} centered className="rounded-4" style={{ backdropFilter: 'blur(5px)' }} contentClassName="border-0 shadow-lg">
+    <Modal show={show} onHide={handleClose} centered backdrop="static">
       <style>{customStyles}</style>
       <Modal.Header closeButton className="border-0 pb-0">
-        <Modal.Title className="fw-bold text-danger">Delete Feedback?</Modal.Title>
+        <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>
+          Confirm Deletion
+        </Modal.Title>
       </Modal.Header>
       <Modal.Body className="py-4">
-        <div className="text-center mb-3">
-          <CsLineIcons icon="bin" size="48" className="text-danger opacity-20" />
+        <div className="d-flex align-items-center mb-3">
+          <div className="p-3 rounded-circle me-3" style={{ backgroundColor: 'rgba(207, 38, 55, 0.1)' }}>
+            <CsLineIcons icon="bin" size="24" style={{ color: '#cf2637' }} />
+          </div>
+          <div>
+            <p className="mb-0 fw-bold text-dark">Permanently delete this feedback?</p>
+            <p className="mb-1 text-muted small">This clears the customer rating and comment from your database.</p>
+            <p className="mb-0 text-success small fw-semibold">Overall rating scores will update automatically.</p>
+          </div>
         </div>
-        <p className="text-center text-muted mb-0">Are you sure you want to permanently delete this customer feedback? This action cannot be undone.</p>
       </Modal.Body>
-      <Modal.Footer className="border-0 pt-0 d-flex gap-3">
-        <Button
-          className="px-4 py-2 delete-feedback-modal-custom-btn-outline flex-grow-1 d-flex align-items-center justify-content-center gap-2"
-          onClick={handleClose}
+      <Modal.Footer className="border-0 pt-0">
+        <Button 
+          onClick={handleClose} 
           disabled={isDeleting}
+          className="rounded-pill px-4 fw-bold delete-feedback-modal-custom-btn-outline"
         >
           Cancel
         </Button>
         <Button
-          className="px-4 py-2 delete-feedback-modal-custom-btn-danger flex-grow-1 d-flex align-items-center justify-content-center gap-2"
           onClick={handleDelete}
           disabled={isDeleting}
+          className="rounded-pill px-4 fw-bold shadow-sm delete-feedback-modal-custom-btn-danger"
         >
           {isDeleting ? (
             <>
-              <Spinner animation="border" size="sm" />
+              <Spinner as="span" animation="border" size="sm" className="me-2" />
               Deleting...
             </>
           ) : (
-            <>
-              <CsLineIcons icon="bin" size="18" />
+            <div className="d-flex align-items-center">
+              <CsLineIcons icon="bin" size="16" className="me-2" stroke="currentColor" />
               Delete
-            </>
+            </div>
           )}
         </Button>
       </Modal.Footer>

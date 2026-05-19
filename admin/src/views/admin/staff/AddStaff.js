@@ -108,7 +108,6 @@ const AddStaff = () => {
 
     photo: Yup.mixed()
       .required('Photo is required')
-      .test('fileSize', 'File size is too large (max 2MB)', (value) => !value || (value && value.size <= 2 * 1024 * 1024))
       .test(
         'fileType',
         'Unsupported file format (JPEG, PNG, JPG, WebP only)',
@@ -138,7 +137,6 @@ const AddStaff = () => {
 
     front_image: Yup.mixed()
       .required('Front ID image is required')
-      .test('fileSize', 'File size is too large (max 2MB)', (value) => !value || (value && value.size <= 2 * 1024 * 1024))
       .test(
         'fileType',
         'Unsupported file format (JPEG, PNG, JPG, WebP only)',
@@ -152,7 +150,6 @@ const AddStaff = () => {
         }
         return schema.notRequired();
       })
-      .test('fileSize', 'File size is too large (max 2MB)', (value) => !value || (value && value.size <= 2 * 1024 * 1024))
       .test(
         'fileType',
         'Unsupported file format (JPEG, PNG, JPG, WebP only)',
@@ -210,7 +207,12 @@ const AddStaff = () => {
         history.push('/staff/view');
       } catch (err) {
         console.error('Error during staff submission:', err);
-        setFileUploadError(err.response?.data?.message || 'Staff submission failed. Please try again.');
+        const serverError = err.response?.data?.error;
+        const serverMessage = err.response?.data?.message;
+        const errorMsg = Array.isArray(serverError)
+          ? serverError.join(', ')
+          : (serverError || serverMessage || 'Staff submission failed. Please try again.');
+        setFileUploadError(errorMsg);
         toast.error('Add staff failed.');
       } finally {
         setLoading((prev) => ({ ...prev, submitting: false }));
@@ -220,6 +222,21 @@ const AddStaff = () => {
   });
 
   const { values, handleChange, handleSubmit, setFieldValue, errors, touched } = formik;
+
+  const calendarStyles = `
+    .date-input-container input[type="date"]::-webkit-calendar-picker-indicator {
+      position: absolute !important;
+      right: 12px !important;
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+      width: 24px !important;
+      height: 24px !important;
+      cursor: pointer !important;
+      opacity: 0 !important;
+      z-index: 5 !important;
+    }
+  `;
+
 
   useEffect(() => {
     const initializeData = async () => {
@@ -267,15 +284,90 @@ const AddStaff = () => {
     setFieldValue('city', '');
   };
 
+  const convertToWebPAndResize = (file, maxSizeBytes = 500 * 1024) => {
+    return new Promise((resolve) => {
+      if (!file || !file.type.startsWith('image/')) {
+        resolve(file);
+        return;
+      }
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+
+            const maxDimension = 1920;
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              } else {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            let quality = 0.9;
+            const attemptCompression = (q) => {
+              canvas.toBlob(
+                (blob) => {
+                  if (!blob) {
+                    resolve(file);
+                    return;
+                  }
+                  if (blob.size <= maxSizeBytes || q <= 0.1) {
+                    const originalName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                    const newFileName = `${originalName}.webp`;
+                    const compressedFile = new File([blob], newFileName, {
+                      type: 'image/webp',
+                      lastModified: Date.now(),
+                    });
+                    resolve(compressedFile);
+                  } else {
+                    attemptCompression(q - 0.1);
+                  }
+                },
+                'image/webp',
+                q
+              );
+            };
+
+            attemptCompression(quality);
+          } catch (e) {
+            console.error('Error during canvas processing:', e);
+            resolve(file);
+          }
+        };
+        img.onerror = () => resolve(file);
+      };
+      reader.onerror = () => resolve(file);
+    });
+  };
+
   const handleFileChange = async (fieldName, file, setPreview) => {
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: true }));
 
-    // Simulate file processing delay for better UX
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    setFieldValue(fieldName, file);
+    let processedFile = file;
     if (file) {
-      setPreview(URL.createObjectURL(file));
+      try {
+        processedFile = await convertToWebPAndResize(file);
+      } catch (err) {
+        console.error('Failed to process image:', err);
+      }
+    }
+
+    setFieldValue(fieldName, processedFile);
+    if (processedFile) {
+      setPreview(URL.createObjectURL(processedFile));
     }
 
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: false }));
@@ -298,7 +390,7 @@ const AddStaff = () => {
 
   return (
     <div className="add-staff-staff-container pb-5">
-      
+      <style>{calendarStyles}</style>
       <HtmlHead title={title} description={description} />
 
       <div className="container-fluid px-lg-5">
@@ -388,29 +480,51 @@ const AddStaff = () => {
                     <Col md={6}>
                       <Form.Group className="mb-3">
                         <Form.Label>Birth Date</Form.Label>
-                        <Form.Control
-                          type="date"
-                          name="birth_date"
-                          value={values.birth_date}
-                          onChange={handleChange}
-                          isInvalid={touched.birth_date && errors.birth_date}
-                          disabled={loading.submitting}
-                        />
-                        <Form.Control.Feedback type="invalid">{errors.birth_date}</Form.Control.Feedback>
+                        <div className="position-relative date-input-container">
+                          <Form.Control
+                            type="date"
+                            name="birth_date"
+                            value={values.birth_date}
+                            onChange={handleChange}
+                            isInvalid={touched.birth_date && errors.birth_date}
+                            disabled={loading.submitting}
+                            className="pe-5"
+                          />
+                          <div 
+                            className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
+                            style={{ pointerEvents: 'none', zIndex: 4 }}
+                          >
+                            <CsLineIcons icon="calendar" size="18" className="text-primary" />
+                          </div>
+                        </div>
+                        {touched.birth_date && errors.birth_date && (
+                          <div className="text-danger mt-1 small">{errors.birth_date}</div>
+                        )}
                       </Form.Group>
                     </Col>
                     <Col md={6}>
                       <Form.Group className="mb-3">
                         <Form.Label>Joining Date</Form.Label>
-                        <Form.Control
-                          type="date"
-                          name="joining_date"
-                          value={values.joining_date}
-                          onChange={handleChange}
-                          isInvalid={touched.joining_date && errors.joining_date}
-                          disabled={loading.submitting}
-                        />
-                        <Form.Control.Feedback type="invalid">{errors.joining_date}</Form.Control.Feedback>
+                        <div className="position-relative date-input-container">
+                          <Form.Control
+                            type="date"
+                            name="joining_date"
+                            value={values.joining_date}
+                            onChange={handleChange}
+                            isInvalid={touched.joining_date && errors.joining_date}
+                            disabled={loading.submitting}
+                            className="pe-5"
+                          />
+                          <div 
+                            className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
+                            style={{ pointerEvents: 'none', zIndex: 4 }}
+                          >
+                            <CsLineIcons icon="calendar" size="18" className="text-primary" />
+                          </div>
+                        </div>
+                        {touched.joining_date && errors.joining_date && (
+                          <div className="text-danger mt-1 small">{errors.joining_date}</div>
+                        )}
                       </Form.Group>
                     </Col>
 

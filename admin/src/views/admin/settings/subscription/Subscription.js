@@ -47,6 +47,7 @@ const Subscription = () => {
 
   const [panelAccounts, setPanelAccounts] = useState({});
   const [inactiveAddOns, setInactiveAddOns] = useState([]);
+  const [restaurantCode, setRestaurantCode] = useState('');
 
   const [actionLoading, setActionLoading] = useState({
     renew: false,
@@ -59,14 +60,21 @@ const Subscription = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [plansRes, userRes] = await Promise.all([
+      const [plansRes, userRes, userDetailsRes] = await Promise.all([
         axios.get(`${process.env.REACT_APP_API}/subscription/get-plans`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }),
         axios.get(`${process.env.REACT_APP_API}/subscription/get`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }),
+        axios.get(`${process.env.REACT_APP_API}/user/get`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }).catch(() => null),
       ]);
+
+      if (userDetailsRes && userDetailsRes.data) {
+        setRestaurantCode(userDetailsRes.data.restaurant_code || '');
+      }
 
       const enriched = userRes.data.data.map((sub) => {
         const plan = plansRes.data.data.find((p) => p._id === sub.plan_id);
@@ -242,13 +250,21 @@ const Subscription = () => {
       } else if (planName === 'Online Order Reconciliation') {
         history.push('/online-order-reconcilation');
       } else if (planName === 'Reservation Manager') {
-        history.push('/reservation-management');
+        window.open('https://manager.theboxsync.com/operations/manage-reservations', '_blank');
       } else if (planName === 'Dynamic Reports') {
         history.push('/statistics/overview');
       } else if (planName === 'Payroll By The Box') {
-        history.push('/staff');
+        window.open('https://payroll.theboxsync.com', '_blank');
       } else if (planName === 'Restaurant Website') {
-        history.push('/settings/manage-website');
+        window.open(`https://website.theboxsync.com/${restaurantCode}`, '_blank');
+      } else if (planName === 'Captain Panel') {
+        window.open('https://captain.theboxsync.com', '_blank');
+      } else if (planName === 'KOT Panel') {
+        window.open('https://kot.theboxsync.com', '_blank');
+      } else if (planName === 'Manager') {
+        window.open('https://manager.theboxsync.com', '_blank');
+      } else if (planName === 'QSR') {
+        window.open('https://qsr.theboxsync.com', '_blank');
       } else {
         toast.error('Invalid Plan');
       }
@@ -277,11 +293,11 @@ const Subscription = () => {
         accessor: 'status',
         Cell: ({ value }) => {
           if (value === 'active') {
-            return <Badge bg="soft-success" className="text-success px-3 py-2 rounded-pill">Active</Badge>;
+            return <Badge bg="none" className="subscription-bg-soft-success text-success px-3 py-2 rounded-pill">Active</Badge>;
           } else if (value === 'inactive') {
-            return <Badge bg="soft-warning" className="text-warning px-3 py-2 rounded-pill">Inactive</Badge>;
+            return <Badge bg="none" className="subscription-bg-soft-warning text-warning px-3 py-2 rounded-pill">Inactive</Badge>;
           }
-          return <Badge bg="soft-danger" className="text-danger px-3 py-2 rounded-pill">{value}</Badge>;
+          return <Badge bg="none" className="subscription-bg-soft-danger text-danger px-3 py-2 rounded-pill">{value}</Badge>;
         },
       },
       {
@@ -319,7 +335,7 @@ const Subscription = () => {
                 >
                   <CsLineIcons icon="bin" size="15" />
                 </Button>
-                {original.plan_name === 'Payroll By The Box' && (
+                {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Manager', 'QSR'].includes(original.plan_name) && (
                   <Button
                     variant="none"
                     size="sm"
@@ -346,7 +362,7 @@ const Subscription = () => {
                 >
                   <CsLineIcons icon="plus" size="15" />
                 </Button>
-                {original.plan_name === 'Payroll By The Box' && (
+                {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Manager', 'QSR'].includes(original.plan_name) && (
                   <Button
                     variant="none"
                     size="sm"
@@ -468,10 +484,10 @@ const Subscription = () => {
 
       <Card className="subscription-glass-card border-0 mb-5">
         <Card.Body className="p-4">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h4 className="fw-bold mb-0">Active Subscriptions</h4>
-            <div className="d-flex gap-2">
-              <div className="search-input-container shadow-sm">
+          <div className="d-flex flex-column flex-sm-row justify-content-sm-between align-items-start align-items-sm-center gap-3 mb-4">
+            <h4 className="fw-bold mb-0 text-nowrap">Active Subscriptions</h4>
+            <div className="d-flex gap-2 w-100 w-sm-auto">
+              <div className="search-input-container shadow-sm w-100 w-sm-auto">
                 <ControlsSearch tableInstance={tableInstance} />
               </div>
               <div className="d-none d-lg-block">
@@ -504,9 +520,9 @@ const Subscription = () => {
                           <span className="subscription-mobile-value mb-0">{original.plan_name}</span>
                         </div>
                         <div>
-                          {original.status === 'active' && <Badge bg="soft-success" className="text-success rounded-pill">Active</Badge>}
-                          {original.status === 'inactive' && <Badge bg="soft-warning" className="text-warning rounded-pill">Inactive</Badge>}
-                          {original.status === 'blocked' && <Badge bg="soft-danger" className="text-danger rounded-pill">Blocked</Badge>}
+                          {original.status === 'active' && <Badge bg="none" className="subscription-bg-soft-success text-success rounded-pill">Active</Badge>}
+                          {original.status === 'inactive' && <Badge bg="none" className="subscription-bg-soft-warning text-warning rounded-pill">Inactive</Badge>}
+                          {original.status === 'blocked' && <Badge bg="none" className="subscription-bg-soft-danger text-danger rounded-pill">Blocked</Badge>}
                         </div>
                       </div>
                       <Row className="g-2 mb-3">
@@ -548,7 +564,7 @@ const Subscription = () => {
                   <Card.Body className="p-4 d-flex flex-column">
                     <div className="d-flex justify-content-between align-items-start mb-3">
                       <h5 className="fw-bold mb-0">{sub.plan_name}</h5>
-                      <Badge bg="soft-warning" className="text-warning rounded-pill">Expired</Badge>
+                      <Badge bg="none" className="subscription-bg-soft-warning text-warning rounded-pill">Expired</Badge>
                     </div>
                     <div className="subscription-plan-price mb-3">₹{sub.plan_price}</div>
                     <p className="text-muted small mb-4">
