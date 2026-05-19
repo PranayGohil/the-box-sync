@@ -1,10 +1,112 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Button, Form, Spinner, Alert } from 'react-bootstrap';
+import { Row, Col, Card, Button, Form, Spinner, Alert, Table } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+
+const customStyles = `
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1.25rem !important;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .glass-card:hover { 
+    transform: translateY(-5px); 
+    box-shadow: 0 12px 40px rgba(31, 38, 135, 0.1) !important;
+  }
+  .custom-btn-outline {
+    border: 1.5px solid #23b3f4 !important;
+    color: #23b3f4 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    font-weight: 700 !important;
+    border-radius: 50px !important;
+  }
+  .custom-btn-outline:hover {
+    background-color: #23b3f4 !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+  }
+  .token-badge {
+    background: #23b3f4 !important;
+    color: #fff !important;
+    font-weight: 800;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.3);
+  }
+  
+  /* Toggle Switch */
+  .kot-toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .kot-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+  }
+  .kot-toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: #e2e8f0;
+    border-radius: 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .kot-toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .kot-toggle.completed .kot-toggle-slider {
+    background: #10b981;
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+  }
+  .kot-toggle.completed .kot-toggle-slider::before {
+    transform: translateX(20px);
+  }
+  .kot-toggle.loading .kot-toggle-slider {
+    background: #cbd5e1;
+  }
+
+  /* Mobile Optimizations */
+  @media (max-width: 768px) {
+    .page-title-container {
+      margin-top: -0.5rem !important;
+    }
+    .page-title-container h1 {
+      font-size: 1.75rem !important;
+      margin-bottom: 0.5rem !important;
+    }
+    .mobile-header-stats {
+      margin-top: 1rem;
+      border-top: 1px solid rgba(0,0,0,0.05);
+      padding-top: 1rem;
+    }
+  }
+`;
 
 const ViewKots = () => {
   const title = 'Manage KOTs';
@@ -92,241 +194,203 @@ const ViewKots = () => {
       kot.token?.toString().includes(searchTerm)
   );
 
+  const pendingItemsCount = filteredKOTs.reduce((total, kot) => total + kot.order_items.filter((item) => item.status === 'Preparing').length, 0);
+
   if (loading.initial) {
     return (
-      <>
-        <HtmlHead title={title} description={description} />
-        <Row>
-          <Col>
-            <div className="d-flex justify-content-between">
-              <div className="page-title-container mb-4">
-                <h1 className="mb-0 pb-0 display-4">{title}</h1>
-                <BreadcrumbList items={breadcrumbs} />
-              </div>
-              <div>
-                <span>Date:</span> <span className="fw-bold fs-5">{new Date().toLocaleDateString('en-IN')}</span>
-              </div>
-            </div>
-            <div className="text-center py-5">
-              <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading KOTs...</h5>
-              <p className="text-muted">Please wait while we fetch kitchen orders</p>
-            </div>
-          </Col>
-        </Row>
-      </>
+      <div className="container-fluid py-5 text-center">
+        <Spinner animation="border" style={{ color: '#23b3f4' }} />
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="container-fluid pb-5 mb-5">
+      <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
-      <Row>
-        <Col>
-          <div className="d-flex justify-content-between">
-            <div className="page-title-container mb-4">
-              <h1 className="mb-0 pb-0 display-4">{title}</h1>
-              <BreadcrumbList items={breadcrumbs} />
+
+      {/* Header Section */}
+      <div className="page-title-container dashboard-title-container mb-4 mt-4 mt-lg-2 text-start">
+        <Row className="g-0 align-items-center">
+          <Col xs="auto" className="me-auto text-start">
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
+              {title}
+            </h1>
+            <BreadcrumbList items={breadcrumbs} />
+          </Col>
+          <Col xs="12" md="auto" className="text-md-end mt-3 mt-md-0 mobile-header-stats">
+            <div className="text-muted fw-bold d-flex align-items-center justify-content-md-end">
+              <span className="me-2">Date:</span>
+              <span className="text-dark">{new Date().toLocaleDateString('en-GB')}</span>
             </div>
-            <div>
-              <span>Date:</span> <span className="fw-bold fs-5">{new Date().toLocaleDateString('en-IN')}</span>
-            </div>
+          </Col>
+        </Row>
+      </div>
+
+      {error && (
+        <Alert variant="danger" className="mb-4 d-flex align-items-center justify-content-between" style={{ borderRadius: '1rem' }}>
+          <div>
+            <CsLineIcons icon="error" className="me-2" />
+            {error}
           </div>
+          <Button variant="outline-danger" size="sm" className="rounded-pill" onClick={fetchOrderData}>
+            Retry
+          </Button>
+        </Alert>
+      )}
 
-          {error && (
-            <Alert variant="danger" className="mb-4">
-              <CsLineIcons icon="error" className="me-2" />
-              {error}
-              <Button variant="outline-danger" size="sm" className="ms-3" onClick={fetchOrderData}>
-                Retry
-              </Button>
-            </Alert>
-          )}
-
-          <Form className="mb-4">
-            <Row className="align-items-center justify-content-between">
-              <Col md={4}>
-                <div className="position-relative">
-                  <Form.Control
-                    type="text"
-                    placeholder="Search by customer, type, or token..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                  {searchTerm && (
-                    <div
-                      className="position-absolute"
-                      style={{ right: '10px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}
-                      onClick={() => setSearchTerm('')}
-                    >
-                      <CsLineIcons icon="close" size="14" className="text-muted" />
-                    </div>
-                  )}
-                </div>
-              </Col>
-              <Col md={4} className="d-flex align-items-center justify-content-end">
-                <div>Pending Dishes to Complete : </div>
-                <div className="mx-2 fs-3 fw-bold">
-                  {loading.initial ? (
-                    <Spinner animation="border" size="sm" className="ms-2" />
-                  ) : (
-                    filteredKOTs.reduce((total, kot) => total + kot.order_items.filter((item) => item.status === 'Preparing').length, 0)
-                  )}
-                </div>
-              </Col>
-            </Row>
-          </Form>
-
-          {filteredKOTs.length === 0 ? (
-            <Row className="justify-content-center my-5">
-              <Col xs={12} md={8} lg={6} className="text-center">
-                <div className="py-5">
-                  <CsLineIcons icon="inbox" size="48" className="text-muted mb-3" />
-                  <h5>No KOTs Found</h5>
-                  <p className="text-muted">{searchTerm ? `No KOTs matching "${searchTerm}"` : 'No kitchen orders available'}</p>
-                </div>
-              </Col>
-            </Row>
-          ) : (
-            <Row>
-              {filteredKOTs.map((data) => {
-                const allDishesCompleted = data.order_items.every((dish) => dish.status === 'Completed');
-
-                return (
-                  <Col md={4} lg={4} key={data._id}>
-                    <Card body className="mb-4 shadow-sm">
-                      <div className="d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                          <h5 className="mb-1">{data.order_type}</h5>
-                          <div className="text-muted small">{data.customer_name || 'Guest'}</div>
-                        </div>
-                        {(data.order_type === 'Takeaway' || data.order_type === 'Delivery') && (
-                          <div className="text-end">
-                            <h5 className="mb-1">Token</h5>
-                            <div className="d-flex justify-content-end">
-                              <div className="fw-bold bg-primary rounded-pill py-2 px-3 text-center text-white">{data.token}</div>
-                            </div>
-                          </div>
-                        )}
-                        {data.order_type === 'Dine In' && (
-                          <div className="text-end">
-                            <h5 className="mb-1">
-                              Area: <span className="fw-bold">{data.table_area}</span>
-                            </h5>
-                            <div className="d-flex justify-content-end">
-                              <div className="fw-bold bg-primary rounded-pill py-2 px-3 text-center text-white">{data.table_no}</div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="table-responsive mb-3">
-                        <table className="table table-sm table-striped">
-                          <thead>
-                            <tr>
-                              <th>Dish</th>
-                              <th>Qty</th>
-                              <th>Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {data.order_items.map((dish) =>
-                              dish.special_notes !== 'Parcel Charge' ? (
-                                <tr key={dish._id}>
-                                  <td>{dish.dish_name}</td>
-                                  <td>{dish.quantity}</td>
-                                  <td>
-                                    {dish.status === 'Preparing' ? (
-                                      <div className="position-relative">
-                                        <Button
-                                          size="sm"
-                                          className="btn btn-sm btn-icon"
-                                          variant="outline-success"
-                                          onClick={() => updateDishStatus(data.order_source, data._id, dish._id)}
-                                          title="Mark as Completed"
-                                          disabled={updatingDishId === dish._id}
-                                        >
-                                          {updatingDishId === dish._id ? (
-                                            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
-                                          ) : (
-                                            <CsLineIcons icon="check" />
-                                          )}
-                                        </Button>
-                                      </div>
-                                    ) : (
-                                      <span className="text-success fw-bold">
-                                        <CsLineIcons icon="check-circle" /> Done
-                                      </span>
-                                    )}
-                                  </td>
-                                </tr>
-                              ) : null
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {data.comment && (
-                        <div className="mb-3">
-                          <strong>Notes: </strong>
-                          <span>{data.comment}</span>
-                        </div>
-                      )}
-
-                      {!allDishesCompleted && (
-                        <div className="text-end">
-                          <Button
-                            variant="primary"
-                            className="btn btn-sm btn-icon"
-                            size="sm"
-                            onClick={() => updateAllDishStatus(data.order_source, data._id)}
-                            disabled={updatingOrderId === data._id}
-                          >
-                            {updatingOrderId === data._id ? (
-                              <>
-                                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                                Updating...
-                              </>
-                            ) : (
-                              <>
-                                <CsLineIcons icon="check-square" /> Mark All Completed
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      )}
-                      <div>
-                        Order source: <strong>{data.order_source}</strong>
-                      </div>
-                    </Card>
-                  </Col>
-                );
-              })}
-            </Row>
-          )}
-
-          {/* Full page loader for bulk updates */}
-          {updatingOrderId && (
-            <div
-              className="position-fixed top-0 left-0 w-100 h-100 d-flex justify-content-center align-items-center"
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                zIndex: 9999,
-                backdropFilter: 'blur(2px)',
-              }}
-            >
-              <Card className="shadow-lg border-0" style={{ minWidth: '200px' }}>
-                <Card.Body className="text-center p-4">
-                  <Spinner animation="border" variant="primary" className="mb-3" style={{ width: '3rem', height: '3rem' }} />
-                  <h5 className="mb-0">Updating Dishes...</h5>
-                  <small className="text-muted">Please wait a moment</small>
-                </Card.Body>
-              </Card>
-            </div>
-          )}
+      {/* Controls Section */}
+      <Row className="mb-4 align-items-center">
+        <Col xs="12" md="6" lg="4" className="mb-3 mb-md-0">
+          <div className="shadow-sm rounded-pill bg-white border d-flex align-items-center px-3" style={{ height: '45px' }}>
+            <CsLineIcons icon="search" size="18" className="text-primary opacity-75" />
+            <Form.Control
+              type="text"
+              placeholder="Search KOTs by customer, type, or token..."
+              className="border-0 bg-transparent shadow-none flex-grow-1 ms-2"
+              style={{ fontSize: '14px' }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <div className="cursor-pointer text-muted px-1" onClick={() => setSearchTerm('')}>
+                <CsLineIcons icon="close" size="14" />
+              </div>
+            )}
+          </div>
+        </Col>
+        <Col xs="12" md="6" lg="8" className="text-md-end">
+          <div className="d-inline-flex align-items-center bg-white shadow-sm border rounded-pill px-4 py-2">
+            <span className="text-muted fw-bold small text-uppercase letter-spacing-1 me-2">Pending Items:</span>
+            <span className="h4 mb-0 fw-800 text-primary">{pendingItemsCount}</span>
+          </div>
         </Col>
       </Row>
-    </>
+
+      {/* KOT Cards Section */}
+      {filteredKOTs.length === 0 ? (
+        <Card className="border-0 glass-card py-5 text-center">
+          <Card.Body>
+            <CsLineIcons icon="inbox" size="48" className="text-muted mb-3" />
+            <h5 className="fw-bold">No Active KOTs</h5>
+            <p className="text-muted">{searchTerm ? `No KOTs matching "${searchTerm}"` : 'No kitchen orders available'}</p>
+          </Card.Body>
+        </Card>
+      ) : (
+        <Row className="g-4">
+          {filteredKOTs.map((data) => {
+            const allDishesCompleted = data.order_items.every((dish) => dish.status === 'Completed');
+
+            return (
+              <Col md={6} lg={4} key={data._id}>
+                <Card className="border-0 glass-card h-100">
+                  <Card.Body className="p-4 d-flex flex-column">
+                    <div className="d-flex justify-content-between align-items-start mb-4">
+                      <div>
+                        <h5 className="fw-bold mb-0 text-primary">{data.order_type}</h5>
+                        {data.order_type === 'Dine In' ? (
+                          <div className="text-muted small fw-bold mt-1">
+                            {data.customer_name || 'Guest'}
+                            <div className="text-primary mt-1" style={{ fontSize: '0.8rem' }}>
+                              Area: {data.table_area || 'Default'}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-muted small fw-bold mt-1">{data.customer_name || 'Guest'}</div>
+                        )}
+                      </div>
+                      {data.order_type === 'Dine In' ? (
+                        <div className="token-badge" style={{ fontSize: '0.9rem', fontWeight: '800' }}>
+                          T-{data.table_no}
+                        </div>
+                      ) : (
+                        <div className="token-badge">#{data.token}</div>
+                      )}
+                    </div>
+
+                    <div className="table-responsive flex-grow-1 mb-4">
+                      <Table borderless size="sm" className="align-middle mb-0">
+                        <thead>
+                          <tr className="text-muted border-bottom" style={{ fontSize: '0.65rem', fontWeight: '800', letterSpacing: '1px' }}>
+                            <th className="px-0 pb-2">ITEM</th>
+                            <th className="text-center pb-2">QTY</th>
+                            <th className="text-end px-0 pb-2">ACTION</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.order_items.map((dish) => 
+                            dish.special_notes !== 'Parcel Charge' ? (
+                              <tr key={dish._id} className="border-bottom-light">
+                                <td className="px-0 py-3 fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
+                                  {dish.dish_name}
+                                </td>
+                                <td className="text-center fw-bold text-dark">{dish.quantity}</td>
+                                <td className="text-end px-0">
+                                  <label
+                                    className={`kot-toggle ${dish.status === 'Completed' ? 'completed' : ''} ${updatingDishId === dish._id ? 'loading' : ''}`}
+                                    title={dish.status === 'Completed' ? 'Completed' : 'Mark as done'}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={dish.status === 'Completed'}
+                                      disabled={dish.status === 'Completed' || updatingDishId === dish._id}
+                                      onChange={() => dish.status === 'Preparing' && updateDishStatus(data.order_source, data._id, dish._id)}
+                                    />
+                                    <span className="kot-toggle-slider" />
+                                  </label>
+                                </td>
+                              </tr>
+                            ) : null
+                          )}
+                        </tbody>
+                      </Table>
+                    </div>
+
+                    {data.comment && <div className="mb-4 p-3 bg-light rounded small fw-bold text-muted border">Note: {data.comment}</div>}
+
+                    <div className="d-flex justify-content-between align-items-center mt-auto pt-3 border-top" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
+                      <div className="small text-muted fw-bold">
+                        Source: <span className="text-dark">{data.order_source}</span>
+                      </div>
+                      {!allDishesCompleted && (
+                        <Button
+                          className="custom-btn-outline py-2 px-3"
+                          style={{ fontSize: '0.8rem' }}
+                          onClick={() => updateAllDishStatus(data.order_source, data._id)}
+                          disabled={updatingOrderId === data._id}
+                        >
+                          {updatingOrderId === data._id ? <Spinner size="sm" /> : 'Complete KOT'}
+                        </Button>
+                      )}
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            );
+          })}
+        </Row>
+      )}
+
+      {/* Full page loader for bulk updates */}
+      {updatingOrderId && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            zIndex: 9999,
+            backdropFilter: 'blur(2px)',
+          }}
+        >
+          <Card className="shadow-lg border-0" style={{ minWidth: '200px', borderRadius: '1.5rem' }}>
+            <Card.Body className="text-center p-4">
+              <Spinner animation="border" variant="primary" className="mb-3" style={{ width: '3rem', height: '3rem' }} />
+              <h5 className="mb-0 fw-bold">Updating KOT Status...</h5>
+              <small className="text-muted">Please wait a moment</small>
+            </Card.Body>
+          </Card>
+        </div>
+      )}
+    </div>
   );
 };
 

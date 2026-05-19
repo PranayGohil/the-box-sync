@@ -25,68 +25,22 @@ const PaymentSummaryBox = ({
   // ─── Styles ───────────────────────────────────────────────────────────────
   const btnBase = {
     width: '100%',
-    padding: '0.6rem',
-    borderRadius: '10px',
-    fontSize: '13px',
+    padding: '0.45rem',
+    borderRadius: '8px',
+    fontSize: '12.5px',
     fontWeight: 700,
     border: 'none',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '6px',
+    gap: '5px',
     transition: 'all 0.18s ease',
   };
 
   return (
     <>
-      {/* ── Mobile sticky bar ── */}
-      <style>{`
-        @media (max-width: 991px) {
-          .mobile-cart-bar {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: #fff; padding: 12px 16px;
-            z-index: 1040; cursor: pointer;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-            border-top: 1px solid rgba(226,232,240,0.9);
-          }
-          .mobile-sticky-spacer { height: 72px; }
-        }
-      `}</style>
 
-      <div className="mobile-sticky-spacer d-lg-none" />
-
-      {orderItems.length > 0 && (
-        <div
-          role="button"
-          tabIndex={0}
-          className="d-lg-none mobile-cart-bar d-flex justify-content-between align-items-center"
-          onClick={() => setShowCartSheet && setShowCartSheet(true)}
-          onKeyDown={(e) => e.key === 'Enter' && setShowCartSheet && setShowCartSheet(true)}
-        >
-          <div className="d-flex align-items-center gap-3">
-            <div
-              style={{
-                width: '40px', height: '40px', borderRadius: '12px',
-                background: '#23b3f4', color: '#fff',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 800, fontSize: '16px',
-              }}
-            >
-              {totalQty}
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '16px', color: '#1e293b', lineHeight: 1 }}>₹{paymentData.total}</div>
-              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
-                {dueAmount > 0.01 ? `Due: ₹${dueAmount.toFixed(2)}` : 'Fully Paid'}
-              </div>
-            </div>
-          </div>
-          <div style={{ fontWeight: 700, color: '#23b3f4', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            View Cart <CsLineIcons icon="chevron-right" size="14" />
-          </div>
-        </div>
-      )}
 
       {/* ── Desktop panel ── */}
       <div className="d-none d-lg-block">
@@ -95,42 +49,34 @@ const PaymentSummaryBox = ({
         <div
           style={{
             background: 'linear-gradient(135deg, rgba(35,179,244,0.06), rgba(35,179,244,0.02))',
-            borderRadius: '12px',
+            borderRadius: '10px',
             border: '1px solid rgba(35,179,244,0.15)',
-            padding: '12px 14px',
-            marginBottom: '12px',
+            padding: '10px 12px',
+            marginBottom: '8px',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#94a3b8' }}>
-                Order Total
-              </div>
-              <div style={{ fontSize: '22px', fontWeight: 900, color: '#1e293b', lineHeight: 1.1, marginTop: '2px' }}>
-                ₹{totalAmount.toFixed(2)}
-              </div>
+            <div className="d-flex align-items-baseline gap-2">
+              <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>
+                Total:
+              </span>
+              <span style={{ fontSize: '18px', fontWeight: 900, color: '#1e293b' }}>
+                ₹{totalAmount.toFixed(0)}
+              </span>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '11px', color: '#94a3b8' }}>{totalQty} item{totalQty !== 1 ? 's' : ''}</div>
-              {totalPaid > 0 && (
-                <div style={{ fontSize: '11px', marginTop: '3px' }}>
-                  Paid: <span style={{ fontWeight: 700, color: '#10b981' }}>₹{totalPaid.toFixed(2)}</span>
+              <div style={{ fontSize: '10.5px', color: '#94a3b8', fontWeight: 600 }}>{totalQty} items</div>
+              {dueAmount > 0.01 && totalPaid > 0 && (
+                <div style={{ fontSize: '10px', fontWeight: 800, color: '#ef4444' }}>
+                  Due: ₹{dueAmount.toFixed(0)}
                 </div>
-              )}
-              {dueAmount > 0.01 && (
-                <div style={{ fontSize: '12px', fontWeight: 800, color: '#ef4444', marginTop: '2px' }}>
-                  Due: ₹{dueAmount.toFixed(2)}
-                </div>
-              )}
-              {totalPaid > 0 && dueAmount <= 0.01 && (
-                <div style={{ fontSize: '12px', fontWeight: 800, color: '#10b981', marginTop: '2px' }}>✓ Fully Paid</div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {/* Action Buttons - 2 Column Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
 
           {/* Save Changes */}
           {orderItems.length > 0 && isDirty && (
@@ -140,8 +86,8 @@ const PaymentSummaryBox = ({
               onClick={() => handleSaveOrder('Save')}
               disabled={isLoading}
             >
-              <CsLineIcons icon="save" size="14" />
-              Save Changes
+              <CsLineIcons icon="save" size="13" />
+              Save
             </button>
           )}
 
@@ -153,8 +99,8 @@ const PaymentSummaryBox = ({
               onClick={() => handleSaveOrder('KOT')}
               disabled={isLoading}
             >
-              <CsLineIcons icon="send" size="14" />
-              Send to Kitchen
+              <CsLineIcons icon="send" size="13" />
+              Kitchen
             </button>
           )}
 
@@ -166,8 +112,8 @@ const PaymentSummaryBox = ({
               onClick={onKotAndPrint}
               disabled={isLoading || kotPrinting}
             >
-              <CsLineIcons icon="print" size="14" />
-              {kotPrinting ? 'Printing...' : 'Order Print'}
+              <CsLineIcons icon="print" size="13" />
+              {kotPrinting ? '...' : 'Order Print'}
             </button>
           )}
 
@@ -175,11 +121,17 @@ const PaymentSummaryBox = ({
           {(orderStatus === 'KOT' || (orderStatus === 'Save' && orderItems.length > 0) || (isPaid && dueAmount > 0.01)) && (
             <button
               type="button"
-              style={{ ...btnBase, background: '#23b3f4', color: '#ffffff', boxShadow: '0 4px 14px rgba(35,179,244,0.35)' }}
+              style={{ 
+                ...btnBase, 
+                background: '#23b3f4', 
+                color: '#ffffff', 
+                boxShadow: '0 4px 12px rgba(35,179,244,0.3)',
+                gridColumn: (isDirty || showKOTButtons) ? 'span 1' : 'span 2'
+              }}
               onClick={handleOpenPaymentModal}
             >
-              <CsLineIcons icon="credit-card" size="14" stroke="#fff" />
-              {dueAmount > 0.01 && totalPaid > 0 ? 'Pay Balance' : 'Process Payment'}
+              <CsLineIcons icon="credit-card" size="13" stroke="#fff" />
+              {dueAmount > 0.01 && totalPaid > 0 ? 'Pay' : 'Payment'}
             </button>
           )}
 
@@ -298,7 +250,7 @@ const PaymentSummaryBox = ({
             <p className="text-muted text-center">No payments recorded yet</p>
           ) : (
             [...paymentHistory].reverse().map((record) => (
-              <div key={record.id} style={{ border: '1px solid rgba(226,232,240,0.9)', borderRadius: '10px', padding: '12px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div key={record.id} style={{ border: '1px solid rgba(226,232,240,0.9)', borderRadius: '10px', padding: '12px', marginBottom: '8px', display: 'flex', justifycontent: 'space-between', alignitems: 'center' }}>
                 <div>
                   <div style={{ fontWeight: 800, fontSize: '16px', color: '#10b981' }}>₹{parseFloat(record.amount).toFixed(2)}</div>
                   <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>{record.type} • {new Date(record.timestamp).toLocaleString('en-IN')}</div>

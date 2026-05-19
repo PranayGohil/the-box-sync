@@ -184,64 +184,72 @@ const MobileBottomNav = () => {
   ].filter(item => !item.hide);
 
   return (
-    <div 
-      className="position-fixed bottom-0 start-0 end-0 d-lg-none px-4" 
-      style={{ 
-        zIndex: 1050, 
-        paddingBottom: 'calc(20px + env(safe-area-inset-bottom))',
-      }}
-    >
-      <div 
-        className="d-flex justify-content-around align-items-center position-relative shadow-lg"
-        style={{ 
-          height: '65px',
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(25px)',
-          borderRadius: '35px',
-          border: '1px solid rgba(255, 255, 255, 0.4)',
-          boxShadow: '0 15px 40px rgba(0,0,0,0.12)'
-        }}
-      >
+    <div className="bottom-nav-wrapper d-lg-none">
+      <style>{`
+        .bottom-nav-wrapper {
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1050;
+          width: 95%;
+          max-width: 500px;
+          display: flex;
+          justify-content: center;
+          pointer-events: none;
+        }
+
+        .bottom-nav-pill {
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(25px) saturate(200%);
+          -webkit-backdrop-filter: blur(25px) saturate(200%);
+          border: 1px solid rgba(255, 255, 255, 0.45);
+          border-radius: 40px;
+          padding: 6px 10px;
+          display: flex;
+          align-items: center;
+          justify-content: space-around;
+          width: 100%;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+          pointer-events: auto;
+        }
+
+        .bottom-nav-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-decoration: none !important;
+          color: #64748b;
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bottom-nav-item.active {
+          color: #1ea8e7;
+          background: rgba(30, 168, 231, 0.12);
+          transform: translateY(-5px);
+        }
+
+        @media (max-width: 991px) {
+          body {
+            padding-bottom: 90px !important;
+          }
+        }
+      `}</style>
+
+      <div className="bottom-nav-pill">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.to);
           return (
             <NavLink
               key={item.label}
               to={item.to}
-              className="d-flex flex-column align-items-center text-decoration-none"
-              style={{ flex: 1, height: '100%', position: 'relative', justifyContent: 'center' }}
+              className={`bottom-nav-item ${isActive ? 'active' : ''}`}
             >
-              <div 
-                className="d-flex align-items-center justify-content-center transition-all"
-                style={{ 
-                  width: isActive ? '60px' : '38px',
-                  height: isActive ? '60px' : '38px',
-                  background: isActive ? 'linear-gradient(135deg, #1ea8e7 0%, #007bff 100%)' : 'transparent',
-                  borderRadius: '50%',
-                  transform: isActive ? 'translateY(-28px) scale(1.1)' : 'scale(1)',
-                  boxShadow: isActive ? '0 10px 25px rgba(30, 168, 231, 0.4)' : 'none',
-                  border: isActive ? '5px solid #fff' : 'none',
-                  transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                  zIndex: isActive ? 5 : 1
-                }}
-              >
-                <div 
-                  style={{ 
-                    filter: isActive ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' : 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <CsLineIcons 
-                    icon={item.icon} 
-                    size={isActive ? 32 : 28} 
-                    stroke={isActive ? '#ffffff' : '#94a3b8'}
-                    fill={isActive ? 'rgba(255,255,255,0.2)' : 'none'}
-                  />
-                </div>
-              </div>
+              <CsLineIcons icon={item.icon} size="20" />
             </NavLink>
           );
         })}
@@ -272,7 +280,7 @@ const Operations = () => {
             </div>
           </Col>
         ) : (<div className="pt-2" />)}
-        <Col>
+        <Col className="ps-lg-2">
           <Switch>
             <Route exact path="/operations" render={() => <Redirect to="/operations/order-history" />} />
             <Route path="/operations/order-history" component={OrderHistory} />

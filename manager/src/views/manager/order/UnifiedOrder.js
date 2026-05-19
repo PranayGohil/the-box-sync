@@ -20,6 +20,7 @@ import CustomerInfoForm from './components/CustomerInfoForm';
 import PaymentSummaryBox from './components/PaymentSummaryBox';
 import PaymentModal from './components/PaymentModal';
 import BottomCartSheet from './components/BottomCartSheet';
+import MobileCartBar from './components/MobileCartBar';
 import { LeaveConfirmationModal, CancelOrderModal } from './components/ConfirmationModals';
 import useMenuFetcher from './hooks/useMenuFetcher';
 import useOrderCart from './hooks/useOrderCart';
@@ -55,8 +56,8 @@ const API_MAP = {
 const DEFAULT_PAYMENT_DATA = {
   subTotal: 0, cgstPercent: 0, sgstPercent: 0, vatPercent: 0,
   cgstAmount: 0, sgstAmount: 0, vatAmount: 0,
-  discountType: 'amount', discountValue: 0, discountAmount: 0,
-  total: 0, paidAmount: 0, waveoffAmount: 0, paymentType: 'Cash',
+  discountType: 'amount', discountValue: '', discountAmount: 0,
+  total: 0, paidAmount: '', waveoffAmount: 0, paymentType: 'Cash',
 };
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -414,8 +415,7 @@ const UnifiedOrder = () => {
           if (orderType === 'Dine In' && tableId) {
             window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`;
           } else {
-            const pathBase = orderType === 'Delivery' ? 'delivery' : 'takeaway';
-            window.location.href = `/order/${pathBase}?orderId=${savedId}&mode=edit`;
+            window.location.href = `/order/new?orderId=${savedId}&mode=edit`;
           }
         } else {
           fetchOrderDetails();
@@ -615,18 +615,13 @@ const UnifiedOrder = () => {
           <div className="pos-order-panel">
             <div className="pos-order-header">
               <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <div className="fw-bold" style={{ color: '#23b3f4', fontSize: '15px' }}>
-                    {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no)
-                      ? `Table ${tableInfo.table_no || customerInfo.table_no}`
-                      : 'Order Details'}
-                  </div>
-                  <div className="text-muted" style={{ fontSize: '11px' }}>
-                    {orderItems.length} item{orderItems.length !== 1 ? 's' : ''} in cart
-                  </div>
+                <div className="fw-bold" style={{ color: '#23b3f4', fontSize: '13px' }}>
+                  {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no)
+                    ? `T-${tableInfo.table_no || customerInfo.table_no}`
+                    : 'Order'} ({orderItems.length})
                 </div>
                 {tokenNumber && (
-                  <div style={{ background: 'rgba(35,179,244,0.1)', borderRadius: '50px', padding: '3px 12px', color: '#23b3f4', fontWeight: 700, fontSize: '12px' }}>
+                  <div style={{ background: 'rgba(35,179,244,0.1)', borderRadius: '50px', padding: '2px 10px', color: '#23b3f4', fontWeight: 800, fontSize: '11px' }}>
                     #{tokenNumber}
                   </div>
                 )}
@@ -651,7 +646,7 @@ const UnifiedOrder = () => {
                   value={customerInfo.comment}
                   onChange={(e) => setCustomerInfo((prev) => ({ ...prev, comment: e.target.value }))}
                   placeholder="Notes..."
-                  style={{ borderRadius: '8px', border: '1.5px solid rgba(226,232,240,0.9)', fontSize: '12px', resize: 'none', color: '#333', background: '#f8fafc' }}
+                  style={{ borderRadius: '6px', border: '1.5px solid rgba(226,232,240,0.9)', fontSize: '11.5px', height: '28px', resize: 'none', color: '#333', background: '#f8fafc' }}
                 />
               </div>
             </div>
@@ -790,10 +785,13 @@ const UnifiedOrder = () => {
           />
         </Form.Group>
       </BottomCartSheet>
+      <MobileCartBar
+        orderItems={orderItems}
+        paymentData={paymentData}
+        setShowCartSheet={setShowCartSheet}
+      />
     </>
   );
 };
 
 export default UnifiedOrder;
-
-

@@ -175,7 +175,7 @@ const ManageTable = () => {
               >
                 <div className="d-flex align-items-center gap-3">
                   <div
-                    className="d-flex align-items-center justify-content-center rounded-circle"
+                    className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
                     style={{
                       width: '32px',
                       height: '32px',

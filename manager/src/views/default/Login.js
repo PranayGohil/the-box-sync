@@ -1,5 +1,5 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { Button, Form, Spinner } from 'react-bootstrap';
+import React, { useState, useContext } from 'react';
+import { Spinner } from 'react-bootstrap';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -8,23 +8,12 @@ import axios from 'axios';
 import { AuthContext } from 'contexts/AuthContext';
 
 const Login = () => {
-  const title = 'Manager Login';
-  const description = 'Secure access to your control panel';
+  const title = 'Manager Login — The Box';
+  const description = 'Secure manager access to the management portal.';
 
   const { login } = useContext(AuthContext);
   const [showPassword, setShowPassword] = useState(false);
   const [wrongMsg, setWrongMsg] = useState('');
-
-  // Add full height classes to root
-  useEffect(() => {
-    document.body.classList.add('h-100');
-    const root = document.getElementById('root');
-    if (root) root.classList.add('h-100');
-    return () => {
-      document.body.classList.remove('h-100');
-      if (root) root.classList.remove('h-100');
-    };
-  }, []);
 
   const validationSchema = Yup.object().shape({
     restaurant_code: Yup.string().required('Restaurant Code is required'),
@@ -56,157 +45,136 @@ const Login = () => {
   return (
     <>
       <HtmlHead title={title} description={description} />
-      
 
-
-      <div className="container-fluid p-0 h-100 position-relative" style={{ zIndex: 1 }}>
-        <div className="row g-0 h-100 justify-content-center align-items-center">
-          <div className="col-11 col-sm-8 col-md-6 col-lg-5 col-xl-4 col-xxl-3">
-            
-            {/* Clean Neumorphic / Light Glass Card */}
-            <div 
-              className="p-4 p-sm-5"
-              style={{
-                background: '#ffffff',
-                borderRadius: '24px',
-                border: '1px solid rgba(35, 179, 244, 0.1)',
-                boxShadow: '0 25px 50px rgba(35, 179, 244, 0.1)',
-                animation: 'fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
-                overflow: 'hidden',
-                position: 'relative'
-              }}
-            >
-              <div className="text-center mb-5 position-relative" style={{ zIndex: 2 }}>
-                <div 
-                  className="mb-4 d-inline-flex justify-content-center align-items-center"
-                  style={{
-                    width: '72px', height: '72px',
-                    borderRadius: '22px',
-                    background: 'rgba(35, 179, 244, 0.1)',
-                    boxShadow: '0 10px 30px rgba(35,179,244,0.15)',
-                    border: '1px solid rgba(35,179,244,0.2)',
-                    transform: 'translateY(0)',
-                    transition: 'transform 0.3s ease'
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
-                >
-                  <CsLineIcons icon="shield" size="34" stroke="#23b3f4" />
-                </div>
-                <h2 className="mb-2 fw-bolder" style={{ color: '#1a1a1a', letterSpacing: '-0.5px', fontSize: '1.75rem' }}>Manager Portal</h2>
-                <p className="mb-0 fw-semibold" style={{ color: '#6c757d' }}>Access your restaurant dashboard</p>
+      <div className="login-login-page-wrapper">
+        {/* Left Panel */}
+        <div className="login-login-left-panel">
+          <div className="login-login-brand-logo">THE <span>BOX</span></div>
+          <h1 className="login-login-hero-title">
+            Your Restaurant,<br />
+            <span>Perfectly Managed.</span>
+          </h1>
+          <p className="login-login-hero-sub">
+            A powerful admin platform to manage orders, inventory, staff, and operations — all in one place.
+          </p>
+          <div className="login-login-feature-pills">
+            {['Real-time Order Tracking', 'Inventory Intelligence', 'Staff & Payroll Management', 'Financial Reporting'].map((f) => (
+              <div key={f} className="login-login-feature-pill">
+                <div className="login-login-feature-pill-dot" />
+                {f}
               </div>
+            ))}
+          </div>
+        </div>
 
-              <form onSubmit={handleSubmit} className="position-relative" style={{ zIndex: 2 }}>
-                
-                {/* Clean Light Inputs */}
-                <div className="mb-4 position-relative">
-                  <div className="position-absolute d-flex align-items-center justify-content-center" style={{ width: '56px', height: '100%', top: 0, left: 0 }}>
-                    <CsLineIcons icon="building" stroke="#23b3f4" size="18" />
-                  </div>
-                  <Form.Control 
-                    type="text" 
-                    name="restaurant_code" 
-                    placeholder="Restaurant Code" 
-                    value={values.restaurant_code} 
-                    onChange={handleChange}
-                    className="clean-input"
-                  />
-                  {errors.restaurant_code && touched.restaurant_code && <div className="text-danger mt-2 px-2 small fw-bold">{errors.restaurant_code}</div>}
-                </div>
+        {/* Right Panel — Login Form */}
+        <div className="login-login-right-panel">
+          <div className="login-login-form-header">
+            <div className="login-login-form-eyebrow">Manager Portal</div>
+            <h2 className="login-login-form-title">Welcome back</h2>
+            <p className="login-login-form-subtitle">Sign in to your dashboard</p>
+          </div>
 
-                <div className="mb-4 position-relative">
-                  <div className="position-absolute d-flex align-items-center justify-content-center" style={{ width: '56px', height: '100%', top: 0, left: 0 }}>
-                    <CsLineIcons icon="user" stroke="#23b3f4" size="18" />
-                  </div>
-                  <Form.Control 
-                    type="text" 
-                    name="username" 
-                    placeholder="Username" 
-                    value={values.username} 
-                    onChange={handleChange}
-                    className="clean-input"
-                  />
-                  {errors.username && touched.username && <div className="text-danger mt-2 px-2 small fw-bold">{errors.username}</div>}
-                </div>
+          <form onSubmit={handleSubmit}>
+            {wrongMsg && (
+              <div className="login-auth-alert-error">
+                <CsLineIcons icon="warning-hexagon" size="18" />
+                {wrongMsg}
+              </div>
+            )}
 
-                <div className="mb-4 position-relative">
-                  <div className="position-absolute d-flex align-items-center justify-content-center" style={{ width: '56px', height: '100%', top: 0, left: 0 }}>
-                    <CsLineIcons icon="lock-off" stroke="#23b3f4" size="18" />
-                  </div>
-                  <Form.Control 
-                    type={showPassword ? 'text' : 'password'} 
-                    name="password" 
-                    placeholder="Password" 
-                    value={values.password} 
-                    onChange={handleChange}
-                    className="clean-input pe-5"
-                  />
-                  <div 
-                    className="position-absolute cursor-pointer d-flex align-items-center justify-content-center"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{ width: '56px', height: '100%', top: 0, right: 0, opacity: 0.7, transition: 'opacity 0.2s' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.opacity = 0.7; }}
-                  >
-                    <CsLineIcons icon={showPassword ? "eye-off" : "eye"} stroke="#23b3f4" size="18" />
-                  </div>
-                  {errors.password && touched.password && <div className="text-danger mt-2 px-2 small fw-bold">{errors.password}</div>}
-                </div>
-
-                {wrongMsg && (
-                  <div className="text-danger text-center mb-4 fw-bold p-3" style={{ background: 'rgba(255, 60, 60, 0.1)', color: '#d32f2f', borderRadius: '12px', border: '1px solid rgba(255, 60, 60, 0.2)' }}>
-                    {wrongMsg}
-                  </div>
-                )}
-
-                <Button 
-                  size="lg" 
-                  type="submit" 
+            {/* Restaurant Code */}
+            <div className="login-auth-input-group">
+              <label className="login-auth-input-label">Restaurant Code</label>
+              <div style={{ position: 'relative' }}>
+                <span className="login-auth-input-icon">
+                  <CsLineIcons icon="building" size="18" />
+                </span>
+                <input
+                  type="text"
+                  name="restaurant_code"
+                  placeholder="e.g. REST101"
+                  value={values.restaurant_code}
+                  onChange={handleChange}
                   disabled={isSubmitting}
-                  className="w-100 border-0 fw-bold d-flex align-items-center justify-content-center mt-2"
-                  style={{
-                    background: 'linear-gradient(135deg, #4dc4f6 0%, #23b3f4 100%)',
-                    color: '#ffffff',
-                    borderRadius: '16px',
-                    height: '56px',
-                    fontSize: '1.1rem',
-                    boxShadow: '0 10px 20px rgba(35, 179, 244, 0.3)',
-                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                  }}
-                  onMouseEnter={(e) => {
-                    if(!isSubmitting) {
-                      e.currentTarget.style.transform = 'translateY(-3px)';
-                      e.currentTarget.style.boxShadow = '0 15px 30px rgba(35, 179, 244, 0.4)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if(!isSubmitting) {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 10px 20px rgba(35, 179, 244, 0.3)';
-                    }
-                  }}
-                >
-                  {isSubmitting ? (
-                    <Spinner animation="border" size="sm" variant="light" />
-                  ) : (
-                    'Sign In to Dashboard'
-                  )}
-                </Button>
-              </form>
-
-              <div className="mt-5 text-center position-relative" style={{ zIndex: 2 }}>
-                <p className="mb-0 fw-semibold" style={{ color: '#6c757d', fontSize: '13px' }}>
-                  Powered by <strong style={{ color: '#1a1a1a' }}>TheBoxSync</strong>
-                </p>
+                  className="login-auth-input form-control"
+                />
               </div>
+              {errors.restaurant_code && touched.restaurant_code && (
+                <div className="login-auth-error-msg">
+                  <CsLineIcons icon="warning" size="13" />
+                  {errors.restaurant_code}
+                </div>
+              )}
             </div>
 
+            {/* Username */}
+            <div className="login-auth-input-group">
+              <label className="login-auth-input-label">Username</label>
+              <div style={{ position: 'relative' }}>
+                <span className="login-auth-input-icon">
+                  <CsLineIcons icon="user" size="18" />
+                </span>
+                <input
+                  type="text"
+                  name="username"
+                  placeholder="yourusername"
+                  value={values.username}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className="login-auth-input form-control"
+                />
+              </div>
+              {errors.username && touched.username && (
+                <div className="login-auth-error-msg">
+                  <CsLineIcons icon="warning" size="13" />
+                  {errors.username}
+                </div>
+              )}
+            </div>
+
+            {/* Password */}
+            <div className="login-auth-input-group">
+              <label className="login-auth-input-label">Password</label>
+              <div style={{ position: 'relative' }}>
+                <span className="login-auth-input-icon">
+                  <CsLineIcons icon="lock-off" size="18" />
+                </span>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  placeholder="••••••••"
+                  value={values.password}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className="login-auth-input form-control"
+                />
+                <span className="login-auth-input-icon-right" onClick={() => setShowPassword(!showPassword)}>
+                  <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="18" />
+                </span>
+              </div>
+              {errors.password && touched.password && (
+                <div className="login-auth-error-msg">
+                  <CsLineIcons icon="warning" size="13" />
+                  {errors.password}
+                </div>
+              )}
+            </div>
+
+            <button type="submit" className="login-btn-auth-primary" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <><Spinner as="span" animation="border" size="sm" className="me-2" />Signing in...</>
+              ) : (
+                <><CsLineIcons icon="login" size="17" className="me-2" />Sign In</>
+              )}
+            </button>
+          </form>
+
+          <div className="login-auth-powered">
+            Powered by <strong>TheBoxSync</strong>
           </div>
         </div>
       </div>
-
-
     </>
   );
 };

@@ -410,6 +410,10 @@
     justify-content: space-between !important;
     align-items: center !important;
     min-height: 45px;
+    gap: 1rem;
+    text-align: right;
+    white-space: normal !important;
+    word-break: break-word;
   }
   
   .manage-menu-glass-card td:not(:last-child) {
@@ -422,6 +426,7 @@
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    flex-shrink: 0;
   }
   
   .manage-menu-glass-card td:nth-child(1)::before { content: "Dish Name"; }

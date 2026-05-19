@@ -60,7 +60,7 @@ const MenuGrid = ({
             className={`pos-category-item ${selectedCategory === '' && !showSpecial && !showParcelCharge ? 'active' : ''}`}
             onClick={() => { setSelectedCategory(''); setShowSpecial(false); if (setShowParcelCharge) setShowParcelCharge(false); setShowCategories(false); }}
           >
-            <span>🍽️</span> All Items
+            <span role="img" aria-label="all items">🍽️</span> All Items
           </button>
 
           {setShowParcelCharge && (
@@ -69,7 +69,7 @@ const MenuGrid = ({
               className={`pos-category-item ${showParcelCharge ? 'active' : ''}`}
               onClick={() => { setShowParcelCharge(true); setShowSpecial(false); setSelectedCategory(''); setShowCategories(false); }}
             >
-              <span>📦</span> Parcel Charges
+              <span role="img" aria-label="parcel">📦</span> Parcel Charges
             </button>
           )}
 
@@ -78,7 +78,7 @@ const MenuGrid = ({
             className={`pos-category-item ${showSpecial && !showParcelCharge ? 'active' : ''}`}
             onClick={() => { setShowSpecial(true); setSelectedCategory(''); if (setShowParcelCharge) setShowParcelCharge(false); setShowCategories(false); }}
           >
-            <span>⭐</span> Specials
+            <span role="img" aria-label="specials">⭐</span> Specials
           </button>
 
           <div className="pos-drawer-divider"><span>Menu</span></div>
@@ -132,7 +132,7 @@ const MenuGrid = ({
           {!showParcelCharge ? (
             filteredMenuData.length === 0 ? (
               <div className="pos-empty-state">
-                <div className="pos-empty-icon">🔍</div>
+                <div className="pos-empty-icon"><span role="img" aria-label="search">🔍</span></div>
                 <p className="pos-empty-text">No items found</p>
                 <p className="pos-empty-sub">Try a different search or category</p>
               </div>
@@ -177,7 +177,7 @@ const MenuGrid = ({
 
                             {/* Details */}
                             <div className="pos-menu-details">
-                              {dish.is_special && <div className="pos-special-star">⭐</div>}
+                              {dish.is_special && <div className="pos-special-star"><span role="img" aria-label="special">⭐</span></div>}
                               <div className="pos-dish-name">{dish.dish_name}</div>
                               <div className="pos-dish-price">₹{dish.dish_price}</div>
                               <div className="pos-add-hint">+ Add</div>

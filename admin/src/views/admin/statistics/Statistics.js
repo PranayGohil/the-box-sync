@@ -174,12 +174,27 @@ const Statistics = () => {
                     <span>{periodOptions.find((p) => p.value === selectedPeriod)?.label}</span>
                     <CsLineIcons icon="chevron-down" className="ms-2" size="12" />
                   </Dropdown.Toggle>
-                  <Dropdown.Menu className="statistics-interactive-card border-0 mt-2 shadow-lg">
-                    {periodOptions.map((period) => (
-                      <Dropdown.Item key={period.value} onClick={() => setSelectedPeriod(period.value)} active={selectedPeriod === period.value}>
-                        {period.label}
-                      </Dropdown.Item>
-                    ))}
+                  <Dropdown.Menu className="statistics-interactive-card border-0 mt-2 shadow-lg" style={{ borderRadius: '1rem', padding: '0.5rem' }}>
+                    {periodOptions.map((period) => {
+                      const isActive = period.value === selectedPeriod;
+                      return (
+                        <Dropdown.Item
+                          key={period.value}
+                          onClick={() => setSelectedPeriod(period.value)}
+                          active={isActive}
+                          className={`d-flex align-items-center justify-content-between my-1 px-3 py-2 ${isActive ? 'fw-bold text-white' : 'text-dark'}`}
+                          style={{
+                            backgroundColor: isActive ? brandColor : 'transparent',
+                            color: isActive ? '#fff' : '#495057',
+                            borderRadius: '0.75rem',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          <span className={isActive ? 'text-white' : ''}>{period.label}</span>
+                          {isActive && <CsLineIcons icon="check" size="12" className="text-white ms-2" />}
+                        </Dropdown.Item>
+                      );
+                    })}
                   </Dropdown.Menu>
                 </Dropdown>
               )}
