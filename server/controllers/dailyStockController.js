@@ -2,6 +2,7 @@ const DailyStockLog = require("../models/dailyStockLogModel");
 const WastageLog = require("../models/wastageLogModel");
 const Inventory = require("../models/inventoryModel");
 const StockUsageLog = require("../models/stockUsageLogModel");
+const StockCorrectionRequest = require("../models/stockCorrectionRequestModel");
 const XLSX = require("xlsx");
 
 // ─── Helper: normalize a date to midnight UTC ────────────────────────────────
@@ -49,11 +50,12 @@ const saveOpeningStock = async (req, res) => {
     });
 
     // ── Role-based lock ──────────────────────────────────────────────────────
-    // Only Admin can edit an already-submitted opening log.
-    if (existing && role !== "Admin") {
+    // Only Admin can edit an already-verified opening log.
+    // Managers can edit/verify if it is currently auto_generated (not yet verified by manager).
+    if (existing && existing.log_status === "manager_verified" && role !== "Admin") {
       return res.status(403).json({
         success: false,
-        message: "Opening stock for today is already submitted. Contact Admin to make corrections.",
+        message: "Opening stock for today is already verified. Raise a correction request to make changes.",
       });
     }
 
@@ -269,6 +271,18 @@ const updateDailyLog = async (req, res) => {
 
     let parsedItems = items;
     if (typeof items === "string") parsedItems = JSON.parse(items);
+
+    const log = await DailyStockLog.findOne({ _id: id, user_id: userId });
+    if (!log) return res.status(404).json({ success: false, message: "Log not found" });
+
+    // ── Role-based lock ──────────────────────────────────────────────────────
+    // Only Admin can edit an already-verified daily log.
+    if (log.log_status === "manager_verified" && role !== "Admin") {
+      return res.status(403).json({
+        success: false,
+        message: "This daily log is already verified and locked. Please raise a correction request.",
+      });
+    }
 
     const updated = await DailyStockLog.findOneAndUpdate(
       { _id: id, user_id: userId },
@@ -796,6 +810,88 @@ const exportDailyReport = async (req, res) => {
   }
 };
 
+// ─── POST /daily-stock/correction-request ──────────────────────────────────
+const createCorrectionRequest = async (req, res) => {
+  try {
+    const userId = String(req.user._id || req.user);
+    const role = req.user.Role || "Manager";
+    const { log_id, reason } = req.body;
+
+    if (!log_id || !reason) {
+      return res.status(400).json({ success: false, message: "log_id and reason are required" });
+    }
+
+    const log = await DailyStockLog.findOne({ _id: log_id, user_id: userId });
+    if (!log) {
+      return res.status(404).json({ success: false, message: "Stock log not found" });
+    }
+
+    const request = await StockCorrectionRequest.create({
+      user_id: userId,
+      requested_by: role,
+      log_id,
+      log_date: log.date,
+      shift: log.shift,
+      reason,
+      status: "pending",
+    });
+
+    res.json({ success: true, data: request });
+  } catch (error) {
+    console.error("createCorrectionRequest error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// ─── GET /daily-stock/correction-request ───────────────────────────────────
+const getCorrectionRequests = async (req, res) => {
+  try {
+    const userId = String(req.user._id || req.user);
+    const role = req.user.Role || "Manager";
+
+    let query = {};
+    if (role !== "Admin") {
+      query.user_id = userId;
+    }
+
+    const requests = await StockCorrectionRequest.find(query)
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({ success: true, data: requests });
+  } catch (error) {
+    console.error("getCorrectionRequests error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// ─── PUT /daily-stock/correction-request/:id ───────────────────────────────
+const resolveCorrectionRequest = async (req, res) => {
+  try {
+    const role = req.user.Role || "Manager";
+    if (role !== "Admin") {
+      return res.status(403).json({ success: false, message: "Only Admin can resolve correction requests" });
+    }
+
+    const { id } = req.params;
+    const { status, admin_notes } = req.body;
+
+    const request = await StockCorrectionRequest.findById(id);
+    if (!request) {
+      return res.status(404).json({ success: false, message: "Correction request not found" });
+    }
+
+    request.status = status || request.status;
+    request.admin_notes = admin_notes || request.admin_notes;
+    await request.save();
+
+    res.json({ success: true, data: request });
+  } catch (error) {
+    console.error("resolveCorrectionRequest error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 module.exports = {
   saveOpeningStock,
   saveClosingStock,
@@ -809,4 +905,7 @@ module.exports = {
   updateItemThreshold,
   getDailyReport,
   exportDailyReport,
+  createCorrectionRequest,
+  getCorrectionRequests,
+  resolveCorrectionRequest,
 };

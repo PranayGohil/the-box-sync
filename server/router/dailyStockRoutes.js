@@ -13,6 +13,9 @@ const {
   updateItemThreshold,
   getDailyReport,
   exportDailyReport,
+  createCorrectionRequest,
+  getCorrectionRequests,
+  resolveCorrectionRequest,
 } = require("../controllers/dailyStockController");
 
 const dailyStockRouter = express.Router();
@@ -24,6 +27,11 @@ dailyStockRouter.get("/today", authMiddleware, getTodayLog);
 dailyStockRouter.get("/auto-open", authMiddleware, autoGenerateOpening);
 dailyStockRouter.get("/history", authMiddleware, getDailyLogHistory);
 dailyStockRouter.put("/:id", authMiddleware, updateDailyLog);
+
+// Correction Requests
+dailyStockRouter.post("/correction-request", authMiddleware, createCorrectionRequest);
+dailyStockRouter.get("/correction-request", authMiddleware, getCorrectionRequests);
+dailyStockRouter.put("/correction-request/:id", authMiddleware, resolveCorrectionRequest);
 
 // Wastage
 dailyStockRouter.post("/log-wastage", authMiddleware, logWastage);
