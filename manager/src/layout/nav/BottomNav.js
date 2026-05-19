@@ -6,10 +6,11 @@ import { AuthContext } from 'contexts/AuthContext';
 
 const BottomNav = () => {
   const { isLogin } = useSelector((state) => state.auth);
+  const { attrMobile } = useSelector((state) => state.menu);
   const { pathname } = useLocation();
   const { activePlans } = useContext(AuthContext);
 
-  if (!isLogin) return null;
+  if (!isLogin || attrMobile) return null;
 
   const isSettings = pathname.startsWith('/settings') || pathname.startsWith('/pages/profile/settings');
   const isOperations = pathname.startsWith('/operations');

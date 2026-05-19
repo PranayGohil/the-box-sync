@@ -18,8 +18,8 @@ const CustomToggle = React.forwardRef(({ children, onClick, style }, ref) => (
       e.preventDefault();
       onClick(e);
     }}
-    className="d-flex align-items-center justify-content-center px-4 rounded-pill shadow-sm bg-white cursor-pointer transition-all hover-scale-up"
-    style={{ ...style, height: '42px', minWidth: '170px', fontWeight: '700', color: '#23b3f4', border: '1.5px solid #23b3f4' }}
+    className="d-flex align-items-center justify-content-center px-3 rounded-pill shadow-sm bg-white cursor-pointer transition-all hover-scale-up"
+    style={{ ...style, height: '34px', minWidth: '130px', fontSize: '0.8rem', fontWeight: '700', color: '#23b3f4', border: '1.5px solid #23b3f4' }}
   >
     {children}
   </div>
@@ -126,8 +126,7 @@ const Statistics = () => {
     { value: 'today', label: 'Today' },
     { value: 'yesterday', label: 'Yesterday' },
     { value: 'week', label: 'This Week' },
-    { value: 'month', label: 'This Month' },
-    { value: 'year', label: 'This Year' },
+    { value: 'month', label: 'This Month' }
   ];
 
   if (loading && !overview) {
@@ -167,37 +166,36 @@ const Statistics = () => {
               <BreadcrumbList items={breadcrumbs} />
             </Col>
             <Col xs="auto" className="d-flex justify-content-end gap-2 mt-3 mt-md-0">
-              {activePlans?.includes('Dynamic Reports') && (
-                <Dropdown className="d-inline-block">
-                  <Dropdown.Toggle as={CustomToggle}>
-                    <CsLineIcons icon="calendar" className="me-2" size="15" />
-                    <span>{periodOptions.find((p) => p.value === selectedPeriod)?.label}</span>
-                    <CsLineIcons icon="chevron-down" className="ms-2" size="12" />
-                  </Dropdown.Toggle>
-                  <Dropdown.Menu className="statistics-interactive-card border-0 mt-2 shadow-lg" style={{ borderRadius: '1rem', padding: '0.5rem' }}>
-                    {periodOptions.map((period) => {
-                      const isActive = period.value === selectedPeriod;
-                      return (
-                        <Dropdown.Item
-                          key={period.value}
-                          onClick={() => setSelectedPeriod(period.value)}
-                          active={isActive}
-                          className={`d-flex align-items-center justify-content-between my-1 px-3 py-2 ${isActive ? 'fw-bold text-white' : 'text-dark'}`}
-                          style={{
-                            backgroundColor: isActive ? brandColor : 'transparent',
-                            color: isActive ? '#fff' : '#495057',
-                            borderRadius: '0.75rem',
-                            transition: 'all 0.2s ease',
-                          }}
-                        >
-                          <span className={isActive ? 'text-white' : ''}>{period.label}</span>
-                          {isActive && <CsLineIcons icon="check" size="12" className="text-white ms-2" />}
-                        </Dropdown.Item>
-                      );
-                    })}
-                  </Dropdown.Menu>
-                </Dropdown>
-              )}
+              <Dropdown className="d-inline-block">
+                <Dropdown.Toggle as={CustomToggle}>
+                  <CsLineIcons icon="calendar" className="me-2" size="13" />
+                  <span>{periodOptions.find((p) => p.value === selectedPeriod)?.label}</span>
+                  <CsLineIcons icon="chevron-down" className="ms-2" size="10" />
+                </Dropdown.Toggle>
+                <Dropdown.Menu className="statistics-interactive-card border-0 mt-2 shadow-lg" style={{ borderRadius: '1rem', padding: '0.5rem' }}>
+                  {periodOptions.map((period) => {
+                    const isActive = period.value === selectedPeriod;
+                    return (
+                      <Dropdown.Item
+                        key={period.value}
+                        onClick={() => setSelectedPeriod(period.value)}
+                        active={isActive}
+                        className={`d-flex align-items-center justify-content-between my-1 px-3 py-2 ${isActive ? 'fw-bold text-white' : 'text-dark'}`}
+                        style={{
+                          backgroundColor: isActive ? brandColor : 'transparent',
+                          color: isActive ? '#fff' : '#495057',
+                          borderRadius: '0.75rem',
+                          fontSize: '0.8rem',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <span className={isActive ? 'text-white' : ''}>{period.label}</span>
+                        {isActive && <CsLineIcons icon="check" size="10" className="text-white ms-2" />}
+                      </Dropdown.Item>
+                    );
+                  })}
+                </Dropdown.Menu>
+              </Dropdown>
             </Col>
           </Row>
         </div>
@@ -211,7 +209,7 @@ const Statistics = () => {
                     <div className="statistics-stat-label mb-2">Total Revenue</div>
                     <div className="statistics-stat-value text-primary">{formatCurrency(overview?.summary?.totalRevenue)}</div>
                     {comparison && (
-                      <div className={`mt-2 smaller fw-bold ${comparison.trend === 'up' ? 'text-success' : 'text-danger'}`}>
+                      <div className={`mt-2 fw-bold ${comparison.trend === 'up' ? 'text-success' : 'text-danger'}`} style={{ fontSize: '0.7rem' }}>
                         {comparison.trend === 'up' ? '↑' : '↓'} {Math.abs(comparison.change)}% vs last period
                       </div>
                     )}
@@ -231,7 +229,7 @@ const Statistics = () => {
                   <div>
                     <div className="statistics-stat-label mb-2">Total Orders</div>
                     <div className="statistics-stat-value">{overview?.summary?.totalOrders || 0}</div>
-                    <div className="text-muted smaller fw-bold mt-2">Avg: {formatCurrency(overview?.summary?.avgOrderValue)}</div>
+                    <div className="text-muted fw-bold mt-2" style={{ fontSize: '0.7rem' }}>Avg: {formatCurrency(overview?.summary?.avgOrderValue)}</div>
                   </div>
                   <div
                     className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
@@ -251,7 +249,7 @@ const Statistics = () => {
                   <div>
                     <div className="statistics-stat-label mb-2">Total Discounts</div>
                     <div className="statistics-stat-value text-warning">{formatCurrency(overview?.summary?.totalDiscount)}</div>
-                    <div className="text-muted smaller fw-bold mt-2">Wave Off: {formatCurrency(overview?.summary?.totalWaveOff)}</div>
+                    <div className="text-muted fw-bold mt-2" style={{ fontSize: '0.7rem' }}>Wave Off: {formatCurrency(overview?.summary?.totalWaveOff)}</div>
                   </div>
                   <div
                     className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
@@ -271,7 +269,7 @@ const Statistics = () => {
                   <div>
                     <div className="statistics-stat-label mb-2">Avg Order Value</div>
                     <div className="statistics-stat-value">{formatCurrency(overview?.summary?.avgOrderValue)}</div>
-                    <div className="text-muted smaller fw-bold mt-2">Daily performance</div>
+                    <div className="text-muted fw-bold mt-2" style={{ fontSize: '0.7rem' }}>Daily performance</div>
                   </div>
                   <div
                     className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"

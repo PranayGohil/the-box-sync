@@ -176,6 +176,9 @@ const NavContent = () => {
 const MobileBottomNav = () => {
   const { activePlans } = useContext(AuthContext);
   const { pathname } = useLocation();
+  const { attrMobile } = useSelector((state) => state.menu);
+
+  if (attrMobile) return null;
 
   const navItems = [
     { label: 'Order', icon: 'cart', to: '/operations/order-history' },

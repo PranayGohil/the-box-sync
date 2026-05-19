@@ -97,6 +97,14 @@ const FinancialReport = () => {
     fetchFinancialReport();
   }, []);
 
+  const sortedDailyFinancials = reportData
+    ? [...reportData.dailyFinancials].sort((a, b) => {
+      const dateA = new Date(a.date.year, a.date.month - 1, a.date.day);
+      const dateB = new Date(b.date.year, b.date.month - 1, b.date.day);
+      return dateB - dateA;
+    })
+    : [];
+
   const exportToExcel = async () => {
     if (!reportData) return;
     setExporting(true);
@@ -104,14 +112,87 @@ const FinancialReport = () => {
     setExportType('Excel');
     try {
       const wb = XLSX.utils.book_new();
+      const allData = [];
+
+      allData.push(['FINANCIAL AUDIT REPORT']);
+      allData.push(['Company:', COMPANY_NAME]);
+      allData.push(['Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`]);
+      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy HH:mm')]);
+      allData.push([]);
+
       if (exportOptions.includeSummary) {
-        const dashboardData = [['FINANCIAL REPORT DASHBOARD'], [], ['Company:', COMPANY_NAME], ['Period:', `${startDate} to ${endDate}`], [], ['Metric', 'Value'], ['Gross', reportData.summary.grossRevenue], ['Net', reportData.summary.netRevenue]];
-        const ws = XLSX.utils.aoa_to_sheet(dashboardData);
-        XLSX.utils.book_append_sheet(wb, ws, 'Dashboard');
+        setExportProgress(20);
+        allData.push(['EXECUTIVE FISCAL SUMMARY']);
+        allData.push(['Metric', 'Value', 'Note']);
+        allData.push(['Gross Revenue', reportData.summary.grossRevenue, 'Total realization']);
+        allData.push(['Net Revenue', reportData.summary.netRevenue, 'Post-deduction yield']);
+        allData.push(['Total Deductions', reportData.summary.totalDiscount + reportData.summary.totalWaveOff, `${reportData.summary.discountPercentage}% ratio`]);
+        allData.push(['Fiscal Tax', reportData.summary.totalTax, `${reportData.summary.taxPercentage}% effective`]);
+        allData.push(['Gross Profit Estimate', reportData.summary.grossProfit, `Margin: ${reportData.summary.grossProfitMargin}%`]);
+        allData.push([]);
+        allData.push([]);
       }
+
+      if (exportOptions.includeDailyBreakdown && sortedDailyFinancials?.length > 0) {
+        setExportProgress(40);
+        allData.push(['DAILY OPERATIONAL LEDGER']);
+        allData.push(['Date', 'Gross Rev', 'Deductions', 'Net Yield', 'Fiscal Tax', 'Orders']);
+        sortedDailyFinancials.forEach(day => {
+          allData.push([`${day.date.day}-${day.date.month}-${day.date.year}`, day.grossRevenue, day.discount + day.waveOff, day.netRevenue, day.tax, day.orders]);
+        });
+        allData.push(['Audit Period Total', reportData.summary.grossRevenue, reportData.summary.totalDiscount + reportData.summary.totalWaveOff, reportData.summary.netRevenue, reportData.summary.totalTax, reportData.summary.totalOrders]);
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeTaxBreakdown) {
+        setExportProgress(60);
+        allData.push(['TAX COMPLIANCE BREAKDOWN']);
+        allData.push(['Tax Type', 'Amount']);
+        allData.push(['CGST / SGST', reportData.summary.cgstAmount + reportData.summary.sgstAmount]);
+        allData.push(['VAT', reportData.summary.vatAmount]);
+        allData.push(['Total Tax', reportData.summary.totalTax]);
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includePaymentMethods && reportData.paymentMethodFinancials?.length > 0) {
+        setExportProgress(75);
+        allData.push(['PAYMENT CHANNEL ANALYSIS']);
+        allData.push(['Payment Method', 'Orders', 'Net Yield', 'Collected Amount']);
+        reportData.paymentMethodFinancials.forEach(payment => {
+          allData.push([payment.paymentMethod, payment.orderCount, payment.totalAmount, payment.paidAmount]);
+        });
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeFinancialInsights) {
+        setExportProgress(85);
+        allData.push(['FISCAL INTELLIGENCE ALERTS']);
+        allData.push(['Alert', 'Detail']);
+        allData.push(['Discount Policy', `Rate: ${reportData.summary.discountPercentage}%. ${reportData.summary.discountPercentage > 15 ? 'Alert: Exposure detected.' : 'Healthy parameters.'}`]);
+        allData.push(['Tax Remittance', `Total: ${reportData.summary.totalTax}. Modules ready for compliance filing.`]);
+        allData.push(['Revenue Yield', `Net Yield: ${reportData.summary.netRevenue}. Avg Order: ${(reportData.summary.netRevenue / reportData.summary.totalOrders).toFixed(2)}.`]);
+        allData.push(['Collection Rate', `${((reportData.summary.totalPaid / reportData.summary.netRevenue) * 100).toFixed(1)}%`]);
+        allData.push([]);
+        allData.push([]);
+      }
+
+      const ws = XLSX.utils.aoa_to_sheet(allData);
+      ws['!cols'] = [{ wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Financial Report');
+
       XLSX.writeFile(wb, `Financial_Report_${startDate}_to_${endDate}.xlsx`);
       showSuccessToast('Excel report exported successfully!');
-    } catch (err) { console.error(err); } finally { setExporting(false); setExportProgress(0); }
+    } catch (err) {
+      console.error(err);
+      showSuccessToast('Error exporting Excel report');
+    } finally {
+      setExporting(false);
+      setExportProgress(0);
+      setExportType('');
+    }
   };
 
   const exportToPDF = async () => {
@@ -121,10 +202,148 @@ const FinancialReport = () => {
     setExportType('PDF');
     try {
       const doc = new jsPDF();
-      doc.text('FINANCIAL AUDIT', 105, 20, { align: 'center' });
+      
+      doc.setFontSize(16);
+      doc.text('Financial Audit Report', 105, 15, { align: 'center' });
+      doc.setFontSize(10);
+      doc.text(COMPANY_NAME, 105, 22, { align: 'center' });
+      doc.text(`Period: ${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`, 105, 28, { align: 'center' });
+
+      let currentY = 35;
+
+      if (exportOptions.includeSummary) {
+        setExportProgress(20);
+        doc.setFontSize(12);
+        doc.text('Executive Fiscal Summary', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Metric', 'Value', 'Note']],
+          body: [
+            ['Gross Revenue', formatCurrencyPDF(reportData.summary.grossRevenue), 'Total realization'],
+            ['Net Revenue', formatCurrencyPDF(reportData.summary.netRevenue), 'Post-deduction yield'],
+            ['Total Deductions', formatCurrencyPDF(reportData.summary.totalDiscount + reportData.summary.totalWaveOff), `${reportData.summary.discountPercentage}% ratio`],
+            ['Fiscal Tax', formatCurrencyPDF(reportData.summary.totalTax), `${reportData.summary.taxPercentage}% effective`],
+            ['Gross Profit Estimate', formatCurrencyPDF(reportData.summary.grossProfit), `Margin: ${reportData.summary.grossProfitMargin}%`]
+          ],
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeTaxBreakdown) {
+        setExportProgress(35);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Tax Compliance Breakdown', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Tax Type', 'Amount']],
+          body: [
+            ['CGST / SGST', formatCurrencyPDF(reportData.summary.cgstAmount + reportData.summary.sgstAmount)],
+            ['VAT', formatCurrencyPDF(reportData.summary.vatAmount)],
+            ['Total Tax', formatCurrencyPDF(reportData.summary.totalTax)]
+          ],
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includePaymentMethods && reportData.paymentMethodFinancials?.length > 0) {
+        setExportProgress(50);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Payment Channel Analysis', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Payment Method', 'Orders', 'Net Yield', 'Collected Amount']],
+          body: reportData.paymentMethodFinancials.map(payment => [
+            payment.paymentMethod,
+            payment.orderCount.toString(),
+            formatCurrencyPDF(payment.totalAmount),
+            formatCurrencyPDF(payment.paidAmount)
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeDailyBreakdown && sortedDailyFinancials?.length > 0) {
+        setExportProgress(70);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Daily Operational Ledger', 14, currentY);
+        
+        const dailyBody = sortedDailyFinancials.map(day => [
+          `${day.date.day}-${day.date.month}-${day.date.year}`,
+          formatCurrencyPDF(day.grossRevenue),
+          formatCurrencyPDF(day.discount + day.waveOff),
+          formatCurrencyPDF(day.netRevenue),
+          formatCurrencyPDF(day.tax),
+          day.orders.toString()
+        ]);
+
+        dailyBody.push([
+          'Audit Period Total',
+          formatCurrencyPDF(reportData.summary.grossRevenue),
+          formatCurrencyPDF(reportData.summary.totalDiscount + reportData.summary.totalWaveOff),
+          formatCurrencyPDF(reportData.summary.netRevenue),
+          formatCurrencyPDF(reportData.summary.totalTax),
+          reportData.summary.totalOrders.toString()
+        ]);
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Date', 'Gross Rev', 'Deductions', 'Net Yield', 'Fiscal Tax', 'Orders']],
+          body: dailyBody,
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 },
+          didParseCell(data) {
+            if (data.row.index === dailyBody.length - 1) {
+              data.cell.styles.fontStyle = 'bold';
+              data.cell.styles.fillColor = [240, 240, 240];
+            }
+          }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeFinancialInsights) {
+        setExportProgress(90);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Fiscal Intelligence Alerts', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Alert', 'Detail']],
+          body: [
+            ['Discount Policy', `Rate: ${reportData.summary.discountPercentage}%. ${reportData.summary.discountPercentage > 15 ? 'Alert: Exposure detected.' : 'Healthy parameters.'}`],
+            ['Tax Remittance', `Total: ${formatCurrencyPDF(reportData.summary.totalTax)}. Modules ready for compliance filing.`],
+            ['Revenue Yield', `Net Yield: ${formatCurrencyPDF(reportData.summary.netRevenue)}. Avg Order: ${formatCurrencyPDF(reportData.summary.netRevenue / reportData.summary.totalOrders)}.`],
+            ['Collection Rate', `${((reportData.summary.totalPaid / reportData.summary.netRevenue) * 100).toFixed(1)}%`]
+          ],
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+      }
+
       doc.save(`Financial_Report_${startDate}_to_${endDate}.pdf`);
       showSuccessToast('PDF report exported successfully!');
-    } catch (err) { console.error(err); } finally { setExporting(false); setExportProgress(0); }
+    } catch (err) {
+      console.error(err);
+      showSuccessToast('Error exporting PDF report');
+    } finally {
+      setExporting(false);
+      setExportProgress(0);
+      setExportType('');
+    }
   };
 
   const handleExportClick = (type) => {
@@ -137,14 +356,6 @@ const FinancialReport = () => {
     if (exportType === 'Excel') exportToExcel();
     else if (exportType === 'PDF') exportToPDF();
   };
-
-  const sortedDailyFinancials = reportData
-    ? [...reportData.dailyFinancials].sort((a, b) => {
-      const dateA = new Date(a.date.year, a.date.month - 1, a.date.day);
-      const dateB = new Date(b.date.year, b.date.month - 1, b.date.day);
-      return dateB - dateA;
-    })
-    : [];
 
   if (loading && !reportData) {
     return (
