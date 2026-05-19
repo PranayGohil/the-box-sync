@@ -75,6 +75,9 @@ const OrderHistory = () => {
   // Ref to prevent infinite loops
   const fetchRef = useRef(false);
 
+  // Table areas fetched from DB
+  const [tableAreas, setTableAreas] = useState([]);
+
   const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
@@ -154,6 +157,28 @@ const OrderHistory = () => {
       fetchOrders();
     }
   }, [fetchOrders]);
+
+  // Fetch table areas from DB on mount
+  useEffect(() => {
+    const fetchTableAreas = async () => {
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API}/table/get-all`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        if (res.data && res.data.data) {
+          const areas = [...new Set(res.data.data.map((item) => item.area).filter(Boolean))];
+          setTableAreas(areas);
+        }
+      } catch (err) {
+        console.error('Failed to fetch table areas:', err);
+      }
+    };
+    fetchTableAreas();
+  }, []);
+
   const handlePageChange = (newPageIndex) => {
     if (newPageIndex !== pageIndex) {
       setPageIndex(newPageIndex);
@@ -1051,39 +1076,33 @@ const OrderHistory = () => {
 
   if (loading && pageIndex === 0) {
     return (
-      <>
+      <div className="container-fluid pb-5">
         <HtmlHead title={title} description={description} />
-        <Row>
-          <Col>
-            <section className="scroll-section" id="title">
-              <div className="page-title-container">
-                <h1 className="mb-0 pb-0 display-4">{title}</h1>
-                <BreadcrumbList items={breadcrumbs} />
-              </div>
-            </section>
-            <div className="text-center py-5">
-              <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading Order History...</h5>
-              <p className="text-muted">Please wait while we fetch your orders</p>
-            </div>
-          </Col>
-        </Row>
-      </>
+        <section className="scroll-section" id="title">
+          <div className="page-title-container mt-5 pt-1 mt-md-0 pt-md-0">
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+            <BreadcrumbList items={breadcrumbs} />
+          </div>
+        </section>
+        <div className="text-center py-5">
+          <Spinner animation="border" variant="primary" className="mb-3" />
+          <h5>Loading Order History...</h5>
+          <p className="text-muted">Please wait while we fetch your orders</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="container-fluid pb-5">
       <HtmlHead title={title} description={description} />
 
-      <Row>
-        <Col>
-          <section className="scroll-section" id="title">
-            <div className="page-title-container mb-4">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
-              <BreadcrumbList items={breadcrumbs} />
-            </div>
-          </section>
+      <section className="scroll-section" id="title">
+        <div className="page-title-container mb-4 mt-5 pt-1 mt-md-0 pt-md-0">
+          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+          <BreadcrumbList items={breadcrumbs} />
+        </div>
+      </section>
 
           {error && (
             <Alert variant="danger" className="mb-4">
@@ -1205,25 +1224,37 @@ const OrderHistory = () => {
                       </Col>
 
                       {/* Date Range Filter */}
-                      <Col xs="6" sm="6" md="2">
+                      <Col xs="12" sm="6" md="2">
                         <Form.Label className="small fw-bold text-muted mb-1">From</Form.Label>
-                        <Form.Control
-                          type="date"
-                          value={filters.fromDate}
-                          onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-                          className="rounded-pill px-4 border-0 shadow-sm bg-white"
-                          style={{ height: '44px', fontSize: '14px', appearance: 'none' }}
-                        />
+                        <div
+                          className="d-flex align-items-center bg-white shadow-sm rounded-pill px-3"
+                          style={{ height: '44px', border: '1px solid #f1f5f9', minWidth: 0, overflow: 'hidden' }}
+                        >
+                          <CsLineIcons icon="calendar" size="14" className="text-primary me-2 flex-shrink-0" />
+                          <Form.Control
+                            type="date"
+                            value={filters.fromDate}
+                            onChange={(e) => handleFilterChange('fromDate', e.target.value)}
+                            className="border-0 bg-transparent shadow-none p-0 w-100"
+                            style={{ fontSize: '13px', outline: 'none', minWidth: 0 }}
+                          />
+                        </div>
                       </Col>
-                      <Col xs="6" sm="6" md="2">
+                      <Col xs="12" sm="6" md="2">
                         <Form.Label className="small fw-bold text-muted mb-1">To</Form.Label>
-                        <Form.Control
-                          type="date"
-                          value={filters.toDate}
-                          onChange={(e) => handleFilterChange('toDate', e.target.value)}
-                          className="rounded-pill px-4 border-0 shadow-sm bg-white"
-                          style={{ height: '44px', fontSize: '14px', appearance: 'none' }}
-                        />
+                        <div
+                          className="d-flex align-items-center bg-white shadow-sm rounded-pill px-3"
+                          style={{ height: '44px', border: '1px solid #f1f5f9', minWidth: 0, overflow: 'hidden' }}
+                        >
+                          <CsLineIcons icon="calendar" size="14" className="text-primary me-2 flex-shrink-0" />
+                          <Form.Control
+                            type="date"
+                            value={filters.toDate}
+                            onChange={(e) => handleFilterChange('toDate', e.target.value)}
+                            className="border-0 bg-transparent shadow-none p-0 w-100"
+                            style={{ fontSize: '13px', outline: 'none', minWidth: 0 }}
+                          />
+                        </div>
                       </Col>
 
                       {/* Order Status Filter */}
@@ -1274,16 +1305,31 @@ const OrderHistory = () => {
                       </Col>
 
                       {/* Table Area Filter */}
-                      {/* <Col md={2} className="mb-3">
-                      <Form.Label className="small text-muted">Table Area</Form.Label>
-                      <Form.Control
-                        type="text"
-                        size="sm"
-                        placeholder="Table Area"
-                        value={filters.tableArea}
-                        onChange={(e) => handleFilterChange('tableArea', e.target.value)}
-                      />
-                    </Col> */}
+                      {tableAreas.length > 0 && (
+                        <Col xs="12" sm="6" md="3">
+                          <Form.Label className="small fw-bold text-muted mb-1">Table Area</Form.Label>
+                          <Dropdown className="w-100">
+                            <Dropdown.Toggle
+                              variant="white"
+                              className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                              style={{ height: '44px', fontSize: '14px' }}
+                            >
+                              {filters.tableArea || 'All Areas'}
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu
+                              className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                              style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+                            >
+                              <Dropdown.Item active={filters.tableArea === ''} onClick={() => handleFilterChange('tableArea', '')}>All Areas</Dropdown.Item>
+                              {tableAreas.map((area) => (
+                                <Dropdown.Item key={area} active={filters.tableArea === area} onClick={() => handleFilterChange('tableArea', area)}>
+                                  {area}
+                                </Dropdown.Item>
+                              ))}
+                            </Dropdown.Menu>
+                          </Dropdown>
+                        </Col>
+                      )}
                     </Row>
                   </div>
                 </Card.Body>
@@ -1335,7 +1381,7 @@ const OrderHistory = () => {
                               <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd MMM yyyy, HH:mm')}</div>
                             </div>
                             <Badge
-                              bg={order.order_status === 'Paid' || order.order_status === 'Completed' || order.order_status === 'Save' ? 'success' : order.order_status === 'KOT' ? 'warning' : 'secondary'}
+                              bg={order.order_status === 'Paid' || order.order_status === 'Completed' || order.order_status === 'Save' ? 'success' : order.order_status === 'KOT' ? 'warning' : order.order_status === 'Cancelled' ? 'danger' : 'secondary'}
                               className="rounded-pill px-3 py-1"
                             >
                               {order.order_status}
@@ -1344,8 +1390,10 @@ const OrderHistory = () => {
 
                           <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
                             <Col xs="6">
-                              <div className="text-muted small">Type</div>
-                              <div className="fw-bold small">{order.order_type}</div>
+                              <div className="text-muted small mb-1">Type</div>
+                              <Badge bg={order.order_type === 'Dine In' ? 'primary' : order.order_type === 'Takeaway' ? 'warning' : order.order_type === 'Delivery' ? 'success' : 'secondary'} className="rounded-pill px-3 py-1">
+                                {order.order_type}
+                              </Badge>
                             </Col>
                             <Col xs="6" className="text-end">
                               <div className="text-muted small">Amount</div>
@@ -1468,22 +1516,34 @@ const OrderHistory = () => {
                         <Col xs={12}>
                           <Form.Label className="small fw-bold text-muted mb-1">Date Range</Form.Label>
                           <div className="d-flex flex-column flex-sm-row gap-3">
-                            <Form.Control
-                              type="date"
-                              value={exportFilters.fromDate}
-                              onChange={(e) => setExportFilters({ ...exportFilters, fromDate: e.target.value })}
-                              className="border-0 shadow-sm rounded-pill flex-grow-1 px-4"
-                              style={{ height: '44px', fontSize: '14px' }}
-                            />
-                            <Form.Control
-                              type="date"
-                              value={exportFilters.toDate}
-                              onChange={(e) => setExportFilters({ ...exportFilters, toDate: e.target.value })}
-                              className="border-0 shadow-sm rounded-pill flex-grow-1 px-4"
-                              style={{ height: '44px', fontSize: '14px' }}
-                            />
-                          </div>
-                        </Col>
+                        <div 
+                          className="d-flex align-items-center flex-grow-1 bg-white shadow-sm rounded-pill px-3" 
+                          style={{ height: '44px', border: '1px solid #f1f5f9' }}
+                        >
+                          <CsLineIcons icon="calendar" size="16" className="text-primary me-2" />
+                          <Form.Control
+                            type="date"
+                            value={exportFilters.fromDate}
+                            onChange={(e) => setExportFilters({ ...exportFilters, fromDate: e.target.value })}
+                            className="border-0 bg-transparent shadow-none p-0 w-100"
+                            style={{ fontSize: '14px', outline: 'none' }}
+                          />
+                        </div>
+                        <div 
+                          className="d-flex align-items-center flex-grow-1 bg-white shadow-sm rounded-pill px-3" 
+                          style={{ height: '44px', border: '1px solid #f1f5f9' }}
+                        >
+                          <CsLineIcons icon="calendar" size="16" className="text-primary me-2" />
+                          <Form.Control
+                            type="date"
+                            value={exportFilters.toDate}
+                            onChange={(e) => setExportFilters({ ...exportFilters, toDate: e.target.value })}
+                            className="border-0 bg-transparent shadow-none p-0 w-100"
+                            style={{ fontSize: '14px', outline: 'none' }}
+                          />
+                        </div>
+                      </div>
+                    </Col>
 
                         <Col xs={12} sm={6}>
                           <Form.Label className="small fw-bold text-muted mb-1">Order Source</Form.Label>
@@ -1578,14 +1638,30 @@ const OrderHistory = () => {
 
                         <Col xs={12}>
                           <Form.Label className="small fw-bold text-muted mb-1">Table Area</Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder="Enter table area"
-                            value={exportFilters.tableArea}
-                            onChange={(e) => setExportFilters({ ...exportFilters, tableArea: e.target.value })}
-                            className="border-0 shadow-sm rounded-pill px-4"
-                            style={{ height: '44px', fontSize: '14px' }}
-                          />
+                          <Dropdown className="w-100">
+                            <Dropdown.Toggle
+                              variant="white"
+                              className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                              style={{ height: '44px', fontSize: '14px' }}
+                            >
+                              {exportFilters.tableArea || 'All Areas'}
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu
+                              className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                              style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
+                            >
+                              <Dropdown.Item active={exportFilters.tableArea === ''} onClick={() => setExportFilters({ ...exportFilters, tableArea: '' })}>All Areas</Dropdown.Item>
+                              {tableAreas.length > 0 ? (
+                                tableAreas.map((area) => (
+                                  <Dropdown.Item key={area} active={exportFilters.tableArea === area} onClick={() => setExportFilters({ ...exportFilters, tableArea: area })}>
+                                    {area}
+                                  </Dropdown.Item>
+                                ))
+                              ) : (
+                                <Dropdown.Item disabled className="text-muted">No areas configured</Dropdown.Item>
+                              )}
+                            </Dropdown.Menu>
+                          </Dropdown>
                         </Col>
                       </Row>
                     </Card>
@@ -1616,15 +1692,17 @@ const OrderHistory = () => {
                 Close
               </Button>
               {!exporting && (
-                <Button variant="primary" onClick={handleExportConfirm} className="rounded-pill px-4 border-0" style={{ backgroundColor: '#23b3f4' }}>
-                  Generate {exportFormat === 'excel' ? 'Excel' : 'PDF'}
+                <Button
+                  onClick={handleExportConfirm}
+                  className="px-4 py-2 rounded-pill d-flex align-items-center manage-table-custom-btn-outline"
+                >
+                  <CsLineIcons icon="download" className="me-2" size="18" stroke="currentColor" />
+                  Download {exportFormat === 'excel' ? 'Excel' : 'PDF'}
                 </Button>
               )}
             </Modal.Footer>
           </Modal>
-        </Col>
-      </Row>
-    </>
+    </div>
   );
 };
 

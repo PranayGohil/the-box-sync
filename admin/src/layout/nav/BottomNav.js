@@ -64,18 +64,17 @@ const BottomNav = () => {
         }
 
         .bottom-nav-pill {
-          background: rgba(255, 255, 255, 0.95);
+          background: rgba(255, 255, 255, 0.85);
           backdrop-filter: blur(25px) saturate(200%);
           -webkit-backdrop-filter: blur(25px) saturate(200%);
-          border: 1px solid rgba(255, 255, 255, 0.4);
-          border-radius: 35px;
-          padding: 0px 10px;
+          border: 1px solid rgba(255, 255, 255, 0.45);
+          border-radius: 40px;
+          padding: 6px 10px;
           display: flex;
           align-items: center;
           justify-content: space-around;
           width: 100%;
-          height: 65px;
-          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
           pointer-events: auto;
         }
 
@@ -85,50 +84,23 @@ const BottomNav = () => {
           align-items: center;
           justify-content: center;
           text-decoration: none !important;
-          color: #94a3b8;
-          flex: 1;
-          height: 100%;
-          position: relative;
-          transition: all 0.3s ease;
-        }
-
-        .bottom-nav-bubble {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 38px;
-          height: 38px;
+          color: #64748b;
+          width: 48px;
+          height: 48px;
           border-radius: 50%;
-          background: transparent;
-          transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          z-index: 1;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .bottom-nav-item.active-bubble .bottom-nav-bubble {
-          width: 60px;
-          height: 60px;
-          background: linear-gradient(135deg, #1ea8e7 0%, #007bff 100%);
-          transform: translateY(-26px) scale(1.05);
-          box-shadow: 0 10px 25px rgba(30, 168, 231, 0.4);
-          border: 5px solid #ffffff;
-          z-index: 5;
-        }
-
-        .bottom-nav-icon-container {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.3s ease;
-        }
-
-        .bottom-nav-item.active-bubble .bottom-nav-icon-container {
-          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+        .bottom-nav-item.active {
+          color: #1ea8e7;
+          background: rgba(30, 168, 231, 0.12);
+          transform: translateY(-5px);
         }
 
         /* Adjust main layout for bottom nav space */
         @media (max-width: 991px) {
           body {
-            padding-bottom: 95px !important;
+            padding-bottom: 90px !important;
           }
         }
       `}</style>
@@ -161,18 +133,9 @@ const BottomNav = () => {
             <NavLink
               key={item.to}
               to={item.to}
-              className={`bottom-nav-item ${isActive ? 'active-bubble' : ''}`}
+              className={`bottom-nav-item ${isActive ? 'active' : ''}`}
             >
-              <div className="bottom-nav-bubble">
-                <div className="bottom-nav-icon-container">
-                  <CsLineIcons
-                    icon={item.icon}
-                    size={isActive ? "26" : "24"}
-                    stroke={isActive ? '#ffffff' : '#94a3b8'}
-                    fill={isActive ? 'rgba(255,255,255,0.2)' : 'none'}
-                  />
-                </div>
-              </div>
+              <CsLineIcons icon={item.icon} size="20" />
             </NavLink>
           );
         })}

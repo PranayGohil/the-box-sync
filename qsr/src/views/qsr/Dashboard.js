@@ -22,7 +22,7 @@ const CustomToggle = React.forwardRef(({ children, onClick, style }, ref) => (
 ));
 
 const Dashboard = () => {
-  const title = 'Analytics Dashboard';
+  const title = 'Dashboard';
   const description = 'Restaurant performance and insights';
   const history = useHistory();
 

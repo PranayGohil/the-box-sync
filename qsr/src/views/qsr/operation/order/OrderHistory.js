@@ -517,7 +517,7 @@ const OrderHistory = () => {
       <div className="container-fluid pb-5">
         <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4 mt-5 mt-lg-0">
+      <div className="page-title-container mb-4 mt-5 pt-1 mt-md-0 pt-md-0">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto">
             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>
@@ -728,7 +728,7 @@ const OrderHistory = () => {
                         <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd MMM yyyy, HH:mm')}</div>
                       </div>
                       <Badge
-                        bg={order.order_status === 'Paid' ? 'success' : order.order_status === 'KOT' ? 'warning' : 'secondary'}
+                        bg={order.order_status === 'Paid' || order.order_status === 'Completed' || order.order_status === 'Save' ? 'success' : order.order_status === 'KOT' ? 'warning' : order.order_status === 'Cancelled' ? 'danger' : 'secondary'}
                         className="rounded-pill px-3 py-1"
                       >
                         {order.order_status}
@@ -737,8 +737,10 @@ const OrderHistory = () => {
 
                     <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
                       <Col xs="6">
-                        <div className="text-muted small">Type</div>
-                        <div className="fw-bold small">{order.order_type}</div>
+                        <div className="text-muted small mb-1">Type</div>
+                        <Badge bg={order.order_type === 'Dine In' ? 'primary' : order.order_type === 'Takeaway' ? 'warning' : order.order_type === 'Delivery' ? 'success' : 'secondary'} className="rounded-pill px-3 py-1">
+                          {order.order_type}
+                        </Badge>
                       </Col>
                       <Col xs="6" className="text-end">
                         <div className="text-muted small">Amount</div>
@@ -749,7 +751,7 @@ const OrderHistory = () => {
                     </Row>
 
                     <div className="d-flex justify-content-between align-items-center">
-                      <Badge bg="info" className="rounded-pill opacity-75">
+                      <Badge bg={order.order_source === 'Manager' ? 'info' : order.order_source === 'Captain' ? 'primary' : order.order_source === 'QSR' ? 'secondary' : 'dark'} className="rounded-pill px-3 py-1">
                         {order.order_source}
                       </Badge>
                       <div className="d-flex gap-2">
