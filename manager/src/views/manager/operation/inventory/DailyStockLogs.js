@@ -29,6 +29,7 @@ const DailyStockLogs = () => {
   const [editItems, setEditItems] = useState([]);
   const [editNotes, setEditNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [expandedDates, setExpandedDates] = useState({});
 
   // Correction request states
   const [showCorrectionModal, setShowCorrectionModal] = useState(false);
@@ -65,6 +66,7 @@ const DailyStockLogs = () => {
       setLoading(true);
       const res = await getDailyLogHistory({ from: fromDate, to: toDate, limit: 100 });
       setLogs(res.data.data || []);
+      setExpandedDates({});
     } catch (err) {
       toast.error('Load failed');
     } finally {
@@ -106,6 +108,10 @@ const DailyStockLogs = () => {
     return acc;
   }, {});
 
+  const toggleDateCollapse = (dateKey) => {
+    setExpandedDates((prev) => ({ ...prev, [dateKey]: !prev[dateKey] }));
+  };
+
   const customStyles = `
     .audit-logs-day-card {
       background: #ffffff !important;
@@ -122,6 +128,16 @@ const DailyStockLogs = () => {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      cursor: pointer;
+    }
+    .audit-logs-day-header:hover {
+      background: linear-gradient(135deg, #eff6ff 0%, #e2e8f0 100%) !important;
+    }
+    .audit-logs-day-header .expand-icon {
+      transition: transform 0.2s ease;
+    }
+    .audit-logs-day-header.expanded .expand-icon {
+      transform: rotate(180deg);
     }
     .audit-logs-log-row-card {
       padding: 1.25rem 2rem !important;
@@ -232,18 +248,20 @@ const DailyStockLogs = () => {
 
             return (
               <div key={dateKey} className="audit-logs-day-card">
-                <div className="audit-logs-day-header">
+                <div className={`audit-logs-day-header${expandedDates[dateKey] ? ' expanded' : ''}`} onClick={() => toggleDateCollapse(dateKey)}>
                   <div>
                     <div className="h5 fw-bold mb-1 text-dark d-flex align-items-center"><CsLineIcons icon="calendar" className="me-2 text-primary" size="20" />{format(new Date(dateKey), 'dd MMM yyyy')}</div>
                     <div className="text-muted small fw-bold" style={{letterSpacing: '0.05em'}}>{format(new Date(dateKey), 'EEEE').toUpperCase()} AUDIT</div>
                   </div>
-                  <div className="d-flex gap-2">
+                  <div className="d-flex align-items-center gap-2">
                     {opening && <Badge bg={STATUS_CONFIG[opening.log_status]?.bg || 'secondary'} className="px-3 py-2 fw-bold" style={{ fontSize: '0.75rem' }}>Opening: {STATUS_CONFIG[opening.log_status]?.label}</Badge>}
                     {closing && <Badge bg={STATUS_CONFIG[closing.log_status]?.bg || 'secondary'} className="px-3 py-2 fw-bold" style={{ fontSize: '0.75rem' }}>Closing: {STATUS_CONFIG[closing.log_status]?.label}</Badge>}
+                    <CsLineIcons icon="chevron-down" size="18" className="expand-icon" />
                   </div>
                 </div>
 
-                <div className="p-4 bg-white">
+                {expandedDates[dateKey] && (
+                  <div className="p-4 bg-white">
                   <Row className="d-none d-lg-flex px-3 mb-3 mx-0 align-items-center">
                     <Col lg={4} className="audit-header-col ps-4">Ingredient</Col>
                     <Col lg={2} className="audit-header-col text-center">Opening</Col>
@@ -349,8 +367,9 @@ const DailyStockLogs = () => {
                     </Button>
                   )}
                 </div>
+                  </div>
+                )}
               </div>
-            </div>
             );
           })
         )}

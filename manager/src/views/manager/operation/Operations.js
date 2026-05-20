@@ -137,8 +137,6 @@ const NavContent = () => {
               '/operations/edit-inventory',
               '/operations/inventory-details',
               '/operations/stock-management',
-              '/operations/daily-opening-stock',
-              '/operations/daily-closing-stock',
               '/operations/daily-stock-logs',
               '/operations/wastage-log',
               '/operations/inventory-report'
@@ -147,6 +145,14 @@ const NavContent = () => {
           }}>
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Manage Inventory</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/daily-opening-stock" className="px-0">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Opening Stock</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/daily-closing-stock" className="px-0">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Closing Stock</span>
           </Nav.Link>
         </div>
       </div>

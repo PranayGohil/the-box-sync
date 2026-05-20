@@ -150,14 +150,14 @@ const CompleteInventory = () => {
     <div className="complete-inventory-inventory-container">
       
       <HtmlHead title="Complete Inventory" />
-      <div className="container px-lg-5">
+      <div className="container-fluid px-3 px-lg-5">
         <div className="page-title-container mb-4 mt-5 mt-lg-0">
-          <Row className="g-0 align-items-center">
-            <Col xs="auto" className="me-auto">
+          <Row className="g-3 align-items-center">
+            <Col xs={12} md={7}>
               <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>Complete Request</h1>
               <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations/inventory', text: 'Inventory' }, { to: `operations/complete-inventory/${id}`, title: 'Complete' }]} />
             </Col>
-            <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
+            <Col xs={12} md={5} className="d-flex flex-wrap justify-content-start justify-content-md-end gap-2 mt-3 mt-md-0">
               <Button variant="outline-secondary" onClick={() => history.goBack()} className="rounded-pill px-4 fw-bold border-2">
                 <CsLineIcons icon="arrow-left" size="14" className="me-2" /> Cancel
               </Button>
@@ -224,7 +224,15 @@ const CompleteInventory = () => {
                   <Card.Body className="p-4 p-lg-5">
                     <div className="complete-inventory-section-label"><CsLineIcons icon="file-text" size="18" /> Purchase Verification</div>
                     <Row className="g-4 mb-5">
-                      <Col xs={12} md={3}><div className="complete-inventory-input-group-label">Bill Date</div><Field type="date" name="bill_date" className={`complete-inventory-modern-input form-control ${touched.bill_date && errors.bill_date ? 'is-invalid' : ''}`} /></Col>
+                      <Col xs={12} md={3}>
+                        <div className="complete-inventory-input-group-label">Bill Date</div>
+                        <div className="position-relative">
+                          <Field type="date" name="bill_date" className={`complete-inventory-modern-input form-control ${touched.bill_date && errors.bill_date ? 'is-invalid' : ''}`} />
+                          <div className="position-absolute end-0 top-50 translate-middle-y me-3" style={{ pointerEvents: 'none', zIndex: 5 }}>
+                            <CsLineIcons icon="calendar" size="16" className="text-muted" />
+                          </div>
+                        </div>
+                      </Col>
                       <Col xs={12} md={3}><div className="complete-inventory-input-group-label">Bill Number</div><Field type="text" name="bill_number" className={`complete-inventory-modern-input form-control ${touched.bill_number && errors.bill_number ? 'is-invalid' : ''}`} placeholder="Enter bill #" /></Col>
                       <Col xs={12} md={3}><div className="complete-inventory-input-group-label">Vendor</div><div className="complete-inventory-select-modern"><CreatableSelect isClearable menuPlacement="auto" menuPortalTarget={document.body} options={(suggestions.vendors || []).map(v => ({ label: v, value: v }))} value={values.vendor_name ? { label: values.vendor_name, value: values.vendor_name } : null} onChange={(s) => setFieldValue('vendor_name', s ? s.value : '')} placeholder="Vendor..." classNamePrefix="react-select" /></div></Col>
                       <Col xs={12} md={3}><div className="complete-inventory-input-group-label">Category</div><div className="complete-inventory-select-modern"><CreatableSelect isClearable menuPlacement="auto" menuPortalTarget={document.body} options={(suggestions.categories || []).map(c => ({ label: c, value: c }))} value={values.category ? { label: values.category, value: values.category } : null} onChange={(s) => setFieldValue('category', s ? s.value : '')} placeholder="Category..." classNamePrefix="react-select" /></div></Col>

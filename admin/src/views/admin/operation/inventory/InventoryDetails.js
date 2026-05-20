@@ -70,14 +70,14 @@ const InventoryDetails = () => {
     <div className="inventory-details-details-container">
       
       <HtmlHead title="Inventory Details" />
-      <div className="container px-lg-5">
+      <div className="container-fluid px-3 px-lg-5">
         <div className="page-title-container mb-4 mt-5 mt-lg-0">
-          <Row className="g-0 align-items-center">
-            <Col xs="auto" className="me-auto">
+          <Row className="g-3 align-items-center">
+            <Col xs={12} md={7}>
               <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>Inventory Details</h1>
               <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations/inventory', text: 'Inventory' }, { to: '', title: 'Details' }]} />
             </Col>
-            <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
+            <Col xs={12} md={5} className="d-flex flex-wrap justify-content-start justify-content-md-end gap-2 mt-3 mt-md-0">
               <Button variant="outline-secondary" onClick={() => history.push('/operations/inventory-history')} className="rounded-pill px-4 fw-bold border-2">
                 <CsLineIcons icon="arrow-left" size="14" className="me-2" /> Back
               </Button>
@@ -92,7 +92,7 @@ const InventoryDetails = () => {
         </div>
 
         <div className="inventory-details-overview-bar">
-          <div className="d-flex gap-5">
+          <div className="d-flex flex-wrap gap-3 gap-md-5">
             <div>
               <div className="inventory-details-info-label">Bill Date</div>
               <div className="inventory-details-info-val">{new Date(inventory.bill_date).toLocaleDateString('en-IN')}</div>
@@ -149,39 +149,73 @@ const InventoryDetails = () => {
           <div className="section-label">
             <CsLineIcons icon="shopping-basket" size="18" /> Item Manifest
           </div>
-          <div className="inventory-details-item-header-row d-none d-lg-flex">
-            <div style={{ width: '60px' }}>#</div>
-            <div style={{ flex: 2 }}>Description</div>
-            <div style={{ flex: 1 }}>Quantity</div>
-            <div style={{ flex: 1 }}>Unit Price</div>
-            <div style={{ flex: 1 }} className="text-end">
-              Subtotal
+          {/* Desktop View */}
+          <div className="d-none d-lg-block">
+            <div className="inventory-details-item-header-row">
+              <div style={{ width: '60px' }}>#</div>
+              <div style={{ flex: 2 }}>Description</div>
+              <div style={{ flex: 1 }}>Quantity</div>
+              <div style={{ flex: 1 }}>Unit Price</div>
+              <div style={{ flex: 1 }} className="text-end">
+                Subtotal
+              </div>
             </div>
+            {inventory.items.map((item, index) => (
+              <div key={index} className="inventory-details-item-row-card">
+                <div style={{ width: '60px' }} className="fw-bold text-muted">
+                  {index + 1}
+                </div>
+                <div style={{ flex: 2 }} className="fw-bold text-dark">
+                  {item.item_name}
+                </div>
+                <div style={{ flex: 1 }} className="fw-bold">
+                  {item.item_quantity} {item.unit}
+                </div>
+                <div style={{ flex: 1 }} className="text-muted">
+                  ₹ {item.item_price || '0.00'}
+                </div>
+                <div style={{ flex: 1 }} className="text-end fw-bold text-primary">
+                  ₹ {(item.item_quantity * (item.item_price || 0)).toFixed(2)}
+                </div>
+              </div>
+            ))}
           </div>
-          {inventory.items.map((item, index) => (
-            <div key={index} className="inventory-details-item-row-card">
-              <div style={{ width: '60px' }} className="fw-bold text-muted">
-                <span className="inventory-details-mobile-label">#</span>
-                {index + 1}
+
+          {/* Mobile View */}
+          <div className="d-block d-lg-none">
+            {inventory.items.map((item, index) => (
+              <div key={index} className="mb-3 p-3 bg-white border rounded-4 shadow-sm">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div className="d-flex align-items-center gap-2">
+                    <span className="badge rounded-pill px-2.5 py-1 fw-bold" style={{ fontSize: '0.75rem', backgroundColor: '#e0f2fe', color: '#0369a1' }}>
+                      #{index + 1}
+                    </span>
+                    <h6 className="fw-bold text-dark mb-0">{item.item_name}</h6>
+                  </div>
+                </div>
+                <Row className="g-2 text-center">
+                  <Col xs={6}>
+                    <div className="p-2 rounded-3 bg-light" style={{ border: '1px solid #f1f5f9' }}>
+                      <div className="text-muted small fw-bold" style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Quantity</div>
+                      <div className="fw-bold text-dark mt-0.5">{item.item_quantity} {item.unit}</div>
+                    </div>
+                  </Col>
+                  <Col xs={6}>
+                    <div className="p-2 rounded-3 bg-light" style={{ border: '1px solid #f1f5f9' }}>
+                      <div className="text-muted small fw-bold" style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Unit Price</div>
+                      <div className="fw-bold text-dark mt-0.5">₹ {item.item_price || '0.00'}</div>
+                    </div>
+                  </Col>
+                  <Col xs={12}>
+                    <div className="p-2 rounded-3 d-flex justify-content-between align-items-center mt-1" style={{ backgroundColor: '#e0f2fe', border: '1px solid #bae6fd' }}>
+                      <span className="fw-bold text-primary small text-uppercase" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>Item Subtotal</span>
+                      <span className="fw-bold text-primary">₹ {(item.item_quantity * (item.item_price || 0)).toFixed(2)}</span>
+                    </div>
+                  </Col>
+                </Row>
               </div>
-              <div style={{ flex: 2 }} className="fw-bold text-dark">
-                <span className="inventory-details-mobile-label">Description</span>
-                {item.item_name}
-              </div>
-              <div style={{ flex: 1 }} className="fw-bold">
-                <span className="inventory-details-mobile-label">Quantity</span>
-                {item.item_quantity} {item.unit}
-              </div>
-              <div style={{ flex: 1 }} className="text-muted">
-                <span className="inventory-details-mobile-label">Unit Price</span>
-                ₹ {item.item_price || '0.00'}
-              </div>
-              <div style={{ flex: 1 }} className="text-md-end fw-bold text-primary">
-                <span className="inventory-details-mobile-label">Subtotal</span>
-                ₹ {(item.item_quantity * (item.item_price || 0)).toFixed(2)}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
           <div className="inventory-details-summary-hub mt-5">
             <Row className="g-4">
@@ -226,7 +260,6 @@ const InventoryDetails = () => {
                     Balance {Number(inventory.unpaid_amount || 0) > 0 ? 'Due' : 'Cleared'}: ₹ {Number(inventory.unpaid_amount || 0).toFixed(2)}
                   </span>
                 </div>
-                <div className="text-muted small">This record is synchronized with global financial ledgers.</div>
               </Col>
             </Row>
           </div>
