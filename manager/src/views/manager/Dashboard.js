@@ -249,67 +249,6 @@ const Dashboard = () => {
 
         {/* Active Side Section */}
         <Col xs="12" lg="4">
-          {/* Section 1: Active Dine-In Orders */}
-          <div className="d-flex align-items-center mb-4">
-            <div style={{ width: '8px', height: '24px', background: '#23b3f4', borderRadius: '4px', marginRight: '12px', boxShadow: '0 2px 5px rgba(35,179,244,0.3)' }} />
-            <h3 className="mb-0 fw-bold" style={{ color: '#23b3f4', letterSpacing: '0.5px' }}>Active Dine-In</h3>
-          </div>
-          <div style={{ maxHeight: '40vh', overflowY: 'auto', paddingRight: '5px', marginBottom: '2.5rem' }} className="custom-scrollbar">
-            {activeDineInOrders.length === 0 ? (
-              <div style={{ ...glassCardStyle, borderStyle: 'dashed' }} className="text-center p-4">
-                <CsLineIcons icon="tag" size="30" stroke="rgba(35,179,244,0.4)" className="mb-2" />
-                <p className="mb-0 fw-semibold" style={{ color: '#6c757d', fontSize: '13px' }}>No active Dine-In tables</p>
-              </div>
-            ) : (
-              activeDineInOrders.map((order) => (
-                <div 
-                  key={order._id} 
-                  className="mb-3"
-                  style={glassCardStyle}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 15px 30px rgba(35,179,244,0.1)' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = glassCardStyle.boxShadow }}
-                  onClick={() => {
-                    const tableId = findTableId(order.table_no, order.table_area);
-                    if (tableId) handleTableClick(tableId, order._id);
-                  }}
-                >
-                  <div className="p-3">
-                    <div className="d-flex justify-content-between align-items-start mb-2">
-                      <div>
-                        <h5 className="mb-1 fw-bold d-flex align-items-center gap-2" style={{ color: '#1a1a1a', fontSize: '14px' }}>
-                          <CsLineIcons icon="tag" size="16" stroke="#23b3f4"/>
-                          Table {order.table_no} ({order.table_area})
-                        </h5>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
-                          Order #{order.token || order._id.slice(-6)}
-                        </p>
-                      </div>
-                      <Badge 
-                        bg={order.order_status === 'Paid' || order.order_status === 'Save' ? 'success' : 'warning'} 
-                        className={order.order_status === 'KOT' ? 'text-dark' : 'text-white'}
-                        style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold' }}
-                      >
-                        {order.order_status}
-                      </Badge>
-                    </div>
-                    <div className="d-flex flex-wrap gap-2">
-                      {order.order_items.slice(0, 3).map((item, i) => (
-                        <div key={i} style={{ background: 'rgba(35, 179, 244, 0.08)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#1a1a1a', border: '1px solid rgba(35,179,244,0.12)' }}>
-                          {item.dish_name} <strong className="ms-1" style={{color: '#23b3f4'}}>x{item.quantity}</strong>
-                        </div>
-                      ))}
-                      {order.order_items.length > 3 && (
-                        <div style={{ background: '#f8f9fa', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#6c757d', border: '1px dashed #dee2e6' }}>
-                          +{order.order_items.length - 3} more
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
           {/* Section 2: Active Takeaways & Deliveries */}
           <div className="d-flex align-items-center mb-4">
             <div style={{ width: '8px', height: '24px', background: '#23b3f4', borderRadius: '4px', marginRight: '12px', boxShadow: '0 2px 5px rgba(35,179,244,0.3)' }} />
