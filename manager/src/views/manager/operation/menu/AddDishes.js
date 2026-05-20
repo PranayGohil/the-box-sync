@@ -1,3 +1,4 @@
+/* eslint-disable react/no-this-in-sfc, func-names, no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Card, Col, Row, Button, Form as BForm, Spinner, Alert } from 'react-bootstrap';
@@ -157,15 +158,15 @@ const AddDishes = () => {
     mealType: prefilledMealType,
     counter: prefilledCounter,
     hideOnKot: prefilledHideOnKot,
-    dishes: [{
-      dish_name: '',
-      dish_price: '',
-      dish_img: null,
-      description: '',
-      quantity: '',
-      unit: '',
-      showAdvancedOptions: false,
-    }],
+    dishes: [
+      {
+        dish_name: '',
+        dish_img: null,
+        description: '',
+        variants: [{ size_name: '', price: '', extra: '', is_available: true }],
+        addons: [],
+      },
+    ],
   };
 
   const getMenuCategories = async (mealType) => {
@@ -222,10 +223,22 @@ const AddDishes = () => {
     dishes: Yup.array().of(
       Yup.object().shape({
         dish_name: Yup.string().required('Dish name is required'),
-        dish_price: Yup.number().typeError('Must be a number').required('Price is required'),
         description: Yup.string(),
-        quantity: Yup.string(),
-        unit: Yup.string(),
+        variants: Yup.array()
+          .of(
+            Yup.object().shape({
+              size_name: Yup.string(),
+              price: Yup.number().typeError('Must be a number').required('Price is required'),
+              extra: Yup.string(),
+            })
+          )
+          .min(1, 'At least one variant/price is required'),
+        addons: Yup.array().of(
+          Yup.object().shape({
+            addon_name: Yup.string().required('Addon name is required'),
+            price: Yup.number().typeError('Must be a number').required('Price is required'),
+          })
+        ),
       })
     ),
   });
@@ -240,7 +253,37 @@ const AddDishes = () => {
       formData.append('hide_on_kot', values.hideOnKot);
       const dishData = values.dishes.map((dish, i) => {
         if (dish.dish_img) formData.append(`dish_img`, dish.dish_img);
-        return { ...dish, dish_img: '' };
+
+        let cleanedVariants = [];
+        if (Array.isArray(dish.variants)) {
+          cleanedVariants = dish.variants.map((v) => ({
+            size_name: v.size_name || '',
+            price: Number(v.price) || 0,
+            extra: v.extra || '',
+            is_available: v.is_available !== false,
+          }));
+        }
+
+        let cleanedAddons = [];
+        if (Array.isArray(dish.addons)) {
+          cleanedAddons = dish.addons
+            .filter((a) => a.addon_name && a.addon_name.trim() !== '')
+            .map((a) => ({
+              addon_name: a.addon_name,
+              price: Number(a.price) || 0,
+              is_available: a.is_available !== false,
+            }));
+        }
+
+        return {
+          dish_name: dish.dish_name,
+          dish_price: cleanedVariants[0] ? Number(cleanedVariants[0].price) || 0 : 0,
+          description: dish.description,
+          has_variants: cleanedVariants.length > 1,
+          variants: cleanedVariants,
+          addons: cleanedAddons,
+          dish_img: '',
+        };
       });
       formData.append('dishes', JSON.stringify(dishData));
       const res = await axios.post(`${process.env.REACT_APP_API}/menu/add`, formData, {
@@ -287,7 +330,9 @@ const AddDishes = () => {
         <div className="page-title-container mb-4 mt-5 mt-lg-0 text-start">
           <Row className="g-0 align-items-center">
             <Col xs="auto" className="me-auto text-start">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
+                {title}
+              </h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
           </Row>
@@ -312,11 +357,14 @@ const AddDishes = () => {
                               getMenuCategories(type);
                             }}
                           >
-                            <div className="rounded-circle" style={{ 
-                              width: '12px', 
-                              height: '12px', 
-                              background: type === 'veg' ? '#10b981' : type === 'egg' ? '#f59e0b' : '#ef4444' 
-                            }} />
+                            <div
+                              className="rounded-circle"
+                              style={{
+                                width: '12px',
+                                height: '12px',
+                                background: type === 'veg' ? '#10b981' : type === 'egg' ? '#f59e0b' : '#ef4444',
+                              }}
+                            />
                             {type === 'veg' ? 'Veg' : type === 'egg' ? 'Egg' : 'Non-Veg'}
                           </div>
                         ))}
@@ -333,7 +381,7 @@ const AddDishes = () => {
                                 ...selectStyles.control(base, state),
                                 borderColor: values.category === '' && isSubmitting ? '#ef4444' : state.isFocused ? '#23b3f4' : '#e5e7eb',
                                 minHeight: '48px',
-                              })
+                              }),
                             }}
                             isClearable
                             menuPlacement="auto"
@@ -361,7 +409,7 @@ const AddDishes = () => {
                             control: (base, state) => ({
                               ...selectStyles.control(base, state),
                               minHeight: '48px',
-                            })
+                            }),
                           }}
                           isClearable
                           menuPlacement="auto"
@@ -375,10 +423,7 @@ const AddDishes = () => {
                       </BForm.Group>
                     </Col>
                     <Col xs={12}>
-                      <div 
-                        className="d-flex align-items-center gap-2 cursor-pointer"
-                        onClick={() => setFieldValue('hideOnKot', !values.hideOnKot)}
-                      >
+                      <div className="d-flex align-items-center gap-2 cursor-pointer" onClick={() => setFieldValue('hideOnKot', !values.hideOnKot)}>
                         <div className={`custom-check ${values.hideOnKot ? 'active' : ''}`}>
                           {values.hideOnKot && <CsLineIcons icon="check" size="12" className="text-white" />}
                         </div>
@@ -393,11 +438,15 @@ const AddDishes = () => {
                       {({ push, remove }) => (
                         <div className="d-flex flex-column gap-3">
                           {values.dishes.map((dish, index) => (
-                            <div key={index} className="p-3 p-md-4 rounded-xl border-0 position-relative shadow-sm mb-3" style={{ background: '#f8fafc', borderRadius: '1.25rem' }}>
-                              <Button 
-                                variant="outline-danger" 
+                            <div
+                              key={index}
+                              className="p-3 p-md-4 rounded-xl border-0 position-relative shadow-sm mb-3"
+                              style={{ background: '#f8fafc', borderRadius: '1.25rem' }}
+                            >
+                              <Button
+                                variant="outline-danger"
                                 className="delete-btn-table"
-                                onClick={() => remove(index)} 
+                                onClick={() => remove(index)}
                                 disabled={values.dishes.length === 1}
                                 title="Remove Dish"
                               >
@@ -406,16 +455,19 @@ const AddDishes = () => {
                               <Row className="g-2 g-md-3 align-items-end">
                                 <Col xs={12} md={4}>
                                   <BForm.Group>
-                                    <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>Dish Name</BForm.Label>
+                                    <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>
+                                      Dish Name
+                                    </BForm.Label>
                                     <div className="position-relative">
                                       <CreatableSelect
                                         styles={{
                                           ...selectStyles,
                                           control: (base, state) => ({
                                             ...selectStyles.control(base, state),
-                                            borderColor: values.dishes[index].dish_name === '' && isSubmitting ? '#ef4444' : state.isFocused ? '#23b3f4' : '#e5e7eb',
+                                            borderColor:
+                                              values.dishes[index].dish_name === '' && isSubmitting ? '#ef4444' : state.isFocused ? '#23b3f4' : '#e5e7eb',
                                             minHeight: '48px',
-                                          })
+                                          }),
                                         }}
                                         isClearable
                                         menuPlacement="auto"
@@ -429,79 +481,186 @@ const AddDishes = () => {
                                     </div>
                                   </BForm.Group>
                                 </Col>
-                                <Col xs={6} md={2}>
-                                  <BForm.Group>
-                                    <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>Price</BForm.Label>
-                                    <BForm.Control
-                                      type="text"
-                                      name={`dishes[${index}].dish_price`}
-                                      value={dish.dish_price}
-                                      onChange={handleChange}
-                                      placeholder="0"
-                                      className="pill-input"
-                                      isInvalid={values.dishes[index].dish_price === '' && isSubmitting}
-                                    />
-                                    <ErrorMessage name={`dishes[${index}].dish_price`} component="div" className="text-danger small mt-1" />
-                                  </BForm.Group>
+                                <Col xs={12} className="mt-3">
+                                  <div className="p-3 rounded-xl border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
+                                    <div className="d-flex justify-content-between align-items-center mb-3">
+                                      <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '0.9rem' }}>
+                                        Sizes, Pricing & Details
+                                      </h6>
+                                      <ErrorMessage name={`dishes[${index}].variants`} component="div" className="text-danger small fw-bold" />
+                                    </div>
+                                    <FieldArray name={`dishes[${index}].variants`}>
+                                      {({ push: pushVariant, remove: removeVariant }) => (
+                                        <div className="d-flex flex-column gap-2">
+                                          {(dish.variants || []).map((variant, vIdx) => (
+                                            <Row key={vIdx} className="g-2 align-items-end mb-2">
+                                              <Col xs={12} sm={4}>
+                                                <BForm.Group>
+                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                    Size / Variant Name (e.g. Regular, Small)
+                                                  </BForm.Label>
+                                                  <BForm.Control
+                                                    type="text"
+                                                    name={`dishes[${index}].variants[${vIdx}].size_name`}
+                                                    value={variant.size_name || ''}
+                                                    onChange={handleChange}
+                                                    placeholder="e.g. Regular"
+                                                    className="pill-input py-1 px-3"
+                                                    style={{ height: '40px', borderRadius: '8px' }}
+                                                  />
+                                                  <ErrorMessage
+                                                    name={`dishes[${index}].variants[${vIdx}].size_name`}
+                                                    component="div"
+                                                    className="text-danger small mt-1"
+                                                  />
+                                                </BForm.Group>
+                                              </Col>
+                                              <Col xs={5} sm={3}>
+                                                <BForm.Group>
+                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                    Price (₹)
+                                                  </BForm.Label>
+                                                  <BForm.Control
+                                                    type="text"
+                                                    name={`dishes[${index}].variants[${vIdx}].price`}
+                                                    value={variant.price || ''}
+                                                    onChange={handleChange}
+                                                    placeholder="Price"
+                                                    className="pill-input py-1 px-3"
+                                                    style={{ height: '40px', borderRadius: '8px' }}
+                                                  />
+                                                  <ErrorMessage
+                                                    name={`dishes[${index}].variants[${vIdx}].price`}
+                                                    component="div"
+                                                    className="text-danger small mt-1"
+                                                  />
+                                                </BForm.Group>
+                                              </Col>
+                                              <Col xs={5} sm={4}>
+                                                <BForm.Group>
+                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                    Extra Details (e.g. Serves 1-2)
+                                                  </BForm.Label>
+                                                  <BForm.Control
+                                                    type="text"
+                                                    name={`dishes[${index}].variants[${vIdx}].extra`}
+                                                    value={variant.extra || ''}
+                                                    onChange={handleChange}
+                                                    placeholder="e.g. Serves 1-2"
+                                                    className="pill-input py-1 px-3"
+                                                    style={{ height: '40px', borderRadius: '8px' }}
+                                                  />
+                                                </BForm.Group>
+                                              </Col>
+                                              <Col xs={2} sm="auto" className="pb-1 text-end">
+                                                <Button
+                                                  variant="outline-danger"
+                                                  onClick={() => removeVariant(vIdx)}
+                                                  disabled={dish.variants.length === 1}
+                                                  style={{ height: '40px', width: '40px', borderRadius: '8px', padding: 0 }}
+                                                  className="d-flex align-items-center justify-content-center btn btn-outline-danger"
+                                                >
+                                                  <CsLineIcons icon="bin" size="14" />
+                                                </Button>
+                                              </Col>
+                                            </Row>
+                                          ))}
+                                          <Button
+                                            type="button"
+                                            variant="outline-primary"
+                                            className="custom-btn-outline py-1 px-3 mt-2 d-flex align-items-center gap-1 align-self-start btn btn-outline-primary"
+                                            style={{ height: '34px', fontSize: '0.8rem', borderRadius: '8px' }}
+                                            onClick={() => pushVariant({ size_name: '', price: '', extra: '', is_available: true })}
+                                          >
+                                            <CsLineIcons icon="plus" size="12" />
+                                            Add Size/Variant
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </FieldArray>
+                                  </div>
                                 </Col>
-                                <Col xs={6} md={2}>
-                                  <BForm.Group>
-                                    <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>Qty</BForm.Label>
-                                    <BForm.Control
-                                      type="text"
-                                      name={`dishes[${index}].quantity`}
-                                      value={dish.quantity}
-                                      onChange={handleChange}
-                                      placeholder="1"
-                                      className="pill-input"
-                                    />
-                                  </BForm.Group>
-                                </Col>
-                                <Col xs={12} md={4}>
-                                  <BForm.Group>
-                                    <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>Unit</BForm.Label>
-                                    <Select
-                                      classNamePrefix="react-select"
-                                      menuPlacement="auto"
-                                      menuPortalTarget={document.body}
-                                      options={[
-                                        { value: 'kg', label: 'kg' },
-                                        { value: 'g', label: 'g' },
-                                        { value: 'litre', label: 'litre' },
-                                        { value: 'ml', label: 'ml' },
-                                        { value: 'piece', label: 'piece' },
-                                        { value: 'plate', label: 'Plate' },
-                                        { value: 'portion', label: 'Portion' },
-                                      ]}
-                                      value={dish.unit ? { value: dish.unit, label: dish.unit } : null}
-                                      onChange={(selected) => setFieldValue(`dishes[${index}].unit`, selected ? selected.value : '')}
-                                      placeholder="Select Unit"
-                                      isDisabled={isSubmitting}
-                                      styles={{
-                                        ...selectStyles,
-                                        control: (base, state) => ({
-                                          ...selectStyles.control(base, state),
-                                          minHeight: '48px',
-                                        }),
-                                        menu: (base) => ({
-                                          ...base,
-                                          borderRadius: '12px',
-                                          overflow: 'hidden',
-                                          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                                          border: '1px solid #e5e7eb',
-                                          zIndex: 9999,
-                                        }),
-                                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                                        option: (base, state) => ({
-                                          ...base,
-                                          backgroundColor: state.isSelected ? '#23b3f4' : state.isFocused ? '#f0f9ff' : 'white',
-                                          color: state.isSelected ? 'white' : '#333',
-                                          padding: '10px 15px',
-                                          '&:active': { backgroundColor: '#23b3f4', color: 'white' },
-                                        })
-                                      }}
-                                    />
-                                  </BForm.Group>
+
+                                <Col xs={12} className="mt-2">
+                                  <div className="p-3 rounded-xl border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
+                                    <div className="d-flex justify-content-between align-items-center mb-3">
+                                      <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '0.9rem' }}>
+                                        Configure Add-ons (Optional)
+                                      </h6>
+                                    </div>
+                                    <FieldArray name={`dishes[${index}].addons`}>
+                                      {({ push: pushAddon, remove: removeAddon }) => (
+                                        <div className="d-flex flex-column gap-2">
+                                          {(dish.addons || []).map((addon, aIdx) => (
+                                            <Row key={aIdx} className="g-2 align-items-end mb-2">
+                                              <Col xs={8} sm={6}>
+                                                <BForm.Group>
+                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                    Add-on Name (e.g. Extra Sauce)
+                                                  </BForm.Label>
+                                                  <BForm.Control
+                                                    type="text"
+                                                    name={`dishes[${index}].addons[${aIdx}].addon_name`}
+                                                    value={addon.addon_name || ''}
+                                                    onChange={handleChange}
+                                                    placeholder="Add-on Name"
+                                                    className="pill-input py-1 px-3"
+                                                    style={{ height: '38px', borderRadius: '8px' }}
+                                                  />
+                                                  <ErrorMessage
+                                                    name={`dishes[${index}].addons[${aIdx}].addon_name`}
+                                                    component="div"
+                                                    className="text-danger small mt-1"
+                                                  />
+                                                </BForm.Group>
+                                              </Col>
+                                              <Col xs={3} sm={4}>
+                                                <BForm.Group>
+                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                    Price (Extra charge)
+                                                  </BForm.Label>
+                                                  <BForm.Control
+                                                    type="text"
+                                                    name={`dishes[${index}].addons[${aIdx}].price`}
+                                                    value={addon.price || ''}
+                                                    onChange={handleChange}
+                                                    placeholder="Price"
+                                                    className="pill-input py-1 px-3"
+                                                    style={{ height: '38px', borderRadius: '8px' }}
+                                                  />
+                                                  <ErrorMessage
+                                                    name={`dishes[${index}].addons[${aIdx}].price`}
+                                                    component="div"
+                                                    className="text-danger small mt-1"
+                                                  />
+                                                </BForm.Group>
+                                              </Col>
+                                              <Col xs="auto" className="pb-1">
+                                                <Button
+                                                  variant="outline-danger"
+                                                  onClick={() => removeAddon(aIdx)}
+                                                  style={{ height: '38px', width: '38px', borderRadius: '8px', padding: 0 }}
+                                                  className="d-flex align-items-center justify-content-center btn btn-outline-danger"
+                                                >
+                                                  <CsLineIcons icon="bin" size="14" />
+                                                </Button>
+                                              </Col>
+                                            </Row>
+                                          ))}
+                                          <Button
+                                            type="button"
+                                            variant="outline-primary"
+                                            className="custom-btn-outline py-1 px-3 mt-2 d-flex align-items-center gap-1 align-self-start"
+                                            style={{ height: '34px', fontSize: '0.8rem', borderRadius: '8px' }}
+                                            onClick={() => pushAddon({ addon_name: '', price: '', is_available: true })}
+                                          >
+                                            <CsLineIcons icon="plus" size="12" />
+                                            Add Add-on
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </FieldArray>
+                                  </div>
                                 </Col>
 
                                 <Col xs={12} md={4} className="pt-md-2">
@@ -513,23 +672,32 @@ const AddDishes = () => {
                                       accept="image/*"
                                       onChange={(e) => handleImageChange(e, index, setFieldValue)}
                                     />
-                                    <label htmlFor={`file-${index}`} className="custom-btn-outline px-3 py-2 rounded-pill small fw-bold cursor-pointer mb-0 d-flex align-items-center justify-content-center w-100" style={{ height: '48px' }}>
+                                    <label
+                                      htmlFor={`file-${index}`}
+                                      className="custom-btn-outline px-3 py-2 rounded-pill small fw-bold cursor-pointer mb-0 d-flex align-items-center justify-content-center w-100"
+                                      style={{ height: '48px' }}
+                                    >
                                       <CsLineIcons icon="upload" size="14" className="me-2" />
                                       {dish.dish_img ? 'Change Image' : 'Add Image'}
                                     </label>
                                     {imagePreviews[index] && (
-                                      <img src={imagePreviews[index]} alt="Preview" className="ms-2 rounded shadow-sm" style={{ width: '45px', height: '45px', objectFit: 'cover' }} />
+                                      <img
+                                        src={imagePreviews[index]}
+                                        alt="Preview"
+                                        className="ms-2 rounded shadow-sm"
+                                        style={{ width: '45px', height: '45px', objectFit: 'cover' }}
+                                      />
                                     )}
                                   </div>
                                 </Col>
                                 <Col xs={12} md={8} className="pt-md-2">
-                                  <Field 
-                                    as="textarea" 
-                                    rows={2} 
+                                  <Field
+                                    as="textarea"
+                                    rows={2}
                                     style={{ resize: 'none' }}
-                                    name={`dishes[${index}].description`} 
-                                    className="form-control pill-input bg-white" 
-                                    placeholder="Add description (optional)..." 
+                                    name={`dishes[${index}].description`}
+                                    className="form-control pill-input bg-white"
+                                    placeholder="Add description (optional)..."
                                   />
                                 </Col>
                               </Row>
@@ -540,16 +708,24 @@ const AddDishes = () => {
                             <Button
                               type="button"
                               className="custom-btn-outline px-4 py-2 d-flex align-items-center justify-content-center gap-2"
-                              onClick={() => push({
-                                dish_name: '', dish_price: '', dish_img: null, description: '', quantity: '', unit: '', showAdvancedOptions: false,
-                              })}
+                              onClick={() =>
+                                push({
+                                  dish_name: '',
+                                  dish_price: '',
+                                  dish_img: null,
+                                  description: '',
+                                  quantity: '',
+                                  unit: '',
+                                  showAdvancedOptions: false,
+                                })
+                              }
                             >
                               <CsLineIcons icon="plus" size="18" />
                               Add More Dish
                             </Button>
 
-                            <Button 
-                              type="submit" 
+                            <Button
+                              type="submit"
                               className="custom-btn-outline px-5 py-2 d-flex align-items-center justify-content-center gap-2"
                               disabled={isSubmitting}
                             >
@@ -568,7 +744,10 @@ const AddDishes = () => {
         </Formik>
 
         {isSubmitting && (
-          <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ background: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(4px)' }}>
+          <div
+            className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+            style={{ background: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(4px)' }}
+          >
             <Card className="glass-card border-0 shadow-lg text-center p-5">
               <Spinner animation="grow" style={{ color: '#23b3f4' }} className="mb-4" />
               <h4 className="fw-bold mb-1">Finalizing Menu</h4>

@@ -8,6 +8,67 @@ const Menu = require("../models/menuModel");
 const Notification = require("../models/notificationModel");
 const OrderCounter = require("../models/orderCounterModel");
 
+const recalculateOrderTotals = (orderInfo) => {
+  if (!orderInfo || !Array.isArray(orderInfo.order_items)) return orderInfo;
+
+  let sub_total = 0;
+
+  orderInfo.order_items = orderInfo.order_items.map((item) => {
+    let basePrice = item.dish_price; // Default fallback
+
+    // If selected_variant exists and has a price, use it
+    if (item.selected_variant && typeof item.selected_variant.price === "number") {
+      basePrice = item.selected_variant.price;
+    } else if (item.selected_variant && typeof item.selected_variant.price === "string") {
+      basePrice = Number(item.selected_variant.price) || 0;
+    }
+
+    let addonsSum = 0;
+    if (Array.isArray(item.selected_addons)) {
+      item.selected_addons.forEach((addon) => {
+        if (typeof addon.price === "number") {
+          addonsSum += addon.price;
+        } else if (typeof addon.price === "string") {
+          addonsSum += Number(addon.price) || 0;
+        }
+      });
+    }
+
+    const finalDishPrice = basePrice + addonsSum;
+    item.dish_price = finalDishPrice;
+
+    const itemSubtotal = finalDishPrice * (Number(item.quantity) || 1);
+    sub_total += itemSubtotal;
+
+    return item;
+  });
+
+  orderInfo.sub_total = sub_total;
+
+  const cgst_percent = Number(orderInfo.cgst_percent) || 0;
+  const sgst_percent = Number(orderInfo.sgst_percent) || 0;
+  const vat_percent = Number(orderInfo.vat_percent) || 0;
+
+  const cgst_amount = Math.round(((sub_total * cgst_percent) / 100) * 100) / 100;
+  const sgst_amount = Math.round(((sub_total * sgst_percent) / 100) * 100) / 100;
+  const vat_amount = Math.round(((sub_total * vat_percent) / 100) * 100) / 100;
+
+  orderInfo.cgst_amount = cgst_amount;
+  orderInfo.sgst_amount = sgst_amount;
+  orderInfo.vat_amount = vat_amount;
+
+  const bill_amount = sub_total + cgst_amount + sgst_amount + vat_amount;
+  orderInfo.bill_amount = bill_amount;
+
+  const discount_amount = Number(orderInfo.discount_amount) || 0;
+  const waveoff_amount = Number(orderInfo.waveoff_amount) || 0;
+
+  const total_amount = Math.max(0, bill_amount - discount_amount - waveoff_amount);
+  orderInfo.total_amount = total_amount;
+
+  return orderInfo;
+};
+
 const cron = require("node-cron");
 
 cron.schedule("0 0 * * *", async () => {
@@ -239,6 +300,8 @@ const orderController = async (req, res) => {
     const orderId = orderInfo.order_id;
     orderInfo.user_id = req.user;
 
+    orderInfo = recalculateOrderTotals(orderInfo);
+
     let savedOrder;
 
     // ✅ 1. Save customer if provided
@@ -385,6 +448,8 @@ const dineInController = async (req, res) => {
     const orderId = orderInfo.order_id;
     orderInfo.user_id = req.user;
     console.log("Order Info : ", req.body);
+
+    orderInfo = recalculateOrderTotals(orderInfo);
 
     // if (!tableId) {
     //   console.error("Table ID is required for Dine In orders");
@@ -589,6 +654,8 @@ const takeawayController = async (req, res) => {
     const orderId = orderInfo.order_id;
     orderInfo.user_id = req.user;
 
+    orderInfo = recalculateOrderTotals(orderInfo);
+
     let savedOrder;
     let savedCustomer;
 
@@ -763,6 +830,8 @@ const deliveryController = async (req, res) => {
     let { orderInfo, customerInfo } = req.body;
     const orderId = orderInfo.order_id;
     orderInfo.user_id = req.user;
+
+    orderInfo = recalculateOrderTotals(orderInfo);
 
     // ✅ Validate required fields for delivery
     if (
@@ -959,6 +1028,8 @@ const deliveryFromSiteController = async (req, res) => {
     }
 
     orderInfo.user_id = restauant._id;
+
+    orderInfo = recalculateOrderTotals(orderInfo);
 
     // ✅ Validate required fields for delivery
     if (

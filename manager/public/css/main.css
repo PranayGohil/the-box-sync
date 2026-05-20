@@ -1,3 +1,67 @@
+/* Login Animations and Input Styles */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.clean-input {
+  background: #f8f9fa !important;
+  border: 1px solid #dee2e6 !important;
+  color: #1a1a1a !important;
+  border-radius: 16px !important;
+  height: 56px !important;
+  padding-left: 56px !important;
+  font-weight: 500 !important;
+  font-size: 1rem !important;
+  transition: all 0.3s ease !important;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.02) !important;
+}
+.clean-input::placeholder {
+  color: #adb5bd !important;
+}
+.clean-input:focus {
+  background: #ffffff !important;
+  border-color: rgba(35, 179, 244, 0.5) !important;
+  box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.15), inset 0 2px 5px rgba(0, 0, 0, 0.02) !important;
+  outline: none !important;
+}
+.clean-input:-webkit-autofill,
+.clean-input:-webkit-autofill:hover,
+.clean-input:-webkit-autofill:focus,
+.clean-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #f8f9fa inset !important;
+  -webkit-text-fill-color: #1a1a1a !important;
+  caret-color: #23b3f4 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Menu Grid Sidebar */
+.menu-content-transition {
+  transition: margin-left 0.3s ease;
+}
+.menu-sidebar {
+  transition: transform 0.3s ease;
+}
+@media (max-width: 767px) {
+  .menu-content-transition {
+    margin-left: 0 !important;
+  }
+  .menu-sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh !important;
+    z-index: 1050 !important;
+  }
+}
+
 /* ════════════════════════════════════════
    POS SYSTEM LAYOUT — PREMIUM
    ════════════════════════════════════════ */
@@ -371,7 +435,7 @@
   z-index: 2;
 }
 .pos-dish-name {
-  font-size: 11.5px;
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.3;
   color: #1e293b;

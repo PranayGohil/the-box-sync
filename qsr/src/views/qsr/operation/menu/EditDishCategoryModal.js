@@ -4,8 +4,79 @@ import { useFormik } from 'formik';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
-
 import CreatableSelect from 'react-select/creatable';
+
+const customStyles = `
+  .edit-dish-category-modal-pill-input {
+    border-radius: 12px !important;
+    padding: 0.7rem 1.2rem !important;
+    border: 1px solid #e5e7eb !important;
+    background: #ffffff !important;
+    transition: all 0.2s ease !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+    height: 48px !important;
+  }
+  .edit-dish-category-modal-pill-input:focus {
+    border-color: #23b3f4 !important;
+    box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
+    outline: none !important;
+  }
+  .edit-dish-category-modal-custom-btn-outline {
+    border: 1px solid #23b3f4 !important;
+    color: #23b3f4 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+  }
+  .edit-dish-category-modal-custom-btn-outline:hover {
+    background-color: #23b3f4 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+  }
+  .edit-dish-category-modal-custom-btn-outline:hover svg {
+    stroke: #fff !important;
+  }
+  .edit-dish-category-modal-radio-pill {
+    cursor: pointer;
+    padding: 8px 20px;
+    border-radius: 50px;
+    border: 1.5px solid #e2e8f0;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #475569;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .edit-dish-category-modal-radio-pill:hover {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+  }
+  .edit-dish-category-modal-radio-pill.active {
+    background-color: #23b3f4;
+    border-color: #23b3f4;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25);
+  }
+  .edit-dish-category-modal-custom-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 2px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+  .edit-dish-category-modal-custom-check.active {
+    background: #23b3f4 !important;
+    border-color: #23b3f4 !important;
+  }
+`;
 
 const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,6 +98,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                 setCounterOptions(options);
             } catch (err) {
                 console.error('Error fetching counters:', err);
+                toast.error('Failed to load counters.');
             }
         };
 
@@ -85,10 +157,10 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
             ...base,
             borderRadius: '12px',
             padding: '4px',
-            border: state.isFocused ? '1px solid #1ea8e7' : '1px solid #e5e7eb',
-            boxShadow: state.isFocused ? '0 0 0 4px rgba(30, 168, 231, 0.1)' : 'none',
+            border: state.isFocused ? '1px solid #23b3f4' : '1px solid #e5e7eb',
+            boxShadow: state.isFocused ? '0 0 0 4px rgba(35, 179, 244, 0.1)' : 'none',
             backgroundColor: '#fff',
-            '&:hover': { border: '1px solid #1ea8e7' },
+            '&:hover': { border: '1px solid #23b3f4' },
         }),
     };
 
@@ -96,8 +168,8 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
         return (
             <Modal show={show} onHide={handleClose} centered>
                 <Modal.Body className="text-center py-5">
-                    <Spinner animation="border" variant="primary" />
-                    <p className="mt-3">Loading...</p>
+                    <Spinner animation="border" style={{ color: '#23b3f4' }} />
+                    <p className="mt-3 text-muted fw-bold">Loading details...</p>
                 </Modal.Body>
             </Modal>
         );
@@ -105,9 +177,9 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
 
     return (
         <Modal show={show} onHide={handleClose} backdrop="static" centered size="lg">
-            
+            <style>{customStyles}</style>
             <Modal.Header closeButton className="border-0 pb-0">
-                <Modal.Title className="fw-bold" style={{ color: '#1ea8e7' }}>
+                <Modal.Title className="fw-bold" style={{ color: '#23b3f4' }}>
                     <CsLineIcons icon="edit" className="me-2" />
                     Edit Category Details
                 </Modal.Title>

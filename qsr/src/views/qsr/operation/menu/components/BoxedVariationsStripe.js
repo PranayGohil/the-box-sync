@@ -11,7 +11,7 @@ import ControlsPageSize from './ControlsPageSize';
 const BoxedVariationsStripe = ({ columns, data, category, setEditCategoryModalShow, setSelectedCategory }) => {
   const history = useHistory();
   const tableInstance = useTable(
-    { columns, data, initialState: { pageIndex: 0, sortBy: [{ id: 'dish_name', asc: true }] } },
+    { columns, data, initialState: { pageIndex: 0, sortBy: [{ id: 'name', desc: true }] } },
     useGlobalFilter,
     useSortBy,
     usePagination
@@ -22,7 +22,7 @@ const BoxedVariationsStripe = ({ columns, data, category, setEditCategoryModalSh
       <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom" style={{ borderColor: 'rgba(35, 179, 244, 0.1)' }}>
         <div>
           <h5 className="mb-1 fw-bold text-dark" style={{ letterSpacing: '-0.01em' }}>{category.category}</h5>
-          <Badge 
+          <Badge
             bg="none"
             className={`manage-menu-badge-meal ${category.meal_type === 'veg' ? 'manage-menu-badge-veg' : category.meal_type === 'egg' ? 'manage-menu-badge-egg' : 'manage-menu-badge-non-veg'}`}
           >
@@ -60,20 +60,18 @@ const BoxedVariationsStripe = ({ columns, data, category, setEditCategoryModalSh
         </div>
       </div>
 
-      <Row className="g-2 mb-3">
-        <Col xs="12" md="8">
+      <Row className="g-2 mb-3 d-none d-md-flex">
+        <Col sm="12" md="8">
           <ControlsSearch tableInstance={tableInstance} />
         </Col>
-        <Col xs="12" md="4" className="d-flex justify-content-md-end mt-2 mt-md-0">
+        <Col sm="12" md="4" className="d-flex justify-content-md-end">
           <ControlsPageSize tableInstance={tableInstance} />
         </Col>
       </Row>
 
       <Row>
         <Col xs="12">
-          <div className="table-responsive border-0">
-            <Table className="react-table nowrap stripe manage-menu-responsive-table" tableInstance={tableInstance} />
-          </div>
+          <Table className="react-table nowrap stripe" tableInstance={tableInstance} />
         </Col>
         <Col xs="12" className="mt-3">
           <TablePagination tableInstance={tableInstance} />

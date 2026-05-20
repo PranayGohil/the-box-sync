@@ -3,7 +3,9 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { Button, Row, Col, Card, Form, Badge } from 'react-bootstrap';
 import axios from 'axios';
 import {
-  getOrderById, getUserTaxInfo, getTableById,
+  getOrderById,
+  getUserTaxInfo,
+  getTableById,
   createOrUpdateDineInOrder,
   createOrUpdateTakeawayOrder,
   createOrUpdateDeliveryOrder,
@@ -54,10 +56,20 @@ const API_MAP = {
 };
 
 const DEFAULT_PAYMENT_DATA = {
-  subTotal: 0, cgstPercent: 0, sgstPercent: 0, vatPercent: 0,
-  cgstAmount: 0, sgstAmount: 0, vatAmount: 0,
-  discountType: 'amount', discountValue: '', discountAmount: 0,
-  total: 0, paidAmount: '', waveoffAmount: 0, paymentType: 'Cash',
+  subTotal: 0,
+  cgstPercent: 0,
+  sgstPercent: 0,
+  vatPercent: 0,
+  cgstAmount: 0,
+  sgstAmount: 0,
+  vatAmount: 0,
+  discountType: 'amount',
+  discountValue: '',
+  discountAmount: 0,
+  total: 0,
+  paidAmount: '',
+  waveoffAmount: 0,
+  paymentType: 'Cash',
 };
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -113,7 +125,10 @@ const UnifiedOrder = () => {
   const [tableInfo, setTableInfo] = useState({});
   const [waiters, setWaiters] = useState([]);
 
-  const initialStateRef = useRef({ orderItems: [], customerInfo: { name: '', phone: '', address: '', total_persons: '', waiter: '', table_no: '', comment: '' } });
+  const initialStateRef = useRef({
+    orderItems: [],
+    customerInfo: { name: '', phone: '', address: '', total_persons: '', waiter: '', table_no: '', comment: '' },
+  });
   const allowNavigationRef = useRef(false);
   const kotSnapshotRef = useRef([]);
 
@@ -140,7 +155,7 @@ const UnifiedOrder = () => {
       setTableInfo(response.data.data);
       if (orderType === 'Dine In' && !isEditMode) {
         const tableNo = response.data.data.table_no;
-        setCustomerInfo(prev => ({ ...prev, table_no: tableNo }));
+        setCustomerInfo((prev) => ({ ...prev, table_no: tableNo }));
         initialStateRef.current.customerInfo.table_no = tableNo;
       }
     } catch (error) {
@@ -236,11 +251,22 @@ const UnifiedOrder = () => {
 
   const { addItemToOrder, updateItemQuantity, removeItem } = useOrderCart({ setOrderItems, socket, orderId, fetchOrderDetails });
 
-  const { handleDiscountTypeChange, handleDiscountValueChange, handlePaidAmountChange } = useOrderCalculations({ orderItems, taxRates, paymentData, setPaymentData });
+  const { handleDiscountTypeChange, handleDiscountValueChange, handlePaidAmountChange } = useOrderCalculations({
+    orderItems,
+    taxRates,
+    paymentData,
+    setPaymentData,
+  });
 
   // ── Parcel Charge helper ───────────────────────────────────────────────────
   const addParcelCharge = (charge) => {
-    addItemToOrder({ dish_name: `${charge.name} ${charge.size}`, dish_price: charge.price, special_notes: 'Parcel Charge', status: 'Container Charge', quantity: 1 });
+    addItemToOrder({
+      dish_name: `${charge.name} ${charge.size}`,
+      dish_price: charge.price,
+      special_notes: 'Parcel Charge',
+      status: 'Container Charge',
+      quantity: 1,
+    });
   };
 
   // ── Dirty Check ───────────────────────────────────────────────────────────
@@ -248,8 +274,7 @@ const UnifiedOrder = () => {
     const initial = initialStateRef.current;
     const currentEditable = orderItems.filter((i) => i.status !== 'Completed');
     const initialEditable = initial.orderItems.filter((i) => i.status !== 'Completed');
-    return JSON.stringify(currentEditable) !== JSON.stringify(initialEditable) ||
-      JSON.stringify(customerInfo) !== JSON.stringify(initial.customerInfo);
+    return JSON.stringify(currentEditable) !== JSON.stringify(initialEditable) || JSON.stringify(customerInfo) !== JSON.stringify(initial.customerInfo);
   };
 
   // Guard: only run after initial data is loaded
@@ -270,32 +295,52 @@ const UnifiedOrder = () => {
       // New order — start dirty tracking immediately
       setIsInitialized(true);
     }
-    getUserTaxInfo(token).then((r) => {
-      const taxInfo = r.data.taxInfo || {};
-      setPaymentData((prev) => ({ ...prev, cgstPercent: taxInfo.cgst || 0, sgstPercent: taxInfo.sgst || 0, vatPercent: taxInfo.vat || 0 }));
-      setTaxRates({ cgst: taxInfo.cgst || 0, sgst: taxInfo.sgst || 0, vat: taxInfo.vat || 0 });
-      setContainerCharges(r.data.containerCharges || []);
-      setUserData(r.data);
-    }).catch(console.error);
+    getUserTaxInfo(token)
+      .then((r) => {
+        const taxInfo = r.data.taxInfo || {};
+        setPaymentData((prev) => ({ ...prev, cgstPercent: taxInfo.cgst || 0, sgstPercent: taxInfo.sgst || 0, vatPercent: taxInfo.vat || 0 }));
+        setTaxRates({ cgst: taxInfo.cgst || 0, sgst: taxInfo.sgst || 0, vat: taxInfo.vat || 0 });
+        setContainerCharges(r.data.containerCharges || []);
+        setUserData(r.data);
+      })
+      .catch(console.error);
   }, [orderId, tableId]);
 
   // ── Navigation Guard ──────────────────────────────────────────────────────
   useEffect(() => {
-    const handleBeforeUnload = (e) => { if (!isDirty) return; e.preventDefault(); e.returnValue = ''; };
+    const handleBeforeUnload = (e) => {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
 
   useEffect(() => {
     const unblock = history.block((loc) => {
-      if (allowNavigationRef.current) { allowNavigationRef.current = false; return true; }
-      if (isDirty && loc.pathname !== window.location.pathname) { setNextLocation(loc.pathname); setShowLeaveModal(true); return false; }
+      if (allowNavigationRef.current) {
+        allowNavigationRef.current = false;
+        return true;
+      }
+      if (isDirty && loc.pathname !== window.location.pathname) {
+        setNextLocation(loc.pathname);
+        setShowLeaveModal(true);
+        return false;
+      }
       return true;
     });
     return unblock;
   }, [isDirty, history]);
 
-  const handleNavigation = (path) => { if (isDirty) { setNextLocation(path); setShowLeaveModal(true); } else { history.push(path); } };
+  const handleNavigation = (path) => {
+    if (isDirty) {
+      setNextLocation(path);
+      setShowLeaveModal(true);
+    } else {
+      history.push(path);
+    }
+  };
 
   // ── Print ─────────────────────────────────────────────────────────────────
   const handlePrint = (order_id) => openPrintWindow(order_id, setPrinting);
@@ -305,9 +350,7 @@ const UnifiedOrder = () => {
     const delta = [];
     for (const item of currentItems) {
       if (!['Completed', 'Cancelled', 'Container Charge'].includes(item.status)) {
-        const prev = snapshotItems.find(
-          s => s.dish_name === item.dish_name && s.special_notes === item.special_notes
-        );
+        const prev = snapshotItems.find((s) => s.dish_name === item.dish_name && s.special_notes === item.special_notes);
 
         if (!prev) {
           delta.push({ ...item });
@@ -321,11 +364,23 @@ const UnifiedOrder = () => {
 
   // ── Validation ────────────────────────────────────────────────────────────
   const validateOrder = () => {
-    if (orderItems.length === 0) { alert('Please add items to the order'); return false; }
+    if (orderItems.length === 0) {
+      alert('Please add items to the order');
+      return false;
+    }
     if (orderType === 'Delivery') {
-      if (!customerInfo.name) { alert('Please enter customer name'); return false; }
-      if (!customerInfo.phone) { alert('Please enter customer phone number'); return false; }
-      if (!customerInfo.address) { alert('Please enter customer address'); return false; }
+      if (!customerInfo.name) {
+        alert('Please enter customer name');
+        return false;
+      }
+      if (!customerInfo.phone) {
+        alert('Please enter customer phone number');
+        return false;
+      }
+      if (!customerInfo.address) {
+        alert('Please enter customer address');
+        return false;
+      }
     }
     return true;
   };
@@ -335,23 +390,39 @@ const UnifiedOrder = () => {
     const orderData = {
       order_type: orderType,
       order_items: orderItems.map((item) => ({
-        dish_name: item.dish_name, quantity: item.quantity, dish_price: item.dish_price,
+        dish_name: item.dish_name,
+        quantity: item.quantity,
+        dish_price: item.dish_price,
         special_notes: item.special_notes || '',
         status: completeAll
           ? 'Completed'
-          : (status === 'KOT' || status === 'Paid')
-            ? (item.status === 'Pending' ? 'Preparing' : item.status)
-            : (status === 'Save' ? (item.status || 'Pending') : item.status),
+          : status === 'KOT' || status === 'Paid'
+          ? item.status === 'Pending'
+            ? 'Preparing'
+            : item.status
+          : status === 'Save'
+          ? item.status || 'Pending'
+          : item.status,
+        selected_variant: item.selected_variant,
+        selected_addons: item.selected_addons,
       })),
       order_status: status,
       customer_name: customerInfo.name,
       comment: customerInfo.comment,
-      bill_amount: parseFloat(paymentData.total), sub_total: parseFloat(paymentData.subTotal),
-      cgst_percent: parseFloat(paymentData.cgstPercent), sgst_percent: parseFloat(paymentData.sgstPercent), vat_percent: parseFloat(paymentData.vatPercent),
-      cgst_amount: parseFloat(paymentData.cgstAmount), sgst_amount: parseFloat(paymentData.sgstAmount), vat_amount: parseFloat(paymentData.vatAmount),
-      discount_amount: parseFloat(paymentData.discountAmount), waveoff_amount: parseFloat(paymentData.waveoffAmount),
-      total_amount: parseFloat(paymentData.total), paid_amount: parseFloat(paymentData.paidAmount),
-      payment_type: paymentData.paymentType, order_source: 'Manager',
+      bill_amount: parseFloat(paymentData.total),
+      sub_total: parseFloat(paymentData.subTotal),
+      cgst_percent: parseFloat(paymentData.cgstPercent),
+      sgst_percent: parseFloat(paymentData.sgstPercent),
+      vat_percent: parseFloat(paymentData.vatPercent),
+      cgst_amount: parseFloat(paymentData.cgstAmount),
+      sgst_amount: parseFloat(paymentData.sgstAmount),
+      vat_amount: parseFloat(paymentData.vatAmount),
+      discount_amount: parseFloat(paymentData.discountAmount),
+      waveoff_amount: parseFloat(paymentData.waveoffAmount),
+      total_amount: parseFloat(paymentData.total),
+      paid_amount: parseFloat(paymentData.paidAmount),
+      payment_type: paymentData.paymentType,
+      order_source: 'Manager',
     };
 
     // DineIn-specific fields
@@ -377,7 +448,10 @@ const UnifiedOrder = () => {
   const handleKotAndPrint = async () => {
     if (!validateOrder()) return;
     const delta = computeKOTDelta(orderItems, kotSnapshotRef.current);
-    if (delta.length === 0) { toast.info('No new items to send to kitchen'); return; }
+    if (delta.length === 0) {
+      toast.info('No new items to send to kitchen');
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -404,7 +478,8 @@ const UnifiedOrder = () => {
 
         printKOTSlip(
           { orderNo, orderType, tokenNumber, tableNo: customerInfo.table_no || tableInfo.table_no, items: delta, kotNo, timestamp },
-          userData, setKotPrinting
+          userData,
+          setKotPrinting
         );
         toast.success(`KOT #${kotNo} sent to kitchen!`);
 
@@ -431,8 +506,17 @@ const UnifiedOrder = () => {
 
   const handleReprintKOT = (record) => {
     printKOTSlip(
-      { orderNo, orderType, tokenNumber, tableNo: customerInfo.table_no || tableInfo.table_no, items: record.items, kotNo: record.kotNo, timestamp: record.timestamp },
-      userData, setKotPrinting
+      {
+        orderNo,
+        orderType,
+        tokenNumber,
+        tableNo: customerInfo.table_no || tableInfo.table_no,
+        items: record.items,
+        kotNo: record.kotNo,
+        timestamp: record.timestamp,
+      },
+      userData,
+      setKotPrinting
     );
   };
 
@@ -450,7 +534,7 @@ const UnifiedOrder = () => {
         initialStateRef.current = {
           orderItems: JSON.parse(JSON.stringify(orderItems)),
           customerInfo: JSON.parse(JSON.stringify(customerInfo)),
-          paid_amount: (response.data.order?.paid_amount || initialStateRef.current.paid_amount || 0),
+          paid_amount: response.data.order?.paid_amount || initialStateRef.current.paid_amount || 0,
         };
         setOrderStatus(status);
 
@@ -487,7 +571,10 @@ const UnifiedOrder = () => {
   };
 
   const handleCancelOrder = async () => {
-    if (!orderId) { alert('No order to cancel'); return; }
+    if (!orderId) {
+      alert('No order to cancel');
+      return;
+    }
     setIsLoading(true);
     try {
       const payload = {
@@ -515,7 +602,10 @@ const UnifiedOrder = () => {
   };
 
   const handlePayment = async () => {
-    if (paymentData.paidAmount <= 0) { alert('Please enter a valid paid amount'); return; }
+    if (paymentData.paidAmount <= 0) {
+      alert('Please enter a valid paid amount');
+      return;
+    }
     await handleSaveOrder('Paid');
   };
 
@@ -527,7 +617,7 @@ const UnifiedOrder = () => {
     setPaymentData((prev) => ({
       ...prev,
       paidAmount: totalAmount, // This is the total cumulative amount
-      waveoffAmount: 0
+      waveoffAmount: 0,
     }));
     setShowPaymentModal(true);
   };
@@ -544,14 +634,9 @@ const UnifiedOrder = () => {
 
       {/* POS Wrapper */}
       <div className="pos-wrapper">
-
         {/* Top Bar */}
         <div className="pos-topbar">
-          <Button
-            className="custom-btn-outline"
-            style={{ padding: '0.35rem 1rem', flexShrink: 0 }}
-            onClick={() => handleNavigation('/dashboard')}
-          >
+          <Button className="custom-btn-outline" style={{ padding: '0.35rem 1rem', flexShrink: 0 }} onClick={() => handleNavigation('/dashboard')}>
             <CsLineIcons icon="arrow-left" size="13" className="me-1" />
             Back
           </Button>
@@ -564,12 +649,32 @@ const UnifiedOrder = () => {
             )}
           </div>
           {tokenNumber && (
-            <div style={{ border: '1.5px solid #23b3f4', borderRadius: '50px', padding: '3px 12px', color: '#23b3f4', fontWeight: 700, fontSize: '12px', flexShrink: 0 }}>
+            <div
+              style={{
+                border: '1.5px solid #23b3f4',
+                borderRadius: '50px',
+                padding: '3px 12px',
+                color: '#23b3f4',
+                fontWeight: 700,
+                fontSize: '12px',
+                flexShrink: 0,
+              }}
+            >
               Token #{tokenNumber}
             </div>
           )}
           {orderStatus && (
-            <div style={{ border: '1.5px solid #6c757d', borderRadius: '50px', padding: '3px 12px', color: '#6c757d', fontWeight: 700, fontSize: '12px', flexShrink: 0 }}>
+            <div
+              style={{
+                border: '1.5px solid #6c757d',
+                borderRadius: '50px',
+                padding: '3px 12px',
+                color: '#6c757d',
+                fontWeight: 700,
+                fontSize: '12px',
+                flexShrink: 0,
+              }}
+            >
               {orderStatus}
             </div>
           )}
@@ -578,10 +683,20 @@ const UnifiedOrder = () => {
             value={orderType}
             onChange={(e) => handleOrderTypeChange(e.target.value)}
             disabled={isEditMode || !!tableId}
-            style={{ maxWidth: '130px', borderRadius: '50px', borderColor: 'rgba(35,179,244,0.35)', color: '#23b3f4', fontWeight: 700, fontSize: '13px', flexShrink: 0 }}
+            style={{
+              maxWidth: '130px',
+              borderRadius: '50px',
+              borderColor: 'rgba(35,179,244,0.35)',
+              color: '#23b3f4',
+              fontWeight: 700,
+              fontSize: '13px',
+              flexShrink: 0,
+            }}
           >
             {ORDER_TYPES.map((t) => (
-              <option key={t} value={t}>{t}</option>
+              <option key={t} value={t}>
+                {t}
+              </option>
             ))}
           </Form.Select>
           <div className="text-muted small fw-semibold" style={{ flexShrink: 0 }}>
@@ -616,12 +731,20 @@ const UnifiedOrder = () => {
             <div className="pos-order-header">
               <div className="d-flex justify-content-between align-items-center">
                 <div className="fw-bold" style={{ color: '#23b3f4', fontSize: '13px' }}>
-                  {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no)
-                    ? `T-${tableInfo.table_no || customerInfo.table_no}`
-                    : 'Order'} ({orderItems.length})
+                  {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no) ? `T-${tableInfo.table_no || customerInfo.table_no}` : 'Order'} (
+                  {orderItems.length})
                 </div>
                 {tokenNumber && (
-                  <div style={{ background: 'rgba(35,179,244,0.1)', borderRadius: '50px', padding: '2px 10px', color: '#23b3f4', fontWeight: 800, fontSize: '11px' }}>
+                  <div
+                    style={{
+                      background: 'rgba(35,179,244,0.1)',
+                      borderRadius: '50px',
+                      padding: '2px 10px',
+                      color: '#23b3f4',
+                      fontWeight: 800,
+                      fontSize: '11px',
+                    }}
+                  >
                     #{tokenNumber}
                   </div>
                 )}
@@ -646,17 +769,21 @@ const UnifiedOrder = () => {
                   value={customerInfo.comment}
                   onChange={(e) => setCustomerInfo((prev) => ({ ...prev, comment: e.target.value }))}
                   placeholder="Notes..."
-                  style={{ borderRadius: '6px', border: '1.5px solid rgba(226,232,240,0.9)', fontSize: '11.5px', height: '28px', resize: 'none', color: '#333', background: '#f8fafc' }}
+                  style={{
+                    borderRadius: '6px',
+                    border: '1.5px solid rgba(226,232,240,0.9)',
+                    fontSize: '11.5px',
+                    height: '28px',
+                    resize: 'none',
+                    color: '#333',
+                    background: '#f8fafc',
+                  }}
                 />
               </div>
             </div>
 
             <div className="pos-cart-section">
-              <OrderCartTable
-                orderItems={orderItems}
-                updateItemQuantity={updateItemQuantity}
-                removeItem={removeItem}
-              />
+              <OrderCartTable orderItems={orderItems} updateItemQuantity={updateItemQuantity} removeItem={removeItem} />
             </div>
 
             <div className="pos-total-section">
@@ -717,12 +844,7 @@ const UnifiedOrder = () => {
         handleSaveOrder={handleSaveOrder}
         isLoading={isLoading}
       />
-      <CancelOrderModal
-        showCancelModal={showCancelModal}
-        setShowCancelModal={setShowCancelModal}
-        handleCancelOrder={handleCancelOrder}
-        isLoading={isLoading}
-      />
+      <CancelOrderModal showCancelModal={showCancelModal} setShowCancelModal={setShowCancelModal} handleCancelOrder={handleCancelOrder} isLoading={isLoading} />
 
       {/* Mobile Bottom Sheet */}
       <BottomCartSheet
@@ -760,7 +882,9 @@ const UnifiedOrder = () => {
             style={{ maxWidth: '130px', borderRadius: '50px', borderColor: 'rgba(35,179,244,0.3)', color: '#23b3f4', fontWeight: 700 }}
           >
             {ORDER_TYPES.map((t) => (
-              <option key={t} value={t}>{t}</option>
+              <option key={t} value={t}>
+                {t}
+              </option>
             ))}
           </Form.Select>
         </div>
@@ -785,11 +909,7 @@ const UnifiedOrder = () => {
           />
         </Form.Group>
       </BottomCartSheet>
-      <MobileCartBar
-        orderItems={orderItems}
-        paymentData={paymentData}
-        setShowCartSheet={setShowCartSheet}
-      />
+      <MobileCartBar orderItems={orderItems} paymentData={paymentData} setShowCartSheet={setShowCartSheet} />
     </>
   );
 };
