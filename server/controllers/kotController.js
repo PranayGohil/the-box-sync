@@ -46,14 +46,9 @@ const showKOTs = async (req, res) => {
               input: "$order_items",
               as: "item",
               cond: {
-                $and: [
-                  {
-                    $or: [
-                      { $eq: ["$$item.hide_on_kot", false] },
-                      { $not: ["$$item.hide_on_kot"] } // field missing or false
-                    ]
-                  },
-                  { $ne: ["$$item.status", "Completed"] } // optional
+                $or: [
+                  { $eq: ["$$item.hide_on_kot", false] },
+                  { $not: ["$$item.hide_on_kot"] } 
                 ]
               }
             }
@@ -62,7 +57,7 @@ const showKOTs = async (req, res) => {
       },
       {
         $match: {
-          "order_items.0": { $exists: true },
+          "order_items": { $elemMatch: { status: { $ne: "Completed" } } },
         },
       },
       { $sort: { [sortField]: sortOrder } },

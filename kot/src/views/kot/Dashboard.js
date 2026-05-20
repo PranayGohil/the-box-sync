@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Button, Form, Spinner, Table } from 'react-bootstrap';
+import { Row, Col, Card, Button, Form, Spinner, Table, Modal } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -140,6 +140,8 @@ const ViewKots = () => {
   });
   const [updatingDishId, setUpdatingDishId] = useState(null);
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmData, setConfirmData] = useState(null);
 
   const fetchOrderData = async () => {
     try {
@@ -205,6 +207,24 @@ const ViewKots = () => {
     } finally {
       setUpdatingOrderId(null);
     }
+  };
+
+  const handleDishToggle = (data, dish) => {
+    if (dish.status !== 'Preparing') return;
+    
+    const pendingItems = data.order_items.filter(item => item.special_notes !== 'Parcel Charge' && item.status !== 'Completed');
+    
+    if (pendingItems.length === 1 && pendingItems[0]._id === dish._id) {
+      setConfirmData({ orderSource: data.order_source, orderId: data._id, dishId: dish._id, type: 'SINGLE' });
+      setShowConfirmModal(true);
+    } else {
+      updateDishStatus(data.order_source, data._id, dish._id);
+    }
+  };
+
+  const handleCompleteAll = (orderSource, orderId) => {
+    setConfirmData({ orderSource, orderId, type: 'ALL' });
+    setShowConfirmModal(true);
   };
 
   const filteredKOTs = kotData.filter(
@@ -325,8 +345,7 @@ const ViewKots = () => {
                                       type="checkbox"
                                       checked={item.status === 'Completed'}
                                       disabled={item.status === 'Completed' || updatingDishId === item._id}
-                                      onChange={() => item.status === 'Preparing' && updateDishStatus(kot.order_source, kot._id, item._id)}
-                                    />
+                                      onChange={() => handleDishToggle(kot, item)}                                    />
                                     <span className="kot-toggle-slider" />
                                   </label>
                                 </td>
@@ -347,8 +366,7 @@ const ViewKots = () => {
                         <div style={{ width: '60%' }}>
                           <Button
                             className="custom-btn-outline w-100 py-2"
-                            onClick={() => updateAllDishStatus(kot.order_source, kot._id)}
-                            disabled={updatingOrderId === kot._id}
+                            onClick={() => handleCompleteAll(kot.order_source, kot._id)}                            disabled={updatingOrderId === kot._id}
                           >
                             {updatingOrderId === kot._id ? <Spinner size="sm" /> : 'Mark KOT Complete'}
                           </Button>
@@ -362,6 +380,37 @@ const ViewKots = () => {
           })}
         </Row>
       )}
+
+      {/* Confirmation Modal for Last Item / All Items */}
+      <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered contentClassName="border-0 shadow-lg" style={{ borderRadius: '1.5rem' }}>
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="fw-bold" style={{ color: '#23b3f4' }}>Complete KOT?</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="pt-3">
+          <p className="text-muted fw-bold mb-0">
+            {confirmData?.type === 'SINGLE' 
+              ? 'This is the last pending item. Marking it as completed will complete the entire KOT. Do you want to proceed?'
+              : 'Are you sure you want to mark the entire KOT and all its items as completed?'}
+          </p>
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0">
+          <Button variant="light" className="custom-btn-outline border-0 text-muted" onClick={() => setShowConfirmModal(false)}>
+            Cancel
+          </Button>
+          <Button className="custom-btn-outline" onClick={() => {
+            if (confirmData) {
+              if (confirmData.type === 'SINGLE') {
+                updateDishStatus(confirmData.orderSource, confirmData.orderId, confirmData.dishId);
+              } else {
+                updateAllDishStatus(confirmData.orderSource, confirmData.orderId);
+              }
+            }
+            setShowConfirmModal(false);
+          }}>
+            Confirm
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
