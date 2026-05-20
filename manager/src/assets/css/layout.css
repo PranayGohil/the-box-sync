@@ -971,7 +971,7 @@
       letter-spacing: 0.1em;
     }
 .customer-insights-report-stat-value {
-      font-size: 2rem !important;
+      font-size: 1.5rem !important;
       font-weight: 900 !important;
       color: #0f172a !important;
       line-height: 1;
@@ -1039,8 +1039,14 @@
       text-transform: uppercase;
       letter-spacing: 0.1em;
     }
-.financial-report-stat-value, .inventory-report-stat-value, .dashboard-stat-value, .statistics-stat-value {
-      font-size: 2rem !important;
+.financial-report-stat-value, .inventory-report-stat-value, .dashboard-stat-value {
+      font-size: 1.5rem !important;
+      font-weight: 900 !important;
+      color: #0f172a !important;
+      line-height: 1;
+    }
+.statistics-stat-value {
+      font-size: 1.5rem !important;
       font-weight: 900 !important;
       color: #0f172a !important;
       line-height: 1;
@@ -1138,7 +1144,7 @@
       letter-spacing: 0.1em;
     }
 .inventory-report-stat-value {
-      font-size: 1.8rem !important;
+      font-size: 1.5rem !important;
       font-weight: 900 !important;
       color: #0f172a !important;
       line-height: 1;
@@ -1284,7 +1290,7 @@
       letter-spacing: 0.1em;
     }
 .menu-performance-report-stat-value {
-      font-size: 2rem !important;
+      font-size: 1.5rem !important;
       font-weight: 900 !important;
       color: #0f172a !important;
       line-height: 1;
@@ -1391,7 +1397,7 @@
       letter-spacing: 0.1em;
     }
 .operational-report-stat-value {
-      font-size: 2rem !important;
+      font-size: 1.5rem !important;
       font-weight: 900 !important;
       color: #0f172a !important;
       line-height: 1;
@@ -1462,7 +1468,7 @@
       letter-spacing: 0.1em;
     }
 .sales-report-stat-value {
-      font-size: 2rem !important;
+      font-size: 1.5rem !important;
       font-weight: 900 !important;
       color: #0f172a !important;
       line-height: 1;

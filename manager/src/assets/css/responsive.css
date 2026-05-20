@@ -2306,7 +2306,7 @@
       letter-spacing: 0.1em;
     }
     .statistics-stat-value {
-      font-size: 2rem !important;
+      font-size: 1.5rem !important;
       font-weight: 900 !important;
       color: #0f172a !important;
       line-height: 1;
@@ -2333,22 +2333,33 @@
         min-height: 500px;
       }
       .statistics-stat-value {
-        font-size: 1.8rem !important;
+        font-size: 1rem !important;
       }
       .sales-report-stat-value {
-        font-size: 1.8rem !important;
+        font-size: 1rem !important;
       }
       .customer-insights-report-stat-value {
-        font-size: 1.8rem !important;
+        font-size: 1rem !important;
       }
       .operational-report-stat-value {
-        font-size: 1.8rem !important;
+        font-size: 1rem !important;
       }
       .menu-performance-report-stat-value {
-        font-size: 1.8rem !important;
+        font-size: 1rem !important;
       }
-      .financial-report-stat-value, .inventory-report-stat-value {
-        font-size: 1.8rem !important;
+      .financial-report-stat-value, .inventory-report-stat-value, .dashboard-stat-value {
+        font-size: 1rem !important;
+      }
+      .sales-report-table-mobile-optimized th,
+      .sales-report-table-mobile-optimized td {
+        padding-left: 0.15rem !important;
+        padding-right: 0.15rem !important;
+        font-size: 0.65rem !important;
+        line-height: 1.2;
+      }
+      .sales-report-table-mobile-optimized td {
+        white-space: normal !important;
+        word-wrap: break-word;
       }
     }
 /* Scoped styles from Login */

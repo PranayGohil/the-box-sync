@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { Col, Form, Row, Button, Modal, Spinner, Card, Badge, Collapse, Alert } from 'react-bootstrap';
+import { Col, Form, Row, Button, Modal, Spinner, Card, Badge, Collapse, Alert, Dropdown } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
 import { toast } from 'react-toastify';
 import classNames from 'classnames';
@@ -487,12 +487,12 @@ const Feedback = () => {
             {/* Table Controls */}
             <div className="inventory-history-search-filter-hub border-0 shadow-sm">
               <Row className="g-2 g-md-3 align-items-center">
-                <Col xs md="6" lg="6">
+                <Col xs="12" md="6" lg="6">
                   <div className="inventory-history-search-input-container">
                     <ControlsSearch tableInstance={tableInstance} />
                   </div>
                 </Col>
-                <Col xs="auto">
+                <Col xs="auto" className="d-none d-md-block">
                   <Button
                     variant={showFilters ? 'primary' : 'outline-primary'}
                     className="btn-icon btn-icon-only position-relative rounded-circle border-2"
@@ -511,6 +511,43 @@ const Feedback = () => {
                     )}
                   </Button>
                 </Col>
+                <Col xs="12" className="d-md-none mt-2">
+                  <Dropdown className="w-100">
+                    <Dropdown.Toggle
+                      as={Button}
+                      variant={filters.rating ? 'primary' : 'outline-primary'}
+                      className="w-100 d-flex align-items-center justify-content-between px-3 border-2 dropdown-toggle-no-arrow"
+                      style={{ height: '40px', borderRadius: '50px' }}
+                    >
+                      <span className="d-flex align-items-center gap-2">
+                        <CsLineIcons icon="filter" size="16" />
+                        {filters.rating ? `${filters.rating} Stars` : 'Filter by Rating'}
+                      </span>
+                      <CsLineIcons icon="chevron-down" size="16" />
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu className="w-100 shadow border-0 rounded-xl mt-1">
+                      <Dropdown.Header className="text-uppercase small fw-bold text-muted px-3 pt-2">Filter by Rating</Dropdown.Header>
+                      <Dropdown.Item active={filters.rating === ''} onClick={() => setFilters({ ...filters, rating: '' })}>
+                        All Ratings
+                      </Dropdown.Item>
+                      <Dropdown.Item active={filters.rating === '5'} onClick={() => setFilters({ ...filters, rating: '5' })}>
+                        5 Stars ★★★★★
+                      </Dropdown.Item>
+                      <Dropdown.Item active={filters.rating === '4'} onClick={() => setFilters({ ...filters, rating: '4' })}>
+                        4 Stars ★★★★
+                      </Dropdown.Item>
+                      <Dropdown.Item active={filters.rating === '3'} onClick={() => setFilters({ ...filters, rating: '3' })}>
+                        3 Stars ★★★
+                      </Dropdown.Item>
+                      <Dropdown.Item active={filters.rating === '2'} onClick={() => setFilters({ ...filters, rating: '2' })}>
+                        2 Stars ★★
+                      </Dropdown.Item>
+                      <Dropdown.Item active={filters.rating === '1'} onClick={() => setFilters({ ...filters, rating: '1' })}>
+                        1 Star ★
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </Col>
                 <Col md className="text-md-end d-flex align-items-center justify-content-md-end gap-2 gap-md-3 mt-2 mt-md-0">
                   <div className="d-none d-lg-block smaller text-muted fw-bold">
                     {loading
@@ -528,43 +565,45 @@ const Feedback = () => {
             </div>
 
             {/* Collapsible Filter Panel */}
-            <Collapse in={showFilters}>
-              <div>
-                <div className="inventory-history-filter-panel mb-4 shadow-sm">
-                  <Row className="g-3">
-                    <Col md="4">
-                      <span className="text-uppercase small fw-bold text-muted d-block mb-1">From Date</span>
-                      <Form.Control type="date" value={filters.fromDate} onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })} />
-                    </Col>
-                    <Col md="4">
-                      <span className="text-uppercase small fw-bold text-muted d-block mb-1">To Date</span>
-                      <Form.Control type="date" value={filters.toDate} onChange={(e) => setFilters({ ...filters, toDate: e.target.value })} />
-                    </Col>
-                    <Col md="3">
-                      <span className="text-uppercase small fw-bold text-muted d-block mb-1">Rating</span>
-                      <Form.Select value={filters.rating} onChange={(e) => setFilters({ ...filters, rating: e.target.value })}>
-                        <option value="">All Ratings</option>
-                        <option value="5">5 Stars</option>
-                        <option value="4">4 Stars</option>
-                        <option value="3">3 Stars</option>
-                        <option value="2">2 Stars</option>
-                        <option value="1">1 Star</option>
-                      </Form.Select>
-                    </Col>
-                    <Col md="1" className="d-flex align-items-end justify-content-end">
-                      <Button
-                        variant="light"
-                        size="sm"
-                        className="rounded-pill px-4 fw-bold"
-                        onClick={() => setFilters({ fromDate: '', toDate: '', rating: '' })}
-                      >
-                        Clear
-                      </Button>
-                    </Col>
-                  </Row>
+            <div className="d-none d-md-block">
+              <Collapse in={showFilters}>
+                <div>
+                  <div className="inventory-history-filter-panel mb-4 shadow-sm">
+                    <Row className="g-3">
+                      <Col md="4">
+                        <span className="text-uppercase small fw-bold text-muted d-block mb-1">From Date</span>
+                        <Form.Control type="date" value={filters.fromDate} onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })} />
+                      </Col>
+                      <Col md="4">
+                        <span className="text-uppercase small fw-bold text-muted d-block mb-1">To Date</span>
+                        <Form.Control type="date" value={filters.toDate} onChange={(e) => setFilters({ ...filters, toDate: e.target.value })} />
+                      </Col>
+                      <Col md="3">
+                        <span className="text-uppercase small fw-bold text-muted d-block mb-1">Rating</span>
+                        <Form.Select value={filters.rating} onChange={(e) => setFilters({ ...filters, rating: e.target.value })}>
+                          <option value="">All Ratings</option>
+                          <option value="5">5 Stars</option>
+                          <option value="4">4 Stars</option>
+                          <option value="3">3 Stars</option>
+                          <option value="2">2 Stars</option>
+                          <option value="1">1 Star</option>
+                        </Form.Select>
+                      </Col>
+                      <Col md="1" className="d-flex align-items-end justify-content-end">
+                        <Button
+                          variant="light"
+                          size="sm"
+                          className="rounded-pill px-4 fw-bold"
+                          onClick={() => setFilters({ fromDate: '', toDate: '', rating: '' })}
+                        >
+                          Clear
+                        </Button>
+                      </Col>
+                    </Row>
+                  </div>
                 </div>
-              </div>
-            </Collapse>
+              </Collapse>
+            </div>
 
             {loading ? (
               <div className="text-center py-5">

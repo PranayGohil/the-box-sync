@@ -223,30 +223,64 @@ const SalesReport = () => {
     setExportType('Excel');
     try {
       const wb = XLSX.utils.book_new();
+      const allData = [];
+
+      allData.push(['SALES REPORT']);
+      allData.push(['Company:', COMPANY_NAME]);
+      allData.push(['Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`]);
+      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy HH:mm')]);
+      allData.push([]);
+
       if (exportOptions.includeSummary) {
-        const dashboardData = [
-          ['SALES REPORT DASHBOARD'],
-          [],
-          ['Company:', COMPANY_NAME],
-          ['Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`],
-          ['Generated:', format(new Date(), 'dd MMM yyyy HH:mm')],
-          [],
-          ['METRICS'],
-          ['Metric', 'Value'],
-          ['Total Revenue', reportData.revenue.summary.totalRevenue],
-          ['Total Orders', reportData.revenue.summary.totalOrders],
-          ['Average Order Value', reportData.revenue.summary.averageOrderValue],
-        ];
-        const dashboardSheet = XLSX.utils.aoa_to_sheet(dashboardData);
-        XLSX.utils.book_append_sheet(wb, dashboardSheet, 'Summary');
+        allData.push(['EXECUTIVE SUMMARY']);
+        allData.push(['Metric', 'Value']);
+        allData.push(['Total Revenue', reportData.revenue.summary.totalRevenue]);
+        allData.push(['Total Orders', reportData.revenue.summary.totalOrders]);
+        allData.push(['Average Order Value', reportData.revenue.summary.averageOrderValue]);
+        allData.push([]);
+        allData.push([]);
       }
+      
       if (exportOptions.includeRevenueTrends) {
-        const revData = [['REVENUE TREND'], [], ['Date', 'Revenue', 'Orders']];
+        allData.push(['REVENUE TRENDS']);
+        allData.push(['Date Period', 'Total Revenue', 'Total Orders', 'Order Average']);
         [...reportData.revenue.data].sort((a, b) => getItemDate(a) - getItemDate(b)).forEach(item => {
-          revData.push([formatTrendDate(item), item.value, item.orderCount]);
+          const orderAvg = item.orderCount > 0 ? item.value / item.orderCount : 0;
+          allData.push([formatTrendDate(item), item.value, item.orderCount, orderAvg]);
         });
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(revData), 'Revenue Details');
+        allData.push([]);
+        allData.push([]);
       }
+
+      if (exportOptions.includeTopDishes) {
+        allData.push(['DISH PERFORMANCE RANKING']);
+        allData.push(['Rank', 'Dish Name', 'Category', 'Quantity Sold', 'Revenue']);
+        reportData.dishes.data.forEach((dish, index) => {
+          allData.push([index + 1, dish.dishName, dish.category || 'Main Course', dish.totalQuantity, dish.totalRevenue]);
+        });
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeOrderTypes) {
+        allData.push(['ORDER TYPE BREAKDOWN']);
+        allData.push(['Order Type', 'Orders', 'Revenue', 'Percentage']);
+        reportData.orders.data.forEach(order => {
+          const percentage = ((order.totalRevenue / reportData.revenue.summary.totalRevenue) * 100).toFixed(1);
+          allData.push([order.category, order.count, order.totalRevenue, `${percentage}%`]);
+        });
+        allData.push([]);
+        allData.push([]);
+      }
+
+      const sheet = XLSX.utils.aoa_to_sheet(allData);
+      
+      // Auto-size columns slightly for better readability
+      const colWidths = [{ wch: 25 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
+      sheet['!cols'] = colWidths;
+
+      XLSX.utils.book_append_sheet(wb, sheet, 'Sales Report');
+
       XLSX.writeFile(wb, `Sales_Report_${startDate}_to_${endDate}.xlsx`);
       showSuccessToast('Excel report exported successfully!');
     } catch (err) {
@@ -262,17 +296,104 @@ const SalesReport = () => {
     setExportType('PDF');
     try {
       const doc = new jsPDF();
-      doc.text('Sales Report', 105, 20, { align: 'center' });
-      doc.text(COMPANY_NAME, 105, 30, { align: 'center' });
-      autoTable(doc, {
-        startY: 40,
-        head: [['Metric', 'Value']],
-        body: [
-          ['Total Revenue', formatCurrencyPDF(reportData.revenue.summary.totalRevenue)],
-          ['Total Orders', reportData.revenue.summary.totalOrders.toString()],
-          ['Average Order Value', formatCurrencyPDF(reportData.revenue.summary.averageOrderValue)]
-        ]
-      });
+      
+      doc.setFontSize(16);
+      doc.text('Sales Report', 105, 15, { align: 'center' });
+      doc.setFontSize(10);
+      doc.text(COMPANY_NAME, 105, 22, { align: 'center' });
+      doc.text(`Period: ${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`, 105, 28, { align: 'center' });
+
+      let currentY = 35;
+
+      if (exportOptions.includeSummary) {
+        doc.setFontSize(12);
+        doc.text('Executive Summary', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Metric', 'Value']],
+          body: [
+            ['Total Revenue', formatCurrencyPDF(reportData.revenue.summary.totalRevenue)],
+            ['Total Orders', reportData.revenue.summary.totalOrders.toString()],
+            ['Average Order Value', formatCurrencyPDF(reportData.revenue.summary.averageOrderValue)]
+          ],
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeRevenueTrends) {
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Revenue Trends', 14, currentY);
+        
+        const revBody = [...reportData.revenue.data]
+          .sort((a, b) => getItemDate(a) - getItemDate(b))
+          .map(item => [
+            formatTrendDate(item), 
+            formatCurrencyPDF(item.value), 
+            item.orderCount.toString(),
+            formatCurrencyPDF(item.orderCount > 0 ? item.value / item.orderCount : 0)
+          ]);
+          
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Date Period', 'Total Revenue', 'Total Orders', 'Order Average']],
+          body: revBody,
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeTopDishes) {
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Dish Performance Ranking', 14, currentY);
+        
+        const dishBody = reportData.dishes.data.map((dish, index) => [
+          (index + 1).toString(),
+          dish.dishName,
+          dish.category || 'Main Course',
+          dish.totalQuantity.toString(),
+          formatCurrencyPDF(dish.totalRevenue)
+        ]);
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Rank', 'Dish Name', 'Category', 'Quantity Sold', 'Revenue']],
+          body: dishBody,
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeOrderTypes) {
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Order Type Breakdown', 14, currentY);
+        
+        const typeBody = reportData.orders.data.map((order) => [
+          order.category,
+          order.count.toString(),
+          formatCurrencyPDF(order.totalRevenue),
+          `${((order.totalRevenue / reportData.revenue.summary.totalRevenue) * 100).toFixed(1)}%`
+        ]);
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Order Type', 'Orders', 'Revenue', 'Percentage']],
+          body: typeBody,
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+      }
+
       doc.save(`Sales_Report_${startDate}_to_${endDate}.pdf`);
       showSuccessToast('PDF exported successfully!');
     } catch (err) {
@@ -488,8 +609,8 @@ const SalesReport = () => {
                       <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Revenue Trends</h2>
                       <CsLineIcons icon="chart-4" size="18" style={{ color: brandColor }} />
                     </div>
-                    <div className="table-responsive">
-                      <Table borderless hover className="align-middle mb-0">
+                    <div className="table-responsive d-none d-md-block">
+                      <Table borderless hover className="align-middle mb-0 sales-report-table-mobile-optimized">
                         <thead className="sales-report-stat-label">
                           <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
                             <th className="py-3">Date Period</th>
@@ -509,6 +630,28 @@ const SalesReport = () => {
                           ))}
                         </tbody>
                       </Table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="d-block d-md-none mt-3">
+                      {sortedRevenueData.map((item, idx) => (
+                        <div key={idx} className="p-3 mb-3 border rounded-3 shadow-sm" style={{ background: '#f8fafc', borderColor: '#e2e8f0' }}>
+                          <div className="d-flex justify-content-between align-items-center mb-2 pb-2" style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                            <div className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>{formatTrendDate(item)}</div>
+                            <div className="fw-bold text-primary" style={{ fontSize: '0.95rem' }}>{formatCurrency(item.value)}</div>
+                          </div>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <div>
+                              <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Total Orders</span>
+                              <span className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>{item.orderCount}</span>
+                            </div>
+                            <div className="text-end">
+                              <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Order Avg</span>
+                              <span className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>{formatCurrency(item.orderCount > 0 ? item.value / item.orderCount : 0)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </Card.Body>
                 </Card>

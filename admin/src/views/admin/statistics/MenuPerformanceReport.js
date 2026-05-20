@@ -174,38 +174,97 @@ const MenuPerformanceReport = () => {
     setExportType('Excel');
     try {
       const wb = XLSX.utils.book_new();
+      const allData = [];
+
+      allData.push(['MENU PERFORMANCE REPORT']);
+      allData.push(['Company:', COMPANY_NAME]);
+      allData.push(['Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`]);
+      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy HH:mm')]);
+      allData.push([]);
+
       if (exportOptions.includeSummary) {
-        const dashboardData = [
-          ['MENU PERFORMANCE DASHBOARD'],
-          [],
-          ['Company:', COMPANY_NAME],
-          ['Report Period:', `${startDate} to ${endDate}`],
-          [],
-          ['SUMMARY METRICS'],
-          ['Metric', 'Value'],
-          ['Total Dishes Sold', reportData.summary.totalDishes],
-          ['Total Menu Revenue', reportData.summary.totalRevenue],
-          ['Total Categories', reportData.summary.totalCategories],
-        ];
-        const ws = XLSX.utils.aoa_to_sheet(dashboardData);
-        XLSX.utils.book_append_sheet(wb, ws, 'Dashboard');
+        setExportProgress(20);
+        allData.push(['SUMMARY METRICS']);
+        allData.push(['Metric', 'Value']);
+        allData.push(['Total Items Sold', reportData.dishPerformance.reduce((sum, d) => sum + d.totalQuantity, 0)]);
+        allData.push(['Total Menu Revenue', reportData.summary.totalRevenue]);
+        allData.push(['Total Categories', reportData.summary.totalCategories]);
+        allData.push(['Top Performer', reportData.dishPerformance[0]?.dishName || 'N/A']);
+        allData.push([]);
+        allData.push([]);
       }
-      if (exportOptions.includeAllDishes) {
-        const dishData = [['DISH PERFORMANCE'], [], ['Rank', 'Dish', 'Category', 'Qty', 'Revenue', 'Orders', 'Performance']];
-        reportData.dishPerformance.forEach((dish, idx) => {
-          dishData.push([idx + 1, dish.dishName, dish.category, dish.totalQuantity, dish.totalRevenue, dish.orderCount, getPerformanceLevel(dish)]);
+
+      if (exportOptions.includePerformanceDistribution) {
+        setExportProgress(35);
+        allData.push(['PERFORMANCE DISTRIBUTION INSIGHTS']);
+        allData.push(['Status', 'Dish Count', '% of Menu']);
+        
+        const topPerformers = reportData.dishPerformance.filter(d => getPerformanceLevel(d) === 'excellent').length;
+        const stableItems = reportData.dishPerformance.filter(d => getPerformanceLevel(d) === 'good').length;
+        const lowPerformers = reportData.dishPerformance.filter(d => getPerformanceLevel(d) === 'poor').length;
+        const total = reportData.dishPerformance.length;
+
+        allData.push(['Top Performers', topPerformers, total > 0 ? `${((topPerformers / total) * 100).toFixed(1)}%` : '0%']);
+        allData.push(['Stable Items', stableItems, total > 0 ? `${((stableItems / total) * 100).toFixed(1)}%` : '0%']);
+        allData.push(['Low Performers', lowPerformers, total > 0 ? `${((lowPerformers / total) * 100).toFixed(1)}%` : '0%']);
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeCategoryPerformance && reportData.categoryPerformance?.length > 0) {
+        setExportProgress(50);
+        allData.push(['CATEGORY YIELD INSIGHTS']);
+        allData.push(['Category', 'Orders', 'Revenue', 'Yield per Dish', '% of Total Revenue']);
+        
+        reportData.categoryPerformance.forEach((cat) => {
+          const percent = reportData.summary.totalRevenue > 0 ? ((cat.totalRevenue / reportData.summary.totalRevenue) * 100).toFixed(1) : 0;
+          allData.push([cat.category, cat.orderCount, cat.totalRevenue, cat.avgRevenuePerDish, `${percent}%`]);
         });
-        const ws = XLSX.utils.aoa_to_sheet(dishData);
-        XLSX.utils.book_append_sheet(wb, ws, 'Menu Items');
+        allData.push([]);
+        allData.push([]);
       }
+
+      if (exportOptions.includeMealTypePerformance && reportData.mealTypePerformance?.length > 0) {
+        setExportProgress(65);
+        allData.push(['MEAL TYPE UTILIZATION TRENDS']);
+        allData.push(['Meal Type', 'Qty Sold', 'Revenue', 'Orders', '% Revenue', 'Status']);
+        
+        reportData.mealTypePerformance.forEach((meal) => {
+          const percent = reportData.summary.totalRevenue > 0 ? (meal.totalRevenue / reportData.summary.totalRevenue) * 100 : 0;
+          const status = percent >= 40 ? 'High Load' : percent >= 20 ? 'Balanced' : 'Light';
+          allData.push([meal.mealType || 'Not Specified', meal.totalQuantity, meal.totalRevenue, meal.orderCount, `${percent.toFixed(1)}%`, status]);
+        });
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeAllDishes && filteredDishes?.length > 0) {
+        setExportProgress(80);
+        allData.push(['MENU ITEM PERFORMANCE AUDIT']);
+        allData.push(['Rank', 'Dish Name', 'Category', 'Qty Sold', 'Revenue', 'Avg Price', 'Status']);
+        
+        filteredDishes.forEach((dish, idx) => {
+          allData.push([idx + 1, dish.dishName, dish.category || 'N/A', dish.totalQuantity, dish.totalRevenue, dish.avgPrice, getPerformanceLevel(dish).toUpperCase()]);
+        });
+        allData.push([]);
+        allData.push([]);
+      }
+
+      const ws = XLSX.utils.aoa_to_sheet(allData);
+      ws['!cols'] = [{ wch: 20 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Menu Performance');
+
       XLSX.writeFile(wb, `Menu_Report_${startDate}_to_${endDate}.xlsx`);
       setToastMessage('Excel report exported successfully!');
       setShowToast(true);
     } catch (err) {
       console.error(err);
+      setToastMessage('Error exporting Excel report');
+      setShowToast(true);
     } finally {
       setExporting(false);
       setExportProgress(0);
+      setExportType('');
     }
   };
 
@@ -215,28 +274,138 @@ const MenuPerformanceReport = () => {
     setExportProgress(10);
     setExportType('PDF');
     try {
-      const doc = new jsPDF('landscape');
-      doc.setFontSize(20);
-      doc.text('MENU PERFORMANCE REPORT', 148.5, 20, { align: 'center' });
-      doc.setFontSize(12);
-      doc.text(COMPANY_NAME, 148.5, 30, { align: 'center' });
+      const doc = new jsPDF();
+      
+      doc.setFontSize(16);
+      doc.text('Menu Performance Report', 105, 15, { align: 'center' });
+      doc.setFontSize(10);
+      doc.text(COMPANY_NAME, 105, 22, { align: 'center' });
+      doc.text(`Period: ${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`, 105, 28, { align: 'center' });
 
-      autoTable(doc, {
-        startY: 40,
-        head: [['Rank', 'Dish Name', 'Category', 'Qty', 'Revenue', 'Orders']],
-        body: reportData.dishPerformance
-          .slice(0, 30)
-          .map((dish, idx) => [idx + 1, dish.dishName, dish.category, dish.totalQuantity, formatCurrencyPDF(dish.totalRevenue), dish.orderCount]),
-        theme: 'grid',
-      });
+      let currentY = 35;
+
+      if (exportOptions.includeSummary) {
+        setExportProgress(20);
+        doc.setFontSize(12);
+        doc.text('Summary Metrics', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Metric', 'Value']],
+          body: [
+            ['Total Items Sold', reportData.dishPerformance.reduce((sum, d) => sum + d.totalQuantity, 0).toString()],
+            ['Total Menu Revenue', formatCurrencyPDF(reportData.summary.totalRevenue)],
+            ['Total Categories', reportData.summary.totalCategories.toString()],
+            ['Top Performer', reportData.dishPerformance[0]?.dishName || 'N/A'],
+          ],
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includePerformanceDistribution) {
+        setExportProgress(35);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Performance Distribution Insights', 14, currentY);
+        
+        const topPerformers = reportData.dishPerformance.filter(d => getPerformanceLevel(d) === 'excellent').length;
+        const stableItems = reportData.dishPerformance.filter(d => getPerformanceLevel(d) === 'good').length;
+        const lowPerformers = reportData.dishPerformance.filter(d => getPerformanceLevel(d) === 'poor').length;
+        const total = reportData.dishPerformance.length;
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Status', 'Dish Count', '% of Menu']],
+          body: [
+            ['Top Performers', topPerformers.toString(), total > 0 ? `${((topPerformers / total) * 100).toFixed(1)}%` : '0%'],
+            ['Stable Items', stableItems.toString(), total > 0 ? `${((stableItems / total) * 100).toFixed(1)}%` : '0%'],
+            ['Low Performers', lowPerformers.toString(), total > 0 ? `${((lowPerformers / total) * 100).toFixed(1)}%` : '0%'],
+          ],
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeCategoryPerformance && reportData.categoryPerformance?.length > 0) {
+        setExportProgress(50);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Category Yield Insights', 14, currentY);
+        
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Category', 'Orders', 'Revenue', 'Yield per Dish', '% Rev']],
+          body: reportData.categoryPerformance.map((cat) => {
+            const percent = reportData.summary.totalRevenue > 0 ? ((cat.totalRevenue / reportData.summary.totalRevenue) * 100).toFixed(1) : 0;
+            return [cat.category, cat.orderCount.toString(), formatCurrencyPDF(cat.totalRevenue), formatCurrencyPDF(cat.avgRevenuePerDish), `${percent}%`];
+          }),
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeMealTypePerformance && reportData.mealTypePerformance?.length > 0) {
+        setExportProgress(65);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Meal Type Utilization Trends', 14, currentY);
+        
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Meal Type', 'Qty Sold', 'Revenue', 'Orders', '% Rev', 'Status']],
+          body: reportData.mealTypePerformance.map((meal) => {
+            const percent = reportData.summary.totalRevenue > 0 ? (meal.totalRevenue / reportData.summary.totalRevenue) * 100 : 0;
+            const status = percent >= 40 ? 'High Load' : percent >= 20 ? 'Balanced' : 'Light';
+            return [meal.mealType || 'Not Specified', meal.totalQuantity.toString(), formatCurrencyPDF(meal.totalRevenue), meal.orderCount.toString(), `${percent.toFixed(1)}%`, status];
+          }),
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeAllDishes && filteredDishes?.length > 0) {
+        setExportProgress(80);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Menu Item Performance Audit', 14, currentY);
+        
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Rank', 'Dish Name', 'Category', 'Qty Sold', 'Revenue', 'Avg Price', 'Status']],
+          body: filteredDishes.slice(0, 100).map((dish, idx) => [
+            (idx + 1).toString(),
+            dish.dishName,
+            dish.category || 'N/A',
+            dish.totalQuantity.toString(),
+            formatCurrencyPDF(dish.totalRevenue),
+            formatCurrencyPDF(dish.avgPrice),
+            getPerformanceLevel(dish).toUpperCase()
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+      }
+
       doc.save(`Menu_Report_${startDate}_to_${endDate}.pdf`);
       setToastMessage('PDF report exported successfully!');
       setShowToast(true);
     } catch (err) {
       console.error(err);
+      setToastMessage('Error exporting PDF report');
+      setShowToast(true);
     } finally {
       setExporting(false);
       setExportProgress(0);
+      setExportType('');
     }
   };
 

@@ -113,179 +113,127 @@ const OperationalReport = () => {
     return reportData.dayOfWeekAnalysis.reduce((max, day) => (day.orderCount > max.orderCount ? day : max), reportData.dayOfWeekAnalysis[0]);
   };
 
-  // Enhanced Excel Export
   const exportToExcel = async () => {
     if (!reportData) return;
-
     setExporting(true);
     setExportProgress(10);
     setExportType('Excel');
 
     try {
       const wb = XLSX.utils.book_new();
+      const allData = [];
 
       const busiestHour = getBusiestHour();
       const busiestDay = getBusiestDay();
 
-      // Dashboard Sheet
+      allData.push(['OPERATIONAL PERFORMANCE REPORT']);
+      allData.push(['Company:', COMPANY_NAME]);
+      allData.push(['Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`]);
+      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy HH:mm')]);
+      allData.push([]);
+
+      // Executive Insights
       if (exportOptions.includeInsights) {
-        setExportProgress(15);
-        const dashboardData = [
-          ['OPERATIONAL PERFORMANCE DASHBOARD'],
-          [],
-          ['Company:', COMPANY_NAME],
-          ['Report Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`],
-          ['Generated On:', format(new Date(), 'dd MMM yyyy HH:mm')],
-          [],
-          ['KEY OPERATIONAL METRICS'],
-          ['Metric', 'Value'],
-          ['Total Active Staff', reportData.waiterPerformance?.length || 0],
-          ['Active Tables', reportData.tablePerformance?.length || 0],
-          ['Busiest Hour', busiestHour ? `${busiestHour.hour}:00` : 'N/A'],
-          ['Peak Hour Orders', busiestHour ? busiestHour.orderCount : 0],
-          ['Busiest Day', busiestDay ? busiestDay.dayName : 'N/A'],
-          ['Peak Day Orders', busiestDay ? busiestDay.orderCount : 0],
-          [],
-          ['TOP PERFORMERS'],
-          ['Category', 'Name', 'Performance'],
-        ];
-
-        // Add top waiter
-        if (reportData.waiterPerformance && reportData.waiterPerformance.length > 0) {
-          const topWaiter = reportData.waiterPerformance[0];
-          dashboardData.push(['Top Waiter', topWaiter.waiter, `${topWaiter.totalOrders} orders`]);
-        }
-
-        // Add top table
-        if (reportData.tablePerformance && reportData.tablePerformance.length > 0) {
-          const topTable = reportData.tablePerformance[0];
-          dashboardData.push(['Top Table', topTable.tableNo, `${topTable.orderCount} orders`]);
-        }
-
-        const dashboardSheet = XLSX.utils.aoa_to_sheet(dashboardData);
-        dashboardSheet['!cols'] = [{ wch: 25 }, { wch: 30 }, { wch: 20 }];
-        XLSX.utils.book_append_sheet(wb, dashboardSheet, 'Dashboard');
+        allData.push(['KEY OPERATIONAL METRICS']);
+        allData.push(['Metric', 'Value']);
+        allData.push(['Total Active Staff', reportData.waiterPerformance?.length || 0]);
+        allData.push(['Active Tables', reportData.tablePerformance?.length || 0]);
+        allData.push(['Busiest Hour', busiestHour ? `${busiestHour.hour}:00` : 'N/A']);
+        allData.push(['Peak Hour Orders', busiestHour ? busiestHour.orderCount : 0]);
+        allData.push(['Busiest Day', busiestDay ? busiestDay.dayName : 'N/A']);
+        allData.push(['Peak Day Orders', busiestDay ? busiestDay.orderCount : 0]);
+        allData.push([]);
+        allData.push([]);
       }
 
-      // Waiter Performance Sheet
-      if (exportOptions.includeWaiterPerformance) {
-        setExportProgress(30);
-        const waiterData = [
-          ['WAITER PERFORMANCE ANALYSIS'],
-          [],
-          ['Rank', 'Waiter', 'Total Orders', 'Revenue', 'Avg Order Value', 'Tables Served', 'Total Discount', 'Revenue/Order', 'Performance Rating'],
-        ];
+      // Waiter Performance
+      if (exportOptions.includeWaiterPerformance && reportData.waiterPerformance?.length > 0) {
+        allData.push(['STAFF PERFORMANCE RANKING']);
+        allData.push(['Rank', 'Name', 'Total Orders', 'Revenue', 'Avg Ticket', 'Tables Served', 'Efficiency']);
 
         const avgRevenue = reportData.waiterPerformance.reduce((sum, w) => sum + w.totalRevenue, 0) / reportData.waiterPerformance.length;
 
         reportData.waiterPerformance.forEach((waiter, idx) => {
           const performance = waiter.totalRevenue >= avgRevenue * 1.2 ? 'Excellent' : waiter.totalRevenue >= avgRevenue * 0.8 ? 'Good' : 'Needs Improvement';
-
-          waiterData.push([
+          allData.push([
             idx + 1,
             waiter.waiter,
             waiter.totalOrders,
             waiter.totalRevenue,
             waiter.avgOrderValue,
             waiter.tablesServed,
-            waiter.totalDiscount,
-            waiter.revenuePerOrder,
             performance,
           ]);
         });
-
-        const waiterSheet = XLSX.utils.aoa_to_sheet(waiterData);
-        waiterSheet['!cols'] = [{ wch: 8 }, { wch: 20 }, { wch: 14 }, { wch: 15 }, { wch: 16 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 18 }];
-        
-        const range = XLSX.utils.decode_range(waiterSheet['!ref']);
-        for (let R = 3; R <= range.e.r; R += 1) {
-          const revenueCell = XLSX.utils.encode_cell({ r: R, c: 3 });
-          const avgCell = XLSX.utils.encode_cell({ r: R, c: 4 });
-          if (waiterSheet[revenueCell]) waiterSheet[revenueCell].z = '"Rs. "#,##0';
-          if (waiterSheet[avgCell]) waiterSheet[avgCell].z = '"Rs. "#,##0';
-        }
-
-        XLSX.utils.book_append_sheet(wb, waiterSheet, 'Waiter Performance');
+        allData.push([]);
+        allData.push([]);
       }
 
-      // Table Performance Sheet
-      if (exportOptions.includeTablePerformance) {
-        setExportProgress(45);
-        const tableData = [
-          ['TABLE PERFORMANCE ANALYSIS'],
-          [],
-          ['Rank', 'Table No', 'Area', 'Orders', 'Revenue', 'Avg Order', 'Total Persons', 'Avg Persons', 'Revenue/Person'],
-        ];
+      // Table Performance
+      if (exportOptions.includeTablePerformance && reportData.tablePerformance?.length > 0) {
+        allData.push(['TABLE UTILIZATION MATRIX']);
+        allData.push(['Rank', 'Table No', 'Area', 'Orders', 'Revenue', 'Avg Ticket', 'Footfall', 'Rev/Person']);
 
-        reportData.tablePerformance.forEach((table, idx) => {
-          tableData.push([
+        reportData.tablePerformance.slice(0, 50).forEach((table, idx) => {
+          allData.push([
             idx + 1,
             table.tableNo,
-            table.tableArea || 'N/A',
+            table.tableArea || 'GENERAL',
             table.orderCount,
             table.totalRevenue,
             table.avgOrderValue,
             table.totalPersons,
-            table.avgPersonsPerOrder,
             table.revenuePerPerson,
           ]);
         });
-
-        const tableSheet = XLSX.utils.aoa_to_sheet(tableData);
-        tableSheet['!cols'] = [{ wch: 8 }, { wch: 12 }, { wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 16 }];
-        XLSX.utils.book_append_sheet(wb, tableSheet, 'Table Performance');
+        allData.push([]);
+        allData.push([]);
       }
 
-      // Peak Hours Sheet
-      if (exportOptions.includePeakHours) {
-        setExportProgress(60);
-        const hoursData = [['HOURLY PERFORMANCE ANALYSIS'], [], ['Hour', 'Time Range', 'Orders', 'Revenue', 'Avg Order Value', 'Activity Level']];
+      // Peak Hours
+      if (exportOptions.includePeakHours && reportData.peakHours?.length > 0) {
+        allData.push(['HOURLY LOAD ANALYSIS']);
+        allData.push(['Hour Range', 'Orders', 'Revenue', 'Avg Order Value', 'Activity Level']);
         const maxOrders = Math.max(...reportData.peakHours.map((h) => h.orderCount));
 
         reportData.peakHours.forEach((hour) => {
-          const activityPercent = (hour.orderCount / maxOrders) * 100;
+          const activityPercent = maxOrders > 0 ? (hour.orderCount / maxOrders) * 100 : 0;
           const activityLevel = activityPercent >= 80 ? 'Peak' : activityPercent >= 50 ? 'Busy' : activityPercent >= 25 ? 'Moderate' : 'Slow';
-          hoursData.push([hour.hour, `${hour.hour}:00 - ${hour.hour + 1}:00`, hour.orderCount, hour.totalRevenue, hour.avgOrderValue, activityLevel]);
+          allData.push([`${hour.hour}:00 - ${hour.hour + 1}:00`, hour.orderCount, hour.totalRevenue, hour.avgOrderValue, activityLevel]);
         });
-
-        const hoursSheet = XLSX.utils.aoa_to_sheet(hoursData);
-        hoursSheet['!cols'] = [{ wch: 8 }, { wch: 18 }, { wch: 10 }, { wch: 15 }, { wch: 16 }, { wch: 15 }];
-        XLSX.utils.book_append_sheet(wb, hoursSheet, 'Peak Hours');
+        allData.push([]);
+        allData.push([]);
       }
 
-      // Day of Week Sheet
-      if (exportOptions.includeDayOfWeek) {
-        setExportProgress(75);
-        const dayData = [['DAY OF WEEK ANALYSIS'], [], ['Day', 'Orders', 'Revenue', 'Avg Order Value', 'Performance Rating']];
-        const avgRevenue = reportData.dayOfWeekAnalysis.reduce((sum, d) => sum + d.totalRevenue, 0) / reportData.dayOfWeekAnalysis.length;
-
+      // Day of Week
+      if (exportOptions.includeDayOfWeek && reportData.dayOfWeekAnalysis?.length > 0) {
+        allData.push(['WEEKLY PERFORMANCE']);
+        allData.push(['Day', 'Orders', 'Revenue', 'Avg Order Value']);
         reportData.dayOfWeekAnalysis.forEach((day) => {
-          const performance = day.totalRevenue >= avgRevenue * 1.2 ? 'Best Day' : day.totalRevenue >= avgRevenue * 0.8 ? 'Average' : 'Below Average';
-          dayData.push([day.dayName, day.orderCount, day.totalRevenue, day.avgOrderValue, performance]);
+          allData.push([day.dayName, day.orderCount, day.totalRevenue, day.avgOrderValue]);
         });
-
-        const daySheet = XLSX.utils.aoa_to_sheet(dayData);
-        daySheet['!cols'] = [{ wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 16 }, { wch: 18 }];
-        XLSX.utils.book_append_sheet(wb, daySheet, 'Day of Week');
+        allData.push([]);
+        allData.push([]);
       }
 
-      // Area Performance Sheet
-      if (exportOptions.includeAreaPerformance && reportData.areaPerformance && reportData.areaPerformance.length > 0) {
-        setExportProgress(85);
-        const areaData = [['TABLE AREA PERFORMANCE'], [], ['Area', 'Orders', 'Revenue', 'Avg Order', 'Tables', 'Revenue/Table']];
+      // Area Performance
+      if (exportOptions.includeAreaPerformance && reportData.areaPerformance?.length > 0) {
+        allData.push(['AREA PERFORMANCE ANALYTICS']);
+        allData.push(['Area', 'Orders', 'Revenue', 'Avg Ticket', 'Tables', 'Revenue/Table']);
 
         reportData.areaPerformance.forEach((area) => {
-          areaData.push([area.area, area.orderCount, area.totalRevenue, area.avgOrderValue, area.tableCount, area.revenuePerTable]);
+          allData.push([area.area, area.orderCount, area.totalRevenue, area.avgOrderValue, area.tableCount, area.revenuePerTable]);
         });
-
-        const areaSheet = XLSX.utils.aoa_to_sheet(areaData);
-        areaSheet['!cols'] = [{ wch: 20 }, { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 10 }, { wch: 15 }];
-        XLSX.utils.book_append_sheet(wb, areaSheet, 'Area Performance');
+        allData.push([]);
+        allData.push([]);
       }
 
-      setExportProgress(95);
+      const sheet = XLSX.utils.aoa_to_sheet(allData);
+      sheet['!cols'] = [{ wch: 20 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+      
+      XLSX.utils.book_append_sheet(wb, sheet, 'Operational Report');
+
       XLSX.writeFile(wb, `Operational_Report_${startDate}_to_${endDate}.xlsx`);
-      setExportProgress(100);
       setToastMessage('Excel report exported successfully!');
       setShowToast(true);
     } catch (err) {
@@ -293,135 +241,181 @@ const OperationalReport = () => {
       setToastMessage('Error exporting Excel file');
       setShowToast(true);
     } finally {
-      setTimeout(() => {
-        setExporting(false);
-        setExportProgress(0);
-        setExportType('');
-      }, 500);
+      setExporting(false);
+      setExportProgress(0);
+      setExportType('');
     }
   };
 
-  // Enhanced PDF Export
   const exportToPDF = async () => {
     if (!reportData) return;
-
     setExporting(true);
-    setExportProgress(10);
     setExportType('PDF');
-
     try {
-      const doc = new jsPDF('landscape');
-      let yPosition = 20;
-
+      const doc = new jsPDF();
+      
       const busiestHour = getBusiestHour();
       const busiestDay = getBusiestDay();
 
-      // Executive Summary Page
-      setExportProgress(15);
-      doc.setFillColor(35, 179, 244);
-      doc.rect(0, 0, 297, 40, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(24);
-      doc.setFont(undefined, 'bold');
-      doc.text('OPERATIONAL PERFORMANCE REPORT', 148.5, 20, { align: 'center' });
-      doc.setFontSize(14);
-      doc.text(COMPANY_NAME, 148.5, 30, { align: 'center' });
+      doc.setFontSize(16);
+      doc.text('Operational Performance Report', 105, 15, { align: 'center' });
+      doc.setFontSize(10);
+      doc.text(COMPANY_NAME, 105, 22, { align: 'center' });
+      doc.text(`Period: ${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`, 105, 28, { align: 'center' });
 
-      yPosition = 50;
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(12);
-      doc.text(`Report Period: ${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`, 20, yPosition);
-      yPosition += 15;
+      let currentY = 35;
 
       if (exportOptions.includeInsights) {
-        doc.setFontSize(16);
-        doc.text('Executive Summary', 20, yPosition);
-        yPosition += 12;
-
-        const metrics = [
-          { label: 'Active Staff', value: (reportData.waiterPerformance?.length || 0).toString(), color: [35, 179, 244] },
-          { label: 'Active Tables', value: (reportData.tablePerformance?.length || 0).toString(), color: [16, 185, 129] },
-          { label: 'Busiest Hour', value: busiestHour ? `${busiestHour.hour}:00` : 'N/A', color: [245, 158, 11] },
-          { label: 'Busiest Day', value: busiestDay ? busiestDay.dayName : 'N/A', color: [139, 92, 246] },
-        ];
-
-        metrics.forEach((metric, idx) => {
-          const xPos = 20 + idx * 65;
-          doc.setFillColor(...metric.color);
-          doc.roundedRect(xPos, yPosition, 60, 25, 3, 3, 'F');
-          doc.setTextColor(255, 255, 255);
-          doc.setFontSize(9);
-          doc.text(metric.label, xPos + 30, yPosition + 9, { align: 'center' });
-          doc.setFontSize(14);
-          doc.text(metric.value, xPos + 30, yPosition + 19, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text('Executive Summary', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Metric', 'Value']],
+          body: [
+            ['Total Active Staff', (reportData.waiterPerformance?.length || 0).toString()],
+            ['Active Tables', (reportData.tablePerformance?.length || 0).toString()],
+            ['Busiest Hour', busiestHour ? `${busiestHour.hour}:00 (${busiestHour.orderCount} orders)` : 'N/A'],
+            ['Busiest Day', busiestDay ? `${busiestDay.dayName} (${busiestDay.orderCount} orders)` : 'N/A'],
+          ],
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
         });
-
-        yPosition += 40;
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(10);
-        const topWaiter = reportData.waiterPerformance?.[0];
-        const insights = [
-          `• Top performing waiter: ${topWaiter?.waiter || 'N/A'} (${topWaiter?.totalOrders || 0} orders)`,
-          `• Peak business hours: ${busiestHour ? `${busiestHour.hour}:00-${busiestHour.hour + 1}:00` : 'N/A'} with ${busiestHour?.orderCount || 0} orders`,
-          `• Busiest day of week: ${busiestDay?.dayName || 'N/A'} with ${formatCurrencyPDF(busiestDay?.totalRevenue || 0)} revenue`,
-        ];
-        insights.forEach((insight) => {
-          doc.text(insight, 20, yPosition);
-          yPosition += 7;
-        });
-
-        doc.addPage();
-        yPosition = 20;
+        currentY = doc.lastAutoTable.finalY + 15;
       }
 
-      // Tables
-      if (exportOptions.includeWaiterPerformance) {
-        setExportProgress(40);
-        doc.setFontSize(14);
-        doc.text('Waiter Performance Analysis', 20, yPosition);
-        autoTable(doc, {
-          startY: yPosition + 8,
-          head: [['Rank', 'Waiter', 'Orders', 'Revenue', 'Avg Order', 'Tables', 'Performance']],
-          body: reportData.waiterPerformance.map((waiter, idx) => [
-            (idx + 1).toString(),
+      if (exportOptions.includeWaiterPerformance && reportData.waiterPerformance?.length > 0) {
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Staff Performance Ranking', 14, currentY);
+        
+        const avgRevenue = reportData.waiterPerformance.reduce((sum, w) => sum + w.totalRevenue, 0) / reportData.waiterPerformance.length;
+
+        const waiterBody = reportData.waiterPerformance.map((waiter, index) => {
+          const performance = waiter.totalRevenue >= avgRevenue * 1.2 ? 'Excellent' : waiter.totalRevenue >= avgRevenue * 0.8 ? 'Good' : 'Needs Improvement';
+          return [
+            (index + 1).toString(),
             waiter.waiter,
             waiter.totalOrders.toString(),
             formatCurrencyPDF(waiter.totalRevenue),
             formatCurrencyPDF(waiter.avgOrderValue),
             waiter.tablesServed.toString(),
-            waiter.totalRevenue >= 10000 ? '⭐ Excellent' : '👍 Good'
-          ]),
-          theme: 'grid',
-          headStyles: { fillColor: [35, 179, 244] }
+            performance
+          ];
         });
-        yPosition = doc.lastAutoTable.finalY + 15;
-      }
 
-      if (exportOptions.includeTablePerformance) {
-        setExportProgress(60);
-        if (yPosition > 180) { doc.addPage(); yPosition = 20; }
-        doc.setFontSize(14);
-        doc.text('Table Performance Analysis', 20, yPosition);
         autoTable(doc, {
-          startY: yPosition + 8,
-          head: [['Table', 'Area', 'Orders', 'Revenue', 'Avg Order', 'Rev/Person']],
-          body: reportData.tablePerformance.slice(0, 15).map(table => [
-            table.tableNo,
-            table.tableArea || 'N/A',
-            table.orderCount.toString(),
-            formatCurrencyPDF(table.totalRevenue),
-            formatCurrencyPDF(table.avgOrderValue),
-            formatCurrencyPDF(table.revenuePerPerson)
-          ]),
-          theme: 'striped',
-          headStyles: { fillColor: [35, 179, 244] }
+          startY: currentY + 5,
+          head: [['Rank', 'Name', 'Orders', 'Revenue', 'Avg Ticket', 'Tables', 'Efficiency']],
+          body: waiterBody,
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
         });
-        yPosition = doc.lastAutoTable.finalY + 15;
+        currentY = doc.lastAutoTable.finalY + 15;
       }
 
-      setExportProgress(95);
+      if (exportOptions.includeTablePerformance && reportData.tablePerformance?.length > 0) {
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Table Utilization Matrix', 14, currentY);
+        
+        const tableBody = reportData.tablePerformance.slice(0, 50).map((table, index) => [
+          (index + 1).toString(),
+          table.tableNo,
+          table.tableArea || 'GENERAL',
+          table.orderCount.toString(),
+          formatCurrencyPDF(table.totalRevenue),
+          table.totalPersons.toString()
+        ]);
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Rank', 'Table', 'Area', 'Orders', 'Revenue', 'Footfall']],
+          body: tableBody,
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includePeakHours && reportData.peakHours?.length > 0) {
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Hourly Load Analysis', 14, currentY);
+        
+        const maxOrders = Math.max(...reportData.peakHours.map((h) => h.orderCount));
+        
+        const hoursBody = reportData.peakHours.map(hour => {
+          const activityPercent = maxOrders > 0 ? (hour.orderCount / maxOrders) * 100 : 0;
+          const activityLevel = activityPercent >= 80 ? 'Peak' : activityPercent >= 50 ? 'Busy' : activityPercent >= 25 ? 'Moderate' : 'Slow';
+          return [
+            `${hour.hour}:00 - ${hour.hour + 1}:00`,
+            hour.orderCount.toString(),
+            formatCurrencyPDF(hour.totalRevenue),
+            activityLevel
+          ];
+        });
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Hour Range', 'Orders', 'Revenue', 'Activity']],
+          body: hoursBody,
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeDayOfWeek && reportData.dayOfWeekAnalysis?.length > 0) {
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Weekly Performance', 14, currentY);
+        
+        const dayBody = reportData.dayOfWeekAnalysis.map(day => [
+          day.dayName,
+          day.orderCount.toString(),
+          formatCurrencyPDF(day.totalRevenue),
+          formatCurrencyPDF(day.avgOrderValue)
+        ]);
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Day', 'Orders', 'Revenue', 'Avg Order Value']],
+          body: dayBody,
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeAreaPerformance && reportData.areaPerformance?.length > 0) {
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Area Performance Analytics', 14, currentY);
+        
+        const areaBody = reportData.areaPerformance.map(area => [
+          area.area,
+          area.tableCount.toString(),
+          area.orderCount.toString(),
+          formatCurrencyPDF(area.totalRevenue),
+          formatCurrencyPDF(area.avgOrderValue)
+        ]);
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Area', 'Tables', 'Orders', 'Revenue', 'Avg Ticket']],
+          body: areaBody,
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+      }
+
       doc.save(`Operational_Report_${startDate}_to_${endDate}.pdf`);
-      setExportProgress(100);
       setToastMessage('PDF report exported successfully!');
       setShowToast(true);
     } catch (err) {
@@ -429,11 +423,9 @@ const OperationalReport = () => {
       setToastMessage('Error exporting PDF file');
       setShowToast(true);
     } finally {
-      setTimeout(() => {
-        setExporting(false);
-        setExportProgress(0);
-        setExportType('');
-      }, 500);
+      setExporting(false);
+      setExportProgress(0);
+      setExportType('');
     }
   };
 
@@ -718,23 +710,36 @@ const OperationalReport = () => {
                       <CsLineIcons icon="trend-up" size="18" style={{ color: brandColor }} />
                     </div>
                     <div className="d-flex flex-column gap-4 mt-3">
-                      {reportData.dayOfWeekAnalysis.map((day, idx) => (
-                        <div key={idx} className="d-flex align-items-center justify-content-between">
-                          <div className="d-flex align-items-center overflow-hidden">
-                            <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 flex-shrink-0" style={{ backgroundColor: 'rgba(0,0,0,0.02)' }}>
-                              <span className="fw-bold smaller text-muted">{day.dayName.substring(0, 1)}</span>
+                      {(() => {
+                        if (!reportData.dayOfWeekAnalysis || reportData.dayOfWeekAnalysis.length === 0) return null;
+                        const avgRevenue = reportData.dayOfWeekAnalysis.reduce((sum, d) => sum + d.totalRevenue, 0) / reportData.dayOfWeekAnalysis.length;
+                        
+                        return reportData.dayOfWeekAnalysis.map((day, idx) => {
+                          const isBest = day.totalRevenue >= avgRevenue * 1.2;
+                          const isSlow = day.totalRevenue < avgRevenue * 0.8;
+                          const badgeBg = isBest ? 'success' : isSlow ? 'warning' : 'light';
+                          const badgeText = isBest ? 'BEST DAY' : isSlow ? 'SLOW DAY' : 'NORMAL';
+                          const textClass = isBest ? 'text-white' : isSlow ? 'text-dark' : 'text-dark';
+
+                          return (
+                            <div key={idx} className="d-flex align-items-center justify-content-between">
+                              <div className="d-flex align-items-center overflow-hidden">
+                                <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 flex-shrink-0" style={{ backgroundColor: 'rgba(0,0,0,0.02)' }}>
+                                  <span className="fw-bold smaller text-muted">{day.dayName.substring(0, 1)}</span>
+                                </div>
+                                <div className="overflow-hidden">
+                                  <div className="fw-bold text-dark mb-0 text-truncate">{day.dayName}</div>
+                                  <div className="smaller text-muted fw-bold">{day.orderCount} Orders</div>
+                                </div>
+                              </div>
+                              <div className="text-end ms-2 flex-shrink-0">
+                                <div className="fw-bold text-primary smaller">{formatCurrency(day.totalRevenue)}</div>
+                                <Badge bg={badgeBg} className={`rounded-pill px-2 py-1 ${textClass}`} style={{ fontSize: '0.6rem' }}>{badgeText}</Badge>
+                              </div>
                             </div>
-                            <div className="overflow-hidden">
-                              <div className="fw-bold text-dark mb-0 text-truncate">{day.dayName}</div>
-                              <div className="smaller text-muted fw-bold">{day.orderCount} Orders</div>
-                            </div>
-                          </div>
-                          <div className="text-end ms-2 flex-shrink-0">
-                            <div className="fw-bold text-primary smaller">{formatCurrency(day.totalRevenue)}</div>
-                            <Badge bg={day.totalRevenue >= 10000 ? 'success' : 'light'} className="rounded-pill px-2 py-1 text-dark" style={{ fontSize: '0.6rem' }}>NORMAL</Badge>
-                          </div>
-                        </div>
-                      ))}
+                          );
+                        });
+                      })()}
                     </div>
                   </Card.Body>
                 </Card>

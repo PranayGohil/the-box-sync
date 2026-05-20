@@ -65,6 +65,13 @@ const CustomerInsightsReport = () => {
     }).format(amount || 0);
   };
 
+  const formatCurrencyPDF = (amount) => {
+    const value = new Intl.NumberFormat('en-IN', {
+      maximumFractionDigits: 0,
+    }).format(amount || 0);
+    return `Rs. ${value}`;
+  };
+
   const fetchCustomerReport = async () => {
     setLoading(true);
     setError(null);
@@ -102,17 +109,80 @@ const CustomerInsightsReport = () => {
     setExportType('Excel');
     try {
       const wb = XLSX.utils.book_new();
-      const wsData = [['Customer Insights Report'], [], ['Report Period', `${startDate} to ${endDate}`], []];
-      wsData.push(['Metric', 'Value']);
-      wsData.push(['Total Customers', totalCustomers]);
-      wsData.push(['Repeat Customers', repeatCustomers]);
-      wsData.push(['Repeat Rate', `${repeatRate}%`]);
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      XLSX.utils.book_append_sheet(wb, ws, 'Summary');
+      const allData = [];
+
+      allData.push(['CUSTOMER INSIGHTS REPORT']);
+      allData.push(['Company:', COMPANY_NAME]);
+      allData.push(['Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`]);
+      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy HH:mm')]);
+      allData.push([]);
+
+      allData.push(['EXECUTIVE SUMMARY']);
+      allData.push(['Metric', 'Value']);
+      allData.push(['Total Customers', totalCustomers]);
+      allData.push(['Repeat Customers', repeatCustomers]);
+      allData.push(['One-Time Visitors', oneTimeCustomers]);
+      allData.push(['Repeat Rate', `${repeatRate}%`]);
+      allData.push(['Avg Lifetime Value', reportData.topCustomers?.[0]?.avgOrderValue || 0]);
+      allData.push([]);
+      allData.push([]);
+
+      if (exportOptions.includeTopCustomers && reportData.topCustomers?.length > 0) {
+        allData.push(['CUSTOMER RANKING']);
+        allData.push(['Rank', 'Customer Name', 'Total Visits', 'Total Spent']);
+        reportData.topCustomers.slice(0, exportOptions.topCustomersLimit).forEach((customer, index) => {
+          allData.push([index + 1, customer.customerName || 'Guest', customer.totalOrders, customer.totalSpent]);
+        });
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeSegmentation && reportData.customerSegmentation?.length > 0) {
+        allData.push(['VISIT FREQUENCY (SEGMENTATION)']);
+        allData.push(['Segment', 'Customer Count', 'Percentage']);
+        const labels = ['1 Order', '2-4 Orders', '5-9 Orders', '10-19 Orders', '20+ Orders'];
+        reportData.customerSegmentation.forEach(segment => {
+          const percentage = totalCustomers > 0 ? ((segment.customerCount / totalCustomers) * 100).toFixed(1) : 0;
+          allData.push([labels[segment._id - 1] || 'Other', segment.customerCount, `${percentage}%`]);
+        });
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeLifetimeValue && reportData.lifetimeValueDistribution?.length > 0) {
+        allData.push(['LIFETIME VALUE DISTRIBUTION']);
+        allData.push(['Value Range', 'Customer Count', 'Percentage']);
+        const ranges = ['Rs. 0-1K', 'Rs. 1K-5K', 'Rs. 5K-10K', 'Rs. 10K-25K', 'Rs. 25K-50K', 'Rs. 50K+'];
+        reportData.lifetimeValueDistribution.forEach(item => {
+          const percentage = totalCustomers > 0 ? ((item.customerCount / totalCustomers) * 100).toFixed(1) : 0;
+          allData.push([ranges[item._id] || 'Elite', item.customerCount, `${percentage}%`]);
+        });
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeAcquisitionTrend && reportData.acquisitionTrend?.length > 0) {
+        allData.push(['ACQUISITION & GROWTH TREND']);
+        allData.push(['Date', 'New Customers', 'Retention']);
+        [...reportData.acquisitionTrend].reverse().forEach(item => {
+          const dateStr = `${String(item._id.day).padStart(2, '0')}-${String(item._id.month).padStart(2, '0')}-${item._id.year}`;
+          const retention = item.newCustomers > 0 ? 'High' : 'Stable';
+          allData.push([dateStr, item.newCustomers, retention]);
+        });
+        allData.push([]);
+        allData.push([]);
+      }
+
+      const sheet = XLSX.utils.aoa_to_sheet(allData);
+      const colWidths = [{ wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
+      sheet['!cols'] = colWidths;
+
+      XLSX.utils.book_append_sheet(wb, sheet, 'Customer Insights');
       XLSX.writeFile(wb, `Customer_Report_${startDate}_to_${endDate}.xlsx`);
       showSuccessToast('Excel exported successfully!');
     } catch (err) {
       console.error(err);
+      showSuccessToast('Error exporting Excel');
     } finally {
       setExporting(false);
     }
@@ -124,16 +194,126 @@ const CustomerInsightsReport = () => {
     setExportType('PDF');
     try {
       const doc = new jsPDF();
-      doc.text('Customer Insights Report', 105, 20, { align: 'center' });
+      
+      doc.setFontSize(16);
+      doc.text('Customer Insights Report', 105, 15, { align: 'center' });
+      doc.setFontSize(10);
+      doc.text(COMPANY_NAME, 105, 22, { align: 'center' });
+      doc.text(`Period: ${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`, 105, 28, { align: 'center' });
+
+      let currentY = 35;
+
+      doc.setFontSize(12);
+      doc.text('Executive Summary', 14, currentY);
       autoTable(doc, {
-        startY: 30,
+        startY: currentY + 5,
         head: [['Metric', 'Value']],
-        body: [['Total Customers', totalCustomers.toString()], ['Repeat Rate', `${repeatRate}%`]]
+        body: [
+          ['Total Customers', totalCustomers.toString()],
+          ['Repeat Customers', repeatCustomers.toString()],
+          ['One-Time Visitors', oneTimeCustomers.toString()],
+          ['Repeat Rate', `${repeatRate}%`],
+          ['Avg Lifetime Value', formatCurrencyPDF(reportData.topCustomers?.[0]?.avgOrderValue || 0)]
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [35, 179, 244] },
+        margin: { bottom: 15 }
       });
+      currentY = doc.lastAutoTable.finalY + 15;
+
+      if (exportOptions.includeTopCustomers && reportData.topCustomers?.length > 0) {
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Customer Ranking', 14, currentY);
+        
+        const rankBody = reportData.topCustomers.slice(0, exportOptions.topCustomersLimit).map((customer, index) => [
+          (index + 1).toString(),
+          customer.customerName || 'Guest',
+          customer.totalOrders.toString(),
+          formatCurrencyPDF(customer.totalSpent)
+        ]);
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Rank', 'Customer Name', 'Total Visits', 'Total Spent']],
+          body: rankBody,
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeSegmentation && reportData.customerSegmentation?.length > 0) {
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Visit Frequency (Segmentation)', 14, currentY);
+        
+        const labels = ['1 Order', '2-4 Orders', '5-9 Orders', '10-19 Orders', '20+ Orders'];
+        const segBody = reportData.customerSegmentation.map(segment => {
+          const percentage = totalCustomers > 0 ? ((segment.customerCount / totalCustomers) * 100).toFixed(1) : 0;
+          return [labels[segment._id - 1] || 'Other', segment.customerCount.toString(), `${percentage}%`];
+        });
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Segment', 'Customer Count', 'Percentage']],
+          body: segBody,
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeLifetimeValue && reportData.lifetimeValueDistribution?.length > 0) {
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Lifetime Value Distribution', 14, currentY);
+        
+        const ranges = ['Rs. 0-1K', 'Rs. 1K-5K', 'Rs. 5K-10K', 'Rs. 10K-25K', 'Rs. 25K-50K', 'Rs. 50K+'];
+        const ltvBody = reportData.lifetimeValueDistribution.map(item => {
+          const percentage = totalCustomers > 0 ? ((item.customerCount / totalCustomers) * 100).toFixed(1) : 0;
+          return [ranges[item._id] || 'Elite', item.customerCount.toString(), `${percentage}%`];
+        });
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Value Range', 'Customer Count', 'Percentage']],
+          body: ltvBody,
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeAcquisitionTrend && reportData.acquisitionTrend?.length > 0) {
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Acquisition & Growth Trend', 14, currentY);
+        
+        const acqBody = [...reportData.acquisitionTrend].reverse().map(item => {
+          const dateStr = `${String(item._id.day).padStart(2, '0')}-${String(item._id.month).padStart(2, '0')}-${item._id.year}`;
+          const retention = item.newCustomers > 0 ? 'High' : 'Stable';
+          return [dateStr, item.newCustomers.toString(), retention];
+        });
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Date', 'New Customers', 'Retention']],
+          body: acqBody,
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+      }
+
       doc.save(`Customer_Report_${startDate}_to_${endDate}.pdf`);
       showSuccessToast('PDF exported successfully!');
     } catch (err) {
       console.error(err);
+      showSuccessToast('Error exporting PDF');
     } finally {
       setExporting(false);
     }
@@ -411,7 +591,7 @@ const CustomerInsightsReport = () => {
                       <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Acquisition & Growth Trend</h2>
                       <CsLineIcons icon="trend-up" size="18" style={{ color: brandColor }} />
                     </div>
-                    <div className="table-responsive mt-3">
+                    <div className="table-responsive mt-3 d-none d-md-block">
                       <Table borderless hover className="align-middle mb-0">
                         <thead className="customer-insights-report-stat-label">
                           <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
@@ -457,6 +637,40 @@ const CustomerInsightsReport = () => {
                           )}
                         </tbody>
                       </Table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="d-block d-md-none mt-3">
+                      {reportData.acquisitionTrend && reportData.acquisitionTrend.length > 0 ? (
+                        [...reportData.acquisitionTrend].reverse().slice(0, 10).map((item, idx) => {
+                          const totalNew = reportData.acquisitionTrend.reduce((sum, i) => sum + i.newCustomers, 0);
+                          const percentage = totalNew > 0 ? ((item.newCustomers / totalNew) * 100).toFixed(1) : 0;
+                          return (
+                            <div key={idx} className="p-3 mb-3 border rounded-3 shadow-sm" style={{ background: '#f8fafc', borderColor: '#e2e8f0' }}>
+                              <div className="d-flex justify-content-between align-items-center mb-2 pb-2" style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                                <div className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
+                                  {`${String(item._id.day).padStart(2, '0')}-${String(item._id.month).padStart(2, '0')}-${item._id.year}`}
+                                </div>
+                                <Badge bg="rgba(35, 179, 244, 0.1)" className="text-primary px-3 py-1 rounded-pill fw-bold">
+                                  {item.newCustomers} New
+                                </Badge>
+                              </div>
+                              <div className="d-flex justify-content-between align-items-center">
+                                <div>
+                                  <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Growth</span>
+                                  <span className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>{percentage}%</span>
+                                </div>
+                                <div className="text-end">
+                                  <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Retention</span>
+                                  <span className="fw-bold text-success" style={{ fontSize: '0.85rem' }}>{item.newCustomers > 0 ? 'High' : 'Stable'}</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="text-center text-muted py-5 border rounded-3 shadow-sm" style={{ background: '#f8fafc', borderColor: '#e2e8f0' }}>No acquisition data available</div>
+                      )}
                     </div>
                   </Card.Body>
                 </Card>

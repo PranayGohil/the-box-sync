@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Button, Col, Row, Card, Form, Spinner, Badge, ProgressBar, Table } from 'react-bootstrap';
+import { Button, Col, Row, Card, Form, Spinner, Badge, ProgressBar, Table, Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -8,6 +8,10 @@ import { getDailyReport, exportDailyReportExcel } from 'api/inventory';
 import axios from 'axios';
 import { format, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { Chart, registerables } from 'chart.js';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { AuthContext } from 'contexts/AuthContext';
 
 Chart.register(...registerables);
 
@@ -95,8 +99,23 @@ const InventoryReport = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportType, setExportType] = useState('');
+  const [exportProgress, setExportProgress] = useState(0);
+  const [exportOptions, setExportOptions] = useState({
+    includeOperations: true,
+    includeFinancials: true,
+    includeIngredientAudit: true,
+    includeTopItems: true,
+    includeVendors: true,
+    includeLedger: true
+  });
+
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
+
+  const { currentUser } = React.useContext(AuthContext);
+  const COMPANY_NAME = `${currentUser?.name || 'The Box'}`;
 
   const API_BASE = process.env.REACT_APP_API;
   const getHeaders = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
@@ -163,23 +182,276 @@ const InventoryReport = () => {
     setActivePreset(preset.label);
   };
 
-  const handleExportExcel = async () => {
+  const exportToExcel = async () => {
+    if (!reportData || !statsData) return;
+    setExporting(true);
+    setExportProgress(10);
+    setExportType('Excel');
     try {
-      setExporting(true);
-      const res = await exportDailyReportExcel({ from: fromDate, to: toDate });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Inventory_Intelligence.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      toast.success('Excel exported');
+      const wb = XLSX.utils.book_new();
+      const allData = [];
+
+      allData.push(['UNIFIED INVENTORY HUB REPORT']);
+      allData.push(['Company:', COMPANY_NAME]);
+      allData.push(['Period:', `${format(new Date(fromDate), 'dd MMM yyyy')} to ${format(new Date(toDate), 'dd MMM yyyy')}`]);
+      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy HH:mm')]);
+      allData.push([]);
+
+      if (exportOptions.includeOperations) {
+        setExportProgress(20);
+        allData.push(['OPERATIONAL PERFORMANCE METRICS']);
+        allData.push(['Metric', 'Value']);
+        allData.push(['Received', reportData.summary.total_received]);
+        allData.push(['Used', reportData.summary.total_used]);
+        allData.push(['Wasted', reportData.summary.total_wasted]);
+        allData.push(['Stock On Hand', reportData.summary.total_current_stock]);
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeFinancials) {
+        setExportProgress(35);
+        allData.push(['FINANCIAL PROCUREMENT ANALYTICS']);
+        allData.push(['Metric', 'Value']);
+        allData.push(['Total Investment', statsData.summary.totalAmount]);
+        allData.push(['Unpaid Dues', statsData.summary.totalUnpaid]);
+        allData.push(['Payment Rate', `${statsData.summary.paymentRate}%`]);
+        allData.push(['Avg PO Value', statsData.summary.avgPurchaseValue]);
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeIngredientAudit && reportData.itemSummary?.length > 0) {
+        setExportProgress(50);
+        allData.push(['INGREDIENT MOVEMENT AUDIT']);
+        allData.push(['Ingredient', 'Unit', 'Received', 'Used', 'Wasted', 'Efficiency %']);
+        reportData.itemSummary.forEach(item => {
+          allData.push([item.item_name, item.unit, item.received, item.used, item.wasted, `${100 - item.wastage_percent}%`]);
+        });
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeTopItems && statsData.topItemsByQuantity?.length > 0) {
+        setExportProgress(65);
+        allData.push(['TOP STOCK ITEM PERFORMANCE']);
+        allData.push(['Item Name', 'Unit', 'Volume', 'Total Value', 'Avg Price']);
+        statsData.topItemsByQuantity.forEach(item => {
+          allData.push([item.itemName, item.unit || 'N/A', item.totalQuantity, item.totalValue, item.avgPrice]);
+        });
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeVendors && statsData.vendorPerformance?.length > 0) {
+        setExportProgress(80);
+        allData.push(['VENDOR RELATIONSHIP AUDIT']);
+        allData.push(['Vendor Name', 'Total PO', 'Dues', 'Credit Health %', 'Purchase Count']);
+        statsData.vendorPerformance.forEach(vendor => {
+          allData.push([vendor.vendorName || 'Unknown Vendor', vendor.totalAmount, vendor.unpaidAmount, `${vendor.paymentRate}%`, vendor.purchaseCount]);
+        });
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeLedger && statsData.statusBreakdown?.length > 0) {
+        setExportProgress(90);
+        allData.push(['FISCAL STATUS LEDGER']);
+        allData.push(['Status', 'Orders', 'Allocation', 'Portfolio %']);
+        statsData.statusBreakdown.forEach(status => {
+          allData.push([status.status, status.count, status.totalAmount, `${((status.totalAmount / statsData.summary.totalAmount) * 100).toFixed(1)}%`]);
+        });
+        allData.push([]);
+        allData.push([]);
+      }
+
+      const ws = XLSX.utils.aoa_to_sheet(allData);
+      ws['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Inventory Hub');
+
+      XLSX.writeFile(wb, `Inventory_Report_${fromDate}_to_${toDate}.xlsx`);
+      toast.success('Excel report exported successfully!');
     } catch (err) {
-      toast.error('Export failed');
+      console.error(err);
+      toast.error('Error exporting Excel report');
     } finally {
       setExporting(false);
+      setExportProgress(0);
+      setExportType('');
     }
+  };
+
+  const formatCurrencyPDF = (amount) => {
+    const value = new Intl.NumberFormat('en-IN', {
+      maximumFractionDigits: 0,
+    }).format(amount || 0);
+    return `Rs. ${value}`;
+  };
+
+  const exportToPDF = async () => {
+    if (!reportData || !statsData) return;
+    setExporting(true);
+    setExportProgress(10);
+    setExportType('PDF');
+    try {
+      const doc = new jsPDF();
+      
+      doc.setFontSize(16);
+      doc.text('Unified Inventory Hub Report', 105, 15, { align: 'center' });
+      doc.setFontSize(10);
+      doc.text(COMPANY_NAME, 105, 22, { align: 'center' });
+      doc.text(`Period: ${format(new Date(fromDate), 'dd MMM yyyy')} to ${format(new Date(toDate), 'dd MMM yyyy')}`, 105, 28, { align: 'center' });
+
+      let currentY = 35;
+
+      if (exportOptions.includeOperations) {
+        setExportProgress(20);
+        doc.setFontSize(12);
+        doc.text('Operational Performance Metrics', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Metric', 'Value']],
+          body: [
+            ['Received', reportData.summary.total_received.toString()],
+            ['Used', reportData.summary.total_used.toString()],
+            ['Wasted', reportData.summary.total_wasted.toString()],
+            ['Stock On Hand', reportData.summary.total_current_stock.toString()]
+          ],
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeFinancials) {
+        setExportProgress(35);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Financial Procurement Analytics', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Metric', 'Value']],
+          body: [
+            ['Total Investment', formatCurrencyPDF(statsData.summary.totalAmount)],
+            ['Unpaid Dues', formatCurrencyPDF(statsData.summary.totalUnpaid)],
+            ['Payment Rate', `${statsData.summary.paymentRate}%`],
+            ['Avg PO Value', formatCurrencyPDF(statsData.summary.avgPurchaseValue)]
+          ],
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeIngredientAudit && reportData.itemSummary?.length > 0) {
+        setExportProgress(50);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Ingredient Movement Audit', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Ingredient', 'Unit', 'Received', 'Used', 'Wasted', 'Efficiency %']],
+          body: reportData.itemSummary.map(item => [
+            item.item_name,
+            item.unit,
+            item.received.toString(),
+            item.used.toString(),
+            item.wasted.toString(),
+            `${100 - item.wastage_percent}%`
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeTopItems && statsData.topItemsByQuantity?.length > 0) {
+        setExportProgress(65);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Top Stock Item Performance', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Item Name', 'Unit', 'Volume', 'Total Value', 'Avg Price']],
+          body: statsData.topItemsByQuantity.map(item => [
+            item.itemName,
+            item.unit || 'N/A',
+            item.totalQuantity.toString(),
+            formatCurrencyPDF(item.totalValue),
+            formatCurrencyPDF(item.avgPrice)
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeVendors && statsData.vendorPerformance?.length > 0) {
+        setExportProgress(80);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Vendor Relationship Audit', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Vendor Name', 'Total PO', 'Dues', 'Credit Health %']],
+          body: statsData.vendorPerformance.map(vendor => [
+            vendor.vendorName || 'Unknown Vendor',
+            formatCurrencyPDF(vendor.totalAmount),
+            formatCurrencyPDF(vendor.unpaidAmount),
+            `${vendor.paymentRate}%`
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeLedger && statsData.statusBreakdown?.length > 0) {
+        setExportProgress(90);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Fiscal Status Ledger', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Status', 'Orders', 'Allocation', 'Portfolio %']],
+          body: statsData.statusBreakdown.map(status => [
+            status.status.toUpperCase(),
+            status.count.toString(),
+            formatCurrencyPDF(status.totalAmount),
+            `${((status.totalAmount / statsData.summary.totalAmount) * 100).toFixed(1)}%`
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+      }
+
+      doc.save(`Inventory_Report_${fromDate}_to_${toDate}.pdf`);
+      toast.success('PDF report exported successfully!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error exporting PDF report');
+    } finally {
+      setExporting(false);
+      setExportProgress(0);
+      setExportType('');
+    }
+  };
+
+  const handleExportClick = (type) => {
+    setShowExportModal(true);
+    setExportType(type);
+  };
+
+  const handleExportConfirm = () => {
+    setShowExportModal(false);
+    if (exportType === 'Excel') exportToExcel();
+    else if (exportType === 'PDF') exportToPDF();
   };
 
   const formatCurrency = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0);
@@ -287,13 +559,22 @@ const InventoryReport = () => {
       <Card className="inventory-report-interactive-card border-0 mb-4 no-print shadow-sm">
         <Card.Body className="p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
           <div className="d-flex gap-3 align-items-center">
-            <Button variant="outline-success" className="inventory-report-custom-btn-outline border-success text-success px-4" onClick={handleExportExcel} disabled={exporting}>
+            <Button variant="outline-success" className="inventory-report-custom-btn-outline border-success text-success px-4" onClick={() => handleExportClick('Excel')} disabled={exporting}>
               <CsLineIcons icon="file-text" className="me-2" size="15" /> Excel
             </Button>
-            <Button variant="outline-danger" className="inventory-report-custom-btn-outline border-danger text-danger px-4" onClick={() => window.print()} disabled={!reportData}>
+            <Button variant="outline-danger" className="inventory-report-custom-btn-outline border-danger text-danger px-4" onClick={() => handleExportClick('PDF')} disabled={exporting}>
               <CsLineIcons icon="file-text" className="me-2" size="15" /> PDF
             </Button>
           </div>
+          {exporting && (
+            <div className="flex-grow-1 ms-md-4 mt-3 mt-md-0">
+              <div className="d-flex align-items-center mb-2">
+                <Spinner animation="border" size="sm" className="me-2" style={{ color: brandColor }} />
+                <span className="smaller fw-bold text-muted">Generating {exportType}... {exportProgress}%</span>
+              </div>
+              <ProgressBar now={exportProgress} className="progress-sm" variant="info" style={{ height: '6px' }} />
+            </div>
+          )}
         </Card.Body>
       </Card>
 
@@ -823,6 +1104,39 @@ const InventoryReport = () => {
         </div>
       )}
       </div>
+
+      {/* Export Options Modal */}
+      <Modal show={showExportModal} onHide={() => setShowExportModal(false)} centered contentClassName="interactive-card border-0 shadow-lg">
+        <Modal.Header className="border-0 p-4 pb-0" closeButton>
+          <Modal.Title className="fw-bold" style={{ color: brandColor }}>Inventory Intelligence Export</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          <p className="text-muted smaller fw-bold mb-4">Customize your inventory audit report.</p>
+          <Form className="d-flex flex-column gap-3">
+             {[
+              { label: 'Operational Performance Metrics', key: 'includeOperations' },
+              { label: 'Financial Procurement Analytics', key: 'includeFinancials' },
+              { label: 'Ingredient Movement Audit', key: 'includeIngredientAudit' },
+              { label: 'Top Stock Item Performance', key: 'includeTopItems' },
+              { label: 'Vendor Relationship Audit', key: 'includeVendors' },
+              { label: 'Fiscal Status Ledger', key: 'includeLedger' }
+            ].map(option => (
+              <Form.Check 
+                key={option.key}
+                type="switch"
+                id={option.key}
+                label={<span className="fw-bold smaller text-dark ms-2">{option.label}</span>}
+                checked={exportOptions[option.key]}
+                onChange={(e) => setExportOptions({ ...exportOptions, [option.key]: e.target.checked })}
+              />
+            ))}
+          </Form>
+        </Modal.Body>
+        <Modal.Footer className="border-0 p-4 pt-0">
+          <Button variant="light" className="inventory-report-custom-btn-outline border-0 text-muted" onClick={() => setShowExportModal(false)}>Cancel</Button>
+          <Button className="inventory-report-custom-btn-outline px-4" onClick={handleExportConfirm}>Generate Audit</Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 };
