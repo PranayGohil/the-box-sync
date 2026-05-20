@@ -444,7 +444,7 @@ const buyCompletePlan = async (req, res) => {
 const getAllSubscriptions = async (req, res) => {
   try {
     const users = await User.find({})
-      .select("_id name email mobile restaurant_code")
+      .select("_id name email mobile restaurant_code isApproved")
       .lean();
     const subscriptions = await Subscription.find({}).lean();
 
@@ -461,6 +461,7 @@ const getAllSubscriptions = async (req, res) => {
       email: user.email,
       mobile: user.mobile,
       restaurant_code: user.restaurant_code,
+      isApproved: user.isApproved,
       subscriptions: subsByUser[user._id.toString()] || [],
     }));
 

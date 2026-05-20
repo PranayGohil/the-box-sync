@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
-import { Button, Card, Modal } from 'react-bootstrap';
+import { Button, Card, Modal, Collapse } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import LayoutFull from 'layout/LayoutFull';
 import { toast } from 'react-toastify';
@@ -12,19 +12,22 @@ const SelectPlan = () => {
 
   const [selectedPlan, setSelectedPlan] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [selectedAddons, setSelectedAddons] = useState([]);
+  const [openComparison, setOpenComparison] = useState(false);
 
   const allAddons = [
     { label: 'Reservation Management', value: 'Reservation Manager' },
-    { label: 'QSR Billing App', value: 'QSR' },
-    { label: 'Captain Ordering App', value: 'Captain Panel' },
+    { label: 'QSR Billing Panel', value: 'QSR' },
+    { label: 'Captain Ordering Panel', value: 'Captain Panel' },
     { label: 'Kitchen Display System', value: 'KOT Panel' },
     { label: 'Restaurant Website', value: 'Restaurant Website' },
     { label: 'Scan & QR Order', value: 'Scan For Menu' },
     { label: 'QR-based Feedback', value: 'Feedback' },
     { label: 'Waiter Calling System', value: 'Waiter Calling System' },
     { label: 'Dynamic Reports', value: 'Dynamic Reports' },
-    { label: 'E-Invoice', value: 'E-Invoice' },
+    { label: 'Whatsapp-Invoice', value: 'Whatsapp-Invoice' },
+    { label: 'Token Management', value: 'Token Management' },
   ];
 
   const handlePlanSelect = (plan) => {
@@ -52,7 +55,7 @@ const SelectPlan = () => {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       if (response.data.success) {
-        window.location.href = `/dashboard`;
+        setShowSuccessModal(true);
       } else {
         toast.error(response.data.message);
       }
@@ -65,94 +68,108 @@ const SelectPlan = () => {
   const plans = [
     {
       name: 'Core Plan',
-      price: '₹10,000',
+      originalPrice: '₹10,000',
+      price: '₹8,000',
       period: '/ year',
       color: 'primary',
       features: {
-        basic: [
-          'Menu management',
-          'Multi-terminal billing',
-          'Inventory module',
-          'Third-party integrations',
+        billing: [
+          'Inventory Management',
+          '80+ reports',
+          'Third-party Integrations',
           'In-built CRM',
-          'Central kitchen module',
+          'Menu management',
+          'Staff management',
+          'Unlimited Users & Terminals',
           'Unlimited cash register',
-          'Unlimited-user rights',
-          'Reports',
-          '24x7 Support',
-          'Free Training',
+          'Multi-terminal billing',
         ],
         addons: [],
         advanced: [],
+        support: [
+          '24x7 support',
+          'Free training',
+          'Free staff re-training',
+        ],
       },
     },
     {
       name: 'Growth Plan',
-      price: '₹15,000',
+      originalPrice: '₹20,000',
+      price: '₹16,000',
       period: '/ year',
       color: 'success',
       recommended: true,
       features: {
-        basic: [
-          'Menu management',
-          'Multi-terminal billing',
-          'Inventory module',
-          'Third-party integrations',
+        billing: [
+          'Inventory Management',
+          '80+ reports',
+          'Third-party Integrations',
           'In-built CRM',
-          'Central kitchen module',
+          'Menu management',
+          'Staff management',
+          'Unlimited Users & Terminals',
           'Unlimited cash register',
-          'Unlimited-user rights',
-          'Reports',
-          '24x7 Support',
-          'Free Training',
+          'Multi-terminal billing',
         ],
         addons: [
           'Reservation Management',
-          'QSR Billing App',
-          'Captain Ordering App',
+          'QSR Panel',
+          'Captain Panel',
           'Kitchen Display System',
           'Restaurant Website',
           'Scan & QR Order',
           'QR-based Feedback',
           'Waiter Calling System',
           'Dynamic Reports',
-          'E-Invoice',
+          'Whatsapp-Invoice',
+          'Token Management',
         ],
         advanced: [],
+        support: [
+          '24x7 support',
+          'Free training',
+          'Free staff re-training',
+        ],
       },
     },
     {
       name: 'Scale Plan',
-      price: '₹20,000',
+      originalPrice: '₹30,000',
+      price: '₹24,000',
       period: '/ year',
       color: 'warning',
       features: {
-        basic: [
-          'Menu management',
-          'Multi-terminal billing',
-          'Inventory module',
-          'Third-party integrations',
+        billing: [
+          'Inventory Management',
+          '80+ reports',
+          'Third-party Integrations',
           'In-built CRM',
-          'Central kitchen module',
+          'Menu management',
+          'Staff management',
+          'Unlimited Users & Terminals',
           'Unlimited cash register',
-          'Unlimited-user rights',
-          'Reports',
-          '24x7 Support',
-          'Free Training',
+          'Multi-terminal billing',
         ],
         addons: [
           'Reservation Management',
-          'QSR Billing App',
-          'Captain Ordering App',
+          'QSR Panel',
+          'Captain Panel',
           'Kitchen Display System',
           'Restaurant Website',
           'Scan & QR Order',
           'QR-based Feedback',
           'Waiter Calling System',
           'Dynamic Reports',
-          'E-Invoice',
+          'Whatsapp-Invoice',
+          'Token Management',
         ],
-        advanced: ['Payroll By TheBox', 'Dynamic reports'],
+        advanced: ['TheBoxSync Payroll'],
+        support: [
+          '24x7 support',
+          'Free training',
+          'Free staff re-training',
+        ],
       },
     },
   ];
@@ -160,201 +177,297 @@ const SelectPlan = () => {
   return (
     <LayoutFull>
       <HtmlHead title={title} description={description} />
+      <style>{`
+        .fixed-background {
+          display: none !important;
+        }
+        .select-plan-wrapper {
+          background: #0a1118;
+          background-image: 
+            radial-gradient(circle at 15% 50%, rgba(29, 160, 219, 0.08), transparent 25%),
+            radial-gradient(circle at 85% 30%, rgba(35, 179, 244, 0.08), transparent 25%);
+          position: relative;
+          overflow: hidden;
+        }
+        footer, footer .footer-content {
+          background: #0a1118 !important;
+          border-top: none !important;
+        }
+        footer p {
+          color: rgba(255, 255, 255, 0.5) !important;
+        }
+        .plan-column {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 20px;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+          padding: 2.5rem 2rem;
+          height: 100%;
+        }
+        .plan-name {
+          color: #fff; 
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin-bottom: 1rem;
+        }
+        .plan-name-recommended {
+          color: #4ade80;
+        }
+        .plan-price-large {
+          font-size: 2.5rem;
+          font-weight: 800;
+          color: #fff;
+          line-height: 1;
+        }
+        .plan-price-original {
+          font-size: 1.1rem;
+          color: rgba(255,255,255,0.5);
+          text-decoration: line-through;
+          margin-left: 0.5rem;
+          font-weight: 500;
+        }
+        .plan-subtitle {
+          color: rgba(255,255,255,0.7);
+          font-size: 0.85rem;
+          margin-top: 1.5rem;
+          margin-bottom: 1.5rem;
+          line-height: 1.5;
+        }
+        .plan-divider {
+          border-top: 1px solid rgba(255,255,255,0.2);
+          margin-bottom: 1.5rem;
+        }
+        .feature-item {
+          display: flex;
+          align-items: flex-start;
+          margin-bottom: 1rem;
+          font-size: 0.95rem;
+          color: #fff;
+        }
+        .icon-check {
+          margin-right: 0.75rem;
+          margin-top: 0.15rem;
+        }
+        .icon-cross {
+          margin-right: 0.75rem;
+          margin-top: 0.15rem;
+        }
+        .btn-glass {
+          background: rgba(255,255,255,0.15);
+          backdrop-filter: blur(5px);
+          border: 1px solid rgba(255,255,255,0.3);
+          color: #fff;
+          font-weight: 600;
+          transition: all 0.3s ease;
+        }
+        .btn-glass:hover {
+          background: rgba(255,255,255,0.25);
+          color: #fff;
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .btn-glass-primary {
+          background: #23b3f4;
+          border: none;
+          color: #fff;
+          font-weight: 700;
+          transition: all 0.3s ease;
+        }
+        .btn-glass-primary:hover {
+          background: #1da0db;
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(35,179,244,0.4);
+        }
+        .pulse-badge {
+          animation: pulse-animation 2s infinite;
+          font-weight: 600;
+          letter-spacing: 1px;
+          font-size: 0.9rem;
+          padding: 0.4rem 1.25rem !important;
+          text-transform: uppercase;
+        }
+        @keyframes pulse-animation {
+          0% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7); }
+          70% { box-shadow: 0 0 0 10px rgba(25, 135, 84, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+        }
+        .glass-modal .modal-content {
+          background: rgba(13, 27, 42, 0.9) !important;
+          backdrop-filter: blur(25px);
+          -webkit-backdrop-filter: blur(25px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 20px;
+          color: #fff;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        .glass-modal .modal-header {
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 1.5rem 2rem;
+        }
+        .glass-modal .modal-body {
+          padding: 2rem;
+        }
+        .glass-modal .modal-footer {
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 1.5rem 2rem;
+        }
+        .glass-modal .btn-close {
+          filter: invert(1) grayscale(100%) brightness(200%);
+        }
+        .addon-card {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          border-radius: 12px !important;
+          transition: all 0.2s;
+        }
+        .addon-card:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+        .addon-card.selected {
+          background: rgba(35, 179, 244, 0.15) !important;
+          border-color: #23b3f4 !important;
+        }
+      `}</style>
 
-      <div className="min-h-100 d-flex align-items-center justify-content-center py-5">
-        <div className="container">
+      <div className="min-h-100 py-5 select-plan-wrapper" style={{ paddingTop: '80px', paddingBottom: '80px' }}>
+        <div className="container" style={{ position: 'relative', zIndex: 3, maxWidth: '1150px' }}>
           {/* Header */}
-          <div className="text-center mb-5">
-            <h1 className="text-white fs-2 lh-1 mb-3">Value-packed features at Wallet-friendly cost</h1>
-            <p className="text-white bg-primary rounded-3 px-3 py-2 mb-4">No hidden costs & no additional charges. Just transparent & affordable pricing.</p>
+          <div className="text-center mb-5 pb-3">
+            <h1 className="display-4 fw-bold mb-4 text-white" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>Value-packed features at Wallet-friendly cost</h1>
+            <p className="text-white bg-primary rounded-pill px-4 py-2 mb-4 d-inline-block shadow-sm" style={{ fontWeight: 500, fontSize: '1.1rem', background: 'rgba(var(--bs-primary-rgb), 0.85) !important', backdropFilter: 'blur(10px)' }}>
+              No hidden costs & no additional charges. Just transparent & affordable pricing.
+            </p>
           </div>
-
-          {/* Pricing Cards */}
           <div className="row g-4 justify-content-center">
-            {plans.map((plan, index) => (
-              <div key={index} className="col-xl-4 col-lg-6">
-                <Card className={`h-100 border-${plan.color} shadow-hover`}>
-                  {plan.recommended && (
-                    <div className="position-absolute start-50 translate-middle mt-n3" style={{ top: '15px' }}>
-                      <span className="badge bg-success rounded-pill px-3 py-2">Most Popular</span>
-                    </div>
-                  )}
+            {plans.map((plan, index) => {
+              const featureCategories = [
+                {
+                  title: 'Billing',
+                  features: [
+                    'Inventory Management',
+                    '80+ reports',
+                    'Third-party Integrations',
+                    'In-built CRM',
+                    'Menu management',
+                    'Staff management',
+                    'Unlimited Users & Terminals',
+                    'Unlimited cash register',
+                    'Multi-terminal billing'
+                  ]
+                },
+                {
+                  title: 'Adds ons',
+                  features: [
+                    'Reservation Management',
+                    'QSR Panel',
+                    'Captain Panel',
+                    'Kitchen Display System',
+                    'Restaurant Website',
+                    'Scan & QR Order',
+                    'QR-based Feedback',
+                    'Waiter Calling System',
+                    'Dynamic Reports',
+                    'Whatsapp-Invoice',
+                    'Token Management'
+                  ]
+                },
+                {
+                  title: 'Advanced features',
+                  features: [
+                    'TheBoxSync Payroll'
+                  ]
+                },
+                {
+                  title: 'Support & Training',
+                  features: [
+                    '24x7 support',
+                    'Free training',
+                    'Free staff re-training'
+                  ]
+                }
+              ];
 
-                  <Card.Body className="d-flex flex-column">
-                    {/* Plan Header */}
-                    <div className="text-center mb-4">
-                      <h3 className={`text-${plan.color} mb-1`}>{plan.name}</h3>
-                      <div className="d-flex justify-content-center align-baseline mb-3">
-                        <span className="display-4 fw-bold">{plan.price}</span>
-                        <span className="text-muted ms-1">{plan.period}</span>
+              return (
+                <div key={index} className="col-12 col-md-4">
+                  <div className="plan-column d-flex flex-column position-relative">
+                    {plan.recommended && (
+                      <div className="position-absolute start-50 translate-middle-x" style={{ top: '-22px' }}>
+                        <span className="badge bg-success rounded-pill pulse-badge shadow">Most Popular</span>
                       </div>
-                      <Button variant={plan.color} size="lg" className="mb-4" onClick={() => handlePlanSelect(plan.name.split(' ')[0])}>
+                    )}
+                    <div className={`plan-name ${plan.recommended ? 'plan-name-recommended' : ''}`}>
+                      {plan.name === 'Growth Plan' ? 'Growth (Choose Any 6)' : plan.name.split(' ')[0]}
+                    </div>
+                    
+                    <div className="d-flex align-items-baseline mb-2">
+                      <span className="plan-price-large">{plan.price}</span>
+                      <span className="plan-price-original">{plan.originalPrice}</span>
+                    </div>
+
+                    <p className="plan-subtitle">
+                      Here are the key features that highlight our plans:
+                    </p>
+
+                    <div className="plan-divider" />
+
+                    <div className="flex-grow-1">
+                      {featureCategories.map((category, catIndex) => (
+                        <div key={catIndex} className="mb-4">
+                          <h6 className="text-white fw-bold mb-3 pb-2" style={{ fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                            {category.title}
+                          </h6>
+                          {category.features.map((feature, fIndex) => {
+                            const hasFeature = plan.features.billing.includes(feature) || 
+                                              plan.features.addons.includes(feature) || 
+                                              plan.features.advanced.includes(feature) ||
+                                              plan.features.support.includes(feature);
+                            return (
+                              <div key={fIndex} className="feature-item">
+                                <span className={hasFeature ? 'icon-check' : 'icon-cross'}>
+                                  {hasFeature ? (
+                                    <div className="d-inline-flex align-items-center justify-content-center rounded-circle" style={{ width: '20px', height: '20px', backgroundColor: 'transparent', border: '1.5px solid #4ade80' }}>
+                                      <CsLineIcons icon="check" size="12" style={{ color: '#4ade80' }} />
+                                    </div>
+                                  ) : (
+                                    <div className="d-inline-flex align-items-center justify-content-center rounded-circle" style={{ width: '20px', height: '20px', backgroundColor: 'transparent', border: '1.5px solid #e53e3e' }}>
+                                      <CsLineIcons icon="close" size="12" style={{ color: '#e53e3e' }} />
+                                    </div>
+                                  )}
+                                </span>
+                                <span>
+                                  {feature}
+                                  {plan.name === 'Growth Plan' && feature === 'Scan & QR Order' && ' (optional)'}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 pt-3 text-center">
+                      <Button 
+                        className={`rounded-pill w-100 ${plan.recommended ? 'btn-glass-primary' : 'btn-glass'}`} 
+                        onClick={() => handlePlanSelect(plan.name.split(' ')[0])}
+                      >
                         Select Plan
                       </Button>
                     </div>
-
-                    {/* Features */}
-                    <div className="flex-grow-1">
-                      {/* Basic Features */}
-                      <h6 className="text-muted text-uppercase mb-3">Basic Features</h6>
-                      <ul className="list-unstyled mb-4">
-                        {plan.features.basic.map((feature, i) => (
-                          <li key={`basic-${i}`} className="mb-2">
-                            <CsLineIcons icon="check" className="text-success me-2" />
-                            <span>{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-
-                      {/* Addons */}
-                      {plan.features.addons.length > 0 && (
-                        <>
-                          <h6 className="text-muted text-uppercase mb-3 mt-4">Add-ons</h6>
-                          <ul className="list-unstyled mb-4">
-                            {plan.features.addons.map((feature, i) => (
-                              <li key={`addon-${i}`} className="mb-2">
-                                <CsLineIcons icon="check" className="text-success me-2" />
-                                <span>{feature}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </>
-                      )}
-
-                      {/* Advanced Features */}
-                      {plan.features.advanced.length > 0 && (
-                        <>
-                          <h6 className="text-muted text-uppercase mb-3 mt-4">Advanced Features</h6>
-                          <ul className="list-unstyled mb-4">
-                            {plan.features.advanced.map((feature, i) => (
-                              <li key={`advanced-${i}`} className="mb-2">
-                                <CsLineIcons icon="check" className="text-success me-2" />
-                                <span>{feature}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </>
-                      )}
-                    </div>
-                  </Card.Body>
-                </Card>
-              </div>
-            ))}
-          </div>
-
-          {/* Feature Comparison Table (Collapsible) */}
-          <div className="mt-5">
-            <div className="collapse" id="featureComparison">
-              <Card className="shadow">
-                <Card.Body>
-                  <div className="table-responsive">
-                    <table className="table table-bordered table-hover">
-                      <thead className="table-light">
-                        <tr>
-                          <th style={{ width: '30%' }}>Feature</th>
-                          {plans.map((plan, index) => (
-                            <th key={index} className="text-center">
-                              {plan.name}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {/* Basic Features */}
-                        <tr className="table-secondary">
-                          <td colSpan="4" className="fw-bold">
-                            Basic Features
-                          </td>
-                        </tr>
-                        {[
-                          'Menu management',
-                          'Multi-terminal billing',
-                          'Inventory module',
-                          'Third-party integrations',
-                          'In-built CRM',
-                          'Central kitchen module',
-                          'Unlimited cash register',
-                          'Unlimited-user rights',
-                          'Reports',
-                          '24x7 Support',
-                          'Free Training',
-                        ].map((feature, index) => (
-                          <tr key={`basic-${index}`}>
-                            <td>{feature}</td>
-                            {plans.map((plan, planIndex) => (
-                              <td key={planIndex} className="text-center">
-                                <CsLineIcons icon="check" className="text-success" size="15" />
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-
-                        {/* Addons */}
-                        <tr className="table-secondary">
-                          <td colSpan="4" className="fw-bold">
-                            Add-ons
-                          </td>
-                        </tr>
-                        {[
-                          'Reservation Management',
-                          'QSR Billing App',
-                          'Captain Ordering App',
-                          'Kitchen Display System',
-                          'Restaurant Website',
-                          'Scan & QR Order',
-                          'QR-based Feedback',
-                          'Waiter Calling System',
-                          'Dynamic Reports',
-                          'E-Invoice',
-                        ].map((feature, index) => (
-                          <tr key={`addon-${index}`}>
-                            <td>{feature}</td>
-                            {plans.map((plan, planIndex) => (
-                              <td key={planIndex} className="text-center">
-                                {plan.features.addons.includes(feature) ? (
-                                  <CsLineIcons icon="check" className="text-success" size="15" />
-                                ) : (
-                                  <CsLineIcons icon="close" className="text-danger" size="15" />
-                                )}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-
-                        {/* Advanced Features */}
-                        <tr className="table-secondary">
-                          <td colSpan="4" className="fw-bold">
-                            Advanced Features
-                          </td>
-                        </tr>
-                        {['Payroll By TheBox', 'Dynamic reports'].map((feature, index) => (
-                          <tr key={`advanced-${index}`}>
-                            <td>{feature}</td>
-                            {plans.map((plan, planIndex) => (
-                              <td key={planIndex} className="text-center">
-                                {plan.features.advanced.includes(feature) ? (
-                                  <CsLineIcons icon="check" className="text-success" size="15" />
-                                ) : (
-                                  <CsLineIcons icon="close" className="text-danger" size="15" />
-                                )}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
                   </div>
-                </Card.Body>
-              </Card>
-            </div>
+                </div>
+              );
+            })}
           </div>
+
         </div>
       </div>
 
       {/* Confirmation Modal */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered scrollable dialogClassName="glass-modal">
         <Modal.Header closeButton>
-          <Modal.Title>
+          <Modal.Title className="fw-bold" style={{ letterSpacing: '0.5px' }}>
             Confirm Plan Selection
           </Modal.Title>
         </Modal.Header>
@@ -362,26 +475,27 @@ const SelectPlan = () => {
           {selectedPlan === 'Growth' ? (
             <div>
               <div className="text-center mb-4">
-                <CsLineIcons icon="grid" size="48" className="text-success mb-3" />
-                <h5>Customize Your <strong>Growth</strong> Plan</h5>
-                <p className="text-muted mb-0">Select up to 6 Add-ons included in your plan ({selectedAddons.length}/6 selected).</p>
+                <CsLineIcons icon="grid" size="48" style={{ color: '#23b3f4' }} className="mb-3" />
+                <h4 className="fw-bold text-white mb-2">Customize Your <span style={{ color: '#23b3f4' }}>Growth</span> Plan</h4>
+                <p className="text-white-50 mb-0">Select up to 6 Add-ons included in your plan ({selectedAddons.length}/6 selected).</p>
               </div>
-              <div className="row g-2">
+              <div className="row g-3">
                 {allAddons.map((addon, index) => (
-                  <div key={index} className="col-md-6">
+                  <div key={index} className="col-12 col-sm-6">
                     <div
-                      className={`border rounded p-2 ${selectedAddons.includes(addon.value) ? 'border-success bg-success-subtle' : ''}`}
+                      className={`p-3 addon-card ${selectedAddons.includes(addon.value) ? 'selected' : ''}`}
                       onClick={() => handleToggleAddon(addon.value)}
                       style={{ cursor: 'pointer' }}
                     >
                       <div className="form-check m-0 d-flex align-items-center" style={{ cursor: 'pointer' }}>
                         <input
-                          className="form-check-input mt-0 me-2"
+                          className="form-check-input mt-0 me-3"
                           type="checkbox"
                           checked={selectedAddons.includes(addon.value)}
                           onChange={() => { }}
+                          style={selectedAddons.includes(addon.value) ? { backgroundColor: '#23b3f4', borderColor: '#23b3f4' } : {}}
                         />
-                        <label className="form-check-label mb-0" style={{ cursor: 'pointer', fontSize: '13px' }}>
+                        <label className="form-check-label mb-0 fw-medium text-white" style={{ cursor: 'pointer', fontSize: '0.9rem' }}>
                           {addon.label}
                         </label>
                       </div>
@@ -391,22 +505,74 @@ const SelectPlan = () => {
               </div>
             </div>
           ) : (
-            <div className="text-center mb-4">
-              <CsLineIcons icon="shield" size="48" className={`text-${selectedPlan === 'Scale' ? 'warning' : 'primary'} mb-3`} />
-              <h5>
-                Are you sure you want to select the <strong>{selectedPlan}</strong> Plan?
-              </h5>
-              <p className="text-muted mb-0">You will be redirected to the checkout page to complete your purchase.</p>
+            <div className="text-center py-4 mb-2">
+              <div className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4" style={{ width: '80px', height: '80px', backgroundColor: 'rgba(35, 179, 244, 0.15)' }}>
+                <CsLineIcons icon="shield" size="40" style={{ color: '#23b3f4' }} />
+              </div>
+              <h4 className="fw-bold text-white mb-3">
+                Select <span style={{ color: '#23b3f4' }}>{selectedPlan}</span> Plan?
+              </h4>
+              <p className="text-white-50 mb-0 px-3">Please confirm your selection to proceed with the activation process.</p>
             </div>
           )}
+
+          {(() => {
+            const activePlanObj = plans.find((p) => p.name.startsWith(selectedPlan));
+            const basePrice = activePlanObj ? parseInt(activePlanObj.price.replace(/[^\d]/g, ''), 10) : 0;
+            if (basePrice === 0) return null;
+            const gst = Math.round(basePrice * 0.18);
+            const total = basePrice + gst;
+            return (
+              <div className="mt-4 p-3 rounded-3 mx-auto" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', maxWidth: '400px' }}>
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-white-50">Plan Price:</span>
+                  <span className="text-white fw-bold">₹{basePrice.toLocaleString()}</span>
+                </div>
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-white-50">Taxes (18% GST):</span>
+                  <span className="text-white fw-bold">₹{gst.toLocaleString()}</span>
+                </div>
+                <div className="my-2" style={{ borderTop: '1px dashed rgba(255,255,255,0.2)' }} />
+                <div className="d-flex justify-content-between align-items-center mt-2">
+                  <span className="text-white fw-bold" style={{ fontSize: '1.1rem' }}>Total Amount:</span>
+                  <span className="fw-bold" style={{ fontSize: '1.4rem', color: '#4ade80' }}>₹{total.toLocaleString()}</span>
+                </div>
+              </div>
+            );
+          })()}
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="dark" onClick={() => setShowModal(false)}>
+        <Modal.Footer className="justify-content-center border-0 pt-0">
+          <Button variant="link" className="text-white-50 text-decoration-none fw-bold me-3" onClick={() => setShowModal(false)}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleConfirm}>
-            <CsLineIcons icon="check" className="me-2" />
-            Confirm & Proceed to Checkout
+          <Button className="btn-glass-primary rounded-pill px-4" onClick={handleConfirm}>
+            <CsLineIcons icon="check" size="16" className="me-2" />
+            Confirm
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Success Modal */}
+      <Modal 
+        show={showSuccessModal} 
+        onHide={() => { window.location.href = '/dashboard'; }} 
+        centered 
+        dialogClassName="glass-modal"
+      >
+        <Modal.Body className="text-center py-5">
+          <div className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4" style={{ width: '80px', height: '80px', backgroundColor: 'rgba(74, 222, 128, 0.15)' }}>
+            <CsLineIcons icon="check" size="40" style={{ color: '#4ade80' }} />
+          </div>
+          <h4 className="fw-bold text-white mb-3 px-3" style={{ lineHeight: '1.4' }}>
+            Thank you for choosing the <span style={{ color: '#4ade80' }}>{selectedPlan}</span> Plan!
+          </h4>
+          <p className="text-white-50 mb-0 px-4" style={{ fontSize: '1.05rem', lineHeight: '1.6' }}>
+            Our team will contact you shortly regarding payment. Your panel will be activated within 24 hours after successful payment confirmation.
+          </p>
+        </Modal.Body>
+        <Modal.Footer className="justify-content-center border-0 pt-0 pb-4">
+          <Button className="btn-glass-primary rounded-pill px-5" onClick={() => { window.location.href = '/dashboard'; }}>
+            Go to Dashboard
           </Button>
         </Modal.Footer>
       </Modal>

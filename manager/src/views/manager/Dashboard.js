@@ -234,8 +234,7 @@ const Dashboard = () => {
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        </Col>
+                          </Col>
                       );
                     })}
                 </Row>
@@ -297,30 +296,12 @@ const Dashboard = () => {
                         <div style={{ background: '#f8f9fa', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#6c757d', border: '1px dashed #dee2e6' }}>
                           +{order.order_items.length - 3} more
                         </div>
-                        <Badge
-                          bg={order.order_status === 'Paid' || order.order_status === 'Save' ? 'success' : 'warning'}
-                          className={order.order_status === 'KOT' ? 'text-dark' : 'text-white'}
-                          style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold' }}
-                        >
-                          {order.order_status}
-                        </Badge>
-                      </div>
-                      <div className="d-flex flex-wrap gap-2">
-                        {order.order_items.slice(0, 3).map((item, i) => (
-                          <div key={i} style={{ background: 'rgba(35, 179, 244, 0.08)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#1a1a1a', border: '1px solid rgba(35,179,244,0.12)' }}>
-                            {item.dish_name} <strong className="ms-1" style={{ color: '#23b3f4' }}>x{item.quantity}</strong>
-                          </div>
-                        ))}
-                        {order.order_items.length > 3 && (
-                          <div style={{ background: '#f8f9fa', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#6c757d', border: '1px dashed #dee2e6' }}>
-                            +{order.order_items.length - 3} more
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
-                ))
-              )}
+                </div>
+              ))
+            )}
             </div>
           </Col>
         </Row>

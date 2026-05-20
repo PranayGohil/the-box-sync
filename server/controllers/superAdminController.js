@@ -188,11 +188,37 @@ const deleteSubAdmin = async (req, res) => {
   }
 };
 
+const toggleApproval = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "Restaurant not found" });
+    }
+
+    user.isApproved = !user.isApproved;
+    await user.save();
+
+    await logActivity(
+      { _id: req.user._id, username: req.user.username },
+      user.isApproved ? "APPROVE_RESTAURANT" : "REVOKE_RESTAURANT",
+      id,
+      { restaurant_name: user.name }
+    );
+
+    return res.status(200).json({ message: "Approval status updated", isApproved: user.isApproved });
+  } catch (error) {
+    console.error("Toggle Approval Error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = { 
   superAdminLogin, 
   impersonateUser, 
   getAuditLogs, 
   createSubAdmin, 
   getAllAdmins, 
-  deleteSubAdmin 
+  deleteSubAdmin,
+  toggleApproval
 };
