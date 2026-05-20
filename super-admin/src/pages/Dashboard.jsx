@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaUsers, FaCheckCircle, FaExclamationCircle, FaSearch } from "react-icons/fa";
+import { FaUsers, FaCheckCircle, FaExclamationCircle, FaSearch, FaUserCheck, FaUserTimes } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 const Dashboard = () => {
   const [users, setUsers] = useState([]);
@@ -34,6 +35,27 @@ const Dashboard = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleToggleApproval = async (userId, currentStatus) => {
+    try {
+      setLoading(true);
+      await axios.put(
+        `${import.meta.env.VITE_APP_API_URL}/api/superadmin/toggle-approval/${userId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          }
+        }
+      );
+      toast.success(`Restaurant ${currentStatus ? 'revoked' : 'approved'} successfully`);
+      fetchData(); // Refresh the list
+    } catch (error) {
+      console.error("Failed to toggle approval", error);
+      toast.error(error.response?.data?.message || "Failed to update approval status");
+      setLoading(false);
+    }
+  };
 
   const filteredUsers = users.filter(user => 
     user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -125,6 +147,7 @@ const Dashboard = () => {
                 <th>Code</th>
                 <th>Contact</th>
                 <th>Subscriptions</th>
+                <th>Approval</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -146,6 +169,13 @@ const Dashboard = () => {
                       <span className="badge bg-light text-dark border">{user.subscriptions.length} Total</span>
                     </td>
                     <td>
+                      {user.isApproved ? (
+                        <span className="badge bg-success rounded-pill px-3"><FaUserCheck className="me-1" /> Approved</span>
+                      ) : (
+                        <span className="badge bg-warning text-dark rounded-pill px-3"><FaUserTimes className="me-1" /> Pending</span>
+                      )}
+                    </td>
+                    <td>
                       <div className="d-flex gap-2">
                         {active > 0 && <span className="badge-modern badge-active">{active} Active</span>}
                         {expired > 0 && <span className="badge-modern badge-expired">{expired} Expired</span>}
@@ -153,12 +183,21 @@ const Dashboard = () => {
                       </div>
                     </td>
                     <td>
-                      <button
-                        className="btn-modern btn-modern-primary btn-sm"
-                        onClick={() => navigate(`/userdetails/${user._id}`)}
-                      >
-                        Details
-                      </button>
+                      <div className="d-flex gap-2 align-items-center">
+                        <button
+                          className={`btn btn-sm text-white ${user.isApproved ? 'btn-danger' : 'btn-success'}`}
+                          style={{ borderRadius: '8px' }}
+                          onClick={() => handleToggleApproval(user._id, user.isApproved)}
+                        >
+                          {user.isApproved ? 'Revoke' : 'Approve'}
+                        </button>
+                        <button
+                          className="btn-modern btn-modern-primary btn-sm"
+                          onClick={() => navigate(`/userdetails/${user._id}`)}
+                        >
+                          Details
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

@@ -86,8 +86,8 @@ const Login = () => {
         {/* Right Panel — Login Form */}
         <div className="login-login-right-panel">
           <div className="login-login-form-header">
-            <div className="login-login-form-eyebrow">QSR Operator Portal</div>
-            <h2 className="login-login-form-title">Operator Access</h2>
+            <div className="login-login-form-eyebrow">QSR Portal</div>
+            <h2 className="login-login-form-title">Welcome back</h2>
             <p className="login-login-form-subtitle">Sign in to your outlet control panel</p>
           </div>
 

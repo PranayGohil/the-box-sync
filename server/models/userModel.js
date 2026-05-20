@@ -96,6 +96,10 @@ const userSchema = new Schema({
   purchasedPlan: {
     type: String,
   },
+  isApproved: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // userModel.js

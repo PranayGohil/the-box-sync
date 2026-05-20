@@ -48,6 +48,8 @@ const Register = () => {
   const [sendingVerification, setSendingVerification] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const countdownRef = useRef(null);
 
   const pinRegex = /^[1-9][0-9]{5}$/;
@@ -132,7 +134,7 @@ const Register = () => {
         setFieldTouched('email', true, false);
       }
     } catch (err) {
-      setFieldError('email', 'Failed to send verification code');
+      setFieldError('email', err.response?.data?.message || 'Failed to send verification code');
       setFieldTouched('email', true, false);
     } finally {
       setSendingVerification(false);
@@ -160,7 +162,7 @@ const Register = () => {
         setFieldTouched('verificationCode', true, false);
       }
     } catch (err) {
-      setFieldError('verificationCode', 'Verification failed');
+      setFieldError('verificationCode', err.response?.data?.message || 'Verification failed');
       setFieldTouched('verificationCode', true, false);
     } finally {
       setVerifyingCode(false);
@@ -230,19 +232,21 @@ const Register = () => {
   };
 
   const getClassName = (steps, step, index, stepItem) => {
-    if (steps.indexOf(step) === index) return 'step-doing';
+    if (steps.indexOf(step) === index) return 'register-step-doing';
     if (steps.indexOf(step) > index || stepItem.isDone) {
       stepItem.isDone = true;
-      return 'step-done';
+      return 'register-step-done';
     }
-    return 'step';
+    return 'register-step';
   };
 
   const rightSide = (
-    <div className="register-reg-right">
-      <div className="register-reg-eyebrow">Restaurant Registration</div>
-      <h2 className="register-reg-title">Create your account</h2>
-      <p className="register-reg-subtitle">Set up your restaurant on The Box platform</p>
+    <div className="login-login-right-panel">
+      <div className="login-login-form-header">
+        <div className="login-login-form-eyebrow">Restaurant Registration</div>
+        <h2 className="login-login-form-title">Create your account</h2>
+        <p className="login-login-form-subtitle">Set up your restaurant on The Box platform</p>
+      </div>
       <div className="wizard wizard-default">
         <Wizard>
           <WithWizard
@@ -251,7 +255,7 @@ const Register = () => {
                 {steps.map(
                   (stepItem, index) =>
                     !stepItem.hideTopNav && (
-                      <div key={`topNavStep_${index}`} className={`register-reg-step-item ${getClassName(steps, step, index, stepItem)}`}>
+                      <div key={`topNavStep_${index}`} className={`register-reg-step-item reg-step-item ${getClassName(steps, step, index, stepItem)}`}>
                         <div className="register-reg-step-btn">
                           <span>{stepItem.name}</span>
                           <small>{stepItem.desc}</small>
@@ -267,86 +271,143 @@ const Register = () => {
               <Formik innerRef={forms[0]} initialValues={fields} validationSchema={validationSchemas[0]} validateOnMount onSubmit={() => {}}>
                 {({ errors, touched, setFieldValue, values, setFieldError, setFieldTouched }) => (
                   <Form>
-                    <div className="mb-3 register-top-label">
-                      <Form.Label>RESTAURANT NAME</Form.Label>
-                      <Field className="register-form-control" name="name" />
-                      {errors.name && touched.name && <div className="auth-error">{errors.name}</div>}
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">RESTAURANT NAME</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="shop" size="18" />
+                        </span>
+                        <Field className="login-auth-input form-control" name="name" placeholder="Enter restaurant name" />
+                      </div>
+                      {errors.name && touched.name && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.name}
+                        </div>
+                      )}
                     </div>
-                    <div className="mb-3 register-top-label">
-                      <Form.Label>LOGO</Form.Label>
-                      <input
-                        type="file"
-                        className="register-form-control"
-                        accept="image/*"
-                        disabled={uploadingLogo}
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            setUploadingLogo(true);
-                            setFieldValue('logo', file);
-                            setTimeout(() => {
-                              setPreviewLogo(URL.createObjectURL(file));
-                              setUploadingLogo(false);
-                            }, 500);
-                          }
-                        }}
-                      />
-                      {errors.logo && touched.logo && <div className="auth-error">{errors.logo}</div>}
+                    
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">LOGO</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="upload" size="18" />
+                        </span>
+                        <input
+                          type="file"
+                          className="login-auth-input form-control"
+                          accept="image/*"
+                          style={{ padding: '0.45rem 1rem 0.45rem 2.5rem' }}
+                          disabled={uploadingLogo}
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              setUploadingLogo(true);
+                              setFieldValue('logo', file);
+                              setTimeout(() => {
+                                setPreviewLogo(URL.createObjectURL(file));
+                                setUploadingLogo(false);
+                              }, 500);
+                            }
+                          }}
+                        />
+                      </div>
+                      {errors.logo && touched.logo && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.logo}
+                        </div>
+                      )}
                       {previewLogo && <img src={previewLogo} alt="Logo" className="img-thumbnail mt-2" style={{ maxWidth: '80px' }} />}
                     </div>
-                    <div className="mb-3 register-top-label">
-                      <Form.Label>EMAIL</Form.Label>
-                      <div className="d-flex align-items-center">
-                        <Field className="register-form-control" style={{ flex: 1 }} name="email" type="email" />
-                        <button
-                          type="button"
-                          className="register-btn-pill-outline"
-                          onClick={() => sendVerification(values.email, setFieldError, setFieldTouched)}
-                          disabled={verificationCountdown > 0 || sendingVerification}
-                        >
-                          {sendingVerification ? (
-                            <Spinner animation="border" size="sm" />
-                          ) : verificationCountdown > 0 ? (
-                            `Resend (${verificationCountdown}s)`
-                          ) : (
-                            'Send Code'
-                          )}
-                        </button>
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">EMAIL</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="email" size="18" />
+                        </span>
+                        <Field className="login-auth-input form-control" name="email" type="email" placeholder="you@restaurant.com" />
                       </div>
-                      {errors.email && touched.email && <div className="auth-error">{errors.email}</div>}
-                      {isEmailVerified && <div className="verified-badge">✓ Email verified</div>}
+                      {errors.email && touched.email && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.email}
+                        </div>
+                      )}
                     </div>
+                    {!isEmailVerified && (
+                      <button
+                        type="button"
+                        className="login-btn-auth-primary mb-4"
+                        style={{ width: '100%', borderRadius: '50px' }}
+                        onClick={() => sendVerification(values.email, setFieldError, setFieldTouched)}
+                        disabled={verificationCountdown > 0 || sendingVerification}
+                      >
+                        {sendingVerification ? (
+                          <Spinner animation="border" size="sm" />
+                        ) : verificationCountdown > 0 ? (
+                          `Resend (${verificationCountdown}s)`
+                        ) : (
+                          'Send Code'
+                        )}
+                      </button>
+                    )}
+                    {isEmailVerified && <div className="text-success mb-4" style={{ fontSize: '13px', fontWeight: 'bold', marginTop: '-15px' }}>✓ Email verified</div>}
+
                     {verificationSent && !isEmailVerified && (
-                      <div className="mb-3 register-top-label">
-                        <Form.Label>VERIFICATION CODE</Form.Label>
-                        <div className="d-flex align-items-center">
+                      <>
+                        <div className="login-auth-input-group">
+                          <label className="login-auth-input-label">VERIFICATION CODE</label>
+                        <div style={{ position: 'relative' }}>
+                          <span className="login-auth-input-icon">
+                            <CsLineIcons icon="check" size="18" />
+                          </span>
                           <Field
-                            className="register-form-control"
-                            style={{ flex: 1 }}
+                            className="login-auth-input form-control"
                             name="verificationCode"
                             maxLength="6"
+                            placeholder="123456"
                             value={verificationCodeInput}
                             onChange={(e) => {
                               setVerificationCodeInput(e.target.value);
                               setFieldValue('verificationCode', e.target.value);
                             }}
                           />
-                          <button
-                            type="button"
-                            className="register-btn-pill-outline"
-                            onClick={() => verifyCode(values.email, setFieldError, setFieldTouched)}
-                            disabled={verifyingCode || !verificationCodeInput}
-                          >
-                            {verifyingCode ? <Spinner animation="border" size="sm" /> : 'Verify'}
-                          </button>
                         </div>
-                        {errors.verificationCode && touched.verificationCode && <div className="auth-error">{errors.verificationCode}</div>}
+                        {errors.verificationCode && touched.verificationCode && (
+                          <div className="login-auth-error-msg">
+                            <CsLineIcons icon="warning" size="13" />
+                            {errors.verificationCode}
+                          </div>
+                        )}
                       </div>
+                        <button
+                          type="button"
+                          className="login-btn-auth-primary mb-4"
+                          style={{ width: '100%', borderRadius: '50px' }}
+                          onClick={() => verifyCode(values.email, setFieldError, setFieldTouched)}
+                          disabled={verifyingCode || !verificationCodeInput}
+                        >
+                          {verifyingCode ? <Spinner animation="border" size="sm" /> : 'Verify'}
+                        </button>
+                      </>
                     )}
-                    <div className="mb-3 register-top-label">
-                      <Form.Label>PHONE NUMBER</Form.Label>
-                      <Field className="register-form-control" name="mobile" />
-                      {errors.mobile && touched.mobile && <div className="auth-error">{errors.mobile}</div>}
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">PHONE NUMBER</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="phone" size="18" />
+                        </span>
+                        <Field className="login-auth-input form-control" name="mobile" placeholder="10-digit number" />
+                      </div>
+                      {errors.mobile && touched.mobile && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.mobile}
+                        </div>
+                      )}
                     </div>
                   </Form>
                 )}
@@ -356,67 +417,106 @@ const Register = () => {
               <Formik innerRef={forms[1]} initialValues={fields} validationSchema={validationSchemas[1]} validateOnMount onSubmit={() => {}}>
                 {({ errors, touched, values, setFieldValue }) => (
                   <Form>
-                    <div className="mb-3 register-top-label">
-                      <Form.Label>ADDRESS</Form.Label>
-                      <Field className="register-form-control" name="address" />
-                      {errors.address && touched.address && <div className="auth-error">{errors.address}</div>}
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">ADDRESS</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="pin" size="18" />
+                        </span>
+                        <Field className="login-auth-input form-control" name="address" placeholder="Street address" />
+                      </div>
+                      {errors.address && touched.address && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.address}
+                        </div>
+                      )}
                     </div>
-                    <div className="mb-3 register-top-label">
-                      <Form.Label>COUNTRY</Form.Label>
-                      <select
-                        className="register-form-control"
-                        value={values.country}
-                        onChange={(e) => {
-                          const c = Country.getAllCountries().find((x) => x.name === e.target.value);
-                          setFieldValue('country', c.name);
-                          setFieldValue('country_code', c.isoCode);
-                          setFieldValue('state', '');
-                          setFieldValue('city', '');
-                        }}
-                      >
-                        <option value="">Select Country</option>
-                        {Country.getAllCountries().map((c) => (
-                          <option key={c.isoCode} value={c.name}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">COUNTRY</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="web" size="18" />
+                        </span>
+                        <select
+                          className="login-auth-input form-control"
+                          value={values.country}
+                          onChange={(e) => {
+                            const c = Country.getAllCountries().find((x) => x.name === e.target.value);
+                            setFieldValue('country', c.name);
+                            setFieldValue('country_code', c.isoCode);
+                            setFieldValue('state', '');
+                            setFieldValue('city', '');
+                          }}
+                        >
+                          <option value="">Select Country</option>
+                          {Country.getAllCountries().map((c) => (
+                            <option key={c.isoCode} value={c.name}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                    <div className="mb-3 register-top-label">
-                      <Form.Label>STATE</Form.Label>
-                      <select
-                        className="register-form-control"
-                        value={values.state}
-                        onChange={(e) => {
-                          const s = State.getStatesOfCountry(values.country_code).find((x) => x.name === e.target.value);
-                          setFieldValue('state', s.name);
-                          setFieldValue('state_code', s.isoCode);
-                          setFieldValue('city', '');
-                        }}
-                      >
-                        <option value="">Select State</option>
-                        {State.getStatesOfCountry(values.country_code).map((s) => (
-                          <option key={s.isoCode} value={s.name}>
-                            {s.name}
-                          </option>
-                        ))}
-                      </select>
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">STATE</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="compass" size="18" />
+                        </span>
+                        <select
+                          className="login-auth-input form-control"
+                          value={values.state}
+                          onChange={(e) => {
+                            const s = State.getStatesOfCountry(values.country_code).find((x) => x.name === e.target.value);
+                            setFieldValue('state', s.name);
+                            setFieldValue('state_code', s.isoCode);
+                            setFieldValue('city', '');
+                          }}
+                        >
+                          <option value="">Select State</option>
+                          {State.getStatesOfCountry(values.country_code).map((s) => (
+                            <option key={s.isoCode} value={s.name}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                    <div className="mb-3 register-top-label">
-                      <Form.Label>CITY</Form.Label>
-                      <select className="register-form-control" value={values.city} onChange={(e) => setFieldValue('city', e.target.value)}>
-                        <option value="">Select City</option>
-                        {City.getCitiesOfState(values.country_code, values.state_code).map((c) => (
-                          <option key={c.name} value={c.name}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">CITY</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="building" size="18" />
+                        </span>
+                        <select className="login-auth-input form-control" value={values.city} onChange={(e) => setFieldValue('city', e.target.value)}>
+                          <option value="">Select City</option>
+                          {City.getCitiesOfState(values.country_code, values.state_code).map((c) => (
+                            <option key={c.name} value={c.name}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                    <div className="mb-3 register-top-label">
-                      <Form.Label>ZIP CODE</Form.Label>
-                      <Field className="register-form-control" name="pincode" />
-                      {errors.pincode && touched.pincode && <div className="auth-error">{errors.pincode}</div>}
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">ZIP CODE</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="pin" size="18" />
+                        </span>
+                        <Field className="login-auth-input form-control" name="pincode" placeholder="Enter zip code" />
+                      </div>
+                      {errors.pincode && touched.pincode && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.pincode}
+                        </div>
+                      )}
                     </div>
                   </Form>
                 )}
@@ -426,25 +526,82 @@ const Register = () => {
               <Formik innerRef={forms[2]} initialValues={fields} validationSchema={validationSchemas[2]} validateOnMount onSubmit={() => {}}>
                 {({ errors, touched }) => (
                   <Form>
-                    <div className="mb-3 register-top-label">
-                      <Form.Label>FSSAI NO</Form.Label>
-                      <Field className="register-form-control" name="fssai_no" />
-                      {errors.fssai_no && touched.fssai_no && <div className="auth-error">{errors.fssai_no}</div>}
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">FSSAI NO</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="shield" size="18" />
+                        </span>
+                        <Field className="login-auth-input form-control" name="fssai_no" placeholder="Enter FSSAI number" />
+                      </div>
+                      {errors.fssai_no && touched.fssai_no && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.fssai_no}
+                        </div>
+                      )}
                     </div>
-                    <div className="mb-3 register-top-label">
-                      <Form.Label>GST NO</Form.Label>
-                      <Field className="register-form-control" name="gst_no" />
-                      {errors.gst_no && touched.gst_no && <div className="auth-error">{errors.gst_no}</div>}
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">GST NO</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="file-text" size="18" />
+                        </span>
+                        <Field className="login-auth-input form-control" name="gst_no" placeholder="Enter GST number" />
+                      </div>
+                      {errors.gst_no && touched.gst_no && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.gst_no}
+                        </div>
+                      )}
                     </div>
-                    <div className="mb-3 register-top-label">
-                      <Form.Label>PASSWORD</Form.Label>
-                      <Field type="password" className="register-form-control" name="password" />
-                      {errors.password && touched.password && <div className="auth-error">{errors.password}</div>}
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">PASSWORD</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="lock-off" size="18" />
+                        </span>
+                        <Field type={showPassword ? 'text' : 'password'} className="login-auth-input form-control" name="password" placeholder="••••••••" />
+                        <span 
+                          className="position-absolute" 
+                          style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer' }}
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="15" />
+                        </span>
+                      </div>
+                      {errors.password && touched.password && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.password}
+                        </div>
+                      )}
                     </div>
-                    <div className="mb-3 register-top-label">
-                      <Form.Label>CONFIRM</Form.Label>
-                      <Field type="password" className="register-form-control" name="confirmPassword" />
-                      {errors.confirmPassword && touched.confirmPassword && <div className="auth-error">{errors.confirmPassword}</div>}
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">CONFIRM</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="lock-off" size="18" />
+                        </span>
+                        <Field type={showConfirmPassword ? 'text' : 'password'} className="login-auth-input form-control" name="confirmPassword" placeholder="••••••••" />
+                        <span 
+                          className="position-absolute" 
+                          style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer' }}
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          <CsLineIcons icon={showConfirmPassword ? 'eye-off' : 'eye'} size="15" />
+                        </span>
+                      </div>
+                      {errors.confirmPassword && touched.confirmPassword && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.confirmPassword}
+                        </div>
+                      )}
                     </div>
                   </Form>
                 )}
@@ -453,15 +610,22 @@ const Register = () => {
           </Steps>
           <WithWizard
             render={({ next, previous, step, steps }) => (
-              <div className={`register-reg-nav-btns ${bottomNavHidden ? 'invisible' : ''}`}>
+              <div className={`d-flex gap-3 w-100 mt-4 ${bottomNavHidden ? 'invisible' : ''}`}>
                 <button
                   type="button"
-                  className={`register-btn-auth-outline flex-1 ${steps.indexOf(step) <= 0 ? 'd-none' : ''}`}
+                  className={`login-btn-auth-primary flex-grow-1 ${steps.indexOf(step) <= 0 ? 'invisible' : ''}`}
+                  style={{ borderRadius: '50px' }}
                   onClick={() => onClickPrev(previous, steps, step)}
                 >
                   Back
                 </button>
-                <button type="button" className="register-btn-auth-primary flex-grow-1" onClick={() => onClickNext(next, steps, step)} disabled={loading}>
+                <button 
+                  type="button" 
+                  className="login-btn-auth-primary flex-grow-1" 
+                  style={{ borderRadius: '50px' }}
+                  onClick={() => onClickNext(next, steps, step)} 
+                  disabled={loading}
+                >
                   {loading ? <Spinner animation="border" size="sm" /> : steps.indexOf(step) === steps.length - 1 ? 'Submit' : 'Continue'}
                 </button>
               </div>
@@ -469,32 +633,32 @@ const Register = () => {
           />
         </Wizard>
       </div>
-      <div className="register-reg-footer">
+      <div className="login-auth-footer-link">
         Already have an account? <RouterLink to="/login">Sign in →</RouterLink>
       </div>
-      <div className="register-reg-powered">
+      <div className="login-auth-powered">
         Powered by <strong>TheBoxSync</strong>
       </div>
     </div>
   );
 
   return (
-    <div className="register-register-wrapper">
+    <div className="login-login-page-wrapper">
       <HtmlHead title={title} description={description} />
-      <div className="register-reg-left">
-        <div className="register-reg-brand">
+      <div className="login-login-left-panel">
+        <div className="login-login-brand-logo">
           THE <span>BOX</span>
         </div>
-        <h1 className="register-reg-hero">
+        <h1 className="login-login-hero-title">
           Start your
           <br />
           <span>restaurant journey.</span>
         </h1>
-        <p className="register-reg-sub">Join hundreds of restaurants managing their operations smarter with The Box platform.</p>
-        <div className="register-reg-pills">
+        <p className="login-login-hero-sub">Join hundreds of restaurants managing their operations smarter with The Box platform.</p>
+        <div className="login-login-feature-pills">
           {['3-step quick setup', 'Email verification', 'Secure & encrypted', 'Instant access'].map((f) => (
-            <div key={f} className="register-reg-pill">
-              <div className="register-register-reg-pill-dot" />
+            <div key={f} className="login-login-feature-pill">
+              <div className="login-login-feature-pill-dot" />
               {f}
             </div>
           ))}
