@@ -36,7 +36,7 @@ const DeleteTableModal = ({ show, handleClose, data, onDeleteSuccess }) => {
       
       <Modal.Header closeButton className="border-0 pb-0">
         <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>
-          Confirm Delete
+          Confirm Deletion
         </Modal.Title>
       </Modal.Header>
       <Modal.Body className="py-4">
@@ -45,8 +45,9 @@ const DeleteTableModal = ({ show, handleClose, data, onDeleteSuccess }) => {
             <CsLineIcons icon="bin" size="24" style={{ color: '#cf2637' }} />
           </div>
           <div>
-            <p className="mb-0 fw-bold text-dark">Are you sure you want to delete this table?</p>
-            <p className="mb-0 text-muted small">This action cannot be undone and will permanently remove the table from your restaurant layout.</p>
+            <p className="mb-0 fw-bold text-dark">Permanently delete Table #{data?.table_no}?</p>
+            <p className="mb-1 text-muted small">This clears the table from your live {data?.area || ''} floor plan.</p>
+            <p className="mb-0 text-success small fw-semibold">Historical sales and order logs remain perfectly safe.</p>
           </div>
         </div>
       </Modal.Body>

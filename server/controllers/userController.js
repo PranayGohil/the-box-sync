@@ -569,7 +569,7 @@ const resetAdminPassword = async (req, res) => {
 
 const updateUser = async (req, res) => {
   const userId = req.user;
-  const { ...updates } = req.body;
+  const { password, ...updates } = req.body;
   console.log(req.body);
 
   if (!userId) {
@@ -577,9 +577,23 @@ const updateUser = async (req, res) => {
   }
 
   try {
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).select("+password");
     if (!user) {
       return res.status(404).json({ error: "User not found." });
+    }
+
+    // Verify password if email or mobile changes
+    const emailChanged = updates.email && updates.email !== user.email;
+    const mobileChanged = updates.mobile && Number(updates.mobile) !== user.mobile;
+    if (emailChanged || mobileChanged) {
+      if (!password) {
+        return res.status(400).json({ error: "Password is required to change Email or Phone number." });
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ error: "Incorrect password. Verification failed." });
+      }
     }
 
     // ✅ Save uploaded logo path if available

@@ -125,6 +125,20 @@ exports.deletePanelUser = async (req, res) => {
   try {
     const { planName } = req.params;
     const userId = req.user._id;
+    const adminPassword = req.body.adminPassword || req.headers['x-admin-password'] || req.query.adminPassword;
+
+    if (!adminPassword) {
+      return res.status(400).json({ message: "Admin password is required to delete credentials." });
+    }
+
+    // Verify admin password
+    const admin = await User.findById(userId).select('+password');
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    const isMatch = await bcrypt.compare(adminPassword, admin.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid admin password" });
+    }
 
     const Model = getModel(planName);
     const deleted = await Model.findOneAndDelete({ user_id: userId });

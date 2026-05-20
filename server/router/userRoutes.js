@@ -31,13 +31,13 @@ userRouter.route("/check-email").post(validate(emailCheckSchema), emailCheck);
 userRouter.route("/register").post(upload.single('logo'), validate(registerSchema), register);
 userRouter.route("/login").post(validate(loginSchema), login);
 userRouter.route("/logout").get(logout);
-userRouter.route("/send-otp").post(authMiddleware, validate(sendOtpSchema), sendAdminOtp);
+userRouter.route("/send-otp").post(validate(sendOtpSchema), sendAdminOtp);
 userRouter
 .route("/verify-otp")
-.post(authMiddleware, validate(verifyOtpSchema), verifyAdminOtp);
+.post(validate(verifyOtpSchema), verifyAdminOtp);
 userRouter
 .route("/reset-password")
-.post(authMiddleware, validate(resetPasswordSchema), resetAdminPassword);
+.post(validate(resetPasswordSchema), resetAdminPassword);
 userRouter.route("/get").get(authMiddleware, getUserData);
 userRouter.route("/get/:code").get(authMiddleware, getUserDataByCode);
 userRouter.route("/update").put(authMiddleware, adminAuth, upload.single("logo"), updateUser);

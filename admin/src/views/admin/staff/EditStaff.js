@@ -101,11 +101,6 @@ const EditStaff = () => {
         if (typeof value === 'string') return true;
         return isFileObject(value);
       })
-      .test('fileSize', 'File size is too large (max 2MB)', (value) => {
-        if (!value) return true;
-        if (typeof value === 'string') return true;
-        return isFileObject(value) ? value.size <= maxSize : true;
-      })
       .test('fileType', 'Unsupported file format (JPEG, PNG, JPG, WebP only)', (value) => {
         if (!value) return true;
         if (typeof value === 'string') return true;
@@ -139,11 +134,6 @@ const EditStaff = () => {
         if (typeof value === 'string') return true;
         return isFileObject(value);
       })
-      .test('fileSize', 'File size is too large (max 2MB)', (value) => {
-        if (!value) return true;
-        if (typeof value === 'string') return true;
-        return isFileObject(value) ? value.size <= maxSize : true;
-      })
       .test('fileType', 'Unsupported file format (JPEG, PNG, JPG, WebP only)', (value) => {
         if (!value) return true;
         if (typeof value === 'string') return true;
@@ -161,32 +151,12 @@ const EditStaff = () => {
         }
         return schema;
       })
-      .test('fileSize', 'File size is too large (max 2MB)', (value) => {
-        if (!value) return true;
-        if (typeof value === 'string') return true;
-        return isFileObject(value) ? value.size <= maxSize : true;
-      })
       .test('fileType', 'Unsupported file format (JPEG, PNG, JPG, WebP only)', (value) => {
         if (!value) return true;
         if (typeof value === 'string') return true;
         return isFileObject(value) ? allowedTypes.includes(value.type) : true;
       }),
 
-    salary_structure: Yup.object().shape({
-      earnings: Yup.object({
-        basic: Yup.number().min(0, 'Must be 0 or more').required('Basic is required'),
-        hra: Yup.number().min(0),
-        conveyance: Yup.number().min(0),
-        medical: Yup.number().min(0),
-        special: Yup.number().min(0),
-        other: Yup.number().min(0),
-      }),
-      deductions: Yup.object({
-        pf_percentage: Yup.number().min(0).max(100),
-        esi_percentage: Yup.number().min(0).max(100),
-        pt: Yup.number().min(0),
-      }),
-    }),
   });
 
   const formik = useFormik({
@@ -238,7 +208,12 @@ const EditStaff = () => {
         history.push('/staff/view');
       } catch (err) {
         console.error('Error updating staff:', err);
-        setFileUploadError(err.response?.data?.message || 'Update failed. Please try again.');
+        const serverError = err.response?.data?.error;
+        const serverMessage = err.response?.data?.message;
+        const errorMsg = Array.isArray(serverError)
+          ? serverError.join(', ')
+          : (serverError || serverMessage || 'Update failed. Please try again.');
+        setFileUploadError(errorMsg);
         toast.error('Update failed.');
       } finally {
         setLoading((prev) => ({ ...prev, submitting: false }));
@@ -248,6 +223,21 @@ const EditStaff = () => {
   });
 
   const { values, handleChange, handleSubmit, setFieldValue, errors, touched } = formik;
+
+  const calendarStyles = `
+    .date-input-container input[type="date"]::-webkit-calendar-picker-indicator {
+      position: absolute !important;
+      right: 12px !important;
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+      width: 24px !important;
+      height: 24px !important;
+      cursor: pointer !important;
+      opacity: 0 !important;
+      z-index: 5 !important;
+    }
+  `;
+
 
   useEffect(() => {
     setCountries(Country.getAllCountries());
@@ -274,31 +264,37 @@ const EditStaff = () => {
         setFieldValue('birth_date', staff.birth_date);
         setFieldValue('joining_date', staff.joining_date);
         setFieldValue('address', staff.address);
-        setFieldValue('country', staff.country);
-        setFieldValue('state', staff.state);
-        setFieldValue('city', staff.city);
-        setFieldValue('phone_no', staff.phone_no);
-        setFieldValue('email', staff.email);
-        setFieldValue('salary', staff.salary);
-        setFieldValue('position', staff.position);
-        setFieldValue('document_type', staff.document_type);
-        setFieldValue('id_number', staff.id_number);
-        setFieldValue('photo', staff.photo || '');
-        setFieldValue('front_image', staff.front_image || '');
-        setFieldValue('back_image', staff.back_image || '');
+        const selectedCountry = Country.getAllCountries().find(
+          (c) => c.name.toLowerCase() === staff.country?.toLowerCase() || c.isoCode.toLowerCase() === staff.country?.toLowerCase()
+        );
+        const countryVal = selectedCountry ? selectedCountry.name : (staff.country || '');
+        setFieldValue('country', countryVal);
 
-        const selectedCountry = Country.getAllCountries().find((c) => c.name === staff.country);
-
+        let stateVal = staff.state || '';
         if (selectedCountry) {
           const countryStates = State.getStatesOfCountry(selectedCountry.isoCode);
           setStates(countryStates);
 
-          const selectedState = countryStates.find((s) => s.name === staff.state);
+          const selectedState = countryStates.find(
+            (s) => s.name.toLowerCase() === staff.state?.toLowerCase() || s.isoCode.toLowerCase() === staff.state?.toLowerCase()
+          );
 
           if (selectedState) {
+            stateVal = selectedState.name;
             setCities(City.getCitiesOfState(selectedCountry.isoCode, selectedState.isoCode));
           }
         }
+        setFieldValue('state', stateVal);
+        setFieldValue('city', staff.city || '');
+        setFieldValue('phone_no', staff.phone_no || '');
+        setFieldValue('email', staff.email || '');
+        setFieldValue('salary', staff.salary || '');
+        setFieldValue('position', staff.position || '');
+        setFieldValue('document_type', staff.document_type || '');
+        setFieldValue('id_number', staff.id_number || '');
+        setFieldValue('photo', staff.photo || '');
+        setFieldValue('front_image', staff.front_image || '');
+        setFieldValue('back_image', staff.back_image || '');
 
         setPhotoPreview(staff.photo ? `${process.env.REACT_APP_UPLOAD_DIR}/${staff.photo}` : null);
         setFrontImagePreview(staff.front_image ? `${process.env.REACT_APP_UPLOAD_DIR}/${staff.front_image}` : null);
@@ -325,7 +321,7 @@ const EditStaff = () => {
 
   const handleCountryChange = (selected) => {
     const countryName = selected ? selected.value : '';
-    const selectedCountry = countries.find((c) => c.name === countryName);
+    const selectedCountry = countries.find((c) => c.name === countryName || c.isoCode === countryName);
 
     setFieldValue('country', countryName);
     setStates(selectedCountry ? State.getStatesOfCountry(selectedCountry.isoCode) : []);
@@ -336,22 +332,114 @@ const EditStaff = () => {
 
   const handleStateChange = (selected) => {
     const stateName = selected ? selected.value : '';
-    const selectedCountry = countries.find((c) => c.name === values.country);
-    const selectedState = states.find((s) => s.name === stateName);
+    const selectedCountry = countries.find((c) => c.name === values.country || c.isoCode === values.country);
+    const selectedState = states.find((s) => s.name === stateName || s.isoCode === stateName);
 
     setFieldValue('state', stateName);
     setCities(selectedCountry && selectedState ? City.getCitiesOfState(selectedCountry.isoCode, selectedState.isoCode) : []);
     setFieldValue('city', '');
   };
 
+  const getSelectedCountryOption = () => {
+    if (!values.country) return null;
+    const country = countries.find(
+      (c) => c.name.toLowerCase() === values.country.toLowerCase() || c.isoCode.toLowerCase() === values.country.toLowerCase()
+    );
+    return country ? { label: country.name, value: country.name } : { label: values.country, value: values.country };
+  };
+
+  const getSelectedStateOption = () => {
+    if (!values.state) return null;
+    const stateObj = states.find(
+      (s) => s.name.toLowerCase() === values.state.toLowerCase() || s.isoCode.toLowerCase() === values.state.toLowerCase()
+    );
+    return stateObj ? { label: stateObj.name, value: stateObj.name } : { label: values.state, value: values.state };
+  };
+
+  const convertToWebPAndResize = (file, maxSizeBytes = 500 * 1024) => {
+    return new Promise((resolve) => {
+      if (!file || !file.type.startsWith('image/')) {
+        resolve(file);
+        return;
+      }
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+
+            const maxDimension = 1920;
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              } else {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            let quality = 0.9;
+            const attemptCompression = (q) => {
+              canvas.toBlob(
+                (blob) => {
+                  if (!blob) {
+                    resolve(file);
+                    return;
+                  }
+                  if (blob.size <= maxSizeBytes || q <= 0.1) {
+                    const originalName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                    const newFileName = `${originalName}.webp`;
+                    const compressedFile = new File([blob], newFileName, {
+                      type: 'image/webp',
+                      lastModified: Date.now(),
+                    });
+                    resolve(compressedFile);
+                  } else {
+                    attemptCompression(q - 0.1);
+                  }
+                },
+                'image/webp',
+                q
+              );
+            };
+
+            attemptCompression(quality);
+          } catch (e) {
+            console.error('Error during canvas processing:', e);
+            resolve(file);
+          }
+        };
+        img.onerror = () => resolve(file);
+      };
+      reader.onerror = () => resolve(file);
+    });
+  };
+
   const handleFileChange = async (fieldName, file, setPreview) => {
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: true }));
 
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    setFieldValue(fieldName, file);
+    let processedFile = file;
     if (file) {
-      setPreview(URL.createObjectURL(file));
+      try {
+        processedFile = await convertToWebPAndResize(file);
+      } catch (err) {
+        console.error('Failed to process image:', err);
+      }
+    }
+
+    setFieldValue(fieldName, processedFile);
+    if (processedFile) {
+      setPreview(URL.createObjectURL(processedFile));
     }
 
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: false }));
@@ -374,7 +462,7 @@ const EditStaff = () => {
 
   return (
     <div className="edit-staff-staff-container pb-5">
-      
+      <style>{calendarStyles}</style>
       <HtmlHead title={title} description={description} />
       
       <div className="container-fluid px-lg-5">
@@ -465,29 +553,51 @@ const EditStaff = () => {
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">Birthday</Form.Label>
-                      <Form.Control
-                        type="date"
-                        name="birth_date"
-                        value={values.birth_date}
-                        onChange={handleChange}
-                        isInvalid={touched.birth_date && errors.birth_date}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.birth_date}</Form.Control.Feedback>
+                      <div className="position-relative date-input-container">
+                        <Form.Control
+                          type="date"
+                          name="birth_date"
+                          value={values.birth_date}
+                          onChange={handleChange}
+                          isInvalid={touched.birth_date && errors.birth_date}
+                          disabled={loading.submitting}
+                          className="pe-5"
+                        />
+                        <div 
+                          className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
+                          style={{ pointerEvents: 'none', zIndex: 4 }}
+                        >
+                          <CsLineIcons icon="calendar" size="18" className="text-primary" />
+                        </div>
+                      </div>
+                      {touched.birth_date && errors.birth_date && (
+                        <div className="text-danger mt-1 small">{errors.birth_date}</div>
+                      )}
                     </Form.Group>
                   </Col>
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">Joining Date</Form.Label>
-                      <Form.Control
-                        type="date"
-                        name="joining_date"
-                        value={values.joining_date}
-                        onChange={handleChange}
-                        isInvalid={touched.joining_date && errors.joining_date}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.joining_date}</Form.Control.Feedback>
+                      <div className="position-relative date-input-container">
+                        <Form.Control
+                          type="date"
+                          name="joining_date"
+                          value={values.joining_date}
+                          onChange={handleChange}
+                          isInvalid={touched.joining_date && errors.joining_date}
+                          disabled={loading.submitting}
+                          className="pe-5"
+                        />
+                        <div 
+                          className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
+                          style={{ pointerEvents: 'none', zIndex: 4 }}
+                        >
+                          <CsLineIcons icon="calendar" size="18" className="text-primary" />
+                        </div>
+                      </div>
+                      {touched.joining_date && errors.joining_date && (
+                        <div className="text-danger mt-1 small">{errors.joining_date}</div>
+                      )}
                     </Form.Group>
                   </Col>
                 </Row>
@@ -517,7 +627,7 @@ const EditStaff = () => {
                       <Select
                         classNamePrefix="react-select"
                         options={countries.map((country) => ({ label: country.name, value: country.name }))}
-                        value={values.country ? { label: values.country, value: values.country } : null}
+                        value={getSelectedCountryOption()}
                         onChange={(selected) => handleCountryChange(selected)}
                         isDisabled={loading.submitting}
                         placeholder="Select Country"
@@ -533,7 +643,7 @@ const EditStaff = () => {
                       <Select
                         classNamePrefix="react-select"
                         options={states.map((state) => ({ label: state.name, value: state.name }))}
-                        value={values.state ? { label: values.state, value: values.state } : null}
+                        value={getSelectedStateOption()}
                         onChange={(selected) => handleStateChange(selected)}
                         isDisabled={!values.country || loading.submitting}
                         placeholder="Select State"

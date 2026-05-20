@@ -4,7 +4,39 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-
+const customStyles = `
+  .delete-staff-modal-custom-btn-outline {
+    border: 1px solid #23b3f4 !important;
+    color: #23b3f4 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+  }
+  .delete-staff-modal-custom-btn-outline:hover {
+    background-color: #23b3f4 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+  }
+  .delete-staff-modal-custom-btn-danger {
+    border: 1px solid #cf2637 !important;
+    color: #cf2637 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+  }
+  .delete-staff-modal-custom-btn-danger:hover {
+    background-color: #cf2637 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(207, 38, 55, 0.25) !important;
+  }
+  .delete-staff-modal-custom-btn-danger:hover svg {
+    stroke: #fff !important;
+  }
+`;
 
 const DeleteStaffModal = ({ show, handleClose, data, onDeleteSuccess }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -34,51 +66,54 @@ const DeleteStaffModal = ({ show, handleClose, data, onDeleteSuccess }) => {
   };
 
   return (
-    <Modal show={show} onHide={handleClose} centered className="rounded-4">
-      
+    <Modal show={show} onHide={handleClose} centered backdrop="static">
+      <style>{customStyles}</style>
       <Modal.Header closeButton className="border-0 pb-0">
-        <Modal.Title className="fw-bold text-danger">Delete Staff Member?</Modal.Title>
+        <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>
+          Confirm Deletion
+        </Modal.Title>
       </Modal.Header>
       <Modal.Body className="py-4">
-        <div className="text-center mb-4">
-          <div className="bg-soft-danger d-inline-flex p-4 rounded-circle mb-3">
-            <CsLineIcons icon="bin" size="48" className="text-danger" />
+        <div className="d-flex align-items-center mb-3">
+          <div className="p-3 rounded-circle me-3" style={{ backgroundColor: 'rgba(207, 38, 55, 0.1)' }}>
+            <CsLineIcons icon="bin" size="24" style={{ color: '#cf2637' }} />
           </div>
-          <p className="text-muted mb-0">
-            Are you sure you want to permanently delete <strong>{data?.f_name} {data?.l_name}</strong>? 
-            This action will remove all staff records including attendance and payroll data.
-          </p>
+          <div>
+            <p className="mb-0 fw-bold text-dark">Permanently delete {data?.f_name} {data?.l_name}?</p>
+            <p className="mb-1 text-muted small">This clears the staff member from your active operations roster.</p>
+            <p className="mb-0 text-success small fw-semibold">Historical payroll and attendance records remain perfectly safe.</p>
+          </div>
         </div>
         {error && (
-          <Alert variant="danger" className="rounded-3 shadow-sm border-0 d-flex align-items-center">
+          <Alert variant="danger" className="rounded-3 shadow-sm border-0 d-flex align-items-center mt-3">
             <CsLineIcons icon="error" className="me-2" size="20" />
             <small>{error}</small>
           </Alert>
         )}
       </Modal.Body>
-      <Modal.Footer className="border-0 pt-0 d-flex gap-3">
+      <Modal.Footer className="border-0 pt-0">
         <Button 
-          className="px-4 py-2 delete-staff-modal-custom-btn-outline flex-grow-1 d-flex align-items-center justify-content-center gap-2" 
           onClick={handleClose} 
           disabled={isDeleting}
+          className="rounded-pill px-4 fw-bold delete-staff-modal-custom-btn-outline"
         >
           Cancel
         </Button>
         <Button
-          className="px-4 py-2 delete-staff-modal-custom-btn-danger flex-grow-1 d-flex align-items-center justify-content-center gap-2"
           onClick={handleDelete}
           disabled={isDeleting}
+          className="rounded-pill px-4 fw-bold shadow-sm delete-staff-modal-custom-btn-danger"
         >
           {isDeleting ? (
             <>
-              <Spinner animation="border" size="sm" />
+              <Spinner as="span" animation="border" size="sm" className="me-2" />
               Deleting...
             </>
           ) : (
-            <>
-              <CsLineIcons icon="bin" size="18" />
-              Delete Member
-            </>
+            <div className="d-flex align-items-center">
+              <CsLineIcons icon="bin" size="16" className="me-2" stroke="currentColor" />
+              Delete
+            </div>
           )}
         </Button>
       </Modal.Footer>
