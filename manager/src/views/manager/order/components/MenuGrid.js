@@ -221,8 +221,8 @@ const MenuGrid = ({
 
                             {/* Image */}
                             <div className="pos-menu-img-wrap">
-                              {dish.dish_image ? (
-                                <img src={`${uploadDir}/${dish.dish_image}`} alt={dish.dish_name} className="pos-menu-img" />
+                              {dish.dish_img ? (
+                                <img src={`${uploadDir}/${dish.dish_img}`} alt={dish.dish_name} className="pos-menu-img" />
                               ) : (
                                 <div className="d-flex align-items-center justify-content-center h-100 text-muted">
                                   <CsLineIcons icon="cupcake" size="30" opacity="0.3" />
@@ -421,10 +421,13 @@ const MenuGrid = ({
                 <div>
                   {selectedCustomizeDish.variants
                     .filter((v) => v.is_available !== false)
-                    .map((v) => {
-                      const isActive = selectedVariant?.size_name === v.size_name;
+                    .map((v, idx) => {
+                      const isActive = selectedVariant && (
+                        (selectedVariant._id && v._id && selectedVariant._id === v._id) ||
+                        (selectedVariant.size_name === v.size_name && Number(selectedVariant.price) === Number(v.price) && selectedVariant.extra === v.extra)
+                      );
                       return (
-                        <div key={v.size_name} className={`customize-option-card ${isActive ? 'active' : ''}`} onClick={() => setSelectedVariant(v)}>
+                        <div key={v._id || idx} className={`customize-option-card ${isActive ? 'active' : ''}`} onClick={() => setSelectedVariant(v)}>
                           <div className="d-flex align-items-center gap-3">
                             <div className="custom-radio-circle">
                               <div className="custom-radio-inner" />
@@ -433,6 +436,11 @@ const MenuGrid = ({
                               <div className="fw-bold text-dark" style={{ fontSize: '0.9rem' }}>
                                 {v.size_name}
                               </div>
+                              {v.extra && (
+                                <div className="text-muted small" style={{ fontSize: '0.75rem', fontWeight: '500' }}>
+                                  {v.extra}
+                                </div>
+                              )}
                               {v.quantity && (
                                 <div className="text-muted small" style={{ fontSize: '0.75rem' }}>
                                   Qty: {v.quantity} {v.unit || ''}
@@ -512,9 +520,10 @@ const MenuGrid = ({
                   dish_price: finalItemPrice,
                   selected_variant: selectedVariant
                     ? {
-                        size_name: selectedVariant.size_name,
-                        price: Number(selectedVariant.price),
-                      }
+                      size_name: selectedVariant.size_name,
+                      price: Number(selectedVariant.price),
+                      extra: selectedVariant.extra || '',
+                    }
                     : undefined,
                   selected_addons: selectedAddons.map((addon) => ({
                     addon_name: addon.addon_name,

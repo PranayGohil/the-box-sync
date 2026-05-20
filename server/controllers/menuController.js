@@ -76,23 +76,16 @@ const addMenu = async (req, res) => {
       return {
         ...dish,
         dish_price:
-          dish.dish_price !== "" && dish.dish_price != null
-            ? Number(dish.dish_price)
-            : undefined,
-        quantity:
-          dish.quantity !== "" && dish.quantity != null
-            ? Number(dish.quantity)
-            : undefined,
+          Array.isArray(parsedVariants) && parsedVariants[0]
+            ? Number(parsedVariants[0].price)
+            : Number(dish.dish_price || 0),
         has_variants:
-          typeof dish.has_variants === "string"
-            ? dish.has_variants === "true"
-            : !!dish.has_variants,
+          Array.isArray(parsedVariants) ? parsedVariants.length > 1 : false,
         variants: Array.isArray(parsedVariants)
           ? parsedVariants.map((v) => ({
               size_name: v.size_name,
               price: v.price != null && v.price !== "" ? Number(v.price) : 0,
-              quantity: v.quantity != null && v.quantity !== "" ? Number(v.quantity) : undefined,
-              unit: v.unit,
+              extra: v.extra,
               is_available: v.is_available !== false,
             }))
           : undefined,
@@ -106,10 +99,13 @@ const addMenu = async (req, res) => {
       };
     });
 
-    const filter = { user_id, category, counter, hide_on_kot, meal_type };
+    const isHideOnKot = typeof hide_on_kot === "string" ? hide_on_kot === "true" : !!hide_on_kot;
+
+    const filter = { user_id, category, meal_type };
 
     const update = {
       $push: { dishes: { $each: parsedDishes } },
+      $set: { counter: counter || null, hide_on_kot: isHideOnKot }
     };
 
     const options = {
@@ -426,13 +422,12 @@ const updateMenu = async (req, res) => {
     const updateFields = {
       "dishes.$.dish_name": dish_name,
       "dishes.$.dish_price":
-        dish_price !== "" && dish_price != null
+        Array.isArray(parsedVariants) && parsedVariants[0]
+          ? Number(parsedVariants[0].price)
+          : dish_price !== "" && dish_price != null
           ? Number(dish_price)
           : undefined,
       "dishes.$.description": description,
-      "dishes.$.quantity":
-        quantity !== "" && quantity != null ? Number(quantity) : undefined,
-      "dishes.$.unit": unit,
       "dishes.$.is_special":
         is_special !== undefined
           ? typeof is_special === "string" ? is_special === "true" : !!is_special
@@ -442,15 +437,12 @@ const updateMenu = async (req, res) => {
           ? typeof is_available === "string" ? is_available === "true" : !!is_available
           : undefined,
       "dishes.$.has_variants":
-        has_variants !== undefined
-          ? typeof has_variants === "string" ? has_variants === "true" : !!has_variants
-          : undefined,
+        Array.isArray(parsedVariants) ? parsedVariants.length > 1 : false,
       "dishes.$.variants": Array.isArray(parsedVariants)
         ? parsedVariants.map((v) => ({
             size_name: v.size_name,
             price: v.price != null && v.price !== "" ? Number(v.price) : 0,
-            quantity: v.quantity != null && v.quantity !== "" ? Number(v.quantity) : undefined,
-            unit: v.unit,
+            extra: v.extra,
             is_available: v.is_available !== false,
           }))
         : undefined,

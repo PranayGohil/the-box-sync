@@ -30,12 +30,7 @@ const Table = ({ tableInstance, className }) => {
                     return (
                         <tr key={ri} {...row.getRowProps()} className={ri % 2 === 0 ? 'even' : 'odd'}>
                             {row.cells.map((cell, ci) => (
-                                <td 
-                                    key={ci} 
-                                    {...cell.getCellProps()} 
-                                    className={cell.column.cellClassName}
-                                    data-title={typeof cell.column.Header === 'string' ? cell.column.Header : cell.column.id}
-                                >
+                                <td key={ci} {...cell.getCellProps()} className={cell.column.cellClassName}>
                                     {cell.render('Cell')}
                                 </td>
                             ))}

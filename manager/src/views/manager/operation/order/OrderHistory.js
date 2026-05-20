@@ -34,7 +34,6 @@ const OrderHistory = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [printing, setPrinting] = useState({});
-  const [printingStatus, setPrintingStatus] = useState(false);
 
   // Export State
   const [showExportModal, setShowExportModal] = useState(false);
@@ -422,20 +421,25 @@ const OrderHistory = () => {
     try {
       setExportProgress(20);
       
-      // Build query string from export filters
-      const params = new URLSearchParams();
-      if (exportFilters.orderSource) params.append('order_source', exportFilters.orderSource);
-      if (exportFilters.orderStatus) params.append('order_status', exportFilters.orderStatus);
-      if (exportFilters.orderType) params.append('order_type', exportFilters.orderType);
-      if (exportFilters.tableArea) params.append('table_area', exportFilters.tableArea);
-      if (exportFilters.fromDate) params.append('startDate', exportFilters.fromDate);
-      if (exportFilters.toDate) params.append('endDate', exportFilters.toDate);
-      if (exportFilters.paymentType) params.append('payment_type', exportFilters.paymentType);
-      params.append('limit', 10000);
+      // Build params for export endpoint
+      const params = {
+        page: 1,
+        limit: 10000,
+        sortBy: 'order_date',
+        sortOrder: 'desc',
+      };
+      if (exportFilters.orderSource) params.order_source = exportFilters.orderSource;
+      if (exportFilters.orderStatus) params.order_status = exportFilters.orderStatus;
+      if (exportFilters.orderType) params.order_type = exportFilters.orderType;
+      if (exportFilters.tableArea) params.table_area = exportFilters.tableArea;
+      if (exportFilters.fromDate) params.from = exportFilters.fromDate;
+      if (exportFilters.toDate) params.to = exportFilters.toDate;
+      if (exportFilters.paymentType) params.payment_type = exportFilters.paymentType;
 
       setExportProgress(30);
 
-      const response = await axios.get(`${process.env.REACT_APP_API}/order/get-all?${params.toString()}`, {
+      const response = await axios.get(`${process.env.REACT_APP_API}/order/get-orders`, {
+        params,
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
 
@@ -579,20 +583,25 @@ const OrderHistory = () => {
       setExporting(true);
       setExportProgress(10);
 
-      // Build query string from export filters
-      const params = new URLSearchParams();
-      if (exportFilters.orderSource) params.append('order_source', exportFilters.orderSource);
-      if (exportFilters.orderStatus) params.append('order_status', exportFilters.orderStatus);
-      if (exportFilters.orderType) params.append('order_type', exportFilters.orderType);
-      if (exportFilters.tableArea) params.append('table_area', exportFilters.tableArea);
-      if (exportFilters.fromDate) params.append('startDate', exportFilters.fromDate);
-      if (exportFilters.toDate) params.append('endDate', exportFilters.toDate);
-      if (exportFilters.paymentType) params.append('payment_type', exportFilters.paymentType);
-      params.append('limit', 10000);
+      // Build params for export endpoint
+      const params = {
+        page: 1,
+        limit: 10000,
+        sortBy: 'order_date',
+        sortOrder: 'desc',
+      };
+      if (exportFilters.orderSource) params.order_source = exportFilters.orderSource;
+      if (exportFilters.orderStatus) params.order_status = exportFilters.orderStatus;
+      if (exportFilters.orderType) params.order_type = exportFilters.orderType;
+      if (exportFilters.tableArea) params.table_area = exportFilters.tableArea;
+      if (exportFilters.fromDate) params.from = exportFilters.fromDate;
+      if (exportFilters.toDate) params.to = exportFilters.toDate;
+      if (exportFilters.paymentType) params.payment_type = exportFilters.paymentType;
 
       setExportProgress(30);
 
-      const response = await axios.get(`${process.env.REACT_APP_API}/order/get-all?${params.toString()}`, {
+      const response = await axios.get(`${process.env.REACT_APP_API}/order/get-orders`, {
+        params,
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
 
@@ -862,9 +871,7 @@ const OrderHistory = () => {
   };
 
   const handlePrint = async (orderId) => {
-    setPrintingStatus(true);
     await openPrintWindow(orderId, setPrinting);
-    setPrintingStatus(false);
   };
 
   const columns = React.useMemo(

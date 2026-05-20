@@ -326,7 +326,12 @@ const ViewKots = () => {
                                   {dish.dish_name}
                                   {((dish.selected_variant && dish.selected_variant.size_name) || (Array.isArray(dish.selected_addons) && dish.selected_addons.filter(a => a && a.addon_name).length > 0)) && (
                                     <div style={{ fontSize: '10px', fontWeight: 600, color: '#64748b', marginTop: '2px', lineHeight: 1.2, whiteSpace: 'normal' }}>
-                                      {dish.selected_variant && dish.selected_variant.size_name && `Size: ${dish.selected_variant.size_name}`}
+                                      {dish.selected_variant && (dish.selected_variant.size_name || dish.selected_variant.extra) && (
+                                        <>
+                                          {dish.selected_variant.size_name ? `Size: ${dish.selected_variant.size_name}` : ''}
+                                          {dish.selected_variant.extra && ` (${dish.selected_variant.extra})`}
+                                        </>
+                                      )}
                                       {dish.selected_variant && dish.selected_variant.size_name && Array.isArray(dish.selected_addons) && dish.selected_addons.filter(a => a && a.addon_name).length > 0 && ' • '}
                                       {Array.isArray(dish.selected_addons) && dish.selected_addons.filter(a => a && a.addon_name).map(addon => addon.addon_name).join(' • ')}
                                     </div>

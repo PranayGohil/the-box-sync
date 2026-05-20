@@ -83,49 +83,32 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
   const formik = useFormik({
     initialValues: {
       dish_name: data?.dish_name || '',
-      dish_price: data?.dish_price || '',
       description: data?.description || '',
-      quantity: data?.quantity || '',
-      unit: data?.unit || '',
       dish_img: null,
       is_special: data?.is_special || false,
       is_available: data?.is_available ?? true,
-      has_variants: data?.has_variants || false,
-      variants: data?.variants || [],
+      variants: (data?.variants && data.variants.length > 0)
+        ? data.variants.map((v) => ({
+            size_name: v.size_name || '',
+            price: v.price || '',
+            extra: v.extra || '',
+            is_available: v.is_available ?? true,
+          }))
+        : [{ size_name: '', price: data?.dish_price || '', extra: '', is_available: true }],
       addons: data?.addons || [],
     },
     validationSchema: Yup.object().shape({
       dish_name: Yup.string().required('Dish name is required'),
-      dish_price: Yup.number()
-        .typeError('Must be a number')
-        .nullable()
-        .test('price-required', 'Price is required', function (value) {
-          const { has_variants } = this.parent;
-          if (!has_variants && (value === undefined || value === null || value === '')) {
-            return false;
-          }
-          return true;
-        }),
       description: Yup.string(),
-      quantity: Yup.string(),
-      unit: Yup.string(),
-      has_variants: Yup.boolean(),
       variants: Yup.array()
         .of(
           Yup.object().shape({
-            size_name: Yup.string().required('Size name is required'),
+            size_name: Yup.string(),
             price: Yup.number().typeError('Must be a number').required('Price is required'),
-            quantity: Yup.number().typeError('Must be a number'),
-            unit: Yup.string(),
+            extra: Yup.string(),
           })
         )
-        .test('variants-required', 'At least one size/variant is required when variants are enabled', function (value) {
-          const { has_variants } = this.parent;
-          if (has_variants && (!value || value.length === 0)) {
-            return false;
-          }
-          return true;
-        }),
+        .min(1, 'At least one variant/price is required'),
       addons: Yup.array().of(
         Yup.object().shape({
           addon_name: Yup.string().required('Addon name is required'),
@@ -140,25 +123,22 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
         const formData = new FormData();
         formData.append('_id', data._id);
         formData.append('dish_name', values.dish_name);
-        formData.append('dish_price', values.has_variants ? 0 : values.dish_price || 0);
         formData.append('description', values.description);
-        formData.append('quantity', values.has_variants ? '' : values.quantity || '');
-        formData.append('unit', values.has_variants ? '' : values.unit || '');
         formData.append('is_special', values.is_special);
         formData.append('is_available', values.is_available);
-        formData.append('has_variants', !!values.has_variants);
 
         let cleanedVariants = [];
-        if (values.has_variants && Array.isArray(values.variants)) {
+        if (Array.isArray(values.variants)) {
           cleanedVariants = values.variants.map((v) => ({
-            size_name: v.size_name,
+            size_name: v.size_name || '',
             price: Number(v.price) || 0,
-            quantity: v.quantity !== '' && v.quantity != null ? Number(v.quantity) : undefined,
-            unit: v.unit,
+            extra: v.extra || '',
             is_available: v.is_available !== false,
           }));
         }
         formData.append('variants', JSON.stringify(cleanedVariants));
+        formData.append('dish_price', cleanedVariants[0] ? Number(cleanedVariants[0].price) || 0 : 0);
+        formData.append('has_variants', cleanedVariants.length > 1);
 
         let cleanedAddons = [];
         if (Array.isArray(values.addons)) {
@@ -218,24 +198,6 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
       <Modal.Body className="py-4">
         <Form id="edit_dish_form" onSubmit={formik.handleSubmit}>
           <Row className="g-3">
-            <Col md={12}>
-              <div
-                className="d-flex align-items-center gap-2 cursor-pointer mb-2"
-                onClick={() => {
-                  const newVal = !formik.values.has_variants;
-                  formik.setFieldValue('has_variants', newVal);
-                  if (newVal && (!formik.values.variants || formik.values.variants.length === 0)) {
-                    formik.setFieldValue('variants', [{ size_name: '', price: '', quantity: '', unit: '', is_available: true }]);
-                  }
-                }}
-              >
-                <div className={`custom-check ${formik.values.has_variants ? 'active' : ''}`}>
-                  {formik.values.has_variants && <CsLineIcons icon="check" size="12" className="text-white" />}
-                </div>
-                <span className="fw-bold text-alternate small text-uppercase">This dish has multiple sizes/variants</span>
-              </div>
-            </Col>
-
             <Col md={8}>
               <Form.Group className="mb-4">
                 <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Dish Name</Form.Label>
@@ -249,21 +211,6 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                   placeholder="Enter dish name"
                 />
               </Form.Group>
-
-              {!formik.values.has_variants && (
-                <Form.Group className="mb-4">
-                  <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Dish Price</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="dish_price"
-                    value={formik.values.dish_price}
-                    onChange={formik.handleChange}
-                    disabled={isSubmitting}
-                    className="pill-input shadow-sm"
-                    placeholder="0.00"
-                  />
-                </Form.Group>
-              )}
             </Col>
 
             <Col md={4}>
@@ -314,18 +261,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
               </Form.Group>
             </Col>
 
-            {!formik.values.has_variants && (
-              <Col md={4} xs={12}>
-                <div className="d-flex align-items-center gap-2 cursor-pointer mb-4" onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}>
-                  <div className={`custom-check ${showAdvancedOptions ? 'active' : ''}`}>
-                    {showAdvancedOptions && <CsLineIcons icon="check" size="12" className="text-white" />}
-                  </div>
-                  <span className="fw-bold text-alternate small text-uppercase">Advanced Options</span>
-                </div>
-              </Col>
-            )}
-
-            <Col md={4} xs={6}>
+            <Col md={6} xs={6}>
               <div
                 className="d-flex align-items-center gap-2 cursor-pointer mb-4"
                 onClick={() => formik.setFieldValue('is_special', !formik.values.is_special)}
@@ -337,7 +273,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
               </div>
             </Col>
 
-            <Col md={4} xs={6}>
+            <Col md={6} xs={6}>
               <div
                 className="d-flex align-items-center gap-2 cursor-pointer mb-4"
                 onClick={() => formik.setFieldValue('is_available', !formik.values.is_available)}
@@ -349,209 +285,105 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
               </div>
             </Col>
 
-            {!formik.values.has_variants && showAdvancedOptions && (
-              <>
-                <Col xs={6} md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="small fw-bold text-muted text-uppercase mb-1">Quantity</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="quantity"
-                      value={formik.values.quantity}
-                      onChange={formik.handleChange}
-                      disabled={isSubmitting}
-                      className="pill-input shadow-sm"
-                      placeholder="e.g. 1"
-                    />
-                  </Form.Group>
-                </Col>
-                <Col xs={6} md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="small fw-bold text-muted text-uppercase mb-1">Unit</Form.Label>
-                    <Select
-                      classNamePrefix="react-select"
-                      menuPlacement="auto"
-                      menuPortalTarget={document.body}
-                      options={[
-                        { value: 'kg', label: 'kg' },
-                        { value: 'g', label: 'g' },
-                        { value: 'litre', label: 'litre' },
-                        { value: 'ml', label: 'ml' },
-                        { value: 'piece', label: 'piece' },
-                        { value: 'plate', label: 'Plate' },
-                        { value: 'portion', label: 'Portion' },
-                      ]}
-                      value={formik.values.unit ? { value: formik.values.unit, label: formik.values.unit } : null}
-                      onChange={(selected) => formik.setFieldValue('unit', selected ? selected.value : '')}
-                      placeholder="Select Unit"
-                      isDisabled={isSubmitting}
-                      styles={{
-                        control: (base, state) => ({
-                          ...base,
-                          borderRadius: '12px',
-                          minHeight: '45px',
-                          border: state.isFocused ? '1px solid #23b3f4' : '1px solid #e5e7eb',
-                          boxShadow: state.isFocused ? '0 0 0 4px rgba(35, 179, 244, 0.1)' : 'none',
-                          backgroundColor: '#fff',
-                          '&:hover': { border: '1px solid #23b3f4' },
-                        }),
-                        menu: (base) => ({
-                          ...base,
-                          borderRadius: '12px',
-                          overflow: 'hidden',
-                          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                          border: '1px solid #e5e7eb',
-                          zIndex: 9999,
-                        }),
-                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                        option: (base, state) => ({
-                          ...base,
-                          backgroundColor: state.isSelected ? '#23b3f4' : state.isFocused ? '#f0f9ff' : 'white',
-                          color: state.isSelected ? 'white' : '#333',
-                          padding: '10px 15px',
-                          '&:active': { backgroundColor: '#23b3f4', color: 'white' },
-                        }),
-                      }}
-                    />
-                  </Form.Group>
-                </Col>
-              </>
-            )}
-
-            {formik.values.has_variants && (
-              <Col md={12} className="mt-3">
-                <div className="p-3 rounded-xl border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e5e7eb' }}>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '0.85rem', letterSpacing: '0.05em' }}>
-                      CONFIGURE SIZES / VARIANTS
-                    </h6>
-                    {formik.errors.variants && typeof formik.errors.variants === 'string' && (
-                      <div className="text-danger small fw-bold">{formik.errors.variants}</div>
-                    )}
-                  </div>
-                  <div className="d-flex flex-column gap-2">
-                    {(formik.values.variants || []).map((variant, vIdx) => (
-                      <Row key={vIdx} className="g-2 align-items-end mb-2">
-                        <Col xs={12} sm={4}>
-                          <Form.Group>
-                            <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                              Size Name (e.g. Medium)
-                            </Form.Label>
-                            <Form.Control
-                              type="text"
-                              name={`variants[${vIdx}].size_name`}
-                              value={variant.size_name || ''}
-                              onChange={formik.handleChange}
-                              placeholder="Size Name"
-                              className="pill-input py-1 px-3"
-                              style={{ height: '38px', borderRadius: '8px' }}
-                              isInvalid={formik.touched.variants?.[vIdx]?.size_name && !!formik.errors.variants?.[vIdx]?.size_name}
-                            />
-                            {formik.errors.variants?.[vIdx]?.size_name && (
-                              <div className="text-danger small mt-1">{formik.errors.variants[vIdx].size_name}</div>
-                            )}
-                          </Form.Group>
-                        </Col>
-                        <Col xs={4} sm={2}>
-                          <Form.Group>
-                            <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                              Price
-                            </Form.Label>
-                            <Form.Control
-                              type="text"
-                              name={`variants[${vIdx}].price`}
-                              value={variant.price || ''}
-                              onChange={formik.handleChange}
-                              placeholder="Price"
-                              className="pill-input py-1 px-3"
-                              style={{ height: '38px', borderRadius: '8px' }}
-                              isInvalid={formik.touched.variants?.[vIdx]?.price && !!formik.errors.variants?.[vIdx]?.price}
-                            />
-                            {formik.errors.variants?.[vIdx]?.price && <div className="text-danger small mt-1">{formik.errors.variants[vIdx].price}</div>}
-                          </Form.Group>
-                        </Col>
-                        <Col xs={4} sm={2}>
-                          <Form.Group>
-                            <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                              Qty (Opt)
-                            </Form.Label>
-                            <Form.Control
-                              type="text"
-                              name={`variants[${vIdx}].quantity`}
-                              value={variant.quantity || ''}
-                              onChange={formik.handleChange}
-                              placeholder="Qty"
-                              className="pill-input py-1 px-3"
-                              style={{ height: '38px', borderRadius: '8px' }}
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col xs={4} sm={3}>
-                          <Form.Group>
-                            <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                              Unit (Opt)
-                            </Form.Label>
-                            <Select
-                              classNamePrefix="react-select"
-                              menuPlacement="auto"
-                              menuPortalTarget={document.body}
-                              options={[
-                                { value: 'kg', label: 'kg' },
-                                { value: 'g', label: 'g' },
-                                { value: 'litre', label: 'litre' },
-                                { value: 'ml', label: 'ml' },
-                                { value: 'piece', label: 'piece' },
-                                { value: 'plate', label: 'Plate' },
-                                { value: 'portion', label: 'Portion' },
-                              ]}
-                              value={variant.unit ? { value: variant.unit, label: variant.unit } : null}
-                              onChange={(selected) => formik.setFieldValue(`variants[${vIdx}].unit`, selected ? selected.value : '')}
-                              placeholder="Unit"
-                              styles={{
-                                control: (base) => ({
-                                  ...base,
-                                  borderRadius: '8px',
-                                  minHeight: '38px',
-                                  height: '38px',
-                                  fontSize: '0.85rem',
-                                }),
-                              }}
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col xs="auto" className="pb-1">
-                          <Button
-                            variant="outline-danger"
-                            onClick={() => {
-                              const newVariants = [...formik.values.variants];
-                              newVariants.splice(vIdx, 1);
-                              formik.setFieldValue('variants', newVariants);
-                            }}
-                            disabled={formik.values.variants.length === 1}
-                            style={{ height: '38px', width: '38px', borderRadius: '8px', padding: 0 }}
-                            className="d-flex align-items-center justify-content-center btn btn-outline-danger"
-                          >
-                            <CsLineIcons icon="bin" size="14" />
-                          </Button>
-                        </Col>
-                      </Row>
-                    ))}
-                    <Button
-                      type="button"
-                      variant="outline-primary"
-                      className="custom-btn-outline py-1 px-3 mt-2 d-flex align-items-center gap-1 align-self-start btn btn-outline-primary"
-                      style={{ height: '34px', fontSize: '0.8rem', borderRadius: '8px' }}
-                      onClick={() => {
-                        formik.setFieldValue('variants', [...formik.values.variants, { size_name: '', price: '', quantity: '', unit: '', is_available: true }]);
-                      }}
-                    >
-                      <CsLineIcons icon="plus" size="12" />
-                      Add Size/Variant
-                    </Button>
-                  </div>
+            <Col md={12} className="mt-3">
+              <div className="p-3 rounded-xl border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e5e7eb' }}>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '0.85rem', letterSpacing: '0.05em' }}>
+                    SIZES, PRICING & DETAILS
+                  </h6>
+                  {formik.errors.variants && typeof formik.errors.variants === 'string' && (
+                    <div className="text-danger small fw-bold">{formik.errors.variants}</div>
+                  )}
                 </div>
-              </Col>
-            )}
+                <div className="d-flex flex-column gap-2">
+                  {(formik.values.variants || []).map((variant, vIdx) => (
+                    <Row key={vIdx} className="g-2 align-items-end mb-2">
+                      <Col xs={12} sm={4}>
+                        <Form.Group>
+                          <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                            Size / Variant Name (e.g. Regular, Small)
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            name={`variants[${vIdx}].size_name`}
+                            value={variant.size_name || ''}
+                            onChange={formik.handleChange}
+                            placeholder="e.g. Regular"
+                            className="pill-input py-1 px-3"
+                            style={{ height: '40px', borderRadius: '8px' }}
+                            isInvalid={formik.touched.variants?.[vIdx]?.size_name && !!formik.errors.variants?.[vIdx]?.size_name}
+                          />
+                          {formik.errors.variants?.[vIdx]?.size_name && (
+                            <div className="text-danger small mt-1">{formik.errors.variants[vIdx].size_name}</div>
+                          )}
+                        </Form.Group>
+                      </Col>
+                      <Col xs={5} sm={3}>
+                        <Form.Group>
+                          <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                            Price (₹)
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            name={`variants[${vIdx}].price`}
+                            value={variant.price || ''}
+                            onChange={formik.handleChange}
+                            placeholder="Price"
+                            className="pill-input py-1 px-3"
+                            style={{ height: '40px', borderRadius: '8px' }}
+                            isInvalid={formik.touched.variants?.[vIdx]?.price && !!formik.errors.variants?.[vIdx]?.price}
+                          />
+                          {formik.errors.variants?.[vIdx]?.price && <div className="text-danger small mt-1">{formik.errors.variants[vIdx].price}</div>}
+                        </Form.Group>
+                      </Col>
+                      <Col xs={5} sm={4}>
+                        <Form.Group>
+                          <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                            Extra Details (e.g. Serves 1-2)
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            name={`variants[${vIdx}].extra`}
+                            value={variant.extra || ''}
+                            onChange={formik.handleChange}
+                            placeholder="e.g. Serves 1-2"
+                            className="pill-input py-1 px-3"
+                            style={{ height: '40px', borderRadius: '8px' }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col xs={2} sm="auto" className="pb-1 text-end">
+                        <Button
+                          variant="outline-danger"
+                          onClick={() => {
+                            const newVariants = [...formik.values.variants];
+                            newVariants.splice(vIdx, 1);
+                            formik.setFieldValue('variants', newVariants);
+                          }}
+                          disabled={formik.values.variants.length === 1}
+                          style={{ height: '40px', width: '40px', borderRadius: '8px', padding: 0 }}
+                          className="d-flex align-items-center justify-content-center btn btn-outline-danger"
+                        >
+                          <CsLineIcons icon="bin" size="14" />
+                        </Button>
+                      </Col>
+                    </Row>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline-primary"
+                    className="custom-btn-outline py-1 px-3 mt-2 d-flex align-items-center gap-1 align-self-start btn btn-outline-primary"
+                    style={{ height: '34px', fontSize: '0.8rem', borderRadius: '8px' }}
+                    onClick={() => {
+                      formik.setFieldValue('variants', [...formik.values.variants, { size_name: '', price: '', extra: '', is_available: true }]);
+                    }}
+                  >
+                    <CsLineIcons icon="plus" size="12" />
+                    Add Size/Variant
+                  </Button>
+                </div>
+              </div>
+            </Col>
 
             <Col md={12} className="mt-2">
               <div className="p-3 rounded-xl border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e5e7eb' }}>

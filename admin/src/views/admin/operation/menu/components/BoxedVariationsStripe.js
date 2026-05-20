@@ -22,7 +22,7 @@ const BoxedVariationsStripe = ({ columns, data, category, setEditCategoryModalSh
       <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom" style={{ borderColor: 'rgba(35, 179, 244, 0.1)' }}>
         <div>
           <h5 className="mb-1 fw-bold text-dark" style={{ letterSpacing: '-0.01em' }}>{category.category}</h5>
-          <Badge 
+          <Badge
             bg="none"
             className={`manage-menu-badge-meal ${category.meal_type === 'veg' ? 'manage-menu-badge-veg' : category.meal_type === 'egg' ? 'manage-menu-badge-egg' : 'manage-menu-badge-non-veg'}`}
           >

@@ -9,6 +9,7 @@ const areItemsEqual = (itemA, itemB) => {
   if (varA || varB) {
     if (!varA || !varB) return false;
     if (varA.size_name !== varB.size_name) return false;
+    if (Number(varA.price) !== Number(varB.price)) return false;
   }
 
   // Check addons matching
@@ -50,10 +51,22 @@ const useOrderCart = ({ setOrderItems, socket, orderId, fetchOrderDetails }) => 
 
   // Order item management
   const addItemToOrder = (item) => {
+    let itemWithVariant = { ...item };
+    if (!itemWithVariant.selected_variant && Array.isArray(itemWithVariant.variants) && itemWithVariant.variants.length > 0) {
+      const defaultVariant = itemWithVariant.variants[0];
+      if (defaultVariant && (defaultVariant.size_name || defaultVariant.extra)) {
+        itemWithVariant.selected_variant = {
+          size_name: defaultVariant.size_name || '',
+          price: Number(defaultVariant.price),
+          extra: defaultVariant.extra || '',
+        };
+      }
+    }
+
     setOrderItems((prevItems) => {
       // ONLY merge with non-completed items that have identical customizations
       const existingItemIndex = prevItems.findIndex(
-        (orderItem) => areItemsEqual(orderItem, item) && (orderItem.status === 'Pending' || orderItem.status === 'Preparing')
+        (orderItem) => areItemsEqual(orderItem, itemWithVariant) && (orderItem.status === 'Pending' || orderItem.status === 'Preparing')
       );
 
       if (existingItemIndex > -1) {
@@ -64,7 +77,7 @@ const useOrderCart = ({ setOrderItems, socket, orderId, fetchOrderDetails }) => 
       return [
         ...prevItems,
         {
-          ...item,
+          ...itemWithVariant,
           quantity: 1,
           status: 'Pending',
         },

@@ -7,10 +7,11 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
 import Select from 'react-select';
-import BoxedVariationsStripe from './components/BoxedVariationsStripe';
+import { useHistory } from 'react-router-dom';
 import EditDishModal from './EditDishModal';
 import EditDishCategoryModal from './EditDishCategoryModal';
 import DeleteDishModal from './DeleteDishModal';
+
 
 const ManageMenu = () => {
   const title = 'Manage Menu';
@@ -21,6 +22,9 @@ const ManageMenu = () => {
     { to: 'operations', text: 'Operations' },
     { to: 'operations/manage-menu', title: 'Manage Menu' },
   ];
+
+  const history = useHistory();
+  const uploadDir = process.env.REACT_APP_UPLOAD_DIR || 'http://localhost:5001/uploads';
 
   const [editMenuModalShow, setEditMenuModalShow] = useState(false);
   const [selectedDish, setSelectedDish] = useState(null);
@@ -133,22 +137,35 @@ const ManageMenu = () => {
   }
 
   return (
-    <div className="container-fluid px-lg-5 pb-5 mb-5">
+    <div className="container-fluid px-lg-5 pb-5">
       <HtmlHead title={title} description={description} />
-      <div className="page-title-container mb-4 mt-0 mt-lg-0 text-start">
+      <style>{`
+        .hover-elevate {
+          transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+        }
+        .hover-elevate:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+        }
+      `}</style>
+      <div className="page-title-container mb-4 mt-5 mt-lg-0 text-start">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto text-start">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
-              {title}
-            </h1>
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
           <Col xs="12" md="5" className="d-flex flex-column flex-sm-row justify-content-md-end gap-2 mt-3 mt-md-0">
-            <Button href="/operations/qr-for-menu" className="manage-menu-custom-btn-outline shadow-sm border-0">
+            <Button
+              href="/operations/qr-for-menu"
+              className="manage-menu-custom-btn-outline shadow-sm border-0"
+            >
               <CsLineIcons icon="bookmark" className="me-2" size="18" />
               QR for Menu
             </Button>
-            <Button href="/operations/add-dish" className="manage-menu-custom-btn-outline shadow-sm border-0">
+            <Button
+              href="/operations/add-dish"
+              className="manage-menu-custom-btn-outline shadow-sm border-0"
+            >
               <CsLineIcons icon="plus" className="me-2" size="18" />
               Add New Dish
             </Button>
@@ -156,93 +173,85 @@ const ManageMenu = () => {
         </Row>
       </div>
 
-      <Card className="border-0 shadow-sm mb-5" style={{ borderRadius: '1.25rem' }}>
-        <Card.Body className="p-3">
-          <Row className="g-3 align-items-center manage-menu-controls-row">
-            <Col xs={12} md={6}>
-              <div className="manage-menu-search-container shadow-sm d-flex align-items-center">
-                <div className="manage-menu-search-icon-wrapper">
-                  <CsLineIcons icon="search" size="16" />
-                </div>
-                <Form.Control
-                  type="text"
-                  placeholder="Search dishes by name..."
-                  className="border-0 bg-transparent shadow-none flex-grow-1 manage-menu-pill-input"
-                  onChange={(e) => handleSearch(e.target.value)}
-                />
-              </div>
-            </Col>
-            <Col xs={12} sm={6} md={3}>
-              <Select
-                classNamePrefix="react-select"
-                options={[
-                  { value: '', label: 'All Meal Types' },
-                  { value: 'veg', label: 'Veg Only' },
-                  { value: 'non-veg', label: 'Non-Veg Only' },
-                  { value: 'egg', label: 'Contains Egg' },
-                ]}
-                value={
-                  filters.meal_type
-                    ? {
-                        value: filters.meal_type,
-                        label: filters.meal_type === 'veg' ? 'Veg Only' : filters.meal_type === 'non-veg' ? 'Non-Veg Only' : 'Contains Egg',
-                      }
-                    : { value: '', label: 'All Meal Types' }
-                }
-                onChange={(selected) => handleFilter('meal_type', selected ? selected.value : '')}
-                placeholder="Meal Type"
-                styles={{
-                  control: (base, state) => ({
-                    ...base,
-                    borderRadius: '10px',
-                    height: '44px',
-                    border: '1px solid #eee',
-                    boxShadow: 'none',
-                    '&:hover': { border: '1px solid #eee' },
-                  }),
-                  menu: (base) => ({
-                    ...base,
-                    borderRadius: '1rem',
-                    overflow: 'hidden',
-                    boxShadow: '0 8px 32px rgba(31, 38, 135, 0.12)',
-                    zIndex: 9999,
-                  }),
-                  placeholder: (base) => ({ ...base, color: '#23b3f4', fontWeight: '600' }),
-                  singleValue: (base) => ({ ...base, color: '#23b3f4', fontWeight: '600' }),
-                }}
+      <div className="inventory-history-search-filter-hub border-0 shadow-sm mb-4">
+        <Row className="g-2 g-md-3 align-items-center">
+          <Col xs={12} md={6}>
+            <div className="inventory-history-search-input-container">
+              <span style={{ paddingLeft: '14px', paddingRight: '8px', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+                <CsLineIcons icon="search" size="16" />
+              </span>
+              <Form.Control
+                type="text"
+                placeholder="Search dishes by name..."
+                className="border-0 bg-transparent shadow-none flex-grow-1"
+                style={{ fontSize: '14px', outline: 'none', height: '38px' }}
+                onChange={(e) => handleSearch(e.target.value)}
               />
-            </Col>
-            <Col xs={12} sm={6} md={3}>
-              <Select
-                classNamePrefix="react-select"
-                options={[{ value: '', label: 'All Categories' }, ...categoryOptions.map((cat) => ({ value: cat, label: cat }))]}
-                value={filters.category ? { value: filters.category, label: filters.category } : { value: '', label: 'All Categories' }}
-                onChange={(selected) => handleFilter('category', selected ? selected.value : '')}
-                placeholder="Category"
-                styles={{
-                  control: (base, state) => ({
-                    ...base,
-                    borderRadius: '10px',
-                    height: '44px',
-                    border: '1px solid #eee',
-                    boxShadow: 'none',
-                    '&:hover': { border: '1px solid #eee' },
-                  }),
-                  menu: (base) => ({
-                    ...base,
-                    borderRadius: '1rem',
-                    overflow: 'hidden',
-                    boxShadow: '0 8px 32px rgba(31, 38, 135, 0.12)',
-                    zIndex: 9999,
-                  }),
-                  placeholder: (base) => ({ ...base, color: '#23b3f4', fontWeight: '600' }),
-                  singleValue: (base) => ({ ...base, color: '#23b3f4', fontWeight: '600' }),
-                }}
-              />
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
+            </div>
+          </Col>
+          <Col xs={12} sm={6} md={3}>
+            <Select
+              classNamePrefix="react-select"
+              options={[
+                { value: '', label: 'All Meal Types' },
+                { value: 'veg', label: 'Veg Only' },
+                { value: 'non-veg', label: 'Non-Veg Only' },
+                { value: 'egg', label: 'Contains Egg' },
+              ]}
+              value={filters.meal_type ? { value: filters.meal_type, label: filters.meal_type === 'veg' ? 'Veg Only' : filters.meal_type === 'non-veg' ? 'Non-Veg Only' : 'Contains Egg' } : { value: '', label: 'All Meal Types' }}
+              onChange={(selected) => handleFilter('meal_type', selected ? selected.value : '')}
+              placeholder="Meal Type"
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  borderRadius: '50px',
+                  height: '40px',
+                  border: '1.5px solid #e2e8f0',
+                  boxShadow: 'none',
+                  '&:hover': { borderColor: '#23b3f4' },
+                }),
+                menu: (base) => ({
+                  ...base,
+                  borderRadius: '1rem',
+                  overflow: 'hidden',
+                  boxShadow: '0 8px 32px rgba(31, 38, 135, 0.12)',
+                  zIndex: 9999,
+                }),
+                placeholder: (base) => ({ ...base, color: '#23b3f4', fontWeight: '600' }),
+                singleValue: (base) => ({ ...base, color: '#23b3f4', fontWeight: '600' }),
+              }}
+            />
+          </Col>
+          <Col xs={12} sm={6} md={3}>
+            <Select
+              classNamePrefix="react-select"
+              options={[{ value: '', label: 'All Categories' }, ...categoryOptions.map(cat => ({ value: cat, label: cat }))]}
+              value={filters.category ? { value: filters.category, label: filters.category } : { value: '', label: 'All Categories' }}
+              onChange={(selected) => handleFilter('category', selected ? selected.value : '')}
+              placeholder="Category"
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  borderRadius: '50px',
+                  height: '40px',
+                  border: '1.5px solid #e2e8f0',
+                  boxShadow: 'none',
+                  '&:hover': { borderColor: '#23b3f4' },
+                }),
+                menu: (base) => ({
+                  ...base,
+                  borderRadius: '1rem',
+                  overflow: 'hidden',
+                  boxShadow: '0 8px 32px rgba(31, 38, 135, 0.12)',
+                  zIndex: 9999,
+                }),
+                placeholder: (base) => ({ ...base, color: '#23b3f4', fontWeight: '600' }),
+                singleValue: (base) => ({ ...base, color: '#23b3f4', fontWeight: '600' }),
+              }}
+            />
+          </Col>
+        </Row>
+      </div>
 
       {filteredMenuData.length === 0 ? (
         <Card className="border-0 manage-menu-glass-card text-center py-5">
@@ -255,85 +264,160 @@ const ManageMenu = () => {
           </Card.Body>
         </Card>
       ) : (
-        <Row className="g-4">
-          {filteredMenuData.map((category) => {
-            const columns = [
-              {
-                Header: 'Dish Name',
-                accessor: 'dish_name',
-                sortable: true,
-                headerClassName: 'text-muted text-small text-uppercase',
-                Cell: ({ row }) => (
-                  <div className="d-flex align-items-center">
-                    <span className="fw-bold text-dark">{row.original.dish_name}</span>
-                    {row.original.is_special && (
-                      <Badge bg="soft-warning" className="ms-2 rounded-pill p-1">
-                        <CsLineIcons icon="star" size="12" fill="#f6c343" stroke="#f6c343" />
-                      </Badge>
-                    )}
-                  </div>
-                ),
-              },
-              {
-                Header: 'Price',
-                accessor: 'dish_price',
-                sortable: true,
-                headerClassName: 'text-muted text-small text-uppercase text-center',
-                cellClassName: 'text-center',
-                Cell: ({ value }) => <span className="fw-bold manage-menu-text-black">₹{value}</span>,
-              },
-              {
-                Header: 'Actions',
-                id: 'actions',
-                headerClassName: 'text-muted text-small text-uppercase text-end',
-                Cell: ({ row }) => (
-                  <div className="d-flex justify-content-end gap-1">
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="p-1 manage-menu-text-primary manage-menu-custom-icon-btn"
-                      onClick={() => {
-                        setSelectedDish(row.original);
-                        setEditMenuModalShow(true);
-                      }}
-                      title="Edit"
-                    >
-                      <CsLineIcons icon="edit" size="15" />
-                    </Button>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="p-1 text-danger manage-menu-text-danger manage-menu-custom-icon-btn"
-                      onClick={() => {
-                        setDishToDelete(row.original);
-                        setDeleteDishModalShow(true);
-                      }}
-                      title="Delete"
-                    >
-                      <CsLineIcons icon="bin" size="15" />
-                    </Button>
-                  </div>
-                ),
-              },
-            ];
+        <div className="manage-menu-grid-wrapper">
+          {filteredMenuData.map((category) => (
+            <div key={category.id || category._id} className="mb-4 text-start">
+              {/* Category Header — ManageTable style: white pill card */}
+              <div
+                className="d-flex justify-content-between align-items-center gap-2 mb-3 px-3 py-3 bg-white shadow-sm"
+                style={{ borderRadius: '15px', border: '1px solid rgba(0,0,0,0.03)' }}
+              >
+                <div className="d-flex align-items-center gap-3">
+                  <div
+                    className="rounded-circle flex-shrink-0"
+                    style={{
+                      width: '14px',
+                      height: '14px',
+                      backgroundColor:
+                        category.meal_type === 'veg' ? '#10b981'
+                          : category.meal_type === 'egg' ? '#f59e0b'
+                            : '#ef4444',
+                    }}
+                  />
+                  <h2 className="h5 mb-0 fw-bold text-dark">{category.category}</h2>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <Badge
+                    bg="none"
+                    className="rounded-pill px-3 py-2"
+                    style={{ backgroundColor: 'rgba(35,179,244,0.1)', color: '#23b3f4', fontSize: '0.82rem', fontWeight: '700' }}
+                  >
+                    {category.dishes.length} {category.dishes.length === 1 ? 'Dish' : 'Dishes'}
+                  </Badge>
+                  <Button
+                    variant="light"
+                    size="sm"
+                    className="btn-icon btn-icon-only shadow-sm rounded-circle border-0"
+                    onClick={() => { setSelectedCategory(category); setEditCategoryModalShow(true); }}
+                    title="Edit Category"
+                  >
+                    <CsLineIcons icon="edit" size="15" />
+                  </Button>
+                  <Button
+                    variant="light"
+                    size="sm"
+                    className="btn-icon btn-icon-only shadow-sm rounded-circle border-0 text-primary"
+                    onClick={() => history.push('/operations/add-dish', { category: category.category, mealType: category.meal_type, fromManageMenu: true })}
+                    title="Add Dish to Category"
+                  >
+                    <CsLineIcons icon="plus" size="15" />
+                  </Button>
+                </div>
+              </div>
 
-            return (
-              <Col md={6} lg={6} key={category.id}>
-                <Card className="border-0 manage-menu-glass-card h-100">
-                  <Card.Body className="p-4">
-                    <BoxedVariationsStripe
-                      columns={columns}
-                      data={category.dishes}
-                      category={category}
-                      setEditCategoryModalShow={setEditCategoryModalShow}
-                      setSelectedCategory={setSelectedCategory}
-                    />
-                  </Card.Body>
-                </Card>
-              </Col>
-            );
-          })}
-        </Row>
+              {/* Dishes Grid — pos-menu-card style from MenuGrid */}
+              <div className="pt-1 pb-2 px-1">
+                <Row className="g-3">
+                  {category.dishes.map((dish) => (
+                    <Col xs={12} sm={6} md={4} lg={3} xxl={2} key={dish.id || dish._id}>
+                      <div className="pos-menu-card h-100 position-relative">
+                        {/* Meal-type dot — identical to MenuGrid */}
+                        <div className={`pos-type-dot ${category.meal_type === 'veg' ? 'veg' : category.meal_type === 'egg' ? 'egg' : 'nonveg'}`} />
+
+                        {/* Management buttons — absolute top-right overlay, icon-only, ManageTable link style */}
+                        <div
+                          className="position-absolute d-flex gap-1"
+                          style={{ top: '6px', right: '6px', zIndex: 2 }}
+                        >
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="btn-icon btn-icon-only shadow-sm rounded-circle border-0"
+                            style={{ background: 'rgba(255,255,255,0.82)', borderRadius: '7px', lineHeight: 1 }}
+                            onClick={() => { setSelectedDish(dish); setEditMenuModalShow(true); }}
+                            title="Edit Dish"
+                          >
+                            <CsLineIcons icon="edit" size="14" />
+                          </Button>
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="btn-icon btn-icon-only shadow-sm rounded-circle border-0 text-danger"
+                            style={{ background: 'rgba(255,255,255,0.82)', borderRadius: '7px', lineHeight: 1 }}
+                            onClick={() => { setDishToDelete(dish); setDeleteDishModalShow(true); }}
+                            title="Delete Dish"
+                          >
+                            <CsLineIcons icon="bin" size="14" />
+                          </Button>
+                        </div>
+
+                        {/* Image — square crop */}
+                        <div className="pos-menu-img-wrap" style={{ aspectRatio: '1 / 1', overflow: 'hidden' }}>
+                          {dish.dish_img ? (
+                            <img
+                              src={`${uploadDir}/${dish.dish_img}`}
+                              alt={dish.dish_name}
+                              className="pos-menu-img"
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <div className="d-flex align-items-center justify-content-center h-100 text-muted">
+                              <CsLineIcons icon="cupcake" size="30" opacity="0.3" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Details — identical to MenuGrid */}
+                        <div className="pos-menu-details">
+                          {dish.is_special && (
+                            <div className="pos-special-star">
+                              <span role="img" aria-label="special">⭐</span>
+                            </div>
+                          )}
+                          <div className="pos-dish-name">
+                            {dish.dish_name}
+                          </div>
+
+                          {/* Price: range for variants, flat otherwise */}
+                          <div className="pos-dish-price">
+                            {dish.has_variants && Array.isArray(dish.variants) && dish.variants.length > 0
+                              ? (() => {
+                                const prices = dish.variants.map((v) => Number(v.price) || 0);
+                                const min = Math.min(...prices);
+                                const max = Math.max(...prices);
+                                return min === max ? `₹${min}` : `₹${min} – ₹${max}`;
+                              })()
+                              : `₹${dish.dish_price || 0}`}
+                          </div>
+
+                          {/* Variant details (size / extra) */}
+                          {dish.has_variants && Array.isArray(dish.variants) && dish.variants.length > 0 && (
+                            <div className="text-muted mt-1" style={{ fontSize: '10px', lineHeight: '1.4' }}>
+                              {dish.variants.map((v, idx) => (
+                                <div key={idx} className="d-flex gap-1 align-items-baseline flex-wrap">
+                                  {v.size_name && <span className="fw-semibold" style={{ color: '#334155' }}>{v.size_name}:</span>}
+                                  <span style={{ color: '#23b3f4', fontWeight: 700 }}>₹{v.price}</span>
+                                  {v.extra && <span style={{ fontStyle: 'italic', fontSize: '9px', color: '#94a3b8' }}>({v.extra})</span>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Customizable label (matches MenuGrid) */}
+                          {(dish.has_variants || (Array.isArray(dish.addons) && dish.addons.length > 0)) && (
+                            <div className="text-primary fw-bold" style={{ fontSize: '9px', marginTop: '2px', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                              Customizable
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {selectedDish && (

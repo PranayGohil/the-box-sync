@@ -4,6 +4,36 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
+const customStyles = `
+  .delete-dish-modal-custom-btn-outline {
+    border: 1px solid #23b3f4 !important;
+    color: #23b3f4 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+  }
+  .delete-dish-modal-custom-btn-outline:hover {
+    background-color: #23b3f4 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+  }
+  .delete-dish-modal-custom-btn-delete {
+    border: 1px solid #cf2637 !important;
+    color: #cf2637 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+  }
+  .delete-dish-modal-custom-btn-delete:hover {
+    background-color: #cf2637 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(207, 38, 55, 0.25) !important;
+  }
+  .delete-dish-modal-custom-btn-delete:hover svg {
+    stroke: #fff !important;
+  }
+`;
+
 const DeleteDishModal = ({ show, handleClose, data, fetchMenuData }) => {
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -28,7 +58,7 @@ const DeleteDishModal = ({ show, handleClose, data, fetchMenuData }) => {
 
   return (
     <Modal show={show} onHide={handleClose} centered backdrop="static">
-      
+      <style>{customStyles}</style>
       <Modal.Header closeButton className="border-0 pb-0">
         <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>
           Confirm Delete

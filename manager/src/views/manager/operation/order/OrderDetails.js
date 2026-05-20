@@ -403,9 +403,14 @@ const OrderDetails = () => {
                             <td className="text-muted">{index + 1}</td>
                             <td className="fw-medium">
                               {item.dish_name}
-                              {((item.selected_variant && item.selected_variant.size_name) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) && (
+                              {((item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra)) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) && (
                                 <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', marginTop: '2px', lineHeight: 1.2 }}>
-                                  {item.selected_variant && item.selected_variant.size_name && `Size: ${item.selected_variant.size_name}`}
+                                  {item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && (
+                                    <>
+                                      {item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}
+                                      {item.selected_variant.extra && ` (${item.selected_variant.extra})`}
+                                    </>
+                                  )}
                                   {item.selected_variant && item.selected_variant.size_name && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 && ' • '}
                                   {Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).map(addon => `${addon.addon_name} (+₹${addon.price})`).join(' • ')}
                                 </div>
@@ -441,9 +446,14 @@ const OrderDetails = () => {
                             </div>
                             <div>
                               <div className="fw-bold text-dark">{item.dish_name}</div>
-                              {((item.selected_variant && item.selected_variant.size_name) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) && (
+                              {((item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra)) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) && (
                                 <div className="text-muted xsmall" style={{ fontWeight: 600, color: '#64748b', marginTop: '2px', lineHeight: 1.2 }}>
-                                  {item.selected_variant && item.selected_variant.size_name && `Size: ${item.selected_variant.size_name}`}
+                                  {item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && (
+                                    <>
+                                      {item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}
+                                      {item.selected_variant.extra && ` (${item.selected_variant.extra})`}
+                                    </>
+                                  )}
                                   {item.selected_variant && item.selected_variant.size_name && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 && ' • '}
                                   {Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).map(addon => `${addon.addon_name} (+₹${addon.price})`).join(' • ')}
                                 </div>

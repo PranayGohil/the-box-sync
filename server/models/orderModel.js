@@ -48,6 +48,7 @@ const orderSchema = new Schema({
       selected_variant: {
         size_name: { type: String },
         price: { type: Number },
+        extra: { type: String },
       },
       selected_addons: [
         {

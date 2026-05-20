@@ -58,7 +58,12 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
                 <div
                   style={{ fontSize: '9px', fontWeight: 600, color: '#64748b', marginTop: '2px', marginBottom: '2px', lineHeight: 1.2, whiteSpace: 'normal' }}
                 >
-                  {item.selected_variant && `Size: ${item.selected_variant.size_name}`}
+                  {item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && (
+                    <>
+                      {item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}
+                      {item.selected_variant.extra && ` (${item.selected_variant.extra})`}
+                    </>
+                  )}
                   {item.selected_variant && Array.isArray(item.selected_addons) && item.selected_addons.length > 0 && ' • '}
                   {Array.isArray(item.selected_addons) && item.selected_addons.map((addon) => `${addon.addon_name} (+₹${addon.price})`).join(' • ')}
                 </div>

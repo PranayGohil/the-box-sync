@@ -161,14 +161,9 @@ const AddDishes = () => {
     dishes: [
       {
         dish_name: '',
-        dish_price: '',
         dish_img: null,
         description: '',
-        quantity: '',
-        unit: '',
-        showAdvancedOptions: false,
-        has_variants: false,
-        variants: [],
+        variants: [{ size_name: '', price: '', extra: '', is_available: true }],
         addons: [],
       },
     ],
@@ -228,36 +223,16 @@ const AddDishes = () => {
     dishes: Yup.array().of(
       Yup.object().shape({
         dish_name: Yup.string().required('Dish name is required'),
-        dish_price: Yup.number()
-          .typeError('Must be a number')
-          .nullable()
-          .test('price-required', 'Price is required', function (value) {
-            const { has_variants } = this.parent;
-            if (!has_variants && (value === undefined || value === null || value === '')) {
-              return false;
-            }
-            return true;
-          }),
         description: Yup.string(),
-        quantity: Yup.string(),
-        unit: Yup.string(),
-        has_variants: Yup.boolean(),
         variants: Yup.array()
           .of(
             Yup.object().shape({
-              size_name: Yup.string().required('Size name is required'),
+              size_name: Yup.string(),
               price: Yup.number().typeError('Must be a number').required('Price is required'),
-              quantity: Yup.number().typeError('Must be a number'),
-              unit: Yup.string(),
+              extra: Yup.string(),
             })
           )
-          .test('variants-required', 'At least one size/variant is required when variants are enabled', function (value) {
-            const { has_variants } = this.parent;
-            if (has_variants && (!value || value.length === 0)) {
-              return false;
-            }
-            return true;
-          }),
+          .min(1, 'At least one variant/price is required'),
         addons: Yup.array().of(
           Yup.object().shape({
             addon_name: Yup.string().required('Addon name is required'),
@@ -280,12 +255,11 @@ const AddDishes = () => {
         if (dish.dish_img) formData.append(`dish_img`, dish.dish_img);
 
         let cleanedVariants = [];
-        if (dish.has_variants && Array.isArray(dish.variants)) {
+        if (Array.isArray(dish.variants)) {
           cleanedVariants = dish.variants.map((v) => ({
-            size_name: v.size_name,
+            size_name: v.size_name || '',
             price: Number(v.price) || 0,
-            quantity: v.quantity !== '' && v.quantity != null ? Number(v.quantity) : undefined,
-            unit: v.unit,
+            extra: v.extra || '',
             is_available: v.is_available !== false,
           }));
         }
@@ -303,11 +277,9 @@ const AddDishes = () => {
 
         return {
           dish_name: dish.dish_name,
-          dish_price: dish.has_variants ? 0 : Number(dish.dish_price) || 0,
+          dish_price: cleanedVariants[0] ? Number(cleanedVariants[0].price) || 0 : 0,
           description: dish.description,
-          quantity: dish.has_variants ? undefined : dish.quantity !== '' && dish.quantity != null ? Number(dish.quantity) : undefined,
-          unit: dish.has_variants ? '' : dish.unit,
-          has_variants: !!dish.has_variants,
+          has_variants: cleanedVariants.length > 1,
           variants: cleanedVariants,
           addons: cleanedAddons,
           dish_img: '',
@@ -509,247 +481,105 @@ const AddDishes = () => {
                                     </div>
                                   </BForm.Group>
                                 </Col>
-                                <Col xs={12} className="mb-2">
-                                  <div
-                                    className="d-flex align-items-center gap-2 cursor-pointer"
-                                    onClick={() => {
-                                      const newVal = !dish.has_variants;
-                                      setFieldValue(`dishes[${index}].has_variants`, newVal);
-                                      if (newVal && (!dish.variants || dish.variants.length === 0)) {
-                                        setFieldValue(`dishes[${index}].variants`, [{ size_name: '', price: '', quantity: '', unit: '', is_available: true }]);
-                                      }
-                                    }}
-                                  >
-                                    <div className={`custom-check ${dish.has_variants ? 'active' : ''}`}>
-                                      {dish.has_variants && <CsLineIcons icon="check" size="12" className="text-white" />}
+                                <Col xs={12} className="mt-3">
+                                  <div className="p-3 rounded-xl border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
+                                    <div className="d-flex justify-content-between align-items-center mb-3">
+                                      <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '0.9rem' }}>
+                                        Sizes, Pricing & Details
+                                      </h6>
+                                      <ErrorMessage name={`dishes[${index}].variants`} component="div" className="text-danger small fw-bold" />
                                     </div>
-                                    <span className="fw-bold text-alternate" style={{ fontSize: '0.9rem' }}>
-                                      This dish has multiple sizes/variants
-                                    </span>
+                                    <FieldArray name={`dishes[${index}].variants`}>
+                                      {({ push: pushVariant, remove: removeVariant }) => (
+                                        <div className="d-flex flex-column gap-2">
+                                          {(dish.variants || []).map((variant, vIdx) => (
+                                            <Row key={vIdx} className="g-2 align-items-end mb-2">
+                                              <Col xs={12} sm={4}>
+                                                <BForm.Group>
+                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                    Size / Variant Name (e.g. Regular, Small)
+                                                  </BForm.Label>
+                                                  <BForm.Control
+                                                    type="text"
+                                                    name={`dishes[${index}].variants[${vIdx}].size_name`}
+                                                    value={variant.size_name || ''}
+                                                    onChange={handleChange}
+                                                    placeholder="e.g. Regular"
+                                                    className="pill-input py-1 px-3"
+                                                    style={{ height: '40px', borderRadius: '8px' }}
+                                                  />
+                                                  <ErrorMessage
+                                                    name={`dishes[${index}].variants[${vIdx}].size_name`}
+                                                    component="div"
+                                                    className="text-danger small mt-1"
+                                                  />
+                                                </BForm.Group>
+                                              </Col>
+                                              <Col xs={5} sm={3}>
+                                                <BForm.Group>
+                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                    Price (₹)
+                                                  </BForm.Label>
+                                                  <BForm.Control
+                                                    type="text"
+                                                    name={`dishes[${index}].variants[${vIdx}].price`}
+                                                    value={variant.price || ''}
+                                                    onChange={handleChange}
+                                                    placeholder="Price"
+                                                    className="pill-input py-1 px-3"
+                                                    style={{ height: '40px', borderRadius: '8px' }}
+                                                  />
+                                                  <ErrorMessage
+                                                    name={`dishes[${index}].variants[${vIdx}].price`}
+                                                    component="div"
+                                                    className="text-danger small mt-1"
+                                                  />
+                                                </BForm.Group>
+                                              </Col>
+                                              <Col xs={5} sm={4}>
+                                                <BForm.Group>
+                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                    Extra Details (e.g. Serves 1-2)
+                                                  </BForm.Label>
+                                                  <BForm.Control
+                                                    type="text"
+                                                    name={`dishes[${index}].variants[${vIdx}].extra`}
+                                                    value={variant.extra || ''}
+                                                    onChange={handleChange}
+                                                    placeholder="e.g. Serves 1-2"
+                                                    className="pill-input py-1 px-3"
+                                                    style={{ height: '40px', borderRadius: '8px' }}
+                                                  />
+                                                </BForm.Group>
+                                              </Col>
+                                              <Col xs={2} sm="auto" className="pb-1 text-end">
+                                                <Button
+                                                  variant="outline-danger"
+                                                  onClick={() => removeVariant(vIdx)}
+                                                  disabled={dish.variants.length === 1}
+                                                  style={{ height: '40px', width: '40px', borderRadius: '8px', padding: 0 }}
+                                                  className="d-flex align-items-center justify-content-center btn btn-outline-danger"
+                                                >
+                                                  <CsLineIcons icon="bin" size="14" />
+                                                </Button>
+                                              </Col>
+                                            </Row>
+                                          ))}
+                                          <Button
+                                            type="button"
+                                            variant="outline-primary"
+                                            className="custom-btn-outline py-1 px-3 mt-2 d-flex align-items-center gap-1 align-self-start btn btn-outline-primary"
+                                            style={{ height: '34px', fontSize: '0.8rem', borderRadius: '8px' }}
+                                            onClick={() => pushVariant({ size_name: '', price: '', extra: '', is_available: true })}
+                                          >
+                                            <CsLineIcons icon="plus" size="12" />
+                                            Add Size/Variant
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </FieldArray>
                                   </div>
                                 </Col>
-
-                                {!dish.has_variants && (
-                                  <>
-                                    <Col xs={6} md={2}>
-                                      <BForm.Group>
-                                        <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>
-                                          Price
-                                        </BForm.Label>
-                                        <BForm.Control
-                                          type="text"
-                                          name={`dishes[${index}].dish_price`}
-                                          value={dish.dish_price}
-                                          onChange={handleChange}
-                                          placeholder="0"
-                                          className="pill-input"
-                                          isInvalid={values.dishes[index].dish_price === '' && isSubmitting}
-                                        />
-                                        <ErrorMessage name={`dishes[${index}].dish_price`} component="div" className="text-danger small mt-1" />
-                                      </BForm.Group>
-                                    </Col>
-                                    <Col xs={6} md={2}>
-                                      <BForm.Group>
-                                        <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>
-                                          Qty
-                                        </BForm.Label>
-                                        <BForm.Control
-                                          type="text"
-                                          name={`dishes[${index}].quantity`}
-                                          value={dish.quantity}
-                                          onChange={handleChange}
-                                          placeholder="1"
-                                          className="pill-input"
-                                        />
-                                      </BForm.Group>
-                                    </Col>
-                                    <Col xs={12} md={4}>
-                                      <BForm.Group>
-                                        <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>
-                                          Unit
-                                        </BForm.Label>
-                                        <Select
-                                          classNamePrefix="react-select"
-                                          menuPlacement="auto"
-                                          menuPortalTarget={document.body}
-                                          options={[
-                                            { value: 'kg', label: 'kg' },
-                                            { value: 'g', label: 'g' },
-                                            { value: 'litre', label: 'litre' },
-                                            { value: 'ml', label: 'ml' },
-                                            { value: 'piece', label: 'piece' },
-                                            { value: 'plate', label: 'Plate' },
-                                            { value: 'portion', label: 'Portion' },
-                                          ]}
-                                          value={dish.unit ? { value: dish.unit, label: dish.unit } : null}
-                                          onChange={(selected) => setFieldValue(`dishes[${index}].unit`, selected ? selected.value : '')}
-                                          placeholder="Select Unit"
-                                          isDisabled={isSubmitting}
-                                          styles={{
-                                            ...selectStyles,
-                                            control: (base, state) => ({
-                                              ...selectStyles.control(base, state),
-                                              minHeight: '48px',
-                                            }),
-                                            menu: (base) => ({
-                                              ...base,
-                                              borderRadius: '12px',
-                                              overflow: 'hidden',
-                                              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                                              border: '1px solid #e5e7eb',
-                                              zIndex: 9999,
-                                            }),
-                                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                                            option: (base, state) => ({
-                                              ...base,
-                                              backgroundColor: state.isSelected ? '#23b3f4' : state.isFocused ? '#f0f9ff' : 'white',
-                                              color: state.isSelected ? 'white' : '#333',
-                                              padding: '10px 15px',
-                                              '&:active': { backgroundColor: '#23b3f4', color: 'white' },
-                                            }),
-                                          }}
-                                        />
-                                      </BForm.Group>
-                                    </Col>
-                                  </>
-                                )}
-
-                                {dish.has_variants && (
-                                  <Col xs={12} className="mt-3">
-                                    <div className="p-3 rounded-xl border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
-                                      <div className="d-flex justify-content-between align-items-center mb-3">
-                                        <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '0.9rem' }}>
-                                          Configure Sizes / Variants
-                                        </h6>
-                                        <ErrorMessage name={`dishes[${index}].variants`} component="div" className="text-danger small fw-bold" />
-                                      </div>
-                                      <FieldArray name={`dishes[${index}].variants`}>
-                                        {({ push: pushVariant, remove: removeVariant }) => (
-                                          <div className="d-flex flex-column gap-2">
-                                            {(dish.variants || []).map((variant, vIdx) => (
-                                              <Row key={vIdx} className="g-2 align-items-end mb-2">
-                                                <Col xs={12} sm={4}>
-                                                  <BForm.Group>
-                                                    <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                      Size Name (e.g. Medium)
-                                                    </BForm.Label>
-                                                    <BForm.Control
-                                                      type="text"
-                                                      name={`dishes[${index}].variants[${vIdx}].size_name`}
-                                                      value={variant.size_name || ''}
-                                                      onChange={handleChange}
-                                                      placeholder="Size Name"
-                                                      className="pill-input py-1 px-3"
-                                                      style={{ height: '38px', borderRadius: '8px' }}
-                                                    />
-                                                    <ErrorMessage
-                                                      name={`dishes[${index}].variants[${vIdx}].size_name`}
-                                                      component="div"
-                                                      className="text-danger small mt-1"
-                                                    />
-                                                  </BForm.Group>
-                                                </Col>
-                                                <Col xs={4} sm={2}>
-                                                  <BForm.Group>
-                                                    <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                      Price
-                                                    </BForm.Label>
-                                                    <BForm.Control
-                                                      type="text"
-                                                      name={`dishes[${index}].variants[${vIdx}].price`}
-                                                      value={variant.price || ''}
-                                                      onChange={handleChange}
-                                                      placeholder="Price"
-                                                      className="pill-input py-1 px-3"
-                                                      style={{ height: '38px', borderRadius: '8px' }}
-                                                    />
-                                                    <ErrorMessage
-                                                      name={`dishes[${index}].variants[${vIdx}].price`}
-                                                      component="div"
-                                                      className="text-danger small mt-1"
-                                                    />
-                                                  </BForm.Group>
-                                                </Col>
-                                                <Col xs={4} sm={2}>
-                                                  <BForm.Group>
-                                                    <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                      Qty (Opt)
-                                                    </BForm.Label>
-                                                    <BForm.Control
-                                                      type="text"
-                                                      name={`dishes[${index}].variants[${vIdx}].quantity`}
-                                                      value={variant.quantity || ''}
-                                                      onChange={handleChange}
-                                                      placeholder="Qty"
-                                                      className="pill-input py-1 px-3"
-                                                      style={{ height: '38px', borderRadius: '8px' }}
-                                                    />
-                                                  </BForm.Group>
-                                                </Col>
-                                                <Col xs={4} sm={3}>
-                                                  <BForm.Group>
-                                                    <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                      Unit (Opt)
-                                                    </BForm.Label>
-                                                    <Select
-                                                      classNamePrefix="react-select"
-                                                      menuPlacement="auto"
-                                                      menuPortalTarget={document.body}
-                                                      options={[
-                                                        { value: 'kg', label: 'kg' },
-                                                        { value: 'g', label: 'g' },
-                                                        { value: 'litre', label: 'litre' },
-                                                        { value: 'ml', label: 'ml' },
-                                                        { value: 'piece', label: 'piece' },
-                                                        { value: 'plate', label: 'Plate' },
-                                                        { value: 'portion', label: 'Portion' },
-                                                      ]}
-                                                      value={variant.unit ? { value: variant.unit, label: variant.unit } : null}
-                                                      onChange={(selected) =>
-                                                        setFieldValue(`dishes[${index}].variants[${vIdx}].unit`, selected ? selected.value : '')
-                                                      }
-                                                      placeholder="Unit"
-                                                      styles={{
-                                                        control: (base) => ({
-                                                          ...base,
-                                                          borderRadius: '8px',
-                                                          minHeight: '38px',
-                                                          height: '38px',
-                                                          fontSize: '0.85rem',
-                                                        }),
-                                                      }}
-                                                    />
-                                                  </BForm.Group>
-                                                </Col>
-                                                <Col xs="auto" className="pb-1">
-                                                  <Button
-                                                    variant="outline-danger"
-                                                    onClick={() => removeVariant(vIdx)}
-                                                    disabled={dish.variants.length === 1}
-                                                    style={{ height: '38px', width: '38px', borderRadius: '8px', padding: 0 }}
-                                                    className="d-flex align-items-center justify-content-center btn btn-outline-danger"
-                                                  >
-                                                    <CsLineIcons icon="bin" size="14" />
-                                                  </Button>
-                                                </Col>
-                                              </Row>
-                                            ))}
-                                            <Button
-                                              type="button"
-                                              variant="outline-primary"
-                                              className="custom-btn-outline py-1 px-3 mt-2 d-flex align-items-center gap-1 align-self-start"
-                                              style={{ height: '34px', fontSize: '0.8rem', borderRadius: '8px' }}
-                                              onClick={() => pushVariant({ size_name: '', price: '', quantity: '', unit: '', is_available: true })}
-                                            >
-                                              <CsLineIcons icon="plus" size="12" />
-                                              Add Size/Variant
-                                            </Button>
-                                          </div>
-                                        )}
-                                      </FieldArray>
-                                    </div>
-                                  </Col>
-                                )}
 
                                 <Col xs={12} className="mt-2">
                                   <div className="p-3 rounded-xl border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e2e8f0' }}>

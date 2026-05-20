@@ -25,12 +25,6 @@ const menu = new Schema({
       description: {
         type: String,
       },
-      quantity: {
-        type: Number,
-      },
-      unit: {
-        type: String,
-      },
       is_special: {
         type: Boolean,
         default: false,
@@ -47,8 +41,7 @@ const menu = new Schema({
         {
           size_name: { type: String },
           price: { type: Number },
-          quantity: { type: Number },
-          unit: { type: String },
+          extra: { type: String },
           is_available: { type: Boolean, default: true },
         },
       ],
