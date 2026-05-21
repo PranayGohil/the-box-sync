@@ -95,6 +95,10 @@ const AddStaff = () => {
     country: Yup.string().required('Country is required'),
     state: Yup.string().required('State is required'),
     city: Yup.string().required('City is required'),
+    pincode: Yup.string()
+      .required('Pincode is required')
+      .matches(/^[0-9]{6}$/, 'Pincode must be exactly 6 digits'),
+    gender: Yup.string().required('Gender is required'),
 
     phone_no: Yup.string()
       .required('Phone number is required')
@@ -168,6 +172,8 @@ const AddStaff = () => {
       country: '',
       state: '',
       city: '',
+      pincode: '',
+      gender: '',
       phone_no: '',
       email: '',
       salary: '',
@@ -477,7 +483,26 @@ const AddStaff = () => {
                       </Form.Group>
                     </Col>
 
-                    <Col md={6}>
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Gender</Form.Label>
+                        <Form.Select
+                          name="gender"
+                          value={values.gender}
+                          onChange={handleChange}
+                          isInvalid={touched.gender && errors.gender}
+                          disabled={loading.submitting}
+                        >
+                          <option value="">Select Gender</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                        </Form.Select>
+                        <Form.Control.Feedback type="invalid">{errors.gender}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={4}>
                       <Form.Group className="mb-3">
                         <Form.Label>Birth Date</Form.Label>
                         <div className="position-relative date-input-container">
@@ -502,7 +527,7 @@ const AddStaff = () => {
                         )}
                       </Form.Group>
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       <Form.Group className="mb-3">
                         <Form.Label>Joining Date</Form.Label>
                         <div className="position-relative date-input-container">
@@ -545,7 +570,7 @@ const AddStaff = () => {
                       </Form.Group>
                     </Col>
 
-                    <Col md={4} xs={12}>
+                    <Col md={3} xs={12}>
                       <Form.Group className="mb-3">
                         <Form.Label>Country</Form.Label>
                         <Select
@@ -561,7 +586,7 @@ const AddStaff = () => {
                         {touched.country && errors.country && <div className="text-danger mt-1 small fw-bold">{errors.country}</div>}
                       </Form.Group>
                     </Col>
-                    <Col md={4} xs={12}>
+                    <Col md={3} xs={12}>
                       <Form.Group className="mb-3">
                         <Form.Label>State</Form.Label>
                         <Select
@@ -577,7 +602,7 @@ const AddStaff = () => {
                         {touched.state && errors.state && <div className="text-danger mt-1 small fw-bold">{errors.state}</div>}
                       </Form.Group>
                     </Col>
-                    <Col md={4} xs={12}>
+                    <Col md={3} xs={12}>
                       <Form.Group className="mb-3">
                         <Form.Label>City</Form.Label>
                         <Select
@@ -591,6 +616,21 @@ const AddStaff = () => {
                           styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
                         />
                         {touched.city && errors.city && <div className="text-danger mt-1 small fw-bold">{errors.city}</div>}
+                      </Form.Group>
+                    </Col>
+                    <Col md={3} xs={12}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Pincode</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="pincode"
+                          placeholder="e.g. 400001"
+                          value={values.pincode}
+                          onChange={handleChange}
+                          isInvalid={touched.pincode && errors.pincode}
+                          disabled={loading.submitting}
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.pincode}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
 

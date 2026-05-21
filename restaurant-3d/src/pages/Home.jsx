@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Star, Heart, Award, Leaf, Users, ChevronRight } from 'lucide-react';
+import { ArrowRight, Star, Heart, Award, Leaf, Users, ChevronRight, Check } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -40,6 +40,16 @@ export default function Home() {
   
   const heroImageUrl = settings?.hero_image ? `${API_URL.replace('/api', '')}/uploads/menu/${settings.hero_image}` : null;
   const legacyImageUrl = settings?.legacy_image ? `${API_URL.replace('/api', '')}/uploads/menu/${settings.legacy_image}` : (settings?.about_image ? `${API_URL.replace('/api', '')}/uploads/menu/${settings.about_image}` : "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80");
+
+  const iconMap = { Heart, Award, Leaf, Users, Star, Check };
+  const bulletsToRender = settings?.legacy_bullets?.length > 0 
+    ? settings.legacy_bullets 
+    : [
+        { icon: 'Heart',  label: 'Made with Passion' },
+        { icon: 'Award',  label: 'Quality Driven' },
+        { icon: 'Leaf',   label: 'Fresh Ingredients' },
+        { icon: 'Users',  label: 'Community First' }
+      ];
 
   return (
     <div ref={containerRef} className="overflow-hidden">
@@ -185,8 +195,8 @@ export default function Home() {
              style={{ width: '500px', height: '500px', background: 'radial-gradient(circle, var(--brand-500), transparent)', zIndex: 0 }} />
         
         <div className="container-lg py-5 position-relative" style={{ zIndex: 1 }}>
-          <div className="row g-5 align-items-center">
-            <div className="col-12 col-lg-6" data-reveal="left">
+          <div className={`row g-5 align-items-center ${settings?.legacy_layout === 'image-left' ? 'flex-lg-row-reverse' : ''}`}>
+            <div className="col-12 col-lg-6" data-reveal={settings?.legacy_layout === 'image-left' ? 'right' : 'left'}>
               <div className="pe-lg-5">
                 <div className="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-4" style={{ background: 'rgba(242, 122, 26, 0.1)', border: '1px solid rgba(242, 122, 26, 0.2)' }}>
                   <div className="rounded-circle bg-brand-500" style={{ width: '8px', height: '8px' }} />
@@ -215,21 +225,19 @@ export default function Home() {
                 </div>
 
                 <div className="row g-4 mb-5">
-                  {[
-                    { icon: Heart,  label: 'Made with Passion' },
-                    { icon: Award,  label: 'Quality Driven' },
-                    { icon: Leaf,   label: 'Fresh Ingredients' },
-                    { icon: Users,  label: 'Community First' }
-                  ].map((f, i) => (
-                    <div key={i} className="col-6">
-                      <div className="d-flex align-items-center gap-3">
-                        <div className="rounded-circle glass d-flex align-items-center justify-content-center text-brand-400" style={{ width: '48px', height: '48px' }}>
-                          <f.icon size={20} />
+                  {bulletsToRender.map((f, i) => {
+                    const IconComponent = iconMap[f.icon] || Check;
+                    return (
+                      <div key={i} className="col-6">
+                        <div className="d-flex align-items-center gap-3">
+                          <div className="rounded-circle glass d-flex align-items-center justify-content-center text-brand-400" style={{ width: '48px', height: '48px' }}>
+                            <IconComponent size={20} />
+                          </div>
+                          <span className="text-white fw-medium small">{f.label}</span>
                         </div>
-                        <span className="text-white fw-medium small">{f.label}</span>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <Link to={`/${restaurantCode}/reservation`.replace(/\/+/g, '/')} className="btn-brand px-5 py-3 rounded-pill d-inline-flex align-items-center gap-2 text-decoration-none shadow-brand transition-all hover:scale-105">
@@ -238,7 +246,7 @@ export default function Home() {
               </div>
             </div>
             
-            <div className="col-12 col-lg-6" data-reveal="right">
+            <div className="col-12 col-lg-6" data-reveal={settings?.legacy_layout === 'image-left' ? 'left' : 'right'}>
               <div className="position-relative">
                 <div className="position-absolute -top-4 -right-4 w-100 h-100 border border-brand-500 opacity-20 rounded-5 d-none d-lg-block" style={{ transform: 'translate(20px, -20px)', zIndex: 0 }} />
                 

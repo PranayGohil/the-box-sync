@@ -92,6 +92,8 @@ const ManageWebsite = () => {
       legacy_details: '',
       legacy_image: '',
       legacy_years: '',
+      legacy_layout: 'image-right',
+      legacy_bullets: [],
       contact_details: '',
       map_location: '',
       logo: '',
@@ -150,6 +152,7 @@ const ManageWebsite = () => {
           legacy_image: uploadedLegacyImg,
           featured_dish_ids: JSON.stringify(values.featured_dish_ids),
           opening_hours: JSON.stringify(values.opening_hours),
+          legacy_bullets: JSON.stringify(values.legacy_bullets),
           testimonials: JSON.stringify(values.testimonials),
           social_links: JSON.stringify(values.social_links),
         };
@@ -181,7 +184,7 @@ const ManageWebsite = () => {
         if (settingsRes.data) {
           Object.keys(settingsRes.data).forEach((key) => {
             if (key in formik.initialValues) {
-              const arrayFields = ['featured_dish_ids', 'opening_hours', 'testimonials', 'social_links'];
+              const arrayFields = ['featured_dish_ids', 'opening_hours', 'testimonials', 'social_links', 'legacy_bullets'];
               if (arrayFields.includes(key)) {
                 try {
                   const val = typeof settingsRes.data[key] === 'string' ? JSON.parse(settingsRes.data[key]) : settingsRes.data[key];
@@ -315,6 +318,13 @@ const ManageWebsite = () => {
       values.social_links.filter((_, i) => i !== index)
     );
 
+  const addLegacyBullet = () => setFieldValue('legacy_bullets', [...values.legacy_bullets, { icon: 'Heart', label: '' }]);
+  const removeLegacyBullet = (index) =>
+    setFieldValue(
+      'legacy_bullets',
+      values.legacy_bullets.filter((_, i) => i !== index)
+    );
+
   if (loading) {
     return (
       <div className="text-center py-5">
@@ -437,7 +447,7 @@ const ManageWebsite = () => {
                     <Col xs={12}>
                       <Form.Group className="d-flex flex-column align-items-center mb-3">
                         <Form.Label className="small fw-bold text-muted text-center w-100 mb-3">Logo Image</Form.Label>
-                        <div 
+                        <div
                           className="rounded-circle border border-3 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center mb-3"
                           style={{ width: '120px', height: '120px' }}
                         >
@@ -545,6 +555,18 @@ const ManageWebsite = () => {
                     </Col>
                   </Row>
                   <Form.Group className="mb-3">
+                    <Form.Label className="small fw-bold text-muted">Layout Style</Form.Label>
+                    <Form.Select
+                      className="manage-website-pill-input"
+                      name="legacy_layout"
+                      value={values.legacy_layout}
+                      onChange={handleChange}
+                    >
+                      <option value="image-right">Text Left, Image Right</option>
+                      <option value="image-left">Image Left, Text Right</option>
+                    </Form.Select>
+                  </Form.Group>
+                  <Form.Group className="mb-3">
                     <Form.Label className="small fw-bold text-muted">Legacy Description</Form.Label>
                     <Form.Control
                       className="manage-website-pill-input"
@@ -555,11 +577,63 @@ const ManageWebsite = () => {
                       onChange={handleChange}
                     />
                   </Form.Group>
-                  <Form.Group>
+                  <Form.Group className="mb-3">
                     <Form.Label className="small fw-bold text-muted">Legacy Section Image</Form.Label>
                     <Form.Control className="manage-website-pill-input" type="file" onChange={(e) => setLegacyImageFile(e.target.files[0])} />
                     {values.legacy_image && <div className="mt-1 small text-muted">Current: {values.legacy_image}</div>}
                   </Form.Group>
+                  
+                  <div className="d-flex justify-content-between align-items-center mb-2 mt-4">
+                    <Form.Label className="small fw-bold text-muted mb-0">Feature Bullets</Form.Label>
+                    <Button variant="link" className="text-primary p-0 text-decoration-none fw-bold small" onClick={addLegacyBullet}>
+                      + Add Bullet
+                    </Button>
+                  </div>
+                  {values.legacy_bullets.map((b, index) => (
+                    <div key={index} className="p-3 mb-2 rounded bg-light border position-relative">
+                      <Row className="g-2 align-items-center">
+                        <Col xs={12} md={4}>
+                          <Form.Select
+                            className="manage-website-pill-input"
+                            value={b.icon}
+                            onChange={(e) => {
+                              const newBullets = [...values.legacy_bullets];
+                              newBullets[index].icon = e.target.value;
+                              setFieldValue('legacy_bullets', newBullets);
+                            }}
+                          >
+                            <option value="Heart">Heart</option>
+                            <option value="Award">Award</option>
+                            <option value="Leaf">Leaf (Fresh)</option>
+                            <option value="Users">Users (Community)</option>
+                            <option value="Star">Star</option>
+                            <option value="Check">Checkmark</option>
+                          </Form.Select>
+                        </Col>
+                        <Col xs={12} md={7}>
+                          <Form.Control
+                            className="manage-website-pill-input"
+                            placeholder="Bullet Text (e.g. Made with Passion)"
+                            value={b.label}
+                            onChange={(e) => {
+                              const newBullets = [...values.legacy_bullets];
+                              newBullets[index].label = e.target.value;
+                              setFieldValue('legacy_bullets', newBullets);
+                            }}
+                          />
+                        </Col>
+                        <Col xs={12} md={1} className="text-end">
+                          <Button
+                            variant="none"
+                            className="text-danger p-0 border-0 bg-transparent"
+                            onClick={() => removeLegacyBullet(index)}
+                          >
+                            <CsLineIcons icon="bin" size="15" />
+                          </Button>
+                        </Col>
+                      </Row>
+                    </div>
+                  ))}
                 </Card.Body>
               </Card>
 
@@ -732,7 +806,7 @@ const ManageWebsite = () => {
               <Card className="manage-website-glass-card mb-4 border-0">
                 <Card.Body className="p-4">
                   <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h5 className="manage-website-section-title mb-0">Featured on Home Page</h5>
+                    <h5 className="manage-website-section-title mb-0">Today's Highlights</h5>
                   </div>
                   <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
                     {allDishes.map((menu) => (

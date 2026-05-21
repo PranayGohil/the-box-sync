@@ -88,6 +88,13 @@ const EditStaff = () => {
     birth_date: Yup.date().required('Birth date is required').max(new Date(), 'Birth date cannot be in the future'),
     joining_date: Yup.date().required('Joining date is required').min(Yup.ref('birth_date'), 'Joining date must be after birth date'),
     address: Yup.string().required('Address is required'),
+    country: Yup.string().required('Country is required'),
+    state: Yup.string().required('State is required'),
+    city: Yup.string().required('City is required'),
+    pincode: Yup.string()
+      .required('Pincode is required')
+      .matches(/^[0-9]{6}$/, 'Pincode must be exactly 6 digits'),
+    gender: Yup.string().required('Gender is required'),
     phone_no: Yup.string()
       .required('Phone number is required')
       .matches(/^[0-9]{10}$/, 'Phone number must be 10 digits'),
@@ -286,6 +293,8 @@ const EditStaff = () => {
         }
         setFieldValue('state', stateVal);
         setFieldValue('city', staff.city || '');
+        setFieldValue('pincode', staff.pincode || '');
+        setFieldValue('gender', staff.gender || '');
         setFieldValue('phone_no', staff.phone_no || '');
         setFieldValue('email', staff.email || '');
         setFieldValue('salary', staff.salary || '');
@@ -550,7 +559,26 @@ const EditStaff = () => {
                 </Row>
 
                 <Row className="g-3 mt-1">
-                  <Col md={6}>
+                  <Col md={4}>
+                    <Form.Group>
+                      <Form.Label className="small fw-bold">Gender</Form.Label>
+                      <Form.Select
+                        name="gender"
+                        value={values.gender}
+                        onChange={handleChange}
+                        isInvalid={touched.gender && errors.gender}
+                        disabled={loading.submitting}
+                      >
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </Form.Select>
+                      <Form.Control.Feedback type="invalid">{errors.gender}</Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={4}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">Birthday</Form.Label>
                       <div className="position-relative date-input-container">
@@ -575,7 +603,7 @@ const EditStaff = () => {
                       )}
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col md={4}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">Joining Date</Form.Label>
                       <div className="position-relative date-input-container">
@@ -621,7 +649,7 @@ const EditStaff = () => {
                 </Row>
 
                 <Row className="g-3 mt-1">
-                  <Col md={4} xs={12}>
+                  <Col md={3} xs={12}>
                     <Form.Group className="mb-3">
                       <Form.Label className="small fw-bold">Country</Form.Label>
                       <Select
@@ -637,7 +665,7 @@ const EditStaff = () => {
                       {touched.country && errors.country && <div className="text-danger mt-1 small fw-bold">{errors.country}</div>}
                     </Form.Group>
                   </Col>
-                  <Col md={4} xs={12}>
+                  <Col md={3} xs={12}>
                     <Form.Group className="mb-3">
                       <Form.Label className="small fw-bold">State</Form.Label>
                       <Select
@@ -653,7 +681,7 @@ const EditStaff = () => {
                       {touched.state && errors.state && <div className="text-danger mt-1 small fw-bold">{errors.state}</div>}
                     </Form.Group>
                   </Col>
-                  <Col md={4} xs={12}>
+                  <Col md={3} xs={12}>
                     <Form.Group className="mb-3">
                       <Form.Label className="small fw-bold">City</Form.Label>
                       <Select
@@ -667,6 +695,21 @@ const EditStaff = () => {
                         styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
                       />
                       {touched.city && errors.city && <div className="text-danger mt-1 small fw-bold">{errors.city}</div>}
+                    </Form.Group>
+                  </Col>
+                  <Col md={3} xs={12}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-bold">Pincode</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="pincode"
+                        placeholder="e.g. 400001"
+                        value={values.pincode}
+                        onChange={handleChange}
+                        isInvalid={touched.pincode && errors.pincode}
+                        disabled={loading.submitting}
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.pincode}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
                 </Row>
