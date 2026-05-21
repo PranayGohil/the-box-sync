@@ -186,6 +186,13 @@ const Login = () => {
             </button>
           </form>
 
+          <div className="mt-4 text-center">
+            <span className="text-muted">Don't have an account? </span>
+            <NavLink to="/register" style={{ fontWeight: '700', textDecoration: 'none' }} className="text-primary">
+              Sign up
+            </NavLink>
+          </div>
+
           <div className="login-auth-powered">
             Powered by <strong>TheBoxSync</strong>
           </div>

@@ -1,12 +1,11 @@
 import React, { createRef, useState, useContext, useRef } from 'react';
 import { Wizard, Steps, Step, WithWizard } from 'react-albus';
 import { Button, Form, Spinner } from 'react-bootstrap';
-import { useHistory } from 'react-router-dom';
+import { useHistory, NavLink as RouterLink } from 'react-router-dom';
 import axios from 'axios';
 import { Formik, Field } from 'formik';
 import * as Yup from 'yup';
 import { Country, State, City } from 'country-state-city';
-import LayoutFullpage from 'layout/LayoutFullpage';
 import HtmlHead from 'components/html-head/HtmlHead';
 import { AuthContext } from 'contexts/AuthContext';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -14,8 +13,8 @@ import { toast } from 'react-toastify';
 
 const Register = () => {
   const history = useHistory();
-  const title = 'Register';
-  const description = 'Register Page';
+  const title = 'Register — The Box Payroll';
+  const description = 'Create your company account on The Box Payroll.';
 
   const { login } = useContext(AuthContext);
 
@@ -35,32 +34,32 @@ const Register = () => {
     state_code: '',
     city: '',
     pincode: '',
-    fssai_no: '',
+    industry: '',
+    employee_count: '',
     gst_no: '',
     password: '',
     confirmPassword: '',
     verificationCode: '',
   });
 
-  // Add near other useState declarations
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
-  const [verificationCountdown, setVerificationCountdown] = useState(0); // seconds until resend allowed
+  const [verificationCountdown, setVerificationCountdown] = useState(0);
   const [verificationCodeInput, setVerificationCodeInput] = useState('');
   const [sendingVerification, setSendingVerification] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const countdownRef = useRef(null);
 
   const pinRegex = /^[1-9][0-9]{5}$/;
-  const fssaiRegex = /^[0-9]{7,14}$/;
   const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=[\]{};:'"\\|,.<>/?]).{8,}$/;
 
   const validationSchemas = [
-    // Step 1 schema
     Yup.object({
-      name: Yup.string().required('Restaurant name is required'),
+      name: Yup.string().required('Company name is required'),
       logo: Yup.mixed().required('Logo is required'),
       email: Yup.string()
         .email('Invalid email')
@@ -71,7 +70,6 @@ const Register = () => {
             const res = await axios.post(`${process.env.REACT_APP_API}/user/check-email`, { email: value });
             return !res.data.exists;
           } catch (err) {
-            console.error(err);
             return false;
           }
         }),
@@ -79,24 +77,17 @@ const Register = () => {
         .matches(/^\d{10}$/, 'Must be 10 digits')
         .required('Phone number is required'),
     }),
-    // Step 2 schema
     Yup.object({
       address: Yup.string().required('Address is required'),
       country: Yup.string().required('Country is required'),
       state: Yup.string().required('State is required'),
       city: Yup.string().required('City is required'),
-      pincode: Yup.string()
-        .required('Zip code is required')
-        .matches(pinRegex, 'Enter a valid 6-digit PIN code'),
+      pincode: Yup.string().required('Zip code is required').matches(pinRegex, 'Enter a valid 6-digit PIN code'),
     }),
-    // Step 3 schema
     Yup.object({
-      fssai_no: Yup.string()
-        .required('FSSAI License Number is required')
-        .matches(fssaiRegex, 'Enter a valid FSSAI number (7 to 14 digits)'),
-      gst_no: Yup.string()
-        .required('GST Number is required')
-        .matches(gstRegex, 'Enter a valid 15-character GSTIN (e.g. 27ABCDE1234F1Z5)'),
+      industry: Yup.string().required('Industry is required'),
+      employee_count: Yup.string().required('Employee Size is required'),
+      gst_no: Yup.string().required('GST Number is required').matches(gstRegex, 'Enter a valid 15-character GSTIN (e.g. 27ABCDE1234F1Z5)'),
       password: Yup.string()
         .required('Password is required')
         .min(8, 'Password must be at least 8 characters')
@@ -107,38 +98,30 @@ const Register = () => {
     }),
   ];
 
-  // send verification code (starts countdown)
   const sendVerification = async (email, setFieldError, setFieldTouched) => {
     if (!email) {
       setFieldError('email', 'Enter an email first');
       setFieldTouched('email', true, false);
       return;
     }
-
     setSendingVerification(true);
-
     try {
-      // 1) CHECK IF EMAIL ALREADY EXISTS
       const checkRes = await axios.post(`${process.env.REACT_APP_API}/user/check-email`, { email });
       if (checkRes.data.exists) {
-        setFieldError("email", "Email already exists");
-        setFieldTouched("email", true, false);
+        setFieldError('email', 'Email already exists');
+        setFieldTouched('email', true, false);
         setSendingVerification(false);
-        return; // ❌ STOP — do not send OTP
+        return;
       }
-
-      // 2) SEND OTP IF EMAIL DOES NOT EXIST
       setVerificationSent(false);
       const res = await axios.post(`${process.env.REACT_APP_API}/otp/send-verification`, { email });
-
       if (res.status === 200 && (res.data?.success ?? true)) {
-        toast.success("Verification code sent to your email");
+        toast.success('Verification code sent to your email');
         setVerificationSent(true);
         setVerificationCountdown(60);
-
         if (countdownRef.current) clearInterval(countdownRef.current);
         countdownRef.current = setInterval(() => {
-          setVerificationCountdown(prev => {
+          setVerificationCountdown((prev) => {
             if (prev <= 1) {
               clearInterval(countdownRef.current);
               return 0;
@@ -146,40 +129,33 @@ const Register = () => {
             return prev - 1;
           });
         }, 1000);
-
-        setFieldError("email", undefined);
+        setFieldError('email', undefined);
       } else {
-        setFieldError("email", res.data?.message || "Failed to send code");
-        setFieldTouched("email", true, false);
+        setFieldError('email', res.data?.message || 'Failed to send code');
+        setFieldTouched('email', true, false);
       }
     } catch (err) {
-      console.error("sendVerification error", err);
-      setFieldError("email", "Failed to send verification code");
-      setFieldTouched("email", true, false);
+      setFieldError('email', err.response?.data?.message || 'Failed to send verification code');
+      setFieldTouched('email', true, false);
     } finally {
       setSendingVerification(false);
     }
   };
 
-
-  // verify code entered by user
   const verifyCode = async (email, setFieldError, setFieldTouched) => {
     if (!verificationCodeInput) {
       setFieldError('verificationCode', 'Enter verification code');
       setFieldTouched('verificationCode', true, false);
       return;
     }
-
     setVerifyingCode(true);
     try {
       const res = await axios.post(`${process.env.REACT_APP_API}/otp/verify-email`, { email, code: verificationCodeInput });
       if (res.status === 200 && (res.data?.verified ?? false)) {
         setIsEmailVerified(true);
         toast.success('Email verified');
-        // Clear errors
         setFieldError('verificationCode', undefined);
         setFieldError('email', undefined);
-        // optionally disable resend UI
         setVerificationSent(false);
         if (countdownRef.current) clearInterval(countdownRef.current);
       } else {
@@ -187,14 +163,12 @@ const Register = () => {
         setFieldTouched('verificationCode', true, false);
       }
     } catch (err) {
-      console.error('verifyCode error', err);
-      setFieldError('verificationCode', 'Verification failed');
+      setFieldError('verificationCode', err.response?.data?.message || 'Verification failed');
       setFieldTouched('verificationCode', true, false);
     } finally {
       setVerifyingCode(false);
     }
   };
-
 
   const handleSubmit = async (finalData) => {
     setBottomNavHidden(true);
@@ -204,14 +178,7 @@ const Register = () => {
       Object.keys(finalData).forEach((key) => {
         formData.append(key, finalData[key]);
       });
-
-      for (const pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
-      }
-
-      const res = await axios.post(`${process.env.REACT_APP_API}/user/register`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await axios.post(`${process.env.REACT_APP_API}/user/register`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       if (res.data) {
         login(res.data.token, res.data.user);
         window.location.href = '/select-plan';
@@ -219,7 +186,6 @@ const Register = () => {
         toast.error('Something went wrong!');
       }
     } catch (err) {
-      console.error(err);
       setBottomNavHidden(false);
       toast.error('Something went wrong!');
     } finally {
@@ -230,43 +196,29 @@ const Register = () => {
   const stepFields = [
     ['name', 'logo', 'email', 'mobile'],
     ['address', 'country', 'state', 'city', 'pincode'],
-    ['fssai_no', 'gst_no', 'password', 'confirmPassword'],
+    ['industry', 'employee_count', 'gst_no', 'password', 'confirmPassword'],
   ];
 
   const onClickNext = async (goToNext, steps, step) => {
     const formIndex = steps.indexOf(step);
     const form = forms[formIndex].current;
-
-    if (formIndex >= forms.length) {
-      return;
-    }
-
-    // Validate all fields in this form first
+    if (formIndex >= forms.length) return;
     const errors = await form.validateForm();
-
-    // Mark current step's fields as touched
     const touchedFields = {};
     stepFields[formIndex].forEach((field) => {
       touchedFields[field] = true;
     });
     form.setTouched(touchedFields, false);
-
-    // Check email verification for step 1
     if (formIndex === 0 && !isEmailVerified) {
-      form.setFieldError("email", "Please verify your email");
+      form.setFieldError('email', 'Please verify your email');
       form.setTouched({ ...touchedFields, email: true }, false);
       return;
     }
-
-    // Only proceed if no errors in current step
     const stepHasErrors = stepFields[formIndex].some((field) => errors[field]);
-
     if (!stepHasErrors && form.isValid) {
       const newFields = { ...fields, ...form.values };
       setFields(newFields);
-
       if (formIndex === forms.length - 1) {
-        // Final step - submit
         handleSubmit(newFields);
       } else {
         goToNext();
@@ -275,456 +227,486 @@ const Register = () => {
     }
   };
 
-
   const onClickPrev = (goToPrev, steps, step) => {
-    if (steps.indexOf(step) <= 0) {
-      return;
-    }
+    if (steps.indexOf(step) <= 0) return;
     goToPrev();
   };
 
   const getClassName = (steps, step, index, stepItem) => {
-    if (steps.indexOf(step) === index) {
-      return 'step-doing';
-    }
+    if (steps.indexOf(step) === index) return 'register-step-doing';
     if (steps.indexOf(step) > index || stepItem.isDone) {
       stepItem.isDone = true;
-      return 'step-done';
+      return 'register-step-done';
     }
-    return 'step';
+    return 'register-step';
   };
 
-  const leftSide = (
-    <div className="min-h-100 d-flex align-items-center">
-      <div className="w-100 w-lg-75 w-xxl-50">
-        {/* <div>
-          <div className="mb-5">
-            <h1 className="display-3 text-white">Multiple Niches</h1>
-            <h1 className="display-3 text-white">Ready for Your Project</h1>
-          </div>
-          <p className="h6 text-white lh-1-5 mb-5">
-            Dynamically target high-payoff intellectual capital for customized technologies. Objectively integrate emerging core competencies before
-            process-centric communities...
-          </p>
-          <div className="mb-5">
-            <Button size="lg" variant="outline-white" href="/">
-              Learn More
-            </Button>
-          </div>
-        </div> */}
-      </div>
-    </div>
-  );
-
   const rightSide = (
-    <div className="sw-lg-100 min-h-100 bg-foreground d-flex justify-content-center align-items-center shadow-deep py-5">
-      <div className="sw-lg-70 px-5">
-        <div className="wizard wizard-default">
-          <Wizard>
-            {/* Top Navigation */}
-            <WithWizard
-              render={({ next, previous, step, steps, go, push }) => (
-                <ul className="nav nav-tabs justify-content-center mb-4">
-                  {steps.map((stepItem, index) => {
-                    if (!stepItem.hideTopNav) {
-                      return (
-                        <li key={`topNavStep_${index}`} className={`nav-item ${getClassName(steps, step, index, stepItem)}`}>
-                          <Button variant="link" className="nav-link pe-none">
-                            <span>{stepItem.name}</span>
-                            <small>{stepItem.desc}</small>
-                          </Button>
-                        </li>
-                      );
-                    }
-                    return <span key={`topNavStep_${index}`} />;
-                  })}
-                </ul>
-              )}
-            />
-
-            <Steps>
-              {/* Step 1 - Restaurant Info */}
-              <Step id="step1" name="Restaurant" desc="Basic Information">
-                <div>
-                  <Formik innerRef={forms[0]} initialValues={fields} validationSchema={validationSchemas[0]} validateOnMount onSubmit={() => { }}>
-                    {({ errors, touched, setFieldValue, values, setFieldError, setFieldTouched }) => (
-                      <Form>
-                        <h5 className="card-title">Restaurant Information</h5>
-                        <p className="card-text text-alternate mb-4">Please provide your restaurant's basic details and contact information.</p>
-
-                        <div className="mb-3 top-label tooltip-end-top">
-                          <Form.Label>RESTAURANT NAME</Form.Label>
-                          <Field className="form-control" name="name" />
-                          {errors.name && touched.name && (
-                            <Form.Control.Feedback type="invalid" tooltip className="d-block">
-                              {errors.name}
-                            </Form.Control.Feedback>
-                          )}
+    <div className="login-login-right-panel">
+      <div className="login-login-form-header">
+        <div className="login-login-form-eyebrow">Company Registration</div>
+        <h2 className="login-login-form-title">Create your account</h2>
+        <p className="login-login-form-subtitle">Set up your company on The Box platform</p>
+      </div>
+      <div className="wizard wizard-default">
+        <Wizard>
+          <WithWizard
+            render={({ step, steps }) => (
+              <div className="register-reg-wizard-steps">
+                {steps.map(
+                  (stepItem, index) =>
+                    !stepItem.hideTopNav && (
+                      <div key={`topNavStep_${index}`} className={`register-reg-step-item reg-step-item ${getClassName(steps, step, index, stepItem)}`}>
+                        <div className="register-reg-step-btn">
+                          <span>{stepItem.name}</span>
+                          <small>{stepItem.desc}</small>
                         </div>
+                      </div>
+                    )
+                )}
+              </div>
+            )}
+          />
+          <Steps>
+            <Step id="step1" name="Company" desc="Basic Info">
+              <Formik innerRef={forms[0]} initialValues={fields} validationSchema={validationSchemas[0]} validateOnMount onSubmit={() => {}}>
+                {({ errors, touched, setFieldValue, values, setFieldError, setFieldTouched }) => (
+                  <Form>
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">COMPANY NAME</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="shop" size="18" />
+                        </span>
+                        <Field className="login-auth-input form-control" name="name" placeholder="Enter company name" />
+                      </div>
+                      {errors.name && touched.name && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.name}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">LOGO</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="upload" size="18" />
+                        </span>
+                        <input
+                          type="file"
+                          className="login-auth-input form-control"
+                          accept="image/*"
+                          style={{ padding: '0.45rem 1rem 0.45rem 2.5rem' }}
+                          disabled={uploadingLogo}
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              setUploadingLogo(true);
+                              setFieldValue('logo', file);
+                              setTimeout(() => {
+                                setPreviewLogo(URL.createObjectURL(file));
+                                setUploadingLogo(false);
+                              }, 500);
+                            }
+                          }}
+                        />
+                      </div>
+                      {errors.logo && touched.logo && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.logo}
+                        </div>
+                      )}
+                      {previewLogo && <img src={previewLogo} alt="Logo" className="img-thumbnail mt-2" style={{ maxWidth: '80px' }} />}
+                    </div>
 
-                        <div className="mb-3 top-label tooltip-end-top">
-                          <Form.Label>LOGO</Form.Label>
-                          <input
-                            type="file"
-                            className="form-control"
-                            accept="image/*"
-                            disabled={uploadingLogo}
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">EMAIL</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="email" size="18" />
+                        </span>
+                        <Field className="login-auth-input form-control" name="email" type="email" placeholder="you@company.com" />
+                      </div>
+                      {errors.email && touched.email && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.email}
+                        </div>
+                      )}
+                    </div>
+                    {!isEmailVerified && (
+                      <button
+                        type="button"
+                        className="login-btn-auth-primary mb-4"
+                        style={{ width: '100%', borderRadius: '50px' }}
+                        onClick={() => sendVerification(values.email, setFieldError, setFieldTouched)}
+                        disabled={verificationCountdown > 0 || sendingVerification}
+                      >
+                        {sendingVerification ? (
+                          <Spinner animation="border" size="sm" />
+                        ) : verificationCountdown > 0 ? (
+                          `Resend (${verificationCountdown}s)`
+                        ) : (
+                          'Send Code'
+                        )}
+                      </button>
+                    )}
+                    {isEmailVerified && <div className="text-success mb-4" style={{ fontSize: '13px', fontWeight: 'bold', marginTop: '-15px' }}>✓ Email verified</div>}
+
+                    {verificationSent && !isEmailVerified && (
+                      <>
+                        <div className="login-auth-input-group">
+                          <label className="login-auth-input-label">VERIFICATION CODE</label>
+                        <div style={{ position: 'relative' }}>
+                          <span className="login-auth-input-icon">
+                            <CsLineIcons icon="check" size="18" />
+                          </span>
+                          <Field
+                            className="login-auth-input form-control"
+                            name="verificationCode"
+                            maxLength="6"
+                            placeholder="123456"
+                            value={verificationCodeInput}
                             onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) {
-                                setUploadingLogo(true);
-                                setFieldValue('logo', file);
-                                // Simulate processing time for better UX
-                                setTimeout(() => {
-                                  setPreviewLogo(URL.createObjectURL(file));
-                                  setUploadingLogo(false);
-                                }, 500);
-                              }
+                              setVerificationCodeInput(e.target.value);
+                              setFieldValue('verificationCode', e.target.value);
                             }}
                           />
-                          {errors.logo && touched.logo && (
-                            <Form.Control.Feedback type="invalid" tooltip className="d-block">
-                              {errors.logo}
-                            </Form.Control.Feedback>
-                          )}
-                          {uploadingLogo && (
-                            <div className="mt-2 d-flex align-items-center">
-                              <Spinner animation="border" size="sm" variant="primary" className="me-2" />
-                              <small className="text-muted">Processing logo...</small>
-                            </div>
-                          )}
-                          {previewLogo && !uploadingLogo && (
-                            <div className="mt-2 d-flex align-items-center">
-                              <img src={previewLogo} alt="Logo Preview" className="img-thumbnail me-2" style={{ maxWidth: '100px', maxHeight: '100px' }} />
-                              <small className="text-success">✓ Logo uploaded</small>
-                            </div>
-                          )}
                         </div>
-
-                        <div className="mb-3 top-label tooltip-end-top d-flex flex-column">
-                          <Form.Label>EMAIL</Form.Label>
-                          <div className="d-flex align-items-center">
-                            <Field className="form-control me-2" name="email" type="email" />
-                            <div>
-                              <Button
-                                variant="outline-primary"
-                                onClick={() => sendVerification(values.email, setFieldError, setFieldTouched)}
-                                disabled={verificationCountdown > 0 || sendingVerification}
-                                style={{ whiteSpace: 'nowrap', minWidth: '120px' }}
-                              >
-                                {sendingVerification ? (
-                                  <>
-                                    <Spinner animation="border" size="sm" className="me-1" />
-                                    Sending...
-                                  </>
-                                ) : verificationCountdown > 0 ? (
-                                  `Resend (${verificationCountdown}s)`
-                                ) : (
-                                  'Send Code'
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                          {errors.email && touched.email && (
-                            <Form.Control.Feedback type="invalid" tooltip className="d-block">
-                              {errors.email}
-                            </Form.Control.Feedback>
-                          )}
-                          {/* If verified, show a small badge */}
-                          {isEmailVerified && (
-                            <div className="mt-2 mx-2">
-                              <small className="text-success fw-bold">✓ Email verified successfully</small>
-                            </div>
-                          )}
-                        </div>
-                        {/* Show code entry when a code has been sent */}
-                        {verificationSent && !isEmailVerified && (
-                          <div className="mb-3 top-label tooltip-end-top">
-                            <Form.Label>VERIFICATION CODE</Form.Label>
-                            <div className="mt-2 d-flex align-items-center">
-                              <Field
-                                className="form-control me-2"
-                                name="verificationCode"
-                                placeholder="Enter 6-digit code"
-                                maxLength="6"
-                                disabled={verifyingCode}
-                                value={verificationCodeInput}
-                                onChange={(e) => {
-                                  setVerificationCodeInput(e.target.value);
-                                  setFieldValue('verificationCode', e.target.value);
-                                  // Clear error when user starts typing
-                                  if (errors.verificationCode) {
-                                    setFieldError('verificationCode', undefined);
-                                  }
-                                }}
-                              />
-                              <Button
-                                variant="primary"
-                                onClick={() => verifyCode(values.email, setFieldError, setFieldTouched)}
-                                disabled={verifyingCode || !verificationCodeInput}
-                                style={{ minWidth: '100px' }}
-                              >
-                                {verifyingCode ? (
-                                  <>
-                                    <Spinner animation="border" size="sm" className="me-1" />
-                                    Verifying...
-                                  </>
-                                ) : (
-                                  'Verify'
-                                )}
-                              </Button>
-                            </div>
-                            {errors.verificationCode && touched.verificationCode && (
-                              <Form.Control.Feedback type="invalid" tooltip className="d-block">
-                                {errors.verificationCode}
-                              </Form.Control.Feedback>
-                            )}
+                        {errors.verificationCode && touched.verificationCode && (
+                          <div className="login-auth-error-msg">
+                            <CsLineIcons icon="warning" size="13" />
+                            {errors.verificationCode}
                           </div>
                         )}
-
-                        <div className="mb-3 top-label tooltip-end-top">
-                          <Form.Label>PHONE NUMBER</Form.Label>
-                          <Field className="form-control" name="mobile" />
-                          {errors.mobile && touched.mobile && (
-                            <Form.Control.Feedback type="invalid" tooltip className="d-block">
-                              {errors.mobile}
-                            </Form.Control.Feedback>
-                          )}
-                        </div>
-                      </Form>
+                      </div>
+                        <button
+                          type="button"
+                          className="login-btn-auth-primary mb-4"
+                          style={{ width: '100%', borderRadius: '50px' }}
+                          onClick={() => verifyCode(values.email, setFieldError, setFieldTouched)}
+                          disabled={verifyingCode || !verificationCodeInput}
+                        >
+                          {verifyingCode ? <Spinner animation="border" size="sm" /> : 'Verify'}
+                        </button>
+                      </>
                     )}
-                  </Formik>
-                </div>
-              </Step>
 
-              {/* Step 2 - Address */}
-              <Step id="step2" name="Address" desc="Location Details">
-                <div>
-                  <Formik innerRef={forms[1]} initialValues={fields} validationSchema={validationSchemas[1]} validateOnMount onSubmit={() => { }}>
-                    {({ errors, touched, values, setFieldValue }) => (
-                      <Form>
-                        <h5 className="card-title">Address Information</h5>
-                        <p className="card-text text-alternate mb-4">Please provide your restaurant's complete address details.</p>
-
-                        <div className="mb-3 top-label tooltip-end-top">
-                          <Form.Label>ADDRESS</Form.Label>
-                          <Field className="form-control" name="address" />
-                          {errors.address && touched.address && (
-                            <Form.Control.Feedback type="invalid" tooltip className="d-block">
-                              {errors.address}
-                            </Form.Control.Feedback>
-                          )}
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">PHONE NUMBER</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="phone" size="18" />
+                        </span>
+                        <Field className="login-auth-input form-control" name="mobile" placeholder="10-digit number" />
+                      </div>
+                      {errors.mobile && touched.mobile && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.mobile}
                         </div>
-
-                        <div className="mb-3 top-label tooltip-end-top">
-                          <Form.Label>COUNTRY</Form.Label>
-                          <select
-                            className="form-control"
-                            value={values.country}
-                            onChange={(e) => {
-                              const selectedCountry = Country.getAllCountries().find(
-                                c => c.name === e.target.value
-                              );
-
-                              setFieldValue('country', selectedCountry.name);
-                              setFieldValue('country_code', selectedCountry.isoCode);
-                              setFieldValue('state', '');
-                              setFieldValue('state_code', '');
-                              setFieldValue('city', '');
-                            }}
-
-                          >
-                            <option value="">Select Country</option>
-                            {Country.getAllCountries().map((c) => (
-                              <option key={c.isoCode} value={c.name}>
-                                {c.name}
-                              </option>
-                            ))}
-                          </select>
-                          {errors.country && touched.country && (
-                            <Form.Control.Feedback type="invalid" tooltip className="d-block">
-                              {errors.country}
-                            </Form.Control.Feedback>
-                          )}
-                        </div>
-
-                        <div className="mb-3 top-label tooltip-end-top">
-                          <Form.Label>STATE</Form.Label>
-                          <select
-                            className="form-control"
-                            value={values.state}
-                            onChange={(e) => {
-                              const selectedState = State.getStatesOfCountry(values.country_code)
-                                .find(s => s.name === e.target.value);
-
-                              setFieldValue('state', selectedState.name);
-                              setFieldValue('state_code', selectedState.isoCode);
-                              setFieldValue('city', '');
-                            }}
-                          >
-                            <option value="">Select State</option>
-                            {State.getStatesOfCountry(values.country_code).map((s) => (
-                              <option key={s.isoCode} value={s.name}>
-                                {s.name}
-                              </option>
-                            ))}
-                          </select>
-                          {errors.state && touched.state && (
-                            <Form.Control.Feedback type="invalid" tooltip className="d-block">
-                              {errors.state}
-                            </Form.Control.Feedback>
-                          )}
-                        </div>
-
-                        <div className="mb-3 top-label tooltip-end-top">
-                          <Form.Label>CITY</Form.Label>
-                          <select
-                            className="form-control"
-                            value={values.city}
-                            onChange={(e) => setFieldValue('city', e.target.value)}
-                          >
-                            <option value="">Select City</option>
-                            {City.getCitiesOfState(
-                              values.country_code,
-                              values.state_code
-                            ).map((city) => (
-                              <option key={city.name} value={city.name}>
-                                {city.name}
-                              </option>
-                            ))}
-                          </select>
-                          {errors.city && touched.city && (
-                            <Form.Control.Feedback type="invalid" tooltip className="d-block">
-                              {errors.city}
-                            </Form.Control.Feedback>
-                          )}
-                        </div>
-
-                        <div className="mb-3 top-label tooltip-end-top">
-                          <Form.Label>ZIP CODE</Form.Label>
-                          <Field className="form-control" name="pincode" />
-                          {errors.pincode && touched.pincode && (
-                            <Form.Control.Feedback type="invalid" tooltip className="d-block">
-                              {errors.pincode}
-                            </Form.Control.Feedback>
-                          )}
-                        </div>
-                      </Form>
-                    )}
-                  </Formik>
-                </div>
-              </Step>
-
-              {/* Step 3 - Security */}
-              <Step id="step3" name="Security" desc="Account Setup">
-                <div>
-                  <Formik innerRef={forms[2]} initialValues={fields} validationSchema={validationSchemas[2]} validateOnMount onSubmit={() => { }}>
-                    {({ errors, touched }) => (
-                      <Form>
-                        <h5 className="card-title">Security & Business Details</h5>
-                        <p className="card-text text-alternate mb-4">Complete your registration with business and security information.</p>
-
-                        <div className="mb-3 top-label tooltip-end-top">
-                          <Form.Label>FSSAI LICENSE NUMBER</Form.Label>
-                          <Field className="form-control" name="fssai_no" />
-                          {errors.fssai_no && touched.fssai_no && (
-                            <Form.Control.Feedback type="invalid" tooltip className="d-block">
-                              {errors.fssai_no}
-                            </Form.Control.Feedback>
-                          )}
-                        </div>
-
-                        <div className="mb-3 top-label tooltip-end-top">
-                          <Form.Label>GST NUMBER</Form.Label>
-                          <Field className="form-control" name="gst_no" />
-                          {errors.gst_no && touched.gst_no && (
-                            <Form.Control.Feedback type="invalid" tooltip className="d-block">
-                              {errors.gst_no}
-                            </Form.Control.Feedback>
-                          )}
-                        </div>
-
-                        <div className="mb-3 top-label tooltip-end-top">
-                          <Form.Label>PASSWORD</Form.Label>
-                          <Field type="password" className="form-control" name="password" />
-                          {errors.password && touched.password && (
-                            <Form.Control.Feedback type="invalid" tooltip className="d-block">
-                              {errors.password}
-                            </Form.Control.Feedback>
-                          )}
-                        </div>
-
-                        <div className="mb-3 top-label tooltip-end-top">
-                          <Form.Label>CONFIRM PASSWORD</Form.Label>
-                          <Field type="password" className="form-control" name="confirmPassword" />
-                          {errors.confirmPassword && touched.confirmPassword && (
-                            <Form.Control.Feedback type="invalid" tooltip className="d-block">
-                              {errors.confirmPassword}
-                            </Form.Control.Feedback>
-                          )}
-                        </div>
-                      </Form>
-                    )}
-                  </Formik>
-                </div>
-              </Step>
-
-              {/* Step 4 - Success (Hidden from top nav) */}
-              <Step id="step4" hideTopNav>
-                <div className="d-flex flex-column justify-content-center align-items-center">
-                  {loading ? (
-                    <div className="text-center">
-                      <Spinner animation="border" variant="primary" />
-                      <p>Creating your restaurant account...</p>
+                      )}
                     </div>
-                  ) : (
-                    <div className="text-center">
-                      <h3 className="mb-2">Welcome!</h3>
-                      <p>Your restaurant registration completed successfully!</p>
-                      <Button variant="primary" className="btn-icon btn-icon-end" onClick={() => history.push('/')}>
-                        <span>Get Started</span> <CsLineIcons icon="arrow-right" />
-                      </Button>
+                  </Form>
+                )}
+              </Formik>
+            </Step>
+            <Step id="step2" name="Address" desc="Location">
+              <Formik innerRef={forms[1]} initialValues={fields} validationSchema={validationSchemas[1]} validateOnMount onSubmit={() => {}}>
+                {({ errors, touched, values, setFieldValue }) => (
+                  <Form>
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">ADDRESS</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="pin" size="18" />
+                        </span>
+                        <Field className="login-auth-input form-control" name="address" placeholder="Street address" />
+                      </div>
+                      {errors.address && touched.address && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.address}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </Step>
-            </Steps>
 
-            {/* Navigation */}
-            <WithWizard
-              render={({ next, previous, step, steps }) => (
-                <div className={`wizard-buttons d-flex justify-content-center ${bottomNavHidden && 'invisible'}`}>
-                  <Button
-                    variant="outline-primary"
-                    className={`btn-icon btn-icon-start me-1 ${steps.indexOf(step) <= 0 ? 'disabled' : ''}`}
-                    onClick={() => onClickPrev(previous, steps, step)}
-                    disabled={sendingVerification || verifyingCode || uploadingLogo}
-                  >
-                    <CsLineIcons icon="chevron-left" /> <span>Back</span>
-                  </Button>
-                  <Button
-                    variant="outline-primary"
-                    className="btn-icon btn-icon-end"
-                    onClick={() => onClickNext(next, steps, step)}
-                    disabled={sendingVerification || verifyingCode || uploadingLogo}
-                  >
-                    <span>{steps.indexOf(step) === steps.length - 2 ? 'Submit' : 'Next'}</span>
-                    <CsLineIcons icon="chevron-right" />
-                  </Button>
-                </div>
-              )}
-            />
-          </Wizard>
-        </div>
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">COUNTRY</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="web" size="18" />
+                        </span>
+                        <select
+                          className="login-auth-input form-control"
+                          value={values.country}
+                          onChange={(e) => {
+                            const c = Country.getAllCountries().find((x) => x.name === e.target.value);
+                            setFieldValue('country', c.name);
+                            setFieldValue('country_code', c.isoCode);
+                            setFieldValue('state', '');
+                            setFieldValue('city', '');
+                          }}
+                        >
+                          <option value="">Select Country</option>
+                          {Country.getAllCountries().map((c) => (
+                            <option key={c.isoCode} value={c.name}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">STATE</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="compass" size="18" />
+                        </span>
+                        <select
+                          className="login-auth-input form-control"
+                          value={values.state}
+                          onChange={(e) => {
+                            const s = State.getStatesOfCountry(values.country_code).find((x) => x.name === e.target.value);
+                            setFieldValue('state', s.name);
+                            setFieldValue('state_code', s.isoCode);
+                            setFieldValue('city', '');
+                          }}
+                        >
+                          <option value="">Select State</option>
+                          {State.getStatesOfCountry(values.country_code).map((s) => (
+                            <option key={s.isoCode} value={s.name}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">CITY</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="building" size="18" />
+                        </span>
+                        <select className="login-auth-input form-control" value={values.city} onChange={(e) => setFieldValue('city', e.target.value)}>
+                          <option value="">Select City</option>
+                          {City.getCitiesOfState(values.country_code, values.state_code).map((c) => (
+                            <option key={c.name} value={c.name}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">ZIP CODE</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="pin" size="18" />
+                        </span>
+                        <Field className="login-auth-input form-control" name="pincode" placeholder="Enter zip code" />
+                      </div>
+                      {errors.pincode && touched.pincode && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.pincode}
+                        </div>
+                      )}
+                    </div>
+                  </Form>
+                )}
+              </Formik>
+            </Step>
+            <Step id="step3" name="Security" desc="Setup">
+              <Formik innerRef={forms[2]} initialValues={fields} validationSchema={validationSchemas[2]} validateOnMount onSubmit={() => {}}>
+                {({ errors, touched, values, setFieldValue }) => (
+                  <Form>
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">INDUSTRY</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="briefcase" size="18" />
+                        </span>
+                        <select
+                          className="login-auth-input form-control"
+                          name="industry"
+                          value={values.industry}
+                          onChange={(e) => setFieldValue('industry', e.target.value)}
+                        >
+                          <option value="">Select Industry</option>
+                          <option value="Technology">Technology</option>
+                          <option value="Healthcare">Healthcare</option>
+                          <option value="Retail">Retail</option>
+                          <option value="Manufacturing">Manufacturing</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      {errors.industry && touched.industry && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.industry}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">EMPLOYEE SIZE</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="users" size="18" />
+                        </span>
+                        <select
+                          className="login-auth-input form-control"
+                          name="employee_count"
+                          value={values.employee_count}
+                          onChange={(e) => setFieldValue('employee_count', e.target.value)}
+                        >
+                          <option value="">Select Size</option>
+                          <option value="1-10">1 - 10</option>
+                          <option value="11-50">11 - 50</option>
+                          <option value="51-200">51 - 200</option>
+                          <option value="201-500">201 - 500</option>
+                          <option value="500+">500+</option>
+                        </select>
+                      </div>
+                      {errors.employee_count && touched.employee_count && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.employee_count}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">GST NO</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="file-text" size="18" />
+                        </span>
+                        <Field className="login-auth-input form-control" name="gst_no" placeholder="Enter GST number" />
+                      </div>
+                      {errors.gst_no && touched.gst_no && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.gst_no}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">PASSWORD</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="lock-off" size="18" />
+                        </span>
+                        <Field type={showPassword ? 'text' : 'password'} className="login-auth-input form-control" name="password" placeholder="••••••••" />
+                        <span 
+                          className="position-absolute" 
+                          style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer' }}
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="15" />
+                        </span>
+                      </div>
+                      {errors.password && touched.password && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.password}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="login-auth-input-group">
+                      <label className="login-auth-input-label">CONFIRM</label>
+                      <div style={{ position: 'relative' }}>
+                        <span className="login-auth-input-icon">
+                          <CsLineIcons icon="lock-off" size="18" />
+                        </span>
+                        <Field type={showConfirmPassword ? 'text' : 'password'} className="login-auth-input form-control" name="confirmPassword" placeholder="••••••••" />
+                        <span 
+                          className="position-absolute" 
+                          style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer' }}
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          <CsLineIcons icon={showConfirmPassword ? 'eye-off' : 'eye'} size="15" />
+                        </span>
+                      </div>
+                      {errors.confirmPassword && touched.confirmPassword && (
+                        <div className="login-auth-error-msg">
+                          <CsLineIcons icon="warning" size="13" />
+                          {errors.confirmPassword}
+                        </div>
+                      )}
+                    </div>
+                  </Form>
+                )}
+              </Formik>
+            </Step>
+          </Steps>
+          <WithWizard
+            render={({ next, previous, step, steps }) => (
+              <div className={`d-flex gap-3 w-100 mt-4 ${bottomNavHidden ? 'invisible' : ''}`}>
+                <button
+                  type="button"
+                  className={`login-btn-auth-primary flex-grow-1 ${steps.indexOf(step) <= 0 ? 'invisible' : ''}`}
+                  style={{ borderRadius: '50px' }}
+                  onClick={() => onClickPrev(previous, steps, step)}
+                >
+                  Back
+                </button>
+                <button 
+                  type="button" 
+                  className="login-btn-auth-primary flex-grow-1" 
+                  style={{ borderRadius: '50px' }}
+                  onClick={() => onClickNext(next, steps, step)} 
+                  disabled={loading}
+                >
+                  {loading ? <Spinner animation="border" size="sm" /> : steps.indexOf(step) === steps.length - 1 ? 'Submit' : 'Continue'}
+                </button>
+              </div>
+            )}
+          />
+        </Wizard>
+      </div>
+      <div className="login-auth-footer-link">
+        Already have an account? <RouterLink to="/login">Sign in →</RouterLink>
+      </div>
+      <div className="login-auth-powered">
+        Powered by <strong>TheBoxSync</strong>
       </div>
     </div>
   );
 
   return (
-    <>
+    <div className="login-login-page-wrapper">
       <HtmlHead title={title} description={description} />
-      <LayoutFullpage left={leftSide} right={rightSide} />
-    </>
+      <div className="login-login-left-panel">
+        <div className="login-login-brand-logo">
+          THE <span>BOX</span>
+        </div>
+        <h1 className="login-login-hero-title">
+          Your Workforce,
+          <br />
+          <span>Perfectly Managed.</span>
+        </h1>
+        <p className="login-login-hero-sub">Join hundreds of companies managing their payroll and operations smarter with The Box platform.</p>
+        <div className="login-login-feature-pills">
+          {['3-step quick setup', 'Email verification', 'Secure & encrypted', 'Instant access'].map((f) => (
+            <div key={f} className="login-login-feature-pill">
+              <div className="login-login-feature-pill-dot" />
+              {f}
+            </div>
+          ))}
+        </div>
+      </div>
+      {rightSide}
+    </div>
   );
 };
 

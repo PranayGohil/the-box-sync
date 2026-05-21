@@ -3,6 +3,7 @@ import { DEFAULT_PATHS } from 'config.js';
 
 const NotFound = lazy(() => import('views/default/NotFound'));
 const Login = lazy(() => import('views/default/Login'));
+const Register = lazy(() => import('views/default/Register'));
 const ForgotPassword = lazy(() => import('views/default/ForgotPassword'));
 const ResetPassword = lazy(() => import('views/default/ResetPassword'));
 const Unauthorized = lazy(() => import('views/default/Unauthorized'));
@@ -21,6 +22,7 @@ const Home = lazy(() => import('views/default/Home'));
 const defaultRoutes = [
   { path: DEFAULT_PATHS.NOTFOUND, exact: true, component: NotFound },
   { path: DEFAULT_PATHS.LOGIN, exact: true, component: Login },
+  { path: DEFAULT_PATHS.REGISTER, exact: true, component: Register },
   { path: DEFAULT_PATHS.FORGOT_PASSWORD, exact: true, component: ForgotPassword },
   { path: DEFAULT_PATHS.RESET_PASSWORD, exact: true, component: ResetPassword },
   { path: DEFAULT_PATHS.UNAUTHORIZED, exact: true, component: Unauthorized },
