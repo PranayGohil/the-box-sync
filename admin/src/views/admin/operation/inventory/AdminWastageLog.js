@@ -211,7 +211,10 @@ const AdminWastageLog = () => {
                           checked={form.wastage_type === t.value}
                           onChange={(e) => setForm((p) => ({ ...p, wastage_type: e.target.value }))}
                         />
-                        <label className="btn btn-outline-light text-dark border-light-subtle rounded-pill px-3 py-1 fw-bold small" htmlFor={`type-${t.value}`}>
+                        <label 
+                          className={`btn rounded-pill px-3 py-1 fw-bold small ${form.wastage_type === t.value ? 'btn-primary text-white shadow-sm' : 'btn-outline-light text-dark border-light-subtle'}`} 
+                          htmlFor={`type-${t.value}`}
+                        >
                           {t.label}
                         </label>
                       </div>
@@ -251,24 +254,27 @@ const AdminWastageLog = () => {
                     <div className="text-muted small mt-1 fw-bold">Total Wasted: <span className="text-danger h6 mb-0">{totalWasted.toFixed(2)}</span> Units</div>
                   </Col>
                   <Col xs={12} md="auto">
-                    <div className="d-flex flex-wrap gap-2 justify-content-md-end">
-                      <div style={{ width: '130px' }}>
-                        <div className="admin-wastage-log-input-group-label small mb-1">From</div>
-                        <Form.Control type="date" className="admin-wastage-log-modern-input" style={{ height: '40px', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+                    <div className="d-flex flex-row flex-md-nowrap gap-2 justify-content-md-end align-items-end">
+                      <div className="flex-grow-1" style={{ minWidth: '140px' }}>
+                        <div className="admin-wastage-log-input-group-label small mb-1 text-truncate">From</div>
+                        <Form.Control 
+                          type="date" 
+                          className="admin-wastage-log-modern-input w-100" 
+                          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' fill=\'%2364748b\' viewBox=\'0 0 16 16\'%3E%3Cpath d=\'M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: '10px center', backgroundSize: '14px 14px' }}
+                          value={fromDate} 
+                          onChange={(e) => setFromDate(e.target.value)} 
+                        />
                       </div>
-                      <div style={{ width: '140px' }}>
-                        <div className="admin-wastage-log-input-group-label small mb-1">To</div>
-                        <Form.Control type="date" className="admin-wastage-log-modern-input" style={{ height: '40px', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} value={toDate} onChange={(e) => setToDate(e.target.value)} />
+                      <div className="flex-grow-1" style={{ minWidth: '140px' }}>
+                        <div className="admin-wastage-log-input-group-label small mb-1 text-truncate">To</div>
+                        <Form.Control 
+                          type="date" 
+                          className="admin-wastage-log-modern-input w-100" 
+                          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' fill=\'%2364748b\' viewBox=\'0 0 16 16\'%3E%3Cpath d=\'M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: '10px center', backgroundSize: '14px 14px' }}
+                          value={toDate} 
+                          onChange={(e) => setToDate(e.target.value)} 
+                        />
                       </div>
-                      <Button 
-                        variant="outline-primary" 
-                        className="manage-menu-custom-btn-outline shadow-sm d-flex align-items-center justify-content-center px-4" 
-                        style={{ height: '52px', alignSelf: 'flex-end', borderRadius: '50px', border: '2px solid #23b3f4', color: '#23b3f4', fontWeight: '700' }} 
-                        onClick={fetchLogs}
-                      >
-                        <CsLineIcons icon="refresh" size="18" className="me-2" />
-                        <span>Filter</span>
-                      </Button>
                     </div>
                   </Col>
                 </Row>
@@ -342,7 +348,7 @@ const AdminWastageLog = () => {
                             <Badge bg={typeColors[log.wastage_type] || 'secondary'} className="text-uppercase px-3 py-2 rounded-pill" style={{fontSize: '0.6rem'}}>{log.wastage_type}</Badge>
                           </div>
                           {log.reason && (
-                            <div className="mt-2 small text-muted fst-italic ps-1 border-start border-danger border-3 ml-1" style={{fontSize: '0.75rem'}}>
+                            <div className="mt-2 p-2 small text-muted fst-italic bg-light-subtle rounded-2" style={{fontSize: '0.75rem'}}>
                               "{log.reason}"
                             </div>
                           )}

@@ -1,26 +1,21 @@
 /* Global CSS Rules */
 
-/* Fix for native date input calendar icon not showing on mobile (especially iOS/WebKit) */
-@media (max-width: 768px) {
-    input[type="date"] {
-        position: relative;
-    }
-    
-    input[type="date"]::-webkit-calendar-picker-indicator {
-        display: block !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 18px;
-        height: 18px;
-        background: transparent;
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2364748b"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>');
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: contain;
-        cursor: pointer;
-    }
+/* Fix for native date input calendar icon — works on all screen sizes */
+input[type="date"] {
+    position: relative;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    display: block !important;
+    opacity: 0 !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    z-index: 2 !important;
 }

@@ -79,9 +79,6 @@ const NavMobileButtons = () => {
   return (
     <div className="mobile-buttons-container">
       {scrollspyItems && scrollspyItems.length > 0 && <ScrollspyMobile items={scrollspyItems} />}
-      <a href="#/" id="mobileMenuButton" className="menu-button" onClick={showMobileMenu}>
-        <CsLineIcons icon="menu" />
-      </a>
     </div>
   );
 };

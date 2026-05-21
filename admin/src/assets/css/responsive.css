@@ -23,14 +23,22 @@
       gap: 0.75rem;
     }
     .add-inventory-modern-input {
-      border-radius: 12px !important;
-      padding: 0.8rem 1.25rem !important;
+      border-radius: 50px !important;
+      padding: 0.375rem 1rem !important;
       border: 1.5px solid #f1f5f9 !important;
       font-weight: 600 !important;
       color: #334155 !important;
       transition: all 0.3s ease !important;
       background: #fcfdfe !important;
-      height: 52px !important;
+      height: 44px !important;
+      font-size: 0.875rem !important;
+    }
+    .add-inventory-modern-input[type="date"] {
+      padding-right: 3rem !important;
+    }
+    .add-inventory-modern-input[type="date"]::-webkit-calendar-picker-indicator {
+      opacity: 0 !important;
+      pointer-events: none !important;
     }
     .add-inventory-modern-input:focus {
       border-color: #23b3f4 !important;
@@ -54,14 +62,13 @@
       text-transform: uppercase;
     }
     .add-inventory-item-row-card {
+      position: relative;
       background: #ffffff !important;
       border-radius: 1.25rem !important;
       border: 1px solid #f1f5f9 !important;
       padding: 1.25rem 1.5rem !important;
       margin-bottom: 1rem;
       box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
-      display: flex;
-      align-items: center;
       transition: all 0.25s ease;
     }
     .add-inventory-item-row-card:hover {
@@ -158,14 +165,22 @@
       transform: translateY(-3px);
       box-shadow: 0 15px 30px rgba(35, 179, 244, 0.3) !important;
     }
-    .add-inventory-select-modern .add-inventory-react-select__control {
-      border-radius: 12px !important;
+    .add-inventory-select-modern .react-select__control {
+      border-radius: 50px !important;
       border: 1.5px solid #f1f5f9 !important;
-      min-height: 52px !important;
+      min-height: 44px !important;
+      max-height: 44px !important;
       background: #fcfdfe !important;
       font-weight: 600 !important;
+      font-size: 0.875rem !important;
     }
-    .add-inventory-select-modern .add-inventory-react-select__control--is-focused {
+    .add-inventory-select-modern .react-select__value-container {
+      padding: 0 1rem !important;
+    }
+    .add-inventory-select-modern .react-select__indicators {
+      height: 44px !important;
+    }
+    .add-inventory-select-modern .react-select__control--is-focused {
       border-color: #23b3f4 !important;
       box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
       background: #ffffff !important;
@@ -183,6 +198,60 @@
       color: #64748b;
       box-shadow: 0 2px 8px rgba(0,0,0,0.02);
     }
+    /* Inventory History filter pill */
+    .inventory-history-search-filter-hub {
+      background: #ffffff;
+      border-radius: 1rem;
+      padding: 1rem;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(0,0,0,0.05);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+    }
+    .inventory-history-search-input-container {
+      border-radius: 50px !important;
+      border: 1.5px solid #e2e8f0 !important;
+      background: #ffffff !important;
+      height: 40px !important;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+    .inventory-history-search-input-container:focus-within {
+      border-color: #23b3f4 !important;
+      box-shadow: 0 0 0 4px rgba(35,179,244,0.1) !important;
+    }
+    .inventory-history-filter-pill-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      padding: 0.45rem 1.1rem;
+      border-radius: 50px;
+      border: 1.5px solid #23b3f4;
+      background: #ffffff;
+      color: #23b3f4;
+      font-weight: 700;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      outline: none;
+    }
+    .inventory-history-filter-pill-btn:hover,
+    .inventory-history-filter-pill-btn.active {
+      background: #23b3f4;
+      color: #ffffff;
+    }
+    .inventory-history-pagesize-pill {
+      display: flex;
+      align-items: center;
+      border-radius: 50px;
+      border: 1.5px solid #e2e8f0;
+      background: #ffffff;
+      padding: 0.2rem 0.5rem;
+      width: fit-content;
+    }
+
 /* Scoped styles from AdminDailyStockLogs */
 .admin-daily-stock-logs-stock-container {
       background: #f9f9fb;
@@ -330,14 +399,15 @@
       gap: 0.75rem;
     }
     .complete-inventory-modern-input {
-      border-radius: 12px !important;
-      padding: 0.8rem 1.25rem !important;
+      border-radius: 50px !important;
+      padding: 0.375rem 1.25rem !important;
       border: 1.5px solid #f1f5f9 !important;
       font-weight: 600 !important;
       color: #334155 !important;
       transition: all 0.3s ease !important;
       background: #fcfdfe !important;
-      height: 52px !important;
+      height: 44px !important;
+      font-size: 0.875rem !important;
     }
     .complete-inventory-modern-input:focus {
       border-color: #23b3f4 !important;
@@ -398,11 +468,6 @@
       .complete-inventory-item-row-card {
         padding: 1rem 0.75rem !important;
       }
-      .complete-inventory-modern-input {
-        padding: 0.6rem 0.75rem !important;
-        height: 44px !important;
-        font-size: 0.85rem !important;
-      }
     }
     .complete-inventory-total-display {
       background: #ffffff;
@@ -434,14 +499,22 @@
       font-weight: 900;
       color: #23b3f4;
     }
-    .complete-inventory-select-modern .complete-inventory-react-select__control {
-      border-radius: 12px !important;
+    .complete-inventory-select-modern .react-select__control {
+      border-radius: 50px !important;
       border: 1.5px solid #f1f5f9 !important;
-      min-height: 52px !important;
+      min-height: 44px !important;
+      max-height: 44px !important;
       background: #fcfdfe !important;
       font-weight: 600 !important;
+      font-size: 0.875rem !important;
     }
-    .complete-inventory-select-modern .complete-inventory-react-select__control--is-focused {
+    .complete-inventory-select-modern .react-select__value-container {
+      padding: 0 1.25rem !important;
+    }
+    .complete-inventory-select-modern .react-select__indicators {
+      height: 44px !important;
+    }
+    .complete-inventory-select-modern .react-select__control--is-focused {
       border-color: #23b3f4 !important;
       box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
       background: #ffffff !important;
@@ -508,14 +581,15 @@
       gap: 0.75rem;
     }
     .edit-inventory-modern-input {
-      border-radius: 12px !important;
-      padding: 0.8rem 1.25rem !important;
+      border-radius: 50px !important;
+      padding: 0.375rem 1.25rem !important;
       border: 1.5px solid #f1f5f9 !important;
       font-weight: 600 !important;
       color: #334155 !important;
       transition: all 0.3s ease !important;
       background: #fcfdfe !important;
-      height: 52px !important;
+      height: 44px !important;
+      font-size: 0.875rem !important;
     }
     .edit-inventory-modern-input:focus {
       border-color: #23b3f4 !important;
@@ -545,8 +619,6 @@
       padding: 1.25rem 1.5rem !important;
       margin-bottom: 1rem;
       box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
-      display: flex;
-      align-items: center;
       transition: all 0.25s ease;
     }
     .edit-inventory-item-row-card:hover {
@@ -665,6 +737,9 @@
     .inventory-details-info-val {
       font-weight: 700;
       color: #334155;
+    }
+    .inventory-details-mobile-label {
+      display: none;
     }
     .inventory-details-section-card {
       background: #ffffff !important;
@@ -1086,8 +1161,8 @@
     @media (max-width: 991px) {
       .add-inventory-inventory-container { padding-bottom: 7rem !important; }
       .add-inventory-page-card { border-radius: 1.5rem !important; margin: 0 -0.5rem !important; }
-      .add-inventory-item-row-card { padding: 1rem !important; flex-direction: column; align-items: stretch !important; }
-      .add-inventory-remove-btn { position: absolute; top: 1rem; right: 1rem; width: 32px; height: 32px; }
+      .add-inventory-item-row-card { padding: 1.25rem 1.5rem 1rem !important; }
+      .add-inventory-remove-btn { position: static; width: 32px; height: 32px; }
       .add-inventory-total-display { padding: 1.5rem !important; }
       .add-inventory-section-label { margin-bottom: 1rem !important; }
     }
