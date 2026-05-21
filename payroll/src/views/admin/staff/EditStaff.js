@@ -347,6 +347,7 @@ const EditStaff = () => {
         if (values.photo instanceof File) formData.append('photo', values.photo);
         if (values.front_image instanceof File) formData.append('front_image', values.front_image);
         if (values.back_image instanceof File) formData.append('back_image', values.back_image);
+        if (faceDescriptor) formData.append('face_descriptor', JSON.stringify(faceDescriptor));
 
         await axios.put(`${process.env.REACT_APP_API}/staff/edit/${id}`, formData, {
           headers: {
@@ -1154,6 +1155,19 @@ const EditStaff = () => {
                   {uploadingFiles.photo ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
                   {photoPreview ? 'Change Photo' : 'Upload Photo'}
                 </Button>
+                
+                <div className="mt-3 text-center">
+                  <Button
+                    variant={faceDescriptor ? "success" : "outline-primary"}
+                    className="custom-btn-outline px-4 mx-auto d-flex align-items-center justify-content-center gap-2"
+                    onClick={() => setShowFaceModal(true)}
+                    disabled={loading.submitting}
+                    style={{ maxWidth: 'fit-content' }}
+                  >
+                    <CsLineIcons icon={faceDescriptor ? "check" : "camera"} size="18" /> 
+                    {faceDescriptor ? "Face Captured" : "Capture Face"}
+                  </Button>
+                </div>
               </Card.Body>
             </Card>
 
@@ -1282,8 +1296,7 @@ const EditStaff = () => {
       )}
 
       {/* Face Capture Modal */}
-      {activePlans.includes('Payroll By The Box') && (
-        <Modal show={showFaceModal} onHide={() => setShowFaceModal(false)} centered size="lg">
+      <Modal show={showFaceModal} onHide={() => setShowFaceModal(false)} centered size="lg">
           <Modal.Header closeButton>
             <Modal.Title>Face Capture</Modal.Title>
           </Modal.Header>
@@ -1370,7 +1383,6 @@ const EditStaff = () => {
             </Button>
           </Modal.Footer>
         </Modal>
-      )}
     </div>
   </div>
 );

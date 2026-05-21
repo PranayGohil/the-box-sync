@@ -265,6 +265,7 @@ const AddStaff = () => {
         if (values.photo) formData.append('photo', values.photo);
         if (values.front_image) formData.append('front_image', values.front_image);
         if (values.back_image) formData.append('back_image', values.back_image);
+        if (faceDescriptor) formData.append('face_descriptor', JSON.stringify(faceDescriptor));
 
         const addResponse = await axios.post(`${process.env.REACT_APP_API}/staff/add`, formData, {
           headers: {
@@ -1064,6 +1065,19 @@ const AddStaff = () => {
                       {photoPreview ? 'Change Photo' : 'Upload Photo'}
                     </Button>
                     {touched.photo && errors.photo && <div className="text-danger mt-2 small fw-bold">{errors.photo}</div>}
+                    
+                    <div className="mt-3 text-center">
+                      <Button
+                        variant={faceDescriptor ? "success" : "outline-primary"}
+                        className="custom-btn-outline px-4 mx-auto d-flex align-items-center justify-content-center gap-2"
+                        onClick={() => setShowFaceModal(true)}
+                        disabled={loading.submitting}
+                        style={{ maxWidth: 'fit-content' }}
+                      >
+                        <CsLineIcons icon={faceDescriptor ? "check" : "camera"} size="18" /> 
+                        {faceDescriptor ? "Face Captured" : "Capture Face"}
+                      </Button>
+                    </div>
                   </Form.Group>
                 </div>
               </Card.Body>
@@ -1240,8 +1254,7 @@ const AddStaff = () => {
       )}
 
       {/* Face Capture Modal */}
-      {activePlans.includes('Payroll By The Box') && (
-        <Modal show={showFaceModal} onHide={() => setShowFaceModal(false)} centered size="lg">
+      <Modal show={showFaceModal} onHide={() => setShowFaceModal(false)} centered size="lg">
           <Modal.Header closeButton>
             <Modal.Title>Face Capture</Modal.Title>
           </Modal.Header>
@@ -1328,7 +1341,6 @@ const AddStaff = () => {
             </Button>
           </Modal.Footer>
         </Modal>
-      )}
     </div>
   </div>
 );

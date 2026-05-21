@@ -86,6 +86,10 @@ const Dashboard = () => {
   const [staffCount, setStaffCount] = useState(0);
   const [positions, setPositions] = useState({});
   const [recentStaff, setRecentStaff] = useState([]);
+  
+  const [todayPresentCount, setTodayPresentCount] = useState(0);
+  const [totalLeavesPending, setTotalLeavesPending] = useState(0);
+  const [estimatedPayroll, setEstimatedPayroll] = useState(0);
 
   const API_BASE = process.env.REACT_APP_API;
 
@@ -99,13 +103,43 @@ const Dashboard = () => {
       setStaffCount(staffList.length);
       setRecentStaff(staffList.slice(0, 5));
 
-      // Calculate position breakdown
+      // Calculate position breakdown and estimated payroll
       const posMap = {};
+      let totalBudget = 0;
       staffList.forEach(member => {
         const pos = member.position || 'Other';
         posMap[pos] = (posMap[pos] || 0) + 1;
+        totalBudget += (member.salary || 0);
       });
       setPositions(posMap);
+      setEstimatedPayroll(totalBudget);
+
+      // Fetch pending leaves
+      try {
+        const leaveRes = await axios.get(`${API_BASE}/leave/requests`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        const allLeaves = leaveRes.data.data || [];
+        const pendingCount = allLeaves.filter(req => req.status === 'Pending' || req.status === 'pending').length;
+        setTotalLeavesPending(pendingCount);
+      } catch (err) {
+        console.error('Error fetching pending leaves:', err);
+      }
+
+      // Fetch today's attendance
+      try {
+        const attRes = await axios.get(`${API_BASE}/attendance/today`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        const todayAttendance = attRes.data.data || [];
+        const presentCount = todayAttendance.filter(record => 
+          record.status === 'present' || record.status === 'Present' || 
+          record.status === 'half-day' || record.status === 'Half-Day'
+        ).length;
+        setTodayPresentCount(presentCount);
+      } catch (err) {
+        console.error('Error fetching today attendance:', err);
+      }
     } catch (err) {
       console.error('Error fetching dashboard staff stats:', err);
     } finally {
@@ -136,10 +170,7 @@ const Dashboard = () => {
     );
   }
 
-  // Beautiful curated mock stats combined with real counts
-  const totalLeavesPending = 3;
-  const todayPresentCount = staffCount > 0 ? Math.floor(staffCount * 0.9) : 12;
-  const estimatedPayroll = staffCount > 0 ? staffCount * 18000 : 285000;
+  // Real counts from state variables
 
   return (
     <div className="container-fluid pb-5 px-lg-3 px-xl-4">

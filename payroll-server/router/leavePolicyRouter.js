@@ -14,26 +14,7 @@ router.get('/', authMiddleware, async (req, res) => {
     if (!policy) {
       policy = await LeavePolicy.create({
         user_id: userId,
-        leave_types: [
-          {
-            leave_type_id: "cl",
-            name: "Casual Leave",
-            short_code: "CL",
-            days_per_year: 12,
-            is_paid: true,
-            accrual_type: "monthly",
-            carry_forward: false
-          },
-          {
-            leave_type_id: "sl",
-            name: "Sick Leave",
-            short_code: "SL",
-            days_per_year: 12,
-            is_paid: true,
-            accrual_type: "upfront",
-            carry_forward: false
-          }
-        ]
+        leave_types: []
       });
     }
 

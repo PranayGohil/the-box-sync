@@ -84,7 +84,7 @@ const LeavePolicy = () => {
     setShowModal(true);
   };
 
-  const handleModalSubmit = (e) => {
+  const handleModalSubmit = async (e) => {
     e.preventDefault();
     const updatedTypes = [...leaveTypes];
     if (editingIndex !== null) {
@@ -92,27 +92,36 @@ const LeavePolicy = () => {
     } else {
       updatedTypes.push(form);
     }
-    setLeaveTypes(updatedTypes);
-    setShowModal(false);
-  };
-
-  const handleDelete = (index) => {
-    if (!window.confirm('Delete this leave type? Active leave requests may be affected.')) return;
-    const updated = [...leaveTypes];
-    updated.splice(index, 1);
-    setLeaveTypes(updated);
-  };
-
-  const saveToServer = async () => {
+    
     try {
       setSaving(true);
-      const res = await updateLeavePolicy({ leave_types: leaveTypes });
+      const res = await updateLeavePolicy({ leave_types: updatedTypes });
       if (res.success) {
-        toast.success('Leave policy saved successfully');
+        toast.success('Leave policy updated');
         setLeaveTypes(res.data.leave_types || []);
+        setShowModal(false);
       }
     } catch (err) {
       toast.error('Failed to save leave policy');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (index) => {
+    if (!window.confirm('Delete this leave type? Active leave requests may be affected.')) return;
+    const updated = [...leaveTypes];
+    updated.splice(index, 1);
+    
+    try {
+      setSaving(true);
+      const res = await updateLeavePolicy({ leave_types: updated });
+      if (res.success) {
+        toast.success('Leave type deleted');
+        setLeaveTypes(res.data.leave_types || []);
+      }
+    } catch (err) {
+      toast.error('Failed to delete leave type');
     } finally {
       setSaving(false);
     }
@@ -284,7 +293,7 @@ const LeavePolicy = () => {
         </Row>
       </div>
 
-      {loading ? (
+      {loading || saving ? (
         <div className="text-center py-5">
           <Spinner animation="border" style={{ color: '#1ea8e7' }} />
         </div>
