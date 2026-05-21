@@ -40,11 +40,34 @@ const customStyles = `
   }
   .modal-footer {
     display: flex !important;
-    flex-direction: row !important;
-    justify-content: flex-end !important;
+    flex-direction: column !important;
     gap: 0.75rem !important;
     border-top: none !important;
     padding: 1.5rem !important;
+  }
+  .modal-footer .btn {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  @media (min-width: 576px) {
+    .modal-footer {
+      flex-direction: row !important;
+      justify-content: flex-end !important;
+    }
+    .modal-footer .btn {
+      width: auto !important;
+    }
+  }
+  @media (max-width: 575px) {
+    .modal-dialog {
+      margin: 0.5rem !important;
+    }
+    .modal-body {
+      padding: 1rem !important;
+    }
+    .modal-header {
+      padding: 1rem 1rem 0 1rem !important;
+    }
   }
   .custom-check {
     width: 20px;
@@ -230,7 +253,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
             <Col md={4}>
               <Form.Group className="mb-4">
                 <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Dish Image</Form.Label>
-                <div className="d-flex flex-column align-items-center gap-2 p-3 rounded-xl border-dashed" style={{ border: '2px dashed #e5e7eb' }}>
+                <div className="d-flex flex-column align-items-center gap-2 p-3  border-dashed" style={{ border: '2px dashed #e5e7eb' }}>
                   {previewImg ? (
                     <img src={previewImg} alt="Preview" className="rounded shadow-sm" style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
                   ) : (
@@ -312,7 +335,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
             </Col>
 
             <Col md={12} className="mt-3">
-              <div className="p-3 rounded-xl border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e5e7eb' }}>
+              <div className="p-3  border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e5e7eb' }}>
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '0.85rem', letterSpacing: '0.05em' }}>
                     SIZES, PRICING & DETAILS
@@ -344,7 +367,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                           )}
                         </Form.Group>
                       </Col>
-                      <Col xs={5} sm={3}>
+                      <Col xs={12} sm={3}>
                         <Form.Group>
                           <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
                             Price (₹)
@@ -362,7 +385,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                           {formik.errors.variants?.[vIdx]?.price && <div className="text-danger small mt-1">{formik.errors.variants[vIdx].price}</div>}
                         </Form.Group>
                       </Col>
-                      <Col xs={5} sm={4}>
+                      <Col xs={10} sm={4}>
                         <Form.Group>
                           <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
                             Extra Details (e.g. Serves 1-2)
@@ -388,7 +411,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                           }}
                           disabled={formik.values.variants.length === 1}
                           style={{ height: '40px', width: '40px', borderRadius: '8px', padding: 0 }}
-                          className="d-flex align-items-center justify-content-center btn btn-outline-danger"
+                          className="d-flex align-items-center justify-content-center btn btn-outline-danger w-100"
                         >
                           <CsLineIcons icon="bin" size="14" />
                         </Button>
@@ -412,7 +435,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
             </Col>
 
             <Col md={12} className="mt-2">
-              <div className="p-3 rounded-xl border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e5e7eb' }}>
+              <div className="p-3  border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e5e7eb' }}>
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '0.85rem', letterSpacing: '0.05em' }}>
                     CONFIGURE ADD-ONS (OPTIONAL)

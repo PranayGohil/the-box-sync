@@ -295,12 +295,11 @@ const ManageMenu = () => {
             <div key={category.id || category._id} className="mb-4 text-start">
               {/* Category Header — ManageTable style: white pill card */}
               <div
-                className="d-flex justify-content-between align-items-center gap-2 mb-3 px-3 py-3 bg-white shadow-sm cursor-pointer hover-light"
+                className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 gap-sm-3 mb-3 px-3 py-3 bg-white shadow-sm cursor-pointer hover-light"
                 style={{ borderRadius: '15px', border: '1px solid rgba(0,0,0,0.03)' }}
                 onClick={() => toggleCategory(category.id || category._id)}
               >
-                <div className="d-flex align-items-center gap-3">
-
+                <div className="d-flex align-items-center gap-2 gap-sm-3 min-width-0 w-100 w-sm-auto">
                   <div
                     className="rounded-circle flex-shrink-0"
                     style={{
@@ -312,34 +311,36 @@ const ManageMenu = () => {
                             : '#ef4444',
                     }}
                   />
-                  <h2 className="h5 mb-0 fw-bold text-dark">{category.category}</h2>
+                  <h2 className="h5 mb-0 fw-bold text-dark text-truncate" style={{ maxWidth: '100%' }}>{category.category}</h2>
                 </div>
-                <div className="d-flex align-items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <div className="d-flex align-items-center justify-content-between justify-content-sm-end gap-2 w-100 w-sm-auto mt-2 mt-sm-0 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                   <Badge
                     bg="none"
-                    className="rounded-pill px-3 py-2"
+                    className="rounded-pill px-2 px-sm-3 py-2 flex-shrink-0"
                     style={{ backgroundColor: 'rgba(35,179,244,0.1)', color: '#23b3f4', fontSize: '0.82rem', fontWeight: '700' }}
                   >
                     {category.dishes.length} {category.dishes.length === 1 ? 'Dish' : 'Dishes'}
                   </Badge>
-                  <Button
-                    variant="light"
-                    size="sm"
-                    className="btn-icon btn-icon-only shadow-sm rounded-circle border-0"
-                    onClick={() => { setSelectedCategory(category); setEditCategoryModalShow(true); }}
-                    title="Edit Category"
-                  >
-                    <CsLineIcons icon="edit" size="15" />
-                  </Button>
-                  <Button
-                    variant="light"
-                    size="sm"
-                    className="btn-icon btn-icon-only shadow-sm rounded-circle border-0 text-primary"
-                    onClick={() => history.push('/operations/add-dish', { category: category.category, mealType: category.meal_type, counter: category.counter, hide_on_kot: category.hide_on_kot, fromManageMenu: true })}
-                    title="Add Dish to Category"
-                  >
-                    <CsLineIcons icon="plus" size="15" />
-                  </Button>
+                  <div className="d-flex align-items-center gap-2 ms-auto ms-sm-0 flex-shrink-0">
+                    <Button
+                      variant="light"
+                      size="sm"
+                      className="btn-icon btn-icon-only shadow-sm rounded-circle border-0 flex-shrink-0"
+                      onClick={() => { setSelectedCategory(category); setEditCategoryModalShow(true); }}
+                      title="Edit Category"
+                    >
+                      <CsLineIcons icon="edit" size="15" />
+                    </Button>
+                    <Button
+                      variant="light"
+                      size="sm"
+                      className="btn-icon btn-icon-only shadow-sm rounded-circle border-0 text-primary flex-shrink-0"
+                      onClick={() => history.push('/operations/add-dish', { category: category.category, mealType: category.meal_type, counter: category.counter, hide_on_kot: category.hide_on_kot, fromManageMenu: true })}
+                      title="Add Dish to Category"
+                    >
+                      <CsLineIcons icon="plus" size="15" />
+                    </Button>
+                  </div>
                 </div>
               </div>
 

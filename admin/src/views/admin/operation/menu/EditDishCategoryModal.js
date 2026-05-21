@@ -40,20 +40,66 @@ const customStyles = `
   .edit-dish-category-modal-custom-btn-outline:hover svg {
     stroke: #fff !important;
   }
+  .modal-footer {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    border-top: none !important;
+    padding: 1.5rem !important;
+  }
+  .modal-footer .btn {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  @media (min-width: 576px) {
+    .modal-footer {
+      flex-direction: row !important;
+      justify-content: flex-end !important;
+    }
+    .modal-footer .btn {
+      width: auto !important;
+    }
+  }
+  @media (max-width: 575px) {
+    .modal-dialog {
+      margin: 0.5rem !important;
+    }
+    .modal-body {
+      padding: 1rem !important;
+    }
+    .modal-header {
+      padding: 1rem 1rem 0 1rem !important;
+    }
+  }
   .edit-dish-category-modal-radio-pill {
     cursor: pointer;
-    padding: 8px 16px;
+    padding: 6px 12px;
     border-radius: 50px;
     border: 1px solid #e5e7eb;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #475569;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+  }
+  @media (max-width: 575px) {
+    .edit-dish-category-modal-radio-pill {
+      flex: 1 1 0% !important;
+      justify-content: center !important;
+      font-size: 0.75rem !important;
+      padding: 6px 8px !important;
+    }
+  }
+  @media (min-width: 576px) {
+    .edit-dish-category-modal-radio-pill {
+      padding: 8px 16px;
+      gap: 8px;
+      font-size: 0.85rem;
+    }
   }
   .edit-dish-category-modal-radio-pill:hover {
     background: #f9fafb;

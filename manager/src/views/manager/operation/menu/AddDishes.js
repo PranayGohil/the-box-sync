@@ -42,6 +42,18 @@ const customStyles = `
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
     transition: all 0.3s ease;
   }
+  @media (max-width: 575px) {
+    .container-fluid {
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+    }
+    .glass-card {
+      border-radius: 12px !important;
+    }
+    .glass-card .card-body {
+      padding: 12px !important;
+    }
+  }
   .custom-btn-outline {
     border: 1px solid #23b3f4 !important;
     color: #23b3f4 !important;
@@ -61,14 +73,30 @@ const customStyles = `
   }
   .meal-type-radio {
     cursor: pointer;
-    padding: 8px 16px;
+    padding: 6px 12px;
     border-radius: 50px;
     border: 1px solid #e5e7eb;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     font-weight: 600;
+    font-size: 0.8rem;
+  }
+  @media (max-width: 575px) {
+    .meal-type-radio {
+      flex: 1 1 0% !important;
+      justify-content: center !important;
+      font-size: 0.75rem !important;
+      padding: 6px 8px !important;
+    }
+  }
+  @media (min-width: 576px) {
+    .meal-type-radio {
+      padding: 8px 16px;
+      gap: 8px;
+      font-size: 0.85rem;
+    }
   }
   .meal-type-radio:hover {
     background: #f9fafb;
@@ -437,7 +465,7 @@ const AddDishes = () => {
           {({ values, handleChange, setFieldValue }) => (
             <Form>
               <Card className="glass-card mb-4 border-0">
-                <Card.Body className="p-4">
+                <Card.Body className="p-3 p-sm-4">
                   <Row className="g-4">
                     <Col lg={4}>
                       <BForm.Label className="fw-bold text-muted text-uppercase small mb-3">Meal Type</BForm.Label>
@@ -588,77 +616,80 @@ const AddDishes = () => {
                                       {({ push: pushVariant, remove: removeVariant }) => (
                                         <div className="d-flex flex-column gap-2">
                                           {(dish.variants || []).map((variant, vIdx) => (
-                                            <Row key={vIdx} className="g-2 align-items-end mb-2">
-                                              <Col xs={12} sm={4}>
-                                                <BForm.Group>
-                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                    Size / Variant Name (e.g. Regular, Small)
-                                                  </BForm.Label>
-                                                  <BForm.Control
-                                                    type="text"
-                                                    name={`dishes[${index}].variants[${vIdx}].size_name`}
-                                                    value={variant.size_name || ''}
-                                                    onChange={handleChange}
-                                                    placeholder="e.g. Regular"
-                                                    className="pill-input py-1 px-3"
-                                                    style={{ height: '40px', borderRadius: '8px' }}
-                                                  />
-                                                  <ErrorMessage
-                                                    name={`dishes[${index}].variants[${vIdx}].size_name`}
-                                                    component="div"
-                                                    className="text-danger small mt-1"
-                                                  />
-                                                </BForm.Group>
-                                              </Col>
-                                              <Col xs={5} sm={3}>
-                                                <BForm.Group>
-                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                    Price (₹)
-                                                  </BForm.Label>
-                                                  <BForm.Control
-                                                    type="text"
-                                                    name={`dishes[${index}].variants[${vIdx}].price`}
-                                                    value={variant.price || ''}
-                                                    onChange={handleChange}
-                                                    placeholder="Price"
-                                                    className="pill-input py-1 px-3"
-                                                    style={{ height: '40px', borderRadius: '8px' }}
-                                                  />
-                                                  <ErrorMessage
-                                                    name={`dishes[${index}].variants[${vIdx}].price`}
-                                                    component="div"
-                                                    className="text-danger small mt-1"
-                                                  />
-                                                </BForm.Group>
-                                              </Col>
-                                              <Col xs={5} sm={4}>
-                                                <BForm.Group>
-                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                    Extra Details (e.g. Serves 1-2)
-                                                  </BForm.Label>
-                                                  <BForm.Control
-                                                    type="text"
-                                                    name={`dishes[${index}].variants[${vIdx}].extra`}
-                                                    value={variant.extra || ''}
-                                                    onChange={handleChange}
-                                                    placeholder="e.g. Serves 1-2"
-                                                    className="pill-input py-1 px-3"
-                                                    style={{ height: '40px', borderRadius: '8px' }}
-                                                  />
-                                                </BForm.Group>
-                                              </Col>
-                                              <Col xs={2} sm="auto" className="pb-1 text-end">
-                                                <Button
-                                                  variant="outline-danger"
-                                                  onClick={() => removeVariant(vIdx)}
-                                                  disabled={dish.variants.length === 1}
-                                                  style={{ height: '40px', width: '40px', borderRadius: '8px', padding: 0 }}
-                                                  className="d-flex align-items-center justify-content-center btn btn-outline-danger"
-                                                >
-                                                  <CsLineIcons icon="bin" size="14" />
-                                                </Button>
-                                              </Col>
-                                            </Row>
+                                            <React.Fragment key={vIdx}>
+                                              {vIdx > 0 && <hr className="my-3" style={{ borderTop: '1px dashed #cbd5e1' }} />}
+                                              <Row className="g-2 align-items-end mb-2">
+                                                <Col xs={12} sm={4}>
+                                                  <BForm.Group>
+                                                    <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                      Size / Variant Name
+                                                    </BForm.Label>
+                                                    <BForm.Control
+                                                      type="text"
+                                                      name={`dishes[${index}].variants[${vIdx}].size_name`}
+                                                      value={variant.size_name || ''}
+                                                      onChange={handleChange}
+                                                      placeholder="e.g. Regular"
+                                                      className="pill-input py-1 px-3"
+                                                      style={{ height: '34px', borderRadius: '8px', fontSize: '0.85rem' }}
+                                                    />
+                                                    <ErrorMessage
+                                                      name={`dishes[${index}].variants[${vIdx}].size_name`}
+                                                      component="div"
+                                                      className="text-danger small mt-1"
+                                                    />
+                                                  </BForm.Group>
+                                                </Col>
+                                                <Col xs={12} sm={3}>
+                                                  <BForm.Group>
+                                                    <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                      Price (₹)
+                                                    </BForm.Label>
+                                                    <BForm.Control
+                                                      type="text"
+                                                      name={`dishes[${index}].variants[${vIdx}].price`}
+                                                      value={variant.price || ''}
+                                                      onChange={handleChange}
+                                                      placeholder="Price"
+                                                      className="pill-input py-1 px-3"
+                                                      style={{ height: '34px', borderRadius: '8px', fontSize: '0.85rem' }}
+                                                    />
+                                                    <ErrorMessage
+                                                      name={`dishes[${index}].variants[${vIdx}].price`}
+                                                      component="div"
+                                                      className="text-danger small mt-1"
+                                                    />
+                                                  </BForm.Group>
+                                                </Col>
+                                                <Col xs={10} sm={4}>
+                                                  <BForm.Group>
+                                                    <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                      Extra Details
+                                                    </BForm.Label>
+                                                    <BForm.Control
+                                                      type="text"
+                                                      name={`dishes[${index}].variants[${vIdx}].extra`}
+                                                      value={variant.extra || ''}
+                                                      onChange={handleChange}
+                                                      placeholder="e.g. Serves 1-2"
+                                                      className="pill-input py-1 px-3"
+                                                      style={{ height: '34px', borderRadius: '8px', fontSize: '0.85rem' }}
+                                                    />
+                                                  </BForm.Group>
+                                                </Col>
+                                                <Col xs={2} sm="auto" className="pb-1 text-end">
+                                                  <Button
+                                                    variant="outline-danger"
+                                                    onClick={() => removeVariant(vIdx)}
+                                                    disabled={dish.variants.length === 1}
+                                                    style={{ height: '40px', width: '40px', borderRadius: '8px', padding: 0 }}
+                                                    className="d-flex align-items-center justify-content-center btn btn-outline-danger"
+                                                  >
+                                                    <CsLineIcons icon="bin" size="14" />
+                                                  </Button>
+                                                </Col>
+                                              </Row>
+                                            </React.Fragment>
                                           ))}
                                           <Button
                                             type="button"
@@ -687,60 +718,63 @@ const AddDishes = () => {
                                       {({ push: pushAddon, remove: removeAddon }) => (
                                         <div className="d-flex flex-column gap-2">
                                           {(dish.addons || []).map((addon, aIdx) => (
-                                            <Row key={aIdx} className="g-2 align-items-end mb-2">
-                                              <Col xs={8} sm={6}>
-                                                <BForm.Group>
-                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                    Add-on Name (e.g. Extra Sauce)
-                                                  </BForm.Label>
-                                                  <BForm.Control
-                                                    type="text"
-                                                    name={`dishes[${index}].addons[${aIdx}].addon_name`}
-                                                    value={addon.addon_name || ''}
-                                                    onChange={handleChange}
-                                                    placeholder="Add-on Name"
-                                                    className="pill-input py-1 px-3"
-                                                    style={{ height: '38px', borderRadius: '8px' }}
-                                                  />
-                                                  <ErrorMessage
-                                                    name={`dishes[${index}].addons[${aIdx}].addon_name`}
-                                                    component="div"
-                                                    className="text-danger small mt-1"
-                                                  />
-                                                </BForm.Group>
-                                              </Col>
-                                              <Col xs={3} sm={4}>
-                                                <BForm.Group>
-                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                    Price (Extra charge)
-                                                  </BForm.Label>
-                                                  <BForm.Control
-                                                    type="text"
-                                                    name={`dishes[${index}].addons[${aIdx}].price`}
-                                                    value={addon.price || ''}
-                                                    onChange={handleChange}
-                                                    placeholder="Price"
-                                                    className="pill-input py-1 px-3"
-                                                    style={{ height: '38px', borderRadius: '8px' }}
-                                                  />
-                                                  <ErrorMessage
-                                                    name={`dishes[${index}].addons[${aIdx}].price`}
-                                                    component="div"
-                                                    className="text-danger small mt-1"
-                                                  />
-                                                </BForm.Group>
-                                              </Col>
-                                              <Col xs="auto" className="pb-1">
-                                                <Button
-                                                  variant="outline-danger"
-                                                  onClick={() => removeAddon(aIdx)}
-                                                  style={{ height: '38px', width: '38px', borderRadius: '8px', padding: 0 }}
-                                                  className="d-flex align-items-center justify-content-center btn btn-outline-danger"
-                                                >
-                                                  <CsLineIcons icon="bin" size="14" />
-                                                </Button>
-                                              </Col>
-                                            </Row>
+                                            <React.Fragment key={aIdx}>
+                                              {aIdx > 0 && <hr className="my-2" style={{ borderTop: '1px dashed #e2e8f0' }} />}
+                                              <Row className="g-2 align-items-end mb-2">
+                                                <Col xs={12} sm={6}>
+                                                  <BForm.Group>
+                                                    <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                      Add-on Name
+                                                    </BForm.Label>
+                                                    <BForm.Control
+                                                      type="text"
+                                                      name={`dishes[${index}].addons[${aIdx}].addon_name`}
+                                                      value={addon.addon_name || ''}
+                                                      onChange={handleChange}
+                                                      placeholder="Add-on Name"
+                                                      className="pill-input py-1 px-3"
+                                                      style={{ height: '34px', borderRadius: '8px', fontSize: '0.85rem' }}
+                                                    />
+                                                    <ErrorMessage
+                                                      name={`dishes[${index}].addons[${aIdx}].addon_name`}
+                                                      component="div"
+                                                      className="text-danger small mt-1"
+                                                    />
+                                                  </BForm.Group>
+                                                </Col>
+                                                <Col xs={9} sm={4}>
+                                                  <BForm.Group>
+                                                    <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                      Price (Extra charge)
+                                                    </BForm.Label>
+                                                    <BForm.Control
+                                                      type="text"
+                                                      name={`dishes[${index}].addons[${aIdx}].price`}
+                                                      value={addon.price || ''}
+                                                      onChange={handleChange}
+                                                      placeholder="Price"
+                                                      className="pill-input py-1 px-3"
+                                                      style={{ height: '34px', borderRadius: '8px', fontSize: '0.85rem' }}
+                                                    />
+                                                    <ErrorMessage
+                                                      name={`dishes[${index}].addons[${aIdx}].price`}
+                                                      component="div"
+                                                      className="text-danger small mt-1"
+                                                    />
+                                                  </BForm.Group>
+                                                </Col>
+                                                <Col xs="auto" className="pb-1">
+                                                  <Button
+                                                    variant="outline-danger"
+                                                    onClick={() => removeAddon(aIdx)}
+                                                    style={{ height: '38px', width: '38px', borderRadius: '8px', padding: 0 }}
+                                                    className="d-flex align-items-center justify-content-center btn btn-outline-danger"
+                                                  >
+                                                    <CsLineIcons icon="bin" size="14" />
+                                                  </Button>
+                                                </Col>
+                                              </Row>
+                                            </React.Fragment>
                                           ))}
                                           <Button
                                             type="button"

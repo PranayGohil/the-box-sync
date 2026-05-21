@@ -19,7 +19,6 @@ import ManageMenu from './menu/ManageMenu';
 import AddDishes from './menu/AddDishes';
 import QRforMenu from './menu/QRforMenu';
 
-import RequestedInventory from './inventory/RequestedInventory';
 import AddInventory from './inventory/AddInventory';
 import EditInventory from './inventory/EditInventory';
 import InventoryHistory from './inventory/InventoryHistory';
@@ -36,133 +35,133 @@ const NavContent = () => {
   const { activePlans } = useContext(AuthContext);
   return (
     <>
-      
+
       <Nav className="flex-column operations-operations-sidebar">
-      <div className="mb-1">
-        <div className="operations-section-header">
-          <CsLineIcons icon="cart" size="17" />
-          <span className="align-middle">Order</span>
-        </div>
-        <div className="operations-sub-menu-container">
-          <Nav.Link as={NavLink} to="/operations/order-history" className="px-0" isActive={(match, location) => {
-            return location.pathname.startsWith('/operations/order-history') || location.pathname.startsWith('/operations/order-details');
-          }}>
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Order History</span>
-          </Nav.Link>
-        </div>
-      </div>
-
-      <div className="mb-1">
-        <div className="operations-section-header">
-          <CsLineIcons icon="layout-5" size="17" />
-          <span className="align-middle">Table</span>
-        </div>
-        <div className="operations-sub-menu-container">
-          <Nav.Link as={NavLink} to="/operations/manage-table" className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Manage Table</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/add-table" className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Add Table</span>
-          </Nav.Link>
-        </div>
-      </div>
-
-      <div className="mb-1">
-        <div className="operations-section-header">
-          <CsLineIcons icon="book-open" size="17" />
-          <span className="align-middle">Menu</span>
-        </div>
-        <div className="operations-sub-menu-container">
-          <Nav.Link as={NavLink} to="/operations/manage-menu" className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Manage Menu</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/add-dish" className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Add Dish</span>
-          </Nav.Link>
-          {activePlans.includes('Scan For Menu') && (
-          <Nav.Link as={NavLink} to="/operations/qr-for-menu" className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">QR for Menu</span>
-          </Nav.Link>
-          )}
-        </div>
-      </div>
-
-      {activePlans.includes('Hotel Manager') && (
         <div className="mb-1">
           <div className="operations-section-header">
-            <i className="bi-door-open me-2 sw-3" style={{ fontSize: '17px' }} />
-            <span className="align-middle">Rooms</span>
+            <CsLineIcons icon="cart" size="17" />
+            <span className="align-middle">Order</span>
           </div>
           <div className="operations-sub-menu-container">
-            <Nav.Link as={NavLink} to="/operations/manage-rooms" className="px-0">
+            <Nav.Link as={NavLink} to="/operations/order-history" className="px-0" isActive={(match, location) => {
+              return location.pathname.startsWith('/operations/order-history') || location.pathname.startsWith('/operations/order-details');
+            }}>
               <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Manage Rooms</span>
-            </Nav.Link>
-            <Nav.Link as={NavLink} to="/operations/add-room" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Add Room</span>
-            </Nav.Link>
-            <Nav.Link as={NavLink} to="/operations/add-room-category" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Add Room Category</span>
+              <span className="align-middle">Order History</span>
             </Nav.Link>
           </div>
         </div>
-      )}
 
-      <div className="mb-1">
-        <div className="operations-section-header">
-          <CsLineIcons icon="boxes" size="17" />
-          <span className="align-middle">Inventory</span>
+        <div className="mb-1">
+          <div className="operations-section-header">
+            <CsLineIcons icon="layout-5" size="17" />
+            <span className="align-middle">Table</span>
+          </div>
+          <div className="operations-sub-menu-container">
+            <Nav.Link as={NavLink} to="/operations/manage-table" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Manage Table</span>
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/operations/add-table" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Add Table</span>
+            </Nav.Link>
+          </div>
         </div>
-        <div className="operations-sub-menu-container">
-          <Nav.Link as={NavLink} to="/operations/inventory-history" className="px-0" isActive={(match, location) => {
-            const inventoryPaths = ['/operations/inventory-history', '/operations/add-inventory', '/operations/edit-inventory', '/operations/complete-inventory', '/operations/inventory-details', '/operations/requested-inventory'];
-            return inventoryPaths.some(p => location.pathname.startsWith(p));
-          }}>
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Manage Inventory</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/stock-management" className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Stock Control</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/daily-stock-logs" className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Stock Audit Logs</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/wastage-log" className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Wastage Logs</span>
-          </Nav.Link>
-        </div>
-      </div>
 
-      {activePlans.includes('Feedback') && (
-      <div className="mb-1">
-        <div className="operations-section-header">
-          <CsLineIcons icon="message" size="17" />
-          <span className="align-middle">Feedback</span>
+        <div className="mb-1">
+          <div className="operations-section-header">
+            <CsLineIcons icon="book-open" size="17" />
+            <span className="align-middle">Menu</span>
+          </div>
+          <div className="operations-sub-menu-container">
+            <Nav.Link as={NavLink} to="/operations/manage-menu" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Manage Menu</span>
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/operations/add-dish" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Add Dish</span>
+            </Nav.Link>
+            {activePlans.includes('Scan For Menu') && (
+              <Nav.Link as={NavLink} to="/operations/qr-for-menu" className="px-0">
+                <i className="me-2 sw-3 d-inline-block" />
+                <span className="align-middle">QR for Menu</span>
+              </Nav.Link>
+            )}
+          </div>
         </div>
-        <div className="operations-sub-menu-container">
-          <Nav.Link as={NavLink} to="/operations/feedback" className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">View Feedbacks</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/qr-for-feedback" className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Feedback QR</span>
-          </Nav.Link>
+
+        {activePlans.includes('Hotel Manager') && (
+          <div className="mb-1">
+            <div className="operations-section-header">
+              <i className="bi-door-open me-2 sw-3" style={{ fontSize: '17px' }} />
+              <span className="align-middle">Rooms</span>
+            </div>
+            <div className="operations-sub-menu-container">
+              <Nav.Link as={NavLink} to="/operations/manage-rooms" className="px-0">
+                <i className="me-2 sw-3 d-inline-block" />
+                <span className="align-middle">Manage Rooms</span>
+              </Nav.Link>
+              <Nav.Link as={NavLink} to="/operations/add-room" className="px-0">
+                <i className="me-2 sw-3 d-inline-block" />
+                <span className="align-middle">Add Room</span>
+              </Nav.Link>
+              <Nav.Link as={NavLink} to="/operations/add-room-category" className="px-0">
+                <i className="me-2 sw-3 d-inline-block" />
+                <span className="align-middle">Add Room Category</span>
+              </Nav.Link>
+            </div>
+          </div>
+        )}
+
+        <div className="mb-1">
+          <div className="operations-section-header">
+            <CsLineIcons icon="boxes" size="17" />
+            <span className="align-middle">Inventory</span>
+          </div>
+          <div className="operations-sub-menu-container">
+            <Nav.Link as={NavLink} to="/operations/inventory-history" className="px-0" isActive={(match, location) => {
+              const inventoryPaths = ['/operations/inventory-history', '/operations/add-inventory', '/operations/edit-inventory', '/operations/complete-inventory', '/operations/inventory-details', '/operations/requested-inventory'];
+              return inventoryPaths.some(p => location.pathname.startsWith(p));
+            }}>
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Manage Inventory</span>
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/operations/stock-management" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Stock Control</span>
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/operations/daily-stock-logs" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Stock Audit Logs</span>
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/operations/wastage-log" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Wastage Logs</span>
+            </Nav.Link>
+          </div>
         </div>
-      </div>
-      )}
-    </Nav>
+
+        {activePlans.includes('Feedback') && (
+          <div className="mb-1">
+            <div className="operations-section-header">
+              <CsLineIcons icon="message" size="17" />
+              <span className="align-middle">Feedback</span>
+            </div>
+            <div className="operations-sub-menu-container">
+              <Nav.Link as={NavLink} to="/operations/feedback" className="px-0">
+                <i className="me-2 sw-3 d-inline-block" />
+                <span className="align-middle">View Feedbacks</span>
+              </Nav.Link>
+              <Nav.Link as={NavLink} to="/operations/qr-for-feedback" className="px-0">
+                <i className="me-2 sw-3 d-inline-block" />
+                <span className="align-middle">Feedback QR</span>
+              </Nav.Link>
+            </div>
+          </div>
+        )}
+      </Nav>
     </>
   );
 };

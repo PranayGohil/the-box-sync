@@ -552,3 +552,29 @@
     width: 50%;
   }
 }
+
+/* Global Mobile View Side Spacing Optimization */
+@media (max-width: 575px) {
+  /* Eliminate double-padding in main layout container */
+  #contentArea {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+
+  /* Compact page wrapper padding */
+  .container-fluid {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  /* Maximize space within cards */
+  .card,
+  .glass-card {
+    border-radius: 12px !important;
+  }
+
+  .card .card-body,
+  .glass-card .card-body {
+    padding: 12px !important;
+  }
+}
