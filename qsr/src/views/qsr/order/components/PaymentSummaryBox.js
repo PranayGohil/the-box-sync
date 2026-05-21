@@ -22,6 +22,24 @@ const PaymentSummaryBox = ({
   const dueAmount = Math.max(0, totalAmount - totalPaid);
   const totalQty = orderItems.reduce((sum, item) => sum + item.quantity, 0);
 
+  const showSave = orderItems.length > 0 && isDirty;
+  const showKitchen = canKOT && showKOTButtons;
+  const showPrintBill = (!isPaid || isDirty || dueAmount > 0.01) && orderItems.length > 0;
+  const showPayment = (orderStatus === 'KOT' || (orderStatus === 'Save' && orderItems.length > 0) || (isPaid && dueAmount > 0.01));
+
+  let paymentSpan = 'span 1';
+  let totalUnpaidActions = 0;
+  if (showSave) totalUnpaidActions++;
+  if (showKitchen) totalUnpaidActions++;
+  if (showPrintBill) totalUnpaidActions++;
+  if (showPayment) {
+    if (totalUnpaidActions % 2 === 0) {
+      paymentSpan = 'span 2';
+    } else {
+      paymentSpan = 'span 1';
+    }
+  }
+
   // ─── Styles ───────────────────────────────────────────────────────────────
   const btnBase = {
     width: '100%',
@@ -104,29 +122,28 @@ const PaymentSummaryBox = ({
             </button>
           )}
 
-          {/* KOT + Print */}
-          {showKOTButtons && (
+          {/* Print Bill (even if new/unsaved/dirty) */}
+          {/* {showPrintBill && (
             <button
               type="button"
-              style={{ ...btnBase, background: 'rgba(245,158,11,0.08)', color: '#d97706', border: '1.5px solid rgba(245,158,11,0.3)' }}
-              onClick={onKotAndPrint}
-              disabled={isLoading || kotPrinting}
+              style={{ ...btnBase, background: '#f1f5f9', color: '#475569', border: '1.5px solid rgba(226,232,240,0.9)' }}
+              onClick={() => handlePrint(orderId)}
+              disabled={printing}
             >
               <CsLineIcons icon="print" size="13" />
-              {kotPrinting ? '...' : 'Order Print'}
+              {printing ? 'Printing...' : 'Print Bill'}
             </button>
-          )}
+          )} */}
 
           {/* Process Payment — primary CTA */}
-          {(orderStatus === 'KOT' || (orderStatus === 'Save' && orderItems.length > 0) || (isPaid && dueAmount > 0.01)) && (
+          {showPayment && (
             <button
               type="button"
-              style={{ 
-                ...btnBase, 
-                background: '#23b3f4', 
-                color: '#ffffff', 
-                boxShadow: '0 4px 12px rgba(35,179,244,0.3)',
-                gridColumn: (isDirty || showKOTButtons) ? 'span 1' : 'span 2'
+              style={{
+                ...btnBase,
+                background: '#23b3f4',
+                color: '#ffffff',
+                boxShadow: '0 4px 12px rgba(35, 179, 244, 0.3)'
               }}
               onClick={handleOpenPaymentModal}
             >

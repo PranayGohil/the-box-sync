@@ -33,6 +33,13 @@ import allRoutes from 'routes.js';
 import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// import global custom css architecture
+import './assets/css/global.css';
+import './assets/css/layout.css';
+import './assets/css/components.css';
+import './assets/css/utilities.css';
+import './assets/css/responsive.css';
+
 // mock server register for demo
 import '@mock-api';
 

@@ -3,24 +3,52 @@ import { Button, Modal, Badge } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const PaymentSummaryBox = ({
-  orderItems, isDirty, orderStatus, isLoading, printing,
-  paymentData, orderId, handleSaveOrder, handleOpenPaymentModal,
-  setShowCancelModal, handlePrint, history, setShowCartSheet,
-  onKotAndPrint, kotPrinting, kotHistory = [], onReprintKOT,
-  paymentHistory = [], alreadyPaid = 0, canKOT = false,
+  orderItems,
+  isDirty,
+  orderStatus,
+  isLoading,
+  printing,
+  paymentData,
+  orderId,
+  handleSaveOrder,
+  handleOpenPaymentModal,
+  setShowCancelModal,
+  handlePrint,
+  history,
+  setShowCartSheet,
+  onKotAndPrint,
+  kotPrinting,
+  kotHistory = [],
+  onReprintKOT,
+  paymentHistory = [],
+  alreadyPaid = 0,
+  canKOT = false,
+  orderType,
 }) => {
   const [showKotHistory, setShowKotHistory] = useState(false);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
 
   const isPaid = orderStatus === 'Paid';
-  const showKOTButtons =
-    (orderStatus === 'Save' || (orderStatus !== 'Paid' && isDirty) || (isPaid && isDirty)) &&
-    orderItems.length > 0;
+  const showKOTButtons = (orderStatus === 'Save' || (orderStatus !== 'Paid' && isDirty) || (isPaid && isDirty)) && orderItems.length > 0;
 
   const totalAmount = parseFloat(paymentData.total) || 0;
   const totalPaid = paymentHistory.reduce((sum, p) => sum + parseFloat(p.amount), 0) || alreadyPaid;
   const dueAmount = Math.max(0, totalAmount - totalPaid);
   const totalQty = orderItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  // New Takeaway/Delivery Print Bill behavior
+  const isTakeawayOrDelivery = orderType !== 'Dine In';
+  const showKOTPrintButton = showKOTButtons && !isTakeawayOrDelivery; // KOT + Print (Order Print) is only shown for Dine In
+  const showPrintBill = isTakeawayOrDelivery && orderItems.length > 0 && orderStatus !== 'Paid'; // Print Bill for Takeaway/Delivery unpaid
+
+  let activeButtonsCount = 0;
+  if (orderItems.length > 0 && isDirty) activeButtonsCount++; // Save button
+  if (canKOT && showKOTButtons) activeButtonsCount++; // Kitchen button
+  if (showKOTPrintButton) activeButtonsCount++; // Order Print button (Dine In only)
+  if (showPrintBill) activeButtonsCount++; // Print Bill button (Takeaway/Delivery only)
+
+  const showPayment = orderStatus === 'KOT' || (orderStatus === 'Save' && orderItems.length > 0) || (isPaid && dueAmount > 0.01);
+  const paymentSpan = showPayment && activeButtonsCount % 2 === 0 ? 'span 2' : 'span 1';
 
   // ─── Styles ───────────────────────────────────────────────────────────────
   const btnBase = {
@@ -40,11 +68,8 @@ const PaymentSummaryBox = ({
 
   return (
     <>
-
-
       {/* ── Desktop panel ── */}
       <div className="d-none d-lg-block">
-
         {/* Total display */}
         <div
           style={{
@@ -57,27 +82,18 @@ const PaymentSummaryBox = ({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className="d-flex align-items-baseline gap-2">
-              <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>
-                Total:
-              </span>
-              <span style={{ fontSize: '18px', fontWeight: 900, color: '#1e293b' }}>
-                ₹{totalAmount.toFixed(0)}
-              </span>
+              <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>Total:</span>
+              <span style={{ fontSize: '18px', fontWeight: 900, color: '#1e293b' }}>₹{totalAmount.toFixed(0)}</span>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '10.5px', color: '#94a3b8', fontWeight: 600 }}>{totalQty} items</div>
-              {dueAmount > 0.01 && totalPaid > 0 && (
-                <div style={{ fontSize: '10px', fontWeight: 800, color: '#ef4444' }}>
-                  Due: ₹{dueAmount.toFixed(0)}
-                </div>
-              )}
+              {dueAmount > 0.01 && totalPaid > 0 && <div style={{ fontSize: '10px', fontWeight: 800, color: '#ef4444' }}>Due: ₹{dueAmount.toFixed(0)}</div>}
             </div>
           </div>
         </div>
 
         {/* Action Buttons - 2 Column Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-
           {/* Save Changes */}
           {orderItems.length > 0 && isDirty && (
             <button
@@ -105,7 +121,7 @@ const PaymentSummaryBox = ({
           )}
 
           {/* KOT + Print */}
-          {showKOTButtons && (
+          {showKOTPrintButton && (
             <button
               type="button"
               style={{ ...btnBase, background: 'rgba(245,158,11,0.08)', color: '#d97706', border: '1.5px solid rgba(245,158,11,0.3)' }}
@@ -117,16 +133,28 @@ const PaymentSummaryBox = ({
             </button>
           )}
 
-          {/* Process Payment — primary CTA */}
-          {(orderStatus === 'KOT' || (orderStatus === 'Save' && orderItems.length > 0) || (isPaid && dueAmount > 0.01)) && (
+          {/* Print Bill (even if new/unsaved/dirty) */}
+          {/* {showPrintBill && (
             <button
               type="button"
-              style={{ 
-                ...btnBase, 
-                background: '#23b3f4', 
-                color: '#ffffff', 
-                boxShadow: '0 4px 12px rgba(35,179,244,0.3)',
-                gridColumn: (isDirty || showKOTButtons) ? 'span 1' : 'span 2'
+              style={{ ...btnBase, background: '#f1f5f9', color: '#475569', border: '1.5px solid rgba(226,232,240,0.9)' }}
+              onClick={() => handlePrint(orderId)}
+              disabled={printing}
+            >
+              <CsLineIcons icon="print" size="13" />
+              {printing ? 'Printing...' : 'Print Bill'}
+            </button>
+          )} */}
+
+          {/* Process Payment — primary CTA */}
+          {showPayment && (
+            <button
+              type="button"
+              style={{
+                ...btnBase,
+                background: '#23b3f4',
+                color: '#ffffff',
+                boxShadow: '0 4px 12px rgba(35,179,244,0.3)'
               }}
               onClick={handleOpenPaymentModal}
             >
@@ -166,7 +194,15 @@ const PaymentSummaryBox = ({
               {kotHistory.length > 0 && (
                 <button
                   type="button"
-                  style={{ ...btnBase, flex: 1, background: 'transparent', color: '#94a3b8', border: '1px solid rgba(226,232,240,0.9)', fontSize: '11px', padding: '0.4rem' }}
+                  style={{
+                    ...btnBase,
+                    flex: 1,
+                    background: 'transparent',
+                    color: '#94a3b8',
+                    border: '1px solid rgba(226,232,240,0.9)',
+                    fontSize: '11px',
+                    padding: '0.4rem',
+                  }}
                   onClick={() => setShowKotHistory(true)}
                 >
                   <CsLineIcons icon="history" size="12" />
@@ -176,7 +212,15 @@ const PaymentSummaryBox = ({
               {paymentHistory.length > 0 && (
                 <button
                   type="button"
-                  style={{ ...btnBase, flex: 1, background: 'transparent', color: '#94a3b8', border: '1px solid rgba(226,232,240,0.9)', fontSize: '11px', padding: '0.4rem' }}
+                  style={{
+                    ...btnBase,
+                    flex: 1,
+                    background: 'transparent',
+                    color: '#94a3b8',
+                    border: '1px solid rgba(226,232,240,0.9)',
+                    fontSize: '11px',
+                    padding: '0.4rem',
+                  }}
                   onClick={() => setShowPaymentHistory(true)}
                 >
                   <CsLineIcons icon="credit-card" size="12" />
@@ -186,7 +230,15 @@ const PaymentSummaryBox = ({
               {orderId && orderStatus !== 'Paid' && (
                 <button
                   type="button"
-                  style={{ ...btnBase, flex: 1, background: 'transparent', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)', fontSize: '11px', padding: '0.4rem' }}
+                  style={{
+                    ...btnBase,
+                    flex: 1,
+                    background: 'transparent',
+                    color: '#ef4444',
+                    border: '1px solid rgba(239,68,68,0.25)',
+                    fontSize: '11px',
+                    padding: '0.4rem',
+                  }}
                   onClick={() => setShowCancelModal(true)}
                   disabled={isLoading}
                 >
@@ -212,7 +264,9 @@ const PaymentSummaryBox = ({
               <div key={record.id} style={{ border: '1px solid rgba(226,232,240,0.9)', borderRadius: '10px', padding: '12px', marginBottom: '8px' }}>
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <div>
-                    <Badge bg="dark" className="me-2">Print #{record.kotNo}</Badge>
+                    <Badge bg="dark" className="me-2">
+                      Print #{record.kotNo}
+                    </Badge>
                     <small className="text-muted">{new Date(record.timestamp).toLocaleTimeString('en-IN')}</small>
                   </div>
                   <Button size="sm" variant="outline-primary" onClick={() => onReprintKOT && onReprintKOT(record)} disabled={kotPrinting}>
@@ -232,7 +286,9 @@ const PaymentSummaryBox = ({
           )}
         </Modal.Body>
         <Modal.Footer style={{ borderTop: '1px solid rgba(226,232,240,0.8)' }}>
-          <Button variant="secondary" onClick={() => setShowKotHistory(false)}>Close</Button>
+          <Button variant="secondary" onClick={() => setShowKotHistory(false)}>
+            Close
+          </Button>
         </Modal.Footer>
       </Modal>
 
@@ -242,7 +298,16 @@ const PaymentSummaryBox = ({
           <Modal.Title style={{ fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>Payment History</Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-          <div style={{ background: 'rgba(35,179,244,0.05)', borderRadius: '10px', padding: '12px', textAlign: 'center', marginBottom: '12px', border: '1px solid rgba(35,179,244,0.15)' }}>
+          <div
+            style={{
+              background: 'rgba(35,179,244,0.05)',
+              borderRadius: '10px',
+              padding: '12px',
+              textAlign: 'center',
+              marginBottom: '12px',
+              border: '1px solid rgba(35,179,244,0.15)',
+            }}
+          >
             <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Order Total</div>
             <div style={{ fontSize: '22px', fontWeight: 900, color: '#1e293b' }}>₹{totalAmount.toFixed(2)}</div>
           </div>
@@ -250,28 +315,63 @@ const PaymentSummaryBox = ({
             <p className="text-muted text-center">No payments recorded yet</p>
           ) : (
             [...paymentHistory].reverse().map((record) => (
-              <div key={record.id} style={{ border: '1px solid rgba(226,232,240,0.9)', borderRadius: '10px', padding: '12px', marginBottom: '8px', display: 'flex', justifycontent: 'space-between', alignitems: 'center' }}>
+              <div
+                key={record.id}
+                style={{
+                  border: '1px solid rgba(226,232,240,0.9)',
+                  borderRadius: '10px',
+                  padding: '12px',
+                  marginBottom: '8px',
+                  display: 'flex',
+                  justifycontent: 'space-between',
+                  alignitems: 'center',
+                }}
+              >
                 <div>
                   <div style={{ fontWeight: 800, fontSize: '16px', color: '#10b981' }}>₹{parseFloat(record.amount).toFixed(2)}</div>
-                  <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>{record.type} • {new Date(record.timestamp).toLocaleString('en-IN')}</div>
+                  <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                    {record.type} • {new Date(record.timestamp).toLocaleString('en-IN')}
+                  </div>
                 </div>
                 <Badge bg="success">Paid</Badge>
               </div>
             ))
           )}
-          <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid rgba(226,232,240,0.8)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div
+            style={{
+              marginTop: '10px',
+              paddingTop: '10px',
+              borderTop: '1px solid rgba(226,232,240,0.8)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             <span style={{ fontWeight: 700, fontSize: '13px' }}>Total Paid:</span>
             <span style={{ fontWeight: 800, color: '#10b981', fontSize: '15px' }}>₹{totalPaid.toFixed(2)}</span>
           </div>
           {dueAmount > 0.01 && (
-            <div style={{ marginTop: '6px', padding: '8px 12px', background: 'rgba(239,68,68,0.05)', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div
+              style={{
+                marginTop: '6px',
+                padding: '8px 12px',
+                background: 'rgba(239,68,68,0.05)',
+                borderRadius: '8px',
+                border: '1px solid rgba(239,68,68,0.15)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
               <span style={{ fontWeight: 700, fontSize: '13px' }}>Remaining Due:</span>
               <span style={{ fontWeight: 800, color: '#ef4444', fontSize: '15px' }}>₹{dueAmount.toFixed(2)}</span>
             </div>
           )}
         </Modal.Body>
         <Modal.Footer style={{ borderTop: '1px solid rgba(226,232,240,0.8)' }}>
-          <Button variant="secondary" onClick={() => setShowPaymentHistory(false)}>Close</Button>
+          <Button variant="secondary" onClick={() => setShowPaymentHistory(false)}>
+            Close
+          </Button>
         </Modal.Footer>
       </Modal>
     </>

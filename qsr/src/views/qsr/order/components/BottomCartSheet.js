@@ -20,6 +20,24 @@ const BottomCartSheet = ({
   const totalPaid = paymentHistory.reduce((sum, p) => sum + parseFloat(p.amount), 0) || alreadyPaid;
   const dueAmount = Math.max(0, totalAmount - totalPaid);
 
+  const showSave = orderItems.length > 0 && isDirty;
+  const showKitchen = canKOT && showKOTButtons;
+  const showPrintBill = (!isPaid || isDirty || dueAmount > 0.01) && orderItems.length > 0;
+  const showPayment = (orderStatus === 'KOT' || (orderStatus === 'Save' && orderItems.length > 0) || (isPaid && dueAmount > 0.01));
+
+  let paymentSpan = 'span 1';
+  let totalUnpaidActions = 0;
+  if (showSave) totalUnpaidActions++;
+  if (showKitchen) totalUnpaidActions++;
+  if (showPrintBill) totalUnpaidActions++;
+  if (showPayment) {
+    if (totalUnpaidActions % 2 === 0) {
+      paymentSpan = 'span 2';
+    } else {
+      paymentSpan = 'span 1';
+    }
+  }
+
   return (
     <>
       <Offcanvas
@@ -89,7 +107,7 @@ const BottomCartSheet = ({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             {/* Save Changes */}
-            {orderItems.length > 0 && isDirty && (
+            {showSave && (
               <button
                 type="button"
                 style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, border: '1.5px solid rgba(226,232,240,0.9)', background: '#f1f5f9', color: '#475569', cursor: 'pointer' }}
@@ -100,7 +118,7 @@ const BottomCartSheet = ({
               </button>
             )}
             {/* Send to Kitchen */}
-            {canKOT && showKOTButtons && (
+            {showKitchen && (
               <button
                 type="button"
                 style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: 'rgba(35,179,244,0.08)', color: '#23b3f4', border: '1.5px solid rgba(35,179,244,0.3)', cursor: 'pointer' }}
@@ -110,20 +128,18 @@ const BottomCartSheet = ({
                 Kitchen
               </button>
             )}
-            {/* Order Print */}
-            {showKOTButtons && (
+            {/* Print Bill (even if new/unsaved/dirty) */}
+            {showPrintBill && (
               <button
                 type="button"
-                style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: 'rgba(245,158,11,0.08)', color: '#d97706', border: '1.5px solid rgba(245,158,11,0.3)', cursor: 'pointer' }}
+                style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: '#f1f5f9', color: '#475569', border: '1.5px solid rgba(226,232,240,0.9)', cursor: 'pointer' }}
                 onClick={() => {
                   setShowCartSheet(false);
-                  if (onKotAndPrint) {
-                    onKotAndPrint();
-                  }
+                  handlePrint(orderId);
                 }}
-                disabled={isLoading || kotPrinting}
+                disabled={printing}
               >
-                {kotPrinting ? '...' : 'Order Print'}
+                {printing ? '...' : 'Print Bill'}
               </button>
             )}
             {/* Cancel Order */}
@@ -159,14 +175,14 @@ const BottomCartSheet = ({
                 )}
               </>
             ) : (
-              (orderStatus === 'KOT' || (orderStatus === 'Save' && orderItems.length > 0) || (isPaid && dueAmount > 0.01)) && (
+              showPayment && (
                 <button
                   type="button"
                   style={{ 
                     width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, 
                     background: '#23b3f4', color: '#fff', border: 'none', boxShadow: '0 4px 12px rgba(35,179,244,0.3)', 
                     cursor: 'pointer',
-                    gridColumn: (isDirty || showKOTButtons) ? 'span 1' : 'span 2'
+                    gridColumn: paymentSpan
                   }}
                   onClick={() => { setShowCartSheet(false); handleOpenPaymentModal(); }}
                 >

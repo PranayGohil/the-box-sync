@@ -92,7 +92,8 @@ export const LeaveConfirmationModal = ({
   nextLocation,
   history,
   handleSaveOrder,
-  isLoading
+  isLoading,
+  canKOT
 }) => {
   return (
     <Modal
@@ -159,23 +160,25 @@ export const LeaveConfirmationModal = ({
           </button>
         )}
 
-        <button
-          type="button"
-          className="btn-qsr-blue"
-          onClick={async () => {
-            allowNavigationRef.current = true;
-            await handleSaveOrder('KOT');
-            setShowLeaveModal(false);
-            if (nextLocation) {
-              setTimeout(() => {
-                history.push(nextLocation);
-              }, 0);
-            }
-          }}
-          disabled={isLoading}
-        >
-          Kitchen
-        </button>
+        {canKOT && (
+          <button
+            type="button"
+            className="btn-qsr-blue"
+            onClick={async () => {
+              allowNavigationRef.current = true;
+              await handleSaveOrder('KOT');
+              setShowLeaveModal(false);
+              if (nextLocation) {
+                setTimeout(() => {
+                  history.push(nextLocation);
+                }, 0);
+              }
+            }}
+            disabled={isLoading}
+          >
+            Kitchen
+          </button>
+        )}
       </Modal.Footer>
     </Modal>
   );

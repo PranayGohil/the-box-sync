@@ -318,7 +318,18 @@ export const printModalBill = async (liveData, setPrinting) => {
       return;
     }
 
-    const billHTML = printFullBill(ord, userData, orderItems, ord.sub_total);
+    let billHTML = printFullBill(ord, userData, orderItems, ord.sub_total);
+
+    const groupedByCounter = {};
+    orderItems.forEach(item => {
+      const counterName = item.counter || 'Default';
+      if (!groupedByCounter[counterName]) groupedByCounter[counterName] = [];
+      groupedByCounter[counterName].push(item);
+    });
+
+    Object.entries(groupedByCounter).forEach(([counterName, items]) => {
+      billHTML += printCounterBill(ord, userData, counterName, items);
+    });
 
     printWindow.document.write(`
       <html>

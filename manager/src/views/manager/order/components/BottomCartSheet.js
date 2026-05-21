@@ -4,12 +4,31 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import OrderCartTable from './OrderCartTable';
 
 const BottomCartSheet = ({
-  showCartSheet, setShowCartSheet, orderItems, updateItemQuantity, removeItem,
-  isDirty, orderStatus, isLoading, printing, paymentData, orderId,
-  handleSaveOrder, handleOpenPaymentModal, setShowCancelModal, handlePrint, history, children,
-  alreadyPaid = 0, canKOT = false,
-  onKotAndPrint, kotPrinting, kotHistory = [], onReprintKOT,
+  showCartSheet,
+  setShowCartSheet,
+  orderItems,
+  updateItemQuantity,
+  removeItem,
+  isDirty,
+  orderStatus,
+  isLoading,
+  printing,
+  paymentData,
+  orderId,
+  handleSaveOrder,
+  handleOpenPaymentModal,
+  setShowCancelModal,
+  handlePrint,
+  history,
+  children,
+  alreadyPaid = 0,
+  canKOT = false,
+  onKotAndPrint,
+  kotPrinting,
+  kotHistory = [],
+  onReprintKOT,
   paymentHistory = [],
+  orderType,
 }) => {
   const [showKotHistory, setShowKotHistory] = useState(false);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
@@ -19,6 +38,20 @@ const BottomCartSheet = ({
   const totalAmount = parseFloat(paymentData.total);
   const totalPaid = paymentHistory.reduce((sum, p) => sum + parseFloat(p.amount), 0) || alreadyPaid;
   const dueAmount = Math.max(0, totalAmount - totalPaid);
+
+  // New Takeaway/Delivery Print Bill behavior
+  const isTakeawayOrDelivery = orderType !== 'Dine In';
+  const showKOTPrintButton = showKOTButtons && !isTakeawayOrDelivery; // KOT + Print (Order Print) is only shown for Dine In
+  const showPrintBill = isTakeawayOrDelivery && orderItems.length > 0 && orderStatus !== 'Paid'; // Print Bill for Takeaway/Delivery unpaid
+
+  let activeButtonsCount = 0;
+  if (orderItems.length > 0 && isDirty) activeButtonsCount++; // Save button
+  if (canKOT && showKOTButtons) activeButtonsCount++; // Kitchen button
+  if (showKOTPrintButton) activeButtonsCount++; // Order Print button (Dine In only)
+  if (showPrintBill) activeButtonsCount++; // Print Bill button (Takeaway/Delivery only)
+
+  const showPayment = orderStatus === 'KOT' || (orderStatus === 'Save' && orderItems.length > 0) || (isPaid && dueAmount > 0.01);
+  const paymentSpan = showPayment && activeButtonsCount % 2 === 0 ? 'span 2' : 'span 1';
 
   return (
     <>
@@ -66,24 +99,16 @@ const BottomCartSheet = ({
               marginBottom: '12px',
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'center'
+              alignItems: 'center',
             }}
           >
             <div className="d-flex align-items-baseline gap-2">
-              <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>
-                Total:
-              </span>
-              <span style={{ fontSize: '20px', fontWeight: 900, color: '#1e293b' }}>
-                ₹{totalAmount.toFixed(2)}
-              </span>
+              <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>Total:</span>
+              <span style={{ fontSize: '20px', fontWeight: 900, color: '#1e293b' }}>₹{totalAmount.toFixed(2)}</span>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>{orderItems.reduce((sum, item) => sum + item.quantity, 0)} items</div>
-              {dueAmount > 0.01 && totalPaid > 0 && (
-                <div style={{ fontSize: '11px', fontWeight: 800, color: '#ef4444' }}>
-                  Due: ₹{dueAmount.toFixed(0)}
-                </div>
-              )}
+              {dueAmount > 0.01 && totalPaid > 0 && <div style={{ fontSize: '11px', fontWeight: 800, color: '#ef4444' }}>Due: ₹{dueAmount.toFixed(0)}</div>}
             </div>
           </div>
 
@@ -92,7 +117,17 @@ const BottomCartSheet = ({
             {orderItems.length > 0 && isDirty && (
               <button
                 type="button"
-                style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, border: '1.5px solid rgba(226,232,240,0.9)', background: '#f1f5f9', color: '#475569', cursor: 'pointer' }}
+                style={{
+                  width: '100%',
+                  padding: '0.6rem',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  border: '1.5px solid rgba(226,232,240,0.9)',
+                  background: '#f1f5f9',
+                  color: '#475569',
+                  cursor: 'pointer',
+                }}
                 onClick={() => handleSaveOrder('Save')}
                 disabled={isLoading}
               >
@@ -103,7 +138,17 @@ const BottomCartSheet = ({
             {canKOT && showKOTButtons && (
               <button
                 type="button"
-                style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: 'rgba(35,179,244,0.08)', color: '#23b3f4', border: '1.5px solid rgba(35,179,244,0.3)', cursor: 'pointer' }}
+                style={{
+                  width: '100%',
+                  padding: '0.6rem',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  background: 'rgba(35,179,244,0.08)',
+                  color: '#23b3f4',
+                  border: '1.5px solid rgba(35,179,244,0.3)',
+                  cursor: 'pointer',
+                }}
                 onClick={() => handleSaveOrder('KOT')}
                 disabled={isLoading}
               >
@@ -111,10 +156,20 @@ const BottomCartSheet = ({
               </button>
             )}
             {/* Order Print */}
-            {showKOTButtons && (
+            {showKOTPrintButton && (
               <button
                 type="button"
-                style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: 'rgba(245,158,11,0.08)', color: '#d97706', border: '1.5px solid rgba(245,158,11,0.3)', cursor: 'pointer' }}
+                style={{
+                  width: '100%',
+                  padding: '0.6rem',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  background: 'rgba(245,158,11,0.08)',
+                  color: '#d97706',
+                  border: '1.5px solid rgba(245,158,11,0.3)',
+                  cursor: 'pointer',
+                }}
                 onClick={() => {
                   setShowCartSheet(false);
                   if (onKotAndPrint) {
@@ -126,11 +181,45 @@ const BottomCartSheet = ({
                 {kotPrinting ? '...' : 'Order Print'}
               </button>
             )}
+            {/* Print Bill (even if new/unsaved/dirty) */}
+            {/* {showPrintBill && (
+              <button
+                type="button"
+                style={{
+                  width: '100%',
+                  padding: '0.6rem',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  border: '1.5px solid rgba(226,232,240,0.9)',
+                  background: '#f1f5f9',
+                  color: '#475569',
+                  cursor: 'pointer',
+                }}
+                onClick={() => {
+                  setShowCartSheet(false);
+                  handlePrint(orderId);
+                }}
+                disabled={printing}
+              >
+                {printing ? 'Printing...' : 'Print Bill'}
+              </button>
+            )} */}
             {/* Cancel Order */}
             {orderId && orderStatus !== 'Paid' && (
               <button
                 type="button"
-                style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: 'transparent', color: '#ef4444', border: '1.5px solid rgba(239,68,68,0.25)', cursor: 'pointer' }}
+                style={{
+                  width: '100%',
+                  padding: '0.6rem',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  background: 'transparent',
+                  color: '#ef4444',
+                  border: '1.5px solid rgba(239,68,68,0.25)',
+                  cursor: 'pointer',
+                }}
                 onClick={() => setShowCancelModal(true)}
                 disabled={isLoading}
               >
@@ -142,7 +231,17 @@ const BottomCartSheet = ({
               <>
                 <button
                   type="button"
-                  style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: '#23b3f4', color: '#fff', border: 'none', cursor: 'pointer' }}
+                  style={{
+                    width: '100%',
+                    padding: '0.6rem',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    background: '#23b3f4',
+                    color: '#fff',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
                   onClick={() => history.push('/dashboard')}
                 >
                   Dashboard
@@ -150,7 +249,17 @@ const BottomCartSheet = ({
                 {orderId && (
                   <button
                     type="button"
-                    style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: '#f1f5f9', color: '#475569', border: '1.5px solid rgba(226,232,240,0.9)', cursor: 'pointer' }}
+                    style={{
+                      width: '100%',
+                      padding: '0.6rem',
+                      borderRadius: '10px',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      background: '#f1f5f9',
+                      color: '#475569',
+                      border: '1.5px solid rgba(226,232,240,0.9)',
+                      cursor: 'pointer',
+                    }}
                     onClick={() => handlePrint(orderId)}
                     disabled={printing}
                   >
@@ -159,16 +268,26 @@ const BottomCartSheet = ({
                 )}
               </>
             ) : (
-              (orderStatus === 'KOT' || (orderStatus === 'Save' && orderItems.length > 0) || (isPaid && dueAmount > 0.01)) && (
+              showPayment && (
                 <button
                   type="button"
-                  style={{ 
-                    width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, 
-                    background: '#23b3f4', color: '#fff', border: 'none', boxShadow: '0 4px 12px rgba(35,179,244,0.3)', 
+                  style={{
+                    width: '100%',
+                    padding: '0.6rem',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    background: '#23b3f4',
+                    color: '#fff',
+                    border: 'none',
+                    boxShadow: '0 4px 12px rgba(35,179,244,0.3)',
                     cursor: 'pointer',
-                    gridColumn: (isDirty || showKOTButtons) ? 'span 1' : 'span 2'
+                    gridColumn: paymentSpan,
                   }}
-                  onClick={() => { setShowCartSheet(false); handleOpenPaymentModal(); }}
+                  onClick={() => {
+                    setShowCartSheet(false);
+                    handleOpenPaymentModal();
+                  }}
                 >
                   {dueAmount > 0.01 && totalPaid > 0 ? 'Pay' : 'Payment'}
                 </button>
@@ -179,13 +298,7 @@ const BottomCartSheet = ({
       </Offcanvas>
 
       {/* Order Print History Modal */}
-      <Modal 
-        show={showKotHistory} 
-        onHide={() => setShowKotHistory(false)} 
-        centered 
-        className="modal-custom-confirm"
-        size="md"
-      >
+      <Modal show={showKotHistory} onHide={() => setShowKotHistory(false)} centered className="modal-custom-confirm" size="md">
         <style>{`
           .modal-custom-confirm .modal-content { border-radius: 20px; border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); overflow: hidden; }
           .modal-custom-confirm .modal-header { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 1px solid #e2e8f0; padding: 20px 24px; }
@@ -197,7 +310,18 @@ const BottomCartSheet = ({
         `}</style>
         <Modal.Header closeButton>
           <Modal.Title>
-            <div style={{ background: '#23b3f4', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+            <div
+              style={{
+                background: '#23b3f4',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+              }}
+            >
               <CsLineIcons icon="print" size="20" />
             </div>
             Order Print History
@@ -221,7 +345,7 @@ const BottomCartSheet = ({
                       {new Date(record.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
-                  <button 
+                  <button
                     type="button"
                     className="btn-qsr-blue py-1 px-3"
                     style={{ fontSize: '12px' }}
@@ -237,9 +361,15 @@ const BottomCartSheet = ({
                       <li key={i} className="d-flex justify-content-between align-items-baseline mb-1 border-bottom border-white pb-1">
                         <div style={{ fontSize: '13px', color: '#334155', fontWeight: 600 }}>
                           {item.dish_name}
-                          {item.special_notes && <div className="text-muted" style={{ fontSize: '10px', fontWeight: 400 }}>Note: {item.special_notes}</div>}
+                          {item.special_notes && (
+                            <div className="text-muted" style={{ fontSize: '10px', fontWeight: 400 }}>
+                              Note: {item.special_notes}
+                            </div>
+                          )}
                         </div>
-                        <div className="fw-bold ms-2" style={{ color: '#23b3f4', fontSize: '13px' }}>×{item.quantity}</div>
+                        <div className="fw-bold ms-2" style={{ color: '#23b3f4', fontSize: '13px' }}>
+                          ×{item.quantity}
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -249,31 +379,42 @@ const BottomCartSheet = ({
           )}
         </Modal.Body>
         <Modal.Footer>
-          <button type="button" className="btn-qsr-secondary w-100" onClick={() => setShowKotHistory(false)}>Close History</button>
+          <button type="button" className="btn-qsr-secondary w-100" onClick={() => setShowKotHistory(false)}>
+            Close History
+          </button>
         </Modal.Footer>
       </Modal>
 
       {/* Payment History Modal */}
-      <Modal 
-        show={showPaymentHistory} 
-        onHide={() => setShowPaymentHistory(false)} 
-        centered
-        className="modal-custom-confirm"
-      >
+      <Modal show={showPaymentHistory} onHide={() => setShowPaymentHistory(false)} centered className="modal-custom-confirm">
         <Modal.Header closeButton>
           <Modal.Title>
-            <div style={{ background: '#10b981', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+            <div
+              style={{
+                background: '#10b981',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+              }}
+            >
               <CsLineIcons icon="credit-card" size="20" />
             </div>
             Payment History
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ maxHeight: '65vh', overflowY: 'auto' }}>
-          <div className="mb-4 p-3 rounded-4 text-center" style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.02))', border: '1.5px solid rgba(16,185,129,0.2)' }}>
+          <div
+            className="mb-4 p-3 rounded-4 text-center"
+            style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.02))', border: '1.5px solid rgba(16,185,129,0.2)' }}
+          >
             <div className="text-muted small fw-bold text-uppercase mb-1">Total Bill Amount</div>
             <div className="h3 mb-0 fw-bold text-success">₹{totalAmount.toFixed(2)}</div>
           </div>
-          
+
           {paymentHistory.length === 0 ? (
             <div className="text-center py-4 text-muted">
               <p className="fw-bold mb-0">No payments recorded yet</p>
@@ -287,7 +428,9 @@ const BottomCartSheet = ({
                     {record.type} • {new Date(record.timestamp).toLocaleString('en-IN')}
                   </div>
                 </div>
-                <div style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', padding: '4px 10px', borderRadius: '50px', fontSize: '11px', fontWeight: 800 }}>
+                <div
+                  style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', padding: '4px 10px', borderRadius: '50px', fontSize: '11px', fontWeight: 800 }}
+                >
                   SUCCESS
                 </div>
               </div>
@@ -300,7 +443,10 @@ const BottomCartSheet = ({
               <span className="fw-bold text-success h5 mb-0">₹{totalPaid.toFixed(2)}</span>
             </div>
             {dueAmount > 0.01 && (
-              <div className="d-flex justify-content-between align-items-center p-3 rounded-3 mt-2" style={{ background: '#fef2f2', border: '1px solid #fee2e2' }}>
+              <div
+                className="d-flex justify-content-between align-items-center p-3 rounded-3 mt-2"
+                style={{ background: '#fef2f2', border: '1px solid #fee2e2' }}
+              >
                 <span className="fw-bold text-danger">Remaining Due:</span>
                 <span className="fw-bold text-danger h5 mb-0">₹{dueAmount.toFixed(2)}</span>
               </div>
@@ -308,7 +454,9 @@ const BottomCartSheet = ({
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <button type="button" className="btn-qsr-secondary w-100" onClick={() => setShowPaymentHistory(false)}>Close History</button>
+          <button type="button" className="btn-qsr-secondary w-100" onClick={() => setShowPaymentHistory(false)}>
+            Close History
+          </button>
         </Modal.Footer>
       </Modal>
     </>

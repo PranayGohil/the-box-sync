@@ -15,7 +15,7 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { useSocket } from 'contexts/SocketContext';
 import { AuthContext } from 'contexts/AuthContext';
 import { toast } from 'react-toastify';
-import { openPrintWindow, printKOTSlip } from 'utils/printUtils';
+import { openPrintWindow, printKOTSlip, printModalBill } from 'utils/printUtils';
 import MenuGrid from './components/MenuGrid';
 import OrderCartTable from './components/OrderCartTable';
 import CustomerInfoForm from './components/CustomerInfoForm';
@@ -343,7 +343,13 @@ const UnifiedOrder = () => {
   };
 
   // ── Print ─────────────────────────────────────────────────────────────────
-  const handlePrint = (order_id) => openPrintWindow(order_id, setPrinting);
+  const handlePrint = (order_id) => {
+    if (order_id) {
+      openPrintWindow(order_id, setPrinting);
+    } else {
+      printModalBill({ paymentData, orderItems, customerInfo, orderType, orderId: null, orderNo: 'Preview' }, setPrinting);
+    }
+  };
 
   // ── KOT Delta ─────────────────────────────────────────────────────────────
   const computeKOTDelta = (currentItems, snapshotItems) => {
@@ -389,23 +395,40 @@ const UnifiedOrder = () => {
   const buildPayload = (status, completeAll = false) => {
     const orderData = {
       order_type: orderType,
-      order_items: orderItems.map((item) => ({
-        dish_name: item.dish_name,
-        quantity: item.quantity,
-        dish_price: item.dish_price,
-        special_notes: item.special_notes || '',
-        status: completeAll
-          ? 'Completed'
-          : status === 'KOT' || status === 'Paid'
-          ? item.status === 'Pending'
-            ? 'Preparing'
-            : item.status
-          : status === 'Save'
-          ? item.status || 'Pending'
-          : item.status,
-        selected_variant: item.selected_variant,
-        selected_addons: item.selected_addons,
-      })),
+      order_items: orderItems.map((item) => {
+        let itemStatus = item.status || 'Pending';
+        if (completeAll) {
+          itemStatus = 'Completed';
+        } else if (status === 'Paid') {
+          if (orderType === 'Dine In') {
+            if (itemStatus === 'Pending') {
+              itemStatus = 'Preparing';
+            }
+          } else if (canKOT) {
+            if (itemStatus === 'Pending') {
+              itemStatus = 'Preparing';
+            }
+          } else if (itemStatus !== 'Cancelled') {
+            itemStatus = 'Completed';
+          }
+        } else if (status === 'KOT') {
+          if (itemStatus === 'Pending') {
+            itemStatus = 'Preparing';
+          }
+        } else if (status === 'Save') {
+          itemStatus = itemStatus || 'Pending';
+        }
+
+        return {
+          dish_name: item.dish_name,
+          quantity: item.quantity,
+          dish_price: item.dish_price,
+          special_notes: item.special_notes || '',
+          status: itemStatus,
+          selected_variant: item.selected_variant,
+          selected_addons: item.selected_addons,
+        };
+      }),
       order_status: status,
       customer_name: customerInfo.name,
       comment: customerInfo.comment,
@@ -808,6 +831,7 @@ const UnifiedOrder = () => {
                 paymentHistory={paymentHistory}
                 alreadyPaid={parseFloat(initialStateRef.current?.paid_amount) || 0}
                 canKOT={canKOT}
+                orderType={orderType}
               />
             </div>
           </div>
@@ -843,6 +867,8 @@ const UnifiedOrder = () => {
         history={history}
         handleSaveOrder={handleSaveOrder}
         isLoading={isLoading}
+        canKOT={canKOT}
+        orderType={orderType}
       />
       <CancelOrderModal showCancelModal={showCancelModal} setShowCancelModal={setShowCancelModal} handleCancelOrder={handleCancelOrder} isLoading={isLoading} />
 
@@ -871,6 +897,7 @@ const UnifiedOrder = () => {
         kotHistory={kotHistory}
         onReprintKOT={handleReprintKOT}
         paymentHistory={paymentHistory}
+        orderType={orderType}
       >
         <div className="d-flex align-items-center justify-content-between mb-3">
           <h6 className="mb-0 fw-bold text-muted border-bottom pb-2 flex-grow-1">Customer Details</h6>

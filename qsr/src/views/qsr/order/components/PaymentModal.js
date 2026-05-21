@@ -221,16 +221,14 @@ const PaymentModal = ({
           Cancel
         </Button>
         <div className="d-flex gap-2">
-          {orderId && (
-            <Button 
-              variant="outline-secondary" 
-              style={{ borderRadius: '12px', padding: '10px 20px', fontWeight: 700 }}
-              onClick={handlePrintBill} 
-              disabled={printing || isLoading}
-            >
-              {printing ? 'Printing...' : 'Print Bill'}
-            </Button>
-          )}
+          <Button 
+            variant="outline-secondary" 
+            style={{ borderRadius: '12px', padding: '10px 20px', fontWeight: 700 }}
+            onClick={handlePrintBill} 
+            disabled={printing || isLoading}
+          >
+            {printing ? 'Printing...' : 'Print Bill'}
+          </Button>
           <Button 
             variant="primary" 
             style={{ borderRadius: '12px', padding: '10px 30px', fontWeight: 800, background: '#23b3f4', border: 'none', boxShadow: '0 10px 20px -5px rgba(35, 179, 244, 0.4)' }}
