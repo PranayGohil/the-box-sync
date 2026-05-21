@@ -2,7 +2,6 @@ const Manager = require("../models/managerModel");
 const Kot = require("../models/kotModel");
 const QSR = require("../models/QSRModel");
 const Captain = require("../models/captainModel");
-const Attendance = require("../models/attendanceModel");
 const HotelManager = require("../models/hotelManagerModel");
 const User = require("../models/userModel");
 const Subscription = require("../models/subscriptionModel");
@@ -14,7 +13,6 @@ const panelModels = {
   QSR: QSR,
   "KOT Panel": Kot,
   "Captain Panel": Captain,
-  "Payroll By The Box": Attendance,
   "Hotel Manager": HotelManager,
 };
 
