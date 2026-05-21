@@ -167,6 +167,9 @@ const InventoryDetails = () => {
       font-weight: 700;
       color: #334155;
     }
+    .mobile-label {
+      display: none;
+    }
     .section-card {
       background: #ffffff !important;
       border-radius: 2rem !important;
@@ -303,14 +306,14 @@ const InventoryDetails = () => {
         <div className="details-container">
             <style>{customStyles}</style>
             <HtmlHead title={title} description={description} />
-            <div className="container-fluid px-lg-5">
+            <div className="container-fluid px-3 px-lg-5">
                 <div className="page-title-container mb-4 pt-4">
                     <Row className="g-3 align-items-center">
-                        <Col lg="7">
+                        <Col xs={12} lg={7}>
                             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
                             <BreadcrumbList items={breadcrumbs} />
                         </Col>
-                        <Col lg="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-lg-0">
+                        <Col xs={12} lg={5} className="d-flex flex-wrap justify-content-start justify-content-lg-end gap-2 mt-3 mt-lg-0">
                             <Button variant="outline-secondary" onClick={() => history.push('/operations/inventory-history')} className="btn-action rounded-pill px-4 fw-bold border-2">
                                 <CsLineIcons icon="arrow-left" size="14" className="me-2" /> Back
                             </Button>
@@ -387,32 +390,61 @@ const InventoryDetails = () => {
                     <div className="section-label">
                         <CsLineIcons icon="package" size="18" /> Inventory Items
                     </div>
-                    <div className="item-header-row d-none d-lg-flex">
-                        <div style={{ width: '60px' }}>#</div>
-                        <div style={{ flex: 4 }}>Description</div>
-                        <div style={{ flex: 2 }}>Quantity</div>
-                        <div style={{ flex: 2 }} className="text-md-end">Price</div>
-                    </div>
-                    {inventory.items.map((item, index) => (
-                        <div key={index} className="item-row-card">
-                            <div style={{ width: '60px' }} className="fw-bold text-muted">
-                                <span className="mobile-label">#</span>
-                                {index + 1}
-                            </div>
-                            <div style={{ flex: 4 }} className="fw-bold text-dark">
-                                <span className="mobile-label">Description</span>
-                                {item.item_name}
-                            </div>
-                            <div style={{ flex: 2 }} className="fw-bold text-primary">
-                                <span className="mobile-label">Quantity</span>
-                                {item.item_quantity} {item.unit}
-                            </div>
-                            <div style={{ flex: 2 }} className="text-md-end fw-bold">
-                                <span className="mobile-label">Price</span>
-                                ₹ {item.item_price || 'N/A'}
-                            </div>
+                    {/* Desktop View */}
+                    <div className="d-none d-lg-block">
+                        <div className="item-header-row">
+                            <div style={{ width: '60px' }}>#</div>
+                            <div style={{ flex: 4 }}>Description</div>
+                            <div style={{ flex: 2 }}>Quantity</div>
+                            <div style={{ flex: 2 }} className="text-end">Price</div>
                         </div>
-                    ))}
+                        {inventory.items.map((item, index) => (
+                            <div key={index} className="item-row-card">
+                                <div style={{ width: '60px' }} className="fw-bold text-muted">
+                                    {index + 1}
+                                </div>
+                                <div style={{ flex: 4 }} className="fw-bold text-dark">
+                                    {item.item_name}
+                                </div>
+                                <div style={{ flex: 2 }} className="fw-bold text-primary">
+                                    {item.item_quantity} {item.unit}
+                                </div>
+                                <div style={{ flex: 2 }} className="text-end fw-bold">
+                                    ₹ {item.item_price || 'N/A'}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Mobile View */}
+                    <div className="d-block d-lg-none">
+                        {inventory.items.map((item, index) => (
+                            <div key={index} className="mb-3 p-3 bg-white border rounded-4 shadow-sm">
+                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <span className="badge rounded-pill px-2.5 py-1 fw-bold" style={{ fontSize: '0.75rem', backgroundColor: '#e0f2fe', color: '#0369a1' }}>
+                                            #{index + 1}
+                                        </span>
+                                        <h6 className="fw-bold text-dark mb-0">{item.item_name}</h6>
+                                    </div>
+                                </div>
+                                <Row className="g-2 text-center">
+                                    <Col xs={6}>
+                                        <div className="p-2 rounded-3 bg-light" style={{ border: '1px solid #f1f5f9' }}>
+                                            <div className="text-muted small fw-bold" style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Quantity</div>
+                                            <div className="fw-bold text-dark mt-0.5">{item.item_quantity} {item.unit}</div>
+                                        </div>
+                                    </Col>
+                                    <Col xs={6}>
+                                        <div className="p-2 rounded-3 bg-light" style={{ border: '1px solid #f1f5f9' }}>
+                                            <div className="text-muted small fw-bold" style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Price</div>
+                                            <div className="fw-bold text-dark mt-0.5">₹ {item.item_price || 'N/A'}</div>
+                                        </div>
+                                    </Col>
+                                </Row>
+                            </div>
+                        ))}
+                    </div>
 
                     {(inventory.paid_amount || inventory.total_amount || inventory.unpaid_amount) && (
                         <div className="summary-hub mt-5">

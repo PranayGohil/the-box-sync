@@ -3,6 +3,7 @@ const WastageLog = require("../models/wastageLogModel");
 const Inventory = require("../models/inventoryModel");
 const StockUsageLog = require("../models/stockUsageLogModel");
 const StockCorrectionRequest = require("../models/stockCorrectionRequestModel");
+const Website = require("../models/WebsiteModel");
 const XLSX = require("xlsx");
 
 // ─── Helper: normalize a date to midnight UTC ────────────────────────────────
@@ -892,6 +893,22 @@ const resolveCorrectionRequest = async (req, res) => {
   }
 };
 
+// ─── GET /daily-stock/timings — Restaurant opening/closing time ──────────────
+const getRestaurantTimings = async (req, res) => {
+  try {
+    const userId = String(req.user._id || req.user);
+    const website = await Website.findOne({ user_id: userId }).lean();
+    res.json({
+      success: true,
+      open_time_from: website?.open_time_from || null,
+      open_time_to: website?.open_time_to || null,
+    });
+  } catch (error) {
+    console.error("getRestaurantTimings error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 module.exports = {
   saveOpeningStock,
   saveClosingStock,
@@ -908,4 +925,5 @@ module.exports = {
   createCorrectionRequest,
   getCorrectionRequests,
   resolveCorrectionRequest,
+  getRestaurantTimings,
 };

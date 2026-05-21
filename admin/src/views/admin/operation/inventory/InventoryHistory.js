@@ -17,16 +17,50 @@ import TablePagination from './components/TablePagination';
 // Shared Sub-Components
 const TableControls = ({ onSearch, showFilters, setShowFilters, activeFilterCount, pageIndex, pageSize, totalRecords, onPageSizeChange, isLoading }) => (
   <div className="inventory-history-search-filter-hub border-0 shadow-sm">
-    <Row className="g-2 g-md-3 align-items-center">
-      <Col xs md="6" lg="6">
-        <div className="inventory-history-search-input-container">
-          <ControlsSearch onSearch={onSearch} />
-        </div>
-      </Col>
-      <Col xs="auto">
+
+    {/* ── DESKTOP layout (md+): search + filter icon | showing text + page size ── */}
+    <div className="d-none d-md-flex align-items-center gap-3">
+      {/* Search bar */}
+      <div className="inventory-history-search-input-container flex-grow-1">
+        <ControlsSearch onSearch={onSearch} />
+      </div>
+      {/* Filter circle icon button */}
+      <Button
+        variant={showFilters ? 'primary' : 'outline-primary'}
+        className="btn-icon btn-icon-only position-relative rounded-circle border-2 flex-shrink-0"
+        style={{ width: '40px', height: '40px' }}
+        onClick={() => setShowFilters(!showFilters)}
+      >
+        <CsLineIcons icon={showFilters ? 'close' : 'filter'} size="16" />
+        {activeFilterCount > 0 && (
+          <Badge bg="danger" className="position-absolute top-0 start-100 translate-middle rounded-circle border border-2 border-white" style={{ fontSize: '0.6rem', padding: '0.3em 0.5em' }}>
+            {activeFilterCount}
+          </Badge>
+        )}
+      </Button>
+      {/* Spacer */}
+      <div className="flex-grow-1" />
+      {/* Record count */}
+      <span className="smaller text-muted fw-bold flex-shrink-0">
+        {isLoading ? 'Processing...' : `Showing ${totalRecords > 0 ? pageIndex * pageSize + 1 : 0}–${Math.min((pageIndex + 1) * pageSize, totalRecords)} of ${totalRecords}`}
+      </span>
+      {/* Page size */}
+      <div className="flex-shrink-0">
+        <ControlsPageSize pageSize={pageSize} onPageSizeChange={onPageSizeChange} />
+      </div>
+    </div>
+
+    {/* ── MOBILE layout (<md): search stacked, filter icon + page size inline below ── */}
+    <div className="d-flex d-md-none flex-column gap-2">
+      {/* Search bar */}
+      <div className="inventory-history-search-input-container">
+        <ControlsSearch onSearch={onSearch} />
+      </div>
+      {/* Filter icon & Page size side-by-side */}
+      <div className="d-flex align-items-center gap-2">
         <Button
           variant={showFilters ? 'primary' : 'outline-primary'}
-          className="btn-icon btn-icon-only position-relative rounded-circle border-2"
+          className="btn-icon btn-icon-only position-relative rounded-circle border-2 flex-shrink-0"
           style={{ width: '40px', height: '40px' }}
           onClick={() => setShowFilters(!showFilters)}
         >
@@ -37,16 +71,15 @@ const TableControls = ({ onSearch, showFilters, setShowFilters, activeFilterCoun
             </Badge>
           )}
         </Button>
-      </Col>
-      <Col md className="text-md-end d-flex align-items-center justify-content-md-end gap-2 gap-md-3 mt-2 mt-md-0">
-        <div className="d-none d-lg-block smaller text-muted fw-bold">
-          {isLoading ? 'Processing...' : `Showing ${totalRecords > 0 ? pageIndex * pageSize + 1 : 0}-${Math.min((pageIndex + 1) * pageSize, totalRecords)} of ${totalRecords}`}
-        </div>
-        <div className="d-inline-block">
+        <div className="flex-shrink-0">
           <ControlsPageSize pageSize={pageSize} onPageSizeChange={onPageSizeChange} />
         </div>
-      </Col>
-    </Row>
+        {!isLoading && totalRecords > 0 && (
+          <span className="ms-2 small text-muted fw-bold">of {totalRecords}</span>
+        )}
+      </div>
+    </div>
+
   </div>
 );
 

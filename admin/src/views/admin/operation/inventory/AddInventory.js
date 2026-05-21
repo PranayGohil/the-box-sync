@@ -158,14 +158,20 @@ const AddInventory = () => {
               <Row className="g-4 mb-5">
                 <Col xs={12} md={3}>
                   <div className="add-inventory-input-group-label">Bill Date</div>
-                  <Form.Control
-                    type="date"
-                    className="add-inventory-modern-input"
-                    name="bill_date"
-                    value={values.bill_date}
-                    onChange={handleChange}
-                    isInvalid={touched.bill_date && errors.bill_date}
-                  />
+                  <div className="position-relative">
+                    <Form.Control
+                      type="date"
+                      className="add-inventory-modern-input"
+                      name="bill_date"
+                      value={values.bill_date}
+                      onChange={handleChange}
+                      isInvalid={touched.bill_date && errors.bill_date}
+                    />
+                    <div className="position-absolute end-0 top-50 translate-middle-y me-3" style={{ pointerEvents: 'none', zIndex: 5 }}>
+                      <CsLineIcons icon="calendar" size="16" className="text-muted" />
+                    </div>
+                  </div>
+                  {touched.bill_date && errors.bill_date && <div className="text-danger small mt-1">{errors.bill_date}</div>}
                 </Col>
                 <Col xs={12} md={3}>
                   <div className="add-inventory-input-group-label">Bill Number</div>
@@ -178,6 +184,7 @@ const AddInventory = () => {
                     isInvalid={touched.bill_number && errors.bill_number}
                     placeholder="Enter bill #"
                   />
+                  {touched.bill_number && errors.bill_number && <div className="text-danger small mt-1">{errors.bill_number}</div>}
                 </Col>
                 <Col xs={12} md={3}>
                   <div className="add-inventory-input-group-label">Vendor</div>
@@ -191,8 +198,10 @@ const AddInventory = () => {
                       onChange={(s) => setFieldValue('vendor_name', s ? s.value : '')}
                       placeholder="Vendor..."
                       classNamePrefix="react-select"
+                      styles={{ control: (base) => ({ ...base, borderColor: touched.vendor_name && errors.vendor_name ? '#dc3545' : base.borderColor }) }}
                     />
                   </div>
+                  {touched.vendor_name && errors.vendor_name && <div className="text-danger small mt-1">{errors.vendor_name}</div>}
                 </Col>
                 <Col xs={12} md={3}>
                   <div className="add-inventory-input-group-label">Category</div>
@@ -206,8 +215,10 @@ const AddInventory = () => {
                       onChange={(s) => setFieldValue('category', s ? s.value : '')}
                       placeholder="Category..."
                       classNamePrefix="react-select"
+                      styles={{ control: (base) => ({ ...base, borderColor: touched.category && errors.category ? '#dc3545' : base.borderColor }) }}
                     />
                   </div>
+                  {touched.category && errors.category && <div className="text-danger small mt-1">{errors.category}</div>}
                 </Col>
                 <Col md={12}>
                   <div className="add-inventory-input-group-label">Bill Attachments</div>
@@ -233,6 +244,7 @@ const AddInventory = () => {
                       </div>
                     ))}
                   </div>
+                  {touched.bill_files && errors.bill_files && <div className="text-danger small mt-1 text-center">{errors.bill_files}</div>}
                 </Col>
               </Row>
 
@@ -250,9 +262,9 @@ const AddInventory = () => {
 
               {values.items.map((item, idx) => (
                 <div key={idx} className="add-inventory-item-row-card">
-                  <Row className="w-100 g-3 align-items-center">
+                  <Row className="g-2 align-items-center">
                     <Col xs={12} lg={4}>
-                      <div className="add-inventory-input-group-label d-lg-none">Item Description</div>
+                      <div className="add-inventory-input-group-label">Item Description</div>
                       <div className="add-inventory-select-modern">
                         <CreatableSelect
                           isClearable
@@ -265,19 +277,22 @@ const AddInventory = () => {
                           classNamePrefix="react-select"
                         />
                       </div>
+                      {touched.items?.[idx]?.item_name && errors.items?.[idx]?.item_name && <div className="text-danger small mt-1">{errors.items[idx].item_name}</div>}
                     </Col>
-                    <Col xs={4} lg={1.5}>
+                    <Col xs={4} lg={2}>
                       <div className="add-inventory-input-group-label d-lg-none">Qty</div>
                       <Form.Control
                         type="number"
                         className="add-inventory-modern-input"
                         value={item.item_quantity}
                         onChange={(e) => handleItemChange(idx, 'item_quantity', e.target.value)}
+                        isInvalid={touched.items?.[idx]?.item_quantity && errors.items?.[idx]?.item_quantity}
                       />
+                      {touched.items?.[idx]?.item_quantity && errors.items?.[idx]?.item_quantity && <div className="text-danger small mt-1">{errors.items[idx].item_quantity}</div>}
                     </Col>
                     <Col xs={4} lg={2}>
                       <div className="add-inventory-input-group-label d-lg-none">Unit</div>
-                      <Form.Select className="add-inventory-modern-input" value={item.unit} onChange={(e) => handleItemChange(idx, 'unit', e.target.value)}>
+                      <Form.Select className="add-inventory-modern-input" value={item.unit} onChange={(e) => handleItemChange(idx, 'unit', e.target.value)} isInvalid={touched.items?.[idx]?.unit && errors.items?.[idx]?.unit}>
                         <option value="">Unit</option>
                         <option value="kg">kg</option>
                         <option value="g">g</option>
@@ -285,18 +300,21 @@ const AddInventory = () => {
                         <option value="ml">ml</option>
                         <option value="piece">pc</option>
                       </Form.Select>
+                      {touched.items?.[idx]?.unit && errors.items?.[idx]?.unit && <div className="text-danger small mt-1">{errors.items[idx].unit}</div>}
                     </Col>
-                    <Col xs={4} lg={3}>
-                      <div className="add-inventory-input-group-label d-lg-none">Price</div>
+                    <Col xs={4} lg={2}>
+                      <div className="add-inventory-input-group-label d-lg-none">Price (₹)</div>
                       <Form.Control
                         type="number"
                         className="add-inventory-modern-input"
                         value={item.item_price}
                         onChange={(e) => handleItemChange(idx, 'item_price', e.target.value)}
+                        isInvalid={touched.items?.[idx]?.item_price && errors.items?.[idx]?.item_price}
                       />
+                      {touched.items?.[idx]?.item_price && errors.items?.[idx]?.item_price && <div className="text-danger small mt-1">{errors.items[idx].item_price}</div>}
                     </Col>
-                    <Col xs={12} lg="auto" className="text-end">
-                      <button type="button" className="add-inventory-remove-btn ms-auto" onClick={() => removeItem(idx)} disabled={values.items.length === 1}>
+                    <Col xs="auto" lg="auto" className="d-flex justify-content-end align-items-center">
+                      <button type="button" className="add-inventory-remove-btn" onClick={() => removeItem(idx)} disabled={values.items.length === 1}>
                         <CsLineIcons icon="bin" size="16" />
                       </button>
                     </Col>
@@ -331,24 +349,27 @@ const AddInventory = () => {
                   </Col>
 
                   <Col xs={12} md={12}>
-                    <div className="add-inventory-total-display shadow-sm flex-column flex-md-row align-items-stretch align-items-md-center gap-3">
-                      <div>
-                        <div className="add-inventory-input-group-label mb-1">Final Amount Payable</div>
-                        <div className="add-inventory-total-val">₹ {values.total_amount}</div>
-                      </div>
-                      <div className="text-start text-md-end" style={{ minWidth: '200px' }}>
-                        <div className="add-inventory-input-group-label">Paid Amount</div>
-                        <Form.Control
-                          type="number"
-                          className="add-inventory-modern-input text-md-center fw-bold text-primary"
-                          style={{ fontSize: '1.25rem' }}
-                          name="paid_amount"
-                          value={values.paid_amount}
-                          onChange={handleChange}
-                          isInvalid={touched.paid_amount && errors.paid_amount}
-                          placeholder="0.00"
-                        />
-                      </div>
+                    <div className="add-inventory-total-display shadow-sm">
+                      <Row className="g-3 align-items-center w-100">
+                        <Col xs={12} md={6}>
+                          <div className="add-inventory-input-group-label mb-1">Final Amount Payable</div>
+                          <div className="add-inventory-total-val">₹ {values.total_amount}</div>
+                        </Col>
+                        <Col xs={12} md={6}>
+                          <div className="add-inventory-input-group-label">Paid Amount</div>
+                          <Form.Control
+                            type="number"
+                            className="add-inventory-modern-input fw-bold text-primary"
+                            style={{ fontSize: '1.1rem' }}
+                            name="paid_amount"
+                            value={values.paid_amount}
+                            onChange={handleChange}
+                            isInvalid={touched.paid_amount && errors.paid_amount}
+                            placeholder="0.00"
+                          />
+                          {touched.paid_amount && errors.paid_amount && <div className="text-danger small mt-1">{errors.paid_amount}</div>}
+                        </Col>
+                      </Row>
                     </div>
                   </Col>
 

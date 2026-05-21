@@ -16,6 +16,7 @@ const {
   createCorrectionRequest,
   getCorrectionRequests,
   resolveCorrectionRequest,
+  getRestaurantTimings,
 } = require("../controllers/dailyStockController");
 
 const dailyStockRouter = express.Router();
@@ -26,6 +27,7 @@ dailyStockRouter.post("/close", authMiddleware, saveClosingStock);
 dailyStockRouter.get("/today", authMiddleware, getTodayLog);
 dailyStockRouter.get("/auto-open", authMiddleware, autoGenerateOpening);
 dailyStockRouter.get("/history", authMiddleware, getDailyLogHistory);
+dailyStockRouter.get("/timings", authMiddleware, getRestaurantTimings);
 dailyStockRouter.put("/:id", authMiddleware, updateDailyLog);
 
 // Correction Requests
