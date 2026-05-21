@@ -1,5 +1,5 @@
 /* eslint-disable react/no-this-in-sfc, func-names */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Modal, Button, Form, Spinner, Row, Col } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -7,6 +7,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 
 const customStyles = `
   .pill-input {
@@ -83,13 +84,78 @@ const customStyles = `
     background: #23b3f4 !important;
     border-color: #23b3f4 !important;
   }
+  .square-delete-btn {
+    width: 48px !important;
+    min-width: 48px !important;
+    height: 48px !important;
+    border-radius: 12px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
 `;
 
-const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
+const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }) => {
   const [previewImg, setPreviewImg] = useState(null);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(data?.quantity != null && data.quantity !== '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const selectStyles = {
+    control: (base, state) => ({
+      ...base,
+      borderRadius: '8px',
+      padding: '2px',
+      border: state.isFocused ? '1px solid #23b3f4' : '1px solid #e5e7eb',
+      boxShadow: state.isFocused ? '0 0 0 4px rgba(35, 179, 244, 0.1)' : 'none',
+      backgroundColor: '#fff',
+      '&:hover': { border: '1px solid #23b3f4' },
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,
+    }),
+  };
+
+  const sizeSuggestions = useMemo(() => {
+    return Array.from(
+      new Set(
+        menuData.flatMap((c) =>
+          (c.dishes || []).flatMap((d) =>
+            (d.variants || []).map((v) => v.size_name?.trim()).filter(Boolean)
+          )
+        )
+      )
+    ).sort();
+  }, [menuData]);
+
+  const extraSuggestions = useMemo(() => {
+    return Array.from(
+      new Set(
+        menuData.flatMap((c) =>
+          (c.dishes || []).flatMap((d) =>
+            (d.variants || []).map((v) => v.extra?.trim()).filter(Boolean)
+          )
+        )
+      )
+    ).sort();
+  }, [menuData]);
+
+  const addonSuggestions = useMemo(() => {
+    return Array.from(
+      new Set(
+        menuData.flatMap((c) =>
+          (c.dishes || []).flatMap((d) =>
+            (d.addons || []).map((a) => a.addon_name?.trim()).filter(Boolean)
+          )
+        )
+      )
+    ).sort();
+  }, [menuData]);
+
+
 
   useEffect(() => {
     if (data?.dish_img) {
@@ -352,15 +418,22 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                           <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
                             Size / Variant Name (e.g. Regular, Small)
                           </Form.Label>
-                          <Form.Control
-                            type="text"
-                            name={`variants[${vIdx}].size_name`}
-                            value={variant.size_name || ''}
-                            onChange={formik.handleChange}
+                          <CreatableSelect
+                            styles={{
+                              ...selectStyles,
+                              control: (base, state) => ({
+                                ...selectStyles.control(base, state),
+                                minHeight: '48px',
+                                borderRadius: '12px',
+                              }),
+                            }}
+                            isClearable
+                            menuPlacement="auto"
+                            menuPortalTarget={document.body}
+                            options={sizeSuggestions.map((opt) => ({ value: opt, label: opt }))}
+                            value={variant.size_name ? { value: variant.size_name, label: variant.size_name } : null}
+                            onChange={(selected) => formik.setFieldValue(`variants[${vIdx}].size_name`, selected ? selected.value : '')}
                             placeholder="e.g. Regular"
-                            className="pill-input py-1 px-3"
-                            style={{ height: '40px', borderRadius: '8px' }}
-                            isInvalid={formik.touched.variants?.[vIdx]?.size_name && !!formik.errors.variants?.[vIdx]?.size_name}
                           />
                           {formik.errors.variants?.[vIdx]?.size_name && (
                             <div className="text-danger small mt-1">{formik.errors.variants[vIdx].size_name}</div>
@@ -378,8 +451,8 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                             value={variant.price || ''}
                             onChange={formik.handleChange}
                             placeholder="Price"
-                            className="pill-input py-1 px-3"
-                            style={{ height: '40px', borderRadius: '8px' }}
+                            className="pill-input"
+                            style={{ height: '48px', borderRadius: '12px' }}
                             isInvalid={formik.touched.variants?.[vIdx]?.price && !!formik.errors.variants?.[vIdx]?.price}
                           />
                           {formik.errors.variants?.[vIdx]?.price && <div className="text-danger small mt-1">{formik.errors.variants[vIdx].price}</div>}
@@ -390,18 +463,26 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                           <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
                             Extra Details (e.g. Serves 1-2)
                           </Form.Label>
-                          <Form.Control
-                            type="text"
-                            name={`variants[${vIdx}].extra`}
-                            value={variant.extra || ''}
-                            onChange={formik.handleChange}
+                          <CreatableSelect
+                            styles={{
+                              ...selectStyles,
+                              control: (base, state) => ({
+                                ...selectStyles.control(base, state),
+                                minHeight: '48px',
+                                borderRadius: '12px',
+                              }),
+                            }}
+                            isClearable
+                            menuPlacement="auto"
+                            menuPortalTarget={document.body}
+                            options={extraSuggestions.map((opt) => ({ value: opt, label: opt }))}
+                            value={variant.extra ? { value: variant.extra, label: variant.extra } : null}
+                            onChange={(selected) => formik.setFieldValue(`variants[${vIdx}].extra`, selected ? selected.value : '')}
                             placeholder="e.g. Serves 1-2"
-                            className="pill-input py-1 px-3"
-                            style={{ height: '40px', borderRadius: '8px' }}
                           />
                         </Form.Group>
                       </Col>
-                      <Col xs={2} sm="auto" className="pb-1 text-end">
+                      <Col xs="auto" className="pb-1">
                         <Button
                           variant="outline-danger"
                           onClick={() => {
@@ -410,8 +491,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                             formik.setFieldValue('variants', newVariants);
                           }}
                           disabled={formik.values.variants.length === 1}
-                          style={{ height: '40px', width: '40px', borderRadius: '8px', padding: 0 }}
-                          className="d-flex align-items-center justify-content-center btn btn-outline-danger w-100"
+                          className="square-delete-btn btn btn-outline-danger"
                         >
                           <CsLineIcons icon="bin" size="14" />
                         </Button>
@@ -449,15 +529,22 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                           <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
                             Add-on Name (e.g. Extra Sauce)
                           </Form.Label>
-                          <Form.Control
-                            type="text"
-                            name={`addons[${aIdx}].addon_name`}
-                            value={addon.addon_name || ''}
-                            onChange={formik.handleChange}
+                          <CreatableSelect
+                            styles={{
+                              ...selectStyles,
+                              control: (base, state) => ({
+                                ...selectStyles.control(base, state),
+                                minHeight: '48px',
+                                borderRadius: '12px',
+                              }),
+                            }}
+                            isClearable
+                            menuPlacement="auto"
+                            menuPortalTarget={document.body}
+                            options={addonSuggestions.map((opt) => ({ value: opt, label: opt }))}
+                            value={addon.addon_name ? { value: addon.addon_name, label: addon.addon_name } : null}
+                            onChange={(selected) => formik.setFieldValue(`addons[${aIdx}].addon_name`, selected ? selected.value : '')}
                             placeholder="Add-on Name"
-                            className="pill-input py-1 px-3"
-                            style={{ height: '38px', borderRadius: '8px' }}
-                            isInvalid={formik.touched.addons?.[aIdx]?.addon_name && !!formik.errors.addons?.[aIdx]?.addon_name}
                           />
                           {formik.errors.addons?.[aIdx]?.addon_name && <div className="text-danger small mt-1">{formik.errors.addons[aIdx].addon_name}</div>}
                         </Form.Group>
@@ -473,8 +560,8 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                             value={addon.price || ''}
                             onChange={formik.handleChange}
                             placeholder="Price"
-                            className="pill-input py-1 px-3"
-                            style={{ height: '38px', borderRadius: '8px' }}
+                            className="pill-input"
+                            style={{ height: '48px', borderRadius: '12px' }}
                             isInvalid={formik.touched.addons?.[aIdx]?.price && !!formik.errors.addons?.[aIdx]?.price}
                           />
                           {formik.errors.addons?.[aIdx]?.price && <div className="text-danger small mt-1">{formik.errors.addons[aIdx].price}</div>}
@@ -488,8 +575,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                             newAddons.splice(aIdx, 1);
                             formik.setFieldValue('addons', newAddons);
                           }}
-                          style={{ height: '38px', width: '38px', borderRadius: '8px', padding: 0 }}
-                          className="d-flex align-items-center justify-content-center btn btn-outline-danger"
+                          className="square-delete-btn btn btn-outline-danger"
                         >
                           <CsLineIcons icon="bin" size="14" />
                         </Button>
@@ -538,6 +624,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
           )}
         </Button>
       </Modal.Footer>
+
     </Modal>
   );
 };

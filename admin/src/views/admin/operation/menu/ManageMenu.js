@@ -452,7 +452,7 @@ const ManageMenu = () => {
       )}
 
       {selectedDish && (
-        <EditDishModal show={editMenuModalShow} handleClose={() => setEditMenuModalShow(false)} data={selectedDish} fetchMenuData={fetchMenuData} />
+        <EditDishModal show={editMenuModalShow} handleClose={() => setEditMenuModalShow(false)} data={selectedDish} fetchMenuData={fetchMenuData} menuData={menuData} />
       )}
 
       {selectedCategory && (

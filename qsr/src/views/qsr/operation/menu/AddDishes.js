@@ -1,5 +1,5 @@
 /* eslint-disable react/no-this-in-sfc, func-names, no-unused-vars */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Card, Col, Row, Button, Form as BForm, Spinner, Alert } from 'react-bootstrap';
 import { Formik, Form, FieldArray, Field, ErrorMessage } from 'formik';
@@ -225,6 +225,42 @@ const AddDishes = () => {
   };
 
   const [fullMenuData, setFullMenuData] = useState([]);
+
+  const sizeSuggestions = useMemo(() => {
+    return Array.from(
+      new Set(
+        fullMenuData.flatMap((c) =>
+          (c.dishes || []).flatMap((d) =>
+            (d.variants || []).map((v) => v.size_name?.trim()).filter(Boolean)
+          )
+        )
+      )
+    ).sort();
+  }, [fullMenuData]);
+
+  const extraSuggestions = useMemo(() => {
+    return Array.from(
+      new Set(
+        fullMenuData.flatMap((c) =>
+          (c.dishes || []).flatMap((d) =>
+            (d.variants || []).map((v) => v.extra?.trim()).filter(Boolean)
+          )
+        )
+      )
+    ).sort();
+  }, [fullMenuData]);
+
+  const addonSuggestions = useMemo(() => {
+    return Array.from(
+      new Set(
+        fullMenuData.flatMap((c) =>
+          (c.dishes || []).flatMap((d) =>
+            (d.addons || []).map((a) => a.addon_name?.trim()).filter(Boolean)
+          )
+        )
+      )
+    ).sort();
+  }, [fullMenuData]);
 
   const fetchFullMenuData = async () => {
     try {
@@ -624,14 +660,22 @@ const AddDishes = () => {
                                                     <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
                                                       Size / Variant Name
                                                     </BForm.Label>
-                                                    <BForm.Control
-                                                      type="text"
-                                                      name={`dishes[${index}].variants[${vIdx}].size_name`}
-                                                      value={variant.size_name || ''}
-                                                      onChange={handleChange}
+                                                    <CreatableSelect
+                                                      styles={{
+                                                        ...selectStyles,
+                                                        control: (base, state) => ({
+                                                          ...selectStyles.control(base, state),
+                                                          minHeight: '48px',
+                                                          borderRadius: '12px',
+                                                        }),
+                                                      }}
+                                                      isClearable
+                                                      menuPlacement="auto"
+                                                      menuPortalTarget={document.body}
+                                                      options={sizeSuggestions.map((opt) => ({ value: opt, label: opt }))}
+                                                      value={variant.size_name ? { value: variant.size_name, label: variant.size_name } : null}
+                                                      onChange={(selected) => setFieldValue(`dishes[${index}].variants[${vIdx}].size_name`, selected ? selected.value : '')}
                                                       placeholder="e.g. Regular"
-                                                      className="pill-input py-1 px-3"
-                                                      style={{ height: '34px', borderRadius: '8px', fontSize: '0.85rem' }}
                                                     />
                                                     <ErrorMessage
                                                       name={`dishes[${index}].variants[${vIdx}].size_name`}
@@ -651,8 +695,8 @@ const AddDishes = () => {
                                                       value={variant.price || ''}
                                                       onChange={handleChange}
                                                       placeholder="Price"
-                                                      className="pill-input py-1 px-3"
-                                                      style={{ height: '34px', borderRadius: '8px', fontSize: '0.85rem' }}
+                                                      className="pill-input"
+                                                      style={{ height: '48px', borderRadius: '12px' }}
                                                     />
                                                     <ErrorMessage
                                                       name={`dishes[${index}].variants[${vIdx}].price`}
@@ -666,14 +710,22 @@ const AddDishes = () => {
                                                     <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
                                                       Extra Details
                                                     </BForm.Label>
-                                                    <BForm.Control
-                                                      type="text"
-                                                      name={`dishes[${index}].variants[${vIdx}].extra`}
-                                                      value={variant.extra || ''}
-                                                      onChange={handleChange}
+                                                    <CreatableSelect
+                                                      styles={{
+                                                        ...selectStyles,
+                                                        control: (base, state) => ({
+                                                          ...selectStyles.control(base, state),
+                                                          minHeight: '48px',
+                                                          borderRadius: '12px',
+                                                        }),
+                                                      }}
+                                                      isClearable
+                                                      menuPlacement="auto"
+                                                      menuPortalTarget={document.body}
+                                                      options={extraSuggestions.map((opt) => ({ value: opt, label: opt }))}
+                                                      value={variant.extra ? { value: variant.extra, label: variant.extra } : null}
+                                                      onChange={(selected) => setFieldValue(`dishes[${index}].variants[${vIdx}].extra`, selected ? selected.value : '')}
                                                       placeholder="e.g. Serves 1-2"
-                                                      className="pill-input py-1 px-3"
-                                                      style={{ height: '34px', borderRadius: '8px', fontSize: '0.85rem' }}
                                                     />
                                                   </BForm.Group>
                                                 </Col>
@@ -682,7 +734,7 @@ const AddDishes = () => {
                                                     variant="outline-danger"
                                                     onClick={() => removeVariant(vIdx)}
                                                     disabled={dish.variants.length === 1}
-                                                    style={{ height: '40px', width: '40px', borderRadius: '8px', padding: 0 }}
+                                                    style={{ height: '48px', width: '48px', minWidth: '48px', borderRadius: '12px', padding: 0, flexShrink: 0 }}
                                                     className="d-flex align-items-center justify-content-center btn btn-outline-danger"
                                                   >
                                                     <CsLineIcons icon="bin" size="14" />
@@ -726,14 +778,22 @@ const AddDishes = () => {
                                                     <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
                                                       Add-on Name
                                                     </BForm.Label>
-                                                    <BForm.Control
-                                                      type="text"
-                                                      name={`dishes[${index}].addons[${aIdx}].addon_name`}
-                                                      value={addon.addon_name || ''}
-                                                      onChange={handleChange}
+                                                    <CreatableSelect
+                                                      styles={{
+                                                        ...selectStyles,
+                                                        control: (base, state) => ({
+                                                          ...selectStyles.control(base, state),
+                                                          minHeight: '48px',
+                                                          borderRadius: '12px',
+                                                        }),
+                                                      }}
+                                                      isClearable
+                                                      menuPlacement="auto"
+                                                      menuPortalTarget={document.body}
+                                                      options={addonSuggestions.map((opt) => ({ value: opt, label: opt }))}
+                                                      value={addon.addon_name ? { value: addon.addon_name, label: addon.addon_name } : null}
+                                                      onChange={(selected) => setFieldValue(`dishes[${index}].addons[${aIdx}].addon_name`, selected ? selected.value : '')}
                                                       placeholder="Add-on Name"
-                                                      className="pill-input py-1 px-3"
-                                                      style={{ height: '34px', borderRadius: '8px', fontSize: '0.85rem' }}
                                                     />
                                                     <ErrorMessage
                                                       name={`dishes[${index}].addons[${aIdx}].addon_name`}
@@ -753,8 +813,8 @@ const AddDishes = () => {
                                                       value={addon.price || ''}
                                                       onChange={handleChange}
                                                       placeholder="Price"
-                                                      className="pill-input py-1 px-3"
-                                                      style={{ height: '34px', borderRadius: '8px', fontSize: '0.85rem' }}
+                                                      className="pill-input"
+                                                      style={{ height: '48px', borderRadius: '12px' }}
                                                     />
                                                     <ErrorMessage
                                                       name={`dishes[${index}].addons[${aIdx}].price`}
@@ -767,7 +827,7 @@ const AddDishes = () => {
                                                   <Button
                                                     variant="outline-danger"
                                                     onClick={() => removeAddon(aIdx)}
-                                                    style={{ height: '38px', width: '38px', borderRadius: '8px', padding: 0 }}
+                                                    style={{ height: '48px', width: '48px', minWidth: '48px', borderRadius: '12px', padding: 0, flexShrink: 0 }}
                                                     className="d-flex align-items-center justify-content-center btn btn-outline-danger"
                                                   >
                                                     <CsLineIcons icon="bin" size="14" />
