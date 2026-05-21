@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Button, Form, Spinner, Row, Col } from 'react-bootstrap';
+import { Modal, Button, Form, Spinner, Row, Col, Alert } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -42,25 +42,39 @@ const customStyles = `
   }
   .edit-dish-category-modal-radio-pill {
     cursor: pointer;
-    padding: 8px 20px;
+    padding: 8px 16px;
     border-radius: 50px;
-    border: 1.5px solid #e2e8f0;
-    font-weight: 700;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
     font-size: 0.85rem;
     color: #475569;
-    transition: all 0.2s ease;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
   .edit-dish-category-modal-radio-pill:hover {
-    background-color: #f8fafc;
-    border-color: #cbd5e1;
+    background: #f9fafb;
   }
-  .edit-dish-category-modal-radio-pill.active {
-    background-color: #23b3f4;
-    border-color: #23b3f4;
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25);
+  .edit-dish-category-modal-radio-pill.active.veg {
+    background: #ecfdf5;
+    border-color: #10b981;
+    color: #047857;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+  }
+  .edit-dish-category-modal-radio-pill.active.egg {
+    background: #fffbeb;
+    border-color: #f59e0b;
+    color: #b45309;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+  }
+  .edit-dish-category-modal-radio-pill.active.non-veg {
+    background: #fef2f2;
+    border-color: #ef4444;
+    color: #b91c1c;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
   }
   .edit-dish-category-modal-custom-check {
     width: 20px;
@@ -82,6 +96,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [loading, setLoading] = useState(true);
     const [counterOptions, setCounterOptions] = useState([]);
+    const [submissionError, setSubmissionError] = useState(null);
 
     useEffect(() => {
         const fetchCounters = async () => {
@@ -115,6 +130,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
         enableReinitialize: true,
         onSubmit: async (values) => {
             setIsSubmitting(true);
+            setSubmissionError(null);
             try {
                 const payload = {
                     category: values.category,
@@ -139,7 +155,9 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                 handleClose();
             } catch (err) {
                 console.error('Error updating category:', err);
-                toast.error(err.response?.data?.message || 'Failed to update category.');
+                const errMsg = err.response?.data?.message || 'Failed to update category.';
+                setSubmissionError(errMsg);
+                toast.error(errMsg);
             } finally {
                 setIsSubmitting(false);
             }
@@ -151,6 +169,13 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
             setLoading(false);
         }
     }, [data]);
+
+    useEffect(() => {
+        if (!show) {
+            formik.resetForm();
+            setSubmissionError(null);
+        }
+    }, [show]);
 
     const selectStyles = {
         control: (base, state) => ({
@@ -186,6 +211,12 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
             </Modal.Header>
 
             <Modal.Body className="py-4">
+                {submissionError && (
+                    <Alert variant="danger" className="mb-4 shadow-sm border-0 d-flex align-items-center gap-2" style={{ borderRadius: '12px' }}>
+                        <CsLineIcons icon="error-hexagon" size="18" className="text-danger" />
+                        <span className="small fw-bold text-danger">{submissionError}</span>
+                    </Alert>
+                )}
                 <Form id="edit_category_form" onSubmit={formik.handleSubmit}>
                     <Row className="g-4">
                         <Col md={12}>
@@ -194,10 +225,18 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                                 {['veg', 'egg', 'non-veg'].map((type) => (
                                     <div
                                         key={type}
-                                        className={`edit-dish-category-modal-radio-pill ${formik.values.meal_type === type ? 'active' : ''}`}
+                                        className={`edit-dish-category-modal-radio-pill ${type} ${formik.values.meal_type === type ? 'active' : ''}`}
                                         onClick={() => formik.setFieldValue('meal_type', type)}
                                     >
-                                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                                        <div
+                                            className="rounded-circle"
+                                            style={{
+                                                width: '12px',
+                                                height: '12px',
+                                                background: type === 'veg' ? '#10b981' : type === 'egg' ? '#f59e0b' : '#ef4444',
+                                            }}
+                                        />
+                                        {type === 'veg' ? 'Veg' : type === 'egg' ? 'Egg' : 'Non-Veg'}
                                     </div>
                                 ))}
                             </div>
@@ -236,7 +275,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                             </Form.Group>
                         </Col>
 
-                        <Col md={12}>
+                        {/* <Col md={12}>
                             <div 
                                 className="d-flex align-items-center gap-2 cursor-pointer"
                                 onClick={() => formik.setFieldValue('hide_on_kot', !formik.values.hide_on_kot)}
@@ -246,15 +285,15 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                                 </div>
                                 <span className="fw-bold text-alternate small text-uppercase">Hide on KOT</span>
                             </div>
-                        </Col>
+                        </Col> */}
                     </Row>
                 </Form>
             </Modal.Body>
 
             <Modal.Footer className="border-0">
-                <Button 
-                    variant="outline-light" 
-                    onClick={handleClose} 
+                <Button
+                    variant="outline-light"
+                    onClick={handleClose}
                     disabled={isSubmitting}
                     className="rounded-pill px-4 fw-bold edit-dish-category-modal-custom-btn-outline btn btn-outline-primary"
                 >

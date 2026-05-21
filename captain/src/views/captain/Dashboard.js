@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory, Switch, Route } from 'react-router-dom';
-import { Button, Row, Col, Badge } from 'react-bootstrap';
+import { Row, Col, Badge } from 'react-bootstrap';
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -77,7 +77,6 @@ const Dashboard = () => {
 
   const [tables, setTables] = useState([]);
   const [activeDineInOrders, setActiveDineInOrders] = useState([]);
-  const [activeTakeawaysAndDeliveries, setActiveTakeawaysAndDeliveries] = useState([]);
 
   const fetchTables = async () => {
     try {
@@ -91,13 +90,10 @@ const Dashboard = () => {
   const fetchActiveOrders = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API}/order/get-active`, {
-        params: {
-          source: 'Manager',
-        },
+        params: { source: 'Manager' },
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setActiveDineInOrders(response.data.activeDineInTables);
-      setActiveTakeawaysAndDeliveries(response.data.activeTakeawaysAndDeliveries);
     } catch (error) {
       console.error('Error fetching active orders:', error);
     }
@@ -118,15 +114,6 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error fetching table details:', error);
     }
-  };
-
-  const handleOrderClick = (order) => {
-    const orderType = order.order_type.toLowerCase().replace(' ', '-');
-    history.push(`/order/${orderType}?orderId=${order._id}&mode=edit`);
-  };
-
-  const createNewOrder = (orderType) => {
-    history.push(`/order/${orderType}?mode=new`);
   };
 
   const glassCardStyle = {
@@ -151,24 +138,12 @@ const Dashboard = () => {
             <h1 className="mb-0 pb-0 display-4 fw-bold">Dashboard</h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
-          <Col xs="12" md="6" className="d-none d-md-flex align-items-center justify-content-md-end gap-3 flex-wrap">
-            <Button className="custom-btn-outline" onClick={() => createNewOrder('takeaway')}>
-              <CsLineIcons icon="plus" size="15" className="me-2" />
-              Takeaway
-            </Button>
-            <Button className="custom-btn-outline" onClick={() => createNewOrder('delivery')}>
-              <CsLineIcons icon="plus" size="15" className="me-2" />
-              Delivery
-            </Button>
-            <Button className="custom-btn-outline" onClick={() => history.push('/order/delivery-partners')}>
-              Delivery Partners
-            </Button>
-          </Col>
+
         </Row>
       </div>
 
-      <Row className="gy-4">
-        <Col xs="12" lg="8">
+      <Row className="gy-4" style={{ justifyContent: 'center' }}>
+        <Col xs="12">
           {tables.map((tableArea) => (
             <div className="gx-2 mb-5" key={tableArea._id}>
               <div className="d-flex align-items-center mb-4">
@@ -295,158 +270,16 @@ const Dashboard = () => {
             </div>
           ))}
         </Col>
-
-        {/* Active Orders Section */}
-        <Col xs="12" lg="4">
-          <div className="d-flex align-items-center mb-4">
-            <div
-              style={{
-                width: '8px',
-                height: '24px',
-                background: '#23b3f4',
-                borderRadius: '4px',
-                marginRight: '12px',
-                boxShadow: '0 2px 5px rgba(35,179,244,0.3)',
-              }}
-            />
-            <h3 className="mb-0 fw-bold" style={{ color: '#23b3f4', letterSpacing: '0.5px' }}>
-              Active Takeaways & Deliveries
-            </h3>
-          </div>
-          <div style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', paddingRight: '5px' }} className="custom-scrollbar">
-            {activeTakeawaysAndDeliveries.length === 0 ? (
-              <div style={{ ...glassCardStyle, borderStyle: 'dashed' }} className="text-center p-5">
-                <CsLineIcons icon="delivery" size="40" stroke="rgba(35,179,244,0.4)" className="mb-3" />
-                <p className="mb-0 fw-semibold" style={{ color: '#6c757d' }}>
-                  No active orders at the moment
-                </p>
-              </div>
-            ) : (
-              activeTakeawaysAndDeliveries.map((order) => {
-                return (
-                  <div
-                    key={order._id}
-                    className="mb-3"
-                    style={glassCardStyle}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-3px)';
-                      e.currentTarget.style.boxShadow = '0 15px 30px rgba(35,179,244,0.1)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = glassCardStyle.boxShadow;
-                    }}
-                    onClick={() => handleOrderClick(order)}
-                  >
-                    <div className="p-4">
-                      <div className="d-flex justify-content-between align-items-start mb-3">
-                        <div>
-                          <h5 className="mb-1 fw-bold d-flex align-items-center gap-2" style={{ color: '#1a1a1a' }}>
-                            {order.order_type === 'Takeaway' ? (
-                              <CsLineIcons icon="shop" size="18" stroke="#23b3f4" />
-                            ) : (
-                              <CsLineIcons icon="car" size="18" stroke="#23b3f4" />
-                            )}
-                            {order.order_type}
-                            {order.token && <span style={{ color: '#23b3f4' }}>#{order.token}</span>}
-                          </h5>
-                          <p className="mb-0 text-muted" style={{ fontSize: '13px' }}>
-                            {order.order_type === 'Takeaway' ? `Token: ${order.token}` : `Customer: ${order.customer_name || 'N/A'}`}
-                          </p>
-                        </div>
-                        <Badge
-                          bg={order.order_status === 'Paid' || order.order_status === 'Save' ? 'success' : 'warning'}
-                          className={order.order_status === 'KOT' ? 'text-dark' : 'text-white'}
-                          style={{ padding: '6px 12px', borderRadius: '8px', fontWeight: 'bold', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
-                        >
-                          {order.order_status}
-                        </Badge>
-                      </div>
-                      <div className="d-flex flex-wrap gap-2">
-                        {order.order_items.slice(0, 3).map((item, i) => (
-                          <div
-                            key={i}
-                            style={{
-                              background: 'rgba(35,179,244,0.08)',
-                              padding: '4px 10px',
-                              borderRadius: '6px',
-                              fontSize: '12px',
-                              color: '#1a1a1a',
-                              border: '1px solid rgba(35,179,244,0.15)',
-                            }}
-                          >
-                            {item.dish_name}{' '}
-                            <strong className="ms-1" style={{ color: '#23b3f4' }}>
-                              x{item.quantity}
-                            </strong>
-                          </div>
-                        ))}
-                        {order.order_items.length > 3 && (
-                          <div
-                            style={{
-                              background: '#f8f9fa',
-                              padding: '4px 10px',
-                              borderRadius: '6px',
-                              fontSize: '12px',
-                              color: '#6c757d',
-                              border: '1px dashed #dee2e6',
-                            }}
-                          >
-                            +{order.order_items.length - 3} more
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </Col>
       </Row>
 
       <Switch>
         <Route exact path="/order/dine-in" render={() => <UnifiedOrder />} />
-        <Route exact path="/order/takeaway" render={() => <UnifiedOrder />} />
-        <Route exact path="/order/delivery" render={() => <UnifiedOrder />} />
       </Switch>
 
-      {/* Spacer so sticky bar doesn't overlap last content on mobile */}
-      <div className="d-md-none" style={{ height: '90px' }} />
 
-      {/* Mobile sticky bottom action bar */}
-      <div
-        className="d-md-none"
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: 'rgba(255,255,255,0.95)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          padding: '16px',
-          zIndex: 1040,
-          boxShadow: '0 -10px 30px rgba(35, 179, 244, 0.1)',
-          borderTop: '1px solid rgba(35, 179, 244, 0.1)',
-        }}
-      >
-        <div className="d-flex gap-2">
-          <Button className="flex-grow-1 custom-btn-outline" onClick={() => createNewOrder('takeaway')}>
-            + Takeaway
-          </Button>
-          <Button className="flex-grow-1 custom-btn-outline" onClick={() => createNewOrder('delivery')}>
-            + Delivery
-          </Button>
-          <Button
-            className="d-flex align-items-center justify-content-center custom-btn-outline"
-            style={{ width: '56px', padding: '0 !important' }}
-            onClick={() => history.push('/order/delivery-partners')}
-          >
-            <CsLineIcons icon="shipping" />
-          </Button>
-        </div>
-      </div>
+
+
+
     </div>
   );
 };

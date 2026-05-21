@@ -6,6 +6,7 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
+import { openPrintWindow } from 'utils/printUtils';
 
 const OrderDetails = () => {
   const title = 'Order Details';
@@ -64,265 +65,9 @@ const OrderDetails = () => {
     fetchData();
   }, [id]);
 
-  const printCounterBill = (ord, userData, counterName, items) => {
-    return `
-      <div style="page-break-after: always; font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 10px; border: 1px solid #ccc;">
-        <!-- Restaurant Header -->
-        <div style="text-align: center; margin-bottom: 10px;">
-          <h3 style="margin: 5px;">${userData.name}</h3>
-        </div>
-
-        <hr style="border: 0.5px dashed #ccc;" />
-
-        <!-- Counter Badge -->
-        <div style="text-align: center; margin: 8px 0;">
-          <span style="background: #000; color: #fff; padding: 4px 16px; border-radius: 4px; font-size: 14px; font-weight: bold;">
-            ${counterName} Counter
-          </span>
-        </div>
-
-        <hr style="border: 0.5px dashed #ccc;" />
-
-        <!-- Order Info -->
-        <table style="width: 100%; font-size: 12px; margin-bottom: 8px;">
-          <tr>
-            <td><strong>Bill No:</strong> ${ord.order_no || ord._id}</td>
-            <td style="text-align: right;"><strong>${ord.order_type}</strong></td>
-          </tr>
-          <tr>
-            <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
-            <td style="text-align: right;">
-              ${ord.table_no
-        ? `<strong>Table:</strong> ${ord.table_no}`
-        : ord.token
-          ? `<strong>Token:</strong> ${ord.token}`
-          : ''}
-            </td>
-          </tr>
-          ${ord.customer_name
-        ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
-        : ''}
-        </table>
-
-        <!-- Items Table -->
-        <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
-          <thead>
-            <tr>
-              <th style="text-align: left; border-bottom: 1px solid #ccc;">Item</th>
-              <th style="text-align: center; border-bottom: 1px solid #ccc;">Qty</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${items.map(item => `
-              <tr>
-                <td>${item.dish_name}</td>
-                <td style="text-align: center;">${item.quantity}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-
-      </div>
-    `;
-  };
-
-  const printFullBill = (ord, userData, items, subTotal) => {
-    return `
-      <div style="page-break-after: always; font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 10px; border: 1px solid #ccc;">
-        <!-- Restaurant Header -->
-        <div style="text-align: center; margin-bottom: 10px;">
-          <h2 style="margin: 5px;">${userData.name}</h2>
-          <p style="margin: 0; font-size: 14px;">${userData.address}</p>
-          <p style="margin: 0; font-size: 14px;">${userData.city}, ${userData.state} - ${userData.pincode}</p>
-          <p style="margin: 5px; font-size: 14px;"><strong>Ph:</strong> ${userData.mobile}</p>
-          ${userData.gst_no ? `<p style="font-size: 14px;"><strong>GST:</strong> ${userData.gst_no}</p>` : ''}
-        </div>
-
-        <hr style="border: 0.5px dashed #ccc;" />
-
-        <!-- Order Info -->
-        <table style="width: 100%; font-size: 14px; margin-bottom: 20px;">
-          <tr>
-            <td><strong>Bill No:</strong> ${ord.order_no || ord._id}</td>
-            <td style="text-align: right;"><strong>${ord.order_type}</strong></td>
-          </tr>
-          <tr>
-            <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
-            <td style="text-align: right;">
-              ${ord.table_no
-        ? `<strong>Table:</strong> ${ord.table_no}`
-        : ord.token
-          ? `<strong>Token:</strong> ${ord.token}`
-          : ''}
-            </td>
-          </tr>
-          ${ord.customer_name
-        ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
-        : ''}
-        </table>
-
-        <!-- Items Table -->
-        <table style="width: 100%; font-size: 14px; margin-bottom: 20px;">
-          <thead>
-            <tr>
-              <th style="text-align: left; border-bottom: 1px solid #ccc;">Item</th>
-              <th style="text-align: center; border-bottom: 1px solid #ccc;">Qty</th>
-              <th style="text-align: center; border-bottom: 1px solid #ccc;">Price</th>
-              <th style="text-align: right; border-bottom: 1px solid #ccc;">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${items.map(item => `
-              <tr>
-                <td>${item.dish_name}</td>
-                <td style="text-align: center;">${item.quantity}</td>
-                <td style="text-align: center;">₹${item.dish_price}</td>
-                <td style="text-align: right;">₹${(item.dish_price * item.quantity).toFixed(2)}</td>
-              </tr>
-            `).join('')}
-
-            <tr>
-              <td colspan="3" style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
-                <strong>Sub Total:</strong>
-              </td>
-              <td style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
-                <strong>₹${subTotal.toFixed(2)}</strong>
-              </td>
-            </tr>
-
-            ${ord.cgst_amount > 0 ? `
-              <tr>
-                <td colspan="3" style="text-align: right;">
-                  <strong>CGST (${ord.cgst_percent || 0}%):</strong>
-                </td>
-                <td style="text-align: right;">
-                  ₹${parseFloat(ord.cgst_amount).toFixed(2)}
-                </td>
-              </tr>
-            ` : ''}
-
-            ${ord.sgst_amount > 0 ? `
-              <tr>
-                <td colspan="3" style="text-align: right;">
-                  <strong>SGST (${ord.sgst_percent || 0}%):</strong>
-                </td>
-                <td style="text-align: right;">
-                  ₹${parseFloat(ord.sgst_amount).toFixed(2)}
-                </td>
-              </tr>
-            ` : ''}
-
-            ${ord.vat_amount > 0 ? `
-              <tr>
-                <td colspan="3" style="text-align: right;">
-                  <strong>VAT (${ord.vat_percent || 0}%):</strong>
-                </td>
-                <td style="text-align: right;">
-                  ₹${parseFloat(ord.vat_amount).toFixed(2)}
-                </>
-              </tr>
-            ` : ''}
-
-            ${ord.discount_amount > 0 ? `
-              <tr>
-                <td colspan="3" style="text-align: right;">
-                  <strong>Discount:</strong>
-                </td>
-                <td style="text-align: right;">
-                  ₹${parseFloat(ord.discount_amount).toFixed(2)}
-                </td>
-              </tr>
-            ` : ''}
-
-            <tr>
-              <td colspan="3" style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
-                <strong>Total Amount:</strong>
-              </td>
-              <td style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
-                <strong>₹${parseFloat(ord.total_amount).toFixed(2)}</strong>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <hr style="border: 0.5px dashed #ccc;" />
-        <p style="text-align: center; font-size: 12px;"><strong>Thanks, Visit Again</strong></p>
-
-      </div>
-    `;
-  };
-
   const handlePrint = async () => {
-    try {
-      setPrinting(true);
-
-      const userRes = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-
-      const userData = userRes.data;
-
-      const groupedByCounter = {};
-      order.order_items.forEach(item => {
-        const counterName = item.counter || "Default";
-        if (!groupedByCounter[counterName]) groupedByCounter[counterName] = [];
-        groupedByCounter[counterName].push(item);
-      });
-
-      let allBillsHTML = "";
-      allBillsHTML += printFullBill(order, userData, order.order_items, order.sub_total);
-      Object.entries(groupedByCounter).forEach(([counterName, items]) => {
-        allBillsHTML += printCounterBill(order, userData, counterName, items);
-      });
-
-      // Create a hidden iframe for print
-      let iframe = document.getElementById("print-iframe");
-      if (!iframe) {
-        iframe = document.createElement("iframe");
-        iframe.id = "print-iframe";
-        iframe.style.position = "absolute";
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.border = "none";
-        document.body.appendChild(iframe);
-      }
-
-      const doc = iframe.contentWindow.document || iframe.contentDocument;
-      doc.open();
-      doc.write(`
-        <html>
-        <head>
-          <title>Print Bills</title>
-          <style>
-            @media print {
-              body { margin: 0; }
-            }
-          </style>
-        </head>
-        <body>
-          ${allBillsHTML}
-          <script>
-            window.onload = function() {
-              window.focus();
-              window.print();
-            };
-          </script>
-        </body>
-        </html>
-      `);
-      doc.close();
-
-      setTimeout(() => {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-      }, 500);
-
-    } catch (err) {
-      console.error("Print error:", err);
-      toast.error("Failed to print bills");
-    } finally {
-      setPrinting(false);
-    }
+    if (!order) return;
+    await openPrintWindow(order.id, setPrinting);
   };
 
   const handleWhatsAppShare = async () => {
@@ -653,7 +398,21 @@ const OrderDetails = () => {
                 {order.order_items?.map((item, index) => (
                   <tr key={`${item.dish_name}-${index}`}>
                     <td className="text-muted">{index + 1}</td>
-                    <td className="fw-medium">{item.dish_name}</td>
+                    <td className="fw-medium">
+                      {item.dish_name}
+                      {((item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra)) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) && (
+                        <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', marginTop: '2px', lineHeight: 1.2 }}>
+                          {item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && (
+                            <>
+                              {item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}
+                              {item.selected_variant.extra && ` (${item.selected_variant.extra})`}
+                            </>
+                          )}
+                          {item.selected_variant && item.selected_variant.size_name && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 && ' • '}
+                          {Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).map(addon => `${addon.addon_name} (+₹${addon.price})`).join(' • ')}
+                        </div>
+                      )}
+                    </td>
                     <td className="text-center">{item.quantity}</td>
                     <td className="text-end">₹ {parseFloat(item.dish_price).toFixed(2)}</td>
                     <td className="text-end fw-medium text-primary">₹ {(parseFloat(item.dish_price) * parseFloat(item.quantity)).toFixed(2)}</td>
@@ -684,6 +443,18 @@ const OrderDetails = () => {
                     </div>
                     <div>
                       <div className="fw-bold text-dark">{item.dish_name}</div>
+                      {((item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra)) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) && (
+                        <div className="text-muted xsmall" style={{ fontWeight: 600, color: '#64748b', marginTop: '2px', lineHeight: 1.2 }}>
+                          {item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && (
+                            <>
+                              {item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}
+                              {item.selected_variant.extra && ` (${item.selected_variant.extra})`}
+                            </>
+                          )}
+                          {item.selected_variant && item.selected_variant.size_name && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 && ' • '}
+                          {Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).map(addon => `${addon.addon_name} (+₹${addon.price})`).join(' • ')}
+                        </div>
+                      )}
                       <div className="text-muted xsmall">Qty: {item.quantity} × ₹{parseFloat(item.dish_price).toFixed(2)}</div>
                     </div>
                   </div>

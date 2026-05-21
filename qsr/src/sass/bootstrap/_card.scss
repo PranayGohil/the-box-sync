@@ -552,6 +552,7 @@
   cursor: pointer;
   &:hover {
     @include shadow-and-border-active-before;
+    border-radius: var(--border-radius-md);
   }
 }
 

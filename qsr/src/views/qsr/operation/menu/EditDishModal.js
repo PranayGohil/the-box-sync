@@ -87,13 +87,14 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
       dish_img: null,
       is_special: data?.is_special || false,
       is_available: data?.is_available ?? true,
+      hide_on_kot: data?.hide_on_kot || false,
       variants: (data?.variants && data.variants.length > 0)
         ? data.variants.map((v) => ({
-            size_name: v.size_name || '',
-            price: v.price || '',
-            extra: v.extra || '',
-            is_available: v.is_available ?? true,
-          }))
+          size_name: v.size_name || '',
+          price: v.price || '',
+          extra: v.extra || '',
+          is_available: v.is_available ?? true,
+        }))
         : [{ size_name: '', price: data?.dish_price || '', extra: '', is_available: true }],
       addons: data?.addons || [],
     },
@@ -126,6 +127,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
         formData.append('description', values.description);
         formData.append('is_special', values.is_special);
         formData.append('is_available', values.is_available);
+        formData.append('hide_on_kot', values.hide_on_kot);
 
         let cleanedVariants = [];
         if (Array.isArray(values.variants)) {
@@ -174,6 +176,18 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
       }
     },
   });
+
+  useEffect(() => {
+    if (!show) {
+      formik.resetForm();
+      if (data?.dish_img) {
+        setPreviewImg(`${process.env.REACT_APP_UPLOAD_DIR}${data.dish_img}`);
+      } else {
+        setPreviewImg(null);
+      }
+      setShowAdvancedOptions(data?.quantity != null && data.quantity !== '');
+    }
+  }, [show, data]);
 
   if (loading) {
     return (
@@ -261,7 +275,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
               </Form.Group>
             </Col>
 
-            <Col md={6} xs={6}>
+            <Col md={4} xs={6}>
               <div
                 className="d-flex align-items-center gap-2 cursor-pointer mb-4"
                 onClick={() => formik.setFieldValue('is_special', !formik.values.is_special)}
@@ -273,7 +287,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
               </div>
             </Col>
 
-            <Col md={6} xs={6}>
+            <Col md={4} xs={6}>
               <div
                 className="d-flex align-items-center gap-2 cursor-pointer mb-4"
                 onClick={() => formik.setFieldValue('is_available', !formik.values.is_available)}
@@ -282,6 +296,18 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData }) => {
                   {formik.values.is_available && <CsLineIcons icon="check" size="12" className="text-white" />}
                 </div>
                 <span className="fw-bold text-alternate small text-uppercase">Available</span>
+              </div>
+            </Col>
+
+            <Col md={4} xs={6}>
+              <div
+                className="d-flex align-items-center gap-2 cursor-pointer mb-4"
+                onClick={() => formik.setFieldValue('hide_on_kot', !formik.values.hide_on_kot)}
+              >
+                <div className={`custom-check ${formik.values.hide_on_kot ? 'active' : ''}`}>
+                  {formik.values.hide_on_kot && <CsLineIcons icon="check" size="12" className="text-white" />}
+                </div>
+                <span className="fw-bold text-alternate small text-uppercase">Hide on KOT</span>
               </div>
             </Col>
 

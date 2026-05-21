@@ -160,6 +160,7 @@ const AddDishes = () => {
     hideOnKot: prefilledHideOnKot,
     dishes: [
       {
+        _id: '',
         dish_name: '',
         dish_img: null,
         description: '',
@@ -195,10 +196,22 @@ const AddDishes = () => {
     }
   };
 
-  useEffect(() => {
-    getMenuCategories('veg');
-    getCounters();
-  }, []);
+  const [fullMenuData, setFullMenuData] = useState([]);
+
+  const fetchFullMenuData = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API}/menu/get`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      const transformedMenu = res.data.data.map(({ _id, ...rest }) => ({
+        ...rest,
+        id: _id,
+      }));
+      setFullMenuData(transformedMenu);
+    } catch (error) {
+      console.error('Error fetching full menu data:', error);
+    }
+  };
 
   const getDishesByCategory = async (category) => {
     if (!category) {
@@ -212,6 +225,87 @@ const AddDishes = () => {
       setSuggestions((prev) => ({ ...prev, dishes: response.data.data }));
     } catch (error) {
       console.error('Error fetching dishes:', error);
+    }
+  };
+
+  useEffect(() => {
+    getMenuCategories(prefilledMealType);
+    getCounters();
+    fetchFullMenuData();
+    if (prefilledCategory) {
+      getDishesByCategory(prefilledCategory);
+    }
+  }, [prefilledCategory, prefilledMealType]);
+
+  const handleDishNameChange = (selected, index, values, setFieldValue) => {
+    const name = selected ? selected.value : '';
+    setFieldValue(`dishes[${index}].dish_name`, name);
+
+    if (name) {
+      const currentCategory = values.category;
+      const currentMealType = values.mealType;
+
+      const matchedCategory = fullMenuData.find(
+        (c) => c.category.toLowerCase() === currentCategory.toLowerCase() && c.meal_type === currentMealType
+      );
+
+      if (matchedCategory) {
+        const matchedDish = matchedCategory.dishes.find(
+          (d) => d.dish_name.toLowerCase() === name.toLowerCase()
+        );
+
+        if (matchedDish) {
+          // Autofill existing ID
+          setFieldValue(`dishes[${index}]._id`, matchedDish._id || '');
+          // Autofill description
+          setFieldValue(`dishes[${index}].description`, matchedDish.description || '');
+
+          // Autofill variants
+          if (matchedDish.variants && matchedDish.variants.length > 0) {
+            setFieldValue(
+              `dishes[${index}].variants`,
+              matchedDish.variants.map((v) => ({
+                size_name: v.size_name || '',
+                price: v.price || '',
+                extra: v.extra || '',
+                is_available: v.is_available !== false,
+              }))
+            );
+          } else {
+            setFieldValue(`dishes[${index}].variants`, [
+              { size_name: '', price: matchedDish.dish_price || '', extra: '', is_available: true },
+            ]);
+          }
+
+          // Autofill addons
+          if (matchedDish.addons && matchedDish.addons.length > 0) {
+            setFieldValue(
+              `dishes[${index}].addons`,
+              matchedDish.addons.map((a) => ({
+                addon_name: a.addon_name || '',
+                price: a.price || '',
+                is_available: a.is_available !== false,
+              }))
+            );
+          } else {
+            setFieldValue(`dishes[${index}].addons`, []);
+          }
+
+          // Autofill image preview if any
+          if (matchedDish.dish_img) {
+            setImagePreviews((prev) => ({
+              ...prev,
+              [index]: `${process.env.REACT_APP_UPLOAD_DIR || 'http://localhost:5001/uploads'}${matchedDish.dish_img}`,
+            }));
+          } else {
+            setImagePreviews((prev) => {
+              const updated = { ...prev };
+              delete updated[index];
+              return updated;
+            });
+          }
+        }
+      }
     }
   };
 
@@ -276,6 +370,7 @@ const AddDishes = () => {
         }
 
         return {
+          _id: dish._id || undefined,
           dish_name: dish.dish_name,
           dish_price: cleanedVariants[0] ? Number(cleanedVariants[0].price) || 0 : 0,
           description: dish.description,
@@ -474,7 +569,7 @@ const AddDishes = () => {
                                         menuPortalTarget={document.body}
                                         options={dishOptions}
                                         value={dish.dish_name ? { label: dish.dish_name, value: dish.dish_name } : null}
-                                        onChange={(selected) => setFieldValue(`dishes[${index}].dish_name`, selected ? selected.value : '')}
+                                        onChange={(selected) => handleDishNameChange(selected, index, values, setFieldValue)}
                                         placeholder="Select or create dish name"
                                       />
                                       <ErrorMessage name={`dishes[${index}].dish_name`} component="div" className="text-danger small mt-1" />
@@ -710,6 +805,7 @@ const AddDishes = () => {
                               className="custom-btn-outline px-4 py-2 d-flex align-items-center justify-content-center gap-2"
                               onClick={() =>
                                 push({
+                                  _id: '',
                                   dish_name: '',
                                   dish_price: '',
                                   dish_img: null,
@@ -717,6 +813,8 @@ const AddDishes = () => {
                                   quantity: '',
                                   unit: '',
                                   showAdvancedOptions: false,
+                                  variants: [{ size_name: '', price: '', extra: '', is_available: true }],
+                                  addons: [],
                                 })
                               }
                             >
