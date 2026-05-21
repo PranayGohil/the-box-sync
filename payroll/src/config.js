@@ -1,7 +1,7 @@
 import { LAYOUT, MENU_BEHAVIOUR, NAV_COLOR, MENU_PLACEMENT, RADIUS, THEME_COLOR, USER_ROLE } from 'constants.js';
 
 export const IS_DEMO = true;
-export const IS_AUTH_GUARD_ACTIVE = true;
+export const IS_AUTH_GUARD_ACTIVE = false;
 export const SERVICE_URL = '/app';
 export const USE_MULTI_LANGUAGE = false;
 
@@ -21,7 +21,7 @@ export const DEFAULT_PATHS = {
   NOTFOUND: '/page-not-found',
   UNAUTHORIZED: '/unauthorized',
   INVALID_ACCESS: '/invalid-access',
-  SELECT_PLAN: '/select-plan',
+
 };
 
 export const DEFAULT_SETTINGS = {

@@ -1,0 +1,210 @@
+const Manager = require("../models/managerModel");
+const Kot = require("../models/kotModel");
+const QSR = require("../models/QSRModel");
+const Captain = require("../models/captainModel");
+const Attendance = require("../models/attendanceModel");
+const HotelManager = require("../models/hotelManagerModel");
+const User = require("../models/userModel");
+const Subscription = require("../models/subscriptionModel");
+
+const bcrypt = require("bcryptjs");
+
+const panelModels = {
+  Manager: Manager,
+  QSR: QSR,
+  "KOT Panel": Kot,
+  "Captain Panel": Captain,
+  "Payroll By The Box": Attendance,
+  "Hotel Manager": HotelManager,
+};
+
+const getModel = (planName) => {
+  const model = panelModels[planName];
+  if (!model) throw new Error(`No model found for ${planName}`);
+  return model;
+};
+
+exports.getPanelUser = async (req, res) => {
+  try {
+    const { planName } = req.params;
+    const userId = req.user._id;
+
+    const Model = getModel(planName);
+    const account = await Model.findOne({ user_id: userId });
+
+    res.status(200).json({ exists: !!account, data: account });
+  } catch (err) {
+    console.error("Error in getPanelUser:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.createOrUpdatePanelUser = async (req, res) => {
+  try {
+    const { planName } = req.params;
+    const userId = req.user._id;
+    const { username, password, adminPassword } = req.body;
+    console.log("Plan name : ", planName);
+    console.log("User ID :", userId);
+    console.log("Body :", req.body)
+
+    // If creating new account or changing password, verify admin password
+    if (password) {
+      const admin = await User.findById(userId).select('+password');
+      if (!admin) {
+        return res.status(404).json({ message: "Admin not found" });
+      }
+
+      if (!adminPassword) {
+        return res.status(400).json({ message: "Admin password is required" });
+      }
+
+      const isMatch = await bcrypt.compare(adminPassword, admin.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid admin password" });
+      }
+
+    }
+
+    const Model = getModel(planName);
+    let account = await Model.findOne({ user_id: userId });
+
+    if (account) {
+      // Update
+      account.username = username;
+      if (password) account.password = password; // will hash in pre-save
+    } else {
+      // Create
+      account = new Model({ user_id: userId, username, password });
+    }
+
+    await account.save();
+    res
+      .status(200)
+      .json({ message: "Panel user saved successfully", data: account });
+  } catch (err) {
+    console.error("Error in createOrUpdatePanelUser:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.changePanelPassword = async (req, res) => {
+  try {
+    const { planName } = req.params;
+    const userId = req.user._id;
+    const { adminPassword, newPassword } = req.body;
+
+    // Verify admin password
+    const admin = await User.findById(userId).select('+password');
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    const isMatch = await bcrypt.compare(adminPassword, admin.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid admin password" });
+    }
+
+    // Get correct panel model
+    const Model = getModel(planName);
+    const panelUser = await Model.findOne({ user_id: userId }).select('+password');
+    if (!panelUser) {
+      return res.status(404).json({ message: "Panel account not found" });
+    }
+
+    // Update panel password (will hash via pre-save)
+    panelUser.password = newPassword;
+    await panelUser.save();
+
+    res.status(200).json({ message: "Panel password updated successfully" });
+  } catch (err) {
+    console.error("Error in changePanelPassword:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.deletePanelUser = async (req, res) => {
+  try {
+    const { planName } = req.params;
+    const userId = req.user._id;
+    const adminPassword = req.body.adminPassword || req.headers['x-admin-password'] || req.query.adminPassword;
+
+    if (!adminPassword) {
+      return res.status(400).json({ message: "Admin password is required to delete credentials." });
+    }
+
+    // Verify admin password
+    const admin = await User.findById(userId).select('+password');
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    const isMatch = await bcrypt.compare(adminPassword, admin.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid admin password" });
+    }
+
+    const Model = getModel(planName);
+    const deleted = await Model.findOneAndDelete({ user_id: userId });
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Account not found" });
+    }
+
+    res.status(200).json({ message: "Panel user deleted successfully" });
+  } catch (err) {
+    console.error("Error in deletePanelUser:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.panelLogin = async (req, res) => {
+  try {
+    const { planName } = req.params;
+    const { restaurant_code, username, password } = req.body;
+    console.log("Req.body : ", req.body);
+    console.log(
+      "Restaurant Code : ",
+      restaurant_code,
+      "Username : ",
+      username,
+      "password : ",
+      password
+    );
+    const user = await User.findOne({ restaurant_code });
+
+    if (!user) {
+      console.log("User not found");
+      return res.json({ message: "Invalid restaurant code" });
+    }
+
+    const Model = getModel(planName);
+    const panelUser = await Model.findOne({ username, user_id: user._id });
+    console.log("Model : " + planName);
+
+    if (!panelUser) {
+      console.log("Panel user not found");
+      return res.json({ message: "Invalid Username" });
+    }
+
+    const isMatch = await bcrypt.compare(password, panelUser.password);
+    if (!isMatch) {
+      return res.json({ message: "Invalid Password" });
+    }
+
+    // Verify active subscription for the requested panel
+    const activeSubscription = await Subscription.findOne({
+      user_id: user._id,
+      plan_name: planName,
+      status: "active",
+      end_date: { $gt: new Date() }
+    });
+
+    if (!activeSubscription) {
+      return res.status(403).json({ message: `No active subscription for ${planName}. Please purchase or renew the plan.` });
+    }
+
+    token = await user.generateAuthToken(planName);
+
+    res.status(200).json({ message: "Logged In", token, user });
+  } catch (err) {
+    console.error("Error in panelLogin:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

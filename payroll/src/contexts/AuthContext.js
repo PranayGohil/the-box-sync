@@ -33,8 +33,6 @@ export const AuthProvider = ({ children }) => {
                 );
                 setActivePlans(fetchActivePlans.map((plan) => plan.plan_name));
                 console.log(fetchActivePlans.map((plan) => plan.plan_name));
-            } else {
-                history.push("/select-plan");
             }
         } catch (error) {
             console.error("Error fetching subscription plans:", error);
