@@ -35,6 +35,12 @@ const addStaff = new Schema({
   email: {
     type: String,
   },
+  gender: {
+    type: String,
+  },
+  pincode: {
+    type: String,
+  },
   position: {
     type: String,
   },

@@ -14,10 +14,15 @@ export default function MenuPage() {
   const [sortBy, setSortBy] = useState('popular'); // 'popular' | 'price-asc' | 'price-desc' | 'rating'
   const [showFilters, setShowFilters] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [collapsedCategories, setCollapsedCategories] = useState({});
   const containerRef = useRef(null);
   const { menu, restaurantCode } = useRestaurant();
 
   useGSAPReveal(containerRef);
+
+  const toggleCategory = (category) => {
+    setCollapsedCategories(prev => ({ ...prev, [category]: !prev[category] }));
+  };
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -257,11 +262,47 @@ export default function MenuPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="row g-4"
+              className="d-flex flex-column gap-5"
             >
-              {filtered.map((item, i) => (
-                <div key={item.id} className="col-6 col-md-4 col-lg-3">
-                  <MenuCard item={item} index={i} />
+              {Object.entries(
+                filtered.reduce((acc, item) => {
+                  if (!acc[item.category]) acc[item.category] = [];
+                  acc[item.category].push(item);
+                  return acc;
+                }, {})
+              ).map(([category, items]) => (
+                <div key={category}>
+                  <h3 
+                    className="text-white fw-bold mb-4 border-bottom border-secondary pb-2 d-flex justify-content-between align-items-center" 
+                    style={{ borderColor: 'rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                    onClick={() => toggleCategory(category)}
+                  >
+                    <span>{category}</span>
+                    <ChevronDown 
+                      size={20}
+                      className={`text-white-60 transition-transform`}
+                      style={{ transition: 'transform 0.3s ease', transform: collapsedCategories[category] ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                    />
+                  </h3>
+                  <AnimatePresence initial={false}>
+                    {!collapsedCategories[category] && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="row g-4 pb-2">
+                          {items.map((item, i) => (
+                            <div key={item.id} className="col-6 col-md-4 col-lg-3">
+                              <MenuCard item={item} index={i} />
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ))}
             </motion.div>
