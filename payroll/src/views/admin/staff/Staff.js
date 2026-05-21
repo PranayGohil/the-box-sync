@@ -1,6 +1,5 @@
-import React, { useContext } from 'react';
-import { Switch, Route, Redirect } from 'react-router-dom';
-import { AuthContext } from 'contexts/AuthContext';
+import React from 'react';
+import { Switch, Route, Redirect, useRouteMatch } from 'react-router-dom';
 import ViewStaff from './ViewStaff';
 import AddStaff from './AddStaff';
 import EditStaff from './EditStaff';
@@ -17,88 +16,33 @@ import LeaveRequests from './payroll/LeaveRequests';
 import SalaryAdvances from './payroll/SalaryAdvances';
 
 const Staff = () => {
-  const { activePlans } = useContext(AuthContext);
-
-  const isPlanActive = (plan) => activePlans.includes(plan);
-  const noAccess = (label) => (
-    <div className="text-center p-5 mt-5">
-      <h5 className="text-muted">You need an active <strong>{label}</strong> plan to access this page.</h5>
-    </div>
-  );
+  const { path } = useRouteMatch();
 
   return (
     <>
       <Switch>
         {/* Core Staff Management */}
-        <Route exact path="/staff" render={() => <Redirect to="/staff/view" />} />
-        <Route exact path="/staff/view" render={() =>
-          isPlanActive('Staff Management') ? <ViewStaff /> : noAccess('Staff Management')
-        } />
-        <Route exact path="/staff/add" render={() =>
-          isPlanActive('Staff Management') ? <AddStaff /> : noAccess('Staff Management')
-        } />
-        <Route exact path="/staff/edit/:id" render={() =>
-          isPlanActive('Staff Management') ? <EditStaff /> : noAccess('Staff Management')
-        } />
-        <Route exact path="/staff/profile/:id" render={() =>
-          isPlanActive('Staff Management') ? <StaffProfile /> : noAccess('Staff Management')
-        } />
+        <Route exact path={path} render={() => <Redirect to={`${path}/view`} />} />
+        <Route exact path={`${path}/view`} component={ViewStaff} />
+        <Route exact path={`${path}/add`} component={AddStaff} />
+        <Route exact path={`${path}/edit/:id`} component={EditStaff} />
+        <Route exact path={`${path}/profile/:id`} component={StaffProfile} />
 
         {/* Attendance */}
-        <Route exact path="/staff/attendance" render={() =>
-          isPlanActive('Staff Management') && isPlanActive('Payroll By The Box')
-            ? <ManageAttendance />
-            : noAccess('Staff Management + Payroll By The Box')
-        } />
-        <Route exact path="/staff/attendance/view/:id" render={() =>
-          isPlanActive('Staff Management') && isPlanActive('Payroll By The Box')
-            ? <ViewAttendance />
-            : noAccess('Staff Management + Payroll By The Box')
-        } />
+        <Route exact path={`${path}/attendance`} component={ManageAttendance} />
+        <Route exact path={`${path}/attendance/view/:id`} component={ViewAttendance} />
 
         {/* Payroll */}
-        <Route exact path="/staff/payroll/settings" render={() =>
-          isPlanActive('Staff Management') && isPlanActive('Payroll By The Box')
-            ? <PayrollSettings />
-            : noAccess('Staff Management + Payroll By The Box')
-        } />
-        <Route exact path="/staff/payroll/generate" render={() =>
-          isPlanActive('Staff Management') && isPlanActive('Payroll By The Box')
-            ? <GeneratePayroll />
-            : noAccess('Staff Management + Payroll By The Box')
-        } />
-        <Route exact path="/staff/payroll/view/:staffId" render={() =>
-          isPlanActive('Staff Management') && isPlanActive('Payroll By The Box')
-            ? <ViewStaffPayroll />
-            : noAccess('Staff Management + Payroll By The Box')
-        } />
-        <Route exact path="/staff/payroll/:month?/:year?" render={() =>
-          isPlanActive('Staff Management') && isPlanActive('Payroll By The Box')
-            ? <ManagePayroll />
-            : noAccess('Staff Management + Payroll By The Box')
-        } />
+        <Route exact path={`${path}/payroll/settings`} component={PayrollSettings} />
+        <Route exact path={`${path}/payroll/generate`} component={GeneratePayroll} />
+        <Route exact path={`${path}/payroll/view/:staffId`} component={ViewStaffPayroll} />
+        <Route exact path={`${path}/payroll/:month?/:year?`} component={ManagePayroll} />
 
         {/* Leave & HR */}
-        <Route exact path="/staff/holidays" render={() =>
-          isPlanActive('Staff Management') && isPlanActive('Payroll By The Box')
-            ? <Holidays />
-            : noAccess('Staff Management + Payroll By The Box')
-        } />
-        <Route exact path="/staff/leave-policy" render={() =>
-          isPlanActive('Staff Management') && isPlanActive('Payroll By The Box')
-            ? <LeavePolicy />
-            : noAccess('Staff Management + Payroll By The Box')
-        } />
-        <Route exact path="/staff/leave-requests" render={() =>
-          isPlanActive('Staff Management') && isPlanActive('Payroll By The Box')
-            ? <LeaveRequests />
-            : noAccess('Staff Management + Payroll By The Box')
-        } />
-        <Route exact path="/staff/salary-advances" render={() =>
-          isPlanActive('Staff Management') && isPlanActive('Payroll By The Box')
-            ? <SalaryAdvances />
-            : noAccess('Staff Management + Payroll By The Box')
-        } />
+        <Route exact path={`${path}/holidays`} component={Holidays} />
+        <Route exact path={`${path}/leave-policy`} component={LeavePolicy} />
+        <Route exact path={`${path}/leave-requests`} component={LeaveRequests} />
+        <Route exact path={`${path}/salary-advances`} component={SalaryAdvances} />
       </Switch>
     </>
   );

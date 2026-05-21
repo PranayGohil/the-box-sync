@@ -306,10 +306,8 @@ const AddStaff = () => {
   };
 
   useEffect(() => {
-    if (activePlans.includes('Payroll By The Box')) {
-      loadModels();
-    }
-  }, [activePlans]);
+    loadModels();
+  }, []);
 
   useEffect(() => {
     let interval;

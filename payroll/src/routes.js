@@ -49,9 +49,20 @@ const allRoutes = {
     },
     {
       path: `${appRoot}/staff`,
+      exact: true,
+      redirect: true,
+      to: `${appRoot}/staff/view`,
+    },
+    {
+      path: `${appRoot}/staff`,
       label: 'Staff',
       icon: 'user',
-      component: payroll.staff,
+      subs: [
+        { path: '/view', label: 'View Staff', component: payroll.staff },
+        { path: '/add', label: 'Add Staff', component: payroll.staff },
+        { path: '/edit/:id', label: 'Edit Staff', component: payroll.staff, hideInMenu: true },
+        { path: '/profile/:id', label: 'Staff Profile', component: payroll.staff, hideInMenu: true },
+      ],
     },
     {
       path: `${appRoot}/attendance`,
