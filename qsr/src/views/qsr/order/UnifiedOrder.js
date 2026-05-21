@@ -335,13 +335,17 @@ const UnifiedOrder = () => {
     const orderData = {
       order_type: orderType,
       order_items: orderItems.map((item) => ({
-        dish_name: item.dish_name, quantity: item.quantity, dish_price: item.dish_price,
+        dish_name: item.dish_name,
+        quantity: item.quantity,
+        dish_price: item.dish_price,
         special_notes: item.special_notes || '',
         status: completeAll
           ? 'Completed'
           : (status === 'KOT' || status === 'Paid')
             ? (item.status === 'Pending' ? 'Preparing' : item.status)
             : (status === 'Save' ? (item.status || 'Pending') : item.status),
+        selected_variant: item.selected_variant,
+        selected_addons: item.selected_addons,
       })),
       order_status: status,
       customer_name: customerInfo.name,

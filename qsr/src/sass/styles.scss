@@ -1263,7 +1263,7 @@ textarea.add-dishes-pill-input {
   color: #ffffff;
   letter-spacing: 0.15em;
   margin-bottom: 3rem;
-  text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
   position: relative;
   z-index: 1;
 }
@@ -1280,7 +1280,7 @@ textarea.add-dishes-pill-input {
   margin-bottom: 1.5rem;
   position: relative;
   z-index: 1;
-  text-shadow: 0 2px 20px rgba(0,0,0,0.2);
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
 }
 
 .login-login-hero-title span {
@@ -1289,7 +1289,7 @@ textarea.add-dishes-pill-input {
 
 .login-login-hero-sub {
   font-size: 1rem;
-  color: rgba(255,255,255,0.65);
+  color: rgba(255, 255, 255, 0.65);
   line-height: 1.7;
   max-width: 380px;
   margin-bottom: 3rem;
@@ -1309,12 +1309,12 @@ textarea.add-dishes-pill-input {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 50px;
   padding: 0.6rem 1.25rem;
-  color: rgba(255,255,255,0.85);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 0.85rem;
   font-weight: 600;
   width: fit-content;
@@ -1338,7 +1338,7 @@ textarea.add-dishes-pill-input {
   justify-content: center;
   padding: 3rem 3.5rem;
   position: relative;
-  box-shadow: -20px 0 60px rgba(0,0,0,0.08);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.08);
 }
 
 .login-login-form-header {
@@ -1578,4 +1578,3 @@ textarea.add-dishes-pill-input {
   pointer-events: none;
   opacity: 0.5;
 }
-

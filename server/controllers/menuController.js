@@ -103,24 +103,52 @@ const addMenu = async (req, res) => {
 
     const filter = { user_id, category, meal_type };
 
-    const update = {
-      $push: { dishes: { $each: parsedDishes } },
-      $set: { counter: counter || null, hide_on_kot: isHideOnKot }
-    };
+    const existingMenu = await Menu.findOne(filter);
 
-    const options = {
-      new: true,
-      upsert: true, // create if not exists
-    };
+    let resultMenu;
+    if (existingMenu) {
+      const updatedDishes = [...existingMenu.dishes];
 
-    const updatedMenu = await Menu.findOneAndUpdate(filter, update, options);
+      parsedDishes.forEach((newDish) => {
+        const existingIndex = updatedDishes.findIndex((d) => 
+          (newDish._id && d._id.toString() === newDish._id.toString()) ||
+          (d.dish_name.toLowerCase() === newDish.dish_name.toLowerCase())
+        );
 
-    const isNew = updatedMenu.isNew; // not directly available; if needed, you can check via separate flag logic
+        if (existingIndex !== -1) {
+          const existingDish = updatedDishes[existingIndex];
+          updatedDishes[existingIndex] = {
+            ...existingDish.toObject ? existingDish.toObject() : existingDish,
+            ...newDish,
+            _id: existingDish._id,
+            dish_img: newDish.dish_img || existingDish.dish_img,
+          };
+        } else {
+          updatedDishes.push(newDish);
+        }
+      });
+
+      existingMenu.dishes = updatedDishes;
+      existingMenu.counter = counter || existingMenu.counter;
+      existingMenu.hide_on_kot = isHideOnKot;
+
+      resultMenu = await existingMenu.save();
+    } else {
+      resultMenu = new Menu({
+        user_id,
+        category,
+        meal_type,
+        counter: counter || null,
+        hide_on_kot: isHideOnKot,
+        dishes: parsedDishes,
+      });
+      await resultMenu.save();
+    }
 
     res.status(200).json({
       success: true,
       message: "Menu saved",
-      data: updatedMenu,
+      data: resultMenu,
     });
   } catch (error) {
     console.error("Error adding menu:", error);
@@ -351,7 +379,7 @@ const getMenuDataById = async (req, res) => {
 const updateMenuCategoryAndMealType = async (req, res) => {
   try {
     const id = req.params.id;
-    const { category, meal_type, counter, hide_on_kot } = req.body;
+    let { category, meal_type, counter, hide_on_kot } = req.body;
     const userId = req.user;
 
     if (counter === "") {
@@ -371,6 +399,12 @@ const updateMenuCategoryAndMealType = async (req, res) => {
     res.json({ success: true, data: updatedMenu });
   } catch (error) {
     console.error(error);
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "A menu category with this name and meal type already exists."
+      });
+    }
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -386,6 +420,7 @@ const updateMenu = async (req, res) => {
       unit,
       is_special,
       is_available,
+      hide_on_kot,
       has_variants,
       variants,
       addons,
@@ -467,6 +502,15 @@ const updateMenu = async (req, res) => {
       { user_id: userId, "dishes._id": _id },
       { $set: updateFields },
     );
+
+    // Update hide_on_kot at the menu (category) level if provided
+    if (hide_on_kot !== undefined && hide_on_kot !== null) {
+      const isHideOnKot = typeof hide_on_kot === "string" ? hide_on_kot === "true" : !!hide_on_kot;
+      await Menu.updateOne(
+        { user_id: userId, "dishes._id": _id },
+        { $set: { hide_on_kot: isHideOnKot } },
+      );
+    }
 
     if (result.matchedCount === 0) {
       return res

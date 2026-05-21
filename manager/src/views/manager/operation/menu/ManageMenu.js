@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Card, Col, Row, Form, Spinner, Alert, Button, Badge, Dropdown } from 'react-bootstrap';
+import { Card, Col, Row, Form, Spinner, Alert, Button, Badge, Dropdown, Collapse } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import csInterfaceIcons from 'views/interface/content/icons/data/cs-interface-icons-tags';
@@ -38,6 +38,14 @@ const ManageMenu = () => {
   const [filters, setFilters] = useState({ meal_type: '', category: '' });
   const [loading, setLoading] = useState(true);
   const [categoryOptions, setCategoryOptions] = useState([]);
+  const [expandedCategories, setExpandedCategories] = useState({});
+
+  const toggleCategory = (catId) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [catId]: !prev[catId]
+    }));
+  };
 
   const starFillIcon = csInterfaceIcons.find((icon) => icon.c === 'cs-star-full');
 
@@ -58,6 +66,11 @@ const ManageMenu = () => {
 
       setMenuData(transformedMenu);
       setFilteredMenuData(transformedMenu);
+
+      // Expand first category by default
+      if (transformedMenu.length > 0) {
+        setExpandedCategories({ [transformedMenu[0].id || transformedMenu[0]._id]: true });
+      }
     } catch (error) {
       console.error('Error fetching menu data:', error);
       toast.error('Failed to fetch menu data. Please try again.');
@@ -88,6 +101,13 @@ const ManageMenu = () => {
           dishes: item.dishes.filter((dish) => dish.dish_name.toLowerCase().includes(searchText.toLowerCase())),
         }))
         .filter((item) => item.dishes.length > 0);
+
+      // Expand all matching categories when searching
+      const expanded = {};
+      filtered.forEach((item) => {
+        expanded[item.id || item._id] = true;
+      });
+      setExpandedCategories(expanded);
     }
 
     setFilteredMenuData(filtered);
@@ -146,6 +166,12 @@ const ManageMenu = () => {
         .hover-elevate:hover {
           transform: translateY(-5px);
           box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+        }
+        .hover-light {
+          transition: background-color 0.2s ease;
+        }
+        .hover-light:hover {
+          background-color: #f8fafc !important;
         }
       `}</style>
       <div className="page-title-container mb-4 mt-5 mt-lg-0 text-start">
@@ -269,10 +295,12 @@ const ManageMenu = () => {
             <div key={category.id || category._id} className="mb-4 text-start">
               {/* Category Header — ManageTable style: white pill card */}
               <div
-                className="d-flex justify-content-between align-items-center gap-2 mb-3 px-3 py-3 bg-white shadow-sm"
+                className="d-flex justify-content-between align-items-center gap-2 mb-3 px-3 py-3 bg-white shadow-sm cursor-pointer hover-light"
                 style={{ borderRadius: '15px', border: '1px solid rgba(0,0,0,0.03)' }}
+                onClick={() => toggleCategory(category.id || category._id)}
               >
                 <div className="d-flex align-items-center gap-3">
+
                   <div
                     className="rounded-circle flex-shrink-0"
                     style={{
@@ -286,7 +314,7 @@ const ManageMenu = () => {
                   />
                   <h2 className="h5 mb-0 fw-bold text-dark">{category.category}</h2>
                 </div>
-                <div className="d-flex align-items-center gap-2">
+                <div className="d-flex align-items-center gap-2" onClick={(e) => e.stopPropagation()}>
                   <Badge
                     bg="none"
                     className="rounded-pill px-3 py-2"
@@ -307,7 +335,7 @@ const ManageMenu = () => {
                     variant="light"
                     size="sm"
                     className="btn-icon btn-icon-only shadow-sm rounded-circle border-0 text-primary"
-                    onClick={() => history.push('/operations/add-dish', { category: category.category, mealType: category.meal_type, fromManageMenu: true })}
+                    onClick={() => history.push('/operations/add-dish', { category: category.category, mealType: category.meal_type, counter: category.counter, hide_on_kot: category.hide_on_kot, fromManageMenu: true })}
                     title="Add Dish to Category"
                   >
                     <CsLineIcons icon="plus" size="15" />
@@ -315,106 +343,108 @@ const ManageMenu = () => {
                 </div>
               </div>
 
-              {/* Dishes Grid — pos-menu-card style from MenuGrid */}
-              <div className="pt-1 pb-2 px-1">
-                <Row className="g-3">
-                  {category.dishes.map((dish) => (
-                    <Col xs={12} sm={6} md={4} lg={3} xxl={2} key={dish.id || dish._id}>
-                      <div className="pos-menu-card h-100 position-relative">
-                        {/* Meal-type dot — identical to MenuGrid */}
-                        <div className={`pos-type-dot ${category.meal_type === 'veg' ? 'veg' : category.meal_type === 'egg' ? 'egg' : 'nonveg'}`} />
+              {/* Dishes Grid — pos-menu-card style from MenuGrid - Collapsible */}
+              <Collapse in={expandedCategories[category.id || category._id]}>
+                <div className="pt-1 pb-2 px-1">
+                  <Row className="g-3">
+                    {category.dishes.map((dish) => (
+                      <Col xs={12} sm={6} md={4} lg={3} xxl={2} key={dish.id || dish._id}>
+                        <div className="pos-menu-card h-100 position-relative">
+                          {/* Meal-type dot — identical to MenuGrid */}
+                          <div className={`pos-type-dot ${category.meal_type === 'veg' ? 'veg' : category.meal_type === 'egg' ? 'egg' : 'nonveg'}`} />
 
-                        {/* Management buttons — absolute top-right overlay, icon-only, ManageTable link style */}
-                        <div
-                          className="position-absolute d-flex gap-1"
-                          style={{ top: '6px', right: '6px', zIndex: 2 }}
-                        >
-                          <Button
-                            variant="link"
-                            size="sm"
-                            className="btn-icon btn-icon-only shadow-sm rounded-circle border-0"
-                            style={{ background: 'rgba(255,255,255,0.82)', borderRadius: '7px', lineHeight: 1 }}
-                            onClick={() => { setSelectedDish(dish); setEditMenuModalShow(true); }}
-                            title="Edit Dish"
+                          {/* Management buttons — absolute top-right overlay, icon-only, ManageTable link style */}
+                          <div
+                            className="position-absolute d-flex gap-1"
+                            style={{ top: '6px', right: '6px', zIndex: 2 }}
                           >
-                            <CsLineIcons icon="edit" size="14" />
-                          </Button>
-                          <Button
-                            variant="link"
-                            size="sm"
-                            className="btn-icon btn-icon-only shadow-sm rounded-circle border-0 text-danger"
-                            style={{ background: 'rgba(255,255,255,0.82)', borderRadius: '7px', lineHeight: 1 }}
-                            onClick={() => { setDishToDelete(dish); setDeleteDishModalShow(true); }}
-                            title="Delete Dish"
-                          >
-                            <CsLineIcons icon="bin" size="14" />
-                          </Button>
-                        </div>
-
-                        {/* Image — square crop */}
-                        <div className="pos-menu-img-wrap" style={{ aspectRatio: '1 / 1', overflow: 'hidden' }}>
-                          {dish.dish_img ? (
-                            <img
-                              src={`${uploadDir}/${dish.dish_img}`}
-                              alt={dish.dish_name}
-                              className="pos-menu-img"
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                          ) : (
-                            <div className="d-flex align-items-center justify-content-center h-100 text-muted">
-                              <CsLineIcons icon="cupcake" size="30" opacity="0.3" />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Details — identical to MenuGrid */}
-                        <div className="pos-menu-details">
-                          {dish.is_special && (
-                            <div className="pos-special-star">
-                              <span role="img" aria-label="special">⭐</span>
-                            </div>
-                          )}
-                          <div className="pos-dish-name">
-                            {dish.dish_name}
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="btn-icon btn-icon-only shadow-sm rounded-circle border-0"
+                              style={{ background: 'rgba(255,255,255,0.82)', borderRadius: '7px', lineHeight: 1 }}
+                              onClick={() => { setSelectedDish(dish); setEditMenuModalShow(true); }}
+                              title="Edit Dish"
+                            >
+                              <CsLineIcons icon="edit" size="14" />
+                            </Button>
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="btn-icon btn-icon-only shadow-sm rounded-circle border-0 text-danger"
+                              style={{ background: 'rgba(255,255,255,0.82)', borderRadius: '7px', lineHeight: 1 }}
+                              onClick={() => { setDishToDelete(dish); setDeleteDishModalShow(true); }}
+                              title="Delete Dish"
+                            >
+                              <CsLineIcons icon="bin" size="14" />
+                            </Button>
                           </div>
 
-                          {/* Price: range for variants, flat otherwise */}
-                          <div className="pos-dish-price">
-                            {dish.has_variants && Array.isArray(dish.variants) && dish.variants.length > 0
-                              ? (() => {
-                                const prices = dish.variants.map((v) => Number(v.price) || 0);
-                                const min = Math.min(...prices);
-                                const max = Math.max(...prices);
-                                return min === max ? `₹${min}` : `₹${min} – ₹${max}`;
-                              })()
-                              : `₹${dish.dish_price || 0}`}
+                          {/* Image — square crop */}
+                          <div className="pos-menu-img-wrap" style={{ aspectRatio: '1 / 1', overflow: 'hidden' }}>
+                            {dish.dish_img ? (
+                              <img
+                                src={`${uploadDir}/${dish.dish_img}`}
+                                alt={dish.dish_name}
+                                className="pos-menu-img"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            ) : (
+                              <div className="d-flex align-items-center justify-content-center h-100 text-muted">
+                                <CsLineIcons icon="cupcake" size="30" opacity="0.3" />
+                              </div>
+                            )}
                           </div>
 
-                          {/* Variant details (size / extra) */}
-                          {dish.has_variants && Array.isArray(dish.variants) && dish.variants.length > 0 && (
-                            <div className="text-muted mt-1" style={{ fontSize: '10px', lineHeight: '1.4' }}>
-                              {dish.variants.map((v, idx) => (
-                                <div key={idx} className="d-flex gap-1 align-items-baseline flex-wrap">
-                                  {v.size_name && <span className="fw-semibold" style={{ color: '#334155' }}>{v.size_name}:</span>}
-                                  <span style={{ color: '#23b3f4', fontWeight: 700 }}>₹{v.price}</span>
-                                  {v.extra && <span style={{ fontStyle: 'italic', fontSize: '9px', color: '#94a3b8' }}>({v.extra})</span>}
-                                </div>
-                              ))}
+                          {/* Details — identical to MenuGrid */}
+                          <div className="pos-menu-details">
+                            {dish.is_special && (
+                              <div className="pos-special-star">
+                                <span role="img" aria-label="special">⭐</span>
+                              </div>
+                            )}
+                            <div className="pos-dish-name">
+                              {dish.dish_name}
                             </div>
-                          )}
 
-                          {/* Customizable label (matches MenuGrid) */}
-                          {(dish.has_variants || (Array.isArray(dish.addons) && dish.addons.length > 0)) && (
-                            <div className="text-primary fw-bold" style={{ fontSize: '9px', marginTop: '2px', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
-                              Customizable
+                            {/* Price: range for variants, flat otherwise */}
+                            <div className="pos-dish-price">
+                              {dish.has_variants && Array.isArray(dish.variants) && dish.variants.length > 0
+                                ? (() => {
+                                  const prices = dish.variants.map((v) => Number(v.price) || 0);
+                                  const min = Math.min(...prices);
+                                  const max = Math.max(...prices);
+                                  return min === max ? `₹${min}` : `₹${min} – ₹${max}`;
+                                })()
+                                : `₹${dish.dish_price || 0}`}
                             </div>
-                          )}
+
+                            {/* Variant details (size / extra) */}
+                            {dish.has_variants && Array.isArray(dish.variants) && dish.variants.length > 0 && (
+                              <div className="text-muted mt-1" style={{ fontSize: '10px', lineHeight: '1.4' }}>
+                                {dish.variants.map((v, idx) => (
+                                  <div key={idx} className="d-flex gap-1 align-items-baseline flex-wrap">
+                                    {v.size_name && <span className="fw-semibold" style={{ color: '#334155' }}>{v.size_name}:</span>}
+                                    <span style={{ color: '#23b3f4', fontWeight: 700 }}>₹{v.price}</span>
+                                    {v.extra && <span style={{ fontStyle: 'italic', fontSize: '9px', color: '#94a3b8' }}>({v.extra})</span>}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Customizable label (matches MenuGrid) */}
+                            {(dish.has_variants || (Array.isArray(dish.addons) && dish.addons.length > 0)) && (
+                              <div className="text-primary fw-bold" style={{ fontSize: '9px', marginTop: '2px', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                                Customizable
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </Col>
-                  ))}
-                </Row>
-              </div>
+                      </Col>
+                    ))}
+                  </Row>
+                </div>
+              </Collapse>
             </div>
           ))}
         </div>
