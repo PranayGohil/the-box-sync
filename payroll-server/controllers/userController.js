@@ -1,0 +1,699 @@
+const User = require("../models/userModel");
+const bcrypt = require("bcryptjs");
+const { sendEmail, sendSupportEmail } = require("../utils/emailService");
+
+
+const contactEmail = async (req, res) => {
+  const { name, email2, phone, message } = req.body;
+  console.log("Contact form submission:", { name, email2, phone, message }); // Debug log
+
+  // Basic validation
+  if (!name || !email2 || !phone || !message) {
+    return res.status(400).json({ success: false, message: 'All fields are required.' });
+  }
+
+  try {
+    // 1. Notification email → goes to YOUR inbox
+    await sendSupportEmail({
+      to: process.env.SMTP_SUPPORT_USER, // e.g. support@theboxsync.com
+      subject: `New Contact Form Submission from ${name}`,
+      replyTo: email2,
+      text: `Name: ${name}\nEmail: ${email2}\nPhone: ${phone}\nMessage: ${message}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <div style="background: #7444FD; padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+            <h2 style="color: #fff; margin: 0;">New Contact Form Submission</h2>
+          </div>
+          <div style="padding: 24px; background: #fafafa;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 10px 0; font-weight: bold; color: #555; width: 100px;">Name</td>
+                <td style="padding: 10px 0; color: #222;">${name}</td>
+              </tr>
+              <tr style="border-top: 1px solid #eee;">
+                <td style="padding: 10px 0; font-weight: bold; color: #555;">Email</td>
+                <td style="padding: 10px 0; color: #222;"><a href="mailto:${email2}" style="color: #7444FD;">${email2}</a></td>
+              </tr>
+              <tr style="border-top: 1px solid #eee;">
+                <td style="padding: 10px 0; font-weight: bold; color: #555;">Phone</td>
+                <td style="padding: 10px 0; color: #222;"><a href="tel:${phone}" style="color: #7444FD;">${phone}</a></td>
+              </tr>
+              <tr style="border-top: 1px solid #eee;">
+                <td style="padding: 10px 0; font-weight: bold; color: #555; vertical-align: top;">Message</td>
+                <td style="padding: 10px 0; color: #222; white-space: pre-line;">${message}</td>
+              </tr>
+            </table>
+          </div>
+          <div style="padding: 12px 24px; background: #f0f0f0; border-radius: 0 0 6px 6px; text-align: center; font-size: 12px; color: #999;">
+            Sent via TheBox Contact Form
+          </div>
+        </div>
+      `,
+    });
+
+    // 2. Auto-reply → goes to the USER who submitted the form
+    await sendSupportEmail({
+      to: email2,
+      subject: 'Thanks for contacting TheBox!',
+      replyTo: process.env.CONTACT_RECEIVER_EMAIL,
+      text: `Hi ${name},\n\nThank you for reaching out to us. We have received your message and will get back to you shortly.\n\nBest regards,\nThe TheBox Team`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <div style="background: #7444FD; padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+            <h2 style="color: #fff; margin: 0;">Thank you for contacting us!</h2>
+          </div>
+          <div style="padding: 24px; background: #fafafa;">
+            <p style="color: #333; font-size: 16px;">Hi <strong>${name}</strong>,</p>
+            <p style="color: #555;">Thank you for reaching out to <strong>TheBox</strong>. We have received your message and our team will get back to you as soon as possible.</p>
+            <p style="color: #555; margin-top: 24px;">Best regards,<br><strong>The TheBox Team</strong></p>
+          </div>
+          <div style="padding: 12px 24px; background: #f0f0f0; border-radius: 0 0 6px 6px; text-align: center; font-size: 12px; color: #999;">
+            © TheBox | <a href="mailto:support@theboxsync.com" style="color: #7444FD;">support@theboxsync.com</a>
+          </div>
+        </div>
+      `,
+    });
+
+    return res.status(200).json({ success: true, message: 'Message sent successfully!' });
+
+  } catch (error) {
+    console.error('Contact form email error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to send message. Please try again.' });
+  }
+};
+
+const sendEnquiry = async (req, res) => {
+  const { name, email2, phone, message, plan } = req.body;
+
+  console.log('Enquiry form submission:', { name, email2, phone, message, plan });
+
+  // Basic validation
+  if (!name || !email2 || !phone || !message) {
+    return res.status(400).json({ success: false, message: 'All fields are required.' });
+  }
+
+  try {
+    // 1. Notification email → goes to YOUR inbox
+    await sendSupportEmail({
+      to: process.env.SMTP_SUPPORT_USER,
+      subject: `New Enquiry${plan ? ` for ${plan} Plan` : ''} from ${name}`,
+      replyTo: email2,
+      text: `Plan: ${plan || 'N/A'}\nName: ${name}\nEmail: ${email2}\nPhone: ${phone}\nMessage: ${message}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <div style="background: #7444FD; padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+            <h2 style="color: #fff; margin: 0;">New Plan Enquiry</h2>
+          </div>
+          <div style="padding: 24px; background: #fafafa;">
+            <table style="width: 100%; border-collapse: collapse;">
+              ${plan ? `
+              <tr>
+                <td style="padding: 10px 0; font-weight: bold; color: #555; width: 100px;">Plan</td>
+                <td style="padding: 10px 0;">
+                  <span style="background: #7444FD; color: #fff; padding: 3px 12px; border-radius: 20px; font-size: 13px;">${plan}</span>
+                </td>
+              </tr>` : ''}
+              <tr style="border-top: 1px solid #eee;">
+                <td style="padding: 10px 0; font-weight: bold; color: #555;">Name</td>
+                <td style="padding: 10px 0; color: #222;">${name}</td>
+              </tr>
+              <tr style="border-top: 1px solid #eee;">
+                <td style="padding: 10px 0; font-weight: bold; color: #555;">Email</td>
+                <td style="padding: 10px 0; color: #222;">
+                  <a href="mailto:${email2}" style="color: #7444FD;">${email2}</a>
+                </td>
+              </tr>
+              <tr style="border-top: 1px solid #eee;">
+                <td style="padding: 10px 0; font-weight: bold; color: #555;">Phone</td>
+                <td style="padding: 10px 0; color: #222;">
+                  <a href="tel:${phone}" style="color: #7444FD;">${phone}</a>
+                </td>
+              </tr>
+              <tr style="border-top: 1px solid #eee;">
+                <td style="padding: 10px 0; font-weight: bold; color: #555; vertical-align: top;">Message</td>
+                <td style="padding: 10px 0; color: #222; white-space: pre-line;">${message}</td>
+              </tr>
+            </table>
+          </div>
+          <div style="padding: 12px 24px; background: #f0f0f0; border-radius: 0 0 6px 6px; text-align: center; font-size: 12px; color: #999;">
+            Sent via TheBox Pricing Page
+          </div>
+        </div>
+      `,
+    });
+
+    // 2. Auto-reply → goes to the USER
+    await sendSupportEmail({
+      to: email2,
+      subject: `Thanks for your enquiry${plan ? ` about the ${plan} Plan` : ''}!`,
+      replyTo: process.env.SMTP_SUPPORT_USER,
+      text: `Hi ${name},\n\nThank you for your enquiry${plan ? ` about our ${plan} plan` : ''}. We have received your message and our team will get back to you shortly.\n\nBest regards,\nThe TheBox Team`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <div style="background: #7444FD; padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+            <h2 style="color: #fff; margin: 0;">Thank you for your enquiry!</h2>
+          </div>
+          <div style="padding: 24px; background: #fafafa;">
+            <p style="color: #333; font-size: 16px;">Hi <strong>${name}</strong>,</p>
+            ${plan ? `
+            <p style="color: #555;">
+              We've received your enquiry about our 
+              <strong style="color: #7444FD;">${plan} Plan</strong>. 
+              Our team will review your requirements and get back to you with the best options.
+            </p>` : `
+            <p style="color: #555;">
+              We've received your enquiry. Our team will review your requirements and get back to you shortly.
+            </p>`}
+            <p style="color: #555; margin-top: 24px;">
+              Best regards,<br><strong>The TheBox Team</strong>
+            </p>
+          </div>
+          <div style="padding: 12px 24px; background: #f0f0f0; border-radius: 0 0 6px 6px; text-align: center; font-size: 12px; color: #999;">
+            © TheBox | <a href="mailto:support@theboxsync.com" style="color: #7444FD;">support@theboxsync.com</a>
+          </div>
+        </div>
+      `,
+    });
+
+    return res.status(200).json({ success: true, message: 'Enquiry sent successfully!' });
+
+  } catch (error) {
+    console.error('Enquiry form email error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to send enquiry. Please try again.' });
+  }
+};
+
+
+const emailCheck = async (req, res) => {
+  try {
+    const userExists = await User.findOne({ email: req.body.email })
+      .select("_id")
+      .lean();
+
+    return res.json({
+      success: true,
+      exists: !!userExists,
+      message: userExists ? "User Already Exists" : "User Not Found",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+const register = async (req, res) => {
+  try {
+    const { country, country_code, state, state_code, name, email } = req.body;
+
+    if (
+      !country ||
+      !country_code ||
+      !state ||
+      !state_code ||
+      !name ||
+      !email
+    ) {
+      return res.status(400).json({
+        message: "Country, state, name, and email are required",
+      });
+    }
+
+    // Generate the prefix for the restaurant code
+    const countryPrefix = country_code.toUpperCase(); // IN
+    const statePrefix = state_code.toUpperCase();     // GJ
+
+    // Find the highest existing code for this country and state
+    const latestUser = await User.findOne({
+      country: country,
+      state: state,
+    })
+      .sort({ createdAt: -1 })
+      .select("restaurant_code")
+      .lean();
+
+    let sequenceNumber = 1;
+
+    if (latestUser) {
+      const latestCode = latestUser.restaurant_code;
+      const match = latestCode.match(
+        new RegExp(`${statePrefix}(\\d+)${countryPrefix}`)
+      );
+
+      if (match) {
+        sequenceNumber = parseInt(match[1], 10) + 1;
+      }
+    }
+
+    let restaurantCode;
+    let codeExists = true;
+
+    while (codeExists) {
+      restaurantCode = `${statePrefix}${String(sequenceNumber).padStart(
+        4,
+        "0"
+      )}${countryPrefix}`;
+
+      codeExists = await User.exists({ restaurant_code: restaurantCode });
+
+      if (codeExists) {
+        sequenceNumber++;
+      }
+    }
+
+    // Create the new user with the generated restaurant code
+    const userdata = {
+      ...req.body,
+      country,
+      state,
+      logo: req.file ? "/branding/logo/" + req.file.filename : null,
+      restaurant_code: restaurantCode,
+    };
+
+    const newUser = new User(userdata);
+    await newUser.save();
+
+    const token = await newUser.generateAuthToken("Admin");
+    res.cookie("jwttoken", token, {
+      expires: new Date(Date.now() + 25892000000),
+      httpOnly: true,
+    });
+
+    // Replace placeholders in the email template
+    const regEmail = `
+      <p>
+        Dear <strong> ${name} </strong>,
+      </p>
+  
+      <p>
+        <br>We are pleased to inform you that your registration with TheBox has been successfully completed. Welcome to our community!
+      </p>
+  
+      <p>
+        Here are the details of your registration:
+      </p>
+  
+      <p>
+        <br><strong>Restaurant Code: </strong> ${restaurantCode}
+        <br><strong>Email Address: </strong> ${email}
+        <br><strong>Date of Registration: </strong> ${new Date().toLocaleDateString('en-IN')}
+      </p>
+  
+      <p>Please keep this information safe for your records.</p>
+  
+      <p>If you have any questions or need assistance, feel free to reach out to our customer support team at <span style="font-weight: bold; color: blue;">support@theboxsync.com</span>.</p>
+  
+      <p>Thank you for choosing TheBox. We look forward to providing you with a seamless and enjoyable experience.</p>
+  
+      <p>
+        Best regards,
+        <br>TheBox,
+        <br><span style="font-weight: bold; color: blue;">support@theboxsync.com</span>
+        <br><a href="https://theboxsync.com" style="font-weight: bold; color: blue;">theboxsync.com</a>
+      </p>
+      `;
+
+    await sendEmail({
+      to: email,
+      subject: "Successful Registration Confirmation for Your TheBox Account",
+      html: regEmail,
+    });
+
+    res.json({
+      message: "Registered",
+      restaurant_code: restaurantCode,
+      token,
+      user: { _id: newUser._id, email: newUser.email },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const userExists = await User.findOne({ email }).select("+password");
+
+    if (!userExists) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid Credentials" });
+    }
+
+    const matchPass = await bcrypt.compare(password, userExists.password);
+    if (!matchPass) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid Credentials" });
+    }
+
+    const token = await userExists.generateAuthToken("Admin");
+
+    res.json({
+      success: true,
+      message: "Logged In",
+      token,
+      user: {
+        _id: userExists._id,
+        email: userExists.email,
+      },
+    });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    res.clearCookie("jwttoken");
+    res.status(200).json({ message: "Logged Out" });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const getUserData = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const userId = req.user._id || req.user; // depending on how auth stores it
+
+    const projection = {
+      _id: 1,
+      restaurant_code: 1,
+      name: 1,
+      logo: 1,
+      gst_no: 1,
+      fssai_no: 1,
+      email: 1,
+      mobile: 1,
+      address: 1,
+      country: 1,
+      state: 1,
+      city: 1,
+      pincode: 1,
+      createdAt: 1,
+      taxInfo: 1,
+      containerCharges: 1,
+      purchasedPlan: 1,
+      restaurant_token: 1,
+      isApproved: 1,
+      // don't include password, otp, feedbacks by default
+    };
+
+    const fetchuser = await User.findById(userId).select(projection).lean();
+
+    if (!fetchuser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(fetchuser);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const getUserDataByCode = async (req, res) => {
+  try {
+    const { code } = req.params;
+    const userdata = await User.findOne({ restaurant_code: code }).lean();
+    if (!userdata) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.send(userdata);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error, message: "Server error" });
+  }
+};
+
+const sendAdminOtp = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "Email not found." });
+    }
+
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
+    user.otp = otp;
+    user.otpExpiry = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
+    await user.save();
+
+    // Replace placeholders in the email template
+    const adminOtpMail = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+        <div style="background: #7444FD; padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+          <h2 style="color: #fff; margin: 0;">Password Reset Request</h2>
+        </div>
+        <div style="padding: 24px; background: #fafafa;">
+          <p style="color: #333; font-size: 16px;">Dear <strong>${user.name || "User"}</strong>,</p>
+          <p style="color: #555;">We received a request to reset the password for your TheBox account associated with this email address: <strong style="color: #7444FD;">${email}</strong>.</p>
+          <p style="color: #555;">To proceed with the password reset, please use the following One Time Password (OTP):</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <span style="background: #7444FD; color: #fff; padding: 12px 24px; font-size: 28px; font-weight: bold; border-radius: 6px; letter-spacing: 4px;">${otp}</span>
+          </div>
+          <p style="color: #555; text-align: center;">Please enter this OTP on the password reset page to verify your identity.</p>
+          <p style="color: #555; margin-top: 30px;">If you did not initiate this password reset request, please ignore this email. Your account security is important to us.</p>
+          <p style="color: #555; margin-top: 24px;">Thank you for choosing TheBox.<br><strong>The TheBox Team</strong></p>
+        </div>
+        <div style="padding: 12px 24px; background: #f0f0f0; border-radius: 0 0 6px 6px; text-align: center; font-size: 12px; color: #999;">
+          © TheBox | <a href="mailto:support@theboxsync.com" style="color: #7444FD; text-decoration: none;">support@theboxsync.com</a>
+        </div>
+      </div>
+    `;
+
+    // Send OTP via email
+    await sendEmail({
+      to: email,
+      subject: "OTP Verification for Password Reset from TheBox",
+      html: adminOtpMail,
+    });
+    console.log("OTP sent to your email.", otp);
+    res.json({ message: "OTP sent to your email." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "An error occurred while sending OTP." });
+  }
+};
+
+const verifyAdminOtp = async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    const user = await User.findOne({ email }).select("otp otpExpiry").lean();
+    if (!user) {
+      return res.status(404).json({ message: "Email not found." });
+    }
+
+    if (user.otp !== parseInt(otp, 10) || Date.now() > user.otpExpiry) {
+      return res.status(400).json({ message: "Invalid or expired OTP." });
+    }
+
+    // OTP is valid
+    res.json({ verified: true, message: "OTP verified successfully." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "An error occurred while verifying OTP." });
+  }
+};
+
+const resetAdminPassword = async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "Email not found." });
+    }
+
+    // Update the password
+    user.password = newPassword;
+
+    // Clear OTP fields
+    user.otp = null;
+    user.otpExpiry = null;
+    await user.save();
+
+    // Replace placeholders in the email template
+    const passwordResetMail = `
+      <p>
+        Dear ${user.name || "User"},
+        <br>We are writing to inform you that the password for your TheBox account has been successfully reset. Your account is now secured with the new password.
+      </p>
+      <p>
+        If you have not initiated this password reset or if you have any concerns about your account security, please contact our support team immediately at support@theboxsync.com.
+      </p>
+      <p>
+        Here are the details of your recent password reset:
+      </p>
+      <p>
+        <strong>Email Address:</strong> ${email}<br>
+        <strong>Date and Time of Password Reset:</strong> ${new Date().toLocaleString()}
+      </p>
+      <p>
+        If you encountered any issues during the password reset process or need further assistance, feel free to reach out to us.
+      </p>
+      <p>
+        Thank you for choosing TheBox. We appreciate your trust and look forward to providing you with an excellent experience.
+      </p>
+      <p>
+        Thanks and Regards,<br>
+        TheBox,<br>
+        <span style="font-weight: bold; color: blue;">support@theboxsync.com</span><br>
+        <a href="https://theboxsync.com" style="font-weight: bold; color: blue;">theboxsync.com</a>
+      </p>
+      `;
+
+    // Send confirmation email
+    await sendEmail({
+      to: email,
+      subject: "Password Reset Successful for Your TheBox Account",
+      html: passwordResetMail,
+    });
+
+    res.json({ message: "Password reset successfully." });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ message: "An error occurred while resetting password." });
+  }
+};
+
+const updateUser = async (req, res) => {
+  const userId = req.user;
+  const { password, ...updates } = req.body;
+  console.log(req.body);
+
+  if (!userId) {
+    return res.status(400).json({ error: "User ID is required." });
+  }
+
+  try {
+    const user = await User.findById(userId).select("+password");
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    // Verify password if email or mobile changes
+    const emailChanged = updates.email && updates.email !== user.email;
+    const mobileChanged = updates.mobile && Number(updates.mobile) !== user.mobile;
+    if (emailChanged || mobileChanged) {
+      if (!password) {
+        return res.status(400).json({ error: "Password is required to change Email or Phone number." });
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ error: "Incorrect password. Verification failed." });
+      }
+    }
+
+    // ✅ Save uploaded logo path if available
+    if (req.file && req.file.fieldname === "logo") {
+      updates.logo = `/branding/logo/${req.file.filename}`;
+    }
+
+    // ✅ Update fields
+    Object.keys(updates).forEach((key) => {
+      user[key] = updates[key];
+    });
+
+    await user.save();
+    res.status(200).json({ message: "User information updated successfully." });
+  } catch (error) {
+    console.error("Error updating user information:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+const updateTax = async (req, res) => {
+  const { gst_no, taxInfo } = req.body;
+  const userId = req.user;
+
+  try {
+    await User.findByIdAndUpdate(userId, {
+      gst_no,
+      taxInfo: {
+        cgst: taxInfo?.cgst ?? 0,
+        sgst: taxInfo?.sgst ?? 0,
+        vat: taxInfo?.vat ?? 0,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Tax information updated successfully.",
+    });
+  } catch (error) {
+    console.error("Error updating tax info:", error);
+    res.status(500).send("Failed to update tax information.");
+  }
+};
+
+const getAllUsers = async (req, res) => {
+  try {
+    const { page = 1, limit = 50 } = req.query;
+    const pageNumber = parseInt(page, 10) || 1;
+    const pageSize = parseInt(limit, 10) || 50;
+
+    const projection = {
+      _id: 1,
+      restaurant_code: 1,
+      name: 1,
+      email: 1,
+      mobile: 1,
+      country: 1,
+      state: 1,
+      city: 1,
+      createdAt: 1,
+      purchasedPlan: 1,
+    };
+
+    const [users, total] = await Promise.all([
+      User.find()
+        .select(projection)
+        .skip((pageNumber - 1) * pageSize)
+        .limit(pageSize)
+        .lean(),
+      User.countDocuments(),
+    ]);
+
+    res.json({
+      data: users,
+      pagination: {
+        total,
+        page: pageNumber,
+        limit: pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching users" });
+  }
+};
+
+module.exports = {
+  contactEmail,
+  sendEnquiry,
+  emailCheck,
+  register,
+  login,
+  logout,
+  getUserData,
+  getUserDataByCode,
+  sendAdminOtp,
+  verifyAdminOtp,
+  resetAdminPassword,
+  updateUser,
+  updateTax,
+  getAllUsers,
+};

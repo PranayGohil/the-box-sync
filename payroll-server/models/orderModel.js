@@ -1,0 +1,148 @@
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
+const orderSchema = new Schema({
+  user_id: {
+    type: String,
+  },
+  order_no: {
+    type: String,
+  },
+  table_no: {
+    type: String,
+  },
+  table_area: {
+    type: String,
+  },
+  order_type: {
+    type: String, // Take Away, Delivery
+  },
+  token: {
+    type: Number, // Sequential token for Takeaway orders
+  },
+  order_items: [
+    {
+      dish_name: {
+        type: String,
+      },
+      quantity: {
+        type: Number,
+      },
+      dish_price: {
+        type: Number,
+      },
+      counter: {
+        type: String,
+        default: "Default"
+      },
+      hide_on_kot: {
+        type: Boolean,
+        default: false,
+      },
+      special_notes: {
+        type: String,
+      },
+      status: {
+        type: String, //Preparing, Completed
+        default: "Pending",
+      },
+      selected_variant: {
+        size_name: { type: String },
+        price: { type: Number },
+        extra: { type: String },
+      },
+      selected_addons: [
+        {
+          addon_name: { type: String },
+          price: { type: Number },
+        },
+      ],
+    },
+  ],
+  order_status: {
+    type: String,
+  },
+  customer_id: {
+    type: String,
+  },
+  customer_name: {
+    type: String,
+  },
+  total_persons: {
+    type: String,
+  },
+  comment: {
+    type: String,
+  },
+  waiter: {
+    type: String,
+  },
+  bill_amount: {
+    type: Number,
+  },
+  sub_total: {
+    type: Number,
+  },
+  cgst_percent: {
+    type: Number,
+  },
+  sgst_percent: {
+    type: Number,
+  },
+  vat_percent: {
+    type: Number,
+  },
+  cgst_amount: {
+    type: Number,
+  },
+  sgst_amount: {
+    type: Number,
+  },
+  vat_amount: {
+    type: Number,
+  },
+  discount_amount: {
+    type: Number,
+  },
+  waveoff_amount: {
+    type: Number,
+  },
+  total_amount: {
+    type: Number,
+  },
+  paid_amount: {
+    type: Number,
+  },
+  payment_type: {
+    type: String,
+  },
+  order_source: {
+    type: String,
+    required: true,
+    enum: ["Manager", "QSR", "Captain", "Restaurant Website"],
+  },
+  order_date: {
+    type: Date,
+    default: Date.now,
+  },
+},
+  {
+    timestamps: {
+      createdAt: "order_date",
+      updatedAt: "updated_at",
+    },
+  }
+);
+
+orderSchema.index({ user_id: 1, order_no: 1 });
+
+// 1. Order history & active orders by user + type + status
+orderSchema.index({ user_id: 1, order_type: 1, order_status: 1 });
+
+// 2. When order_source is also used (QSR, Takeaway, Delivery filters)
+orderSchema.index({ user_id: 1, order_source: 1, order_type: 1, order_status: 1 });
+
+// 3. For history / token generation if needed
+orderSchema.index({ user_id: 1, order_source: 1, order_date: -1 });
+
+const Order = mongoose.model("order", orderSchema);
+module.exports = Order;

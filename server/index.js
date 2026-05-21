@@ -18,9 +18,7 @@ const kotRouter = require("./router/kotRoutes");
 const menuRouter = require("./router/menuRoutes");
 const orderRouter = require("./router/orderRoutes");
 const staffRouter = require("./router/staffRoutes");
-const staffAttendanceRouter = require("./router/staffAttendanceRoutes");
-const staffPayrollRouter = require("./router/staffPayrollRouter.js");
-const payrollConfigRouter = require("./router/payrollConfigRouter.js");
+
 const subscriptionRouter = require("./router/subscriptionRoutes");
 const tableRouter = require("./router/tableRoutes");
 const userRouter = require("./router/userRoutes");
@@ -105,9 +103,8 @@ app.use("/api/kot", kotRouter);
 app.use("/api/menu", menuRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/staff", staffRouter);
-app.use("/api/attendance", staffAttendanceRouter);
-app.use("/api/payroll", staffPayrollRouter);
-app.use("/api/payroll-config", payrollConfigRouter);
+
+
 app.use("/api/subscription", subscriptionRouter);
 app.use("/api/table", tableRouter);
 app.use("/api/user", userRouter);
@@ -125,10 +122,7 @@ app.use("/api/otp", otpRouter)
 app.use("/api/waiter", waiterRouter);
 app.use("/api/reservation", reservationRouter);
 app.use("/api/daily-stock", dailyStockRouter);
-app.use("/api/holidays", require("./router/holidayRouter"));
-app.use("/api/leave-policy", require("./router/leavePolicyRouter"));
-app.use("/api/leave", require("./router/leaveRouter"));
-app.use("/api/salary-advance", require("./router/salaryAdvanceRouter"));
+
 
 const errorHandler = require("./middlewares/errorHandler");
 app.use(errorHandler);

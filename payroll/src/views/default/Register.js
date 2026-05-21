@@ -181,7 +181,7 @@ const Register = () => {
       const res = await axios.post(`${process.env.REACT_APP_API}/user/register`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       if (res.data) {
         login(res.data.token, res.data.user);
-        window.location.href = '/select-plan';
+        window.location.href = '/';
       } else {
         toast.error('Something went wrong!');
       }
