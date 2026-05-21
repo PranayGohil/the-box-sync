@@ -107,6 +107,10 @@ const AddStaff = () => {
     country: Yup.string().required('Country is required'),
     state: Yup.string().required('State is required'),
     city: Yup.string().required('City is required'),
+    pincode: Yup.string()
+      .required('Pincode is required')
+      .matches(/^[0-9]{6}$/, 'Pincode must be exactly 6 digits'),
+    gender: Yup.string().required('Gender is required'),
 
     phone_no: Yup.string()
       .required('Phone number is required')
@@ -220,6 +224,8 @@ const AddStaff = () => {
       country: '',
       state: '',
       city: '',
+      pincode: '',
+      gender: '',
       phone_no: '',
       email: '',
       salary: '',
@@ -265,6 +271,7 @@ const AddStaff = () => {
         if (values.photo) formData.append('photo', values.photo);
         if (values.front_image) formData.append('front_image', values.front_image);
         if (values.back_image) formData.append('back_image', values.back_image);
+        if (faceDescriptor) formData.append('face_descriptor', JSON.stringify(faceDescriptor));
 
         const addResponse = await axios.post(`${process.env.REACT_APP_API}/staff/add`, formData, {
           headers: {
@@ -306,10 +313,8 @@ const AddStaff = () => {
   };
 
   useEffect(() => {
-    if (activePlans.includes('Payroll By The Box')) {
-      loadModels();
-    }
-  }, [activePlans]);
+    loadModels();
+  }, []);
 
   useEffect(() => {
     let interval;
@@ -711,7 +716,26 @@ const AddStaff = () => {
                     </Form.Group>
                   </Col>
 
-                  <Col md={6}>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Gender</Form.Label>
+                      <Form.Select
+                        name="gender"
+                        value={values.gender}
+                        onChange={handleChange}
+                        isInvalid={touched.gender && errors.gender}
+                        disabled={loading.submitting}
+                      >
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </Form.Select>
+                      <Form.Control.Feedback type="invalid">{errors.gender}</Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Birth Date</Form.Label>
                       <div className="position-relative date-input-container">
@@ -736,7 +760,7 @@ const AddStaff = () => {
                       )}
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Joining Date</Form.Label>
                       <div className="position-relative date-input-container">
@@ -779,7 +803,7 @@ const AddStaff = () => {
                     </Form.Group>
                   </Col>
 
-                  <Col md={4}>
+                  <Col md={3}>
                     <Form.Group className="mb-3">
                       <Form.Label>Country</Form.Label>
                       <Form.Select
@@ -799,7 +823,7 @@ const AddStaff = () => {
                       <Form.Control.Feedback type="invalid">{errors.country}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
+                  <Col md={3}>
                     <Form.Group className="mb-3">
                       <Form.Label>State</Form.Label>
                       <Form.Select
@@ -819,7 +843,7 @@ const AddStaff = () => {
                       <Form.Control.Feedback type="invalid">{errors.state}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
+                  <Col md={3}>
                     <Form.Group className="mb-3">
                       <Form.Label>City</Form.Label>
                       <Form.Select
@@ -837,6 +861,21 @@ const AddStaff = () => {
                         ))}
                       </Form.Select>
                       <Form.Control.Feedback type="invalid">{errors.city}</Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                  <Col md={3}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Pincode</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="pincode"
+                        placeholder="e.g. 400001"
+                        value={values.pincode}
+                        onChange={handleChange}
+                        isInvalid={touched.pincode && errors.pincode}
+                        disabled={loading.submitting}
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.pincode}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
 
@@ -1066,6 +1105,19 @@ const AddStaff = () => {
                       {photoPreview ? 'Change Photo' : 'Upload Photo'}
                     </Button>
                     {touched.photo && errors.photo && <div className="text-danger mt-2 small fw-bold">{errors.photo}</div>}
+                    
+                    <div className="mt-3 text-center">
+                      <Button
+                        variant={faceDescriptor ? "success" : "outline-primary"}
+                        className="custom-btn-outline px-4 mx-auto d-flex align-items-center justify-content-center gap-2"
+                        onClick={() => setShowFaceModal(true)}
+                        disabled={loading.submitting}
+                        style={{ maxWidth: 'fit-content' }}
+                      >
+                        <CsLineIcons icon={faceDescriptor ? "check" : "camera"} size="18" /> 
+                        {faceDescriptor ? "Face Captured" : "Capture Face"}
+                      </Button>
+                    </div>
                   </Form.Group>
                 </div>
               </Card.Body>
@@ -1242,8 +1294,7 @@ const AddStaff = () => {
       )}
 
       {/* Face Capture Modal */}
-      {activePlans.includes('Payroll By The Box') && (
-        <Modal show={showFaceModal} onHide={() => setShowFaceModal(false)} centered size="lg">
+      <Modal show={showFaceModal} onHide={() => setShowFaceModal(false)} centered size="lg">
           <Modal.Header closeButton>
             <Modal.Title>Face Capture</Modal.Title>
           </Modal.Header>
@@ -1330,7 +1381,6 @@ const AddStaff = () => {
             </Button>
           </Modal.Footer>
         </Modal>
-      )}
     </div>
   </div>
 );

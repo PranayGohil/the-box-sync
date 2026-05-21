@@ -28,6 +28,11 @@ const websiteSchema = new mongoose.Schema({
   legacy_details: String,
   legacy_image: String,
   legacy_years: String,
+  legacy_layout: { type: String, default: 'image-right' },
+  legacy_bullets: [{
+    icon: String,
+    label: String
+  }],
   contact_details: String,
   map_location: String,
   testimonials: [{

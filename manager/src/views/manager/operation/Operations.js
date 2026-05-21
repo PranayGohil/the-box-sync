@@ -154,6 +154,10 @@ const NavContent = () => {
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Closing Stock</span>
           </Nav.Link>
+          <Nav.Link as={NavLink} to="/operations/wastage-log" className="px-0">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Wastage Log</span>
+          </Nav.Link>
         </div>
       </div>
 
