@@ -193,6 +193,7 @@ const MobileBottomNav = () => {
     { label: 'Table', icon: 'layout-5', to: '/operations/manage-table' },
     { label: 'Menu', icon: 'book-open', to: '/operations/manage-menu' },
     { label: 'Inventory', icon: 'boxes', to: '/operations/inventory-history' },
+    { label: 'Feedback', icon: 'message', to: '/operations/feedback', hide: !activePlans.includes('Feedback') },
   ].filter(item => !item.hide);
 
   return (

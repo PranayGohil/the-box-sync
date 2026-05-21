@@ -34,14 +34,29 @@ const customStyles = `
       gap: 0.75rem;
     }
     .modern-input {
-      border-radius: 12px !important;
-      padding: 0.8rem 1.25rem !important;
+      border-radius: 10px !important;
+      padding: 0.4rem 0.8rem !important;
       border: 1.5px solid #f1f5f9 !important;
       font-weight: 600 !important;
       color: #334155 !important;
       transition: all 0.3s ease !important;
       background: #fcfdfe !important;
-      height: 52px !important;
+      height: 40px !important;
+    }
+    input[type="date"].modern-input {
+      padding-right: 0.8rem !important;
+      padding-left: 2.2rem !important;
+      font-size: 0.85rem !important;
+      letter-spacing: -0.5px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z'/%3E%3C/svg%3E") !important;
+      background-repeat: no-repeat !important;
+      background-position: 10px center !important;
+      background-size: 14px 14px !important;
+    }
+    input[type="date"].modern-input::-webkit-calendar-picker-indicator {
+      display: none !important;
+      -webkit-appearance: none;
+      opacity: 0;
     }
     .modern-input:focus {
       border-color: #23b3f4 !important;
@@ -56,9 +71,9 @@ const customStyles = `
       padding-left: 0.25rem;
     }
     .select-modern .react-select__control {
-      border-radius: 12px !important;
+      border-radius: 10px !important;
       border: 1.5px solid #f1f5f9 !important;
-      min-height: 52px !important;
+      min-height: 40px !important;
       background: #fcfdfe !important;
       font-weight: 600 !important;
     }
@@ -251,7 +266,10 @@ const WastageLog = () => {
                           checked={form.wastage_type === t.value}
                           onChange={(e) => setForm((p) => ({ ...p, wastage_type: e.target.value }))}
                         />
-                        <label className="btn btn-outline-light text-dark border-light-subtle rounded-pill px-3 py-1 fw-bold small" htmlFor={`type-${t.value}`}>
+                        <label 
+                          className={`btn rounded-pill px-3 py-1 fw-bold small ${form.wastage_type === t.value ? 'btn-primary text-white shadow-sm' : 'btn-outline-light text-dark border-light-subtle'}`} 
+                          htmlFor={`type-${t.value}`}
+                        >
                           {t.label}
                         </label>
                       </div>
@@ -290,18 +308,27 @@ const WastageLog = () => {
                     <div className="section-label mb-0"><CsLineIcons icon="history" size="18" /> Wastage History</div>
                   </Col>
                   <Col xs={12} md="auto">
-                    <div className="d-flex flex-wrap gap-2 justify-content-md-end">
-                      <div style={{ width: '140px' }}>
-                        <div className="input-group-label small mb-1">From</div>
-                        <Form.Control type="date" className="modern-input" style={{ height: '40px', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+                    <div className="d-flex flex-row flex-md-nowrap gap-2 justify-content-md-end align-items-end">
+                      <div className="flex-grow-1" style={{ minWidth: '140px' }}>
+                        <div className="input-group-label small mb-1 text-truncate">From</div>
+                        <Form.Control 
+                          type="date" 
+                          className="modern-input w-100" 
+                          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' fill=\'%2364748b\' viewBox=\'0 0 16 16\'%3E%3Cpath d=\'M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: '10px center', backgroundSize: '14px 14px' }}
+                          value={fromDate} 
+                          onChange={(e) => setFromDate(e.target.value)} 
+                        />
                       </div>
-                      <div style={{ width: '140px' }}>
-                        <div className="input-group-label small mb-1">To</div>
-                        <Form.Control type="date" className="modern-input" style={{ height: '40px', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} value={toDate} onChange={(e) => setToDate(e.target.value)} />
+                      <div className="flex-grow-1" style={{ minWidth: '140px' }}>
+                        <div className="input-group-label small mb-1 text-truncate">To</div>
+                        <Form.Control 
+                          type="date" 
+                          className="modern-input w-100" 
+                          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' fill=\'%2364748b\' viewBox=\'0 0 16 16\'%3E%3Cpath d=\'M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: '10px center', backgroundSize: '14px 14px' }}
+                          value={toDate} 
+                          onChange={(e) => setToDate(e.target.value)} 
+                        />
                       </div>
-                      <Button variant="outline-primary" className="rounded-pill px-3 align-self-end" style={{ height: '40px' }} onClick={fetchLogs}>
-                        <CsLineIcons icon="refresh" size="14" />
-                      </Button>
                     </div>
                   </Col>
                 </Row>
@@ -318,46 +345,78 @@ const WastageLog = () => {
                     <div className="fw-bold text-muted">No wastage records found for this period.</div>
                   </Alert>
                 ) : (
-                  <div className="table-responsive">
-                    <Table hover className="mb-0 align-middle">
-                      <thead className="bg-light text-muted small text-uppercase fw-bold">
-                        <tr>
-                          <th className="ps-4 py-3">Date / Time</th>
-                          <th className="py-3">Item</th>
-                          <th className="py-3">Qty</th>
-                          <th className="py-3">Type</th>
-                          <th className="py-3">Reason</th>
-                          <th className="py-3 pe-4 text-end">By</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {logs.map((log) => (
-                          <tr key={log._id}>
-                            <td className="ps-4">
-                              <div className="fw-bold text-dark">{format(new Date(log.date), 'dd MMM')}</div>
-                              <div className="text-muted small">{format(new Date(log.date), 'hh:mm a')}</div>
-                            </td>
-                            <td className="fw-bold text-primary">{log.item_name}</td>
-                            <td>
-                              <div className="fw-bold text-danger">-{log.quantity}</div>
-                              <div className="text-muted small">{log.unit}</div>
-                            </td>
-                            <td>
-                              <Badge className={`type-pill bg-${typeColors[log.wastage_type] || 'secondary'} text-uppercase`}>
-                                {log.wastage_type}
-                              </Badge>
-                            </td>
-                            <td className="text-muted small" style={{ maxWidth: 200 }}>
-                              {log.reason || <span className="text-light-emphasis">No note provided</span>}
-                            </td>
-                            <td className="pe-4 text-end">
-                              <div className="fw-bold small">{log.logged_by}</div>
-                            </td>
+                  <>
+                    <div className="table-responsive d-none d-lg-block">
+                      <Table hover className="mb-0 align-middle">
+                        <thead className="bg-light text-muted small text-uppercase fw-bold">
+                          <tr>
+                            <th className="ps-4 py-3">Date / Time</th>
+                            <th className="py-3">Item</th>
+                            <th className="py-3">Qty</th>
+                            <th className="py-3">Type</th>
+                            <th className="py-3">Reason</th>
+                            <th className="py-3 pe-4 text-end">By</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </Table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {logs.map((log) => (
+                            <tr key={log._id}>
+                              <td className="ps-4">
+                                <div className="fw-bold text-dark">{format(new Date(log.date), 'dd MMM')}</div>
+                                <div className="text-muted small">{format(new Date(log.date), 'hh:mm a')}</div>
+                              </td>
+                              <td className="fw-bold text-primary">{log.item_name}</td>
+                              <td>
+                                <div className="fw-bold text-danger">-{log.quantity}</div>
+                                <div className="text-muted small">{log.unit}</div>
+                              </td>
+                              <td>
+                                <Badge className={`type-pill bg-${typeColors[log.wastage_type] || 'secondary'} text-uppercase`}>
+                                  {log.wastage_type}
+                                </Badge>
+                              </td>
+                              <td className="text-muted small" style={{ maxWidth: 200 }}>
+                                {log.reason ? `"${log.reason}"` : <span className="text-light-emphasis">No note provided</span>}
+                              </td>
+                              <td className="pe-4 text-end">
+                                <div className="fw-bold small">{log.logged_by}</div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </div>
+
+                    <div className="d-lg-none p-3">
+                      {logs.map((log) => (
+                        <div key={log._id} className="admin-wastage-log-mobile-row-card p-3 mb-3 border border-light-subtle rounded-3 shadow-sm bg-white">
+                          <div className="d-flex justify-content-between align-items-start mb-2">
+                            <div className="d-flex align-items-center gap-2">
+                              <div className="bg-light p-2 rounded-xl d-flex align-items-center justify-content-center shadow-sm" style={{width: '40px', height: '40px', borderRadius: '10px'}}>
+                                <CsLineIcons icon="box" size="18" className="text-danger" />
+                              </div>
+                              <div>
+                                <div className="fw-bold text-dark small">{log.item_name}</div>
+                                <div className="x-small text-muted fw-bold">{format(new Date(log.date), 'dd MMM yyyy')}</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="d-flex justify-content-between align-items-center mt-3 p-2 bg-light rounded-2">
+                            <div>
+                              <div className="x-small text-muted fw-bold text-uppercase" style={{fontSize: '0.55rem'}}>Quantity</div>
+                              <div className="fw-bold text-danger">{log.quantity} {log.unit}</div>
+                            </div>
+                            <Badge bg={typeColors[log.wastage_type] || 'secondary'} className="text-uppercase px-3 py-2 rounded-pill" style={{fontSize: '0.6rem'}}>{log.wastage_type}</Badge>
+                          </div>
+                          {log.reason && (
+                            <div className="mt-2 p-2 small text-muted fst-italic bg-light-subtle rounded-2" style={{fontSize: '0.75rem'}}>
+                              "{log.reason}"
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
             </Card.Body>

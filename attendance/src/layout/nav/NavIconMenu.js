@@ -7,10 +7,52 @@ import { settingsChangeColor } from 'settings/settingsSlice';
 import IconMenuNotifications from './notifications/Notifications';
 import SearchModal from './search/SearchModal';
 
+const customStyles = `
+    .interactive-card {
+      background: rgba(255, 255, 255, 0.98) !important;
+      backdrop-filter: blur(15px) !important;
+      border-radius: 1.5rem !important;
+      border: 1px solid rgba(255, 255, 255, 0.8) !important;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05) !important;
+      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+      overflow: hidden;
+    }
+    .custom-btn-outline {
+      background: #ffffff !important;
+      border: 1.5px solid #23b3f4 !important;
+      color: #23b3f4 !important;
+      border-radius: 50px !important;
+      padding: 0.6rem 1.5rem !important;
+      font-weight: 700 !important;
+      transition: all 0.3s ease !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    .custom-btn-outline:hover {
+      background: #23b3f4 !important;
+      color: #ffffff !important;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(35, 179, 244, 0.2) !important;
+    }
+    .logout-icon-container {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(244, 63, 94, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      color: #f43f5e;
+    }
+`;
+
 const NavIconMenu = () => {
   const history = useHistory();
   const { color } = useSelector((state) => state.settings);
   const dispatch = useDispatch();
+  const brandColor = '#23b3f4';
   
   
   const onLightDarkModeClick = (e) => {
@@ -35,6 +77,7 @@ const NavIconMenu = () => {
   }
   return (
     <>
+      <style>{customStyles}</style>
       <ul className="list-unstyled list-inline text-center menu-icons">
         {/* <li className="list-inline-item" title="Search">
           <a href="#/" onClick={onSearchIconClick}>
@@ -46,29 +89,41 @@ const NavIconMenu = () => {
             <CsLineIcons icon="logout" size="18" />
           </a>
         </li>
-        <li className="list-inline-item" title={`${color.includes('light') ? 'Light Mode' : 'Dark Mode'}`}>
-          <a href="#/" id="colorButton" onClick={onLightDarkModeClick}>
-            <CsLineIcons icon="light-on" size="18" className="light" />
-            <CsLineIcons icon="light-off" size="18" className="dark" title="Dark Mode" />
-          </a>
-        </li>
+
         {/* <IconMenuNotifications /> */}
       </ul>
       <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 
-      <Modal className="modal-close-out" show={showLogoutModal} onHide={() => setShowLogoutModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Logout</Modal.Title>
+      <Modal 
+        show={showLogoutModal} 
+        onHide={() => setShowLogoutModal(false)} 
+        centered 
+        contentClassName="interactive-card border-0 shadow-lg"
+      >
+        <Modal.Header className="border-0 p-4 pb-0" closeButton>
+          <Modal.Title className="fw-bold" style={{ color: brandColor }}>Session Management</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          <p>Are you sure you want to Logout</p>
+        <Modal.Body className="p-4 text-center">
+          <div className="logout-icon-container">
+            <CsLineIcons icon="logout" size="30" />
+          </div>
+          <h4 className="fw-bold text-dark mb-2">Confirm Logout</h4>
+          <p className="text-muted smaller fw-bold mb-0">Are you sure you want to end your session? You will need to login again to access the dashboard.</p>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowLogoutModal(false)}>
-            Cancel
+        <Modal.Footer className="border-0 p-4 pt-0 d-flex justify-content-center gap-3">
+          <Button 
+            variant="light" 
+            className="custom-btn-outline border-0 text-muted" 
+            onClick={() => setShowLogoutModal(false)}
+          >
+            Stay Signed In
           </Button>
-          <Button variant="danger" onClick={handleLogout}>
-            Logout
+          <Button 
+            variant="danger" 
+            className="custom-btn-outline border-danger text-danger px-5" 
+            onClick={handleLogout}
+          >
+            Yes, Logout
           </Button>
         </Modal.Footer>
       </Modal>

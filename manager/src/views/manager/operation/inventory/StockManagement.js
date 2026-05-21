@@ -163,12 +163,12 @@ const TRACKING_LEVELS = [
 
 const StockManagement = () => {
   const history = useHistory();
-  const title = 'Stock Management';
+  const title = 'Stock Control';
   const description = 'Monitor current stock levels, configure alert thresholds, and deduct stock.';
   const breadcrumbs = [
     { to: '', text: 'Home' },
     { to: 'operations/stock-management', text: 'Operations' },
-    { to: 'operations/stock-management', title: 'Stock Management' },
+    { to: 'operations/stock-management', title: 'Stock Control' },
   ];
 
   const [stockData, setStockData] = useState([]);
@@ -280,7 +280,7 @@ const StockManagement = () => {
                 <Button href="/operations/daily-stock-logs" className="manage-menu-custom-btn-outline shadow-sm border-0 px-4 py-2">
                   <CsLineIcons icon="file-text" size="18" className="me-2" /> <span className="d-none d-sm-inline">Audit Logs</span>
                 </Button>
-                <Button href="/operations/wastage-log" className="manage-menu-custom-btn-outline border-danger text-danger shadow-sm border-0 px-4 py-2" style={{color: '#ef4444', borderColor: '#ef4444'}}>
+                <Button href="/operations/wastage-log" className="manage-menu-custom-btn-outline border-danger text-danger shadow-sm border-0 px-4 py-2" style={{ color: '#ef4444', borderColor: '#ef4444' }}>
                   <CsLineIcons icon="bin" size="18" className="me-2" /> <span className="d-none d-sm-inline">Wastage</span>
                 </Button>
               </Col>
@@ -334,9 +334,8 @@ const StockManagement = () => {
                         <Row className="w-100 g-0 align-items-center">
                           <Col lg={4} className="d-flex align-items-center gap-3" style={{ flex: 2 }}>
                             <div
-                              className={`p-2 rounded-xl d-flex align-items-center justify-content-center shadow-sm ${
-                                isBelow ? 'bg-danger text-white' : 'bg-light text-muted'
-                              }`}
+                              className={`p-2 rounded-xl d-flex align-items-center justify-content-center shadow-sm ${isBelow ? 'bg-danger text-white' : 'bg-light text-muted'
+                                }`}
                               style={{ width: '44px', height: '44px', borderRadius: '12px' }}
                             >
                               <CsLineIcons icon={isBelow ? 'warning-hexagon' : 'box'} size="20" />
@@ -351,9 +350,8 @@ const StockManagement = () => {
                             </div>
                             <div className="ms-stock-management-auto d-lg-none text-end">
                               <div
-                                className={`stock-management-stock-val h5 mb-0 fw-bold ${
-                                  item.totalStock <= 0 ? 'text-danger' : isBelow ? 'text-warning' : 'text-success'
-                                }`}
+                                className={`stock-management-stock-val h5 mb-0 fw-bold ${item.totalStock <= 0 ? 'text-danger' : isBelow ? 'text-warning' : 'text-success'
+                                  }`}
                               >
                                 {item.totalStock}
                               </div>

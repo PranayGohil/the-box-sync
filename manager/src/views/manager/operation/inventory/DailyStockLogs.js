@@ -222,9 +222,17 @@ const DailyStockLogs = () => {
               <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations/inventory', text: 'Inventory' }, { to: '', title: 'Logs' }]} />
             </Col>
             <Col xs="auto">
-              <Button onClick={() => history.goBack()} className="manage-menu-custom-btn-outline shadow-sm border-0 px-3 py-2">
-                <CsLineIcons icon="arrow-left" size="18" className="me-2" /> Back
-              </Button>
+              <div className="d-flex gap-2 flex-wrap justify-content-end">
+                <Button onClick={() => history.push('/operations/daily-opening-stock')} className="manage-menu-custom-btn-outline shadow-sm border-0 px-3 py-2" style={{ color: '#23b3f4' }}>
+                  <CsLineIcons icon="login" size="18" className="me-2" /> Opening Stock
+                </Button>
+                <Button onClick={() => history.push('/operations/daily-closing-stock')} className="manage-menu-custom-btn-outline shadow-sm border-0 px-3 py-2 text-success">
+                  <CsLineIcons icon="logout" size="18" className="me-2" /> Closing Stock
+                </Button>
+                <Button onClick={() => history.goBack()} className="manage-menu-custom-btn-outline shadow-sm border-0 px-3 py-2 ms-md-2">
+                  <CsLineIcons icon="arrow-left" size="18" className="me-2" /> Back
+                </Button>
+              </div>
             </Col>
           </Row>
         </div>

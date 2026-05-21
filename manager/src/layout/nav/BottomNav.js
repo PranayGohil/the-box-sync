@@ -27,7 +27,7 @@ const BottomNav = () => {
     { to: '/operations/manage-table', icon: 'square', label: 'Tables' },
     { to: '/operations/manage-menu', icon: 'list', label: 'Menu' },
     { to: '/operations/inventory-history', icon: 'boxes', label: 'Inventory' },
-    { to: '/operations/feedback', icon: 'message', label: 'Feedback', hide: !activePlans.includes('Feedback') },
+    { to: '/operations/feedback', icon: 'message', label: 'Feedback' },
   ].filter(item => !item.hide);
 
   let navItems = [];
