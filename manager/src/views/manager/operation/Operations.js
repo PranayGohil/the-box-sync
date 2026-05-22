@@ -68,10 +68,7 @@ const NavContent = () => {
               <i className="me-2 sw-3 d-inline-block" />
               <span className="align-middle">Manage Reservations</span>
             </Nav.Link>
-            <Nav.Link as={NavLink} to="/operations/reservation-form" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Reservation Form</span>
-            </Nav.Link>
+
             <Nav.Link as={NavLink} to="/operations/qr-for-reservation" className="px-0">
               <i className="me-2 sw-3 d-inline-block" />
               <span className="align-middle">QR for Reservation</span>
