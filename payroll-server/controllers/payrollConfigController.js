@@ -8,6 +8,27 @@ const getConfig = async (req, res) => {
 
     if (!config) {
       config = await PayrollConfig.create({ user_id });
+    } else {
+      // Migration: If config doesn't have custom_earnings, add default.
+      if (!config.custom_earnings || config.custom_earnings.length === 0) {
+        config.custom_earnings = [
+          { id: "basic", label: "Basic Salary", is_active: true },
+          { id: "hra", label: "HRA", is_active: true },
+          { id: "conveyance", label: "Conveyance", is_active: true },
+          { id: "medical", label: "Medical Allowance", is_active: false },
+          { id: "special", label: "Special Allowance", is_active: false },
+          { id: "other", label: "Other Allowance", is_active: false }
+        ];
+        
+        // If old active_earnings exists, migrate the is_active status
+        if (config.active_earnings && config.active_earnings.length > 0) {
+          config.custom_earnings = config.custom_earnings.map(e => ({
+            ...e,
+            is_active: config.active_earnings.includes(e.id)
+          }));
+        }
+        await config.save();
+      }
     }
 
     res.status(200).json({ success: true, data: config });
@@ -21,7 +42,7 @@ const getConfig = async (req, res) => {
 const updateConfig = async (req, res) => {
   try {
     const user_id = req.user;
-    const { active_earnings, statutory_config, org_rules } = req.body;
+    const { custom_earnings, statutory_config, org_rules } = req.body;
 
     let config = await PayrollConfig.findOne({ user_id });
 
@@ -29,7 +50,7 @@ const updateConfig = async (req, res) => {
       config = new PayrollConfig({ user_id });
     }
 
-    if (active_earnings) config.active_earnings = active_earnings;
+    if (custom_earnings) config.custom_earnings = custom_earnings;
     
     if (statutory_config) {
         config.statutory_config = {

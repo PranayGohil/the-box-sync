@@ -12,6 +12,7 @@ import Webcam from 'react-webcam';
 import { AuthContext } from 'contexts/AuthContext';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
+import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 
 const EditStaff = () => {
@@ -383,7 +384,39 @@ const EditStaff = () => {
     },
   });
 
-  const { values, handleChange, handleSubmit, setFieldValue, errors, touched } = formik;
+    const { values, handleChange, handleSubmit, setFieldValue, errors, touched } = formik;
+
+  const handleAddCustomWeeklyOff = () => {
+    const current = values.custom_weekly_offs ? [...values.custom_weekly_offs] : [];
+    current.push({ day: 'Sunday', type: 'all_weeks', weeks: [] });
+    setFieldValue('custom_weekly_offs', current);
+  };
+
+  const handleRemoveCustomWeeklyOff = (index) => {
+    const current = [...values.custom_weekly_offs];
+    current.splice(index, 1);
+    setFieldValue('custom_weekly_offs', current);
+  };
+
+  const handleUpdateCustomWeeklyOff = (index, field, value) => {
+    const current = [...values.custom_weekly_offs];
+    current[index][field] = value;
+    setFieldValue('custom_weekly_offs', current);
+  };
+
+  const toggleSpecificCustomWeek = (index, weekNum) => {
+    const current = [...values.custom_weekly_offs];
+    const weeks = current[index].weeks ? [...current[index].weeks] : [];
+    if (weeks.includes(weekNum)) {
+      current[index].weeks = weeks.filter(w => w !== weekNum);
+    } else {
+      current[index].weeks.push(weekNum);
+    }
+    setFieldValue('custom_weekly_offs', current);
+  };
+
+
+
 
   useEffect(() => {
     setCountries(Country.getAllCountries());
@@ -470,8 +503,8 @@ const EditStaff = () => {
     value: pos,
   }));
 
-  const handleCountryChange = (event) => {
-    const countryName = event.target.value;
+  const handleCountryChange = (selected) => {
+    const countryName = selected ? selected.value : '';
     const selectedCountry = countries.find((c) => c.name === countryName);
 
     setFieldValue('country', countryName);
@@ -481,8 +514,8 @@ const EditStaff = () => {
     setFieldValue('city', '');
   };
 
-  const handleStateChange = (event) => {
-    const stateName = event.target.value;
+  const handleStateChange = (selected) => {
+    const stateName = selected ? selected.value : '';
     const selectedCountry = countries.find((c) => c.name === values.country);
     const selectedState = states.find((s) => s.name === stateName);
 
@@ -784,18 +817,22 @@ const EditStaff = () => {
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label className="small fw-bold">Gender</Form.Label>
-                      <Form.Select
+                      <Select
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                         name="gender"
-                        value={values.gender}
-                        onChange={handleChange}
-                        isInvalid={touched.gender && errors.gender}
-                        disabled={loading.submitting}
-                      >
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                      </Form.Select>
+                        options={[
+                          { value: 'Male', label: 'Male' },
+                          { value: 'Female', label: 'Female' },
+                          { value: 'Other', label: 'Other' }
+                        ]}
+                        value={values.gender ? { label: values.gender, value: values.gender } : null}
+                        onChange={(selected) => setFieldValue('gender', selected ? selected.value : '')}
+                        onBlur={() => formik.setFieldTouched('gender', true)}
+                        isDisabled={loading.submitting}
+                        placeholder="Select Gender"
+                      />
                       <Form.Control.Feedback type="invalid">{errors.gender}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
@@ -874,60 +911,54 @@ const EditStaff = () => {
                   <Col md={3}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">Country</Form.Label>
-                      <Form.Select
+                      <Select
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                         name="country"
-                        value={values.country}
+                        options={countries.map(c => ({ value: c.name, label: c.name }))}
+                        value={values.country ? { label: values.country, value: values.country } : null}
                         onChange={handleCountryChange}
-                        isInvalid={touched.country && errors.country}
-                        disabled={loading.submitting}
-                      >
-                        <option value="">Select Country</option>
-                        {countries.map((country) => (
-                          <option key={country.isoCode} value={country.name}>
-                            {country.name}
-                          </option>
-                        ))}
-                      </Form.Select>
+                        onBlur={() => formik.setFieldTouched('country', true)}
+                        isDisabled={loading.submitting}
+                        placeholder="Select Country"
+                      />
                       <Form.Control.Feedback type="invalid">{errors.country}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
                   <Col md={3}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">State</Form.Label>
-                      <Form.Select
+                      <Select
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                         name="state"
-                        value={values.state}
+                        options={states.map(s => ({ value: s.name, label: s.name }))}
+                        value={values.state ? { label: values.state, value: values.state } : null}
                         onChange={handleStateChange}
-                        disabled={!values.country || loading.submitting}
-                        isInvalid={touched.state && errors.state}
-                      >
-                        <option value="">Select State</option>
-                        {states.map((state) => (
-                          <option key={state.isoCode} value={state.name}>
-                            {state.name}
-                          </option>
-                        ))}
-                      </Form.Select>
+                        onBlur={() => formik.setFieldTouched('state', true)}
+                        isDisabled={!values.country || loading.submitting}
+                        placeholder="Select State"
+                      />
                       <Form.Control.Feedback type="invalid">{errors.state}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
                   <Col md={3}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">City</Form.Label>
-                      <Form.Select
+                      <Select
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                         name="city"
-                        value={values.city}
-                        onChange={handleChange}
-                        disabled={!values.state || loading.submitting}
-                        isInvalid={touched.city && errors.city}
-                      >
-                        <option value="">Select City</option>
-                        {cities.map((city) => (
-                          <option key={city.name} value={city.name}>
-                            {city.name}
-                          </option>
-                        ))}
-                      </Form.Select>
+                        options={cities.map(c => ({ value: c.name, label: c.name }))}
+                        value={values.city ? { label: values.city, value: values.city } : null}
+                        onChange={(selected) => setFieldValue('city', selected ? selected.value : '')}
+                        onBlur={() => formik.setFieldTouched('city', true)}
+                        isDisabled={!values.state || loading.submitting}
+                        placeholder="Select City"
+                      />
                       <Form.Control.Feedback type="invalid">{errors.city}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
@@ -1004,6 +1035,8 @@ const EditStaff = () => {
                         onBlur={() => formik.setFieldTouched('position', true)}
                         placeholder="Select or type..."
                         classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                       />
                       {touched.position && errors.position && (
                         <div className="text-danger mt-1 small fw-bold">{errors.position}</div>
@@ -1228,18 +1261,30 @@ const EditStaff = () => {
 
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-bold">Document Type</Form.Label>
-                  <Form.Select
-                    name="document_type"
-                    value={values.document_type}
-                    onChange={handleChange}
-                    isInvalid={touched.document_type && errors.document_type}
-                    disabled={loading.submitting}
-                  >
-                    <option value="">Select ID Type</option>
-                    <option value="National Identity Card">National Identity Card</option>
-                    <option value="Pan Card">Pan Card</option>
-                    <option value="Voter Card">Voter Card</option>
-                  </Form.Select>
+                  <Select
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                        name="document_type"
+                        options={[
+                          { value: 'Aadhar Card', label: 'Aadhar Card' },
+                          { value: 'Pan Card', label: 'Pan Card' },
+                          { value: 'National Identity Card', label: 'National Identity Card' },
+                          { value: 'Driving License', label: 'Driving License' },
+                          { value: 'Voter ID Card', label: 'Voter ID Card' },
+                          { value: 'Passport', label: 'Passport' }
+                        ]}
+                        value={values.document_type ? { label: values.document_type, value: values.document_type } : null}
+                        onChange={(selected) => {
+                          setFieldValue('document_type', selected ? selected.value : '');
+                          if (selected && selected.value !== 'National Identity Card') {
+                            setFieldValue('back_image', '');
+                          }
+                        }}
+                        onBlur={() => formik.setFieldTouched('document_type', true)}
+                        isDisabled={loading.submitting}
+                        placeholder="Select Document"
+                      />
                   <Form.Control.Feedback type="invalid">{errors.document_type}</Form.Control.Feedback>
                 </Form.Group>
 

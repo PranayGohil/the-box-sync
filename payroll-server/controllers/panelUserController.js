@@ -158,29 +158,32 @@ exports.panelLogin = async (req, res) => {
   try {
     const { planName } = req.params;
     const { restaurant_code, username, password } = req.body;
-    console.log("Req.body : ", req.body);
-    console.log(
-      "Restaurant Code : ",
-      restaurant_code,
-      "Username : ",
-      username,
-      "password : ",
-      password
-    );
-    const user = await User.findOne({ restaurant_code });
-
-    if (!user) {
-      console.log("User not found");
-      return res.json({ message: "Invalid restaurant code" });
-    }
 
     const Model = getModel(planName);
-    const panelUser = await Model.findOne({ username, user_id: user._id });
-    console.log("Model : " + planName);
 
-    if (!panelUser) {
-      console.log("Panel user not found");
-      return res.json({ message: "Invalid Username" });
+    let user;
+    let panelUser;
+
+    if (planName === "Payroll By The Box" && !restaurant_code) {
+      // ── Attendance kiosk: find by username alone, no restaurant_code needed ──
+      panelUser = await Model.findOne({ username });
+      if (!panelUser) {
+        return res.json({ message: "Invalid Username" });
+      }
+      user = await User.findById(panelUser.user_id);
+      if (!user) {
+        return res.json({ message: "User account not found" });
+      }
+    } else {
+      // ── All other panels: require restaurant_code ──────────────────────────
+      user = await User.findOne({ restaurant_code });
+      if (!user) {
+        return res.json({ message: "Invalid restaurant code" });
+      }
+      panelUser = await Model.findOne({ username, user_id: user._id });
+      if (!panelUser) {
+        return res.json({ message: "Invalid Username" });
+      }
     }
 
     const isMatch = await bcrypt.compare(password, panelUser.password);
@@ -200,8 +203,7 @@ exports.panelLogin = async (req, res) => {
       return res.status(403).json({ message: `No active subscription for ${planName}. Please purchase or renew the plan.` });
     }
 
-    token = await user.generateAuthToken(planName);
-
+    const token = await user.generateAuthToken(planName);
     res.status(200).json({ message: "Logged In", token, user });
   } catch (err) {
     console.error("Error in panelLogin:", err);

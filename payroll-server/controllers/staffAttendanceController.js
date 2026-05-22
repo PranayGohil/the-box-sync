@@ -1,5 +1,6 @@
 const StaffAttendance = require("../models/staffAttendanceModel");
 const Staff = require("../models/staffModel");
+const PayrollConfig = require("../models/PayrollConfig");
 
 // ── Helper: get today's date in IST (YYYY-MM-DD) ─────────────────────────────
 const getTodayIST = () => {
@@ -14,6 +15,49 @@ const getTodayIST = () => {
     return parts;
 };
 
+// ── Helper: Check if a date is a week off ──────────────────────────────────────
+const isWeekOff = (dateObj, policyList) => {
+    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayName = daysOfWeek[dateObj.getDay()];
+    const weekOfMonth = Math.floor((dateObj.getDate() - 1) / 7) + 1;
+
+    for (let policy of policyList) {
+        if (policy.day === dayName) {
+            if (policy.type === 'all_weeks') return true;
+            if (policy.type === 'specific_weeks' && policy.weeks && policy.weeks.includes(weekOfMonth)) return true;
+        }
+    }
+    return false;
+};
+
+const generateWeekOffs = (staff, globalOffs, existingRecords) => {
+    const policyList = staff.weekly_off_policy === 'custom' ? (staff.custom_weekly_offs || []) : globalOffs;
+    if (!policyList || policyList.length === 0) return [];
+
+    const existingDates = new Set(existingRecords.map(r => r.date));
+    const weekOffRecords = [];
+
+    // Generate for current year and previous year just in case
+    const currentYear = new Date().getFullYear();
+    const startDate = new Date(`${currentYear - 1}-01-01`);
+    const endDate = new Date(`${currentYear}-12-31`);
+
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0];
+        if (!existingDates.has(dateStr)) {
+            if (isWeekOff(d, policyList)) {
+                weekOffRecords.push({
+                    _id: 'wo_' + dateStr,
+                    date: dateStr,
+                    status: 'week_off',
+                    staff_id: staff._id
+                });
+            }
+        }
+    }
+    return weekOffRecords;
+};
+
 // ── GET /attendance/today ─────────────────────────────────────────────────────
 // Returns all staff with today's attendance record merged in.
 // Used by ManageAttendance.jsx
@@ -24,7 +68,7 @@ const getTodayAttendance = async (req, res) => {
 
         // Fetch all staff for this user
         const staffList = await Staff.find({ user_id: userId })
-            .select("staff_id f_name l_name position photo")
+            .select("staff_id f_name l_name position photo weekly_off_policy custom_weekly_offs")
             .sort({ f_name: 1 })
             .lean();
 
@@ -67,7 +111,7 @@ const getAttendanceByStaff = async (req, res) => {
         const userId = req.user;
 
         const staff = await Staff.findOne({ _id: staffId, user_id: userId })
-            .select("staff_id f_name l_name position photo salary joining_date")
+            .select("staff_id f_name l_name position photo salary joining_date weekly_off_policy custom_weekly_offs")
             .lean();
 
         if (!staff) {

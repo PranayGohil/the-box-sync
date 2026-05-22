@@ -1,9 +1,7 @@
 const Joi = require("joi");
 
 const panelLoginSchema = Joi.object({
-  restaurant_code: Joi.string().required().messages({
-    "any.required": "Restaurant code is required",
-  }),
+  restaurant_code: Joi.string().optional().allow('', null),
   username: Joi.string().min(3).max(50).required().messages({
     "any.required": "Username is required",
   }),
