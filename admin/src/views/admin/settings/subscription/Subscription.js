@@ -19,6 +19,17 @@ import RaiseInquiryModal from './RaiseInquiryModal';
 
 const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'Payroll By The Box', 'KOT Panel', 'Hotel Manager'];
 
+const PLAN_DISPLAY_NAMES = {
+  'Manager': 'Manager Panel',
+  'QSR': 'QSR Panel',
+  'Payroll By The Box': 'TheBoxSync Payroll',
+  'Scan For Menu': 'Scan & QR Order',
+  'Feedback': 'QR-based Feedback',
+  'Reservation Manager': 'Reservation Management',
+};
+
+const getDisplayName = (name) => PLAN_DISPLAY_NAMES[name] || name;
+
 const Subscription = () => {
   const history = useHistory();
 
@@ -278,7 +289,7 @@ const Subscription = () => {
       {
         Header: 'Plan Name',
         accessor: 'plan_name',
-        Cell: ({ value }) => <span className="fw-semibold">{value}</span>,
+        Cell: ({ value }) => <span className="fw-semibold">{getDisplayName(value)}</span>,
       },
       {
         Header: 'Start Date',
@@ -517,7 +528,7 @@ const Subscription = () => {
                       <div className="d-flex justify-content-between align-items-start mb-3">
                         <div>
                           <span className="subscription-mobile-label">Plan Name</span>
-                          <span className="subscription-mobile-value mb-0">{original.plan_name}</span>
+                          <span className="subscription-mobile-value mb-0">{getDisplayName(original.plan_name)}</span>
                         </div>
                         <div>
                           {original.status === 'active' && <Badge bg="none" className="subscription-bg-soft-success text-success rounded-pill">Active</Badge>}
@@ -563,7 +574,7 @@ const Subscription = () => {
                 <Card className="subscription-glass-card border-0 h-100 subscription-plan-card">
                   <Card.Body className="p-4 d-flex flex-column">
                     <div className="d-flex justify-content-between align-items-start mb-3">
-                      <h5 className="fw-bold mb-0">{sub.plan_name}</h5>
+                      <h5 className="fw-bold mb-0">{getDisplayName(sub.plan_name)}</h5>
                       <Badge bg="none" className="subscription-bg-soft-warning text-warning rounded-pill">Expired</Badge>
                     </div>
                     <div className="subscription-plan-price mb-3">₹{sub.plan_price}</div>
@@ -611,7 +622,7 @@ const Subscription = () => {
               <Col key={plan._id} sm="12" md="6" lg="4">
                 <Card className="subscription-glass-card border-0 h-100 subscription-plan-card">
                   <Card.Body className="p-4 d-flex flex-column">
-                    <h5 className="fw-bold mb-2">{plan.plan_name}</h5>
+                    <h5 className="fw-bold mb-2">{getDisplayName(plan.plan_name)}</h5>
                     <div className="subscription-plan-price mb-2">₹{plan.plan_price}</div>
                     <div className="text-muted small mb-3">per {plan.plan_duration} month(s)</div>
                     

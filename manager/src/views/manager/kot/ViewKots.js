@@ -153,15 +153,15 @@ const ViewKots = () => {
     fetchOrderData();
   }, []);
 
-  const updateDishStatus = async (orderSource, orderId, dishId) => {
+  const updateDishStatus = async (orderSource, orderId, dishId, status = 'Completed') => {
     try {
       setUpdatingDishId(dishId);
       await axios.put(
         `${process.env.REACT_APP_API}/kot/dish/update-status`,
-        { orderSource, orderId, dishId, status: 'Completed' },
+        { orderSource, orderId, dishId, status },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-      toast.success('Dish marked as completed!');
+      toast.success(status === 'Completed' ? 'Dish marked as completed!' : 'Dish updated!');
       fetchOrderData();
     } catch (err) {
       console.log('Error updating dish status:', err);
@@ -172,6 +172,11 @@ const ViewKots = () => {
   };
 
   const handleDishToggle = (data, dish) => {
+    if (dish.status === 'Completed') {
+      updateDishStatus(data.order_source, data._id, dish._id, 'Preparing');
+      return;
+    }
+
     if (dish.status !== 'Preparing') return;
     
     const pendingItems = data.order_items.filter(item => item.special_notes !== 'Parcel Charge' && item.status !== 'Completed');
@@ -180,7 +185,7 @@ const ViewKots = () => {
       setConfirmData({ orderSource: data.order_source, orderId: data._id, dishId: dish._id, type: 'SINGLE' });
       setShowConfirmModal(true);
     } else {
-      updateDishStatus(data.order_source, data._id, dish._id);
+      updateDishStatus(data.order_source, data._id, dish._id, 'Completed');
     }
   };
 
@@ -361,12 +366,12 @@ const ViewKots = () => {
                                 <td className="text-end px-0">
                                   <label
                                     className={`kot-toggle ${dish.status === 'Completed' ? 'completed' : ''} ${updatingDishId === dish._id ? 'loading' : ''}`}
-                                    title={dish.status === 'Completed' ? 'Completed' : 'Mark as done'}
+                                    title={dish.status === 'Completed' ? 'Mark as preparing' : 'Mark as done'}
                                   >
                                     <input
                                       type="checkbox"
                                       checked={dish.status === 'Completed'}
-                                      disabled={dish.status === 'Completed' || updatingDishId === dish._id}
+                                      disabled={updatingDishId === dish._id}
                                       onChange={() => handleDishToggle(data, dish)}
                                     />
                                     <span className="kot-toggle-slider" />

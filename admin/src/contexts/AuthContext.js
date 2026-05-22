@@ -1,13 +1,16 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { setCurrentUser as setReduxUser } from 'auth/authSlice';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const history = useHistory();
+    const dispatch = useDispatch();
     const [currentUser, setCurrentUser] = useState(null);
     const [activePlans, setActivePlans] = useState([])
     const [isLogin, setIsLogin] = useState(false);
@@ -33,8 +36,6 @@ export const AuthProvider = ({ children }) => {
                 );
                 setActivePlans(fetchActivePlans.map((plan) => plan.plan_name));
                 console.log(fetchActivePlans.map((plan) => plan.plan_name));
-            } else {
-                history.push("/select-plan");
             }
         } catch (error) {
             console.error("Error fetching subscription plans:", error);
@@ -62,6 +63,7 @@ export const AuthProvider = ({ children }) => {
                     console.log(res.data);
                     setCurrentUser(res.data);
                     setIsLogin(true);
+                    dispatch(setReduxUser(res.data));
                 })
                 .catch(() => {
                     localStorage.removeItem("token");
