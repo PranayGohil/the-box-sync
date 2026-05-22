@@ -560,6 +560,21 @@ const dineInController = async (req, res) => {
 
     // ✅ 4. Handle existing order update
     if (orderId) {
+      const existingOrder = await Order.findById(orderId);
+      if (!existingOrder) {
+        console.error("Order not found for update");
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      if (orderInfo.order_status !== "Save") {
+        if (!existingOrder.order_no) {
+          orderInfo.order_no = await generateOrderNo(req.user);
+        }
+        if (!existingOrder.token) {
+          orderInfo.token = await generateToken(req.user, orderInfo.order_source || existingOrder.order_source);
+        }
+      }
+
       savedOrder = await Order.findByIdAndUpdate(orderId, orderInfo, {
         new: true,
       });
@@ -607,10 +622,12 @@ const dineInController = async (req, res) => {
     }
 
     // ✅ 5. Handle new order creation
-    const token = await generateToken(req.user, orderInfo.order_source);
-    orderInfo.token = token;
-
-    orderInfo.order_no = await generateOrderNo(req.user);
+    let token = null;
+    if (orderInfo.order_status !== "Save") {
+      token = await generateToken(req.user, orderInfo.order_source);
+      orderInfo.token = token;
+      orderInfo.order_no = await generateOrderNo(req.user);
+    }
 
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();
@@ -755,6 +772,20 @@ const takeawayController = async (req, res) => {
 
     // ✅ 4. Handle existing order update
     if (orderId) {
+      const existingOrder = await Order.findById(orderId);
+      if (!existingOrder) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      if (orderInfo.order_status !== "Save") {
+        if (!existingOrder.order_no) {
+          orderInfo.order_no = await generateOrderNo(req.user);
+        }
+        if (!existingOrder.token) {
+          orderInfo.token = await generateToken(req.user, orderInfo.order_source || existingOrder.order_source);
+        }
+      }
+
       savedOrder = await Order.findByIdAndUpdate(orderId, orderInfo, {
         new: true,
       });
@@ -786,10 +817,12 @@ const takeawayController = async (req, res) => {
 
     // ✅ 5. Handle new order creation
     // Generate token for new takeaway orders
-    const token = await generateToken(req.user, orderInfo.order_source);
-    orderInfo.token = token;
-
-    orderInfo.order_no = await generateOrderNo(req.user);
+    let token = null;
+    if (orderInfo.order_status !== "Save") {
+      token = await generateToken(req.user, orderInfo.order_source);
+      orderInfo.token = token;
+      orderInfo.order_no = await generateOrderNo(req.user);
+    }
 
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();
@@ -943,6 +976,20 @@ const deliveryController = async (req, res) => {
 
     // ✅ 4. Handle existing order update
     if (orderId) {
+      const existingOrder = await Order.findById(orderId);
+      if (!existingOrder) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      if (orderInfo.order_status !== "Save") {
+        if (!existingOrder.order_no) {
+          orderInfo.order_no = await generateOrderNo(req.user);
+        }
+        if (!existingOrder.token) {
+          orderInfo.token = await generateToken(req.user, orderInfo.order_source || existingOrder.order_source);
+        }
+      }
+
       savedOrder = await Order.findByIdAndUpdate(orderId, orderInfo, {
         new: true,
       });
@@ -973,14 +1020,13 @@ const deliveryController = async (req, res) => {
       });
     }
 
-    orderInfo.order_no = await generateOrderNo(req.user);
-
     // ✅ 5. Handle new order creation
-    // Generate token for new takeaway orders
-    const token = await generateToken(req.user, orderInfo.order_source);
-    orderInfo.token = token;
-
-    orderInfo.order_no = await generateOrderNo(req.user);
+    let token = null;
+    if (orderInfo.order_status !== "Save") {
+      token = await generateToken(req.user, orderInfo.order_source);
+      orderInfo.token = token;
+      orderInfo.order_no = await generateOrderNo(req.user);
+    }
 
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();

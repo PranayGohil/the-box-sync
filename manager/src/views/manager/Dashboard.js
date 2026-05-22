@@ -277,7 +277,7 @@ const Dashboard = () => {
                             {order.token && <span style={{ color: '#23b3f4' }}>#{order.token}</span>}
                           </h5>
                           <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
-                            {order.order_type === 'Takeaway' ? `Token: ${order.token}` : `Customer: ${order.customer_name || 'N/A'}`}
+                            {order.order_type === 'Takeaway' ? (order.token ? `Token: ${order.token}` : (order.customer_name || 'Draft Takeaway')) : `Customer: ${order.customer_name || 'N/A'}`}
                           </p>
                         </div>
                         <Badge

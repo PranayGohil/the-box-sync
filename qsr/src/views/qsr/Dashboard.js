@@ -143,7 +143,7 @@ const Dashboard = () => {
                       {/* Title & Token */}
                       <div className="d-flex justify-content-between align-items-baseline mb-3">
                         <h5 className="fw-800 text-slate-800 mb-0" style={{ fontSize: '1.05rem', letterSpacing: '-0.01em' }}>
-                          {order.order_type === 'Takeaway' ? `Token #${order.token}` : order.customer_name || 'Anonymous Customer'}
+                          {order.order_type === 'Takeaway' ? (order.token ? `Token #${order.token}` : (order.customer_name || 'Draft Takeaway')) : order.customer_name || 'Anonymous Customer'}
                         </h5>
                         {order.order_type !== 'Takeaway' && order.token && (
                           <span className="text-muted fw-bold" style={{ fontSize: '0.8rem' }}>

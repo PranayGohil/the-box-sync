@@ -38,7 +38,7 @@ const PaymentSummaryBox = ({
 
   // New Takeaway/Delivery Print Bill behavior
   const isTakeawayOrDelivery = orderType !== 'Dine In';
-  const showKOTPrintButton = showKOTButtons && !isTakeawayOrDelivery; // KOT + Print (Order Print) is only shown for Dine In
+  const showKOTPrintButton = showKOTButtons; // Order Print is shown for Dine In, Takeaway, and Delivery
   const showPrintBill = isTakeawayOrDelivery && orderItems.length > 0 && orderStatus !== 'Paid'; // Print Bill for Takeaway/Delivery unpaid
 
   let activeButtonsCount = 0;

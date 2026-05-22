@@ -246,10 +246,46 @@ const UnifiedOrder = () => {
   // ── Dirty Check ───────────────────────────────────────────────────────────
   const hasUnsavedChanges = () => {
     const initial = initialStateRef.current;
-    const currentEditable = orderItems.filter((i) => i.status !== 'Completed');
-    const initialEditable = initial.orderItems.filter((i) => i.status !== 'Completed');
+    const currentEditable = orderItems.filter((i) => i.status !== 'Completed').map((i) => ({
+      dish_name: i.dish_name,
+      quantity: i.quantity,
+      special_notes: i.special_notes || '',
+      dish_price: i.dish_price,
+      status: i.status || 'Pending',
+      selected_variant: i.selected_variant ? { name: i.selected_variant.name, price: i.selected_variant.price } : null,
+      selected_addons: (i.selected_addons || []).map((a) => ({ name: a.name, price: a.price })),
+    }));
+    const initialEditable = initial.orderItems.filter((i) => i.status !== 'Completed').map((i) => ({
+      dish_name: i.dish_name,
+      quantity: i.quantity,
+      special_notes: i.special_notes || '',
+      dish_price: i.dish_price,
+      status: i.status || 'Pending',
+      selected_variant: i.selected_variant ? { name: i.selected_variant.name, price: i.selected_variant.price } : null,
+      selected_addons: (i.selected_addons || []).map((a) => ({ name: a.name, price: a.price })),
+    }));
+
+    const currentCust = {
+      name: customerInfo.name || '',
+      phone: customerInfo.phone || '',
+      address: customerInfo.address || '',
+      total_persons: customerInfo.total_persons || '',
+      waiter: customerInfo.waiter || '',
+      table_no: customerInfo.table_no || '',
+      comment: customerInfo.comment || '',
+    };
+    const initialCust = {
+      name: initial.customerInfo.name || '',
+      phone: initial.customerInfo.phone || '',
+      address: initial.customerInfo.address || '',
+      total_persons: initial.customerInfo.total_persons || '',
+      waiter: initial.customerInfo.waiter || '',
+      table_no: initial.customerInfo.table_no || '',
+      comment: initial.customerInfo.comment || '',
+    };
+
     return JSON.stringify(currentEditable) !== JSON.stringify(initialEditable) ||
-      JSON.stringify(customerInfo) !== JSON.stringify(initial.customerInfo);
+      JSON.stringify(currentCust) !== JSON.stringify(initialCust);
   };
 
   // Guard: only run after initial data is loaded
@@ -305,14 +341,19 @@ const UnifiedOrder = () => {
     const delta = [];
     for (const item of currentItems) {
       if (!['Completed', 'Cancelled', 'Container Charge'].includes(item.status)) {
-        const prev = snapshotItems.find(
-          s => s.dish_name === item.dish_name && s.special_notes === item.special_notes
-        );
-
-        if (!prev) {
+        // If the item has a 'Pending' status, it has never been printed or sent to the kitchen
+        if (item.status === 'Pending') {
           delta.push({ ...item });
-        } else if (item.quantity > prev.quantity) {
-          delta.push({ ...item, quantity: item.quantity - prev.quantity });
+        } else {
+          const prev = snapshotItems.find(
+            (s) => s.dish_name === item.dish_name && s.special_notes === item.special_notes
+          );
+
+          if (!prev) {
+            delta.push({ ...item });
+          } else if (item.quantity > prev.quantity) {
+            delta.push({ ...item, quantity: item.quantity - prev.quantity });
+          }
         }
       }
     }
@@ -338,9 +379,9 @@ const UnifiedOrder = () => {
         dish_name: item.dish_name, quantity: item.quantity, dish_price: item.dish_price,
         special_notes: item.special_notes || '',
         status: completeAll
-          ? 'Completed'
+          ? (canKOT ? 'Preparing' : 'Completed')
           : (status === 'KOT' || status === 'Paid')
-            ? (item.status === 'Pending' ? 'Preparing' : item.status)
+            ? (item.status === 'Pending' ? (canKOT ? 'Preparing' : 'Completed') : item.status)
             : (status === 'Save' ? (item.status || 'Pending') : item.status),
         selected_variant: item.selected_variant,
         selected_addons: item.selected_addons,
@@ -419,8 +460,10 @@ const UnifiedOrder = () => {
           } else {
             window.location.href = `/order/new?orderId=${savedId}&mode=edit`;
           }
+        } else if (orderType === 'Dine In' && tableId) {
+          window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`;
         } else {
-          fetchOrderDetails();
+          window.location.href = `/order/new?orderId=${savedId}&mode=edit`;
         }
       }
     } catch (err) {
@@ -440,7 +483,7 @@ const UnifiedOrder = () => {
 
   // ── Save / Cancel / Pay ───────────────────────────────────────────────────
   const handleSaveOrder = async (status = 'Save') => {
-    if (!validateOrder()) return;
+    if (!validateOrder()) return false;
     setIsLoading(true);
     try {
       const payload = buildPayload(status);
@@ -479,10 +522,13 @@ const UnifiedOrder = () => {
           toast.success('Order saved successfully!');
           history.push('/dashboard');
         }
+        return true;
       }
+      return false;
     } catch (err) {
       console.error('Error saving order:', err);
       alert('Error saving order. Please try again.');
+      return false;
     } finally {
       setIsLoading(false);
     }
