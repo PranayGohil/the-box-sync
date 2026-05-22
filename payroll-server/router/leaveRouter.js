@@ -3,6 +3,7 @@ const router = express.Router();
 const LeaveRequest = require('../models/leaveRequestModel');
 const LeaveBalance = require('../models/leaveBalanceModel');
 const LeavePolicy = require('../models/leavePolicyModel');
+const Staff = require('../models/staffModel');
 const authMiddleware = require('../middlewares/auth-middlewares');
 
 // ── Leave Balances ────────────────────────────────────────────────────────────

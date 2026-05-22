@@ -35,6 +35,7 @@ const EditStaff = () => {
   const [cities, setCities] = useState([]);
   const [positions, setPositions] = useState([]);
   const [payrollConfig, setPayrollConfig] = useState(null);
+  const [globalLeavePolicies, setGlobalLeavePolicies] = useState([]);
   const [uploadingFiles, setUploadingFiles] = useState({
     photo: false,
     front_image: false,
@@ -425,14 +426,21 @@ const EditStaff = () => {
       try {
         setLoading((prev) => ({ ...prev, initial: true }));
 
-        const [positionsRes, staffRes] = await Promise.all([
+        const [positionsRes, staffRes, leavePolicyRes] = await Promise.all([
           axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
           axios.get(`${process.env.REACT_APP_API}/staff/get/${id}`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
+          axios.get(`${process.env.REACT_APP_API}/leave-policy`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          })
         ]);
+        
+        if (leavePolicyRes?.data?.success && leavePolicyRes?.data?.data?.leave_types) {
+          setGlobalLeavePolicies(leavePolicyRes.data.data.leave_types);
+        }
 
         setPositions(positionsRes.data.data);
 
