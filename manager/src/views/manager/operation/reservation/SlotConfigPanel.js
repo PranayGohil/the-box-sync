@@ -45,6 +45,7 @@ const customStyles = `
   }
   .slot-config-custom-btn-solid:hover {
     background-color: #179edb !important;
+    color: #fff !important;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(35, 179, 244, 0.3) !important;
   }
@@ -80,6 +81,87 @@ const customStyles = `
     font-weight: 700 !important;
     font-size: 0.85rem !important;
     transition: all 0.2s ease !important;
+    min-width: 60px !important;
+  }
+  .slot-config-day-pill.btn-outline-secondary {
+    background-color: transparent !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+  }
+  .slot-config-day-pill.active {
+    background-color: #23b3f4 !important;
+    border-color: #23b3f4 !important;
+    color: #fff !important;
+  }
+  .slot-config-day-pill:not(.active):hover {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  .hover-elevate {
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  }
+  .hover-elevate:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+  }
+  .modal-footer {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    border-top: none !important;
+    padding: 1.5rem !important;
+  }
+  .modal-footer .btn {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  @media (min-width: 576px) {
+    .modal-footer {
+      flex-direction: row !important;
+      justify-content: flex-end !important;
+    }
+    .modal-footer .btn {
+      width: auto !important;
+    }
+  }
+  @media (max-width: 575px) {
+    .modal-dialog {
+      margin: 0.5rem !important;
+    }
+    .modal-body {
+      padding: 1rem !important;
+    }
+    .modal-header {
+      padding: 1rem 1rem 0 1rem !important;
+    }
+  }
+  .slot-config-preset-pill {
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 50px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #475569;
+    background: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    user-select: none;
+  }
+  .slot-config-preset-pill:hover {
+    background: #f9fafb;
+    border-color: #cbd5e1;
+  }
+  .slot-config-preset-pill .preset-time {
+    font-size: 0.72rem;
+    opacity: 0.6;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
   }
 `;
 
@@ -145,11 +227,11 @@ const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
     };
 
     return (
-        <Modal show={show} onHide={onClose} centered size="md" className="rounded-4">
+        <Modal show={show} onHide={onClose} centered size="lg" backdrop="static">
             <style>{customStyles}</style>
             <Modal.Header closeButton className="border-0 pb-0">
                 <Modal.Title className="fw-bold" style={{ color: '#23b3f4' }}>
-                    <CsLineIcons icon={isEdit ? 'edit' : 'plus'} className="me-2" />
+                    <CsLineIcons icon={isEdit ? 'edit' : 'plus'} className="me-2" style={{ stroke: '#23b3f4' }} />
                     {isEdit ? 'Edit Slot Group' : 'Add Slot Group'}
                 </Modal.Title>
             </Modal.Header>
@@ -162,32 +244,26 @@ const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
                         {presetsLoading ? (
                             <Spinner size="sm" style={{ color: '#23b3f4' }} />
                         ) : presets.length > 0 ? (
-                            <>
-                                <div className="d-flex flex-wrap gap-2">
-                                    {presets.map((p) => {
-                                        const meta = PRESET_ICONS[p.name] || { bg: '#f1f5f9', text: '#334155' };
-                                        return (
-                                            <Button
-                                                key={p.name}
-                                                style={{
-                                                    background: meta.bg,
-                                                    border: 'none',
-                                                    fontWeight: 700,
-                                                    color: meta.text,
-                                                    borderRadius: '50px',
-                                                    padding: '6px 14px',
-                                                    fontSize: '0.8rem'
-                                                }}
-                                                onClick={() => applyPreset(p)}
-                                            >
-                                                {colorDot(p.color)}
-                                                {p.name}
-                                                <span className="ms-1 opacity-75" style={{ fontSize: 10 }}>{p.open_time}–{p.close_time}</span>
-                                            </Button>
-                                        );
-                                    })}
-                                </div>
-                            </>
+                            <div className="d-flex flex-wrap gap-2">
+                                {presets.map((p) => (
+                                    <div
+                                        key={p.name}
+                                        className="slot-config-preset-pill"
+                                        onClick={() => applyPreset(p)}
+                                    >
+                                        <span style={{
+                                            display: 'inline-block',
+                                            width: 10,
+                                            height: 10,
+                                            borderRadius: '50%',
+                                            background: p.color || '#6b7280',
+                                            flexShrink: 0
+                                        }} />
+                                        {p.name}
+                                        <span className="preset-time">{p.open_time}–{p.close_time}</span>
+                                    </div>
+                                ))}
+                            </div>
                         ) : (
                             <p className="text-muted small mb-0">Fill in the details below.</p>
                         )}
@@ -292,16 +368,17 @@ const GroupFormModal = ({ show, onClose, onSaved, initial, isEdit }) => {
                     </Alert>
                 )}
             </Modal.Body>
-            <Modal.Footer className="border-0 pt-0">
+            <Modal.Footer className="border-0">
                 <Button 
-                    className='rounded-pill px-4 fw-bold slot-config-custom-btn-outline btn btn-outline-primary' 
+                    className="rounded-pill px-4 fw-bold slot-config-custom-btn-outline btn btn-outline-primary"
                     variant="outline-light" 
                     onClick={onClose}
                 >
                     Cancel
                 </Button>
                 <Button 
-                    className='px-5 py-2 slot-config-custom-btn-outline d-flex align-items-center gap-2' 
+                    className="px-5 py-2 slot-config-custom-btn-outline d-flex align-items-center gap-2"
+                    variant="outline-light"
                     onClick={handleSave} 
                     disabled={saving}
                 >
@@ -423,7 +500,8 @@ const SlotConfigPanel = ({ onSaved, active }) => {
                     </p>
                 </div>
                 <Button 
-                    className='px-4 py-2 slot-config-custom-btn-solid d-flex align-items-center gap-2' 
+                    className='px-4 py-2 slot-config-custom-btn-outline d-flex align-items-center gap-2'
+                    variant="outline-light"
                     onClick={() => { setEditTarget(null); setShowModal(true); }}
                 >
                     <CsLineIcons icon="plus" size="18" /> Add Period
@@ -439,7 +517,8 @@ const SlotConfigPanel = ({ onSaved, active }) => {
                         <h5 className="text-muted fw-bold">No service periods configured yet</h5>
                         <p className="text-muted small mb-4">Add Lunch, Dinner or custom periods to start accepting reservations.</p>
                         <Button 
-                            className='px-4 py-2 slot-config-custom-btn-solid d-inline-flex align-items-center gap-2'
+                            className='px-4 py-2 slot-config-custom-btn-outline d-inline-flex align-items-center gap-2'
+                            variant="outline-light"
                             onClick={() => { setEditTarget(null); setShowModal(true); }}
                         >
                             <CsLineIcons icon="plus" size="18" /> Add Your First Period
@@ -456,55 +535,67 @@ const SlotConfigPanel = ({ onSaved, active }) => {
                         return (
                             <Col md={6} xl={4} key={group._id}>
                                 <Card
-                                    className={`slot-config-glass-card border-0 h-100 ${!group.is_active ? 'opacity-50' : ''}`}
-                                    style={{ borderLeft: `5px solid ${group.color || '#6b7280'}` }}
+                                    className={`hover-elevate border-0 h-100 ${!group.is_active ? 'opacity-50' : ''}`}
+                                    style={{ borderRadius: '15px', overflow: 'hidden' }}
                                 >
-                                    <Card.Body className="p-4 d-flex flex-column justify-content-between">
+                                    <Card.Body className="p-3 d-flex flex-column justify-content-between">
                                         <div>
-                                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                                <div className="d-flex align-items-center gap-2">
-                                                    {colorDot(group.color)}
-                                                    <span className="fw-bold text-dark">{group.name}</span>
-                                                    {isON && <Badge bg="warning" text="dark" style={{ fontSize: 9 }}>Overnight</Badge>}
+                                            <div className="d-flex justify-content-between align-items-start mb-3">
+                                                <div
+                                                    className="d-flex align-items-center justify-content-center bg-light rounded-lg"
+                                                    style={{ width: '45px', height: '45px', backgroundColor: '#f3f4f6' }}
+                                                >
+                                                    <CsLineIcons icon="clock" size="24" style={{ stroke: '#23b3f4' }} />
                                                 </div>
-                                                <Form.Check
-                                                    type="switch"
-                                                    checked={group.is_active}
-                                                    onChange={() => handleToggleActive(group)}
-                                                    title={group.is_active ? 'Active — click to deactivate' : 'Inactive — click to activate'}
-                                                />
+                                                <div className="d-flex align-items-center gap-1">
+                                                    <Form.Check
+                                                        type="switch"
+                                                        id={`switch-${group._id}`}
+                                                        checked={group.is_active}
+                                                        onChange={() => handleToggleActive(group)}
+                                                        title={group.is_active ? 'Active — click to deactivate' : 'Inactive — click to activate'}
+                                                        className="me-2 mt-1"
+                                                    />
+                                                    <Button
+                                                        variant="link"
+                                                        size="sm"
+                                                        className="p-1 text-muted"
+                                                        onClick={() => { setEditTarget(group); setShowModal(true); }}
+                                                    >
+                                                        <CsLineIcons icon="edit" size="16" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="link"
+                                                        size="sm"
+                                                        className="p-1 text-danger"
+                                                        onClick={() => handleDelete(group._id, group.name)}
+                                                    >
+                                                        <CsLineIcons icon="bin" size="16" />
+                                                    </Button>
+                                                </div>
                                             </div>
 
-                                            <div className="d-flex flex-column gap-2 mb-4">
-                                                <small className="text-muted d-flex align-items-center gap-2 fw-medium">
-                                                    <CsLineIcons icon="clock" size={14} style={{ color: '#23b3f4' }} />
-                                                    {group.open_time} – {group.close_time}
-                                                </small>
-                                                <small className="text-muted d-flex align-items-center gap-2 fw-medium">
-                                                    <CsLineIcons icon="grid-1" size={14} style={{ color: '#23b3f4' }} />
-                                                    {slotCount} slots · {group.slot_duration} min each
-                                                </small>
+                                            <div className="mb-2 text-start">
+                                                <span className="text-muted small text-uppercase fw-bold" style={{ letterSpacing: '0.5px' }}>Period Name</span>
+                                                <h4 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                                                    {colorDot(group.color)}
+                                                    {group.name}
+                                                </h4>
                                             </div>
                                         </div>
 
-                                        <div className="d-flex gap-2 pt-3 border-top">
-                                            <Button 
-                                                size="sm" 
-                                                variant="outline-primary" 
-                                                className="slot-config-custom-btn-outline flex-grow-1 py-2"
-                                                onClick={() => { setEditTarget(group); setShowModal(true); }}
-                                            >
-                                                <CsLineIcons icon="edit" size={13} className="me-1" /> Edit
-                                            </Button>
-                                            <Button 
-                                                size="sm" 
-                                                variant="outline-danger" 
-                                                className='slot-config-custom-btn-outline btn btn-outline-danger py-2 px-3'
-                                                style={{ border: '1px solid #cf2637 !important', color: '#cf2637 !important' }}
-                                                onClick={() => handleDelete(group._id, group.name)}
-                                            >
-                                                <CsLineIcons icon="bin" size={13} />
-                                            </Button>
+                                        <div className="d-flex flex-column gap-2 mt-3 pt-3 border-top text-start">
+                                            <div className="d-flex align-items-center gap-2">
+                                                <CsLineIcons icon="clock" size="14" className="text-muted" />
+                                                <span className="text-muted small">Hours:</span>
+                                                <span className="fw-bold small">{group.open_time} – {group.close_time}</span>
+                                                {isON && <Badge bg="warning" text="dark" style={{ fontSize: 9 }} className="ms-auto">Overnight</Badge>}
+                                            </div>
+                                            <div className="d-flex align-items-center gap-2">
+                                                <CsLineIcons icon="grid-1" size="14" className="text-muted" />
+                                                <span className="text-muted small">Slots:</span>
+                                                <span className="fw-bold small">{slotCount} slots ({group.slot_duration} min)</span>
+                                            </div>
                                         </div>
                                     </Card.Body>
                                 </Card>
@@ -524,13 +615,7 @@ const SlotConfigPanel = ({ onSaved, active }) => {
                         {DAYS.map((day, i) => (
                             <Button 
                                 key={i} 
-                                className={`slot-config-day-pill ${openDays.includes(i) ? 'btn btn-primary' : 'btn btn-outline-secondary'}`}
-                                style={{ 
-                                    minWidth: 60,
-                                    backgroundColor: openDays.includes(i) ? '#23b3f4' : 'transparent',
-                                    borderColor: openDays.includes(i) ? '#23b3f4' : '#cbd5e1',
-                                    color: openDays.includes(i) ? '#fff' : '#475569',
-                                }}
+                                className={`slot-config-day-pill ${openDays.includes(i) ? 'active btn-primary' : 'btn-outline-secondary'}`}
                                 onClick={() => toggleDay(i)}
                             >
                                 {day}

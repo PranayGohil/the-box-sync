@@ -346,11 +346,28 @@ router.get("/all", authMiddleware, async (req, res) => {
         const filter = { user_id: req.user._id, is_deleted: false };
         if (status && status !== "all") filter.status = status;
         if (date) filter.reservation_date = date;
+        
+        // Calculate counts independent of status filter
+        const countsFilter = { user_id: req.user._id, is_deleted: false };
+        if (date) countsFilter.reservation_date = date;
+        const allMatching = await Reservation.find(countsFilter).select("status");
+        const counts = {
+            pending: allMatching.filter(r => r.status === "pending").length,
+            approved: allMatching.filter(r => r.status === "approved" || r.status === "reserved").length,
+            seated: allMatching.filter(r => r.status === "seated").length,
+            total: allMatching.length
+        };
+
         const [data, total] = await Promise.all([
             Reservation.find(filter).sort({ reservation_date: 1, slot_start: 1 }).skip((page - 1) * limit).limit(Number(limit)),
             Reservation.countDocuments(filter),
         ]);
-        return res.json({ success: true, data, pagination: { total, page: Number(page), limit: Number(limit), pages: Math.ceil(total / limit) } });
+        return res.json({ 
+            success: true, 
+            data, 
+            pagination: { total, page: Number(page), limit: Number(limit), pages: Math.ceil(total / limit) },
+            counts
+        });
     } catch (err) {
         return res.status(500).json({ success: false, message: "Server error." });
     }

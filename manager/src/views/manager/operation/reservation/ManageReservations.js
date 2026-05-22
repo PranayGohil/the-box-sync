@@ -3,12 +3,16 @@ import {
   Row, Col, Card, Button, Badge, Alert, Form,
   Modal, Table, Spinner, Nav, Tab, OverlayTrigger, Tooltip,
 } from 'react-bootstrap';
+import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import SlotConfigPanel from './SlotConfigPanel';
+import ApproveModal from './ApproveModal';
+import RejectModal from './RejectModal';
+import ConfirmActionModal from './ConfirmActionModal';
 
 const API = process.env.REACT_APP_API;
 const auth = () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` });
@@ -245,202 +249,64 @@ const customStyles = `
   .timeline-grid-wrapper::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
   }
+
+
+
+  /* Statistics Summary Panels */
+  .reservations-stat-card {
+    background: #ffffff !important;
+    border: 1px solid #f1f5f9 !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  .reservations-stat-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06) !important;
+  }
+  .stat-icon-wrapper {
+    transition: all 0.3s ease !important;
+  }
+  .reservations-stat-card:hover .stat-icon-wrapper {
+    transform: scale(1.1) rotate(5deg) !important;
+  }
+
+  /* Timeline Grid Toggle Buttons */
+  .timeline-group-radio-pill {
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 50px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  @media (max-width: 575px) {
+    .timeline-group-radio-pill {
+      flex: 1 1 0% !important;
+      justify-content: center !important;
+      font-size: 0.75rem !important;
+      padding: 6px 8px !important;
+    }
+  }
+  @media (min-width: 576px) {
+    .timeline-group-radio-pill {
+      padding: 8px 16px;
+      gap: 8px;
+      font-size: 0.85rem;
+    }
+  }
+  .timeline-group-radio-pill:hover {
+    background: #f9fafb;
+  }
 `;
 
-// ─── Approve Modal ─────────────────────────────────────────────────────────
-const ApproveModal = ({ show, reservation, onClose, onSuccess }) => {
-  const [areas, setAreas] = useState([]);
-  const [selectedTables, setSelected] = useState([]);
-  const [managerNotes, setNotes] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(false);
-  const [slotLabel, setSlotLabel] = useState('');
 
-  useEffect(() => {
-    if (!show || !reservation) return;
-    setSelected([]); setNotes(''); setFetching(true);
-    axios.get(`${API}/reservation/available-tables/${reservation._id}`, { headers: auth() })
-      .then((r) => { setAreas(r.data.data); setSlotLabel(r.data.slot_label || ''); })
-      .catch(() => toast.error('Could not load available tables.'))
-      .finally(() => setFetching(false));
-  }, [show, reservation]);
-
-  const toggle = (area, tbl) => {
-    setSelected((prev) => {
-      const exists = prev.find((t) => t.table_id === tbl.table_id.toString());
-      if (exists) return prev.filter((t) => t.table_id !== tbl.table_id.toString());
-      return [...prev, { area_id: area.area_id.toString(), area_name: area.area_name, table_id: tbl.table_id.toString(), table_no: tbl.table_no, max_person: tbl.max_person }];
-    });
-  };
-
-  const isSelected = (tbl) => !!selectedTables.find((t) => t.table_id === tbl.table_id.toString());
-  const capacity = selectedTables.reduce((s, t) => s + t.max_person, 0);
-
-  const handleApprove = async () => {
-    if (!selectedTables.length) { toast.warning('Select at least one table.'); return; }
-    setLoading(true);
-    try {
-      await axios.patch(`${API}/reservation/approve/${reservation._id}`, { assigned_tables: selectedTables, manager_notes: managerNotes }, { headers: auth() });
-      toast.success('Approved!'); onSuccess(); onClose();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed.');
-    } finally { setLoading(false); }
-  };
-
-  if (!reservation) return null;
-  return (
-    <Modal show={show} onHide={onClose} size="lg" centered className="rounded-4">
-      <style>{customStyles}</style>
-      <Modal.Header closeButton className="border-0 pb-0">
-        <Modal.Title className="fw-bold" style={{ color: '#198754' }}>
-          <CsLineIcons icon="check-circle" className="me-2" />
-          Approve — {reservation.customer_name}
-        </Modal.Title>
-      </Modal.Header>
-      <Modal.Body className="py-4 text-start">
-        <Alert variant="light" className="border py-3 mb-4 bg-light rounded-3">
-          <Row className="g-3 small fw-bold">
-            <Col xs={6} md={4} className="text-muted d-flex align-items-center gap-1">
-              <CsLineIcons icon="calendar" size="14" style={{ color: '#23b3f4' }} />
-              {fmtDate(reservation.reservation_date)}
-            </Col>
-            <Col xs={6} md={4} className="text-muted d-flex align-items-center gap-1">
-              <CsLineIcons icon="clock" size="14" style={{ color: '#23b3f4' }} />
-              {slotLabel || `${reservation.slot_start}–${reservation.slot_end}`}
-            </Col>
-            <Col xs={6} md={4} className="text-muted d-flex align-items-center gap-1">
-              <CsLineIcons icon="user" size="14" style={{ color: '#23b3f4' }} />
-              {reservation.num_persons} guest{reservation.num_persons > 1 ? 's' : ''}
-            </Col>
-            {reservation.notes && (
-              <Col xs={12} className="text-muted d-flex align-items-start gap-1 mt-2">
-                <CsLineIcons icon="message" size="14" style={{ color: '#23b3f4' }} className="mt-1" />
-                <span className="fw-medium">{reservation.notes}</span>
-              </Col>
-            )}
-          </Row>
-        </Alert>
-
-        <h6 className="fw-bold text-dark mb-3">Assign Table(s) — free for this slot</h6>
-        {fetching ? (
-          <div className="text-center py-4">
-            <Spinner animation="border" style={{ color: '#23b3f4' }} className="mb-2" />
-            <p className="text-muted small fw-bold">Loading available tables…</p>
-          </div>
-        ) : areas.length === 0 ? (
-          <Alert variant="warning" className="rounded-3 fw-bold">No tables available for this slot.</Alert>
-        ) : (
-          areas.map((area) => (
-            <div key={area.area_id} className="mb-4">
-              <p className="text-uppercase text-muted fw-bold mb-2 small" style={{ letterSpacing: 1 }}>{area.area_name}</p>
-              <div className="d-flex flex-wrap gap-2">
-                {area.tables.map((tbl) => {
-                  const active = isSelected(tbl);
-                  return (
-                    <Button 
-                      key={tbl.table_id} 
-                      size="sm"
-                      onClick={() => toggle(area, tbl)}
-                      style={{
-                        borderRadius: '50px',
-                        padding: '8px 16px',
-                        fontWeight: 700,
-                        fontSize: '0.8rem',
-                        transition: 'all 0.2s ease',
-                        backgroundColor: active ? '#23b3f4' : 'transparent',
-                        borderColor: active ? '#23b3f4' : '#cbd5e1',
-                        color: active ? '#fff' : '#475569',
-                      }}
-                      className="d-flex align-items-center gap-1"
-                    >
-                      <CsLineIcons icon="grid-1" size="14" />
-                      Table {tbl.table_no}
-                      <span className="ms-1 small opacity-75">({tbl.max_person}p)</span>
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-          ))
-        )}
-
-        {selectedTables.length > 0 && (
-          <Alert variant={capacity < reservation.num_persons ? 'danger' : 'success'} className="py-3 mt-3 rounded-3 border-0">
-            <small className="fw-bold">
-              Selected: {selectedTables.map((t) => `T${t.table_no}`).join(', ')}
-              &nbsp;·&nbsp; Capacity: <strong>{capacity}p</strong>
-              {capacity < reservation.num_persons && <span className="text-danger ms-2">⚠ Below required {reservation.num_persons}</span>}
-            </small>
-          </Alert>
-        )}
-
-        <Form.Group className="mt-4">
-          <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Note to Customer (optional)</Form.Label>
-          <Form.Control 
-            as="textarea" 
-            rows={2} 
-            placeholder="e.g. Please arrive 10 min early." 
-            value={managerNotes} 
-            onChange={(e) => setNotes(e.target.value)} 
-            className="reservations-pill-input shadow-sm bg-white"
-            style={{ resize: 'none', borderRadius: '12px' }}
-          />
-        </Form.Group>
-      </Modal.Body>
-      <Modal.Footer className="border-0 pt-0">
-        <Button className='reservations-modal-btn-outline px-4 py-2' variant="outline-light" onClick={onClose}>Cancel</Button>
-        <Button className='reservations-modal-btn-success px-5 py-2' variant="success" onClick={handleApprove} disabled={loading || !selectedTables.length}>
-          {loading ? 'Approving…' : <><CsLineIcons icon="check" size="18" className="me-1" />Approve</>}
-        </Button>
-      </Modal.Footer>
-    </Modal>
-  );
-};
-
-// ─── Reject Modal ──────────────────────────────────────────────────────────
-const RejectModal = ({ show, reservation, onClose, onSuccess }) => {
-  const [note, setNote] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleReject = async () => {
-    setLoading(true);
-    try {
-      await axios.patch(`${API}/reservation/reject/${reservation._id}`, { manager_notes: note }, { headers: auth() });
-      toast.success('Rejected.'); onSuccess(); onClose();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed.');
-    } finally { setLoading(false); }
-  };
-
-  if (!reservation) return null;
-  return (
-    <Modal show={show} onHide={onClose} centered className="rounded-4">
-      <style>{customStyles}</style>
-      <Modal.Header closeButton className="border-0 pb-0">
-        <Modal.Title className="fw-bold text-danger">Reject Reservation</Modal.Title>
-      </Modal.Header>
-      <Modal.Body className="py-4 text-start">
-        <p className="text-muted fw-bold">Rejecting for <strong>{reservation.customer_name}</strong> on {fmtDate(reservation.reservation_date)}, {reservation.slot_start}–{reservation.slot_end}.</p>
-        <Form.Group className="mt-3">
-          <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Reason (optional)</Form.Label>
-          <Form.Control 
-            as="textarea" 
-            rows={3} 
-            placeholder="e.g. Fully booked for that slot." 
-            value={note} 
-            onChange={(e) => setNote(e.target.value)} 
-            className="reservations-pill-input shadow-sm bg-white"
-            style={{ resize: 'none', borderRadius: '12px' }}
-          />
-        </Form.Group>
-      </Modal.Body>
-      <Modal.Footer className="border-0 pt-0">
-        <Button className='reservations-modal-btn-outline px-4 py-2' variant="outline-light" onClick={onClose}>Cancel</Button>
-        <Button className='reservations-modal-btn-danger px-5 py-2' onClick={handleReject} disabled={loading}>{loading ? 'Rejecting…' : 'Reject'}</Button>
-      </Modal.Footer>
-    </Modal>
-  );
-};
 
 // ─── Timeline Grid ─────────────────────────────────────────────────────────
 const TimelineGrid = ({ date }) => {
@@ -488,27 +354,31 @@ const TimelineGrid = ({ date }) => {
       <div className="d-flex flex-wrap gap-2 mb-4">
         {groups.map((g) => {
           const isActive = activeGroup === g.group_id;
+          const indicatorBg = g.color || '#6b7280';
           return (
-            <Button
+            <div
               key={g.group_id}
-              size="sm"
+              className={`timeline-group-radio-pill ${isActive ? 'active' : ''}`}
               onClick={() => setActiveGroup(g.group_id)}
-              style={{
-                borderRadius: '50px',
-                padding: '8px 18px',
-                fontWeight: 700,
-                fontSize: '0.85rem',
-                transition: 'all 0.2s ease',
-                backgroundColor: isActive ? g.color : 'transparent',
-                borderColor: isActive ? g.color : '#e2e8f0',
-                color: isActive ? '#fff' : '#475569',
-                boxShadow: isActive ? `0 4px 12px ${g.color}33` : 'none'
-              }}
-              className="d-flex align-items-center gap-2"
+              style={
+                isActive ? {
+                  background: `${indicatorBg}14`,
+                  borderColor: indicatorBg,
+                  color: indicatorBg,
+                  boxShadow: `0 4px 12px ${indicatorBg}26`,
+                } : {}
+              }
             >
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: isActive ? '#fff' : (g.color || '#6b7280'), display: 'inline-block' }} />
+              <div
+                className="rounded-circle"
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  background: indicatorBg,
+                }}
+              />
               {g.name}
-            </Button>
+            </div>
           );
         })}
       </div>
@@ -614,6 +484,7 @@ const TimelineGrid = ({ date }) => {
 
 // ─── Main Dashboard ────────────────────────────────────────────────────────
 const ManageReservations = () => {
+  const history = useHistory();
   const title = 'Manage Reservations';
   const breadcrumbs = [
     { to: '', text: 'Home' },
@@ -623,13 +494,17 @@ const ManageReservations = () => {
 
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('pending');
-  const [dateFilter, setDateFilter] = useState(todayStr());
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('');
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
   const [timelineDate, setTimelineDate] = useState(todayStr());
+  const [counts, setCounts] = useState({ pending: 0, approved: 0, seated: 0, total: 0 });
 
   const [approveTarget, setApproveTarget] = useState(null);
   const [rejectTarget, setRejectTarget] = useState(null);
+  const [confirmTarget, setConfirmTarget] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('list');
 
   const STATUS_FILTERS = ['pending', 'approved', 'reserved', 'seated', 'completed', 'rejected', 'cancelled', 'no_show', 'all'];
@@ -643,6 +518,9 @@ const ManageReservations = () => {
       const res = await axios.get(`${API}/reservation/all?${params}`, { headers: auth() });
       setReservations(res.data.data);
       setPagination(res.data.pagination);
+      if (res.data.counts) {
+        setCounts(res.data.counts);
+      }
     } catch { toast.error('Failed to load reservations.'); }
     finally { setLoading(false); }
   }, [statusFilter, dateFilter]);
@@ -655,6 +533,29 @@ const ManageReservations = () => {
       toast.success(msg);
       fetchReservations(pagination.page);
     } catch (err) { toast.error(err.response?.data?.message || 'Action failed.'); }
+  };
+
+  const handleConfirmAction = async () => {
+    if (!confirmTarget || !confirmAction) return;
+    setConfirmLoading(true);
+    let msg = 'Action successful!';
+    if (confirmAction === 'activate') msg = 'Tables reserved!';
+    else if (confirmAction === 'cancel') msg = 'Cancelled.';
+    else if (confirmAction === 'seat') msg = 'Customer seated!';
+    else if (confirmAction === 'no-show') msg = 'Marked no-show.';
+    else if (confirmAction === 'complete') msg = 'Completed!';
+
+    try {
+      await axios.patch(`${API}/reservation/${confirmAction}/${confirmTarget._id}`, {}, { headers: auth() });
+      toast.success(msg);
+      setConfirmTarget(null);
+      setConfirmAction(null);
+      fetchReservations(pagination.page);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Action failed.');
+    } finally {
+      setConfirmLoading(false);
+    }
   };
 
   const ActionButtons = ({ r }) => (
@@ -687,7 +588,7 @@ const ManageReservations = () => {
           title="Activate (Reserve Tables)" 
           className='reservations-action-btn btn btn-info' 
           style={{ backgroundColor: '#23b3f4', borderColor: '#23b3f4' }}
-          onClick={() => quickAction('activate', r._id, 'Tables reserved!')}
+          onClick={() => { setConfirmTarget(r); setConfirmAction('activate'); }}
         >
           <CsLineIcons icon="bookmark" size="14" style={{ stroke: '#fff' }} />
         </Button>
@@ -697,7 +598,7 @@ const ManageReservations = () => {
           title="Cancel" 
           className='reservations-action-btn btn btn-outline-danger' 
           style={{ border: '1px solid #cf2637', color: '#cf2637' }}
-          onClick={() => quickAction('cancel', r._id, 'Cancelled.')}
+          onClick={() => { setConfirmTarget(r); setConfirmAction('cancel'); }}
         >
           <CsLineIcons icon="slash" size="14" />
         </Button>
@@ -709,7 +610,7 @@ const ManageReservations = () => {
           title="Seat" 
           className='reservations-action-btn btn btn-primary' 
           style={{ backgroundColor: '#0d6efd', borderColor: '#0d6efd' }}
-          onClick={() => quickAction('seat', r._id, 'Customer seated!')}
+          onClick={() => { setConfirmTarget(r); setConfirmAction('seat'); }}
         >
           <CsLineIcons icon="check-circle" size="14" style={{ stroke: '#fff' }} />
         </Button>
@@ -719,7 +620,7 @@ const ManageReservations = () => {
           title="No-Show" 
           className='reservations-action-btn btn btn-outline-secondary' 
           style={{ border: '1px solid #64748b', color: '#64748b' }}
-          onClick={() => quickAction('no-show', r._id, 'Marked no-show.')}
+          onClick={() => { setConfirmTarget(r); setConfirmAction('no-show'); }}
         >
           <CsLineIcons icon="close-circle" size="14" />
         </Button>
@@ -731,15 +632,13 @@ const ManageReservations = () => {
           title="Complete" 
           className='reservations-action-btn btn btn-secondary' 
           style={{ backgroundColor: '#475569', borderColor: '#475569' }}
-          onClick={() => quickAction('complete', r._id, 'Completed!')}
+          onClick={() => { setConfirmTarget(r); setConfirmAction('complete'); }}
         >
           <CsLineIcons icon="check-square" size="14" style={{ stroke: '#fff' }} />
         </Button>
       )}
     </div>
   );
-
-  const pendingCount = reservations.filter((r) => r.status === 'pending').length;
 
   return (
     <>
@@ -753,16 +652,78 @@ const ManageReservations = () => {
               <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
-            <Col xs="12" md="4" className="text-end mt-3 mt-md-0">
+            <Col xs="12" md="4" className="d-flex justify-content-md-end align-items-center gap-2 mt-3 mt-md-0">
               <Button 
                 className='reservations-modal-btn-outline px-4 py-2 d-inline-flex align-items-center gap-2' 
                 onClick={() => fetchReservations(pagination.page)}
               >
                 <CsLineIcons icon="refresh-horizontal" size="18" /> Refresh
               </Button>
+              <Button 
+                className='reservations-modal-btn-outline px-4 py-2 d-inline-flex align-items-center gap-2' 
+                onClick={() => history.push('/operations/reservation-form')}
+              >
+                <CsLineIcons icon="plus" size="18" /> New Reservation
+              </Button>
             </Col>
           </Row>
         </div>
+
+        {/* STATISTICS SUMMARY PANELS */}
+        <Row className="g-3 mb-5">
+          <Col xs={12} sm={6} lg={3}>
+            <Card className="reservations-stat-card border-0 shadow-sm rounded-4 p-3 bg-white" style={{ borderLeft: '4px solid #ffc107' }}>
+              <Card.Body className="p-0 d-flex align-items-center gap-3">
+                <div className="stat-icon-wrapper d-flex align-items-center justify-content-center rounded-circle" style={{ width: 48, height: 48, background: 'rgba(255, 193, 7, 0.1)' }}>
+                  <CsLineIcons icon="clock" size="20" style={{ stroke: '#ffc107' }} />
+                </div>
+                <div>
+                  <div className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em', fontSize: '10px' }}>Pending Review</div>
+                  <h3 className="mb-0 fw-extrabold text-dark mt-1" style={{ fontSize: '20px', fontWeight: 800 }}>{counts.pending}</h3>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col xs={12} sm={6} lg={3}>
+            <Card className="reservations-stat-card border-0 shadow-sm rounded-4 p-3 bg-white" style={{ borderLeft: '4px solid #198754' }}>
+              <Card.Body className="p-0 d-flex align-items-center gap-3">
+                <div className="stat-icon-wrapper d-flex align-items-center justify-content-center rounded-circle" style={{ width: 48, height: 48, background: 'rgba(25, 135, 84, 0.1)' }}>
+                  <CsLineIcons icon="check-circle" size="20" style={{ stroke: '#198754' }} />
+                </div>
+                <div>
+                  <div className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em', fontSize: '10px' }}>Approved</div>
+                  <h3 className="mb-0 fw-extrabold text-dark mt-1" style={{ fontSize: '20px', fontWeight: 800 }}>{counts.approved}</h3>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col xs={12} sm={6} lg={3}>
+            <Card className="reservations-stat-card border-0 shadow-sm rounded-4 p-3 bg-white" style={{ borderLeft: '4px solid #0d6efd' }}>
+              <Card.Body className="p-0 d-flex align-items-center gap-3">
+                <div className="stat-icon-wrapper d-flex align-items-center justify-content-center rounded-circle" style={{ width: 48, height: 48, background: 'rgba(13, 110, 253, 0.1)' }}>
+                  <CsLineIcons icon="user-check" size="20" style={{ stroke: '#0d6efd' }} />
+                </div>
+                <div>
+                  <div className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em', fontSize: '10px' }}>Seated Guests</div>
+                  <h3 className="mb-0 fw-extrabold text-dark mt-1" style={{ fontSize: '20px', fontWeight: 800 }}>{counts.seated}</h3>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col xs={12} sm={6} lg={3}>
+            <Card className="reservations-stat-card border-0 shadow-sm rounded-4 p-3 bg-white" style={{ borderLeft: '4px solid #23b3f4' }}>
+              <Card.Body className="p-0 d-flex align-items-center gap-3">
+                <div className="stat-icon-wrapper d-flex align-items-center justify-content-center rounded-circle" style={{ width: 48, height: 48, background: 'rgba(35, 179, 244, 0.1)' }}>
+                  <CsLineIcons icon="bookmark" size="20" style={{ stroke: '#23b3f4' }} />
+                </div>
+                <div>
+                  <div className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em', fontSize: '10px' }}>Total Active</div>
+                  <h3 className="mb-0 fw-extrabold text-dark mt-1" style={{ fontSize: '20px', fontWeight: 800 }}>{counts.total}</h3>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
 
         <Tab.Container defaultActiveKey="list" onSelect={(k) => setActiveTab(k)}>
           <Nav variant="tabs" className="reservations-tabs mb-4">
@@ -791,28 +752,24 @@ const ManageReservations = () => {
               <Card className="reservations-filter-card border-0 p-4">
                 <Card.Body className="p-0">
                   <Row className="g-4 align-items-end">
-                    <Col xs={12} lg={8}>
+                    <Col xs={12} md={5} lg={6}>
                       <span className="small fw-bold text-muted text-uppercase mb-2 d-block" style={{ letterSpacing: '0.05em' }}>Status Filter</span>
-                      <div className="d-flex flex-wrap gap-2">
-                        {STATUS_FILTERS.map((s) => {
-                          const isActive = statusFilter === s;
-                          return (
-                            <Button 
-                              key={s} 
-                              className={`reservations-status-pill ${isActive ? 'active' : ''}`}
-                              onClick={() => setStatusFilter(s)}
-                            >
-                              {s === 'all' ? 'All' : STATUS_META[s]?.label || s}
-                              {s === 'pending' && pendingCount > 0 && (
-                                <Badge bg="danger" pill className="ms-2" style={{ fontSize: 9 }}>{pendingCount}</Badge>
-                              )}
-                            </Button>
-                          );
-                        })}
-                      </div>
+                      <Form.Select 
+                        value={statusFilter} 
+                        onChange={(e) => setStatusFilter(e.target.value)} 
+                        className="reservations-pill-input shadow-sm bg-white w-100"
+                        style={{ height: '44px' }}
+                      >
+                        <option value="all">All</option>
+                        {Object.entries(STATUS_META).map(([key, meta]) => (
+                          <option key={key} value={key}>
+                            {meta.label} {key === 'pending' && counts.pending > 0 ? `(${counts.pending})` : ''}
+                          </option>
+                        ))}
+                      </Form.Select>
                     </Col>
                     
-                    <Col xs={12} sm={8} lg={3}>
+                    <Col xs={12} sm={8} md={4} lg={4}>
                       <Form.Label className="small fw-bold text-muted text-uppercase mb-2" style={{ letterSpacing: '0.05em' }}>Date</Form.Label>
                       <Form.Control 
                         type="date" 
@@ -823,11 +780,11 @@ const ManageReservations = () => {
                       />
                     </Col>
                     
-                    <Col xs={12} sm={4} lg={1}>
+                    <Col xs={12} sm={4} md={3} lg={2}>
                       <Button 
                         className="reservations-modal-btn-outline w-100 py-2 d-flex align-items-center justify-content-center"
                         style={{ height: '44px' }}
-                        onClick={() => { setDateFilter(''); setStatusFilter('pending'); }}
+                        onClick={() => { setDateFilter(''); setStatusFilter('all'); }}
                       >
                         Reset
                       </Button>
@@ -868,53 +825,70 @@ const ManageReservations = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {reservations.map((r) => (
-                          <tr key={r._id} className="reservations-row-card">
-                            <td>
-                              <div className="fw-bold text-dark">{r.customer_name}</div>
-                              <small className="text-muted fw-medium">{r.customer_phone}</small>
-                            </td>
-                            <td><small className="fw-bold text-alternate">{fmtDate(r.reservation_date)}</small></td>
-                            <td>
-                              {r.group_name && (
-                                <Badge bg="light" text="dark" className="border mb-2 d-inline-flex align-items-center gap-1 fw-bold text-secondary px-2 py-1" style={{ fontSize: 10, borderRadius: '50px' }}>
-                                  {r.group_name}
-                                </Badge>
-                              )}
-                              <div>
-                                <Badge bg="light" text="dark" className="border fw-bold text-alternate px-2 py-1" style={{ borderRadius: '50px' }}>
-                                  <CsLineIcons icon="clock" size={11} className="me-1" style={{ stroke: '#23b3f4' }} />
-                                  {r.slot_start} – {r.slot_end}
-                                </Badge>
-                              </div>
-                              <div style={{ fontSize: 10 }} className="text-muted mt-1 fw-medium">{r.slots?.length} slot{r.slots?.length > 1 ? 's' : ''}</div>
-                            </td>
-                            <td>
-                              <div className="d-flex align-items-center gap-1 fw-bold text-dark">
-                                <CsLineIcons icon="user" size={14} style={{ color: '#23b3f4' }} />
-                                {r.num_persons}
-                              </div>
-                            </td>
-                            <td>
-                              {r.assigned_tables?.length ? (
-                                <div className="d-flex flex-wrap gap-1">
-                                  {r.assigned_tables.map((t) => (
-                                    <Badge key={t.table_id} bg="light" text="dark" className="border fw-bold text-dark px-2 py-1" style={{ borderRadius: '50px' }}>
-                                      {t.area_name} · T{t.table_no}
-                                    </Badge>
-                                  ))}
+                        {(() => {
+                          const statusOrder = {
+                            pending: 1,      // Requests
+                            seated: 2,       // Seated
+                            approved: 3,     // Approved / Reserved
+                            reserved: 4,
+                            completed: 5,    // Completed
+                            rejected: 6,     // Cancelled / Rejected / No-Show
+                            cancelled: 7,
+                            no_show: 8
+                          };
+                          const sorted = [...reservations].sort((a, b) => {
+                            const orderA = statusOrder[a.status] || 99;
+                            const orderB = statusOrder[b.status] || 99;
+                            return orderA - orderB;
+                          });
+                          return sorted.map((r) => (
+                            <tr key={r._id} className="reservations-row-card">
+                              <td>
+                                <div className="fw-bold text-dark">{r.customer_name}</div>
+                                <small className="text-muted fw-medium">{r.customer_phone}</small>
+                              </td>
+                              <td><small className="fw-bold text-alternate">{fmtDate(r.reservation_date)}</small></td>
+                              <td>
+                                {r.group_name && (
+                                  <Badge bg="light" text="dark" className="border mb-2 d-inline-flex align-items-center gap-1 fw-bold text-secondary px-2 py-1" style={{ fontSize: 10, borderRadius: '50px' }}>
+                                    {r.group_name}
+                                  </Badge>
+                                )}
+                                <div>
+                                  <Badge bg="light" text="dark" className="border fw-bold text-alternate px-2 py-1" style={{ borderRadius: '50px' }}>
+                                    <CsLineIcons icon="clock" size={11} className="me-1" style={{ stroke: '#23b3f4' }} />
+                                    {r.slot_start} – {r.slot_end}
+                                  </Badge>
                                 </div>
-                              ) : <span className="text-muted small fw-medium">—</span>}
-                            </td>
-                            <td>
-                              <Badge bg={STATUS_META[r.status]?.variant || 'secondary'} style={{ borderRadius: '50px', padding: '6px 14px', fontSize: '0.8rem' }}>
-                                {r.auto_activated && r.status === 'reserved' && '⚡ '}
-                                {STATUS_META[r.status]?.label || r.status}
-                              </Badge>
-                            </td>
-                            <td><ActionButtons r={r} /></td>
-                          </tr>
-                        ))}
+                                <div style={{ fontSize: 10 }} className="text-muted mt-1 fw-medium">{r.slots?.length} slot{r.slots?.length > 1 ? 's' : ''}</div>
+                              </td>
+                              <td>
+                                <div className="d-flex align-items-center gap-1 fw-bold text-dark">
+                                  <CsLineIcons icon="user" size={14} style={{ color: '#23b3f4' }} />
+                                  {r.num_persons}
+                                </div>
+                              </td>
+                              <td>
+                                {r.assigned_tables?.length ? (
+                                  <div className="d-flex flex-wrap gap-1">
+                                    {r.assigned_tables.map((t) => (
+                                      <Badge key={t.table_id} bg="light" text="dark" className="border fw-bold text-dark px-2 py-1" style={{ borderRadius: '50px' }}>
+                                        {t.area_name} · T{t.table_no}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                ) : <span className="text-muted small fw-medium">—</span>}
+                              </td>
+                              <td>
+                                <Badge bg={STATUS_META[r.status]?.variant || 'secondary'} style={{ borderRadius: '50px', padding: '6px 14px', fontSize: '0.8rem' }}>
+                                  {r.auto_activated && r.status === 'reserved' && '⚡ '}
+                                  {STATUS_META[r.status]?.label || r.status}
+                                </Badge>
+                              </td>
+                              <td><ActionButtons r={r} /></td>
+                            </tr>
+                          ));
+                        })()}
                       </tbody>
                     </Table>
                   </div>
@@ -991,8 +965,18 @@ const ManageReservations = () => {
         </Tab.Container>
       </div>
 
+
+
       <ApproveModal show={!!approveTarget} reservation={approveTarget} onClose={() => setApproveTarget(null)} onSuccess={() => fetchReservations(pagination.page)} />
       <RejectModal show={!!rejectTarget} reservation={rejectTarget} onClose={() => setRejectTarget(null)} onSuccess={() => fetchReservations(pagination.page)} />
+      <ConfirmActionModal 
+        show={!!confirmAction} 
+        action={confirmAction} 
+        reservation={confirmTarget} 
+        loading={confirmLoading}
+        onClose={() => { setConfirmTarget(null); setConfirmAction(null); }} 
+        onConfirm={handleConfirmAction} 
+      />
     </>
   );
 };

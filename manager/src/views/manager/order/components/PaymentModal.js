@@ -18,10 +18,15 @@ const PaymentModal = ({
   orderType,
   orderId,
   orderNo,
+  handlePrint,
 }) => {
   const [printing, setPrinting] = useState(false);
   const handlePrintBill = () => {
-    printModalBill({ paymentData, orderItems, customerInfo, orderType, orderId, orderNo }, setPrinting);
+    if (handlePrint) {
+      handlePrint(orderId);
+    } else {
+      printModalBill({ paymentData, orderItems, customerInfo, orderType, orderId, orderNo }, setPrinting);
+    }
   };
 
   const labelStyle = { fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: '#94a3b8', marginBottom: '5px' };

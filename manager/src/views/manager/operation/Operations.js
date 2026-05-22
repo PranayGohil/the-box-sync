@@ -282,7 +282,7 @@ const Operations = () => {
 
   const { themeValues } = useSelector((state) => state.settings);
   const lgBreakpoint = parseInt(themeValues.lg.replace('px', ''), 10);
-  const { activePlans } = useContext(AuthContext);
+  const { activePlans, currentUser } = useContext(AuthContext);
 
   return (
     <div className="position-relative pb-7 pb-lg-0">
@@ -315,7 +315,7 @@ const Operations = () => {
             <Route path="/operations/reservation-form" render={() => (
               <>
                 {activePlans.includes('Reservation Manager') ? (
-                  <ReservationForm />
+                  <ReservationForm restaurantUserId={currentUser?._id} />
                 ) : (
                   <div className="text-center">You need to buy or renew to Reservation Manager plan to access this page.</div>
                 )}

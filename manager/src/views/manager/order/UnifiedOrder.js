@@ -174,10 +174,12 @@ const UnifiedOrder = () => {
     }
   }
 
-  async function fetchOrderDetails() {
+  async function fetchOrderDetails(targetId) {
     try {
+      const activeId = targetId || orderId;
+      if (!activeId) return;
       const token = localStorage.getItem('token');
-      const res = await getOrderById(orderId, token);
+      const res = await getOrderById(activeId, token);
       const order = res.data.data;
       const items = order.order_items || [];
 
@@ -342,14 +344,6 @@ const UnifiedOrder = () => {
     }
   };
 
-  // ── Print ─────────────────────────────────────────────────────────────────
-  const handlePrint = (order_id) => {
-    if (order_id) {
-      openPrintWindow(order_id, setPrinting);
-    } else {
-      printModalBill({ paymentData, orderItems, customerInfo, orderType, orderId: null, orderNo: 'Preview' }, setPrinting);
-    }
-  };
 
   // ── KOT Delta ─────────────────────────────────────────────────────────────
   const computeKOTDelta = (currentItems, snapshotItems) => {
@@ -467,6 +461,53 @@ const UnifiedOrder = () => {
     };
   };
 
+  // ── Print ─────────────────────────────────────────────────────────────────
+  const handlePrint = async (order_id) => {
+    const activeId = order_id || orderId;
+    if (!activeId || isDirty) {
+      if (!validateOrder()) return;
+      setPrinting(true);
+      try {
+        const status = orderStatus || 'Save';
+        const payload = buildPayload(status);
+        const token = localStorage.getItem('token');
+        const response = await API_MAP[orderType](payload, token);
+        if (response.data.status === 'success') {
+          const savedId = response.data.orderId || response.data.order?._id;
+
+          allowNavigationRef.current = true;
+          setIsDirty(false);
+          setOrderStatus(status);
+
+          // Update URL and routing so the page is in edit mode
+          if (savedId) {
+            // Close any open sheets/modals so they don't block the screen
+            setShowPaymentModal(false);
+            setShowCartSheet(false);
+
+            if (orderType === 'Dine In' && tableId) {
+              history.replace(`/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`);
+            } else {
+              history.replace(`/order/${orderType.toLowerCase()}?orderId=${savedId}&mode=edit`);
+            }
+
+            // Sync fetch the fully populated order (with backend generated Token/Bill number)
+            await fetchOrderDetails(savedId);
+
+            // Print the newly saved order
+            openPrintWindow(savedId, setPrinting);
+          }
+        }
+      } catch (err) {
+        console.error('Error saving order before print:', err);
+        alert('Error saving order. Please try again.');
+        setPrinting(false);
+      }
+    } else {
+      openPrintWindow(activeId, setPrinting);
+    }
+  };
+
   // ── KOT & Print ───────────────────────────────────────────────────────────
   const handleKotAndPrint = async () => {
     if (!validateOrder()) return;
@@ -513,7 +554,7 @@ const UnifiedOrder = () => {
           if (orderType === 'Dine In' && tableId) {
             window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`;
           } else {
-            window.location.href = `/order/new?orderId=${savedId}&mode=edit`;
+            window.location.href = `/order/${orderType.toLowerCase()}?orderId=${savedId}&mode=edit`;
           }
         } else {
           fetchOrderDetails();
@@ -855,6 +896,7 @@ const UnifiedOrder = () => {
         orderId={orderId}
         orderNo={orderNo}
         alreadyPaid={parseFloat(initialStateRef.current.paid_amount) || 0}
+        handlePrint={handlePrint}
       />
       <LeaveConfirmationModal
         showLeaveModal={showLeaveModal}

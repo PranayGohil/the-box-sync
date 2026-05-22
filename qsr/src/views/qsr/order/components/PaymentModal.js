@@ -18,10 +18,15 @@ const PaymentModal = ({
   orderType,
   orderId,
   orderNo,
+  handlePrint,
 }) => {
   const [printing, setPrinting] = useState(false);
   const handlePrintBill = () => {
-    printModalBill({ paymentData, orderItems, customerInfo, orderType, orderId, orderNo }, setPrinting);
+    if (handlePrint) {
+      handlePrint(orderId);
+    } else {
+      printModalBill({ paymentData, orderItems, customerInfo, orderType, orderId, orderNo }, setPrinting);
+    }
   };
 
   const labelStyle = { fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: '#94a3b8', marginBottom: '5px' };
@@ -84,7 +89,18 @@ const PaymentModal = ({
 
       <Modal.Header closeButton>
         <Modal.Title>
-          <div style={{ background: '#23b3f4', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+          <div
+            style={{
+              background: '#23b3f4',
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+            }}
+          >
             <CsLineIcons icon="credit-card" size="20" />
           </div>
           Process Payment
@@ -99,7 +115,7 @@ const PaymentModal = ({
               <h6 className="fw-bold mb-3 d-flex align-items-center gap-2" style={{ color: '#1e293b' }}>
                 <CsLineIcons icon="content" size="16" /> Order Summary
               </h6>
-              
+
               <div className="d-flex justify-content-between mb-2">
                 <span className="text-muted small fw-semibold">Sub Total</span>
                 <span className="fw-bold">₹{paymentData.subTotal}</span>
@@ -132,8 +148,8 @@ const PaymentModal = ({
               <div className="pt-2 mt-2 border-top">
                 <div style={labelStyle}>Discount</div>
                 <InputGroup className="mb-2">
-                  <Form.Select 
-                    value={paymentData.discountType} 
+                  <Form.Select
+                    value={paymentData.discountType}
                     onChange={(e) => handleDiscountTypeChange(e.target.value)}
                     style={{ maxWidth: '90px', borderRight: 'none', borderTopLeftRadius: '10px', borderBottomLeftRadius: '10px' }}
                   >
@@ -157,7 +173,9 @@ const PaymentModal = ({
               </div>
 
               <div className="pt-3 mt-3 border-top d-flex justify-content-between align-items-center">
-                <span className="fw-bold h5 mb-0" style={{ color: '#1e293b' }}>Grand Total</span>
+                <span className="fw-bold h5 mb-0" style={{ color: '#1e293b' }}>
+                  Grand Total
+                </span>
                 <span className="fw-bold h4 mb-0 text-primary">₹{paymentData.total}</span>
               </div>
             </div>
@@ -170,7 +188,9 @@ const PaymentModal = ({
               <div>
                 <label style={labelStyle}>Paid Amount</label>
                 <div className="position-relative">
-                  <span className="position-absolute translate-middle-y top-50 start-0 ps-3 fw-bold text-muted" style={{ zIndex: 10 }}>₹</span>
+                  <span className="position-absolute translate-middle-y top-50 start-0 ps-3 fw-bold text-muted" style={{ zIndex: 10 }}>
+                    ₹
+                  </span>
                   <Form.Control
                     type="number"
                     value={paymentData.paidAmount || ''}
@@ -185,11 +205,22 @@ const PaymentModal = ({
               {/* Wave-off / Change */}
               <Row>
                 <Col sm={12}>
-                  <div style={{ ...valueBoxStyle, background: parseFloat(paymentData.waveoffAmount) > 0 ? '#fef2f2' : parseFloat(paymentData.waveoffAmount) < 0 ? '#f0fdf4' : '#f8fafc', borderColor: parseFloat(paymentData.waveoffAmount) > 0 ? '#fee2e2' : parseFloat(paymentData.waveoffAmount) < 0 ? '#dcfce7' : '#e2e8f0' }}>
+                  <div
+                    style={{
+                      ...valueBoxStyle,
+                      background: parseFloat(paymentData.waveoffAmount) > 0 ? '#fef2f2' : parseFloat(paymentData.waveoffAmount) < 0 ? '#f0fdf4' : '#f8fafc',
+                      borderColor: parseFloat(paymentData.waveoffAmount) > 0 ? '#fee2e2' : parseFloat(paymentData.waveoffAmount) < 0 ? '#dcfce7' : '#e2e8f0',
+                    }}
+                  >
                     <div style={{ ...labelStyle, marginBottom: '2px', color: parseFloat(paymentData.waveoffAmount) !== 0 ? 'inherit' : '#94a3b8' }}>
                       {parseFloat(paymentData.waveoffAmount) > 0 ? 'Balance Due' : parseFloat(paymentData.waveoffAmount) < 0 ? 'Change to Return' : 'Balance'}
                     </div>
-                    <div className="h5 mb-0 fw-bold" style={{ color: parseFloat(paymentData.waveoffAmount) > 0 ? '#ef4444' : parseFloat(paymentData.waveoffAmount) < 0 ? '#22c55e' : '#1e293b' }}>
+                    <div
+                      className="h5 mb-0 fw-bold"
+                      style={{
+                        color: parseFloat(paymentData.waveoffAmount) > 0 ? '#ef4444' : parseFloat(paymentData.waveoffAmount) < 0 ? '#22c55e' : '#1e293b',
+                      }}
+                    >
                       ₹{Math.abs(parseFloat(paymentData.waveoffAmount)).toFixed(2)}
                     </div>
                   </div>
@@ -221,18 +252,25 @@ const PaymentModal = ({
           Cancel
         </Button>
         <div className="d-flex gap-2">
-          <Button 
-            variant="outline-secondary" 
+          <Button
+            variant="outline-secondary"
             style={{ borderRadius: '12px', padding: '10px 20px', fontWeight: 700 }}
-            onClick={handlePrintBill} 
+            onClick={handlePrintBill}
             disabled={printing || isLoading}
           >
             {printing ? 'Printing...' : 'Print Bill'}
           </Button>
-          <Button 
-            variant="primary" 
-            style={{ borderRadius: '12px', padding: '10px 30px', fontWeight: 800, background: '#23b3f4', border: 'none', boxShadow: '0 10px 20px -5px rgba(35, 179, 244, 0.4)' }}
-            onClick={handlePayment} 
+          <Button
+            variant="primary"
+            style={{
+              borderRadius: '12px',
+              padding: '10px 30px',
+              fontWeight: 800,
+              background: '#23b3f4',
+              border: 'none',
+              boxShadow: '0 10px 20px -5px rgba(35, 179, 244, 0.4)',
+            }}
+            onClick={handlePayment}
             disabled={isLoading}
           >
             {isLoading ? 'Processing...' : 'Complete Payment'}

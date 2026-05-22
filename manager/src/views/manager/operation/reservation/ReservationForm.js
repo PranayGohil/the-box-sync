@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Row, Col, Card, Form, Button, Alert, Badge, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
+import { AuthContext } from 'contexts/AuthContext';
 
 const API = process.env.REACT_APP_API;
 
@@ -21,6 +22,24 @@ const STATUS_META = {
 const todayStr = () => new Date().toISOString().slice(0, 10);
 const addDays = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
 const fmtDate = (str) => new Date(`${str}T00:00:00`).toLocaleDateString('en-IN', { dateStyle: 'long' });
+
+const to12Hour = (t) => {
+    if (!t) return '';
+    try {
+        const parts = t.split(':');
+        if (parts.length < 2) return t;
+        let h = parseInt(parts[0], 10);
+        const m = parts[1];
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h %= 12;
+        if (h === 0) h = 12;
+        const hStr = h < 10 ? `0${h}` : h;
+        return `${hStr}:${m} ${ampm}`;
+    } catch {
+        return t;
+    }
+};
+
 
 const customStyles = `
   .reservation-form-custom-btn-outline {
@@ -75,6 +94,95 @@ const customStyles = `
     box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
     outline: none !important;
   }
+
+  /* Bouncy steps */
+  .step-active-pulse {
+    animation: stepPulse 2s infinite ease-in-out;
+  }
+  @keyframes stepPulse {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(35, 179, 244, 0.4);
+    }
+    50% {
+      transform: scale(1.05);
+      box-shadow: 0 0 0 8px rgba(35, 179, 244, 0);
+    }
+  }
+  .reservation-form-slot-group-pill {
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 50px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #475569;
+    background: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    user-select: none;
+  }
+  .reservation-form-slot-group-pill:not(.active):hover {
+    background: #f9fafb;
+    border-color: #cbd5e1;
+  }
+  .reservation-form-slot-group-pill.active {
+    color: #fff !important;
+    font-weight: 700;
+  }
+  .reservation-form-slot-group-pill.active:hover {
+    opacity: 0.9;
+  }
+  .reservation-form-time-pill {
+    cursor: pointer;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1.5px solid #e2e8f0;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #334155;
+    background: #ffffff;
+    min-width: 85px;
+    min-height: 85px;
+    user-select: none;
+  }
+  .reservation-form-time-pill:not(.active):hover:not(.disabled) {
+    border-color: #23b3f4;
+    color: #23b3f4;
+    background: #f0f9ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.12);
+  }
+  .reservation-form-time-pill.active {
+    color: #fff !important;
+    font-weight: 700;
+    transform: translateY(-2px);
+  }
+  .reservation-form-time-pill.active:hover {
+    opacity: 0.9;
+  }
+  .reservation-form-time-pill.disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+    background: #f8fafc;
+    color: #94a3b8;
+    border-color: #e2e8f0;
+  }
+  .reservation-form-time-pill .pill-end-time {
+    font-size: 0.72rem;
+    font-weight: 500;
+    opacity: 0.75;
+  }
 `;
 
 const GroupedSlotPicker = ({ groups, selectedGroupId, selectedSlots, onGroupSelect, onSlotToggle }) => {
@@ -89,27 +197,26 @@ const GroupedSlotPicker = ({ groups, selectedGroupId, selectedSlots, onGroupSele
                     const bookableCount = g.slots.filter((s) => s.bookable).length;
                     const isActive = selectedGroupId === g.group_id;
                     return (
-                        <Button
+                        <div
                             key={g.group_id}
-                            size="sm"
+                            className={`reservation-form-slot-group-pill ${isActive ? 'active' : ''}`}
+                            style={isActive ? { backgroundColor: g.color, borderColor: g.color, boxShadow: `0 4px 12px ${g.color}40` } : {}}
                             onClick={() => onGroupSelect(g.group_id)}
-                            style={{
-                                borderRadius: '50px',
-                                padding: '8px 18px',
-                                fontWeight: 700,
-                                fontSize: '0.85rem',
-                                transition: 'all 0.2s ease',
-                                backgroundColor: isActive ? g.color : 'transparent',
-                                borderColor: isActive ? g.color : '#e2e8f0',
-                                color: isActive ? '#fff' : '#475569',
-                                boxShadow: isActive ? `0 4px 12px ${g.color}33` : 'none'
-                            }}
-                            className="d-flex align-items-center gap-2"
                         >
-                            <span style={{ width: 8, height: 8, borderRadius: '50%', background: isActive ? '#fff' : g.color, display: 'inline-block', flexShrink: 0 }} />
+                            <span style={{
+                                width: 10, height: 10, borderRadius: '50%',
+                                background: isActive ? 'rgba(255,255,255,0.85)' : g.color,
+                                display: 'inline-block', flexShrink: 0
+                            }} />
                             {g.name}
-                            <Badge bg={isActive ? 'light' : 'secondary'} text={isActive ? 'dark' : 'white'} style={{ fontSize: 9, borderRadius: '50px' }}>{bookableCount}</Badge>
-                        </Button>
+                            <span style={{
+                                fontSize: '0.72rem', fontWeight: 700,
+                                background: isActive ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
+                                color: isActive ? '#fff' : '#475569',
+                                borderRadius: '50px', padding: '1px 7px',
+                                lineHeight: 1.6
+                            }}>{bookableCount}</span>
+                        </div>
                     );
                 })}
             </div>
@@ -118,9 +225,7 @@ const GroupedSlotPicker = ({ groups, selectedGroupId, selectedSlots, onGroupSele
                 <>
                     <Alert variant="light" className="border py-2 mb-3 bg-light rounded-3 small">
                         <small className="text-muted fw-bold">
-                            Select up to <strong>{activeGroup.max_slots_per_booking}</strong> consecutive slots
-                            ({activeGroup.max_slots_per_booking * activeGroup.slot_duration} min max).
-                            Tap a slot to select, tap adjacent slots to extend.
+                            Select <strong>1</strong> slot to book a table for this reservation ({activeGroup.slot_duration} mins).
                         </small>
                     </Alert>
 
@@ -128,42 +233,23 @@ const GroupedSlotPicker = ({ groups, selectedGroupId, selectedSlots, onGroupSele
                         {activeGroup.slots.map((s) => {
                             const isSelected = selectedSlots.includes(s.slot_start);
                             const disabled = !s.bookable && !isSelected;
-
-                            const canAdd = (() => {
-                                if (selectedSlots.length === 0) return s.bookable;
-                                if (selectedSlots.length >= activeGroup.max_slots_per_booking) return false;
-                                const allStarts = activeGroup.slots.map((sl) => sl.slot_start);
-                                const selIdx = selectedSlots.map((ss) => allStarts.indexOf(ss));
-                                const thisIdx = allStarts.indexOf(s.slot_start);
-                                return (thisIdx === Math.min(...selIdx) - 1 || thisIdx === Math.max(...selIdx) + 1) && s.bookable;
-                            })();
-
                             const label = s.is_past ? 'Past' : s.is_blocked ? 'Blocked' : !s.bookable ? 'Full' : null;
 
                             return (
-                                <Button
+                                <div
                                     key={s.slot_start}
-                                    size="sm"
-                                    disabled={disabled || (!isSelected && !canAdd && selectedSlots.length > 0)}
-                                    onClick={() => onSlotToggle(s.slot_start, activeGroup)}
-                                    style={{
-                                        minWidth: 90,
-                                        opacity: disabled ? 0.4 : 1,
-                                        borderRadius: '12px',
-                                        padding: '10px 14px',
-                                        fontWeight: 700,
-                                        transition: 'all 0.2s ease',
-                                        backgroundColor: isSelected ? activeGroup.color : 'transparent',
-                                        borderColor: isSelected ? activeGroup.color : disabled ? '#cbd5e1' : '#23b3f4',
-                                        color: isSelected ? '#fff' : disabled ? '#94a3b8' : '#23b3f4',
-                                        boxShadow: isSelected ? `0 4px 12px ${activeGroup.color}33` : 'none'
-                                    }}
-                                    className="d-flex flex-column align-items-center justify-content-center"
+                                    className={`reservation-form-time-pill ${isSelected ? 'active' : ''} ${disabled ? 'disabled' : ''}`}
+                                    style={isSelected ? {
+                                        backgroundColor: activeGroup.color,
+                                        borderColor: activeGroup.color,
+                                        boxShadow: `0 4px 14px ${activeGroup.color}40`
+                                    } : {}}
+                                    onClick={() => !disabled && onSlotToggle(s.slot_start, activeGroup)}
                                 >
-                                    <span className="fw-semibold" style={{ fontSize: 13 }}>{s.slot_start}</span>
-                                    <span style={{ fontSize: 10, opacity: 0.8 }}>–{s.slot_end}</span>
-                                    {label && <Badge bg="secondary" pill style={{ fontSize: 8, marginTop: 4 }}>{label}</Badge>}
-                                </Button>
+                                    <span>{to12Hour(s.slot_start)}</span>
+                                    <span className="pill-end-time">– {to12Hour(s.slot_end)}</span>
+                                    {label && <Badge bg="secondary" pill style={{ fontSize: 8, marginTop: 2 }}>{label}</Badge>}
+                                </div>
                             );
                         })}
                     </div>
@@ -173,11 +259,11 @@ const GroupedSlotPicker = ({ groups, selectedGroupId, selectedSlots, onGroupSele
                             <CsLineIcons icon="clock" size={15} style={{ stroke: activeGroup.color }} />
                             <span className="fw-bold">
                                 <strong>
-                                    {selectedSlots[0]} –&nbsp;
+                                    {to12Hour(selectedSlots[0])} –&nbsp;
                                     {(() => {
                                         const last = selectedSlots[selectedSlots.length - 1];
                                         const lastSlot = activeGroup.slots.find((s) => s.slot_start === last);
-                                        return lastSlot?.slot_end || '';
+                                        return lastSlot ? to12Hour(lastSlot.slot_end) : '';
                                     })()}
                                 </strong>
                                 &nbsp;· {selectedSlots.length * activeGroup.slot_duration} minutes · {activeGroup.name}
@@ -194,6 +280,8 @@ const GroupedSlotPicker = ({ groups, selectedGroupId, selectedSlots, onGroupSele
 };
 
 const ReservationForm = ({ restaurantUserId }) => {
+    const { currentUser } = useContext(AuthContext);
+    const activeUserId = restaurantUserId || currentUser?._id || currentUser?.id;
     const title = 'Reserve a Table';
 
     const [step, setStep] = useState(1);
@@ -218,12 +306,12 @@ const ReservationForm = ({ restaurantUserId }) => {
     const [lookupError, setLookupError] = useState(null);
 
     useEffect(() => {
-        if (!date || !restaurantUserId) return;
+        if (!date || !activeUserId) return;
         setSlotsLoading(true);
         setSelectedGroupId(null);
         setSelectedSlots([]);
         setSlotsMessage('');
-        axios.get(`${API}/reservation/slots`, { params: { user_id: restaurantUserId, date } })
+        axios.get(`${API}/reservation/slots`, { params: { user_id: activeUserId, date } })
             .then((r) => {
                 setGroups(r.data.data || []);
                 setSlotsMessage(r.data.message || '');
@@ -231,7 +319,7 @@ const ReservationForm = ({ restaurantUserId }) => {
             })
             .catch(() => toast.error('Could not load time slots.'))
             .finally(() => setSlotsLoading(false));
-    }, [date, restaurantUserId]);
+    }, [date, activeUserId]);
 
     const handleGroupSelect = (groupId) => {
         setSelectedGroupId(groupId);
@@ -242,11 +330,9 @@ const ReservationForm = ({ restaurantUserId }) => {
         if (slotStart === null) { setSelectedSlots([]); return; }
         setSelectedSlots((prev) => {
             if (prev.includes(slotStart)) {
-                if (slotStart === prev[0] || slotStart === prev[prev.length - 1])
-                    return prev.filter((s) => s !== slotStart);
-                return prev;
+                return [];
             }
-            return [...prev, slotStart].sort();
+            return [slotStart];
         });
     };
 
@@ -274,7 +360,7 @@ const ReservationForm = ({ restaurantUserId }) => {
                 group_id: selectedGroupId,
                 slots: selectedSlots,
                 num_persons: Number(numPersons),
-                user_id: restaurantUserId,
+                user_id: activeUserId,
             });
             setReservationId(res.data.data._id);
             setSubmitted(true);
@@ -298,7 +384,7 @@ const ReservationForm = ({ restaurantUserId }) => {
         return (
             <>
                 <HtmlHead title="Reservation Submitted" />
-                <div className="d-flex justify-content-center py-5 px-3 bg-light min-vh-100 align-items-center">
+                <div className="d-flex justify-content-center py-4 px-2">
                     <style>{customStyles}</style>
                     <Card className="reservation-form-glass-card border-0 overflow-hidden text-center" style={{ maxWidth: 520, width: '100%' }}>
                         <Card.Body className="p-5">
@@ -308,7 +394,11 @@ const ReservationForm = ({ restaurantUserId }) => {
                             <h3 className="fw-bold mb-2 text-dark">Request Submitted!</h3>
                             <p className="text-muted mb-4 fw-medium">
                                 <strong>{fmtDate(date)}</strong> · <strong>{activeGroup?.name}</strong>
-                                {selectedSlots.length > 0 && <> · <strong>{selectedSlots[0]}–{activeGroup?.slots.find((s) => s.slot_start === selectedSlots[selectedSlots.length - 1])?.slot_end}</strong></>}
+                                {selectedSlots.length > 0 && <> · <strong>{to12Hour(selectedSlots[0])}–{(() => {
+                                    const last = selectedSlots[selectedSlots.length - 1];
+                                    const lastSlot = activeGroup?.slots.find((s) => s.slot_start === last);
+                                    return lastSlot ? to12Hour(lastSlot.slot_end) : '';
+                                })()}</strong></>}
                             </p>
                             
                             <p className="small text-muted mb-2 fw-bold text-uppercase" style={{ letterSpacing: '0.05em' }}>Your Reservation ID</p>
@@ -381,7 +471,7 @@ const ReservationForm = ({ restaurantUserId }) => {
     return (
         <>
             <HtmlHead title={title} />
-            <div className="d-flex justify-content-center py-5 px-3 bg-light min-vh-100 align-items-center">
+            <div className="d-flex justify-content-center py-4 px-2">
                 <style>{customStyles}</style>
                 <div style={{ maxWidth: 620, width: '100%' }}>
 
@@ -389,7 +479,7 @@ const ReservationForm = ({ restaurantUserId }) => {
                     <div className="d-flex align-items-center gap-2 mb-4 px-2">
                         {[1, 2, 3].map((n) => (
                             <React.Fragment key={n}>
-                                <div className="d-flex align-items-center justify-content-center rounded-circle fw-bold shadow-sm"
+                                <div className={`d-flex align-items-center justify-content-center rounded-circle fw-bold shadow-sm ${step === n ? 'step-active-pulse' : ''}`}
                                     style={{
                                         width: 32, height: 32, fontSize: 13, flexShrink: 0,
                                         background: step >= n ? '#23b3f4' : '#e2e8f0',
@@ -503,7 +593,7 @@ const ReservationForm = ({ restaurantUserId }) => {
                                             <CsLineIcons icon="chevron-left" size="18" /> Back
                                         </Button>
                                         <Button 
-                                            className="reservation-form-custom-btn-solid flex-grow-1 py-2 d-flex align-items-center justify-content-center gap-2"
+                                            className="reservation-form-custom-btn-outline flex-grow-1 py-2 d-flex align-items-center justify-content-center gap-2"
                                             disabled={selectedSlots.length === 0} 
                                             onClick={() => setStep(3)}
                                         >
@@ -520,7 +610,11 @@ const ReservationForm = ({ restaurantUserId }) => {
                                         <div>
                                             <span className="fw-bold text-dark">{fmtDate(date)}</span>
                                             <span className="text-muted ms-2 small fw-medium">
-                                                · {activeGroup?.name} · {selectedSlots[0]}–{activeGroup?.slots.find((s) => s.slot_start === selectedSlots[selectedSlots.length - 1])?.slot_end}
+                                                · {activeGroup?.name} · {to12Hour(selectedSlots[0])}–{(() => {
+                                                    const last = selectedSlots[selectedSlots.length - 1];
+                                                    const lastSlot = activeGroup?.slots.find((s) => s.slot_start === last);
+                                                    return lastSlot ? to12Hour(lastSlot.slot_end) : '';
+                                                })()}
                                                 · {numPersons} guest{numPersons > 1 ? 's' : ''}
                                             </span>
                                         </div>
@@ -657,7 +751,7 @@ const ReservationForm = ({ restaurantUserId }) => {
                                         </Badge>
                                     </div>
                                     <small className="text-muted d-block fw-medium">
-                                        {fmtDate(statusData.reservation_date)} · {statusData.group_name} · {statusData.slot_start}–{statusData.slot_end} · {statusData.num_persons} guest{statusData.num_persons > 1 ? 's' : ''}
+                                        {fmtDate(statusData.reservation_date)} · {statusData.group_name} · {to12Hour(statusData.slot_start)}–{to12Hour(statusData.slot_end)} · {statusData.num_persons} guest{statusData.num_persons > 1 ? 's' : ''}
                                     </small>
                                     {statusData.manager_notes && <small className="text-muted d-block mt-1 italic">Note: {statusData.manager_notes}</small>}
                                 </Alert>
