@@ -1,7 +1,5 @@
 require("dotenv").config();
 require("express-async-errors");
-require('./cron/reservationCron');
-require('./cron/dailyStockCron');
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -11,50 +9,31 @@ const { Server } = require("socket.io");
 
 const connectDB = require("./utils/db");
 const uploadRouter = require("./router/upload-router");
-const chargeRouter = require("./router/chargeRoutes");
-const feedbackRouter = require("./router/feedbackRoutes");
-const inventoryRouter = require("./router/inventoryRoutes");
-const kotRouter = require("./router/kotRoutes");
-const menuRouter = require("./router/menuRoutes");
-const orderRouter = require("./router/orderRoutes");
 const staffRouter = require("./router/staffRoutes");
 const staffAttendanceRouter = require("./router/staffAttendanceRoutes");
 const staffPayrollRouter = require("./router/staffPayrollRouter.js");
 const payrollConfigRouter = require("./router/payrollConfigRouter.js");
 const subscriptionRouter = require("./router/subscriptionRoutes");
-const tableRouter = require("./router/tableRoutes");
 const userRouter = require("./router/userRoutes");
-const inquiryRouter = require("./router/inquiryRoutes");
 const superAdminRouter = require("./router/superAdminRoutes");
-const websiteRouter = require("./router/websiteRoutes");
-const customerQueryRouter = require("./router/customerQueryRoutes");
 const PanelRouter = require("./router/panelUserRoutes");
-const statisticsRouter = require("./router/statisticsRoutes.js");
-const roomRouter = require("./router/roomRoutes.js");
-const hotelBookingRouter = require("./router/hotelBookingRoutes.js");
-const customerRouter = require("./router/customerRoutes.js");
-const webCustomerRouter = require("./router/webCustomerRoutes.js");
-const otpRouter = require("./router/otpRoutes.js");
-const waiterRouter = require("./router/waiterRoutes.js");
-const reservationRouter = require("./router/reservationRoutes.js");
-const dailyStockRouter = require("./router/dailyStockRoutes.js");
+const kioskRouter = require("./router/kioskRoutes");
 
 const PORT = process.env.PORT;
-// const ORIGINS = process.env.ORIGINS ? process.env.ORIGINS.split(",") : [];
 
 const app = express();
 
-// create HTTP server and pass to socket
+// Create HTTP server and attach Socket.IO
 const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "*", // Replace with frontend domain in production
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
 
-const connectedUsers = {}; // Track employees
+const connectedUsers = {};
 
 const emitToUser = (userId, event, data) => {
   const socketId = connectedUsers[userId];
@@ -71,7 +50,6 @@ io.on("connection", (socket) => {
   socket.on("register", ({ userId, role }) => {
     const key = `${userId}_${role}`;
     connectedUsers[key] = socket.id;
-    console.log("Connected users:", connectedUsers);
   });
 
   socket.on("disconnect", () => {
@@ -87,44 +65,21 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors());
-// app.use(
-//   cors({
-//     origin: ORIGINS,
-//     credentials: true,
-//   })
-// );
 
-// Serve static files from the 'uploads' directory
+// Serve uploaded files (staff photos, ID cards, etc.)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// ── API Routes ───────────────────────────────────────────────────────────────
 app.use("/api/upload", uploadRouter);
-app.use("/api/charge", chargeRouter);
-app.use("/api/feedback", feedbackRouter);
-app.use("/api/inventory", inventoryRouter);
-app.use("/api/kot", kotRouter);
-app.use("/api/menu", menuRouter);
-app.use("/api/order", orderRouter);
 app.use("/api/staff", staffRouter);
 app.use("/api/attendance", staffAttendanceRouter);
 app.use("/api/payroll", staffPayrollRouter);
 app.use("/api/payroll-config", payrollConfigRouter);
 app.use("/api/subscription", subscriptionRouter);
-app.use("/api/table", tableRouter);
 app.use("/api/user", userRouter);
-app.use("/api/inquiry", inquiryRouter);
-app.use("/api/website", websiteRouter);
-app.use("/api/customerquery", customerQueryRouter);
-app.use("/api/panel-user", PanelRouter);
 app.use("/api/superadmin", superAdminRouter);
-app.use("/api/statistics", statisticsRouter);
-app.use("/api/room", roomRouter);
-app.use("/api/hotel-booking", hotelBookingRouter);
-app.use("/api/customer", customerRouter);
-app.use("/api/web-customer", webCustomerRouter);
-app.use("/api/otp", otpRouter)
-app.use("/api/waiter", waiterRouter);
-app.use("/api/reservation", reservationRouter);
-app.use("/api/daily-stock", dailyStockRouter);
+app.use("/api/panel-user", PanelRouter);
+app.use("/api/kiosk", kioskRouter);
 app.use("/api/holidays", require("./router/holidayRouter"));
 app.use("/api/leave-policy", require("./router/leavePolicyRouter"));
 app.use("/api/leave", require("./router/leaveRouter"));
@@ -135,6 +90,6 @@ app.use(errorHandler);
 
 connectDB().then(() => {
   server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Payroll server running on port ${PORT}`);
   });
 });

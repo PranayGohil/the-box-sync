@@ -12,7 +12,9 @@ import Webcam from 'react-webcam';
 import { AuthContext } from 'contexts/AuthContext';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import ImageCropperModal from 'components/cropper/ImageCropperModal';
 
 const AddStaff = () => {
   const title = 'Add Staff';
@@ -39,10 +41,19 @@ const AddStaff = () => {
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [positions, setPositions] = useState([]);
+  const [payrollConfig, setPayrollConfig] = useState(null);
   const [uploadingFiles, setUploadingFiles] = useState({
     photo: false,
     front_image: false,
     back_image: false,
+  });
+
+  const [cropperState, setCropperState] = useState({
+    show: false,
+    imageSrc: null,
+    fieldName: null,
+    setPreview: null,
+    aspect: 1,
   });
 
   // Face capture states
@@ -119,6 +130,7 @@ const AddStaff = () => {
     email: Yup.string().required('Email is required').email('Enter a valid email address'),
 
     salary: Yup.number().required('Salary is required').positive('Salary must be a positive number'),
+    salary_calculation_base: Yup.string().required('Salary calculation base is required').oneOf(['working_days', 'working_hours']),
 
     position: Yup.string().required('Position is required'),
 
@@ -176,27 +188,7 @@ const AddStaff = () => {
       ),
 
     salary_structure: Yup.object().shape({
-      earnings: Yup.object({
-        basic: Yup.number()
-          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-          .min(0, 'Must be 0 or more')
-          .required('Basic is required'),
-        hra: Yup.number()
-          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-          .min(0),
-        conveyance: Yup.number()
-          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-          .min(0),
-        medical: Yup.number()
-          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-          .min(0),
-        special: Yup.number()
-          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-          .min(0),
-        other: Yup.number()
-          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-          .min(0),
-      }),
+      custom_earnings: Yup.object(),
       deductions: Yup.object({
         pf_percentage: Yup.number()
           .transform((value, originalValue) => (originalValue === '' ? 0 : value))
@@ -211,6 +203,11 @@ const AddStaff = () => {
           .min(0),
       }),
     }),
+    increment_plan: Yup.object().shape({
+      type: Yup.string().oneOf(['percentage', 'flat']),
+      value: Yup.number().min(0).nullable(),
+      scheduled_date: Yup.string().nullable()
+    }).nullable()
   });
 
   const formik = useFormik({
@@ -229,6 +226,9 @@ const AddStaff = () => {
       phone_no: '',
       email: '',
       salary: '',
+      salary_calculation_base: 'working_days',
+      weekly_off_policy: 'global',
+      custom_weekly_offs: [{ day: 'Sunday', type: 'all_weeks', weeks: [] }],
       position: '',
       photo: '',
       document_type: '',
@@ -236,20 +236,18 @@ const AddStaff = () => {
       front_image: '',
       back_image: '',
       salary_structure: {
-        earnings: {
-          basic: 0,
-          hra: 0,
-          conveyance: 0,
-          medical: 0,
-          special: 0,
-          other: 0,
-        },
+        custom_earnings: {},
         deductions: {
           pf_percentage: 0,
           esi_percentage: 0,
           pt: 0,
         },
       },
+      increment_plan: {
+        type: 'percentage',
+        value: '',
+        scheduled_date: ''
+      }
     },
     validationSchema: addStaff,
     onSubmit: async (values, { setSubmitting }) => {
@@ -260,7 +258,7 @@ const AddStaff = () => {
 
         Object.keys(values).forEach((key) => {
           if (key !== 'photo' && key !== 'front_image' && key !== 'back_image') {
-            if (key === 'salary_structure') {
+            if (key === 'salary_structure' || key === 'increment_plan' || key === 'custom_weekly_offs') {
               formData.append(key, JSON.stringify(values[key]));
             } else {
               formData.append(key, values[key]);
@@ -271,7 +269,7 @@ const AddStaff = () => {
         if (values.photo) formData.append('photo', values.photo);
         if (values.front_image) formData.append('front_image', values.front_image);
         if (values.back_image) formData.append('back_image', values.back_image);
-        if (faceDescriptor) formData.append('face_descriptor', JSON.stringify(faceDescriptor));
+        if (typeof faceDescriptor !== 'undefined' && faceDescriptor) formData.append('face_descriptor', JSON.stringify(faceDescriptor));
 
         const addResponse = await axios.post(`${process.env.REACT_APP_API}/staff/add`, formData, {
           headers: {
@@ -355,6 +353,8 @@ const AddStaff = () => {
     };
   }, [showFaceModal]);
 
+  
+
   const handleFaceCapture = async () => {
     try {
       setIsCapturing(true);
@@ -378,16 +378,62 @@ const AddStaff = () => {
 
   const { values, handleChange, handleSubmit, setFieldValue, errors, touched } = formik;
 
+  const handleAddCustomWeeklyOff = () => {
+    const current = values.custom_weekly_offs ? [...values.custom_weekly_offs] : [];
+    current.push({ day: 'Sunday', weeks: [] });
+    setFieldValue('custom_weekly_offs', current);
+  };
+
+  const handleRemoveCustomWeeklyOff = (index) => {
+    const current = [...values.custom_weekly_offs];
+    current.splice(index, 1);
+    setFieldValue('custom_weekly_offs', current);
+  };
+
+  const handleUpdateCustomWeeklyOff = (index, field, value) => {
+    const current = [...values.custom_weekly_offs];
+    current[index][field] = value;
+    setFieldValue('custom_weekly_offs', current);
+  };
+
+  const toggleSpecificCustomWeek = (index, weekNum) => {
+    const current = [...values.custom_weekly_offs];
+    const weeks = current[index].weeks ? [...current[index].weeks] : [];
+    if (weeks.includes(weekNum)) {
+      current[index].weeks = weeks.filter(w => w !== weekNum);
+    } else {
+      current[index].weeks.push(weekNum);
+    }
+    setFieldValue('custom_weekly_offs', current);
+  };
+
   useEffect(() => {
     const initializeData = async () => {
       try {
         setLoading((prev) => ({ ...prev, initial: true }));
         setCountries(Country.getAllCountries());
 
-        const response = await axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
-        setPositions(response.data.data);
+        const [positionsRes, configRes] = await Promise.all([
+          axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          }),
+          axios.get(`${process.env.REACT_APP_API}/payroll-config`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          })
+        ]);
+        
+        setPositions(positionsRes.data.data);
+        if (configRes.data.success && configRes.data.data) {
+          setPayrollConfig(configRes.data.data);
+          
+          // Pre-fill initial custom_earnings values
+          const activeEarnings = (configRes.data.data.custom_earnings || []).filter(e => e.is_active);
+          const initialCustomEarnings = {};
+          activeEarnings.forEach(e => {
+            initialCustomEarnings[e.id] = 0;
+          });
+          formik.setFieldValue('salary_structure.custom_earnings', initialCustomEarnings);
+        }
       } catch (error) {
         console.error('Error fetching positions:', error);
         toast.error('Failed to fetch positions.');
@@ -405,8 +451,8 @@ const AddStaff = () => {
     value: pos,
   }));
 
-  const handleCountryChange = (event) => {
-    const countryName = event.target.value;
+  const handleCountryChange = (selected) => {
+    const countryName = selected ? selected.value : '';
     const selectedCountry = countries.find((c) => c.name === countryName);
 
     setFieldValue('country', countryName);
@@ -416,8 +462,8 @@ const AddStaff = () => {
     setFieldValue('city', '');
   };
 
-  const handleStateChange = (event) => {
-    const stateName = event.target.value;
+  const handleStateChange = (selected) => {
+    const stateName = selected ? selected.value : '';
     const selectedCountry = countries.find((c) => c.name === values.country);
     const selectedState = states.find((s) => s.name === stateName);
 
@@ -426,16 +472,33 @@ const AddStaff = () => {
     setFieldValue('city', '');
   };
 
-  const handleFileChange = async (fieldName, file, setPreview) => {
+  const handleFileChange = (fieldName, file, setPreview, aspect = undefined) => {
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      setCropperState({
+        show: true,
+        imageSrc: reader.result?.toString() || "",
+        fieldName,
+        setPreview,
+        aspect,
+      });
+    });
+    reader.readAsDataURL(file);
+    
+    // To clear the file input so the same file can be selected again if cancelled
+    const fileInput = document.getElementById(`${fieldName.replace('_', '-')}-upload`);
+    if(fileInput) fileInput.value = '';
+  };
+
+  const handleCropComplete = async (croppedFile) => {
+    const { fieldName, setPreview } = cropperState;
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: true }));
-
-    // Simulate file processing delay for better UX
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    setFieldValue(fieldName, file);
-    if (file) {
-      setPreview(URL.createObjectURL(file));
-    }
+    
+    const previewUrl = URL.createObjectURL(croppedFile);
+    setPreview(previewUrl);
+    setFieldValue(fieldName, croppedFile);
 
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: false }));
   };
@@ -719,18 +782,22 @@ const AddStaff = () => {
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Gender</Form.Label>
-                      <Form.Select
+                      <Select
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                         name="gender"
-                        value={values.gender}
-                        onChange={handleChange}
-                        isInvalid={touched.gender && errors.gender}
-                        disabled={loading.submitting}
-                      >
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                      </Form.Select>
+                        options={[
+                          { value: 'Male', label: 'Male' },
+                          { value: 'Female', label: 'Female' },
+                          { value: 'Other', label: 'Other' }
+                        ]}
+                        value={values.gender ? { label: values.gender, value: values.gender } : null}
+                        onChange={(selected) => setFieldValue('gender', selected ? selected.value : '')}
+                        onBlur={() => formik.setFieldTouched('gender', true)}
+                        isDisabled={loading.submitting}
+                        placeholder="Select Gender"
+                      />
                       <Form.Control.Feedback type="invalid">{errors.gender}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
@@ -806,60 +873,54 @@ const AddStaff = () => {
                   <Col md={3}>
                     <Form.Group className="mb-3">
                       <Form.Label>Country</Form.Label>
-                      <Form.Select
+                      <Select
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                         name="country"
-                        value={values.country}
+                        options={countries.map(c => ({ value: c.name, label: c.name }))}
+                        value={values.country ? { label: values.country, value: values.country } : null}
                         onChange={handleCountryChange}
-                        isInvalid={touched.country && errors.country}
-                        disabled={loading.submitting}
-                      >
-                        <option value="">Select Country</option>
-                        {countries.map((country) => (
-                          <option key={country.isoCode} value={country.name}>
-                            {country.name}
-                          </option>
-                        ))}
-                      </Form.Select>
+                        onBlur={() => formik.setFieldTouched('country', true)}
+                        isDisabled={loading.submitting}
+                        placeholder="Select Country"
+                      />
                       <Form.Control.Feedback type="invalid">{errors.country}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
                   <Col md={3}>
                     <Form.Group className="mb-3">
                       <Form.Label>State</Form.Label>
-                      <Form.Select
+                      <Select
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                         name="state"
-                        value={values.state}
+                        options={states.map(s => ({ value: s.name, label: s.name }))}
+                        value={values.state ? { label: values.state, value: values.state } : null}
                         onChange={handleStateChange}
-                        disabled={!values.country || loading.submitting}
-                        isInvalid={touched.state && errors.state}
-                      >
-                        <option value="">Select State</option>
-                        {states.map((state) => (
-                          <option key={state.isoCode} value={state.name}>
-                            {state.name}
-                          </option>
-                        ))}
-                      </Form.Select>
+                        onBlur={() => formik.setFieldTouched('state', true)}
+                        isDisabled={!values.country || loading.submitting}
+                        placeholder="Select State"
+                      />
                       <Form.Control.Feedback type="invalid">{errors.state}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
                   <Col md={3}>
                     <Form.Group className="mb-3">
                       <Form.Label>City</Form.Label>
-                      <Form.Select
+                      <Select
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                         name="city"
-                        value={values.city}
-                        onChange={handleChange}
-                        disabled={!values.state || loading.submitting}
-                        isInvalid={touched.city && errors.city}
-                      >
-                        <option value="">Select City</option>
-                        {cities.map((city) => (
-                          <option key={city.name} value={city.name}>
-                            {city.name}
-                          </option>
-                        ))}
-                      </Form.Select>
+                        options={cities.map(c => ({ value: c.name, label: c.name }))}
+                        value={values.city ? { label: values.city, value: values.city } : null}
+                        onChange={(selected) => setFieldValue('city', selected ? selected.value : '')}
+                        onBlur={() => formik.setFieldTouched('city', true)}
+                        isDisabled={!values.state || loading.submitting}
+                        placeholder="Select City"
+                      />
                       <Form.Control.Feedback type="invalid">{errors.city}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
@@ -924,7 +985,7 @@ const AddStaff = () => {
                 </div>
 
                 <Row className="g-3">
-                  <Col md={6}>
+                  <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Job Position</Form.Label>
                       <CreatableSelect
@@ -936,11 +997,34 @@ const AddStaff = () => {
                         onBlur={() => formik.setFieldTouched('position', true)}
                         placeholder="Select or type..."
                         classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                       />
                       {touched.position && errors.position && <div className="text-danger mt-1 small fw-bold">{errors.position}</div>}
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Salary Calculation Base</Form.Label>
+                      <Select
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                        name="salary_calculation_base"
+                        options={[
+                          { value: 'working_days', label: 'Based on Working Days' },
+                          { value: 'working_hours', label: 'Based on Working Hours' }
+                        ]}
+                        value={values.salary_calculation_base ? { label: values.salary_calculation_base === 'working_hours' ? 'Based on Working Hours' : 'Based on Working Days', value: values.salary_calculation_base } : null}
+                        onChange={(selected) => setFieldValue('salary_calculation_base', selected ? selected.value : 'working_days')}
+                        onBlur={() => formik.setFieldTouched('salary_calculation_base', true)}
+                        isDisabled={loading.submitting}
+                        placeholder="Select Base"
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.salary_calculation_base}</Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Salary (Base)</Form.Label>
                       <div className="input-group">
@@ -965,50 +1049,23 @@ const AddStaff = () => {
                 <h6 className="fw-bold mb-3 text-primary">Salary Structure Breakdown</h6>
                 <Row className="g-3">
                   <Col md={6}>
-                    <div className="bg-light rounded-3 p-3 shadow-sm border border-faint">
+                    <div className="bg-light rounded-3 p-3 shadow-sm border border-faint h-100">
                       <div className="small fw-bold text-muted mb-3 text-uppercase letter-spacing-1">Monthly Earnings</div>
-                      <Form.Group className="mb-2">
-                        <Form.Label className="small fw-bold opacity-75">Basic Pay</Form.Label>
-                        <Form.Control
-                          type="number"
-                          name="salary_structure.earnings.basic"
-                          value={values.salary_structure?.earnings?.basic}
-                          onChange={handleChange}
-                          isInvalid={touched.salary_structure?.earnings?.basic && !!errors.salary_structure?.earnings?.basic}
-                          size="sm"
-                        />
-                        {touched.salary_structure?.earnings?.basic && errors.salary_structure?.earnings?.basic && (
-                          <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.earnings.basic}</div>
-                        )}
-                      </Form.Group>
-                      <Form.Group className="mb-2">
-                        <Form.Label className="small fw-bold opacity-75">HRA</Form.Label>
-                        <Form.Control
-                          type="number"
-                          name="salary_structure.earnings.hra"
-                          value={values.salary_structure?.earnings?.hra}
-                          onChange={handleChange}
-                          isInvalid={touched.salary_structure?.earnings?.hra && !!errors.salary_structure?.earnings?.hra}
-                          size="sm"
-                        />
-                        {touched.salary_structure?.earnings?.hra && errors.salary_structure?.earnings?.hra && (
-                          <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.earnings.hra}</div>
-                        )}
-                      </Form.Group>
-                      <Form.Group className="mb-0">
-                        <Form.Label className="small fw-bold opacity-75">Special Allowance</Form.Label>
-                        <Form.Control
-                          type="number"
-                          name="salary_structure.earnings.special"
-                          value={values.salary_structure?.earnings?.special}
-                          onChange={handleChange}
-                          isInvalid={touched.salary_structure?.earnings?.special && !!errors.salary_structure?.earnings?.special}
-                          size="sm"
-                        />
-                        {touched.salary_structure?.earnings?.special && errors.salary_structure?.earnings?.special && (
-                          <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.earnings.special}</div>
-                        )}
-                      </Form.Group>
+                      {payrollConfig?.custom_earnings?.filter(e => e.is_active).map((earning, idx) => (
+                        <Form.Group className="mb-2" key={earning.id}>
+                          <Form.Label className="small fw-bold opacity-75">{earning.label}</Form.Label>
+                          <Form.Control
+                            type="number"
+                            name={`salary_structure.custom_earnings.${earning.id}`}
+                            value={values.salary_structure?.custom_earnings?.[earning.id] ?? 0}
+                            onChange={(e) => setFieldValue(`salary_structure.custom_earnings.${earning.id}`, Number(e.target.value))}
+                            size="sm"
+                          />
+                        </Form.Group>
+                      ))}
+                      {(!payrollConfig?.custom_earnings || payrollConfig.custom_earnings.filter(e => e.is_active).length === 0) && (
+                        <div className="text-muted small">No active earning components defined.</div>
+                      )}
                     </div>
                   </Col>
                   <Col md={6}>
@@ -1059,6 +1116,172 @@ const AddStaff = () => {
                     </div>
                   </Col>
                 </Row>
+
+                
+                <hr className="my-4 opacity-50" />
+                <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                  <CsLineIcons icon="calendar" size="18" />
+                  Weekly Off Policy
+                </h6>
+                <div className="bg-light rounded-3 p-3 shadow-sm border border-faint mb-4">
+                  <Row className="g-3">
+                    <Col md={12}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold opacity-75">Select Policy</Form.Label>
+                        <Select
+                          classNamePrefix="react-select"
+                          menuPortalTarget={document.body}
+                          styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                          name="weekly_off_policy"
+                          options={[
+                            { value: 'global', label: 'Global Company Policy (Use Settings)' },
+                            { value: 'custom', label: 'Custom Employee Policy' }
+                          ]}
+                          value={values.weekly_off_policy ? { label: values.weekly_off_policy === 'custom' ? 'Custom Employee Policy' : 'Global Company Policy (Use Settings)', value: values.weekly_off_policy } : null}
+                          onChange={(selected) => setFieldValue('weekly_off_policy', selected ? selected.value : 'global')}
+                          onBlur={() => formik.setFieldTouched('weekly_off_policy', true)}
+                        />
+                      </Form.Group>
+                    </Col>
+                    
+                    {values.weekly_off_policy === 'custom' && (
+                      <Col md={12}>
+                        <div className="d-flex justify-content-between align-items-center mb-2 mt-3">
+                            <Form.Label className="small fw-bold opacity-75 mb-0">Custom Weekly Offs</Form.Label>
+                            <Badge bg="primary" style={{ cursor: 'pointer' }} onClick={handleAddCustomWeeklyOff}>+ Add Day</Badge>
+                        </div>
+                        <div className="d-flex flex-column gap-3">
+                            {values.custom_weekly_offs && values.custom_weekly_offs.map((woff, idx) => (
+                                <div key={idx} className="p-3 border rounded-3 bg-white shadow-sm position-relative">
+                                    {values.custom_weekly_offs.length > 1 && (
+                                        <span 
+                                            className="position-absolute top-0 end-0 p-2 text-danger" 
+                                            style={{ cursor: 'pointer', zIndex: 10 }}
+                                            onClick={() => handleRemoveCustomWeeklyOff(idx)}
+                                        >
+                                            <CsLineIcons icon="bin" size="15" />
+                                        </span>
+                                    )}
+                                    <Row className="g-2">
+                                        <Col md={6}>
+                                            <Select
+                                                classNamePrefix="react-select"
+                                                menuPortalTarget={document.body}
+                                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                                options={[
+                                                    { value: 'Sunday', label: 'Sunday' },
+                                                    { value: 'Monday', label: 'Monday' },
+                                                    { value: 'Tuesday', label: 'Tuesday' },
+                                                    { value: 'Wednesday', label: 'Wednesday' },
+                                                    { value: 'Thursday', label: 'Thursday' },
+                                                    { value: 'Friday', label: 'Friday' },
+                                                    { value: 'Saturday', label: 'Saturday' }
+                                                ]}
+                                                value={woff.day ? { value: woff.day, label: woff.day } : null}
+                                                onChange={(selected) => handleUpdateCustomWeeklyOff(idx, 'day', selected.value)}
+                                            />
+                                        </Col>
+                                        <Col md={6}>
+                                            <Select
+                                                classNamePrefix="react-select"
+                                                menuPortalTarget={document.body}
+                                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                                options={[
+                                                    { value: 'all_weeks', label: 'Every Week' },
+                                                    { value: 'specific_weeks', label: 'Specific Weeks' }
+                                                ]}
+                                                value={woff.type ? { value: woff.type, label: woff.type === 'all_weeks' ? 'Every Week' : 'Specific Weeks' } : null}
+                                                onChange={(selected) => handleUpdateCustomWeeklyOff(idx, 'type', selected.value)}
+                                            />
+                                        </Col>
+                                    </Row>
+                                    
+                                    {woff.type === 'specific_weeks' && (
+                                        <div className="mt-2">
+                                            <div className="small text-muted mb-1">Select Weeks:</div>
+                                            <div className="d-flex flex-wrap gap-2">
+                                                {[1, 2, 3, 4, 5].map(w => (
+                                                    <Badge
+                                                        key={w}
+                                                        bg={(woff.weeks || []).includes(w) ? 'primary' : 'light'}
+                                                        text={(woff.weeks || []).includes(w) ? 'white' : 'dark'}
+                                                        className="border cursor-pointer px-2 py-1"
+                                                        onClick={() => toggleSpecificCustomWeek(idx, w)}
+                                                    >
+                                                        {w}{w === 1 ? 'st' : w === 2 ? 'nd' : w === 3 ? 'rd' : 'th'}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                      </Col>
+                    )}
+                  </Row>
+                </div>
+
+                <hr className="my-4 opacity-50" />
+                <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                  <CsLineIcons icon="trend-up" size="18" />
+                  Upcoming Increment Plan
+                </h6>
+                <div className="bg-light rounded-3 p-3 shadow-sm border border-faint">
+                  <Row className="g-3 align-items-end">
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold opacity-75">Scheduled Date</Form.Label>
+                        <Form.Control
+                          type="date"
+                          name="increment_plan.scheduled_date"
+                          value={values.increment_plan?.scheduled_date}
+                          onChange={handleChange}
+                          size="sm"
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold opacity-75">Increment Type</Form.Label>
+                        <Select
+                          classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                          name="increment_plan.type"
+                          options={[
+                            { value: 'percentage', label: 'Percentage (%)' },
+                            { value: 'flat', label: 'Flat Amount (₹)' }
+                          ]}
+                          value={values.increment_plan?.type ? { label: values.increment_plan.type === 'percentage' ? 'Percentage (%)' : 'Flat Amount (₹)', value: values.increment_plan.type } : null}
+                          onChange={(selected) => setFieldValue('increment_plan.type', selected ? selected.value : 'percentage')}
+                          onBlur={() => formik.setFieldTouched('increment_plan.type', true)}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold opacity-75">Increment Value</Form.Label>
+                        <Form.Control
+                          type="number"
+                          name="increment_plan.value"
+                          value={values.increment_plan?.value}
+                          onChange={handleChange}
+                          placeholder={values.increment_plan?.type === 'percentage' ? "e.g. 10" : "e.g. 5000"}
+                          size="sm"
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  {values.increment_plan?.scheduled_date && values.increment_plan?.value > 0 && (
+                    <div className="mt-3 p-2 bg-white border rounded small text-muted d-flex align-items-center gap-2">
+                      <CsLineIcons icon="info-hexagon" size="14" className="text-info" />
+                      <span>
+                        An increment of <strong>{values.increment_plan.type === 'percentage' ? `${values.increment_plan.value}%` : `₹${values.increment_plan.value}`}</strong> is scheduled for <strong>{new Date(values.increment_plan.scheduled_date).toLocaleDateString()}</strong>.
+                      </span>
+                    </div>
+                  )}
+                </div>
               </Card.Body>
             </Card>
 
@@ -1089,10 +1312,7 @@ const AddStaff = () => {
                       id="photo-upload"
                       className="d-none"
                       accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) handleFileChange('photo', file, setPhotoPreview);
-                      }}
+                      onChange={(e) => handleFileChange('photo', e.target.files[0], setPhotoPreview, 1)}
                     />
                     <Button
                       as="label"
@@ -1135,18 +1355,30 @@ const AddStaff = () => {
 
                 <Form.Group className="mb-3">
                   <Form.Label>Document Type</Form.Label>
-                  <Form.Select
-                    name="document_type"
-                    value={values.document_type}
-                    onChange={handleChange}
-                    isInvalid={touched.document_type && errors.document_type}
-                    disabled={loading.submitting}
-                  >
-                    <option value="">Select ID Type</option>
-                    <option value="National Identity Card">National Identity Card (Aadhar)</option>
-                    <option value="Pan Card">PAN Card</option>
-                    <option value="Voter Card">Voter ID</option>
-                  </Form.Select>
+                  <Select
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                        name="document_type"
+                        options={[
+                          { value: 'Aadhar Card', label: 'Aadhar Card' },
+                          { value: 'Pan Card', label: 'Pan Card' },
+                          { value: 'National Identity Card', label: 'National Identity Card' },
+                          { value: 'Driving License', label: 'Driving License' },
+                          { value: 'Voter ID Card', label: 'Voter ID Card' },
+                          { value: 'Passport', label: 'Passport' }
+                        ]}
+                        value={values.document_type ? { label: values.document_type, value: values.document_type } : null}
+                        onChange={(selected) => {
+                          setFieldValue('document_type', selected ? selected.value : '');
+                          if (selected && selected.value !== 'National Identity Card') {
+                            setFieldValue('back_image', '');
+                          }
+                        }}
+                        onBlur={() => formik.setFieldTouched('document_type', true)}
+                        isDisabled={loading.submitting}
+                        placeholder="Select Document"
+                      />
                   <Form.Control.Feedback type="invalid">{errors.document_type}</Form.Control.Feedback>
                 </Form.Group>
 
@@ -1176,13 +1408,13 @@ const AddStaff = () => {
                       </div>
                     )}
                   </div>
-                  <Form.Control
-                    type="file"
-                    id="front-image-upload"
-                    className="d-none"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange('front_image', e.target.files[0], setFrontImagePreview)}
-                  />{' '}
+                    <Form.Control
+                      type="file"
+                      id="front-image-upload"
+                      className="d-none"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange('front_image', e.target.files[0], setFrontImagePreview, 1.58)}
+                    />{' '}
                   <div className="d-flex flex-column gap-3 align-items-start w-100">
                     <Button
                       as="label"
@@ -1237,7 +1469,7 @@ const AddStaff = () => {
                       id="back-image-upload"
                       className="d-none"
                       accept="image/*"
-                      onChange={(e) => handleFileChange('back_image', e.target.files[0], setBackImagePreview)}
+                      onChange={(e) => handleFileChange('back_image', e.target.files[0], setBackImagePreview, 1.58)}
                     />
                     <div className="d-flex flex-column gap-3 align-items-start w-100">
                       <Button
@@ -1381,6 +1613,14 @@ const AddStaff = () => {
             </Button>
           </Modal.Footer>
         </Modal>
+
+        <ImageCropperModal
+          show={cropperState.show}
+          onHide={() => setCropperState({ ...cropperState, show: false })}
+          imageSrc={cropperState.imageSrc}
+          onCropComplete={handleCropComplete}
+          aspect={cropperState.aspect}
+        />
     </div>
   </div>
 );

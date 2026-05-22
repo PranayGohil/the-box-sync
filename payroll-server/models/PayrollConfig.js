@@ -9,9 +9,22 @@ const payrollConfigSchema = new Schema(
       unique: true, // One global config per tenant/user
     },
     // ── Active Earning Modules ──────────────────────────────────────────
-    active_earnings: {
-      type: [String],
-      default: ["basic", "hra", "conveyance", "medical", "special", "other"],
+    custom_earnings: {
+      type: [
+        {
+          id: { type: String, required: true },
+          label: { type: String, required: true },
+          is_active: { type: Boolean, default: true }
+        }
+      ],
+      default: [
+        { id: "basic", label: "Basic Salary", is_active: true },
+        { id: "hra", label: "HRA", is_active: true },
+        { id: "conveyance", label: "Conveyance", is_active: true },
+        { id: "medical", label: "Medical Allowance", is_active: false },
+        { id: "special", label: "Special Allowance", is_active: false },
+        { id: "other", label: "Other Allowance", is_active: false }
+      ]
     },
     
     // ── Statutory Deductions (Fully Configurable) ──────────────────────
@@ -46,9 +59,21 @@ const payrollConfigSchema = new Schema(
     // ── Organizational Rules ────────────────────────────────────────────
     org_rules: {
       leave_year_start: { type: String, enum: ["january", "april"], default: "january" },
-      weekly_off_days: { type: [Number], default: [0] }, // 0=Sunday, 1=Monday... [0, 6] = Sun/Sat
+      weekly_off_days: { type: [Number], default: [0] }, // Legacy
       half_day_hours: { type: Number, default: 4 },
       full_day_hours: { type: Number, default: 8 }
+    },
+
+    // ── Global Weekly Off Config ─────────────────────────────────────────
+    global_weekly_offs: {
+      type: [
+        {
+          day: { type: String, enum: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] },
+          type: { type: String, enum: ['all_weeks', 'specific_weeks'], default: 'all_weeks' },
+          weeks: [{ type: Number }]
+        }
+      ],
+      default: [{ day: 'Sunday', type: 'all_weeks', weeks: [] }]
     }
   },
   {

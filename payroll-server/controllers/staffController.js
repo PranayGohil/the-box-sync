@@ -108,6 +108,14 @@ const addStaff = async (req, res) => {
       }
     }
 
+    if (staffData.increment_plan && typeof staffData.increment_plan === "string") {
+      try {
+        staffData.increment_plan = JSON.parse(staffData.increment_plan);
+      } catch (e) {
+        console.error("Invalid increment_plan JSON");
+      }
+    }
+
     if (req.files?.photo?.[0]) {
       staffData.photo = `/staff/profile/${req.files.photo[0].filename}`;
     }
@@ -178,6 +186,14 @@ const updateStaff = async (req, res) => {
         staffData.salary_structure = JSON.parse(staffData.salary_structure);
       } catch (e) {
         console.error("Invalid salary_structure JSON");
+      }
+    }
+
+    if (staffData.increment_plan && typeof staffData.increment_plan === "string") {
+      try {
+        staffData.increment_plan = JSON.parse(staffData.increment_plan);
+      } catch (e) {
+        console.error("Invalid increment_plan JSON");
       }
     }
 
