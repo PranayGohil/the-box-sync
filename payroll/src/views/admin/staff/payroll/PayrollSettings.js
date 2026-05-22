@@ -8,15 +8,6 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import Select from 'react-select';
 import { getPayrollConfig, updatePayrollConfig } from 'api/payrollConfig';
 
-const EARNING_OPTIONS = [
-    { id: 'basic', label: 'Basic Salary' },
-    { id: 'hra', label: 'HRA' },
-    { id: 'conveyance', label: 'Conveyance' },
-    { id: 'medical', label: 'Medical Allowance' },
-    { id: 'special', label: 'Special Allowance' },
-    { id: 'other', label: 'Other Allowance' }
-];
-
 const WEEK_DAYS = [
     { value: 0, label: 'Sunday' },
     { value: 1, label: 'Monday' },
@@ -184,8 +175,11 @@ const PayrollSettings = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
+    const [newEarningLabel, setNewEarningLabel] = useState('');
+
     const [config, setConfig] = useState({
-        active_earnings: ['basic', 'hra', 'conveyance'],
+        custom_earnings: [],
+        global_weekly_offs: [{ day: 'Sunday', type: 'all_weeks', weeks: [] }],
         statutory_config: {
             pf: { is_mandatory: false, employee_percentage: 12, employer_percentage: 12, salary_limit: 15000, auto_calculate: true },
             esi: { is_mandatory: false, employee_percentage: 0.75, employer_percentage: 3.25, gross_limit: 21000, auto_calculate: true },
@@ -206,7 +200,8 @@ const PayrollSettings = () => {
             if (res.success && res.data) {
                 // Merge with defaults to prevent undefined errors
                 setConfig({
-                    active_earnings: res.data.active_earnings || ['basic', 'hra', 'conveyance'],
+                    custom_earnings: res.data.custom_earnings || [],
+                    global_weekly_offs: res.data.global_weekly_offs && res.data.global_weekly_offs.length > 0 ? res.data.global_weekly_offs : [{ day: 'Sunday', type: 'all_weeks', weeks: [] }],
                     statutory_config: {
                         pf: { ...config.statutory_config.pf, ...(res.data.statutory_config?.pf || {}) },
                         esi: { ...config.statutory_config.esi, ...(res.data.statutory_config?.esi || {}) },
@@ -240,14 +235,65 @@ const PayrollSettings = () => {
         }
     };
 
+    
+    const handleAddGlobalWeeklyOff = () => {
+        setConfig(prev => ({
+            ...prev,
+            global_weekly_offs: [...prev.global_weekly_offs, { day: 'Saturday', type: 'all_weeks', weeks: [] }]
+        }));
+    };
+
+    const handleRemoveGlobalWeeklyOff = (index) => {
+        const current = [...config.global_weekly_offs];
+        current.splice(index, 1);
+        setConfig(prev => ({ ...prev, global_weekly_offs: current }));
+    };
+
+    const handleUpdateGlobalWeeklyOff = (index, field, value) => {
+        const current = [...config.global_weekly_offs];
+        current[index][field] = value;
+        setConfig(prev => ({ ...prev, global_weekly_offs: current }));
+    };
+
+    const toggleSpecificWeek = (index, weekNum) => {
+        const current = [...config.global_weekly_offs];
+        const weeks = [...current[index].weeks];
+        if (weeks.includes(weekNum)) {
+            current[index].weeks = weeks.filter(w => w !== weekNum);
+        } else {
+            current[index].weeks.push(weekNum);
+        }
+        setConfig(prev => ({ ...prev, global_weekly_offs: current }));
+    };
+
     // ── Update Handlers ─────────────────────────────────────────────────────────
 
-    const toggleEarning = (id) => {
-        const current = [...config.active_earnings];
-        const idx = current.indexOf(id);
-        if (idx >= 0) current.splice(idx, 1);
-        else current.push(id);
-        setConfig({ ...config, active_earnings: current });
+    const toggleEarning = (idx) => {
+        const current = [...config.custom_earnings];
+        current[idx].is_active = !current[idx].is_active;
+        setConfig({ ...config, custom_earnings: current });
+    };
+
+    const addCustomEarning = () => {
+        if (!newEarningLabel.trim()) return;
+        const newId = newEarningLabel.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        const current = [...config.custom_earnings];
+        
+        // Prevent duplicate IDs
+        if (current.some(e => e.id === newId)) {
+            toast.error("An earning component with this name already exists");
+            return;
+        }
+
+        current.push({ id: newId, label: newEarningLabel.trim(), is_active: true });
+        setConfig({ ...config, custom_earnings: current });
+        setNewEarningLabel('');
+    };
+
+    const deleteCustomEarning = (idx) => {
+        const current = [...config.custom_earnings];
+        current.splice(idx, 1);
+        setConfig({ ...config, custom_earnings: current });
     };
 
     const toggleWeekDay = (dayValue) => {
@@ -575,21 +621,45 @@ const PayrollSettings = () => {
                 <Col xl="6">
                     <Card className="h-100 glass-card">
                         <Card.Body className="p-4">
-                            <h5 className="fw-bold mb-4 text-primary">Active Earnings Components</h5>
+                            <div className="d-flex justify-content-between align-items-center mb-4">
+                                <h5 className="fw-bold mb-0 text-primary">Active Earnings Components</h5>
+                            </div>
                             <p className="text-muted mb-4 small fw-medium">Select which earning components are actively used. Unchecking these will hide them from Staff creation forms.</p>
-                            <Row className="g-4">
-                                {EARNING_OPTIONS.map((opt) => (
-                                    <Col md="6" key={opt.id}>
+                            
+                            <Form.Group className="mb-4 d-flex gap-2">
+                                <Form.Control 
+                                    type="text" 
+                                    placeholder="Enter custom earning name (e.g. Bonus)" 
+                                    className="form-control-premium shadow-sm"
+                                    value={newEarningLabel}
+                                    onChange={(e) => setNewEarningLabel(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && addCustomEarning()}
+                                />
+                                <Button variant="none" className="custom-btn-primary-outline text-nowrap rounded" onClick={addCustomEarning}>
+                                    <CsLineIcons icon="plus" size="18" className="me-1" /> Add
+                                </Button>
+                            </Form.Group>
+
+                            <div className="d-flex flex-column gap-3" style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                                {config.custom_earnings.map((opt, idx) => (
+                                    <div key={opt.id} className="d-flex justify-content-between align-items-center p-3 border rounded bg-light">
                                         <Form.Check
                                             type="switch"
                                             id={`switch-${opt.id}`}
                                             label={<span className="fw-bold ms-1 text-dark">{opt.label}</span>}
-                                            checked={config.active_earnings.includes(opt.id)}
-                                            onChange={() => toggleEarning(opt.id)}
+                                            checked={opt.is_active}
+                                            onChange={() => toggleEarning(idx)}
+                                            className="mb-0"
                                         />
-                                    </Col>
+                                        <Button variant="none" size="sm" className="text-danger p-0 m-0 hover-scale" onClick={() => deleteCustomEarning(idx)}>
+                                            <CsLineIcons icon="bin" size="18" />
+                                        </Button>
+                                    </div>
                                 ))}
-                            </Row>
+                                {config.custom_earnings.length === 0 && (
+                                    <div className="text-center text-muted small p-3">No earning components defined</div>
+                                )}
+                            </div>
                         </Card.Body>
                     </Card>
                 </Col>

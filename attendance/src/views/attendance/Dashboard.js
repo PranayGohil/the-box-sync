@@ -315,13 +315,13 @@ export default function Dashboard() {
   // Load user data
   const fetchUserData = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
+      const response = await axios.get(`${process.env.REACT_APP_API}/kiosk/me`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      if (response.data === 'Null') history.push('/login');
-      else setUserData(response.data);
+      if (response.data) setUserData(response.data);
+      else history.push('/login');
     } catch (err) {
-      console.log('Error fetching user data:', err);
+      console.log('Error fetching kiosk user data:', err);
     }
   };
 

@@ -47,14 +47,40 @@ const addStaff = new Schema({
   salary: {
     type: Number,
   },
+  salary_calculation_base: {
+    type: String,
+    enum: ['working_days', 'working_hours'],
+    default: 'working_days'
+  },
+  weekly_off_policy: {
+    type: String,
+    enum: ['global', 'custom'],
+    default: 'global'
+  },
+  custom_weekly_offs: {
+    type: [
+      {
+        day: { type: String },
+        type: { type: String, enum: ['all_weeks', 'specific_weeks'], default: 'all_weeks' },
+        weeks: [{ type: Number }]
+      }
+    ],
+    default: []
+  },
+  leave_policy_configuration: {
+    type: [
+      {
+        leave_type_id: { type: String },
+        is_active: { type: Boolean, default: true }
+      }
+    ],
+    default: []
+  },
   salary_structure: {
-    earnings: {
-      basic: { type: Number, default: 0 },
-      hra: { type: Number, default: 0 },
-      conveyance: { type: Number, default: 0 },
-      medical: { type: Number, default: 0 },
-      special: { type: Number, default: 0 },
-      other: { type: Number, default: 0 }
+    custom_earnings: {
+      type: Map,
+      of: Number,
+      default: {}
     },
     deductions: {
       pf_percentage: { type: Number, default: 12 },
@@ -65,6 +91,12 @@ const addStaff = new Schema({
   overtime_rate: {
     type: Number,
     default: 0,
+  },
+  increment_plan: {
+    type: { type: String, enum: ['percentage', 'flat'], default: 'percentage' },
+    value: { type: Number, default: 0 },
+    scheduled_date: { type: String, default: "" },
+    is_applied: { type: Boolean, default: false }
   },
   photo: {
     type: String,
