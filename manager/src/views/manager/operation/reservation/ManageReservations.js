@@ -3,12 +3,12 @@ import {
   Row, Col, Card, Button, Badge, Alert, Form,
   Modal, Table, Spinner, Nav, Tab, OverlayTrigger, Tooltip,
 } from 'react-bootstrap';
-import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
+import Select from 'react-select';
 import SlotConfigPanel from './SlotConfigPanel';
 import ApproveModal from './ApproveModal';
 import RejectModal from './RejectModal';
@@ -386,86 +386,153 @@ const TimelineGrid = ({ date }) => {
       {periodSlots.length === 0 ? (
         <Alert variant="light" className="border rounded-3 fw-bold text-center py-4">No slots in this period for the selected date.</Alert>
       ) : (
-        <div className="timeline-grid-wrapper" style={{ overflowX: 'auto', borderRadius: '1rem', border: '1px solid #f1f5f9' }}>
-          <Table bordered size="sm" className="mb-0" style={{ minWidth: Math.max(600, periodSlots.length * 88 + 120), borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th
-                  colSpan={periodSlots.length + 1}
-                  style={{ background: currentGroup.color || '#23b3f4', color: '#fff', fontSize: 13, fontWeight: 700, padding: '12px 16px', border: 'none' }}
-                >
-                  {currentGroup.name} &nbsp;·&nbsp; {periodSlots[0]?.slot_start || '–'} – {periodSlots[periodSlots.length - 1]?.slot_end || '–'}
-                </th>
-              </tr>
-              <tr className="table-light" style={{ background: '#f8fafc' }}>
-                <th style={{ minWidth: 110, position: 'sticky', left: 0, background: '#f8fafc', zIndex: 1, padding: '10px 14px', border: '1px solid #eef2f6', fontWeight: 700, color: '#475569', fontSize: 11, textTransform: 'uppercase' }}>Table</th>
-                {periodSlots.map((s) => (
-                  <th key={s.slot_start} className="text-center" style={{ minWidth: 80, fontSize: 11, padding: '10px 14px', border: '1px solid #eef2f6', fontWeight: 700, color: '#475569' }}>
-                    <div>{s.slot_start}</div>
-                    <div className="text-muted" style={{ fontSize: 9 }}>–{s.slot_end}</div>
+        <>
+          <div className="timeline-grid-wrapper d-none d-lg-block" style={{ overflowX: 'auto', borderRadius: '1rem', border: '1px solid #f1f5f9' }}>
+            <Table bordered size="sm" className="mb-0" style={{ minWidth: Math.max(600, periodSlots.length * 88 + 120), borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th
+                    colSpan={periodSlots.length + 1}
+                    style={{ background: currentGroup.color || '#23b3f4', color: '#fff', fontSize: 13, fontWeight: 700, padding: '12px 16px', border: 'none' }}
+                  >
+                    {currentGroup.name} &nbsp;·&nbsp; {periodSlots[0]?.slot_start || '–'} – {periodSlots[periodSlots.length - 1]?.slot_end || '–'}
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {(areas || []).map((area) => (
-                <React.Fragment key={area.area_id}>
-                  <tr>
-                    <td colSpan={periodSlots.length + 1} className="bg-light py-2 px-3" style={{ border: '1px solid #eef2f6' }}>
-                      <small className="text-uppercase text-muted fw-bold" style={{ letterSpacing: 1, fontSize: 10 }}>
-                        {area.area_name}
-                      </small>
-                    </td>
-                  </tr>
-                  {(area.tables || []).map((tbl) => (
-                    <tr key={tbl.table_id}>
-                      <td style={{ position: 'sticky', left: 0, background: '#fff', zIndex: 1, fontSize: 13, padding: '10px 14px', border: '1px solid #eef2f6' }}>
-                        <div className="fw-bold text-dark">T{tbl.table_no}</div>
-                        <small className="text-muted fw-medium">{tbl.max_person}p</small>
-                      </td>
-                      {periodSlots.map((s) => {
-                        const cellKey = `${currentGroup.group_id}::${s.slot_start}`;
-                        const booking = tbl.slots?.[cellKey];
-                        return (
-                          <td key={s.slot_start} className="p-1 text-center" style={{ verticalAlign: 'middle', border: '1px solid #eef2f6' }}>
-                            {booking ? (
-                              <OverlayTrigger
-                                placement="top"
-                                overlay={
-                                  <Tooltip>
-                                    {booking.customer_name} · {booking.num_persons}p
-                                    <br />{STATUS_META[booking.status]?.label}
-                                    {booking.group_name && <><br />{booking.group_name}</>}
-                                  </Tooltip>
-                                }
-                              >
-                                <div
-                                  className="rounded text-white d-flex align-items-center justify-content-center fw-bold"
-                                  style={{
-                                    background: STATUS_COLORS[booking.status] || '#6c757d',
-                                    height: 36, fontSize: 10, cursor: 'default',
-                                    overflow: 'hidden', padding: '0 4px',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                                  }}
-                                >
-                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {booking.customer_name.split(' ')[0]}
-                                  </span>
-                                </div>
-                              </OverlayTrigger>
-                            ) : (
-                              <div style={{ height: 36 }} />
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
+                </tr>
+                <tr className="table-light" style={{ background: '#f8fafc' }}>
+                  <th style={{ minWidth: 110, position: 'sticky', left: 0, background: '#f8fafc', zIndex: 1, padding: '10px 14px', border: '1px solid #eef2f6', fontWeight: 700, color: '#475569', fontSize: 11, textTransform: 'uppercase' }}>Table</th>
+                  {periodSlots.map((s) => (
+                    <th key={s.slot_start} className="text-center" style={{ minWidth: 80, fontSize: 11, padding: '10px 14px', border: '1px solid #eef2f6', fontWeight: 700, color: '#475569' }}>
+                      <div>{s.slot_start}</div>
+                      <div className="text-muted" style={{ fontSize: 9 }}>–{s.slot_end}</div>
+                    </th>
                   ))}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </Table>
-        </div>
+                </tr>
+              </thead>
+              <tbody>
+                {(areas || []).map((area) => (
+                  <React.Fragment key={area.area_id}>
+                    <tr>
+                      <td colSpan={periodSlots.length + 1} className="bg-light py-2 px-3" style={{ border: '1px solid #eef2f6' }}>
+                        <small className="text-uppercase text-muted fw-bold" style={{ letterSpacing: 1, fontSize: 10 }}>
+                          {area.area_name}
+                        </small>
+                      </td>
+                    </tr>
+                    {(area.tables || []).map((tbl) => (
+                      <tr key={tbl.table_id}>
+                        <td style={{ position: 'sticky', left: 0, background: '#fff', zIndex: 1, fontSize: 13, padding: '10px 14px', border: '1px solid #eef2f6' }}>
+                          <div className="fw-bold text-dark">T{tbl.table_no}</div>
+                          <small className="text-muted fw-medium">{tbl.max_person}p</small>
+                        </td>
+                        {periodSlots.map((s) => {
+                          const cellKey = `${currentGroup.group_id}::${s.slot_start}`;
+                          const booking = tbl.slots?.[cellKey];
+                          return (
+                            <td key={s.slot_start} className="p-1 text-center" style={{ verticalAlign: 'middle', border: '1px solid #eef2f6' }}>
+                              {booking ? (
+                                <OverlayTrigger
+                                  placement="top"
+                                  overlay={
+                                    <Tooltip>
+                                      {booking.customer_name} · {booking.num_persons}p
+                                      <br />{STATUS_META[booking.status]?.label}
+                                      {booking.group_name && <><br />{booking.group_name}</>}
+                                    </Tooltip>
+                                  }
+                                >
+                                  <div
+                                    className="rounded text-white d-flex align-items-center justify-content-center fw-bold"
+                                    style={{
+                                      background: STATUS_COLORS[booking.status] || '#6c757d',
+                                      height: 36, fontSize: 10, cursor: 'default',
+                                      overflow: 'hidden', padding: '0 4px',
+                                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                    }}
+                                  >
+                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {booking.customer_name.split(' ')[0]}
+                                    </span>
+                                  </div>
+                                </OverlayTrigger>
+                              ) : (
+                                <div style={{ height: 36 }} />
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+
+          <div className="d-lg-none mt-3">
+            {(areas || []).map((area) => (
+              <div key={area.area_id} className="mb-4">
+                <div className="text-uppercase text-muted fw-bold mb-3 px-1" style={{ letterSpacing: 1, fontSize: '0.8rem' }}>
+                  {area.area_name}
+                </div>
+                <Row className="g-3">
+                  {(area.tables || []).map((tbl) => {
+                    const tableBookings = periodSlots.map(s => {
+                      const cellKey = `${currentGroup.group_id}::${s.slot_start}`;
+                      return { slot: s, booking: tbl.slots?.[cellKey] };
+                    }).filter(x => x.booking);
+
+                    return (
+                      <Col xs={12} key={tbl.table_id}>
+                        <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '1rem', background: '#f8fafc' }}>
+                          <Card.Body className="p-3">
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                              <div className="fw-bold text-dark fs-6 d-flex align-items-center gap-2">
+                                <CsLineIcons icon="grid-1" size="18" style={{ color: '#23b3f4' }} />
+                                Table {tbl.table_no}
+                              </div>
+                              <Badge bg="light" text="dark" className="border fw-bold px-2 py-1" style={{ borderRadius: '50px' }}>
+                                {tbl.max_person} Guests Max
+                              </Badge>
+                            </div>
+                            
+                            {tableBookings.length === 0 ? (
+                              <div className="text-muted small fw-medium bg-white p-3 rounded-3 text-center border" style={{ borderStyle: 'dashed !important' }}>
+                                No bookings for this period
+                              </div>
+                            ) : (
+                              <div className="d-flex flex-column gap-2">
+                                {tableBookings.map(({ slot, booking }, idx) => (
+                                  <div key={`${slot.slot_start}-${idx}`} className="bg-white p-2 rounded-3 border d-flex justify-content-between align-items-center shadow-sm">
+                                    <div>
+                                      <div className="fw-bold text-dark mb-1" style={{ fontSize: '0.9rem' }}>{booking.customer_name}</div>
+                                      <div className="d-flex align-items-center gap-2">
+                                        <Badge bg="light" text="dark" className="fw-bold" style={{ fontSize: '0.7rem' }}>
+                                          {slot.slot_start} - {slot.slot_end}
+                                        </Badge>
+                                        <span className="text-muted small d-flex align-items-center gap-1">
+                                          <CsLineIcons icon="user" size="12" /> {booking.num_persons}p
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="text-end">
+                                      <Badge bg={STATUS_META[booking.status]?.variant || 'secondary'} style={{ borderRadius: '50px', padding: '4px 8px', fontSize: '0.7rem' }}>
+                                        {STATUS_META[booking.status]?.label || booking.status}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    );
+                  })}
+                </Row>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Legend */}
@@ -484,7 +551,6 @@ const TimelineGrid = ({ date }) => {
 
 // ─── Main Dashboard ────────────────────────────────────────────────────────
 const ManageReservations = () => {
-  const history = useHistory();
   const title = 'Manage Reservations';
   const breadcrumbs = [
     { to: '', text: 'Home' },
@@ -508,6 +574,18 @@ const ManageReservations = () => {
   const [activeTab, setActiveTab] = useState('list');
 
   const STATUS_FILTERS = ['pending', 'approved', 'reserved', 'seated', 'completed', 'rejected', 'cancelled', 'no_show', 'all'];
+
+  const selectStyles = {
+    control: (base, state) => ({
+      ...base,
+      borderRadius: '12px',
+      padding: '2px',
+      border: state.isFocused ? '1px solid #23b3f4' : '1px solid #e5e7eb',
+      boxShadow: state.isFocused ? '0 0 0 4px rgba(35, 179, 244, 0.1)' : 'none',
+      backgroundColor: '#fff',
+      '&:hover': { border: '1px solid #23b3f4' },
+    }),
+  };
 
   const fetchReservations = useCallback(async (page = 1) => {
     setLoading(true);
@@ -654,16 +732,10 @@ const ManageReservations = () => {
             </Col>
             <Col xs="12" md="4" className="d-flex justify-content-md-end align-items-center gap-2 mt-3 mt-md-0">
               <Button 
-                className='reservations-modal-btn-outline px-4 py-2 d-inline-flex align-items-center gap-2' 
-                onClick={() => fetchReservations(pagination.page)}
+                className={`reservations-modal-btn-${activeTab === 'config' ? 'solid' : 'outline'} px-4 py-2 d-inline-flex align-items-center gap-2`}
+                onClick={() => setActiveTab('config')}
               >
-                <CsLineIcons icon="refresh-horizontal" size="18" /> Refresh
-              </Button>
-              <Button 
-                className='reservations-modal-btn-outline px-4 py-2 d-inline-flex align-items-center gap-2' 
-                onClick={() => history.push('/operations/reservation-form')}
-              >
-                <CsLineIcons icon="plus" size="18" /> New Reservation
+                <CsLineIcons icon="settings-1" size="18" /> Slot Settings
               </Button>
             </Col>
           </Row>
@@ -701,7 +773,7 @@ const ManageReservations = () => {
             <Card className="reservations-stat-card border-0 shadow-sm rounded-4 p-3 bg-white" style={{ borderLeft: '4px solid #0d6efd' }}>
               <Card.Body className="p-0 d-flex align-items-center gap-3">
                 <div className="stat-icon-wrapper d-flex align-items-center justify-content-center rounded-circle" style={{ width: 48, height: 48, background: 'rgba(13, 110, 253, 0.1)' }}>
-                  <CsLineIcons icon="user-check" size="20" style={{ stroke: '#0d6efd' }} />
+                  <CsLineIcons icon="user" size="20" style={{ color: '#0d6efd' }} />
                 </div>
                 <div>
                   <div className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em', fontSize: '10px' }}>Seated Guests</div>
@@ -714,7 +786,7 @@ const ManageReservations = () => {
             <Card className="reservations-stat-card border-0 shadow-sm rounded-4 p-3 bg-white" style={{ borderLeft: '4px solid #23b3f4' }}>
               <Card.Body className="p-0 d-flex align-items-center gap-3">
                 <div className="stat-icon-wrapper d-flex align-items-center justify-content-center rounded-circle" style={{ width: 48, height: 48, background: 'rgba(35, 179, 244, 0.1)' }}>
-                  <CsLineIcons icon="bookmark" size="20" style={{ stroke: '#23b3f4' }} />
+                  <CsLineIcons icon="calendar" size="20" style={{ color: '#23b3f4' }} />
                 </div>
                 <div>
                   <div className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em', fontSize: '10px' }}>Total Active</div>
@@ -725,7 +797,7 @@ const ManageReservations = () => {
           </Col>
         </Row>
 
-        <Tab.Container defaultActiveKey="list" onSelect={(k) => setActiveTab(k)}>
+        <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
           <Nav variant="tabs" className="reservations-tabs mb-4">
             <Nav.Item>
               <Nav.Link eventKey="list">
@@ -735,11 +807,6 @@ const ManageReservations = () => {
             <Nav.Item>
               <Nav.Link eventKey="timeline">
                 <CsLineIcons icon="grid-1" size="18" /> Timeline Grid
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link eventKey="config">
-                <CsLineIcons icon="settings-1" size="18" /> Slot Settings
               </Nav.Link>
             </Nav.Item>
           </Nav>
@@ -754,19 +821,19 @@ const ManageReservations = () => {
                   <Row className="g-4 align-items-end">
                     <Col xs={12} md={5} lg={6}>
                       <span className="small fw-bold text-muted text-uppercase mb-2 d-block" style={{ letterSpacing: '0.05em' }}>Status Filter</span>
-                      <Form.Select 
-                        value={statusFilter} 
-                        onChange={(e) => setStatusFilter(e.target.value)} 
-                        className="reservations-pill-input shadow-sm bg-white w-100"
-                        style={{ height: '44px' }}
-                      >
-                        <option value="all">All</option>
-                        {Object.entries(STATUS_META).map(([key, meta]) => (
-                          <option key={key} value={key}>
-                            {meta.label} {key === 'pending' && counts.pending > 0 ? `(${counts.pending})` : ''}
-                          </option>
-                        ))}
-                      </Form.Select>
+                      <Select
+                        value={{
+                          label: statusFilter === 'all' ? 'All' : STATUS_META[statusFilter]?.label || statusFilter,
+                          value: statusFilter,
+                        }}
+                        onChange={(selected) => setStatusFilter(selected.value)}
+                        options={STATUS_FILTERS.map((s) => ({
+                          label: `${s === 'all' ? 'All' : STATUS_META[s]?.label || s} ${s === 'pending' && counts.pending > 0 ? `(${counts.pending})` : ''}`,
+                          value: s,
+                        }))}
+                        classNamePrefix="react-select"
+                        styles={selectStyles}
+                      />
                     </Col>
                     
                     <Col xs={12} sm={8} md={4} lg={4}>
@@ -811,20 +878,91 @@ const ManageReservations = () => {
                     </Card.Body>
                   </Card>
                 ) : (
-                  <div className="table-responsive">
-                    <Table hover className="reservations-table mb-0">
-                      <thead>
-                        <tr>
-                          <th>Customer</th>
-                          <th>Date</th>
-                          <th>Time Slot</th>
-                          <th>Guests</th>
-                          <th>Tables</th>
-                          <th>Status</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                  <>
+                    <div className="table-responsive d-none d-lg-block">
+                      <Table hover className="reservations-table mb-0">
+                        <thead>
+                          <tr>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Time Slot</th>
+                            <th>Guests</th>
+                            <th>Tables</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(() => {
+                            const statusOrder = {
+                              pending: 1,      // Requests
+                              seated: 2,       // Seated
+                              approved: 3,     // Approved / Reserved
+                              reserved: 4,
+                              completed: 5,    // Completed
+                              rejected: 6,     // Cancelled / Rejected / No-Show
+                              cancelled: 7,
+                              no_show: 8
+                            };
+                            const sorted = [...reservations].sort((a, b) => {
+                              const orderA = statusOrder[a.status] || 99;
+                              const orderB = statusOrder[b.status] || 99;
+                              return orderA - orderB;
+                            });
+                            return sorted.map((r) => (
+                              <tr key={r._id} className="reservations-row-card">
+                                <td>
+                                  <div className="fw-bold text-dark">{r.customer_name}</div>
+                                  <small className="text-muted fw-medium">{r.customer_phone}</small>
+                                </td>
+                                <td><small className="fw-bold text-alternate">{fmtDate(r.reservation_date)}</small></td>
+                                <td>
+                                  {r.group_name && (
+                                    <Badge bg="light" text="dark" className="border mb-2 d-inline-flex align-items-center gap-1 fw-bold text-secondary px-2 py-1" style={{ fontSize: 10, borderRadius: '50px' }}>
+                                      {r.group_name}
+                                    </Badge>
+                                  )}
+                                  <div>
+                                    <Badge bg="light" text="dark" className="border fw-bold text-alternate px-2 py-1" style={{ borderRadius: '50px' }}>
+                                      <CsLineIcons icon="clock" size={11} className="me-1" style={{ stroke: '#23b3f4' }} />
+                                      {r.slot_start} – {r.slot_end}
+                                    </Badge>
+                                  </div>
+                                  <div style={{ fontSize: 10 }} className="text-muted mt-1 fw-medium">{r.slots?.length} slot{r.slots?.length > 1 ? 's' : ''}</div>
+                                </td>
+                                <td>
+                                  <div className="d-flex align-items-center gap-1 fw-bold text-dark">
+                                    <CsLineIcons icon="user" size={14} style={{ color: '#23b3f4' }} />
+                                    {r.num_persons}
+                                  </div>
+                                </td>
+                                <td>
+                                  {r.assigned_tables?.length ? (
+                                    <div className="d-flex flex-wrap gap-1">
+                                      {r.assigned_tables.map((t) => (
+                                        <Badge key={t.table_id} bg="light" text="dark" className="border fw-bold text-dark px-2 py-1" style={{ borderRadius: '50px' }}>
+                                          {t.area_name} · T{t.table_no}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  ) : <span className="text-muted small fw-medium">—</span>}
+                                </td>
+                                <td>
+                                  <Badge bg={STATUS_META[r.status]?.variant || 'secondary'} style={{ borderRadius: '50px', padding: '6px 14px', fontSize: '0.8rem' }}>
+                                    {r.auto_activated && r.status === 'reserved' && '⚡ '}
+                                    {STATUS_META[r.status]?.label || r.status}
+                                  </Badge>
+                                </td>
+                                <td><ActionButtons r={r} /></td>
+                              </tr>
+                            ));
+                          })()}
+                        </tbody>
+                      </Table>
+                    </div>
+
+                    <div className="d-lg-none mt-3">
+                      <Row className="g-3">
                         {(() => {
                           const statusOrder = {
                             pending: 1,      // Requests
@@ -842,56 +980,86 @@ const ManageReservations = () => {
                             return orderA - orderB;
                           });
                           return sorted.map((r) => (
-                            <tr key={r._id} className="reservations-row-card">
-                              <td>
-                                <div className="fw-bold text-dark">{r.customer_name}</div>
-                                <small className="text-muted fw-medium">{r.customer_phone}</small>
-                              </td>
-                              <td><small className="fw-bold text-alternate">{fmtDate(r.reservation_date)}</small></td>
-                              <td>
-                                {r.group_name && (
-                                  <Badge bg="light" text="dark" className="border mb-2 d-inline-flex align-items-center gap-1 fw-bold text-secondary px-2 py-1" style={{ fontSize: 10, borderRadius: '50px' }}>
-                                    {r.group_name}
-                                  </Badge>
-                                )}
-                                <div>
-                                  <Badge bg="light" text="dark" className="border fw-bold text-alternate px-2 py-1" style={{ borderRadius: '50px' }}>
-                                    <CsLineIcons icon="clock" size={11} className="me-1" style={{ stroke: '#23b3f4' }} />
-                                    {r.slot_start} – {r.slot_end}
-                                  </Badge>
-                                </div>
-                                <div style={{ fontSize: 10 }} className="text-muted mt-1 fw-medium">{r.slots?.length} slot{r.slots?.length > 1 ? 's' : ''}</div>
-                              </td>
-                              <td>
-                                <div className="d-flex align-items-center gap-1 fw-bold text-dark">
-                                  <CsLineIcons icon="user" size={14} style={{ color: '#23b3f4' }} />
-                                  {r.num_persons}
-                                </div>
-                              </td>
-                              <td>
-                                {r.assigned_tables?.length ? (
-                                  <div className="d-flex flex-wrap gap-1">
-                                    {r.assigned_tables.map((t) => (
-                                      <Badge key={t.table_id} bg="light" text="dark" className="border fw-bold text-dark px-2 py-1" style={{ borderRadius: '50px' }}>
-                                        {t.area_name} · T{t.table_no}
-                                      </Badge>
-                                    ))}
+                            <Col xs={12} sm={6} key={`mobile-${r._id}`}>
+                              <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '1rem', background: '#f8fafc' }}>
+                                <Card.Body className="p-3">
+                                  <div className="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                      <div className="fw-bold text-dark" style={{ fontSize: '1.1rem' }}>{r.customer_name}</div>
+                                      <small className="text-muted fw-medium">{r.customer_phone}</small>
+                                    </div>
+                                    <Badge
+                                      bg={STATUS_META[r.status]?.variant || 'secondary'}
+                                      style={{ borderRadius: '50px', padding: '6px 12px', fontSize: '0.75rem' }}
+                                    >
+                                      {r.auto_activated && r.status === 'reserved' && '⚡ '}
+                                      {STATUS_META[r.status]?.label || r.status}
+                                    </Badge>
                                   </div>
-                                ) : <span className="text-muted small fw-medium">—</span>}
-                              </td>
-                              <td>
-                                <Badge bg={STATUS_META[r.status]?.variant || 'secondary'} style={{ borderRadius: '50px', padding: '6px 14px', fontSize: '0.8rem' }}>
-                                  {r.auto_activated && r.status === 'reserved' && '⚡ '}
-                                  {STATUS_META[r.status]?.label || r.status}
-                                </Badge>
-                              </td>
-                              <td><ActionButtons r={r} /></td>
-                            </tr>
+                                  
+                                  {r.group_name && (
+                                    <Badge
+                                      bg="light"
+                                      text="dark"
+                                      className="border mb-2 d-inline-flex align-items-center gap-1 fw-bold text-secondary px-2 py-1"
+                                      style={{ fontSize: 10, borderRadius: '50px' }}
+                                    >
+                                      {r.group_name}
+                                    </Badge>
+                                  )}
+
+                                  <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
+                                    <Badge bg="light" text="dark" className="border fw-bold text-alternate px-2 py-1" style={{ borderRadius: '50px', fontSize: 10 }}>
+                                      <CsLineIcons icon="calendar" size={10} className="me-1" style={{ stroke: '#23b3f4' }} />
+                                      {fmtDate(r.reservation_date)}
+                                    </Badge>
+                                    <Badge bg="light" text="dark" className="border fw-bold text-alternate px-2 py-1" style={{ borderRadius: '50px', fontSize: 10 }}>
+                                      <CsLineIcons icon="clock" size={10} className="me-1" style={{ stroke: '#23b3f4' }} />
+                                      {r.slot_start} – {r.slot_end}
+                                    </Badge>
+                                  </div>
+
+                                  <Row className="g-2 mb-3">
+                                    <Col xs={4}>
+                                      <div className="small text-muted fw-bold text-uppercase mb-1" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>Guests</div>
+                                      <div className="d-flex align-items-center gap-1 fw-bold text-dark" style={{ fontSize: '0.9rem' }}>
+                                        <CsLineIcons icon="user" size={14} style={{ color: '#23b3f4' }} />
+                                        {r.num_persons}
+                                      </div>
+                                    </Col>
+                                    <Col xs={8}>
+                                      <div className="small text-muted fw-bold text-uppercase mb-1" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>Tables</div>
+                                      {r.assigned_tables?.length ? (
+                                        <div className="d-flex flex-wrap gap-1">
+                                          {r.assigned_tables.map((t) => (
+                                            <Badge
+                                              key={t.table_id}
+                                              bg="light"
+                                              text="dark"
+                                              className="border fw-bold text-dark px-1 py-1"
+                                              style={{ borderRadius: '50px', fontSize: 9 }}
+                                            >
+                                              {t.area_name}·T{t.table_no}
+                                            </Badge>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <span className="text-muted small fw-medium">—</span>
+                                      )}
+                                    </Col>
+                                  </Row>
+
+                                  <div className="border-top pt-3 d-flex justify-content-end">
+                                    <ActionButtons r={r} />
+                                  </div>
+                                </Card.Body>
+                              </Card>
+                            </Col>
                           ));
                         })()}
-                      </tbody>
-                    </Table>
-                  </div>
+                      </Row>
+                    </div>
+                  </>
                 )}
               </Card>
 
