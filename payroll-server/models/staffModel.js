@@ -67,6 +67,15 @@ const addStaff = new Schema({
     ],
     default: []
   },
+  leave_policy_configuration: {
+    type: [
+      {
+        leave_type_id: { type: String },
+        is_active: { type: Boolean, default: true }
+      }
+    ],
+    default: []
+  },
   salary_structure: {
     custom_earnings: {
       type: Map,

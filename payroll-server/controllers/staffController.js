@@ -116,6 +116,22 @@ const addStaff = async (req, res) => {
       }
     }
 
+    if (staffData.custom_weekly_offs && typeof staffData.custom_weekly_offs === "string") {
+      try {
+        staffData.custom_weekly_offs = JSON.parse(staffData.custom_weekly_offs);
+      } catch (e) {
+        console.error("Invalid custom_weekly_offs JSON");
+      }
+    }
+
+    if (staffData.leave_policy_configuration && typeof staffData.leave_policy_configuration === "string") {
+      try {
+        staffData.leave_policy_configuration = JSON.parse(staffData.leave_policy_configuration);
+      } catch (e) {
+        console.error("Invalid leave_policy_configuration JSON");
+      }
+    }
+
     if (req.files?.photo?.[0]) {
       staffData.photo = `/staff/profile/${req.files.photo[0].filename}`;
     }
@@ -194,6 +210,22 @@ const updateStaff = async (req, res) => {
         staffData.increment_plan = JSON.parse(staffData.increment_plan);
       } catch (e) {
         console.error("Invalid increment_plan JSON");
+      }
+    }
+
+    if (staffData.custom_weekly_offs && typeof staffData.custom_weekly_offs === "string") {
+      try {
+        staffData.custom_weekly_offs = JSON.parse(staffData.custom_weekly_offs);
+      } catch (e) {
+        console.error("Invalid custom_weekly_offs JSON");
+      }
+    }
+
+    if (staffData.leave_policy_configuration && typeof staffData.leave_policy_configuration === "string") {
+      try {
+        staffData.leave_policy_configuration = JSON.parse(staffData.leave_policy_configuration);
+      } catch (e) {
+        console.error("Invalid leave_policy_configuration JSON");
       }
     }
 

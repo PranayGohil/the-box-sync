@@ -42,6 +42,7 @@ const AddStaff = () => {
   const [cities, setCities] = useState([]);
   const [positions, setPositions] = useState([]);
   const [payrollConfig, setPayrollConfig] = useState(null);
+  const [globalLeavePolicies, setGlobalLeavePolicies] = useState([]);
   const [uploadingFiles, setUploadingFiles] = useState({
     photo: false,
     front_image: false,
@@ -229,6 +230,7 @@ const AddStaff = () => {
       salary_calculation_base: 'working_days',
       weekly_off_policy: 'global',
       custom_weekly_offs: [{ day: 'Sunday', type: 'all_weeks', weeks: [] }],
+      leave_policy_configuration: [],
       position: '',
       photo: '',
       document_type: '',
@@ -413,16 +415,30 @@ const AddStaff = () => {
         setLoading((prev) => ({ ...prev, initial: true }));
         setCountries(Country.getAllCountries());
 
-        const [positionsRes, configRes] = await Promise.all([
+        const [positionsRes, configRes, leavePolicyRes] = await Promise.all([
           axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
           axios.get(`${process.env.REACT_APP_API}/payroll-config`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          }),
+          axios.get(`${process.env.REACT_APP_API}/leave-policy`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           })
         ]);
         
         setPositions(positionsRes.data.data);
+        if (leavePolicyRes?.data?.success && leavePolicyRes?.data?.data?.leave_types) {
+          setGlobalLeavePolicies(leavePolicyRes.data.data.leave_types);
+          
+          const mapped = leavePolicyRes.data.data.leave_types.map(lt => ({
+            leave_type_id: lt.leave_type_id,
+            is_active: true
+          }));
+          formik.setFieldValue('leave_policy_configuration', mapped);
+          
+        }
+
         if (configRes.data.success && configRes.data.data) {
           setPayrollConfig(configRes.data.data);
           
@@ -1222,6 +1238,49 @@ const AddStaff = () => {
                   </Row>
                 </div>
 
+                <hr className="my-4 opacity-50" />
+                <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                  <CsLineIcons icon="airplane" size="18" />
+                  Leave Policy Configuration
+                </h6>
+                <div className="bg-light rounded-3 p-3 shadow-sm border border-faint mb-4">
+                  {globalLeavePolicies.length === 0 ? (
+                    <div className="text-muted small">No global leave policies configured.</div>
+                  ) : (
+                    <Row className="g-3">
+                      {globalLeavePolicies.map((policy, idx) => {
+                         const currentConfig = values.leave_policy_configuration?.find(c => c.leave_type_id === policy.leave_type_id);
+                         const isChecked = currentConfig ? currentConfig.is_active : true;
+                         return (
+                           <Col md={4} key={policy.leave_type_id}>
+                             <div className="d-flex justify-content-between align-items-center p-2 border rounded bg-white">
+                               <div>
+                                 <div className="fw-bold small">{policy.name}</div>
+                                 <div className="text-muted" style={{ fontSize: '0.75rem' }}>{policy.days_per_year} Days / Year</div>
+                               </div>
+                               <Form.Check
+                                 type="switch"
+                                 id={`leave-switch-${policy.leave_type_id}`}
+                                 checked={isChecked}
+                                 onChange={(e) => {
+                                    const newConfig = [...(values.leave_policy_configuration || [])];
+                                    const index = newConfig.findIndex(c => c.leave_type_id === policy.leave_type_id);
+                                    if (index >= 0) {
+                                      newConfig[index].is_active = e.target.checked;
+                                    } else {
+                                      newConfig.push({ leave_type_id: policy.leave_type_id, is_active: e.target.checked });
+                                    }
+                                    setFieldValue('leave_policy_configuration', newConfig);
+                                 }}
+                               />
+                             </div>
+                           </Col>
+                         );
+                      })}
+                    </Row>
+                  )}
+                </div>
+                
                 <hr className="my-4 opacity-50" />
                 <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
                   <CsLineIcons icon="trend-up" size="18" />
