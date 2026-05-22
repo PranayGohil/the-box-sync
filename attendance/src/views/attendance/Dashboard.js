@@ -293,6 +293,7 @@ export default function Dashboard() {
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [detecting, setDetecting] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const getTodayDate = () => {
     const today = new Date();
@@ -398,9 +399,8 @@ export default function Dashboard() {
     }
   };
 
-  const isCheckedInToday = (attendanceList) => {
-    const today = getTodayDate();
-    return attendanceList?.some((a) => a.date === today && a.in_time && !a.out_time);
+  const isCheckedInToday = (staff) => {
+    return !!staff?.todayAttendance?.in_time && !staff?.todayAttendance?.out_time;
   };
 
   const handleCheckIn = async (staffId) => {
@@ -416,9 +416,10 @@ export default function Dashboard() {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }
       );
+      setSuccessMsg(`✅ Check-in successful at ${getCurrentTime()}`);
+      setError('');
+      await fetchStaffEncodings();
       setDetectedStaff(null);
-      fetchStaffEncodings();
-      alert('Check-in successful');
     } catch (err) {
       console.error('Check-in failed:', err);
       setError('Check-in failed. Please try again.');
@@ -438,9 +439,10 @@ export default function Dashboard() {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }
       );
+      setSuccessMsg(`✅ Check-out successful at ${getCurrentTime()}`);
+      setError('');
+      await fetchStaffEncodings();
       setDetectedStaff(null);
-      fetchStaffEncodings();
-      alert('Check-out successful');
     } catch (err) {
       console.error('Check-out failed:', err);
       setError('Check-out failed. Please try again.');
@@ -467,7 +469,13 @@ export default function Dashboard() {
           </div>
 
           <div className="kiosk-action-area">
-            {error && (
+            {successMsg && (
+            <Alert variant="success" className="mb-4 text-center rounded-3 fw-bold border-0" style={{ maxWidth: '600px', margin: '0 auto', background: '#f0fdf4', color: '#15803d' }} onClose={() => setSuccessMsg('')} dismissible>
+              {successMsg}
+            </Alert>
+          )}
+
+          {error && (
               <Alert variant="danger" className="mb-4 text-center rounded-3 fw-bold border-0" style={{ maxWidth: '600px', margin: '0 auto', background: '#fff1f2', color: '#e11d48' }}>
                 <CsLineIcons icon="error-hexagon" className="me-2" />
                 {error}
@@ -497,24 +505,32 @@ export default function Dashboard() {
             ) : (
               <div className="staff-match-card">
                 <div className="match-avatar-placeholder">
-                  <CsLineIcons icon="user" size={42} />
+                  {detectedStaff.photo ? (
+                    <img
+                      src={`${process.env.REACT_APP_UPLOAD_DIR}${detectedStaff.photo}`}
+                      alt={detectedStaff.f_name}
+                      style={{ width: '90px', height: '90px', borderRadius: '50%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <CsLineIcons icon="user" size={42} />
+                  )}
                 </div>
                 <h3 className="fw-bolder text-dark mb-1">{detectedStaff.f_name} {detectedStaff.l_name}</h3>
                 <p className="text-muted fw-bold mb-4">ID: {detectedStaff.staff_id}</p>
                 
                 <div className="d-flex justify-content-center mb-5">
                   <Badge 
-                    bg={isCheckedInToday(detectedStaff.attandance) ? 'warning' : 'light'} 
-                    className={isCheckedInToday(detectedStaff.attandance) ? 'text-dark px-4 py-2 rounded-pill shadow-sm' : 'text-muted px-4 py-2 rounded-pill border'}
+                    bg={isCheckedInToday(detectedStaff) ? 'warning' : 'light'} 
+                    className={isCheckedInToday(detectedStaff) ? 'text-dark px-4 py-2 rounded-pill shadow-sm' : 'text-muted px-4 py-2 rounded-pill border'}
                     style={{ fontSize: '0.9rem' }}
                   >
-                    <CsLineIcons icon={isCheckedInToday(detectedStaff.attandance) ? 'clock' : 'close'} size={14} className="me-2" />
-                    {isCheckedInToday(detectedStaff.attandance) ? 'Currently Checked In' : 'Not Checked In Today'}
+                    <CsLineIcons icon={isCheckedInToday(detectedStaff) ? 'clock' : 'close'} size={14} className="me-2" />
+                    {isCheckedInToday(detectedStaff) ? 'Currently Checked In' : 'Not Checked In Today'}
                   </Badge>
                 </div>
 
                 <div className="d-flex justify-content-center gap-3 flex-wrap">
-                  {isCheckedInToday(detectedStaff.attandance) ? (
+                  {isCheckedInToday(detectedStaff) ? (
                     <Button className="action-btn btn-check-out" onClick={() => handleCheckOut(detectedStaff._id)}>
                       <CsLineIcons icon="log-out" size={20} />
                       Confirm Check-Out

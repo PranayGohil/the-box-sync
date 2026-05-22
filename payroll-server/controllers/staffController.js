@@ -1,6 +1,17 @@
 const Staff = require("../models/staffModel");
+const StaffAttendance = require("../models/staffAttendanceModel");
 const fs = require("fs");
 const path = require("path");
+
+// ── Helper: get today's date in IST (YYYY-MM-DD) ─────────────────────────────
+const getTodayIST = () => {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+};
 
 // ── GET /staff/get-positions ──────────────────────────────────────────────────
 const getStaffPositions = async (req, res) => {
@@ -222,14 +233,39 @@ const deleteStaff = async (req, res) => {
 const getAllFaceEncodings = async (req, res) => {
   try {
     const userId = req.user?._id || req.user;
+    const today = getTodayIST();
+
     const staff = await Staff.find({
       user_id: userId,
       face_encoding: { $exists: true, $ne: null, $not: { $size: 0 } },
     })
-      .select("_id staff_id f_name l_name email position face_encoding")
+      .select("_id staff_id f_name l_name email position photo face_encoding")
       .lean();
 
-    res.json({ success: true, data: staff });
+    if (staff.length === 0) {
+      return res.json({ success: true, data: [] });
+    }
+
+    // Fetch today's attendance records for all matched staff in a single query
+    const staffIds = staff.map((s) => s._id);
+    const todayRecords = await StaffAttendance.find({
+      staff_id: { $in: staffIds },
+      date: today,
+    }).lean();
+
+    // Build a map: staffId (string) → attendance record
+    const attendanceMap = {};
+    todayRecords.forEach((record) => {
+      attendanceMap[record.staff_id.toString()] = record;
+    });
+
+    // Merge todayAttendance into each staff member
+    const result = staff.map((s) => ({
+      ...s,
+      todayAttendance: attendanceMap[s._id.toString()] || null,
+    }));
+
+    res.json({ success: true, data: result });
   } catch (err) {
     console.error("Error fetching encodings:", err);
     res.status(500).json({ success: false, error: "Failed to fetch face encodings" });
