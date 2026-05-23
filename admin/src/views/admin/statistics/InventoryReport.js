@@ -486,7 +486,7 @@ const InventoryReport = () => {
         </div>
 
       {/* Hub Filters */}
-      {['Growth', 'Scale'].includes(currentUser?.purchasedPlan) && (
+      {['QSR', 'Café', 'Fine Dine', 'Cloud', 'Chain'].includes(currentUser?.purchasedPlan) && (
         <Card className="inventory-report-interactive-card inventory-report-filter-card border-0 mb-4 no-print shadow-sm">
           <Card.Body className="p-4">
             <div className="inventory-report-card-title-container">

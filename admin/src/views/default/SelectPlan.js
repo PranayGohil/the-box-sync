@@ -136,7 +136,7 @@ const SelectPlan = () => {
 
   const plans = [
     {
-      name: 'Core Plan',
+      name: 'QSR Plan',
       originalPrice: '₹10,000',
       price: '₹8,000',
       period: '/ year',
@@ -144,104 +144,203 @@ const SelectPlan = () => {
       features: {
         billing: [
           'Inventory Management',
-          'Statistic Management',
+          '80+ Reports',
           'Third-party Integrations',
           'In-built CRM',
-          'Menu management',
-          'Staff management',
-          'Manager Panel',
-          'QSR Panel',
+          'Menu Management',
+          'Staff Management',
           'Unlimited Users & Terminals',
-          'Unlimited cash register',
-          'Multi-terminal billing',
+          'Unlimited Cash Register',
+          'Multi-terminal Billing',
         ],
-        addons: [],
+        addons: [
+          'QSR Panel',
+          'Kitchen Display System',
+          'Token Management',
+          'Scan & QR Order',
+          'QR-based Feedback',
+          'Dynamic Reports',
+          'WhatsApp Invoice',
+        ],
+        loyalty: [
+          'Customer Profiles',
+          'Points Earn/Redeem at POS',
+        ],
         advanced: [],
         support: [
-          '24x7 support',
-          'Free training',
-          'Free staff re-training',
+          '24/7 Support',
+          'Free Training',
+          'Free Staff Re-training',
         ],
       },
     },
     {
-      name: 'Growth Plan',
-      originalPrice: '₹20,000',
-      price: '₹16,000',
+      name: 'Café Plan',
+      originalPrice: '₹12,500',
+      price: '₹10,000',
       period: '/ year',
       color: 'success',
-      recommended: true,
       features: {
         billing: [
           'Inventory Management',
-          'Statistic Management',
+          '80+ Reports',
           'Third-party Integrations',
           'In-built CRM',
-          'Menu management',
-          'Staff management',
-          'Manager Panel',
-          'QSR Panel',
+          'Menu Management',
+          'Staff Management',
           'Unlimited Users & Terminals',
-          'Unlimited cash register',
-          'Multi-terminal billing',
+          'Unlimited Cash Register',
+          'Multi-terminal Billing',
         ],
         addons: [
-          'Reservation Management',
-          'Captain Panel',
+          'QSR Panel',
           'Kitchen Display System',
-          'Restaurant Website',
+          'Token Management',
           'Scan & QR Order',
           'QR-based Feedback',
-          'Waiter Calling System',
           'Dynamic Reports',
-          'Whatsapp-Invoice',
-          'Token Management',
+          'WhatsApp Invoice',
+          'Restaurant Website',
+        ],
+        loyalty: [
+          'Customer Profiles',
+          'Points Earn/Redeem at POS',
+          'Automated Retention Campaigns',
         ],
         advanced: [],
         support: [
-          '24x7 support',
-          'Free training',
-          'Free staff re-training',
+          '24/7 Support',
+          'Free Training',
+          'Free Staff Re-training',
         ],
       },
     },
     {
-      name: 'Scale Plan',
-      originalPrice: '₹30,000',
-      price: '₹24,000',
+      name: 'Fine Dine Plan',
+      originalPrice: '₹20,000',
+      price: '₹16,000',
       period: '/ year',
       color: 'warning',
       features: {
         billing: [
           'Inventory Management',
-          'Statistic Management',
+          '80+ Reports',
           'Third-party Integrations',
           'In-built CRM',
-          'Menu management',
-          'Staff management',
-          'Manager Panel',
-          'QSR Panel',
+          'Menu Management',
+          'Staff Management',
           'Unlimited Users & Terminals',
-          'Unlimited cash register',
-          'Multi-terminal billing',
+          'Unlimited Cash Register',
+          'Multi-terminal Billing',
         ],
         addons: [
-          'Reservation Management',
           'Captain Panel',
           'Kitchen Display System',
-          'Restaurant Website',
+          'Reservation Management',
           'Scan & QR Order',
           'QR-based Feedback',
           'Waiter Calling System',
           'Dynamic Reports',
-          'Whatsapp-Invoice',
-          'Token Management',
+          'WhatsApp Invoice',
+          'Restaurant Website',
         ],
-        advanced: ['TheBoxSync Payroll'],
+        loyalty: [
+          'Customer Profiles',
+          'Points Earn/Redeem at POS',
+          'Automated Retention Campaigns',
+          'Gamified Loyalty — Food Quests',
+        ],
+        advanced: [],
         support: [
-          '24x7 support',
-          'Free training',
-          'Free staff re-training',
+          '24/7 Support',
+          'Free Training',
+          'Free Staff Re-training',
+        ],
+      },
+    },
+    {
+      name: 'Cloud Plan',
+      originalPrice: '₹12,500',
+      price: '₹10,000',
+      period: '/ year',
+      color: 'info',
+      features: {
+        billing: [
+          'Inventory Management',
+          '80+ Reports',
+          'Third-party Integrations',
+          'In-built CRM',
+          'Menu Management',
+          'Staff Management',
+          'Unlimited Users & Terminals',
+          'Unlimited Cash Register',
+          'Multi-terminal Billing',
+        ],
+        addons: [
+          'Kitchen Display System',
+          'QR-based Feedback',
+          'Dynamic Reports',
+          'WhatsApp Invoice',
+        ],
+        loyalty: [
+          'Customer Profiles',
+          'Points Earn/Redeem at POS',
+          'Automated Retention Campaigns',
+        ],
+        advanced: [],
+        support: [
+          '24/7 Support',
+          'Free Training',
+          'Free Staff Re-training',
+        ],
+      },
+    },
+    {
+      name: 'Chain Plan',
+      originalPrice: '₹30,000',
+      price: '₹24,000',
+      period: '/ year',
+      color: 'danger',
+      recommended: true,
+      features: {
+        billing: [
+          'Inventory Management',
+          '80+ Reports',
+          'Third-party Integrations',
+          'In-built CRM',
+          'Menu Management',
+          'Staff Management',
+          'Unlimited Users & Terminals',
+          'Unlimited Cash Register',
+          'Multi-terminal Billing',
+        ],
+        addons: [
+          'QSR Panel',
+          'Captain Panel',
+          'Kitchen Display System',
+          'Reservation Management',
+          'Token Management',
+          'Scan & QR Order',
+          'QR-based Feedback',
+          'Waiter Calling System',
+          'Dynamic Reports',
+          'WhatsApp Invoice',
+          'Restaurant Website',
+        ],
+        loyalty: [
+          'Customer Profiles',
+          'Points Earn/Redeem at POS',
+          'Automated Retention Campaigns',
+          'Gamified Loyalty — Food Quests',
+        ],
+        advanced: [
+          'TheBoxSync Payroll',
+        ],
+        support: [
+          '24/7 Support',
+          'Free Training',
+          'Free Staff Re-training',
+          'Dedicated Account Manager',
         ],
       },
     },
@@ -402,10 +501,16 @@ const SelectPlan = () => {
           background: rgba(35, 179, 244, 0.15) !important;
           border-color: #23b3f4 !important;
         }
+        @media (min-width: 1200px) {
+          .col-xl-5-custom {
+            flex: 0 0 20% !important;
+            max-width: 20% !important;
+          }
+        }
       `}</style>
 
       <div className="min-h-100 py-5 select-plan-wrapper" style={{ paddingTop: '80px', paddingBottom: '80px' }}>
-        <div className="container" style={{ position: 'relative', zIndex: 3, maxWidth: '1150px' }}>
+        <div className="container-fluid px-lg-5" style={{ position: 'relative', zIndex: 3, maxWidth: '1650px' }}>
           {/* Header */}
           <div className="text-center mb-5 pb-3">
             <h1 className="display-4 fw-bold mb-4 text-white" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>Value-packed features at Wallet-friendly cost</h1>
@@ -417,54 +522,63 @@ const SelectPlan = () => {
             {plans.map((plan, index) => {
               const featureCategories = [
                 {
-                  title: 'Billing',
+                  title: 'Billing & Core',
                   features: [
                     'Inventory Management',
-                    'Statistic Management',
+                    '80+ Reports',
                     'Third-party Integrations',
                     'In-built CRM',
-                    'Menu management',
-                    'Staff management',
-                    'Manager Panel',
-                    'QSR Panel',
+                    'Menu Management',
+                    'Staff Management',
                     'Unlimited Users & Terminals',
-                    'Unlimited cash register',
-                    'Multi-terminal billing'
+                    'Unlimited Cash Register',
+                    'Multi-terminal Billing'
                   ]
                 },
                 {
-                  title: 'Adds ons',
+                  title: 'Add-ons',
                   features: [
-                    'Reservation Management',
+                    'QSR Panel',
                     'Captain Panel',
                     'Kitchen Display System',
-                    'Restaurant Website',
+                    'Reservation Management',
+                    'Token Management',
                     'Scan & QR Order',
                     'QR-based Feedback',
                     'Waiter Calling System',
                     'Dynamic Reports',
-                    'Whatsapp-Invoice',
-                    'Token Management'
+                    'WhatsApp Invoice',
+                    'Restaurant Website'
                   ]
                 },
                 {
-                  title: 'Advanced features',
+                  title: 'Loyalty & CRM Engine',
+                  features: [
+                    'Customer Profiles',
+                    'Points Earn/Redeem at POS',
+                    'Automated Retention Campaigns',
+                    'Gamified Loyalty — Food Quests'
+                  ]
+                },
+                {
+                  title: 'Advanced',
                   features: [
                     'TheBoxSync Payroll'
                   ]
                 },
                 {
-                  title: 'Support & Training',
+                  title: 'Support',
                   features: [
-                    '24x7 support',
-                    'Free training',
-                    'Free staff re-training'
+                    '24/7 Support',
+                    'Free Training',
+                    'Free Staff Re-training',
+                    'Dedicated Account Manager'
                   ]
                 }
               ];
 
               return (
-                <div key={index} className="col-12 col-md-4">
+                <div key={index} className="col-12 col-md-6 col-lg-4 col-xl-5-custom mb-4">
                   <div className="plan-column d-flex flex-column position-relative">
                     {plan.recommended && (
                       <div className="position-absolute start-50 translate-middle-x" style={{ top: '-22px' }}>
@@ -472,7 +586,7 @@ const SelectPlan = () => {
                       </div>
                     )}
                     <div className={`plan-name ${plan.recommended ? 'plan-name-recommended' : ''}`}>
-                      {plan.name === 'Growth Plan' ? 'Growth (Choose Any 6)' : plan.name.split(' ')[0]}
+                      {plan.name.replace(' Plan', '')}
                     </div>
 
                     <div className="d-flex align-items-baseline mb-2">
@@ -495,6 +609,7 @@ const SelectPlan = () => {
                           {category.features.map((feature, fIndex) => {
                             const hasFeature = plan.features.billing.includes(feature) ||
                               plan.features.addons.includes(feature) ||
+                              (plan.features.loyalty && plan.features.loyalty.includes(feature)) ||
                               plan.features.advanced.includes(feature) ||
                               plan.features.support.includes(feature);
                             return (
@@ -512,9 +627,6 @@ const SelectPlan = () => {
                                 </span>
                                 <span>
                                   {feature}
-                                  {plan.name === 'Growth Plan' && feature === 'Scan & QR Order' && ' (optional)'}
-                                  {plan.name === 'Core Plan' && feature === 'Manager Panel' && ' (optional)'}
-                                  {plan.name === 'Core Plan' && feature === 'QSR Panel' && ' (optional)'}
                                 </span>
                               </div>
                             );
@@ -525,7 +637,7 @@ const SelectPlan = () => {
 
                     <div className="mt-4 pt-3 text-center">
                       {(() => {
-                        const isSelected = activePlans.includes(plan.name) || activePlans.includes(plan.name.split(' ')[0]);
+                        const isSelected = activePlans.includes(plan.name) || activePlans.includes(plan.name.replace(' Plan', ''));
                         const hasAnyPlan = activePlans.length > 0;
 
                         if (isSelected) {
