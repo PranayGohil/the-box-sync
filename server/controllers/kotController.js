@@ -222,4 +222,39 @@ const updateAllDishStatus = async (req, res) => {
   }
 };
 
-module.exports = { showKOTs, updateDishStatus, updateAllDishStatus };
+const showKOTDisplay = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { order_source } = req.query;
+
+    const match = {
+      user_id: userId,
+      $or: [
+        { order_status: "KOT" },
+        {
+          $and: [
+            { order_status: "Paid" },
+            { "order_items.status": "Preparing" }
+          ]
+        }
+      ]
+    };
+
+    if (order_source) {
+      const sources = order_source.split(",").map((s) => s.trim());
+      match.order_source = sources.length > 1 ? { $in: sources } : sources[0];
+    }
+
+    const orders = await Order.find(match).sort({ order_date: -1 }).lean();
+
+    return res.json({
+      success: true,
+      data: orders,
+    });
+  } catch (err) {
+    console.error("showKOTDisplay error:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+module.exports = { showKOTs, updateDishStatus, updateAllDishStatus, showKOTDisplay };

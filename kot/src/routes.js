@@ -5,6 +5,7 @@ import { DEFAULT_PATHS } from 'config.js';
 
 const manager = {
   dashboard: lazy(() => import('views/kot/Dashboard')),
+  kotDisplay: lazy(() => import('views/kot/KotDisplay')),
 };
 
 const order = {
@@ -32,6 +33,12 @@ const allRoutes = {
       label: 'Dashboard',
       icon: 'home',
       component: manager.dashboard,
+    },
+    {
+      path: `${appRoot}/kot-display`,
+      label: 'KOT Display',
+      icon: 'home',
+      component: manager.kotDisplay,
     },
     {
       path: `${appRoot}/order`,
