@@ -17,7 +17,7 @@ import ModalEditPanel from './ModalEditPanel';
 import DeletePanelModal from './DeletePanelModal';
 import RaiseInquiryModal from './RaiseInquiryModal';
 
-const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'Payroll By The Box', 'KOT Panel', 'Hotel Manager'];
+const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'Payroll By The Box', 'KOT Panel', 'Kitchen Display System', 'Hotel Manager'];
 
 const PLAN_DISPLAY_NAMES = {
   'Manager': 'Manager Panel',
@@ -29,31 +29,33 @@ const PLAN_DISPLAY_NAMES = {
   'Token Management': 'Token Management',
   'Waiter Calling System': 'Waiter Calling System',
   'Whatsapp-Invoice': 'WhatsApp Invoice',
+  'KOT Panel': 'KOT Panel',
+  'Kitchen Display System': 'Kitchen Display System',
 };
 
 const ALLOWED_PLANS_BY_TIER = {
   'QSR': [
-    'Staff Management',
-    'QSR', 'KOT Panel', 'Token Management', 'Scan For Menu',
+    'Staff Management', 'Online Order Reconciliation',
+    'QSR', 'KOT Panel', 'Kitchen Display System', 'Token Management', 'Scan For Menu',
     'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
   ],
   'Café': [
-    'Staff Management',
-    'QSR', 'KOT Panel', 'Token Management', 'Scan For Menu',
+    'Staff Management', 'Online Order Reconciliation',
+    'QSR', 'KOT Panel', 'Kitchen Display System', 'Token Management', 'Scan For Menu',
     'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'
   ],
   'Fine Dine': [
-    'Manager', 'Staff Management',
-    'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Scan For Menu',
+    'Manager', 'Staff Management', 'Online Order Reconciliation',
+    'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Reservation Manager', 'Scan For Menu',
     'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'
   ],
   'Cloud': [
-    'Manager', 'Staff Management',
-    'KOT Panel', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
+    'Manager', 'Staff Management', 'Online Order Reconciliation',
+    'KOT Panel', 'Kitchen Display System', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
   ],
   'Chain': [
-    'Manager', 'Staff Management',
-    'QSR', 'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Token Management',
+    'Manager', 'Staff Management', 'Online Order Reconciliation',
+    'QSR', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Reservation Manager', 'Token Management',
     'Scan For Menu', 'Feedback', 'Waiter Calling System', 'Dynamic Reports',
     'Whatsapp-Invoice', 'Restaurant Website', 'Payroll By The Box'
   ]
@@ -306,7 +308,7 @@ const Subscription = () => {
         window.open(`https://website.theboxsync.com/${restaurantCode}`, '_blank');
       } else if (planName === 'Captain Panel') {
         window.open('https://captain.theboxsync.com', '_blank');
-      } else if (planName === 'KOT Panel') {
+      } else if (planName === 'KOT Panel' || planName === 'Kitchen Display System') {
         window.open('https://kot.theboxsync.com', '_blank');
       } else if (planName === 'Manager') {
         window.open('https://manager.theboxsync.com', '_blank');
@@ -382,7 +384,7 @@ const Subscription = () => {
                 >
                   <CsLineIcons icon="bin" size="15" />
                 </Button>
-                {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Manager', 'QSR'].includes(original.plan_name) && (
+                {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Manager', 'QSR'].includes(original.plan_name) && (
                   <Button
                     variant="none"
                     size="sm"
@@ -409,7 +411,7 @@ const Subscription = () => {
                 >
                   <CsLineIcons icon="plus" size="15" />
                 </Button>
-                {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Manager', 'QSR'].includes(original.plan_name) && (
+                {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Manager', 'QSR'].includes(original.plan_name) && (
                   <Button
                     variant="none"
                     size="sm"
