@@ -96,7 +96,7 @@ const OrderHistory = () => {
 
       // Add filters to params
       if (filters.orderSource === '') {
-        params.order_source = ['Manager', 'Captain'];
+        params.order_source = ['Manager', 'Captain', 'QSR'];
       } else {
         params.order_source = filters.orderSource;
       }
@@ -420,7 +420,7 @@ const OrderHistory = () => {
 
     try {
       setExportProgress(20);
-      
+
       // Build params for export endpoint
       const params = {
         page: 1,
@@ -476,8 +476,7 @@ const OrderHistory = () => {
       if (exportFilters.fromDate || exportFilters.toDate) {
         sheetData.push([
           'Date Range:',
-          `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${
-            exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
+          `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
           }`,
         ]);
       }
@@ -630,13 +629,13 @@ const OrderHistory = () => {
       // 2. HEADER BANNER
       doc.setFillColor(31, 41, 55); // Premium Charcoal dark grey
       doc.rect(0, yPosition, docWidth, 38, 'F');
-      
+
       // Brand Logo Text / Title
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(22);
       doc.text('THE BOX', 15, yPosition + 15);
-      
+
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(10);
       doc.setTextColor(156, 163, 175); // Lighter muted grey
@@ -667,7 +666,7 @@ const OrderHistory = () => {
 
       // 3. STATS CARDS SECTION
       yPosition += 10; // 52
-      
+
       const totalAmount = orders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
       const avgOrderValue = totalAmount / orders.length;
 
@@ -692,7 +691,7 @@ const OrderHistory = () => {
 
       kpiCards.forEach((card, idx) => {
         const xPos = startX + idx * (cardWidth + cardGap);
-        
+
         // Card Background
         doc.setFillColor(248, 250, 252); // extremely soft slate grey/white
         doc.roundedRect(xPos, yPosition, cardWidth, cardHeight, 3, 3, 'F');
@@ -728,7 +727,7 @@ const OrderHistory = () => {
       if (activeFilters.length > 0) {
         doc.setFillColor(243, 244, 246); // Light gray
         doc.roundedRect(15, yPosition, docWidth - 30, 12 + Math.ceil(activeFilters.length / 2) * 5, 2, 2, 'F');
-        
+
         doc.setTextColor(75, 85, 99);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8);
@@ -736,7 +735,7 @@ const OrderHistory = () => {
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7.5);
-        
+
         activeFilters.forEach((filt, idx) => {
           const col = idx % 2;
           const row = Math.floor(idx / 2);
@@ -812,10 +811,10 @@ const OrderHistory = () => {
         didDrawPage: (pageData) => {
           const totalPagesCount = doc.internal.getNumberOfPages();
           doc.setPage(pageData.pageNumber);
-          
+
           doc.setDrawColor(229, 231, 235);
           doc.line(10, docHeight - 15, docWidth - 10, docHeight - 15);
-          
+
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(7.5);
           doc.setTextColor(156, 163, 175);
@@ -1045,420 +1044,420 @@ const OrderHistory = () => {
         </div>
       </section>
 
-          {error && (
-            <Alert variant="danger" className="mb-4">
-              <CsLineIcons icon="error" className="me-2" />
-              {error}
-            </Alert>
-          )}
+      {error && (
+        <Alert variant="danger" className="mb-4">
+          <CsLineIcons icon="error" className="me-2" />
+          {error}
+        </Alert>
+      )}
 
-          {/* Search and Controls */}
-          <div>
-            <Row className="mb-3 g-2 align-items-center">
-              <Col xs="12" sm="auto" className="flex-grow-1">
-                <div className="order-history-custom-search-container shadow-sm d-flex align-items-center px-2">
-                  <CsLineIcons icon="search" size="18" className="text-primary opacity-75 ms-1 me-2" />
-                  <Form.Control
-                    type="text"
-                    className="border-0 bg-transparent shadow-none"
-                    placeholder="Search orders..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{ height: '40px', fontSize: '14px' }}
-                  />
-                  {searchTerm && (
-                    <div className="cursor-pointer text-muted px-1" onClick={() => setSearchTerm('')}>
-                      <CsLineIcons icon="close" size="14" />
-                    </div>
-                  )}
+      {/* Search and Controls */}
+      <div>
+        <Row className="mb-3 g-2 align-items-center">
+          <Col xs="12" sm="auto" className="flex-grow-1">
+            <div className="order-history-custom-search-container shadow-sm d-flex align-items-center px-2">
+              <CsLineIcons icon="search" size="18" className="text-primary opacity-75 ms-1 me-2" />
+              <Form.Control
+                type="text"
+                className="border-0 bg-transparent shadow-none"
+                placeholder="Search orders..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ height: '40px', fontSize: '14px' }}
+              />
+              {searchTerm && (
+                <div className="cursor-pointer text-muted px-1" onClick={() => setSearchTerm('')}>
+                  <CsLineIcons icon="close" size="14" />
                 </div>
-              </Col>
-              <Col xs="auto" className="ms-auto ms-sm-0">
-                <div className="d-flex gap-2">
-                  <Button
-                    className="order-history-custom-control-btn shadow-sm"
-                    onClick={handleExportClick}
-                    disabled={totalRecords === 0 || loading}
-                    title="Export Orders"
+              )}
+            </div>
+          </Col>
+          <Col xs="auto" className="ms-auto ms-sm-0">
+            <div className="d-flex gap-2">
+              <Button
+                className="order-history-custom-control-btn shadow-sm"
+                onClick={handleExportClick}
+                disabled={totalRecords === 0 || loading}
+                title="Export Orders"
+              >
+                <CsLineIcons icon="download" size="18" />
+              </Button>
+              <Button
+                className={`order-history-custom-control-btn shadow-sm ${showFilters ? 'active' : ''}`}
+                onClick={() => setShowFilters(!showFilters)}
+                title="Filters"
+                disabled={loading}
+              >
+                <CsLineIcons icon={showFilters ? 'close' : 'filter'} size="18" />
+                {getActiveFilterCount() > 0 && (
+                  <Badge
+                    bg="danger"
+                    className="position-absolute rounded-pill border border-2 border-white"
+                    style={{ top: '-5px', right: '-5px', fontSize: '10px', padding: '4px 6px' }}
                   >
-                    <CsLineIcons icon="download" size="18" />
+                    {getActiveFilterCount()}
+                  </Badge>
+                )}
+              </Button>
+            </div>
+          </Col>
+
+          <Col className="text-end d-none d-lg-block">
+            <div className="d-inline-block me-3 text-muted small fw-bold">
+              {loading ? (
+                'Loading...'
+              ) : (
+                <>
+                  Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0}-{Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords}
+                </>
+              )}
+            </div>
+            <div className="d-inline-block">
+              <ControlsPageSize pageSize={pageSize} onPageSizeChange={handlePageSizeChange} />
+            </div>
+          </Col>
+        </Row>
+
+        {/* Filter Section */}
+        <Collapse in={showFilters}>
+          <Card className="mb-4 border-0 shadow-sm" style={{ borderRadius: '1.25rem', backgroundColor: '#f8f9fa' }}>
+            <Card.Body className="p-4">
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h5 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4' }}>
+                  <CsLineIcons icon="filter" className="me-2" size="18" />
+                  Filter Records
+                </h5>
+                {getActiveFilterCount() > 0 && (
+                  <Button
+                    variant="link"
+                    className="p-0 text-danger text-decoration-none small fw-bold"
+                    onClick={handleClearFilters}
+                  >
+                    <CsLineIcons icon="close" size="12" className="me-1" />
+                    Clear All
                   </Button>
-                  <Button
-                    className={`order-history-custom-control-btn shadow-sm ${showFilters ? 'active' : ''}`}
-                    onClick={() => setShowFilters(!showFilters)}
-                    title="Filters"
-                    disabled={loading}
-                  >
-                    <CsLineIcons icon={showFilters ? 'close' : 'filter'} size="18" />
-                    {getActiveFilterCount() > 0 && (
-                      <Badge
-                        bg="danger"
-                        className="position-absolute rounded-pill border border-2 border-white"
-                        style={{ top: '-5px', right: '-5px', fontSize: '10px', padding: '4px 6px' }}
+                )}
+              </div>
+
+              <div>
+                <Row className="g-3">
+                  {/* Order Source Filter */}
+                  <Col xs="12" sm="6" md="2">
+                    <Form.Label className="small fw-bold text-muted mb-1">Source</Form.Label>
+                    <Dropdown className="w-100">
+                      <Dropdown.Toggle
+                        variant="white"
+                        className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                        style={{ height: '44px', fontSize: '14px' }}
                       >
-                        {getActiveFilterCount()}
-                      </Badge>
-                    )}
-                  </Button>
-                </div>
-              </Col>
+                        {filters.orderSource || 'All Sources'}
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu
+                        className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                        style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+                      >
+                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', '')}>All Sources</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Manager')}>Manager</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Captain')}>Captain</Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </Col>
 
-              <Col className="text-end d-none d-lg-block">
-                <div className="d-inline-block me-3 text-muted small fw-bold">
-                  {loading ? (
-                    'Loading...'
-                  ) : (
-                    <>
-                      Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0}-{Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords}
-                    </>
+                  {/* Date Range Filter */}
+                  <Col xs="12" sm="6" md="2">
+                    <Form.Label className="small fw-bold text-muted mb-1">From</Form.Label>
+                    <div
+                      className="d-flex align-items-center bg-white shadow-sm rounded-pill px-3"
+                      style={{ height: '44px', border: '1px solid #f1f5f9', minWidth: 0, overflow: 'hidden' }}
+                    >
+                      <CsLineIcons icon="calendar" size="14" className="text-primary me-2 flex-shrink-0" />
+                      <Form.Control
+                        type="date"
+                        value={filters.fromDate}
+                        onChange={(e) => handleFilterChange('fromDate', e.target.value)}
+                        className="border-0 bg-transparent shadow-none p-0 w-100"
+                        style={{ fontSize: '13px', outline: 'none', minWidth: 0 }}
+                      />
+                    </div>
+                  </Col>
+                  <Col xs="12" sm="6" md="2">
+                    <Form.Label className="small fw-bold text-muted mb-1">To</Form.Label>
+                    <div
+                      className="d-flex align-items-center bg-white shadow-sm rounded-pill px-3"
+                      style={{ height: '44px', border: '1px solid #f1f5f9', minWidth: 0, overflow: 'hidden' }}
+                    >
+                      <CsLineIcons icon="calendar" size="14" className="text-primary me-2 flex-shrink-0" />
+                      <Form.Control
+                        type="date"
+                        value={filters.toDate}
+                        onChange={(e) => handleFilterChange('toDate', e.target.value)}
+                        className="border-0 bg-transparent shadow-none p-0 w-100"
+                        style={{ fontSize: '13px', outline: 'none', minWidth: 0 }}
+                      />
+                    </div>
+                  </Col>
+
+                  {/* Order Status Filter */}
+                  <Col xs="12" sm="6" md="3">
+                    <Form.Label className="small fw-bold text-muted mb-1">Status</Form.Label>
+                    <Dropdown className="w-100">
+                      <Dropdown.Toggle
+                        variant="white"
+                        className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                        style={{ height: '44px', fontSize: '14px' }}
+                      >
+                        {filters.orderStatus || 'All Status'}
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu
+                        className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                        style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+                      >
+                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', '')}>All Status</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Paid')}>Paid</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Save')}>Save</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'KOT')}>KOT</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Cancelled')}>Cancelled</Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </Col>
+
+                  {/* Order Type Filter */}
+                  <Col xs="12" sm="6" md="3">
+                    <Form.Label className="small fw-bold text-muted mb-1">Type</Form.Label>
+                    <Dropdown className="w-100">
+                      <Dropdown.Toggle
+                        variant="white"
+                        className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                        style={{ height: '44px', fontSize: '14px' }}
+                      >
+                        {filters.orderType || 'All Types'}
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu
+                        className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                        style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+                      >
+                        <Dropdown.Item onClick={() => handleFilterChange('orderType', '')}>All Types</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Dine In')}>Dine In</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Takeaway')}>Takeaway</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Delivery')}>Delivery</Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </Col>
+
+                  {/* Table Area Filter */}
+                  {tableAreas.length > 0 && (
+                    <Col xs="12" sm="6" md="3">
+                      <Form.Label className="small fw-bold text-muted mb-1">Table Area</Form.Label>
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle
+                          variant="white"
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                          style={{ height: '44px', fontSize: '14px' }}
+                        >
+                          {filters.tableArea || 'All Areas'}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu
+                          className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                          style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+                        >
+                          <Dropdown.Item active={filters.tableArea === ''} onClick={() => handleFilterChange('tableArea', '')}>All Areas</Dropdown.Item>
+                          {tableAreas.map((area) => (
+                            <Dropdown.Item key={area} active={filters.tableArea === area} onClick={() => handleFilterChange('tableArea', area)}>
+                              {area}
+                            </Dropdown.Item>
+                          ))}
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </Col>
                   )}
-                </div>
-                <div className="d-inline-block">
-                  <ControlsPageSize pageSize={pageSize} onPageSizeChange={handlePageSizeChange} />
-                </div>
+                </Row>
+              </div>
+            </Card.Body>
+          </Card>
+        </Collapse>
+
+        {/* Show table or "no data" message */}
+        {data.length === 0 && !loading ? (
+          <Alert
+            variant="info"
+            className="text-center border-0 shadow-sm"
+            style={{ borderRadius: '1rem', backgroundColor: 'rgba(35, 179, 244, 0.05)', color: '#23b3f4' }}
+          >
+            <CsLineIcons icon="inbox" size={24} className="me-2" />
+            No orders found. {searchTerm || getActiveFilterCount() > 0 ? 'Try adjusting your search or filters.' : 'Orders will appear here once created.'}
+          </Alert>
+        ) : (
+          <>
+            {/* Table View for Desktop */}
+            <Row className="d-none d-md-flex">
+              <Col xs="12" style={{ overflow: 'auto' }}>
+                <Table className="react-table rows" tableInstance={tableInstance} onSort={handleSort} />
               </Col>
             </Row>
 
-            {/* Filter Section */}
-            <Collapse in={showFilters}>
-              <Card className="mb-4 border-0 shadow-sm" style={{ borderRadius: '1.25rem', backgroundColor: '#f8f9fa' }}>
-                <Card.Body className="p-4">
-                  <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h5 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4' }}>
-                      <CsLineIcons icon="filter" className="me-2" size="18" />
-                      Filter Records
-                    </h5>
-                    {getActiveFilterCount() > 0 && (
-                      <Button
-                        variant="link"
-                        className="p-0 text-danger text-decoration-none small fw-bold"
-                        onClick={handleClearFilters}
-                      >
-                        <CsLineIcons icon="close" size="12" className="me-1" />
-                        Clear All
-                      </Button>
-                    )}
-                  </div>
-
-                  <div>
-                    <Row className="g-3">
-                      {/* Order Source Filter */}
-                      <Col xs="12" sm="6" md="2">
-                        <Form.Label className="small fw-bold text-muted mb-1">Source</Form.Label>
-                        <Dropdown className="w-100">
-                          <Dropdown.Toggle
-                            variant="white"
-                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
-                            style={{ height: '44px', fontSize: '14px' }}
-                          >
-                            {filters.orderSource || 'All Sources'}
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu
-                            className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
-                            style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
-                          >
-                            <Dropdown.Item onClick={() => handleFilterChange('orderSource', '')}>All Sources</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Manager')}>Manager</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Captain')}>Captain</Dropdown.Item>
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </Col>
-
-                      {/* Date Range Filter */}
-                      <Col xs="12" sm="6" md="2">
-                        <Form.Label className="small fw-bold text-muted mb-1">From</Form.Label>
-                        <div
-                          className="d-flex align-items-center bg-white shadow-sm rounded-pill px-3"
-                          style={{ height: '44px', border: '1px solid #f1f5f9', minWidth: 0, overflow: 'hidden' }}
-                        >
-                          <CsLineIcons icon="calendar" size="14" className="text-primary me-2 flex-shrink-0" />
-                          <Form.Control
-                            type="date"
-                            value={filters.fromDate}
-                            onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-                            className="border-0 bg-transparent shadow-none p-0 w-100"
-                            style={{ fontSize: '13px', outline: 'none', minWidth: 0 }}
-                          />
+            {/* Card View for Mobile */}
+            <Row className="d-md-none g-3">
+              {data.map((order, idx) => (
+                <Col key={idx} xs="12">
+                  <Card className="border-0 shadow-sm hover-scale-up" style={{ borderRadius: '1.25rem', overflow: 'hidden' }}>
+                    <Card.Body className="p-3 position-relative">
+                      <div
+                        className="position-absolute"
+                        style={{
+                          top: '-10px',
+                          right: '-10px',
+                          width: '60px',
+                          height: '60px',
+                          borderRadius: '50%',
+                          background: 'rgba(35, 179, 244, 0.1)',
+                          filter: 'blur(10px)',
+                        }}
+                      />
+                      <div className="d-flex justify-content-between align-items-start mb-3 position-relative">
+                        <div>
+                          <div className="fw-bolder text-primary mb-1" style={{ fontSize: '14px' }}>
+                            {order.order_no || 'ORD-0000'}
+                          </div>
+                          <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd MMM yyyy, HH:mm')}</div>
                         </div>
-                      </Col>
-                      <Col xs="12" sm="6" md="2">
-                        <Form.Label className="small fw-bold text-muted mb-1">To</Form.Label>
-                        <div
-                          className="d-flex align-items-center bg-white shadow-sm rounded-pill px-3"
-                          style={{ height: '44px', border: '1px solid #f1f5f9', minWidth: 0, overflow: 'hidden' }}
+                        <Badge
+                          bg={order.order_status === 'Paid' || order.order_status === 'Completed' || order.order_status === 'Save' ? 'success' : order.order_status === 'KOT' ? 'warning' : order.order_status === 'Cancelled' ? 'danger' : 'secondary'}
+                          className="rounded-pill px-3 py-1"
                         >
-                          <CsLineIcons icon="calendar" size="14" className="text-primary me-2 flex-shrink-0" />
-                          <Form.Control
-                            type="date"
-                            value={filters.toDate}
-                            onChange={(e) => handleFilterChange('toDate', e.target.value)}
-                            className="border-0 bg-transparent shadow-none p-0 w-100"
-                            style={{ fontSize: '13px', outline: 'none', minWidth: 0 }}
-                          />
-                        </div>
-                      </Col>
+                          {order.order_status}
+                        </Badge>
+                      </div>
 
-                      {/* Order Status Filter */}
-                      <Col xs="12" sm="6" md="3">
-                        <Form.Label className="small fw-bold text-muted mb-1">Status</Form.Label>
-                        <Dropdown className="w-100">
-                          <Dropdown.Toggle
-                            variant="white"
-                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
-                            style={{ height: '44px', fontSize: '14px' }}
-                          >
-                            {filters.orderStatus || 'All Status'}
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu
-                            className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
-                            style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
-                          >
-                            <Dropdown.Item onClick={() => handleFilterChange('orderStatus', '')}>All Status</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Paid')}>Paid</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Save')}>Save</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'KOT')}>KOT</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Cancelled')}>Cancelled</Dropdown.Item>
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </Col>
-
-                      {/* Order Type Filter */}
-                      <Col xs="12" sm="6" md="3">
-                        <Form.Label className="small fw-bold text-muted mb-1">Type</Form.Label>
-                        <Dropdown className="w-100">
-                          <Dropdown.Toggle
-                            variant="white"
-                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
-                            style={{ height: '44px', fontSize: '14px' }}
-                          >
-                            {filters.orderType || 'All Types'}
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu
-                            className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
-                            style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
-                          >
-                            <Dropdown.Item onClick={() => handleFilterChange('orderType', '')}>All Types</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Dine In')}>Dine In</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Takeaway')}>Takeaway</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Delivery')}>Delivery</Dropdown.Item>
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </Col>
-
-                      {/* Table Area Filter */}
-                      {tableAreas.length > 0 && (
-                        <Col xs="12" sm="6" md="3">
-                          <Form.Label className="small fw-bold text-muted mb-1">Table Area</Form.Label>
-                          <Dropdown className="w-100">
-                            <Dropdown.Toggle
-                              variant="white"
-                              className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
-                              style={{ height: '44px', fontSize: '14px' }}
-                            >
-                              {filters.tableArea || 'All Areas'}
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu
-                              className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
-                              style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
-                            >
-                              <Dropdown.Item active={filters.tableArea === ''} onClick={() => handleFilterChange('tableArea', '')}>All Areas</Dropdown.Item>
-                              {tableAreas.map((area) => (
-                                <Dropdown.Item key={area} active={filters.tableArea === area} onClick={() => handleFilterChange('tableArea', area)}>
-                                  {area}
-                                </Dropdown.Item>
-                              ))}
-                            </Dropdown.Menu>
-                          </Dropdown>
+                      <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
+                        <Col xs="6">
+                          <div className="text-muted small mb-1">Type</div>
+                          <Badge bg={order.order_type === 'Dine In' ? 'primary' : order.order_type === 'Takeaway' ? 'warning' : order.order_type === 'Delivery' ? 'success' : 'secondary'} className="rounded-pill px-3 py-1">
+                            {order.order_type}
+                          </Badge>
                         </Col>
-                      )}
-                    </Row>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Collapse>
-
-            {/* Show table or "no data" message */}
-            {data.length === 0 && !loading ? (
-              <Alert
-                variant="info"
-                className="text-center border-0 shadow-sm"
-                style={{ borderRadius: '1rem', backgroundColor: 'rgba(35, 179, 244, 0.05)', color: '#23b3f4' }}
-              >
-                <CsLineIcons icon="inbox" size={24} className="me-2" />
-                No orders found. {searchTerm || getActiveFilterCount() > 0 ? 'Try adjusting your search or filters.' : 'Orders will appear here once created.'}
-              </Alert>
-            ) : (
-              <>
-                {/* Table View for Desktop */}
-                <Row className="d-none d-md-flex">
-                  <Col xs="12" style={{ overflow: 'auto' }}>
-                    <Table className="react-table rows" tableInstance={tableInstance} onSort={handleSort} />
-                  </Col>
-                </Row>
-
-                {/* Card View for Mobile */}
-                <Row className="d-md-none g-3">
-                  {data.map((order, idx) => (
-                    <Col key={idx} xs="12">
-                      <Card className="border-0 shadow-sm hover-scale-up" style={{ borderRadius: '1.25rem', overflow: 'hidden' }}>
-                        <Card.Body className="p-3 position-relative">
-                          <div
-                            className="position-absolute"
-                            style={{
-                              top: '-10px',
-                              right: '-10px',
-                              width: '60px',
-                              height: '60px',
-                              borderRadius: '50%',
-                              background: 'rgba(35, 179, 244, 0.1)',
-                              filter: 'blur(10px)',
-                            }}
-                          />
-                          <div className="d-flex justify-content-between align-items-start mb-3 position-relative">
-                            <div>
-                              <div className="fw-bolder text-primary mb-1" style={{ fontSize: '14px' }}>
-                                {order.order_no || 'ORD-0000'}
-                              </div>
-                              <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd MMM yyyy, HH:mm')}</div>
-                            </div>
-                            <Badge
-                              bg={order.order_status === 'Paid' || order.order_status === 'Completed' || order.order_status === 'Save' ? 'success' : order.order_status === 'KOT' ? 'warning' : order.order_status === 'Cancelled' ? 'danger' : 'secondary'}
-                              className="rounded-pill px-3 py-1"
-                            >
-                              {order.order_status}
-                            </Badge>
+                        <Col xs="6" className="text-end">
+                          <div className="text-muted small">Amount</div>
+                          <div className="fw-bolder text-dark" style={{ fontSize: '15px' }}>
+                            ₹{parseFloat(order.total_amount).toFixed(2)}
                           </div>
+                        </Col>
+                      </Row>
 
-                          <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
-                            <Col xs="6">
-                              <div className="text-muted small mb-1">Type</div>
-                              <Badge bg={order.order_type === 'Dine In' ? 'primary' : order.order_type === 'Takeaway' ? 'warning' : order.order_type === 'Delivery' ? 'success' : 'secondary'} className="rounded-pill px-3 py-1">
-                                {order.order_type}
-                              </Badge>
-                            </Col>
-                            <Col xs="6" className="text-end">
-                              <div className="text-muted small">Amount</div>
-                              <div className="fw-bolder text-dark" style={{ fontSize: '15px' }}>
-                                ₹{parseFloat(order.total_amount).toFixed(2)}
-                              </div>
-                            </Col>
-                          </Row>
+                      <div className="d-flex justify-content-between align-items-center">
+                        <Badge bg={order.order_source === 'Manager' ? 'info' : order.order_source === 'Captain' ? 'primary' : order.order_source === 'QSR' ? 'secondary' : 'dark'} className="rounded-pill px-3 py-1">
+                          {order.order_source}
+                        </Badge>
+                        <div className="d-flex gap-2">
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            className="btn-icon btn-icon-only rounded-circle"
+                            onClick={() => history.push(`/operations/order-details/${order.id}`)}
+                          >
+                            <CsLineIcons icon="eye" size="14" />
+                          </Button>
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            className="btn-icon btn-icon-only rounded-circle"
+                            onClick={() => handlePrint(order.id)}
+                            disabled={printing[order.id]}
+                          >
+                            {printing[order.id] ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="print" size="14" />}
+                          </Button>
+                        </div>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
 
-                          <div className="d-flex justify-content-between align-items-center">
-                            <Badge bg={order.order_source === 'Manager' ? 'info' : order.order_source === 'Captain' ? 'primary' : order.order_source === 'QSR' ? 'secondary' : 'dark'} className="rounded-pill px-3 py-1">
-                              {order.order_source}
-                            </Badge>
-                            <div className="d-flex gap-2">
-                              <Button
-                                variant="outline-primary"
-                                size="sm"
-                                className="btn-icon btn-icon-only rounded-circle"
-                                onClick={() => history.push(`/operations/order-details/${order.id}`)}
-                              >
-                                <CsLineIcons icon="eye" size="14" />
-                              </Button>
-                              <Button
-                                variant="outline-secondary"
-                                size="sm"
-                                className="btn-icon btn-icon-only rounded-circle"
-                                onClick={() => handlePrint(order.id)}
-                                disabled={printing[order.id]}
-                              >
-                                {printing[order.id] ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="print" size="14" />}
-                              </Button>
-                            </div>
+            <Row className="mt-4">
+              <Col xs="12">
+                <TablePagination paginationProps={paginationProps} />
+              </Col>
+            </Row>
+          </>
+        )}
+      </div>
+
+      {/* Export Modal */}
+      <Modal show={showExportModal} onHide={() => !exporting && setShowExportModal(false)} size="lg" centered className="modal-glass">
+        <Modal.Header closeButton={!exporting} className="border-0 pb-0">
+          <Modal.Title className="fw-bold d-flex align-items-center">
+            <div
+              className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3"
+              style={{ backgroundColor: 'rgba(35, 179, 244, 0.1)' }}
+            >
+              <CsLineIcons icon="download" size="20" style={{ color: '#23b3f4' }} />
+            </div>
+            <span>Export Order History</span>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="px-4 pt-4">
+          {!exporting ? (
+            <>
+              <p className="text-muted mb-4">Select your preferred format and filters to generate the report.</p>
+
+              <Form onSubmit={(e) => e.preventDefault()}>
+                {/* Export Format Selection */}
+                <div className="mb-4">
+                  <Form.Label className="fw-bolder mb-3 text-uppercase text-muted" style={{ fontSize: '11px', letterSpacing: '1px' }}>
+                    Export Format
+                  </Form.Label>
+                  <Row className="g-3">
+                    <Col xs="12" sm="6">
+                      <Card
+                        className={`border-2 transition-all cursor-pointer h-100 ${exportFormat === 'excel' ? 'border-primary' : 'border-separator-light'}`}
+                        style={{ borderRadius: '1.25rem', cursor: 'pointer', transition: 'all 0.3s ease' }}
+                        onClick={() => setExportFormat('excel')}
+                      >
+                        <Card.Body className="d-flex align-items-center p-3">
+                          <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 bg-light-success text-success">
+                            <CsLineIcons icon="file-text" size="20" />
                           </div>
+                          <div className="flex-grow-1">
+                            <div className="fw-bold text-dark">Excel Data</div>
+                            <div className="text-muted xsmall">Tabular .xlsx</div>
+                          </div>
+                          <Form.Check type="radio" className="ms-2" checked={exportFormat === 'excel'} onChange={() => { }} />
                         </Card.Body>
                       </Card>
                     </Col>
-                  ))}
-                </Row>
-
-                <Row className="mt-4">
-                  <Col xs="12">
-                    <TablePagination paginationProps={paginationProps} />
-                  </Col>
-                </Row>
-              </>
-            )}
-          </div>
-
-          {/* Export Modal */}
-          <Modal show={showExportModal} onHide={() => !exporting && setShowExportModal(false)} size="lg" centered className="modal-glass">
-            <Modal.Header closeButton={!exporting} className="border-0 pb-0">
-              <Modal.Title className="fw-bold d-flex align-items-center">
-                <div
-                  className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3"
-                  style={{ backgroundColor: 'rgba(35, 179, 244, 0.1)' }}
-                >
-                  <CsLineIcons icon="download" size="20" style={{ color: '#23b3f4' }} />
+                    <Col xs="12" sm="6">
+                      <Card
+                        className={`border-2 transition-all cursor-pointer h-100 ${exportFormat === 'pdf' ? 'border-primary' : 'border-separator-light'}`}
+                        style={{ borderRadius: '1.25rem', cursor: 'pointer', transition: 'all 0.3s ease' }}
+                        onClick={() => setExportFormat('pdf')}
+                      >
+                        <Card.Body className="d-flex align-items-center p-3">
+                          <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 bg-light-danger text-danger">
+                            <CsLineIcons icon="file-text" size="20" />
+                          </div>
+                          <div className="flex-grow-1">
+                            <div className="fw-bold text-dark">PDF Report</div>
+                            <div className="text-muted xsmall">Document .pdf</div>
+                          </div>
+                          <Form.Check type="radio" className="ms-2" checked={exportFormat === 'pdf'} onChange={() => { }} />
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
                 </div>
-                <span>Export Order History</span>
-              </Modal.Title>
-            </Modal.Header>
-            <Modal.Body className="px-4 pt-4">
-              {!exporting ? (
-                <>
-                  <p className="text-muted mb-4">Select your preferred format and filters to generate the report.</p>
 
-                  <Form onSubmit={(e) => e.preventDefault()}>
-                    {/* Export Format Selection */}
-                    <div className="mb-4">
-                      <Form.Label className="fw-bolder mb-3 text-uppercase text-muted" style={{ fontSize: '11px', letterSpacing: '1px' }}>
-                        Export Format
-                      </Form.Label>
-                      <Row className="g-3">
-                        <Col xs="12" sm="6">
-                          <Card
-                            className={`border-2 transition-all cursor-pointer h-100 ${exportFormat === 'excel' ? 'border-primary' : 'border-separator-light'}`}
-                            style={{ borderRadius: '1.25rem', cursor: 'pointer', transition: 'all 0.3s ease' }}
-                            onClick={() => setExportFormat('excel')}
-                          >
-                            <Card.Body className="d-flex align-items-center p-3">
-                              <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 bg-light-success text-success">
-                                <CsLineIcons icon="file-text" size="20" />
-                              </div>
-                              <div className="flex-grow-1">
-                                <div className="fw-bold text-dark">Excel Data</div>
-                                <div className="text-muted xsmall">Tabular .xlsx</div>
-                              </div>
-                              <Form.Check type="radio" className="ms-2" checked={exportFormat === 'excel'} onChange={() => { }} />
-                            </Card.Body>
-                          </Card>
-                        </Col>
-                        <Col xs="12" sm="6">
-                          <Card
-                            className={`border-2 transition-all cursor-pointer h-100 ${exportFormat === 'pdf' ? 'border-primary' : 'border-separator-light'}`}
-                            style={{ borderRadius: '1.25rem', cursor: 'pointer', transition: 'all 0.3s ease' }}
-                            onClick={() => setExportFormat('pdf')}
-                          >
-                            <Card.Body className="d-flex align-items-center p-3">
-                              <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 bg-light-danger text-danger">
-                                <CsLineIcons icon="file-text" size="20" />
-                              </div>
-                              <div className="flex-grow-1">
-                                <div className="fw-bold text-dark">PDF Report</div>
-                                <div className="text-muted xsmall">Document .pdf</div>
-                              </div>
-                              <Form.Check type="radio" className="ms-2" checked={exportFormat === 'pdf'} onChange={() => { }} />
-                            </Card.Body>
-                          </Card>
-                        </Col>
-                      </Row>
-                    </div>
+                {/* Export Filters */}
+                <Form.Label className="fw-bolder mb-3 text-uppercase text-muted" style={{ fontSize: '11px', letterSpacing: '1px' }}>
+                  Filter Data
+                </Form.Label>
 
-                    {/* Export Filters */}
-                    <Form.Label className="fw-bolder mb-3 text-uppercase text-muted" style={{ fontSize: '11px', letterSpacing: '1px' }}>
-                      Filter Data
-                    </Form.Label>
-
-                    <Card className="border-0 bg-light p-3" style={{ borderRadius: '1rem' }}>
-                      <Row className="g-3">
-                        <Col xs={12}>
-                          <Form.Label className="small fw-bold text-muted mb-1">Date Range</Form.Label>
-                          <div className="d-flex flex-column flex-sm-row gap-3">
-                        <div 
-                          className="d-flex align-items-center flex-grow-1 bg-white shadow-sm rounded-pill px-3" 
+                <Card className="border-0 bg-light p-3" style={{ borderRadius: '1rem' }}>
+                  <Row className="g-3">
+                    <Col xs={12}>
+                      <Form.Label className="small fw-bold text-muted mb-1">Date Range</Form.Label>
+                      <div className="d-flex flex-column flex-sm-row gap-3">
+                        <div
+                          className="d-flex align-items-center flex-grow-1 bg-white shadow-sm rounded-pill px-3"
                           style={{ height: '44px', border: '1px solid #f1f5f9' }}
                         >
                           <CsLineIcons icon="calendar" size="16" className="text-primary me-2" />
@@ -1470,8 +1469,8 @@ const OrderHistory = () => {
                             style={{ fontSize: '14px', outline: 'none' }}
                           />
                         </div>
-                        <div 
-                          className="d-flex align-items-center flex-grow-1 bg-white shadow-sm rounded-pill px-3" 
+                        <div
+                          className="d-flex align-items-center flex-grow-1 bg-white shadow-sm rounded-pill px-3"
                           style={{ height: '44px', border: '1px solid #f1f5f9' }}
                         >
                           <CsLineIcons icon="calendar" size="16" className="text-primary me-2" />
@@ -1486,164 +1485,164 @@ const OrderHistory = () => {
                       </div>
                     </Col>
 
-                        <Col xs={12} sm={6}>
-                          <Form.Label className="small fw-bold text-muted mb-1">Order Source</Form.Label>
-                          <Dropdown className="w-100">
-                            <Dropdown.Toggle
-                              variant="white"
-                              className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
-                              style={{ height: '44px', fontSize: '14px' }}
-                            >
-                              {exportFilters.orderSource || 'All Sources'}
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu
-                              className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
-                              style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
-                            >
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: '' })}>All Sources</Dropdown.Item>
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: 'Manager' })}>Manager</Dropdown.Item>
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: 'Captain' })}>Captain</Dropdown.Item>
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: 'QSR' })}>QSR</Dropdown.Item>
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </Col>
+                    <Col xs={12} sm={6}>
+                      <Form.Label className="small fw-bold text-muted mb-1">Order Source</Form.Label>
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle
+                          variant="white"
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                          style={{ height: '44px', fontSize: '14px' }}
+                        >
+                          {exportFilters.orderSource || 'All Sources'}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu
+                          className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                          style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
+                        >
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: '' })}>All Sources</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: 'Manager' })}>Manager</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: 'Captain' })}>Captain</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderSource: 'QSR' })}>QSR</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </Col>
 
-                        <Col xs={12} sm={6}>
-                          <Form.Label className="small fw-bold text-muted mb-1">Status</Form.Label>
-                          <Dropdown className="w-100">
-                            <Dropdown.Toggle
-                              variant="white"
-                              className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
-                              style={{ height: '44px', fontSize: '14px' }}
-                            >
-                              {exportFilters.orderStatus || 'All Status'}
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu
-                              className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
-                              style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
-                            >
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: '' })}>All Status</Dropdown.Item>
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Paid' })}>Paid</Dropdown.Item>
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Save' })}>Save</Dropdown.Item>
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'KOT' })}>KOT</Dropdown.Item>
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Cancelled' })}>Cancelled</Dropdown.Item>
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </Col>
+                    <Col xs={12} sm={6}>
+                      <Form.Label className="small fw-bold text-muted mb-1">Status</Form.Label>
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle
+                          variant="white"
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                          style={{ height: '44px', fontSize: '14px' }}
+                        >
+                          {exportFilters.orderStatus || 'All Status'}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu
+                          className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                          style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
+                        >
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: '' })}>All Status</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Paid' })}>Paid</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Save' })}>Save</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'KOT' })}>KOT</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Cancelled' })}>Cancelled</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </Col>
 
-                        <Col xs={12} sm={6}>
-                          <Form.Label className="small fw-bold text-muted mb-1">Order Type</Form.Label>
-                          <Dropdown className="w-100">
-                            <Dropdown.Toggle
-                              variant="white"
-                              className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
-                              style={{ height: '44px', fontSize: '14px' }}
-                            >
-                              {exportFilters.orderType || 'All Types'}
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu
-                              className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
-                              style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
-                            >
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: '' })}>All Types</Dropdown.Item>
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Dine In' })}>Dine In</Dropdown.Item>
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Takeaway' })}>Takeaway</Dropdown.Item>
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Delivery' })}>Delivery</Dropdown.Item>
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </Col>
+                    <Col xs={12} sm={6}>
+                      <Form.Label className="small fw-bold text-muted mb-1">Order Type</Form.Label>
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle
+                          variant="white"
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                          style={{ height: '44px', fontSize: '14px' }}
+                        >
+                          {exportFilters.orderType || 'All Types'}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu
+                          className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                          style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
+                        >
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: '' })}>All Types</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Dine In' })}>Dine In</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Takeaway' })}>Takeaway</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Delivery' })}>Delivery</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </Col>
 
-                        <Col xs={12} sm={6}>
-                          <Form.Label className="small fw-bold text-muted mb-1">Payment Mode</Form.Label>
-                          <Dropdown className="w-100">
-                            <Dropdown.Toggle
-                              variant="white"
-                              className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
-                              style={{ height: '44px', fontSize: '14px' }}
-                            >
-                              {exportFilters.paymentType || 'All Payment Types'}
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu
-                              className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
-                              style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
-                            >
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: '' })}>All Payment Types</Dropdown.Item>
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Cash' })}>Cash</Dropdown.Item>
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Card' })}>Card</Dropdown.Item>
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'UPI' })}>UPI</Dropdown.Item>
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Complementary' })}>Complementary</Dropdown.Item>
-                              <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Pending' })}>Pending</Dropdown.Item>
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </Col>
+                    <Col xs={12} sm={6}>
+                      <Form.Label className="small fw-bold text-muted mb-1">Payment Mode</Form.Label>
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle
+                          variant="white"
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                          style={{ height: '44px', fontSize: '14px' }}
+                        >
+                          {exportFilters.paymentType || 'All Payment Types'}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu
+                          className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                          style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
+                        >
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: '' })}>All Payment Types</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Cash' })}>Cash</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Card' })}>Card</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'UPI' })}>UPI</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Complementary' })}>Complementary</Dropdown.Item>
+                          <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Pending' })}>Pending</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </Col>
 
-                        <Col xs={12}>
-                          <Form.Label className="small fw-bold text-muted mb-1">Table Area</Form.Label>
-                          <Dropdown className="w-100">
-                            <Dropdown.Toggle
-                              variant="white"
-                              className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
-                              style={{ height: '44px', fontSize: '14px' }}
-                            >
-                              {exportFilters.tableArea || 'All Areas'}
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu
-                              className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
-                              style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
-                            >
-                              <Dropdown.Item active={exportFilters.tableArea === ''} onClick={() => setExportFilters({ ...exportFilters, tableArea: '' })}>All Areas</Dropdown.Item>
-                              {tableAreas.length > 0 ? (
-                                tableAreas.map((area) => (
-                                  <Dropdown.Item key={area} active={exportFilters.tableArea === area} onClick={() => setExportFilters({ ...exportFilters, tableArea: area })}>
-                                    {area}
-                                  </Dropdown.Item>
-                                ))
-                              ) : (
-                                <Dropdown.Item disabled className="text-muted">No areas configured</Dropdown.Item>
-                              )}
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </Col>
-                      </Row>
-                    </Card>
+                    <Col xs={12}>
+                      <Form.Label className="small fw-bold text-muted mb-1">Table Area</Form.Label>
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle
+                          variant="white"
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
+                          style={{ height: '44px', fontSize: '14px' }}
+                        >
+                          {exportFilters.tableArea || 'All Areas'}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu
+                          className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                          style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
+                        >
+                          <Dropdown.Item active={exportFilters.tableArea === ''} onClick={() => setExportFilters({ ...exportFilters, tableArea: '' })}>All Areas</Dropdown.Item>
+                          {tableAreas.length > 0 ? (
+                            tableAreas.map((area) => (
+                              <Dropdown.Item key={area} active={exportFilters.tableArea === area} onClick={() => setExportFilters({ ...exportFilters, tableArea: area })}>
+                                {area}
+                              </Dropdown.Item>
+                            ))
+                          ) : (
+                            <Dropdown.Item disabled className="text-muted">No areas configured</Dropdown.Item>
+                          )}
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </Col>
+                  </Row>
+                </Card>
 
-                    <div className="mt-3 d-flex align-items-center text-primary small bg-light-primary p-2 rounded-3">
-                      <CsLineIcons icon="info-circle" className="me-2" size="14" />
-                      <span>Leave filters empty to export all records.</span>
-                    </div>
-                  </Form>
-                </>
-              ) : (
-                <div className="text-center py-5">
-                  <div className="mb-4">
-                    <Spinner animation="border" style={{ color: '#23b3f4', width: '3rem', height: '3rem' }} />
-                  </div>
-                  <h4 className="fw-bold mb-2">Generating Report</h4>
-                  <p className="text-muted mb-4">Please wait while we compile your data into {exportFormat === 'excel' ? 'Excel' : 'PDF'}...</p>
-                  <div style={{ maxWidth: '300px', margin: '0 auto' }}>
-                    <ProgressBar now={exportProgress} label={`${exportProgress}%`} style={{ height: '10px', backgroundColor: '#f3f4f6' }}>
-                      <ProgressBar now={exportProgress} style={{ backgroundColor: '#23b3f4' }} />
-                    </ProgressBar>
-                  </div>
+                <div className="mt-3 d-flex align-items-center text-primary small bg-light-primary p-2 rounded-3">
+                  <CsLineIcons icon="info-circle" className="me-2" size="14" />
+                  <span>Leave filters empty to export all records.</span>
                 </div>
-              )}
-            </Modal.Body>
-            <Modal.Footer className="border-0 pt-0 pb-4 px-4">
-              <Button type="button" variant="light" onClick={() => setShowExportModal(false)} disabled={exporting} className="rounded-pill px-4">
-                Close
-              </Button>
-              {!exporting && (
-                <Button
-                  type="button"
-                  onClick={handleExportConfirm}
-                  className="px-4 py-2 rounded-pill d-flex align-items-center manage-table-custom-btn-outline"
-                >
-                  <CsLineIcons icon="download" className="me-2" size="18" stroke="currentColor" />
-                  Download {exportFormat === 'excel' ? 'Excel' : 'PDF'}
-                </Button>
-              )}
-            </Modal.Footer>
-          </Modal>
+              </Form>
+            </>
+          ) : (
+            <div className="text-center py-5">
+              <div className="mb-4">
+                <Spinner animation="border" style={{ color: '#23b3f4', width: '3rem', height: '3rem' }} />
+              </div>
+              <h4 className="fw-bold mb-2">Generating Report</h4>
+              <p className="text-muted mb-4">Please wait while we compile your data into {exportFormat === 'excel' ? 'Excel' : 'PDF'}...</p>
+              <div style={{ maxWidth: '300px', margin: '0 auto' }}>
+                <ProgressBar now={exportProgress} label={`${exportProgress}%`} style={{ height: '10px', backgroundColor: '#f3f4f6' }}>
+                  <ProgressBar now={exportProgress} style={{ backgroundColor: '#23b3f4' }} />
+                </ProgressBar>
+              </div>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0 pb-4 px-4">
+          <Button type="button" variant="light" onClick={() => setShowExportModal(false)} disabled={exporting} className="rounded-pill px-4">
+            Close
+          </Button>
+          {!exporting && (
+            <Button
+              type="button"
+              onClick={handleExportConfirm}
+              className="px-4 py-2 rounded-pill d-flex align-items-center manage-table-custom-btn-outline"
+            >
+              <CsLineIcons icon="download" className="me-2" size="18" stroke="currentColor" />
+              Download {exportFormat === 'excel' ? 'Excel' : 'PDF'}
+            </Button>
+          )}
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

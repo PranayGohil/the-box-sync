@@ -145,13 +145,15 @@ export const LeaveConfirmationModal = ({
             type="button"
             className="btn-qsr-secondary"
             onClick={async () => {
-              allowNavigationRef.current = true;
-              await handleSaveOrder('Save');
-              setShowLeaveModal(false);
-              if (nextLocation) {
-                setTimeout(() => {
-                  history.push(nextLocation);
-                }, 0);
+              const success = await handleSaveOrder('Save');
+              if (success) {
+                allowNavigationRef.current = true;
+                setShowLeaveModal(false);
+                if (nextLocation) {
+                  setTimeout(() => {
+                    history.push(nextLocation);
+                  }, 0);
+                }
               }
             }}
             disabled={isLoading}
@@ -165,13 +167,15 @@ export const LeaveConfirmationModal = ({
             type="button"
             className="btn-qsr-blue"
             onClick={async () => {
-              allowNavigationRef.current = true;
-              await handleSaveOrder('KOT');
-              setShowLeaveModal(false);
-              if (nextLocation) {
-                setTimeout(() => {
-                  history.push(nextLocation);
-                }, 0);
+              const success = await handleSaveOrder('KOT');
+              if (success) {
+                allowNavigationRef.current = true;
+                setShowLeaveModal(false);
+                if (nextLocation) {
+                  setTimeout(() => {
+                    history.push(nextLocation);
+                  }, 0);
+                }
               }
             }}
             disabled={isLoading}

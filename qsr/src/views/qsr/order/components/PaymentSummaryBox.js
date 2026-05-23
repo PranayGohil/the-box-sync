@@ -8,6 +8,7 @@ const PaymentSummaryBox = ({
   setShowCancelModal, handlePrint, history, setShowCartSheet,
   onKotAndPrint, kotPrinting, kotHistory = [], onReprintKOT,
   paymentHistory = [], alreadyPaid = 0, canKOT = false,
+  orderType,
 }) => {
   const [showKotHistory, setShowKotHistory] = useState(false);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
@@ -24,6 +25,7 @@ const PaymentSummaryBox = ({
 
   const showSave = orderItems.length > 0 && isDirty;
   const showKitchen = canKOT && showKOTButtons;
+  const showKOTPrintButton = showKOTButtons;
   const showPrintBill = (!isPaid || isDirty || dueAmount > 0.01) && orderItems.length > 0;
   const showPayment = (orderStatus === 'KOT' || (orderStatus === 'Save' && orderItems.length > 0) || (isPaid && dueAmount > 0.01));
 
@@ -31,7 +33,7 @@ const PaymentSummaryBox = ({
   let totalUnpaidActions = 0;
   if (showSave) totalUnpaidActions++;
   if (showKitchen) totalUnpaidActions++;
-  if (showPrintBill) totalUnpaidActions++;
+  if (showKOTPrintButton) totalUnpaidActions++;
   if (showPayment) {
     if (totalUnpaidActions % 2 === 0) {
       paymentSpan = 'span 2';
@@ -119,6 +121,19 @@ const PaymentSummaryBox = ({
             >
               <CsLineIcons icon="send" size="13" />
               Kitchen
+            </button>
+          )}
+
+          {/* KOT + Print */}
+          {showKOTPrintButton && (
+            <button
+              type="button"
+              style={{ ...btnBase, background: 'rgba(245,158,11,0.08)', color: '#d97706', border: '1.5px solid rgba(245,158,11,0.3)' }}
+              onClick={onKotAndPrint}
+              disabled={isLoading || kotPrinting}
+            >
+              <CsLineIcons icon="print" size="13" />
+              {kotPrinting ? '...' : 'Order Print'}
             </button>
           )}
 

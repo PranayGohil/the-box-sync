@@ -10,6 +10,7 @@ const BottomCartSheet = ({
   alreadyPaid = 0, canKOT = false,
   onKotAndPrint, kotPrinting, kotHistory = [], onReprintKOT,
   paymentHistory = [],
+  orderType,
 }) => {
   const [showKotHistory, setShowKotHistory] = useState(false);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
@@ -22,6 +23,7 @@ const BottomCartSheet = ({
 
   const showSave = orderItems.length > 0 && isDirty;
   const showKitchen = canKOT && showKOTButtons;
+  const showKOTPrintButton = showKOTButtons;
   const showPrintBill = (!isPaid || isDirty || dueAmount > 0.01) && orderItems.length > 0;
   const showPayment = (orderStatus === 'KOT' || (orderStatus === 'Save' && orderItems.length > 0) || (isPaid && dueAmount > 0.01));
 
@@ -29,6 +31,7 @@ const BottomCartSheet = ({
   let totalUnpaidActions = 0;
   if (showSave) totalUnpaidActions++;
   if (showKitchen) totalUnpaidActions++;
+  if (showKOTPrintButton) totalUnpaidActions++;
   if (showPrintBill) totalUnpaidActions++;
   if (showPayment) {
     if (totalUnpaidActions % 2 === 0) {
@@ -126,6 +129,17 @@ const BottomCartSheet = ({
                 disabled={isLoading}
               >
                 Kitchen
+              </button>
+            )}
+            {/* KOT + Print */}
+            {showKOTPrintButton && (
+              <button
+                type="button"
+                style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: 'rgba(245,158,11,0.08)', color: '#d97706', border: '1.5px solid rgba(245,158,11,0.3)', cursor: 'pointer' }}
+                onClick={onKotAndPrint}
+                disabled={isLoading || kotPrinting}
+              >
+                {kotPrinting ? '...' : 'Order Print'}
               </button>
             )}
             {/* Print Bill (even if new/unsaved/dirty) */}

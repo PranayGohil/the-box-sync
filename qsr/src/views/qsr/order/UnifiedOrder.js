@@ -274,9 +274,46 @@ const UnifiedOrder = () => {
   // ── Dirty Check ───────────────────────────────────────────────────────────
   const hasUnsavedChanges = () => {
     const initial = initialStateRef.current;
-    const currentEditable = orderItems.filter((i) => i.status !== 'Completed');
-    const initialEditable = initial.orderItems.filter((i) => i.status !== 'Completed');
-    return JSON.stringify(currentEditable) !== JSON.stringify(initialEditable) || JSON.stringify(customerInfo) !== JSON.stringify(initial.customerInfo);
+    const currentEditable = orderItems.filter((i) => i.status !== 'Completed').map((i) => ({
+      dish_name: i.dish_name,
+      quantity: i.quantity,
+      special_notes: i.special_notes || '',
+      dish_price: i.dish_price,
+      status: i.status || 'Pending',
+      selected_variant: i.selected_variant ? { name: i.selected_variant.name, price: i.selected_variant.price } : null,
+      selected_addons: (i.selected_addons || []).map((a) => ({ name: a.name, price: a.price })),
+    }));
+    const initialEditable = initial.orderItems.filter((i) => i.status !== 'Completed').map((i) => ({
+      dish_name: i.dish_name,
+      quantity: i.quantity,
+      special_notes: i.special_notes || '',
+      dish_price: i.dish_price,
+      status: i.status || 'Pending',
+      selected_variant: i.selected_variant ? { name: i.selected_variant.name, price: i.selected_variant.price } : null,
+      selected_addons: (i.selected_addons || []).map((a) => ({ name: a.name, price: a.price })),
+    }));
+
+    const currentCust = {
+      name: customerInfo.name || '',
+      phone: customerInfo.phone || '',
+      address: customerInfo.address || '',
+      total_persons: customerInfo.total_persons || '',
+      waiter: customerInfo.waiter || '',
+      table_no: customerInfo.table_no || '',
+      comment: customerInfo.comment || '',
+    };
+    const initialCust = {
+      name: initial.customerInfo.name || '',
+      phone: initial.customerInfo.phone || '',
+      address: initial.customerInfo.address || '',
+      total_persons: initial.customerInfo.total_persons || '',
+      waiter: initial.customerInfo.waiter || '',
+      table_no: initial.customerInfo.table_no || '',
+      comment: initial.customerInfo.comment || '',
+    };
+
+    return JSON.stringify(currentEditable) !== JSON.stringify(initialEditable) ||
+      JSON.stringify(currentCust) !== JSON.stringify(initialCust);
   };
 
   // Guard: only run after initial data is loaded
@@ -349,12 +386,17 @@ const UnifiedOrder = () => {
     const delta = [];
     for (const item of currentItems) {
       if (!['Completed', 'Cancelled', 'Container Charge'].includes(item.status)) {
-        const prev = snapshotItems.find((s) => s.dish_name === item.dish_name && s.special_notes === item.special_notes);
-
-        if (!prev) {
+        // If the item has a 'Pending' status, it has never been printed or sent to the kitchen
+        if (item.status === 'Pending') {
           delta.push({ ...item });
-        } else if (item.quantity > prev.quantity) {
-          delta.push({ ...item, quantity: item.quantity - prev.quantity });
+        } else {
+          const prev = snapshotItems.find((s) => s.dish_name === item.dish_name && s.special_notes === item.special_notes);
+
+          if (!prev) {
+            delta.push({ ...item });
+          } else if (item.quantity > prev.quantity) {
+            delta.push({ ...item, quantity: item.quantity - prev.quantity });
+          }
         }
       }
     }
@@ -391,7 +433,7 @@ const UnifiedOrder = () => {
       order_items: orderItems.map((item) => {
         let itemStatus = item.status || 'Pending';
         if (completeAll) {
-          itemStatus = 'Completed';
+          itemStatus = canKOT ? 'Preparing' : 'Completed';
         } else if (status === 'Paid') {
           if (canKOT) {
             if (itemStatus === 'Pending') {
@@ -402,7 +444,7 @@ const UnifiedOrder = () => {
           }
         } else if (status === 'KOT') {
           if (itemStatus === 'Pending') {
-            itemStatus = 'Preparing';
+            itemStatus = canKOT ? 'Preparing' : 'Completed';
           }
         } else if (status === 'Save') {
           itemStatus = itemStatus || 'Pending';
@@ -463,7 +505,7 @@ const UnifiedOrder = () => {
       if (!validateOrder()) return;
       setPrinting(true);
       try {
-        const status = orderStatus || 'Save';
+        const status = orderStatus && orderStatus !== 'Save' ? orderStatus : 'KOT';
         const payload = buildPayload(status);
         const token = localStorage.getItem('token');
         const response = await API_MAP[orderType](payload, token);
@@ -474,23 +516,23 @@ const UnifiedOrder = () => {
           setIsDirty(false);
           setOrderStatus(status);
 
-          // Update URL and routing so the page is in edit mode
           if (savedId) {
             // Close any open sheets/modals so they don't block the screen
             setShowPaymentModal(false);
             setShowCartSheet(false);
 
-            if (orderType === 'Dine In' && tableId) {
-              history.replace(`/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`);
+            if (!orderId) {
+              allowNavigationRef.current = true;
+              if (orderType === 'Dine In' && tableId) {
+                window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`;
+              } else {
+                window.location.href = `/order/new?orderId=${savedId}&mode=edit`;
+              }
             } else {
-              history.replace(`/order/new?orderId=${savedId}&mode=edit`);
+              // Already in edit mode: sync fetch populated order and print it
+              await fetchOrderDetails(savedId);
+              openPrintWindow(savedId, setPrinting);
             }
-
-            // Sync fetch the fully populated order (with backend generated Token/Bill number)
-            await fetchOrderDetails(savedId);
-
-            // Print the newly saved order
-            openPrintWindow(savedId, setPrinting);
           }
         }
       } catch (err) {
@@ -551,8 +593,10 @@ const UnifiedOrder = () => {
           } else {
             window.location.href = `/order/new?orderId=${savedId}&mode=edit`;
           }
+        } else if (orderType === 'Dine In' && tableId) {
+          window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`;
         } else {
-          fetchOrderDetails();
+          window.location.href = `/order/new?orderId=${savedId}&mode=edit`;
         }
       }
     } catch (err) {
@@ -581,7 +625,7 @@ const UnifiedOrder = () => {
 
   // ── Save / Cancel / Pay ───────────────────────────────────────────────────
   const handleSaveOrder = async (status = 'Save') => {
-    if (!validateOrder()) return;
+    if (!validateOrder()) return false;
     setIsLoading(true);
     try {
       const payload = buildPayload(status);
@@ -620,10 +664,13 @@ const UnifiedOrder = () => {
           toast.success('Order saved and marked as Paid!');
           history.push('/dashboard');
         }
+        return true;
       }
+      return false;
     } catch (err) {
       console.error('Error saving order:', err);
       alert('Error saving order. Please try again.');
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -867,6 +914,7 @@ const UnifiedOrder = () => {
                 paymentHistory={paymentHistory}
                 alreadyPaid={parseFloat(initialStateRef.current?.paid_amount) || 0}
                 canKOT={canKOT}
+                orderType={orderType}
               />
             </div>
           </div>
@@ -932,6 +980,7 @@ const UnifiedOrder = () => {
         kotHistory={kotHistory}
         onReprintKOT={handleReprintKOT}
         paymentHistory={paymentHistory}
+        orderType={orderType}
       >
         <div className="d-flex align-items-center justify-content-between mb-3">
           <h6 className="mb-0 fw-bold text-muted border-bottom pb-2 flex-grow-1">Customer Details</h6>
