@@ -58,9 +58,21 @@ const Login = () => {
     try {
       const res = await axios.post(`${process.env.REACT_APP_API}/user/login`, values);
       if (res.data.success) {
-        setTimeout(() => {
-          login(res.data.token, res.data.user);
-          window.location.href = '/';
+        setTimeout(async () => {
+          try {
+            const userRes = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
+              headers: { Authorization: `Bearer ${res.data.token}` }
+            });
+            login(res.data.token, userRes.data);
+            if (userRes.data && userRes.data.purchasedPlan) {
+              window.location.href = '/dashboard';
+            } else {
+              window.location.href = '/select-plan';
+            }
+          } catch (err) {
+            console.error('Error checking user data', err);
+            window.location.href = '/dashboard';
+          }
         }, 500);
       } else {
         setError(res.data.message);

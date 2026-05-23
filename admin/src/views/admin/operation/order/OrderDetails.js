@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { Row, Col, Card, Button, Spinner, Table, Alert, Badge } from 'react-bootstrap';
@@ -7,6 +7,7 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
 import { openPrintWindow } from 'utils/printUtils';
+import { AuthContext } from 'contexts/AuthContext';
 
 const OrderDetails = () => {
   const title = 'Order Details';
@@ -21,11 +22,14 @@ const OrderDetails = () => {
 
   const { id } = useParams();
   const history = useHistory();
+  const { currentUser, activePlans } = useContext(AuthContext);
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [printing, setPrinting] = useState(false);
   const [sharing, setSharing] = useState(false);
+
+  const canUseWhatsApp = ['Growth', 'Scale'].includes(currentUser?.purchasedPlan) || activePlans?.includes('Whatsapp-Invoice');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -226,6 +230,7 @@ const OrderDetails = () => {
                   >
                     <CsLineIcons icon="arrow-left" className="me-2" size="15" /> <span>Back</span>
                   </Button>
+                  {canUseWhatsApp && (
                   <Button
                     variant="outline-primary"
                     onClick={handleWhatsAppShare}
@@ -244,6 +249,7 @@ const OrderDetails = () => {
                       </>
                     )}
                   </Button>
+                  )}
                   <Button
                     variant="outline-primary"
                     onClick={handlePrint}

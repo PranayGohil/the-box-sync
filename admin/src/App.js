@@ -17,9 +17,10 @@ const App = () => {
 
   const routes = useMemo(() => getRoutes({ data: allRoutes, isLogin, userRole: currentUser.role }), [isLogin, currentUser]);
   if (routes) {
-    if (isLogin && currentUser && currentUser.isApproved === false) {
+    if (isLogin && currentUser) {
       const path = window.location.pathname;
-      if (!path.includes('/select-plan')) {
+
+      if (currentUser.purchasedPlan && currentUser.isApproved === false && !path.includes('/select-plan')) {
         return (
           <div className="d-flex align-items-center justify-content-center min-vh-100" style={{ backgroundColor: '#0d1b2a', fontFamily: 'inherit' }}>
             <div className="text-center p-5 rounded-4 shadow-lg" style={{ backgroundColor: '#1a3a5c', maxWidth: '500px', border: '1px solid rgba(255,255,255,0.1)' }}>

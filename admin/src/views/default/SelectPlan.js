@@ -1,20 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { Button, Card, Modal, Collapse } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import LayoutFull from 'layout/LayoutFull';
 import { toast } from 'react-toastify';
+import { useHistory } from 'react-router-dom';
 
 const SelectPlan = () => {
-  const title = 'Select Plan';
-  const description = 'Choose your subscription plan';
+  const history = useHistory();
+  const token = localStorage.getItem('token');
 
   const [selectedPlan, setSelectedPlan] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [selectedAddons, setSelectedAddons] = useState([]);
   const [openComparison, setOpenComparison] = useState(false);
+  const [activePlans, setActivePlans] = useState([]);
+
+  useEffect(() => {
+    if (!token) {
+      toast.warning('Please register or log in first to select a plan.');
+      history.push('/register');
+    } else {
+      Promise.all([
+        axios.get(`${process.env.REACT_APP_API}/subscription/get-plans`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(`${process.env.REACT_APP_API}/subscription/get`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(`${process.env.REACT_APP_API}/user/get`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ])
+        .then(([plansRes, subRes, userRes]) => {
+          const userSubscriptions = subRes.data.data.filter((s) => s.status === 'active');
+          const allPlans = plansRes.data.data;
+          const { purchasedPlan } = userRes.data;
+
+          const activeNames = userSubscriptions
+            .map((sub) => {
+              const plan = allPlans.find((p) => p._id === sub.plan_id);
+              return plan ? plan.plan_name : null;
+            })
+            .filter(Boolean);
+
+          if (purchasedPlan) {
+            activeNames.push(purchasedPlan);
+          }
+
+          setActivePlans(activeNames);
+        })
+        .catch((err) => console.error('Error fetching user plans', err));
+    }
+  }, [history, token]);
+
+  if (!token) {
+    return null;
+  }
+
+  const title = 'Select Plan';
+  const description = 'Choose your subscription plan';
+
+
 
   const allAddons = [
     { label: 'Reservation Management', value: 'Reservation Manager' },
@@ -37,16 +86,36 @@ const SelectPlan = () => {
   };
 
   const handleToggleAddon = (value) => {
+    if (selectedPlan === 'Core') {
+      if (selectedAddons.includes(value)) {
+        setSelectedAddons([]);
+      } else {
+        setSelectedAddons([value]);
+      }
+      return;
+    }
+
     if (selectedAddons.includes(value)) {
       setSelectedAddons(selectedAddons.filter((a) => a !== value));
-    } else if (selectedAddons.length < 6) {
-      setSelectedAddons([...selectedAddons, value]);
     } else {
-      toast.warning('You can only select up to 6 add-ons for the Growth plan.');
+      if (selectedPlan === 'Growth' && selectedAddons.length >= 6) {
+        toast.warning('You can only select up to 6 add-ons for the Growth plan.');
+        return;
+      }
+      setSelectedAddons([...selectedAddons, value]);
     }
   };
 
   const handleConfirm = async () => {
+    if (selectedPlan === 'Growth' && selectedAddons.length !== 6) {
+      toast.warning('Please select exactly 6 add-ons for the Growth plan.');
+      return;
+    }
+    if (selectedPlan === 'Core' && selectedAddons.length === 0) {
+      toast.warning('Please select at least one option to proceed.');
+      return;
+    }
+
     setShowModal(false);
     try {
       const response = await axios.post(
@@ -75,11 +144,13 @@ const SelectPlan = () => {
       features: {
         billing: [
           'Inventory Management',
-          '80+ reports',
+          'Statistic Management',
           'Third-party Integrations',
           'In-built CRM',
           'Menu management',
           'Staff management',
+          'Manager Panel',
+          'QSR Panel',
           'Unlimited Users & Terminals',
           'Unlimited cash register',
           'Multi-terminal billing',
@@ -103,18 +174,19 @@ const SelectPlan = () => {
       features: {
         billing: [
           'Inventory Management',
-          '80+ reports',
+          'Statistic Management',
           'Third-party Integrations',
           'In-built CRM',
           'Menu management',
           'Staff management',
+          'Manager Panel',
+          'QSR Panel',
           'Unlimited Users & Terminals',
           'Unlimited cash register',
           'Multi-terminal billing',
         ],
         addons: [
           'Reservation Management',
-          'QSR Panel',
           'Captain Panel',
           'Kitchen Display System',
           'Restaurant Website',
@@ -142,18 +214,19 @@ const SelectPlan = () => {
       features: {
         billing: [
           'Inventory Management',
-          '80+ reports',
+          'Statistic Management',
           'Third-party Integrations',
           'In-built CRM',
           'Menu management',
           'Staff management',
+          'Manager Panel',
+          'QSR Panel',
           'Unlimited Users & Terminals',
           'Unlimited cash register',
           'Multi-terminal billing',
         ],
         addons: [
           'Reservation Management',
-          'QSR Panel',
           'Captain Panel',
           'Kitchen Display System',
           'Restaurant Website',
@@ -347,11 +420,13 @@ const SelectPlan = () => {
                   title: 'Billing',
                   features: [
                     'Inventory Management',
-                    '80+ reports',
+                    'Statistic Management',
                     'Third-party Integrations',
                     'In-built CRM',
                     'Menu management',
                     'Staff management',
+                    'Manager Panel',
+                    'QSR Panel',
                     'Unlimited Users & Terminals',
                     'Unlimited cash register',
                     'Multi-terminal billing'
@@ -361,7 +436,6 @@ const SelectPlan = () => {
                   title: 'Adds ons',
                   features: [
                     'Reservation Management',
-                    'QSR Panel',
                     'Captain Panel',
                     'Kitchen Display System',
                     'Restaurant Website',
@@ -400,7 +474,7 @@ const SelectPlan = () => {
                     <div className={`plan-name ${plan.recommended ? 'plan-name-recommended' : ''}`}>
                       {plan.name === 'Growth Plan' ? 'Growth (Choose Any 6)' : plan.name.split(' ')[0]}
                     </div>
-                    
+
                     <div className="d-flex align-items-baseline mb-2">
                       <span className="plan-price-large">{plan.price}</span>
                       <span className="plan-price-original">{plan.originalPrice}</span>
@@ -419,10 +493,10 @@ const SelectPlan = () => {
                             {category.title}
                           </h6>
                           {category.features.map((feature, fIndex) => {
-                            const hasFeature = plan.features.billing.includes(feature) || 
-                                              plan.features.addons.includes(feature) || 
-                                              plan.features.advanced.includes(feature) ||
-                                              plan.features.support.includes(feature);
+                            const hasFeature = plan.features.billing.includes(feature) ||
+                              plan.features.addons.includes(feature) ||
+                              plan.features.advanced.includes(feature) ||
+                              plan.features.support.includes(feature);
                             return (
                               <div key={fIndex} className="feature-item">
                                 <span className={hasFeature ? 'icon-check' : 'icon-cross'}>
@@ -439,6 +513,8 @@ const SelectPlan = () => {
                                 <span>
                                   {feature}
                                   {plan.name === 'Growth Plan' && feature === 'Scan & QR Order' && ' (optional)'}
+                                  {plan.name === 'Core Plan' && feature === 'Manager Panel' && ' (optional)'}
+                                  {plan.name === 'Core Plan' && feature === 'QSR Panel' && ' (optional)'}
                                 </span>
                               </div>
                             );
@@ -448,12 +524,36 @@ const SelectPlan = () => {
                     </div>
 
                     <div className="mt-4 pt-3 text-center">
-                      <Button 
-                        className={`rounded-pill w-100 ${plan.recommended ? 'btn-glass-primary' : 'btn-glass'}`} 
-                        onClick={() => handlePlanSelect(plan.name.split(' ')[0])}
-                      >
-                        Select Plan
-                      </Button>
+                      {(() => {
+                        const isSelected = activePlans.includes(plan.name) || activePlans.includes(plan.name.split(' ')[0]);
+                        const hasAnyPlan = activePlans.length > 0;
+
+                        if (isSelected) {
+                          return (
+                            <Button
+                              className="rounded-pill w-100 btn-glass"
+                              disabled
+                              style={{ cursor: 'default', opacity: 0.9, backgroundColor: 'rgba(74,222,128,0.15)', borderColor: 'rgba(74,222,128,0.5)', color: '#4ade80' }}
+                            >
+                              <CsLineIcons icon="check" size="15" className="me-2" style={{ color: '#4ade80' }} />
+                              Selected
+                            </Button>
+                          );
+                        }
+
+                        if (hasAnyPlan) {
+                          return null;
+                        }
+
+                        return (
+                          <Button
+                            className={`rounded-pill w-100 ${plan.recommended ? 'btn-glass-primary' : 'btn-glass'}`}
+                            onClick={() => handlePlanSelect(plan.name.split(' ')[0])}
+                          >
+                            Select Plan
+                          </Button>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -490,14 +590,62 @@ const SelectPlan = () => {
                       <div className="form-check m-0 d-flex align-items-center" style={{ cursor: 'pointer' }}>
                         <input
                           className="form-check-input mt-0 me-3"
-                          type="checkbox"
+                          type="radio"
                           checked={selectedAddons.includes(addon.value)}
                           onChange={() => { }}
-                          style={selectedAddons.includes(addon.value) ? { backgroundColor: '#23b3f4', borderColor: '#23b3f4' } : {}}
+                          style={{
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            ...(selectedAddons.includes(addon.value) ? { backgroundColor: '#23b3f4', borderColor: '#23b3f4' } : {})
+                          }}
                         />
                         <label className="form-check-label mb-0 fw-medium text-white" style={{ cursor: 'pointer', fontSize: '0.9rem' }}>
                           {addon.label}
                         </label>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : selectedPlan === 'Core' ? (
+            <div>
+              <div className="text-center mb-4">
+                <CsLineIcons icon="grid" size="48" style={{ color: '#23b3f4' }} className="mb-3" />
+                <h4 className="fw-bold text-white mb-2">Customize Your <span style={{ color: '#23b3f4' }}>Core</span> Plan</h4>
+                <p className="text-white-50 mb-0">Select optional panels to include in your plan.</p>
+              </div>
+              <div className="row g-3">
+                {[
+                  { label: 'Manager Panel', value: 'Manager', desc: 'Manage reservations, oversee active tables, update dining statuses, and streamline day-to-day operations.', icon: 'user' },
+                  { label: 'QSR Panel', value: 'QSR', desc: 'Streamlined billing interface tailored for Quick Service Restaurants to punch orders fast.', icon: 'shop' }
+                ].map((addon, index) => (
+                  <div key={index} className="col-12">
+                    <div
+                      className={`p-3 addon-card ${selectedAddons.includes(addon.value) ? 'selected' : ''}`}
+                      onClick={() => handleToggleAddon(addon.value)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div className="form-check m-0 d-flex align-items-start" style={{ cursor: 'pointer' }}>
+                        <input
+                          className="form-check-input mt-1 me-3"
+                          type="radio"
+                          name="core-addon"
+                          checked={selectedAddons.includes(addon.value)}
+                          onChange={() => { }}
+                          style={{
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            ...(selectedAddons.includes(addon.value) ? { backgroundColor: '#23b3f4', borderColor: '#23b3f4' } : {})
+                          }}
+                        />
+                        <div className="d-flex flex-column text-start">
+                          <label className="form-check-label mb-1 fw-bold text-white d-flex align-items-center" style={{ cursor: 'pointer', fontSize: '1.05rem' }}>
+                            <CsLineIcons icon={addon.icon} size="18" className="me-2" style={{ color: selectedAddons.includes(addon.value) ? '#23b3f4' : 'rgba(255,255,255,0.7)' }} />
+                            {addon.label}
+                          </label>
+                          <span className="text-white-50" style={{ fontSize: '0.85rem', lineHeight: '1.4' }}>{addon.desc}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -553,10 +701,10 @@ const SelectPlan = () => {
       </Modal>
 
       {/* Success Modal */}
-      <Modal 
-        show={showSuccessModal} 
-        onHide={() => { window.location.href = '/dashboard'; }} 
-        centered 
+      <Modal
+        show={showSuccessModal}
+        onHide={() => { window.location.href = '/dashboard'; }}
+        centered
         dialogClassName="glass-modal"
       >
         <Modal.Body className="text-center py-5">

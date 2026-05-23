@@ -26,7 +26,7 @@ const CustomToggle = React.forwardRef(({ children, onClick, style }, ref) => (
 ));
 
 const Statistics = () => {
-  const { activePlans } = React.useContext(AuthContext);
+  const { currentUser, activePlans } = React.useContext(AuthContext);
   const title = 'Analytics & Insights';
   const description = 'Deep dive into restaurant performance';
 
@@ -165,38 +165,40 @@ const Statistics = () => {
               <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
-            <Col xs="auto" className="d-flex justify-content-end gap-2 mt-3 mt-md-0">
-              <Dropdown className="d-inline-block">
-                <Dropdown.Toggle as={CustomToggle}>
-                  <CsLineIcons icon="calendar" className="me-2" size="13" />
-                  <span>{periodOptions.find((p) => p.value === selectedPeriod)?.label}</span>
-                  <CsLineIcons icon="chevron-down" className="ms-2" size="10" />
-                </Dropdown.Toggle>
-                <Dropdown.Menu className="statistics-interactive-card border-0 mt-2 shadow-lg" style={{ borderRadius: '1rem', padding: '0.5rem' }}>
-                  {periodOptions.map((period) => {
-                    const isActive = period.value === selectedPeriod;
-                    return (
-                      <Dropdown.Item
-                        key={period.value}
-                        onClick={() => setSelectedPeriod(period.value)}
-                        active={isActive}
-                        className={`d-flex align-items-center justify-content-between my-1 px-3 py-2 ${isActive ? 'fw-bold text-white' : 'text-dark'}`}
-                        style={{
-                          backgroundColor: isActive ? brandColor : 'transparent',
-                          color: isActive ? '#fff' : '#495057',
-                          borderRadius: '0.75rem',
-                          fontSize: '0.8rem',
-                          transition: 'all 0.2s ease',
-                        }}
-                      >
-                        <span className={isActive ? 'text-white' : ''}>{period.label}</span>
-                        {isActive && <CsLineIcons icon="check" size="10" className="text-white ms-2" />}
-                      </Dropdown.Item>
-                    );
-                  })}
-                </Dropdown.Menu>
-              </Dropdown>
-            </Col>
+            {['Growth', 'Scale'].includes(currentUser?.purchasedPlan) && (
+              <Col xs="auto" className="d-flex justify-content-end gap-2 mt-3 mt-md-0">
+                <Dropdown className="d-inline-block">
+                  <Dropdown.Toggle as={CustomToggle}>
+                    <CsLineIcons icon="calendar" className="me-2" size="13" />
+                    <span>{periodOptions.find((p) => p.value === selectedPeriod)?.label}</span>
+                    <CsLineIcons icon="chevron-down" className="ms-2" size="10" />
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu className="statistics-interactive-card border-0 mt-2 shadow-lg" style={{ borderRadius: '1rem', padding: '0.5rem' }}>
+                    {periodOptions.map((period) => {
+                      const isActive = period.value === selectedPeriod;
+                      return (
+                        <Dropdown.Item
+                          key={period.value}
+                          onClick={() => setSelectedPeriod(period.value)}
+                          active={isActive}
+                          className={`d-flex align-items-center justify-content-between my-1 px-3 py-2 ${isActive ? 'fw-bold text-white' : 'text-dark'}`}
+                          style={{
+                            backgroundColor: isActive ? brandColor : 'transparent',
+                            color: isActive ? '#fff' : '#495057',
+                            borderRadius: '0.75rem',
+                            fontSize: '0.8rem',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          <span className={isActive ? 'text-white' : ''}>{period.label}</span>
+                          {isActive && <CsLineIcons icon="check" size="10" className="text-white ms-2" />}
+                        </Dropdown.Item>
+                      );
+                    })}
+                  </Dropdown.Menu>
+                </Dropdown>
+              </Col>
+            )}
           </Row>
         </div>
 
