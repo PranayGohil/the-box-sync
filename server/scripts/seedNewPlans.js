@@ -53,7 +53,6 @@ const seedNewPlans = async () => {
         is_addon: false,
         max_custom_addons: 0,
         bundled_plans: [
-          "Manager",
           "Staff Management",
           "Online Order Reconciliation",
           "QSR",

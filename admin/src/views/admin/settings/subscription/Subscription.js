@@ -33,26 +33,26 @@ const PLAN_DISPLAY_NAMES = {
 
 const ALLOWED_PLANS_BY_TIER = {
   'QSR': [
-    'Manager', 'Staff Management', 'Online Order Reconciliation',
+    'Staff Management',
     'QSR', 'KOT Panel', 'Token Management', 'Scan For Menu',
     'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
   ],
   'Café': [
-    'Manager', 'Staff Management', 'Online Order Reconciliation',
+    'Staff Management',
     'QSR', 'KOT Panel', 'Token Management', 'Scan For Menu',
     'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'
   ],
   'Fine Dine': [
-    'Manager', 'Staff Management', 'Online Order Reconciliation',
+    'Manager', 'Staff Management',
     'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Scan For Menu',
     'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'
   ],
   'Cloud': [
-    'Manager', 'Staff Management', 'Online Order Reconciliation',
+    'Manager', 'Staff Management',
     'KOT Panel', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
   ],
   'Chain': [
-    'Manager', 'Staff Management', 'Online Order Reconciliation',
+    'Manager', 'Staff Management',
     'QSR', 'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Token Management',
     'Scan For Menu', 'Feedback', 'Waiter Calling System', 'Dynamic Reports',
     'Whatsapp-Invoice', 'Restaurant Website', 'Payroll By The Box'
@@ -97,7 +97,7 @@ const Subscription = () => {
     redirect: false,
   });
 
-  
+
 
   const fetchData = async () => {
     try {
@@ -517,7 +517,7 @@ const Subscription = () => {
 
   return (
     <div className="container-fluid pb-5">
-      
+
       <HtmlHead title={title} description={description} />
 
       <div className="page-title-container mb-4">
@@ -620,10 +620,10 @@ const Subscription = () => {
                       Last active until: {sub.formatted_end}
                     </p>
                     <div className="mt-auto">
-                      <Button 
-                        variant="none" 
-                        className="subscription-custom-btn-outline w-100" 
-                        onClick={() => handleRenew(sub._id)} 
+                      <Button
+                        variant="none"
+                        className="subscription-custom-btn-outline w-100"
+                        onClick={() => handleRenew(sub._id)}
                         disabled={actionLoading.renew}
                       >
                         {actionLoading.renew ? (
@@ -661,7 +661,7 @@ const Subscription = () => {
                     <h5 className="fw-bold mb-2">{getDisplayName(plan.plan_name)}</h5>
                     <div className="subscription-plan-price mb-2">₹{plan.plan_price}</div>
                     <div className="text-muted small mb-3">per {plan.plan_duration} month(s)</div>
-                    
+
                     {plan.features?.length > 0 && (
                       <ul className="subscription-feature-list">
                         {plan.features.map((feature, i) => (
@@ -672,12 +672,12 @@ const Subscription = () => {
                         ))}
                       </ul>
                     )}
-                    
+
                     <div className="mt-auto">
-                      <Button 
-                        variant="none" 
-                        className="subscription-custom-btn-solid w-100" 
-                        onClick={() => handleBuyPlan(plan._id)} 
+                      <Button
+                        variant="none"
+                        className="subscription-custom-btn-solid w-100"
+                        onClick={() => handleBuyPlan(plan._id)}
                         disabled={actionLoading.buy}
                       >
                         {actionLoading.buy ? (
