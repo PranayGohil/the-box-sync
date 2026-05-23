@@ -29,7 +29,7 @@ const OrderDetails = () => {
   const [printing, setPrinting] = useState(false);
   const [sharing, setSharing] = useState(false);
 
-  const canUseWhatsApp = ['Growth', 'Scale'].includes(currentUser?.purchasedPlan) || activePlans?.includes('Whatsapp-Invoice');
+  const canUseWhatsApp = ['QSR', 'Café', 'Fine Dine', 'Cloud', 'Chain'].includes(currentUser?.purchasedPlan) || activePlans?.includes('Whatsapp-Invoice');
 
   useEffect(() => {
     const fetchData = async () => {

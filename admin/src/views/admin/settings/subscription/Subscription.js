@@ -26,6 +26,37 @@ const PLAN_DISPLAY_NAMES = {
   'Scan For Menu': 'Scan & QR Order',
   'Feedback': 'QR-based Feedback',
   'Reservation Manager': 'Reservation Management',
+  'Token Management': 'Token Management',
+  'Waiter Calling System': 'Waiter Calling System',
+  'Whatsapp-Invoice': 'WhatsApp Invoice',
+};
+
+const ALLOWED_PLANS_BY_TIER = {
+  'QSR': [
+    'Manager', 'Staff Management', 'Online Order Reconciliation',
+    'QSR', 'KOT Panel', 'Token Management', 'Scan For Menu',
+    'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
+  ],
+  'Café': [
+    'Manager', 'Staff Management', 'Online Order Reconciliation',
+    'QSR', 'KOT Panel', 'Token Management', 'Scan For Menu',
+    'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'
+  ],
+  'Fine Dine': [
+    'Manager', 'Staff Management', 'Online Order Reconciliation',
+    'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Scan For Menu',
+    'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'
+  ],
+  'Cloud': [
+    'Manager', 'Staff Management', 'Online Order Reconciliation',
+    'KOT Panel', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
+  ],
+  'Chain': [
+    'Manager', 'Staff Management', 'Online Order Reconciliation',
+    'QSR', 'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Token Management',
+    'Scan For Menu', 'Feedback', 'Waiter Calling System', 'Dynamic Reports',
+    'Whatsapp-Invoice', 'Restaurant Website', 'Payroll By The Box'
+  ]
 };
 
 const getDisplayName = (name) => PLAN_DISPLAY_NAMES[name] || name;
@@ -87,16 +118,21 @@ const Subscription = () => {
         setRestaurantCode(userDetailsRes.data.restaurant_code || '');
       }
 
-      const enriched = userRes.data.data.map((sub) => {
-        const plan = plansRes.data.data.find((p) => p._id === sub.plan_id);
-        return {
-          ...sub,
-          plan_name: plan?.plan_name || 'Unknown',
-          is_addon: plan?.is_addon || false,
-          formatted_start: new Date(sub.start_date).toLocaleDateString('en-IN'),
-          formatted_end: new Date(sub.end_date).toLocaleDateString('en-IN'),
-        };
-      });
+      const userTier = userDetailsRes?.data?.purchasedPlan || 'QSR';
+      const allowedPlans = ALLOWED_PLANS_BY_TIER[userTier] || [];
+
+      const enriched = userRes.data.data
+        .map((sub) => {
+          const plan = plansRes.data.data.find((p) => p._id === sub.plan_id);
+          return {
+            ...sub,
+            plan_name: plan?.plan_name || 'Unknown',
+            is_addon: plan?.is_addon || false,
+            formatted_start: new Date(sub.start_date).toLocaleDateString('en-IN'),
+            formatted_end: new Date(sub.end_date).toLocaleDateString('en-IN'),
+          };
+        })
+        .filter((sub) => allowedPlans.includes(sub.plan_name));
 
       setUserSubscription(enriched);
 
@@ -119,16 +155,16 @@ const Subscription = () => {
       const inactivePlans = enriched.filter((sub) => sub.status === 'inactive');
 
       const purchasedPlanIds = new Set(userRes.data.data.map((sub) => sub.plan_id));
-      // Only show true addons as purchasable, exclude bundles (Core, Growth, Scale)
-      const available = plansRes.data.data.filter((plan) => !purchasedPlanIds.has(plan._id) && plan.is_addon === true);
+      // Only show true addons as purchasable, exclude bundles and disallowed plans
+      const available = plansRes.data.data.filter((plan) => !purchasedPlanIds.has(plan._id) && plan.is_addon === true && allowedPlans.includes(plan.plan_name));
       setAvailablePlans(available);
 
       setInactiveAddOns(
         inactivePlans
           .filter((sub) => {
             const plan = plansRes.data.data.find((p) => p._id === sub.plan_id);
-            // Only show true addon plans, exclude bundles (Core, Growth, Scale)
-            return plan?.is_addon === true;
+            // Only show true addon plans, exclude bundles and disallowed plans
+            return plan?.is_addon === true && allowedPlans.includes(sub.plan_name);
           })
           .map((sub) => {
             const plan = plansRes.data.data.find((p) => p._id === sub.plan_id);
