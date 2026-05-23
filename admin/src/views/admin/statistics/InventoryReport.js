@@ -486,74 +486,76 @@ const InventoryReport = () => {
         </div>
 
       {/* Hub Filters */}
-      <Card className="inventory-report-interactive-card inventory-report-filter-card border-0 mb-4 no-print shadow-sm">
-        <Card.Body className="p-4">
-          <div className="inventory-report-card-title-container">
-            <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
-              Intelligence Parameters
-            </h2>
-            <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
-          </div>
+      {['Growth', 'Scale'].includes(currentUser?.purchasedPlan) && (
+        <Card className="inventory-report-interactive-card inventory-report-filter-card border-0 mb-4 no-print shadow-sm">
+          <Card.Body className="p-4">
+            <div className="inventory-report-card-title-container">
+              <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                Intelligence Parameters
+              </h2>
+              <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
+            </div>
 
-          <div className="d-flex flex-wrap mb-4">
-            {PRESETS.map((p) => (
-              <Button key={p.label} variant={activePreset === p.label ? 'primary' : 'outline-primary'} className="inventory-report-preset-pill" onClick={() => applyPreset(p)}>
-                {p.label}
-              </Button>
-            ))}
-          </div>
+            <div className="d-flex flex-wrap mb-4">
+              {PRESETS.map((p) => (
+                <Button key={p.label} variant={activePreset === p.label ? 'primary' : 'outline-primary'} className="inventory-report-preset-pill" onClick={() => applyPreset(p)}>
+                  {p.label}
+                </Button>
+              ))}
+            </div>
 
-          <Row className="g-4">
-            <Col xs={12} md={6} lg={2}>
-              <Form.Label className="inventory-report-stat-label mb-2">Start Date</Form.Label>
-              <Form.Control
-                type="date"
-                value={fromDate}
-                onChange={(e) => {
-                  setFromDate(e.target.value);
-                  setActivePreset('Custom');
-                }}
-              />
-            </Col>
-            <Col xs={12} md={6} lg={2}>
-              <Form.Label className="inventory-report-stat-label mb-2">End Date</Form.Label>
-              <Form.Control
-                type="date"
-                value={toDate}
-                onChange={(e) => {
-                  setToDate(e.target.value);
-                  setActivePreset('Custom');
-                }}
-              />
-            </Col>
-            <Col xs={12} md={4} lg={3}>
-              <Form.Label className="inventory-report-stat-label mb-2">Status</Form.Label>
-              <FilterSelect 
-                value={selectedStatus} 
-                onChange={setSelectedStatus} 
-                options={['all', 'Completed', 'Pending', 'Partially Paid'].map((s) => ({ value: s, label: s === 'all' ? 'All Statuses' : s }))} 
-              />
-            </Col>
-            <Col xs={12} md={4} lg={3}>
-              <Form.Label className="inventory-report-stat-label mb-2">Category</Form.Label>
-              <FilterSelect 
-                value={selectedCategory} 
-                onChange={setSelectedCategory} 
-                options={['all', ...new Set(statsData?.categoryPerformance?.map((c) => c.category) || [])].map((c) => ({
-                  value: c,
-                  label: c === 'all' ? 'All Categories' : c,
-                }))} 
-              />
-            </Col>
-            <Col xs={12} md={4} lg={2} className="d-flex align-items-end">
-              <Button className="inventory-report-custom-btn-outline w-100" onClick={fetchUnifiedReport} disabled={loading}>
-                <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
-                {loading ? 'Processing...' : 'Generate Hub'}
-              </Button>
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
+            <Row className="g-4">
+              <Col xs={12} md={6} lg={2}>
+                <Form.Label className="inventory-report-stat-label mb-2">Start Date</Form.Label>
+                <Form.Control
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => {
+                    setFromDate(e.target.value);
+                    setActivePreset('Custom');
+                  }}
+                />
+              </Col>
+              <Col xs={12} md={6} lg={2}>
+                <Form.Label className="inventory-report-stat-label mb-2">End Date</Form.Label>
+                <Form.Control
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => {
+                    setToDate(e.target.value);
+                    setActivePreset('Custom');
+                  }}
+                />
+              </Col>
+              <Col xs={12} md={4} lg={3}>
+                <Form.Label className="inventory-report-stat-label mb-2">Status</Form.Label>
+                <FilterSelect 
+                  value={selectedStatus} 
+                  onChange={setSelectedStatus} 
+                  options={['all', 'Completed', 'Pending', 'Partially Paid'].map((s) => ({ value: s, label: s === 'all' ? 'All Statuses' : s }))} 
+                />
+              </Col>
+              <Col xs={12} md={4} lg={3}>
+                <Form.Label className="inventory-report-stat-label mb-2">Category</Form.Label>
+                <FilterSelect 
+                  value={selectedCategory} 
+                  onChange={setSelectedCategory} 
+                  options={['all', ...new Set(statsData?.categoryPerformance?.map((c) => c.category) || [])].map((c) => ({
+                    value: c,
+                    label: c === 'all' ? 'All Categories' : c,
+                  }))} 
+                />
+              </Col>
+              <Col xs={12} md={4} lg={2} className="d-flex align-items-end">
+                <Button className="inventory-report-custom-btn-outline w-100" onClick={fetchUnifiedReport} disabled={loading}>
+                  <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
+                  {loading ? 'Processing...' : 'Generate Hub'}
+                </Button>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
+      )}
 
       {/* Action Bar */}
       <Card className="inventory-report-interactive-card border-0 mb-4 no-print shadow-sm">

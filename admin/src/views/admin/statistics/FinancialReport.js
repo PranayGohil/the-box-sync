@@ -379,30 +379,32 @@ const FinancialReport = () => {
         </div>
 
         {/* Audit Filters */}
-        <Card className="financial-report-interactive-card financial-report-filter-card border-0 mb-4 no-print shadow-sm">
-          <Card.Body className="p-4">
-            <div className="financial-report-card-title-container">
-              <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Fiscal Audit Parameters</h2>
-              <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
-            </div>
-            <Row className="g-3 align-items-end mt-1">
-              <Col xs={12} md={5}>
-                <Form.Label className="financial-report-stat-label mb-2">Audit Start Date</Form.Label>
-                <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-              </Col>
-              <Col xs={12} md={5}>
-                <Form.Label className="financial-report-stat-label mb-2">Audit End Date</Form.Label>
-                <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-              </Col>
-              <Col xs={12} md={2}>
-                <Button className="financial-report-custom-btn-outline w-100" onClick={fetchFinancialReport} disabled={loading}>
-                  <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
-                  {loading ? 'Processing...' : 'Generate'}
-                </Button>
-              </Col>
-            </Row>
-          </Card.Body>
-        </Card>
+        {['Growth', 'Scale'].includes(currentUser?.purchasedPlan) && (
+          <Card className="financial-report-interactive-card financial-report-filter-card border-0 mb-4 no-print shadow-sm">
+            <Card.Body className="p-4">
+              <div className="financial-report-card-title-container">
+                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Fiscal Audit Parameters</h2>
+                <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
+              </div>
+              <Row className="g-3 align-items-end mt-1">
+                <Col xs={12} md={5}>
+                  <Form.Label className="financial-report-stat-label mb-2">Audit Start Date</Form.Label>
+                  <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                </Col>
+                <Col xs={12} md={5}>
+                  <Form.Label className="financial-report-stat-label mb-2">Audit End Date</Form.Label>
+                  <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                </Col>
+                <Col xs={12} md={2}>
+                  <Button className="financial-report-custom-btn-outline w-100" onClick={fetchFinancialReport} disabled={loading}>
+                    <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
+                    {loading ? 'Processing...' : 'Generate'}
+                  </Button>
+                </Col>
+              </Row>
+            </Card.Body>
+          </Card>
+        )}
 
         {/* Action Bar */}
         <Card className="financial-report-interactive-card border-0 mb-4 no-print shadow-sm">
