@@ -165,7 +165,7 @@ const Statistics = () => {
               <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
-            {['Growth', 'Scale'].includes(currentUser?.purchasedPlan) && (
+            {['QSR', 'Café', 'Fine Dine', 'Cloud', 'Chain'].includes(currentUser?.purchasedPlan) && (
               <Col xs="auto" className="d-flex justify-content-end gap-2 mt-3 mt-md-0">
                 <Dropdown className="d-inline-block">
                   <Dropdown.Toggle as={CustomToggle}>
