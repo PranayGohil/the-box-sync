@@ -17,7 +17,7 @@ import ModalEditPanel from './ModalEditPanel';
 import DeletePanelModal from './DeletePanelModal';
 import RaiseInquiryModal from './RaiseInquiryModal';
 
-const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'Payroll By The Box', 'KOT Panel', 'Hotel Manager'];
+const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'Payroll By The Box', 'KOT Panel', 'Kitchen Display System', 'Hotel Manager'];
 
 const PLAN_DISPLAY_NAMES = {
   'Manager': 'Manager Panel',
@@ -29,31 +29,33 @@ const PLAN_DISPLAY_NAMES = {
   'Token Management': 'Token Management',
   'Waiter Calling System': 'Waiter Calling System',
   'Whatsapp-Invoice': 'WhatsApp Invoice',
+  'KOT Panel': 'KOT Panel',
+  'Kitchen Display System': 'Kitchen Display System',
 };
 
 const ALLOWED_PLANS_BY_TIER = {
   'QSR': [
-    'Manager', 'Staff Management', 'Online Order Reconciliation',
-    'QSR', 'KOT Panel', 'Token Management', 'Scan For Menu',
+    'Staff Management', 'Online Order Reconciliation',
+    'QSR', 'KOT Panel', 'Kitchen Display System', 'Token Management', 'Scan For Menu',
     'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
   ],
   'Café': [
-    'Manager', 'Staff Management', 'Online Order Reconciliation',
-    'QSR', 'KOT Panel', 'Token Management', 'Scan For Menu',
+    'Staff Management', 'Online Order Reconciliation',
+    'QSR', 'KOT Panel', 'Kitchen Display System', 'Token Management', 'Scan For Menu',
     'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'
   ],
   'Fine Dine': [
     'Manager', 'Staff Management', 'Online Order Reconciliation',
-    'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Scan For Menu',
+    'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Reservation Manager', 'Scan For Menu',
     'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'
   ],
   'Cloud': [
     'Manager', 'Staff Management', 'Online Order Reconciliation',
-    'KOT Panel', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
+    'KOT Panel', 'Kitchen Display System', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
   ],
   'Chain': [
     'Manager', 'Staff Management', 'Online Order Reconciliation',
-    'QSR', 'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Token Management',
+    'QSR', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Reservation Manager', 'Token Management',
     'Scan For Menu', 'Feedback', 'Waiter Calling System', 'Dynamic Reports',
     'Whatsapp-Invoice', 'Restaurant Website', 'Payroll By The Box'
   ]
@@ -97,7 +99,7 @@ const Subscription = () => {
     redirect: false,
   });
 
-  
+
 
   const fetchData = async () => {
     try {
@@ -306,7 +308,7 @@ const Subscription = () => {
         window.open(`https://website.theboxsync.com/${restaurantCode}`, '_blank');
       } else if (planName === 'Captain Panel') {
         window.open('https://captain.theboxsync.com', '_blank');
-      } else if (planName === 'KOT Panel') {
+      } else if (planName === 'KOT Panel' || planName === 'Kitchen Display System') {
         window.open('https://kot.theboxsync.com', '_blank');
       } else if (planName === 'Manager') {
         window.open('https://manager.theboxsync.com', '_blank');
@@ -382,7 +384,7 @@ const Subscription = () => {
                 >
                   <CsLineIcons icon="bin" size="15" />
                 </Button>
-                {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Manager', 'QSR'].includes(original.plan_name) && (
+                {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Manager', 'QSR'].includes(original.plan_name) && (
                   <Button
                     variant="none"
                     size="sm"
@@ -409,7 +411,7 @@ const Subscription = () => {
                 >
                   <CsLineIcons icon="plus" size="15" />
                 </Button>
-                {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Manager', 'QSR'].includes(original.plan_name) && (
+                {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Manager', 'QSR'].includes(original.plan_name) && (
                   <Button
                     variant="none"
                     size="sm"
@@ -517,7 +519,7 @@ const Subscription = () => {
 
   return (
     <div className="container-fluid pb-5">
-      
+
       <HtmlHead title={title} description={description} />
 
       <div className="page-title-container mb-4">
@@ -620,10 +622,10 @@ const Subscription = () => {
                       Last active until: {sub.formatted_end}
                     </p>
                     <div className="mt-auto">
-                      <Button 
-                        variant="none" 
-                        className="subscription-custom-btn-outline w-100" 
-                        onClick={() => handleRenew(sub._id)} 
+                      <Button
+                        variant="none"
+                        className="subscription-custom-btn-outline w-100"
+                        onClick={() => handleRenew(sub._id)}
                         disabled={actionLoading.renew}
                       >
                         {actionLoading.renew ? (
@@ -661,7 +663,7 @@ const Subscription = () => {
                     <h5 className="fw-bold mb-2">{getDisplayName(plan.plan_name)}</h5>
                     <div className="subscription-plan-price mb-2">₹{plan.plan_price}</div>
                     <div className="text-muted small mb-3">per {plan.plan_duration} month(s)</div>
-                    
+
                     {plan.features?.length > 0 && (
                       <ul className="subscription-feature-list">
                         {plan.features.map((feature, i) => (
@@ -672,12 +674,12 @@ const Subscription = () => {
                         ))}
                       </ul>
                     )}
-                    
+
                     <div className="mt-auto">
-                      <Button 
-                        variant="none" 
-                        className="subscription-custom-btn-solid w-100" 
-                        onClick={() => handleBuyPlan(plan._id)} 
+                      <Button
+                        variant="none"
+                        className="subscription-custom-btn-solid w-100"
+                        onClick={() => handleBuyPlan(plan._id)}
                         disabled={actionLoading.buy}
                       >
                         {actionLoading.buy ? (
