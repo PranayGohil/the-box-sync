@@ -188,9 +188,8 @@ const customStyles = `
     }
   }
 
-  /* Fullscreen Mode Styling (Obsidian Midnight Dark Theme) */
+  /* Fullscreen Layout Scaling (Applies to both themes) */
   .glass-card:fullscreen {
-    background: #0b0f19 !important;
     padding: 2.5rem !important;
     overflow: hidden !important;
     height: 100vh !important;
@@ -198,75 +197,115 @@ const customStyles = `
     border-radius: 0 !important;
     box-shadow: none !important;
   }
-  .glass-card:fullscreen .text-dark {
+  .glass-card:fullscreen .order-identifier {
+    font-size: 3.2rem !important;
+    gap: 15px !important;
+  }
+  .glass-card:fullscreen .order-card-3d {
+    padding: 1.25rem 1.5rem !important;
+    margin-bottom: 1.25rem !important;
+    border-radius: 1.25rem !important;
+  }
+  
+  /* Light Theme Fullscreen Background Reset */
+  .glass-card:fullscreen:not(.dark-theme) {
+    background: #f0f7ff !important;
+  }
+  .glass-card:fullscreen:not(.dark-theme) .text-dark {
+    color: #1e293b !important;
+  }
+
+  /* Obsidian Midnight Dark Theme Colors */
+  .glass-card.dark-theme {
+    background: #0b0f19 !important;
+  }
+  .glass-card.dark-theme:not(:fullscreen) {
+    border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+    border-radius: 1.25rem !important;
+  }
+  .glass-card.dark-theme .text-dark {
     color: #f8fafc !important;
   }
-  .glass-card:fullscreen .border-bottom {
+  .glass-card.dark-theme .border-bottom {
     border-bottom: 1.5px solid rgba(255, 255, 255, 0.08) !important;
   }
-  .glass-card:fullscreen .border-end {
+  .glass-card.dark-theme .border-end {
     border-right: 1.5px solid rgba(255, 255, 255, 0.08) !important;
   }
-  .glass-card:fullscreen .preparing-container {
+  .glass-card.dark-theme .preparing-container {
     background-color: rgba(217, 119, 6, 0.06) !important;
     border: 1.5px solid rgba(217, 119, 6, 0.3) !important;
     box-shadow: inset 0 4px 16px rgba(217, 119, 6, 0.08) !important;
   }
-  .glass-card:fullscreen .ready-container {
+  .glass-card.dark-theme .ready-container {
     background-color: rgba(16, 185, 129, 0.06) !important;
     border: 1.5px solid rgba(16, 185, 129, 0.3) !important;
     box-shadow: inset 0 4px 16px rgba(16, 185, 129, 0.08) !important;
   }
-  .glass-card:fullscreen .order-card-3d {
+  .glass-card.dark-theme .order-card-3d {
     background: #1e293b !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
   }
-  .glass-card:fullscreen .order-identifier {
-    font-size: 3.2rem !important;
-    gap: 15px !important;
+  .glass-card.dark-theme .order-identifier {
     color: #f8fafc !important;
   }
-  .glass-card:fullscreen .order-card-3d:hover {
+  .glass-card.dark-theme .order-card-3d:hover {
     background: #334155 !important;
   }
-  .glass-card:fullscreen .preparing-container .order-card-3d:hover {
+  .glass-card.dark-theme .preparing-container .order-card-3d:hover {
     box-shadow: 0 15px 30px rgba(217, 119, 6, 0.2) !important;
   }
-  .glass-card:fullscreen .ready-container .order-card-3d:hover {
+  .glass-card.dark-theme .ready-container .order-card-3d:hover {
     box-shadow: 0 15px 30px rgba(16, 185, 129, 0.2) !important;
   }
-  .glass-card:fullscreen .badge-preparing,
-  .glass-card:fullscreen .badge-completed {
-    font-size: 2.2rem !important;
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    gap: 14px !important;
-  }
-  .glass-card:fullscreen .badge-preparing span,
-  .glass-card:fullscreen .badge-completed span {
-    width: 18px !important;
-    height: 18px !important;
-  }
-  .glass-card:fullscreen .fullscreen-btn {
+  .glass-card.dark-theme .fullscreen-btn,
+  .glass-card.dark-theme .theme-toggle-btn {
     border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
     background: rgba(255, 255, 255, 0.05) !important;
     color: #ffffff !important;
   }
-  .glass-card:fullscreen .fullscreen-btn svg,
-  .glass-card:fullscreen .fullscreen-btn .cs-icon {
+  .glass-card.dark-theme .fullscreen-btn svg,
+  .glass-card.dark-theme .theme-toggle-btn svg {
     color: #ffffff !important;
     opacity: 0.9 !important;
   }
-  .glass-card:fullscreen .fullscreen-btn:hover {
+  .glass-card.dark-theme .fullscreen-btn:hover,
+  .glass-card.dark-theme .theme-toggle-btn:hover {
     background: #ffffff !important;
     color: #0b0f19 !important;
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15) !important;
   }
-  .glass-card:fullscreen .fullscreen-btn:hover svg,
-  .glass-card:fullscreen .fullscreen-btn:hover .cs-icon {
+  .glass-card.dark-theme .fullscreen-btn:hover svg,
+  .glass-card.dark-theme .theme-toggle-btn:hover svg {
     color: #0b0f19 !important;
+  }
+  .theme-toggle-btn {
+    border: 1.5px solid rgba(35, 179, 244, 0.2);
+    background: rgba(35, 179, 244, 0.05);
+    color: #23b3f4;
+    transition: all 0.2s ease;
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .theme-toggle-btn:hover {
+    background: #23b3f4;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25);
+  }
+  .theme-toggle-btn svg {
+    color: #23b3f4 !important;
+    opacity: 0.8 !important;
+    transition: all 0.2s ease;
+  }
+  .theme-toggle-btn:hover svg {
+    color: #ffffff !important;
+    opacity: 1 !important;
   }
   .fullscreen-btn {
     border: 1.5px solid rgba(35, 179, 244, 0.2);
@@ -317,6 +356,15 @@ const KotDisplay = () => {
     const [loading, setLoading] = useState(true);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const cardRef = useRef(null);
+    const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('kot-display-dark-mode') === 'true');
+
+    const toggleTheme = () => {
+        setIsDarkMode(prev => {
+            const next = !prev;
+            localStorage.setItem('kot-display-dark-mode', String(next));
+            return next;
+        });
+    };
 
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
@@ -346,9 +394,11 @@ const KotDisplay = () => {
         };
     }, []);
 
-    const fetchOrderData = async () => {
+    const fetchOrderData = async (showSpinner = false) => {
         try {
-            setLoading(true);
+            if (showSpinner) {
+                setLoading(true);
+            }
             const response = await axios.get(`${process.env.REACT_APP_API}/kot/display/show`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
             });
@@ -356,18 +406,20 @@ const KotDisplay = () => {
         } catch (err) {
             console.log('Error fetching order data:', err);
         } finally {
-            setLoading(false);
+            if (showSpinner) {
+                setLoading(false);
+            }
         }
     };
 
     useEffect(() => {
-        fetchOrderData();
+        fetchOrderData(true); // Show spinner only on initial load
     }, []);
 
     useEffect(() => {
         if (!socket) return () => { };
         socket.on('kot_update', () => {
-            fetchOrderData();
+            fetchOrderData(false); // Background fetch to prevent layout unmount/close
         });
         return () => {
             socket.off('kot_update');
@@ -413,7 +465,14 @@ const KotDisplay = () => {
         <div key={kot._id} className="order-card-3d">
             <div className="order-identifier justify-content-center" style={{ fontSize: isFullscreen ? '3.2rem' : '1.25rem', padding: isFullscreen ? '1.5rem 0' : '0.5rem 0' }}>
                 {kot.order_type === 'Dine In' && kot.table_no ? (
-                    <span>Table {kot.table_no}</span>
+                    <span>
+                        Table {kot.table_no}
+                        {kot.table_area && (
+                            <span style={{ fontSize: isFullscreen ? '2.2rem' : '0.95rem', opacity: 0.75, marginLeft: '8px', fontWeight: '500' }}>
+                                ({kot.table_area})
+                            </span>
+                        )}
+                    </span>
                 ) : (
                     <span>Token #{kot.token || 'N/A'}</span>
                 )}
@@ -489,33 +548,65 @@ const KotDisplay = () => {
             </Row>
 
             {/* KOT Display Table */}
-            {loading ? (
-                <div className="container-fluid py-5 text-center">
-                    <Spinner animation="border" style={{ color: '#23b3f4' }} />
+            <Card ref={cardRef} className={`border-0 glass-card overflow-hidden ${isDarkMode ? 'dark-theme' : ''}`}>
+                <div className="position-relative d-flex align-items-center justify-content-center px-4 pt-4 pb-2 border-bottom">
+                    <h4 className="fw-bold mb-0 text-dark text-uppercase text-center" style={{ fontSize: isFullscreen ? '2.5rem' : '1.25rem', letterSpacing: '1px' }}>
+                        Active Orders Board
+                    </h4>
+                    
+                    {/* Theme Switcher Button */}
+                    <button
+                        type="button"
+                        onClick={toggleTheme}
+                        className="btn rounded-circle theme-toggle-btn position-absolute mb-3"
+                        style={{ right: '4.5rem' }}
+                        title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                    >
+                        {isDarkMode ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="feather feather-sun">
+                                <circle cx="12" cy="12" r="5" />
+                                <line x1="12" y1="1" x2="12" y2="3" />
+                                <line x1="12" y1="21" x2="12" y2="23" />
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                                <line x1="1" y1="12" x2="3" y2="12" />
+                                <line x1="21" y1="12" x2="23" y2="12" />
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                            </svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="feather feather-moon">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                            </svg>
+                        )}
+                    </button>
+
+                    {/* Fullscreen Button */}
+                    <button
+                        type="button"
+                        onClick={toggleFullscreen}
+                        className="btn rounded-circle fullscreen-btn position-absolute mb-3"
+                        style={{ right: '1.5rem' }}
+                        title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                    >
+                        <CsLineIcons icon={isFullscreen ? "shrink-diagonal-2" : "expand-diagonal-2"} size="18" className="text-primary opacity-75" />
+                    </button>
                 </div>
-            ) : filteredKOTs.length === 0 ? (
-                <Card className="border-0 glass-card py-5 text-center">
-                    <Card.Body>
-                        <CsLineIcons icon="inbox" size="18" className="text-primary opacity-75" />
-                        <h5 className="fw-bold text-muted">No Active KOT Orders</h5>
+
+                {loading ? (
+                    <Card.Body className="p-5 text-center">
+                        <div className="py-5">
+                            <Spinner animation="border" style={{ color: '#23b3f4' }} />
+                        </div>
                     </Card.Body>
-                </Card>
-            ) : (
-                <Card ref={cardRef} className="border-0 glass-card overflow-hidden">
-                    <div className="position-relative d-flex align-items-center justify-content-center px-4 pt-4 pb-2 border-bottom">
-                        <h4 className="fw-bold mb-0 text-dark text-uppercase text-center" style={{ fontSize: isFullscreen ? '2.5rem' : '1.25rem', letterSpacing: '1px' }}>
-                            Active Orders Board
-                        </h4>
-                        <button
-                            type="button"
-                            onClick={toggleFullscreen}
-                            className="btn rounded-circle fullscreen-btn position-absolute mb-3"
-                            style={{ right: '1.5rem' }}
-                            title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
-                        >
-                            <CsLineIcons icon={isFullscreen ? "shrink-diagonal-2" : "expand-diagonal-2"} size="18" className="text-primary opacity-75" />
-                        </button>
-                    </div>
+                ) : filteredKOTs.length === 0 ? (
+                    <Card.Body className="p-5 text-center">
+                        <div className="py-5">
+                            <CsLineIcons icon="inbox" size="24" className="text-primary opacity-75 mb-3" style={{ transform: isFullscreen ? 'scale(2)' : 'none' }} />
+                            <h5 className="fw-bold text-muted mt-2" style={{ fontSize: isFullscreen ? '2.2rem' : '1.1rem' }}>No Active KOT Orders</h5>
+                        </div>
+                    </Card.Body>
+                ) : (
                     <Card.Body className="p-4">
                         <Row className="g-4">
                             {/* Left Side: Preparing */}
@@ -553,8 +644,8 @@ const KotDisplay = () => {
                             </Col>
                         </Row>
                     </Card.Body>
-                </Card>
-            )}
+                )}
+            </Card>
         </div>
     );
 };

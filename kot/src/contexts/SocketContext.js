@@ -13,10 +13,16 @@ export const SocketProvider = ({ children }) => {
   const { currentUser } = useContext(AuthContext);
 
   useEffect(() => {
-    const s = io(process.env.REACT_APP_API_URL);
+    const socketUrl = process.env.REACT_APP_API_URL || 
+      (process.env.REACT_APP_API ? process.env.REACT_APP_API.replace('/api', '') : 'http://localhost:5001');
+
+    console.log("KOT Display: Connecting socket to URL:", socketUrl);
+    const s = io(socketUrl);
 
     s.on("connect", () => {
+      console.log("KOT Display: Socket connected successfully with ID:", s.id);
       if (currentUser) {
+        console.log("KOT Display: Registering role KOT for user ID:", currentUser._id);
         s.emit("register", {
           userId: currentUser._id,
           role: "KOT",
@@ -24,9 +30,16 @@ export const SocketProvider = ({ children }) => {
       }
     });
 
+    s.on("disconnect", (reason) => {
+      console.log("KOT Display: Socket disconnected. Reason:", reason);
+    });
+
     setSocket(s);
 
-    return () => s.disconnect();
+    return () => {
+      console.log("KOT Display: Disconnecting socket...");
+      s.disconnect();
+    };
   }, [currentUser]);
 
   return (

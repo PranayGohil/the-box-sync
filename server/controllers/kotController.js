@@ -121,6 +121,12 @@ const updateDishStatus = async (req, res) => {
       }
     }
 
+    // Emit real-time KOT display refresh event
+    const keyKOT = `${req.user._id}_KOT`;
+    if (io && connectedUsers && connectedUsers[keyKOT]) {
+      io.to(connectedUsers[keyKOT]).emit("kot_update");
+    }
+
     res.status(200).json({ success: true, message: "Dish status updated." });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error updating dish status.", error });
@@ -177,6 +183,12 @@ const updateAllDishStatus = async (req, res) => {
         }
       }
 
+      // Emit real-time KOT display refresh event
+      const keyKOT = `${req.user._id}_KOT`;
+      if (io && connectedUsers && connectedUsers[keyKOT]) {
+        io.to(connectedUsers[keyKOT]).emit("kot_update");
+      }
+
       return res.json({ success: true, message: "Preparing items updated", result });
     } else {
       // Update all items
@@ -212,6 +224,12 @@ const updateAllDishStatus = async (req, res) => {
             "dish_status_updated", { orderId, status }
           );
         }
+      }
+
+      // Emit real-time KOT display refresh event
+      const keyKOT = `${req.user._id}_KOT`;
+      if (io && connectedUsers && connectedUsers[keyKOT]) {
+        io.to(connectedUsers[keyKOT]).emit("kot_update");
       }
 
       return res.json({ success: true, message: "All item statuses updated", result });
