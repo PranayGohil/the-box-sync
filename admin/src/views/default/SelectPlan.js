@@ -350,6 +350,20 @@ const SelectPlan = () => {
     <LayoutFull>
       <HtmlHead title={title} description={description} />
       <style>{`
+        /* Global Page Background & Fluid Layout Overrides to Eliminate White Side Gaps */
+        html, body, #root, #root > div {
+          background-color: #0a1118 !important;
+          background: #0a1118 !important;
+        }
+        main, main .container, main .container #contentArea {
+          max-width: 100% !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          width: 100% !important;
+          background: transparent !important;
+          background-color: transparent !important;
+        }
+
         .fixed-background {
           display: none !important;
         }
@@ -360,6 +374,7 @@ const SelectPlan = () => {
             radial-gradient(circle at 85% 30%, rgba(35, 179, 244, 0.08), transparent 25%);
           position: relative;
           overflow: hidden;
+          width: 100%;
         }
         footer, footer .footer-content {
           background: #0a1118 !important;
@@ -369,20 +384,30 @@ const SelectPlan = () => {
           color: rgba(255, 255, 255, 0.5) !important;
         }
         .plan-column {
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          border-radius: 20px;
+          background: rgba(255, 255, 255, 0.04);
+          backdrop-filter: blur(25px);
+          -webkit-backdrop-filter: blur(25px);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 24px;
           box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-          padding: 2.5rem 2rem;
+          padding: 2.25rem 1.75rem;
           height: 100%;
+          transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+          position: relative;
+          z-index: 1;
+        }
+        .plan-column:hover {
+          transform: translateY(-8px);
+          border-color: var(--plan-accent) !important;
+          box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55), 0 0 30px var(--plan-accent-glow);
         }
         .plan-name {
           color: #fff; 
-          font-size: 1.25rem;
-          font-weight: 600;
-          margin-bottom: 1rem;
+          font-size: 1.35rem;
+          font-weight: 700;
+          margin-bottom: 0.75rem;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
         }
         .plan-name-recommended {
           color: #4ade80;
@@ -392,78 +417,89 @@ const SelectPlan = () => {
           font-weight: 800;
           color: #fff;
           line-height: 1;
+          letter-spacing: -1px;
         }
         .plan-price-original {
           font-size: 1.1rem;
-          color: rgba(255,255,255,0.5);
+          color: rgba(255, 255, 255, 0.45);
           text-decoration: line-through;
           margin-left: 0.5rem;
           font-weight: 500;
         }
         .plan-subtitle {
-          color: rgba(255,255,255,0.7);
+          color: rgba(255, 255, 255, 0.65);
           font-size: 0.85rem;
-          margin-top: 1.5rem;
-          margin-bottom: 1.5rem;
+          margin-top: 1rem;
+          margin-bottom: 1rem;
           line-height: 1.5;
         }
         .plan-divider {
-          border-top: 1px solid rgba(255,255,255,0.2);
-          margin-bottom: 1.5rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.12);
+          margin-bottom: 1rem;
         }
+        
+        /* Stretch features container to display fully (no scroll inside the card) */
+        .features-scroll-container {
+          max-height: none !important;
+          overflow-y: visible !important;
+          padding-right: 0 !important;
+          margin-top: 0.5rem;
+        }
+
         .feature-item {
           display: flex;
           align-items: flex-start;
-          margin-bottom: 1rem;
-          font-size: 0.95rem;
-          color: #fff;
+          margin-bottom: 0.85rem;
+          font-size: 0.92rem;
+          color: rgba(255, 255, 255, 0.9);
+          line-height: 1.4;
         }
-        .icon-check {
-          margin-right: 0.75rem;
+        .icon-check, .icon-cross {
+          margin-right: 0.65rem;
           margin-top: 0.15rem;
-        }
-        .icon-cross {
-          margin-right: 0.75rem;
-          margin-top: 0.15rem;
+          flex-shrink: 0;
         }
         .btn-glass {
-          background: rgba(255,255,255,0.15);
+          background: rgba(255, 255, 255, 0.07);
           backdrop-filter: blur(5px);
-          border: 1px solid rgba(255,255,255,0.3);
+          border: 1px solid rgba(255, 255, 255, 0.15);
           color: #fff;
           font-weight: 600;
           transition: all 0.3s ease;
         }
         .btn-glass:hover {
-          background: rgba(255,255,255,0.25);
+          background: rgba(255, 255, 255, 0.18);
+          border-color: rgba(255, 255, 255, 0.3);
           color: #fff;
           transform: translateY(-2px);
-          box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
         }
         .btn-glass-primary {
-          background: #23b3f4;
+          background: var(--plan-accent);
           border: none;
           color: #fff;
           font-weight: 700;
           transition: all 0.3s ease;
         }
         .btn-glass-primary:hover {
-          background: #1da0db;
+          filter: brightness(1.15);
           transform: translateY(-2px);
-          box-shadow: 0 5px 15px rgba(35,179,244,0.4);
+          box-shadow: 0 5px 18px var(--plan-accent-glow);
         }
         .pulse-badge {
           animation: pulse-animation 2s infinite;
           font-weight: 600;
           letter-spacing: 1px;
-          font-size: 0.9rem;
+          font-size: 0.8rem;
           padding: 0.4rem 1.25rem !important;
           text-transform: uppercase;
+          background: #4ade80 !important;
+          color: #0b151e !important;
         }
         @keyframes pulse-animation {
-          0% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7); }
-          70% { box-shadow: 0 0 0 10px rgba(25, 135, 84, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+          0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+          70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
         }
         .glass-modal .modal-content {
           background: rgba(13, 27, 42, 0.9) !important;
@@ -501,10 +537,64 @@ const SelectPlan = () => {
           background: rgba(35, 179, 244, 0.15) !important;
           border-color: #23b3f4 !important;
         }
+
+        /* 1200px and up: Widescreen single row */
         @media (min-width: 1200px) {
           .col-xl-5-custom {
             flex: 0 0 20% !important;
             max-width: 20% !important;
+          }
+        }
+
+        /* Laptops / Smaller Desktops (992px to 1366px) */
+        @media (min-width: 992px) and (max-width: 1366px) {
+          .plan-column {
+            padding: 1.75rem 1.25rem !important;
+            border-radius: 20px;
+          }
+          .plan-name {
+            font-size: 1.15rem !important;
+            margin-bottom: 0.5rem !important;
+          }
+          .plan-price-large {
+            font-size: 2.1rem !important;
+          }
+          .plan-price-original {
+            font-size: 0.95rem !important;
+            margin-left: 0.25rem !important;
+          }
+          .plan-subtitle {
+            font-size: 0.8rem !important;
+            margin-top: 0.75rem !important;
+            margin-bottom: 0.75rem !important;
+          }
+          .feature-item {
+            font-size: 0.85rem !important;
+            margin-bottom: 0.75rem !important;
+          }
+        }
+
+        /* Tablets (768px to 991px) */
+        @media (min-width: 768px) and (max-width: 991px) {
+          .plan-column {
+            padding: 2rem 1.5rem !important;
+          }
+          .plan-price-large {
+            font-size: 2.3rem !important;
+          }
+        }
+
+        /* Mobiles (under 768px) */
+        @media (max-width: 767px) {
+          .plan-column {
+            padding: 1.75rem 1.25rem !important;
+            border-radius: 20px;
+          }
+          .plan-price-large {
+            font-size: 2.4rem !important;
+          }
+          .display-4 {
+            font-size: 2.1rem !important;
           }
         }
       `}</style>
@@ -514,7 +604,7 @@ const SelectPlan = () => {
           {/* Header */}
           <div className="text-center mb-5 pb-3">
             <h1 className="display-4 fw-bold mb-4 text-white" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>Value-packed features at Wallet-friendly cost</h1>
-            <p className="text-white bg-primary rounded-pill px-4 py-2 mb-4 d-inline-block shadow-sm" style={{ fontWeight: 500, fontSize: '1.1rem', background: 'rgba(var(--bs-primary-rgb), 0.85) !important', backdropFilter: 'blur(10px)' }}>
+            <p className="rounded-pill px-4 py-2 mb-4 d-inline-block shadow-sm" style={{ fontWeight: 500, fontSize: '1.1rem', background: 'rgba(35, 179, 244, 0.12)', border: '1.5px solid rgba(35, 179, 244, 0.25)', color: '#23b3f4', backdropFilter: 'blur(10px)' }}>
               No hidden costs & no additional charges. Just transparent & affordable pricing.
             </p>
           </div>
@@ -577,12 +667,28 @@ const SelectPlan = () => {
                 }
               ];
 
+              const planColorMap = {
+                'QSR Plan': { accent: '#23b3f4', glow: 'rgba(35, 179, 244, 0.35)' },
+                'Café Plan': { accent: '#4ade80', glow: 'rgba(74, 222, 128, 0.35)' },
+                'Fine Dine Plan': { accent: '#f59e0b', glow: 'rgba(245, 158, 11, 0.35)' },
+                'Cloud Plan': { accent: '#06b6d4', glow: 'rgba(6, 182, 212, 0.35)' },
+                'Chain Plan': { accent: '#f43f5e', glow: 'rgba(244, 63, 94, 0.35)' }
+              };
+              
+              const colors = planColorMap[plan.name] || { accent: '#23b3f4', glow: 'rgba(35, 179, 244, 0.3)' };
+
               return (
                 <div key={index} className="col-12 col-md-6 col-lg-4 col-xl-5-custom mb-4">
-                  <div className="plan-column d-flex flex-column position-relative">
+                  <div 
+                    className="plan-column d-flex flex-column position-relative"
+                    style={{
+                      '--plan-accent': colors.accent,
+                      '--plan-accent-glow': colors.glow
+                    }}
+                  >
                     {plan.recommended && (
                       <div className="position-absolute start-50 translate-middle-x" style={{ top: '-22px' }}>
-                        <span className="badge bg-success rounded-pill pulse-badge shadow">Most Popular</span>
+                        <span className="badge rounded-pill pulse-badge shadow">Most Popular</span>
                       </div>
                     )}
                     <div className={`plan-name ${plan.recommended ? 'plan-name-recommended' : ''}`}>
@@ -600,7 +706,7 @@ const SelectPlan = () => {
 
                     <div className="plan-divider" />
 
-                    <div className="flex-grow-1">
+                    <div className="flex-grow-1 features-scroll-container">
                       {featureCategories.map((category, catIndex) => (
                         <div key={catIndex} className="mb-4">
                           <h6 className="text-white fw-bold mb-3 pb-2" style={{ fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>

@@ -119,6 +119,10 @@ const UnifiedOrder = () => {
   const [tokenNumber, setTokenNumber] = useState(null);
   const [containerCharges, setContainerCharges] = useState([]);
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', address: '', total_persons: '', waiter: '', table_no: '', comment: '' });
+  const [loyaltySettings, setLoyaltySettings] = useState(null);
+  const [loyaltyProfile, setLoyaltyProfile] = useState(null);
+  const [redeemPoints, setRedeemPoints] = useState(0);
+  const [isRedeeming, setIsRedeeming] = useState(false);
   const [taxRates, setTaxRates] = useState({ cgst: 0, sgst: 0, vat: 0 });
   const [paymentData, setPaymentData] = useState(DEFAULT_PAYMENT_DATA);
   const [orderNo, setOrderNo] = useState('');
@@ -322,6 +326,43 @@ const UnifiedOrder = () => {
     setIsDirty(hasUnsavedChanges());
   }, [orderItems, customerInfo, isInitialized]);
 
+  // ── CRM Loyalty Settings & Customer Profile Loader ──────────────────────────
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    axios.get(`${process.env.REACT_APP_API || 'http://localhost:5000/api'}/loyalty/settings`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(res => {
+      if (res.data.success) {
+        setLoyaltySettings(res.data.data);
+      }
+    })
+    .catch(err => console.error("Error loading loyalty settings:", err));
+  }, []);
+
+  useEffect(() => {
+    const phone = customerInfo.phone;
+    if (phone && phone.length === 10) {
+      const token = localStorage.getItem('token');
+      axios.get(`${process.env.REACT_APP_API || 'http://localhost:5000/api'}/loyalty/customer/${phone}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => {
+        if (res.data.success && res.data.data) {
+          setLoyaltyProfile(res.data.data);
+          if ((!customerInfo.name || customerInfo.name === 'Walk-in Customer') && res.data.data.customer.name !== 'Walk-in Customer') {
+            setCustomerInfo(prev => ({ ...prev, name: res.data.data.customer.name }));
+          }
+        }
+      })
+      .catch(err => console.error("Error loading customer CRM profile:", err));
+    } else {
+      setLoyaltyProfile(null);
+      setIsRedeeming(false);
+      setRedeemPoints(0);
+    }
+  }, [customerInfo.phone]);
+
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   useEffect(() => {
     fetchWaiters();
@@ -429,6 +470,9 @@ const UnifiedOrder = () => {
 
   // ── Payload Builder ───────────────────────────────────────────────────────
   const buildPayload = (status, completeAll = false) => {
+    const pointsRate = loyaltySettings ? (loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints) : 0.1;
+    const pointsDiscountAmount = isRedeeming ? Math.round(redeemPoints * pointsRate) : 0;
+
     const orderData = {
       order_type: orderType,
       order_items: orderItems.map((item) => {
@@ -468,7 +512,7 @@ const UnifiedOrder = () => {
       order_status: status,
       customer_name: customerInfo.name,
       comment: customerInfo.comment,
-      bill_amount: parseFloat(paymentData.total),
+      bill_amount: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount),
       sub_total: parseFloat(paymentData.subTotal),
       cgst_percent: parseFloat(paymentData.cgstPercent),
       sgst_percent: parseFloat(paymentData.sgstPercent),
@@ -476,10 +520,10 @@ const UnifiedOrder = () => {
       cgst_amount: parseFloat(paymentData.cgstAmount),
       sgst_amount: parseFloat(paymentData.sgstAmount),
       vat_amount: parseFloat(paymentData.vatAmount),
-      discount_amount: parseFloat(paymentData.discountAmount),
+      discount_amount: parseFloat(paymentData.discountAmount) + pointsDiscountAmount,
       waveoff_amount: parseFloat(paymentData.waveoffAmount),
-      total_amount: parseFloat(paymentData.total),
-      paid_amount: parseFloat(paymentData.paidAmount),
+      total_amount: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount),
+      paid_amount: status === 'Paid' ? Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount) : parseFloat(paymentData.paidAmount),
       payment_type: paymentData.paymentType,
       order_source: 'Manager',
     };
@@ -500,6 +544,7 @@ const UnifiedOrder = () => {
       orderInfo: { ...orderData, order_id: orderId },
       customerInfo: custPayload,
       tableId: orderType === 'Dine In' ? tableId : undefined,
+      redeemedPoints: isRedeeming ? redeemPoints : 0
     };
   };
 
@@ -734,6 +779,9 @@ const UnifiedOrder = () => {
   };
 
   // ── Derived display helpers ───────────────────────────────────────────────
+  const pointsRate = loyaltySettings ? (loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints) : 0.1;
+  const pointsDiscountAmount = isRedeeming ? Math.round(redeemPoints * pointsRate) : 0;
+
   const showParcelUI = orderType !== 'Dine In';
   const visibleFields = VISIBLE_FIELDS[orderType];
   const requiredFields = REQUIRED_FIELDS[orderType];
@@ -872,6 +920,53 @@ const UnifiedOrder = () => {
                 visibleFields={visibleFields}
                 requiredFields={requiredFields}
               />
+              {loyaltyProfile && (
+                <div 
+                  className="mt-2 p-2 rounded" 
+                  style={{ 
+                    background: 'rgba(35,179,244,0.06)', 
+                    border: '1px dashed rgba(35,179,244,0.3)',
+                    fontSize: '11px',
+                    color: '#1e293b',
+                    textAlign: 'left'
+                  }}
+                >
+                  <div className="d-flex justify-content-between align-items-center mb-1">
+                    <span className="fw-bold text-muted">CRM Insights:</span>
+                    <span className="badge bg-info">{loyaltyProfile.customer.loyalty_points || 0} pts available</span>
+                  </div>
+                  <div className="d-flex justify-content-between mb-1 text-muted">
+                    <span>Visits: <strong>{loyaltyProfile.customer.visit_count || 0}</strong></span>
+                    <span>Spend: <strong>₹{(loyaltyProfile.customer.total_spend || 0).toLocaleString()}</strong></span>
+                  </div>
+                  
+                  {loyaltyProfile.customer.loyalty_points > 0 && (
+                    <div className="d-flex align-items-center mt-1 border-top pt-1 justify-content-between">
+                      <Form.Check
+                        type="checkbox"
+                        id="redeem-loyalty-check"
+                        label={`Redeem points for discount`}
+                        checked={isRedeeming}
+                        onChange={(e) => {
+                          setIsRedeeming(e.target.checked);
+                          if (e.target.checked) {
+                            setRedeemPoints(loyaltyProfile.customer.loyalty_points);
+                          } else {
+                            setRedeemPoints(0);
+                          }
+                        }}
+                        className="m-0 fw-semibold"
+                        style={{ fontSize: '11px' }}
+                      />
+                      {isRedeeming && (
+                        <span className="fw-bold text-success">
+                          -₹{Math.round(redeemPoints * (loyaltySettings ? (loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints) : 0.1))} off
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
               {/* Special Instructions - Moved here to save space for cart */}
               <div className="mt-2">
                 <Form.Control
@@ -904,7 +999,11 @@ const UnifiedOrder = () => {
                 orderStatus={orderStatus}
                 isLoading={isLoading}
                 printing={printing}
-                paymentData={paymentData}
+                paymentData={{
+                  ...paymentData,
+                  discountAmount: parseFloat(paymentData.discountAmount) + pointsDiscountAmount,
+                  total: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount)
+                }}
                 orderId={orderId}
                 handleSaveOrder={handleSaveOrder}
                 handleOpenPaymentModal={handleOpenPaymentModal}
@@ -930,7 +1029,12 @@ const UnifiedOrder = () => {
       <PaymentModal
         showPaymentModal={showPaymentModal}
         setShowPaymentModal={setShowPaymentModal}
-        paymentData={paymentData}
+        paymentData={{
+          ...paymentData,
+          discountAmount: parseFloat(paymentData.discountAmount) + pointsDiscountAmount,
+          total: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount),
+          paidAmount: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount)
+        }}
         setPaymentData={setPaymentData}
         isLoading={isLoading}
         handleDiscountTypeChange={handleDiscountTypeChange}
@@ -972,7 +1076,11 @@ const UnifiedOrder = () => {
         orderStatus={orderStatus}
         isLoading={isLoading}
         printing={printing}
-        paymentData={paymentData}
+        paymentData={{
+          ...paymentData,
+          discountAmount: parseFloat(paymentData.discountAmount) + pointsDiscountAmount,
+          total: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount)
+        }}
         orderId={orderId}
         handleSaveOrder={handleSaveOrder}
         handleOpenPaymentModal={handleOpenPaymentModal}
@@ -1013,6 +1121,53 @@ const UnifiedOrder = () => {
           visibleFields={visibleFields}
           requiredFields={requiredFields}
         />
+        {loyaltyProfile && (
+          <div 
+            className="my-2 p-2 rounded" 
+            style={{ 
+              background: 'rgba(35,179,244,0.06)', 
+              border: '1px dashed rgba(35,179,244,0.3)',
+              fontSize: '12px',
+              color: '#1e293b',
+              textAlign: 'left'
+            }}
+          >
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="fw-bold text-muted">CRM Insights:</span>
+              <span className="badge bg-info">{loyaltyProfile.customer.loyalty_points || 0} pts available</span>
+            </div>
+            <div className="d-flex justify-content-between mb-1 text-muted">
+              <span>Visits: <strong>{loyaltyProfile.customer.visit_count || 0}</strong></span>
+              <span>Spend: <strong>₹{(loyaltyProfile.customer.total_spend || 0).toLocaleString()}</strong></span>
+            </div>
+            
+            {loyaltyProfile.customer.loyalty_points > 0 && (
+              <div className="d-flex align-items-center mt-1 border-top pt-1 justify-content-between">
+                <Form.Check
+                  type="checkbox"
+                  id="redeem-loyalty-check-mobile"
+                  label={`Redeem points for discount`}
+                  checked={isRedeeming}
+                  onChange={(e) => {
+                    setIsRedeeming(e.target.checked);
+                    if (e.target.checked) {
+                      setRedeemPoints(loyaltyProfile.customer.loyalty_points);
+                    } else {
+                      setRedeemPoints(0);
+                    }
+                  }}
+                  className="m-0 fw-semibold"
+                  style={{ fontSize: '12px' }}
+                />
+                {isRedeeming && (
+                  <span className="fw-bold text-success">
+                    -₹{Math.round(redeemPoints * (loyaltySettings ? (loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints) : 0.1))} off
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         <Form.Group className="mb-3">
           <Form.Label className="fw-semibold small text-muted">Special Instructions</Form.Label>
           <Form.Control

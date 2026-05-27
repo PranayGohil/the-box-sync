@@ -34,6 +34,25 @@ const customerSchema = new Schema({
     user_id: {
         type: String,
     },
+    loyalty_points: {
+        type: Number,
+        default: 0,
+    },
+    total_spend: {
+        type: Number,
+        default: 0,
+    },
+    visit_count: {
+        type: Number,
+        default: 0,
+    },
+    last_visit_date: {
+        type: Date,
+    },
+    order_preferences: {
+        type: [String],
+        default: [],
+    }
 });
 
 customerSchema.pre("save", async function (next) {
