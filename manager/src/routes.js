@@ -10,6 +10,11 @@ const manager = {
   kot: lazy(() => import('views/manager/kot/ViewKots')),
 };
 
+const qsr = {
+  dashboard: lazy(() => import('views/qsr/Dashboard')),
+  unified: lazy(() => import('views/qsr/order/UnifiedOrder')),
+};
+
 const order = {
   unified: lazy(() => import('views/manager/order/UnifiedOrder')),
   deliveryPartner: lazy(() => import('views/manager/order/DeliveryPartners')),
@@ -18,6 +23,10 @@ const order = {
 const appRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
 
 const allRoutes = {
+  qsrComponents: {
+    dashboard: qsr.dashboard,
+    unified: qsr.unified,
+  },
   mainMenuItems: [
     {
       path: DEFAULT_PATHS.APP,
@@ -55,6 +64,7 @@ const allRoutes = {
         { path: '/dine-in', label: 'Dine In', component: order.unified },
         { path: '/takeaway', label: 'Take Away', component: order.unified },
         { path: '/delivery', label: 'Delivery', component: order.unified },
+        { path: '/qsr-pos', label: 'QSR POS', component: qsr.unified },
         { path: '/delivery-partners', label: 'Delivery Partners', component: order.deliveryPartner },
       ]
     },
