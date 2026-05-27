@@ -85,6 +85,7 @@ const UnifiedOrder = () => {
 
   const { activePlans } = useContext(AuthContext);
   const canKOT = activePlans ? activePlans.includes('KOT Panel') : false;
+  const backPath = (activePlans && activePlans.includes('Manager') && activePlans.includes('QSR')) ? '/dashboard/manager' : '/dashboard';
 
   // Default type from URL path
   const defaultType = location.pathname.includes('dine-in') ? 'Dine In' : location.pathname.includes('delivery') ? 'Delivery' : 'Takeaway';
@@ -708,11 +709,11 @@ const UnifiedOrder = () => {
         }
 
         if (status !== 'Paid' && status !== 'KOT') {
-          history.push('/dashboard');
+          history.push(backPath);
         } else {
           fetchOrderDetails();
           toast.success('Order saved and marked as Paid!');
-          history.push('/dashboard');
+          history.push(backPath);
         }
         return true;
       }
@@ -747,7 +748,7 @@ const UnifiedOrder = () => {
         allowNavigationRef.current = true;
         setIsDirty(false);
         setShowCancelModal(false);
-        history.push('/dashboard');
+        history.push(backPath);
       }
     } catch (err) {
       console.error('Error cancelling order:', err);
@@ -795,7 +796,7 @@ const UnifiedOrder = () => {
       <div className="pos-wrapper">
         {/* Top Bar */}
         <div className="pos-topbar">
-          <Button className="custom-btn-outline" style={{ padding: '0.35rem 1rem', flexShrink: 0 }} onClick={() => handleNavigation('/dashboard')}>
+          <Button className="custom-btn-outline" style={{ padding: '0.35rem 1rem', flexShrink: 0 }} onClick={() => handleNavigation(backPath)}>
             <CsLineIcons icon="arrow-left" size="13" className="me-1" />
             Back
           </Button>
@@ -994,6 +995,7 @@ const UnifiedOrder = () => {
 
             <div className="pos-total-section">
               <PaymentSummaryBox
+                backPath={backPath}
                 orderItems={orderItems}
                 isDirty={isDirty}
                 orderStatus={orderStatus}
@@ -1067,6 +1069,7 @@ const UnifiedOrder = () => {
 
       {/* Mobile Bottom Sheet */}
       <BottomCartSheet
+        backPath={backPath}
         showCartSheet={showCartSheet}
         setShowCartSheet={setShowCartSheet}
         orderItems={orderItems}
