@@ -332,30 +332,30 @@ const UnifiedOrder = () => {
     axios.get(`${process.env.REACT_APP_API || 'http://localhost:5000/api'}/loyalty/settings`, {
       headers: { Authorization: `Bearer ${token}` }
     })
-    .then(res => {
-      if (res.data.success) {
-        setLoyaltySettings(res.data.data);
-      }
-    })
-    .catch(err => console.error("Error loading loyalty settings:", err));
+      .then(res => {
+        if (res.data.success) {
+          setLoyaltySettings(res.data.data);
+        }
+      })
+      .catch(err => console.error("Error loading loyalty settings:", err));
   }, []);
 
   useEffect(() => {
-    const phone = customerInfo.phone;
+    const { phone } = customerInfo;
     if (phone && phone.length === 10) {
       const token = localStorage.getItem('token');
       axios.get(`${process.env.REACT_APP_API || 'http://localhost:5000/api'}/loyalty/customer/${phone}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      .then(res => {
-        if (res.data.success && res.data.data) {
-          setLoyaltyProfile(res.data.data);
-          if ((!customerInfo.name || customerInfo.name === 'Walk-in Customer') && res.data.data.customer.name !== 'Walk-in Customer') {
-            setCustomerInfo(prev => ({ ...prev, name: res.data.data.customer.name }));
+        .then(res => {
+          if (res.data.success && res.data.data) {
+            setLoyaltyProfile(res.data.data);
+            if ((!customerInfo.name || customerInfo.name === 'Walk-in Customer') && res.data.data.customer.name !== 'Walk-in Customer') {
+              setCustomerInfo(prev => ({ ...prev, name: res.data.data.customer.name }));
+            }
           }
-        }
-      })
-      .catch(err => console.error("Error loading customer CRM profile:", err));
+        })
+        .catch(err => console.error("Error loading customer CRM profile:", err));
     } else {
       setLoyaltyProfile(null);
       setIsRedeeming(false);
@@ -921,10 +921,10 @@ const UnifiedOrder = () => {
                 requiredFields={requiredFields}
               />
               {loyaltyProfile && (
-                <div 
-                  className="mt-2 p-2 rounded" 
-                  style={{ 
-                    background: 'rgba(35,179,244,0.06)', 
+                <div
+                  className="mt-2 p-2 rounded"
+                  style={{
+                    background: 'rgba(35,179,244,0.06)',
                     border: '1px dashed rgba(35,179,244,0.3)',
                     fontSize: '11px',
                     color: '#1e293b',
@@ -939,13 +939,13 @@ const UnifiedOrder = () => {
                     <span>Visits: <strong>{loyaltyProfile.customer.visit_count || 0}</strong></span>
                     <span>Spend: <strong>₹{(loyaltyProfile.customer.total_spend || 0).toLocaleString()}</strong></span>
                   </div>
-                  
+
                   {loyaltyProfile.customer.loyalty_points > 0 && (
                     <div className="d-flex align-items-center mt-1 border-top pt-1 justify-content-between">
                       <Form.Check
                         type="checkbox"
                         id="redeem-loyalty-check"
-                        label={`Redeem points for discount`}
+                        label="Redeem points for discount"
                         checked={isRedeeming}
                         onChange={(e) => {
                           setIsRedeeming(e.target.checked);
@@ -1122,10 +1122,10 @@ const UnifiedOrder = () => {
           requiredFields={requiredFields}
         />
         {loyaltyProfile && (
-          <div 
-            className="my-2 p-2 rounded" 
-            style={{ 
-              background: 'rgba(35,179,244,0.06)', 
+          <div
+            className="my-2 p-2 rounded"
+            style={{
+              background: 'rgba(35,179,244,0.06)',
               border: '1px dashed rgba(35,179,244,0.3)',
               fontSize: '12px',
               color: '#1e293b',
@@ -1140,13 +1140,13 @@ const UnifiedOrder = () => {
               <span>Visits: <strong>{loyaltyProfile.customer.visit_count || 0}</strong></span>
               <span>Spend: <strong>₹{(loyaltyProfile.customer.total_spend || 0).toLocaleString()}</strong></span>
             </div>
-            
+
             {loyaltyProfile.customer.loyalty_points > 0 && (
               <div className="d-flex align-items-center mt-1 border-top pt-1 justify-content-between">
                 <Form.Check
                   type="checkbox"
                   id="redeem-loyalty-check-mobile"
-                  label={`Redeem points for discount`}
+                  label="Redeem points for discount"
                   checked={isRedeeming}
                   onChange={(e) => {
                     setIsRedeeming(e.target.checked);

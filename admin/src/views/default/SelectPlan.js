@@ -68,6 +68,8 @@ const SelectPlan = () => {
   const allAddons = [
     { label: 'Reservation Management', value: 'Reservation Manager' },
     { label: 'QSR Billing Panel', value: 'QSR' },
+    { label: 'Manager Panel', value: 'Manager Panel' },
+    { label: 'Create Cashier', value: 'Create Cashier' },
     { label: 'Captain Ordering Panel', value: 'Captain Panel' },
     { label: 'Kitchen Display System', value: 'KOT Panel' },
     { label: 'Restaurant Website', value: 'Restaurant Website' },
@@ -243,6 +245,8 @@ const SelectPlan = () => {
           'Dynamic Reports',
           'WhatsApp Invoice',
           'Restaurant Website',
+          'Manager Panel',
+          'Create Cashier',
         ],
         loyalty: [
           'Customer Profiles',
@@ -326,6 +330,8 @@ const SelectPlan = () => {
           'Dynamic Reports',
           'WhatsApp Invoice',
           'Restaurant Website',
+          'Manager Panel',
+          'Create Cashier',
         ],
         loyalty: [
           'Customer Profiles',
@@ -629,6 +635,8 @@ const SelectPlan = () => {
                   title: 'Add-ons',
                   features: [
                     'QSR Panel',
+                    'Manager Panel',
+                    'Create Cashier',
                     'Captain Panel',
                     'Kitchen Display System',
                     'Reservation Management',
