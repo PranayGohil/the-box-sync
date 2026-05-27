@@ -7,6 +7,7 @@ const Table = require("../models/tableModel");
 const Menu = require("../models/menuModel");
 const Notification = require("../models/notificationModel");
 const OrderCounter = require("../models/orderCounterModel");
+const { processOrderLoyalty } = require("./loyaltyController");
 
 const recalculateOrderTotals = (orderInfo) => {
   if (!orderInfo || !Array.isArray(orderInfo.order_items)) return orderInfo;
@@ -602,6 +603,15 @@ const dineInController = async (req, res) => {
         }
       } else if (orderInfo.order_status === "Paid") {
         await clearTable(tableId);
+        if (savedOrder.customer_id) {
+          await processOrderLoyalty(
+            req.user,
+            savedOrder._id,
+            savedOrder.total_amount,
+            savedOrder.customer_id,
+            req.body.redeemedPoints || 0
+          );
+        }
         const io = req.app.get("io");
         const connectedUsers = req.app.get("connectedUsers");
 
@@ -646,6 +656,17 @@ const dineInController = async (req, res) => {
       if (io && connectedUsers && connectedUsers[key]) {
         io.to(connectedUsers[key]).emit(
           "kot_update"
+        );
+      }
+    } else if (orderInfo.order_status === "Paid") {
+      await clearTable(tableId);
+      if (savedOrder.customer_id) {
+        await processOrderLoyalty(
+          req.user,
+          savedOrder._id,
+          savedOrder.total_amount,
+          savedOrder.customer_id,
+          req.body.redeemedPoints || 0
         );
       }
     }
@@ -795,6 +816,15 @@ const takeawayController = async (req, res) => {
       }
 
       if (savedOrder.order_status === "KOT" || savedOrder.order_status === "Paid") {
+        if (savedOrder.order_status === "Paid" && savedOrder.customer_id) {
+          await processOrderLoyalty(
+            req.user,
+            savedOrder._id,
+            savedOrder.total_amount,
+            savedOrder.customer_id,
+            req.body.redeemedPoints || 0
+          );
+        }
         const io = req.app.get("io");
         const connectedUsers = req.app.get("connectedUsers");
         console.log("Now it's time for kot refresh", connectedUsers)
@@ -829,6 +859,15 @@ const takeawayController = async (req, res) => {
 
 
     if (savedOrder.order_status === "KOT" || savedOrder.order_status === "Paid") {
+      if (savedOrder.order_status === "Paid" && savedOrder.customer_id) {
+        await processOrderLoyalty(
+          req.user,
+          savedOrder._id,
+          savedOrder.total_amount,
+          savedOrder.customer_id,
+          req.body.redeemedPoints || 0
+        );
+      }
       const io = req.app.get("io");
       const connectedUsers = req.app.get("connectedUsers");
       console.log("Now it's time for kot refresh", connectedUsers)
@@ -999,6 +1038,15 @@ const deliveryController = async (req, res) => {
       }
 
       if (savedOrder.order_status === "KOT" || savedOrder.order_status === "Paid") {
+        if (savedOrder.order_status === "Paid" && savedOrder.customer_id) {
+          await processOrderLoyalty(
+            req.user,
+            savedOrder._id,
+            savedOrder.total_amount,
+            savedOrder.customer_id,
+            req.body.redeemedPoints || 0
+          );
+        }
         const io = req.app.get("io");
         const connectedUsers = req.app.get("connectedUsers");
         console.log("Now it's time for kot refresh", connectedUsers)
@@ -1032,6 +1080,15 @@ const deliveryController = async (req, res) => {
     savedOrder = await newOrder.save();
 
     if (savedOrder.order_status === "KOT" || savedOrder.order_status === "Paid") {
+      if (savedOrder.order_status === "Paid" && savedOrder.customer_id) {
+        await processOrderLoyalty(
+          req.user,
+          savedOrder._id,
+          savedOrder.total_amount,
+          savedOrder.customer_id,
+          req.body.redeemedPoints || 0
+        );
+      }
       const io = req.app.get("io");
       const connectedUsers = req.app.get("connectedUsers");
       console.log("Now it's time for kot refresh", connectedUsers)

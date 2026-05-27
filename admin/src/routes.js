@@ -23,6 +23,7 @@ const report = {
 };
 
 const selectPlan = lazy(() => import('views/default/SelectPlan'));
+const crmSettings = lazy(() => import('views/admin/crm/LoyaltySettings'));
 
 const appRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
 
@@ -57,6 +58,12 @@ const allRoutes = {
       label: 'Settings',
       icon: 'gear',
       component: admin.settings,
+    },
+    {
+      path: `${appRoot}/crm-settings`,
+      label: 'CRM & Loyalty',
+      icon: 'gift',
+      component: crmSettings,
     },
     {
       path: `${appRoot}/statistics`,
