@@ -36,6 +36,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
       adminPassword: '',
       newPassword: '',
       confirmPassword: '',
+      cashier_type: data?.cashier_type || 'qsr',
     },
     enableReinitialize: true,
     validationSchema,
@@ -50,6 +51,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
               username: formValues.username,
               password: formValues.newPassword,
               adminPassword: formValues.adminPassword,
+              ...(planName === 'Create Cashier' && { cashier_type: formValues.cashier_type }),
             },
             {
               headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -75,6 +77,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
             `${process.env.REACT_APP_API}/panel-user/${planName}`,
             {
               username: formValues.username,
+              ...(planName === 'Create Cashier' && { cashier_type: formValues.cashier_type }),
             },
             {
               headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -135,6 +138,36 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
             />
             {renderError('username')}
           </Form.Group>
+
+          {planName === 'Create Cashier' && (
+            <Form.Group className="mb-3">
+              <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Cashier Type</Form.Label>
+              <div className="d-flex gap-4">
+                <Form.Check
+                  type="radio"
+                  id="cashier-type-qsr"
+                  name="cashier_type"
+                  label="QSR"
+                  value="qsr"
+                  checked={formik.values.cashier_type === 'qsr'}
+                  onChange={formik.handleChange}
+                  disabled={isLoading}
+                  className="fw-bold"
+                />
+                <Form.Check
+                  type="radio"
+                  id="cashier-type-dine-in"
+                  name="cashier_type"
+                  label="Dine In"
+                  value="dine-in"
+                  checked={formik.values.cashier_type === 'dine-in'}
+                  onChange={formik.handleChange}
+                  disabled={isLoading}
+                  className="fw-bold"
+                />
+              </div>
+            </Form.Group>
+          )}
 
           {isAddMode && (
             <>

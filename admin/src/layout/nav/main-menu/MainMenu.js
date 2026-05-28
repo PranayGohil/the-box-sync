@@ -31,30 +31,8 @@ const MainMenu = () => {
   const { activePlans } = React.useContext(AuthContext);
 
   const filteredRoutes = useMemo(() => {
-    let routesToFilter = attrMobile && useSidebar ? allRoutes : allRoutes.mainRoutes;
-    
-    if (activePlans) {
-      const hasStaff = activePlans.includes('Staff Management');
-
-      if (!hasStaff) {
-        if (Array.isArray(routesToFilter)) {
-          routesToFilter = routesToFilter.filter(route => {
-            if (route.label === 'Staff' && !hasStaff) return false;
-            return true;
-          });
-        } else if (routesToFilter.mainRoutes) {
-          routesToFilter = {
-            ...routesToFilter,
-            mainRoutes: routesToFilter.mainRoutes.filter(route => {
-              if (route.label === 'Staff' && !hasStaff) return false;
-              return true;
-            })
-          };
-        }
-      }
-    }
-    return routesToFilter;
-  }, [attrMobile, useSidebar, activePlans]);
+    return attrMobile && useSidebar ? allRoutes : allRoutes.mainRoutes;
+  }, [attrMobile, useSidebar]);
 
   const menuItemsMemo = useMemo(
     () =>
@@ -62,8 +40,9 @@ const MainMenu = () => {
         data: filteredRoutes,
         isLogin,
         userRole: currentUser.role,
+        activePlans,
       }),
-    [isLogin, currentUser, filteredRoutes]
+    [isLogin, currentUser, filteredRoutes, activePlans]
   );
 
   useEffect(() => {

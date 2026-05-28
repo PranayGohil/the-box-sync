@@ -4,6 +4,7 @@ const {
   getPanelUser,
   createOrUpdatePanelUser,
   deletePanelUser,
+  deleteCashierById,
   changePanelPassword,
   panelLogin,
 } = require("../controllers/panelUserController");
@@ -20,6 +21,7 @@ const PanelRouter = express.Router();
 PanelRouter.get("/:planName", authMiddleware, getPanelUser);
 PanelRouter.post("/:planName", authMiddleware, validate(createPanelUserSchema), createOrUpdatePanelUser);
 PanelRouter.delete("/:planName", authMiddleware, deletePanelUser);
+PanelRouter.delete("/cashier/:cashierId", authMiddleware, deleteCashierById);
 PanelRouter.post(
   "/change-password/:planName",
   authMiddleware,

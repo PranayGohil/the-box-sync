@@ -144,7 +144,9 @@ userSchema.methods.generateAuthToken = async function (role) {
       { expiresIn: "30d" }
     );
     return token;
-  } catch (error) { }
+  } catch (error) {
+    console.error("Error in generateAuthToken:", error);
+  }
 };
 
 const User = mongoose.model("users", userSchema);

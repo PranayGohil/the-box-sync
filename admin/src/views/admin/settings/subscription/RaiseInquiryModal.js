@@ -40,8 +40,8 @@ function RaiseInquiryModal({ show, handleClose, subscriptionName, fetchData }) {
         handleClose();
       } catch (err) {
         console.error('Error raising inquiry:', err);
-        setError(err.response?.data?.message || 'Failed to send inquiry. Try again.');
-        toast.error('Failed to send inquiry. Try again.');
+        setError(err.response?.data?.message || 'Failed to inquiry: Please try again later.');
+        toast.error('Failed to inquiry: Please try again later.');
       } finally {
         setIsLoading(false);
       }

@@ -46,12 +46,14 @@ const allRoutes = {
       label: 'Operations',
       icon: 'list',
       component: admin.operation,
+      planRequirement: ['Inventory Management', 'QSR'],
     },
     {
       path: `${appRoot}/staff`,
       label: 'Staff',
       icon: 'user',
       component: admin.staff,
+      planRequirement: ['Staff Management'],
     },
     {
       path: `${appRoot}/settings`,
@@ -64,12 +66,14 @@ const allRoutes = {
       label: 'CRM & Loyalty',
       icon: 'gift',
       component: crmSettings,
+      planRequirement: ['In-built CRM', 'Customer Profiles', 'Reservation Manager', 'Feedback'],
     },
     {
       path: `${appRoot}/statistics`,
       label: 'Statistics',
       icon: 'chart-4',
       component: admin.statistics,
+      planRequirement: ['Statistics Management', 'Dynamic Reports'],
       subs: [
         { path: '/overview', label: 'Overview', component: admin.statistics },
         { path: '/sales', label: 'Sales Report', component: report.sales },

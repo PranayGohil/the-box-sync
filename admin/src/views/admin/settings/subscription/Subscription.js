@@ -13,11 +13,14 @@ import ControlsPageSize from './components/ControlsPageSize';
 import Table from './components/Table';
 import TablePagination from './components/TablePagination';
 
+import { plans, featureCategories } from '../../../../config/plansConfig';
+
 import ModalEditPanel from './ModalEditPanel';
 import DeletePanelModal from './DeletePanelModal';
 import RaiseInquiryModal from './RaiseInquiryModal';
+import ModalManageCashiers from './ModalManageCashiers';
 
-const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'Payroll By The Box', 'KOT Panel', 'Kitchen Display System', 'Hotel Manager'];
+const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'Payroll By The Box', 'KOT Panel', 'Kitchen Display System', 'Hotel Manager', 'Create Cashier'];
 
 const PLAN_DISPLAY_NAMES = {
   'Manager': 'Manager Panel',
@@ -27,37 +30,58 @@ const PLAN_DISPLAY_NAMES = {
   'Feedback': 'QR-based Feedback',
   'Reservation Manager': 'Reservation Management',
   'Token Management': 'Token Management',
+  'Table Management': 'Table Management',
   'Waiter Calling System': 'Waiter Calling System',
   'Whatsapp-Invoice': 'WhatsApp Invoice',
   'KOT Panel': 'KOT Panel',
   'Kitchen Display System': 'Kitchen Display System',
+  'Create Cashier': 'Create Cashier',
+};
+
+const ADDON_LABEL_TO_DB = {
+  'Reservation Management': 'Reservation Manager',
+  'QSR Panel': 'QSR',
+  'Manager Panel': 'Manager',
+  'Create Cashier': 'Create Cashier',
+  'Captain Panel': 'Captain Panel',
+  'Kitchen Display System': 'KOT Panel',
+  'Restaurant Website': 'Restaurant Website',
+  'Scan & QR Order': 'Scan For Menu',
+  'QR-based Feedback': 'Feedback',
+  'Waiter Calling System': 'Waiter Calling System',
+  'Dynamic Reports': 'Dynamic Reports',
+  'WhatsApp Invoice': 'Whatsapp-Invoice',
+  'Token Management': 'Token Management',
+  'Table Management': 'Table Management',
+  'TheBoxSync Payroll': 'Payroll By The Box',
 };
 
 const ALLOWED_PLANS_BY_TIER = {
   'QSR': [
-    'Staff Management', 'Online Order Reconciliation',
+    'Staff Management',
     'QSR', 'KOT Panel', 'Kitchen Display System', 'Token Management', 'Scan For Menu',
     'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
   ],
   'Café': [
-    'Staff Management', 'Online Order Reconciliation',
+    'Staff Management',
     'QSR', 'KOT Panel', 'Kitchen Display System', 'Token Management', 'Scan For Menu',
     'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'
   ],
   'Fine Dine': [
-    'Manager', 'Staff Management', 'Online Order Reconciliation',
-    'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Reservation Manager', 'Scan For Menu',
-    'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'
+    'Manager', 'Staff Management',
+    'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Reservation Manager', 'Table Management', 'Scan For Menu',
+    'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website',
+    'Create Cashier'
   ],
   'Cloud': [
-    'Manager', 'Staff Management', 'Online Order Reconciliation',
+    'Staff Management',
     'KOT Panel', 'Kitchen Display System', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
   ],
   'Chain': [
-    'Manager', 'Staff Management', 'Online Order Reconciliation',
-    'QSR', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Reservation Manager', 'Token Management',
+    'Manager', 'Staff Management',
+    'QSR', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Reservation Manager', 'Table Management', 'Token Management',
     'Scan For Menu', 'Feedback', 'Waiter Calling System', 'Dynamic Reports',
-    'Whatsapp-Invoice', 'Restaurant Website', 'Payroll By The Box'
+    'Whatsapp-Invoice', 'Restaurant Website', 'Payroll By The Box', 'Create Cashier'
   ]
 };
 
@@ -86,12 +110,15 @@ const Subscription = () => {
   const [currentPanelData, setCurrentPanelData] = useState(null);
   const [currentPlanName, setCurrentPlanName] = useState('');
 
+  const [showManageCashiersModal, setShowManageCashiersModal] = useState(false);
+
   const [showDeletePanelModal, setShowDeletePanelModal] = useState(false);
   const [deletePlanName, setDeletePlanName] = useState('');
 
   const [panelAccounts, setPanelAccounts] = useState({});
   const [inactiveAddOns, setInactiveAddOns] = useState([]);
   const [restaurantCode, setRestaurantCode] = useState('');
+  const [userDetails, setUserDetails] = useState(null);
 
   const [actionLoading, setActionLoading] = useState({
     renew: false,
@@ -99,7 +126,8 @@ const Subscription = () => {
     redirect: false,
   });
 
-
+  const [activePlanFeatures, setActivePlanFeatures] = useState([]);
+  const [missingFeatures, setMissingFeatures] = useState([]);
 
   const fetchData = async () => {
     try {
@@ -118,12 +146,32 @@ const Subscription = () => {
 
       if (userDetailsRes && userDetailsRes.data) {
         setRestaurantCode(userDetailsRes.data.restaurant_code || '');
+        setUserDetails(userDetailsRes.data);
       }
 
       const userTier = userDetailsRes?.data?.purchasedPlan || 'QSR';
       const allowedPlans = ALLOWED_PLANS_BY_TIER[userTier] || [];
 
-      const enriched = userRes.data.data
+      const activePlanObj = plans.find(p => p.name === `${userTier} Plan` || p.name === userTier) || plans[0];
+      const checkFeats = new Set([
+        ...activePlanObj.features.billing,
+        ...activePlanObj.features.addons,
+        ...(activePlanObj.features.loyalty || []),
+        ...activePlanObj.features.advanced,
+        ...activePlanObj.features.support,
+      ]);
+
+      const allFeats = new Set();
+      featureCategories.forEach(cat => cat.features.forEach(f => allFeats.add(f)));
+
+      setActivePlanFeatures(Array.from(checkFeats));
+      const crosses = [];
+      allFeats.forEach(f => {
+        if (!checkFeats.has(f)) crosses.push(f);
+      });
+      setMissingFeatures(crosses);
+
+      let enriched = userRes.data.data
         .map((sub) => {
           const plan = plansRes.data.data.find((p) => p._id === sub.plan_id);
           return {
@@ -135,6 +183,27 @@ const Subscription = () => {
           };
         })
         .filter((sub) => allowedPlans.includes(sub.plan_name));
+
+      const checkFeatsArray = Array.from(checkFeats);
+      const impliedSubs = checkFeatsArray
+        .filter(feat => PANEL_PLANS.includes(feat))
+        .map(feat => {
+          const existing = enriched.find(sub => sub.plan_name === feat);
+          if (existing) return null;
+          
+          return {
+            _id: `implied_${feat}`,
+            plan_name: feat,
+            is_addon: true,
+            status: 'active',
+            plan_id: `implied_id_${feat}`,
+            formatted_start: 'Included in Plan',
+            formatted_end: 'Included in Plan',
+          }
+        })
+        .filter(Boolean);
+
+      enriched = [...enriched, ...impliedSubs];
 
       setUserSubscription(enriched);
 
@@ -208,6 +277,27 @@ const Subscription = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleSendFeatureInquiry = async (featureName) => {
+    try {
+      setActionLoading(prev => ({ ...prev, [featureName]: true }));
+      const payload = {
+        name: userDetails?.name || 'Admin',
+        email2: userDetails?.email || 'Unknown',
+        phone: userDetails?.mobile || 'Unknown',
+        message: `I am interested in upgrading my plan to include the "${featureName}" feature. Please contact me with pricing and details.`,
+        plan: featureName
+      };
+      
+      await axios.post(`${process.env.REACT_APP_API}/user/enquiry`, payload);
+      toast.success(`Inquiry sent for ${featureName}. Our team will contact you soon for Upgrades & Add-ons and pricing.`);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to inquiry: Please try again later.');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [featureName]: false }));
+    }
+  };
 
   const handleRenew = async (subscriptionId) => {
     setActionLoading((prev) => ({ ...prev, renew: true }));
@@ -296,8 +386,6 @@ const Subscription = () => {
         history.push('/operations/feedback');
       } else if (planName === 'Scan For Menu') {
         history.push('/operations/qr-for-menu');
-      } else if (planName === 'Online Order Reconciliation') {
-        history.push('/online-order-reconcilation');
       } else if (planName === 'Reservation Manager') {
         window.open('https://manager.theboxsync.com/operations/manage-reservations', '_blank');
       } else if (planName === 'Dynamic Reports') {
@@ -310,10 +398,10 @@ const Subscription = () => {
         window.open('https://captain.theboxsync.com', '_blank');
       } else if (planName === 'KOT Panel' || planName === 'Kitchen Display System') {
         window.open('https://kot.theboxsync.com', '_blank');
-      } else if (planName === 'Manager') {
+      } else if (planName === 'Manager' || planName === 'QSR') {
         window.open('https://manager.theboxsync.com', '_blank');
-      } else if (planName === 'QSR') {
-        window.open('https://qsr.theboxsync.com', '_blank');
+      } else if (planName === 'Create Cashier') {
+        window.open('https://cashier.theboxsync.com', '_blank');
       } else {
         toast.error('Invalid Plan');
       }
@@ -361,72 +449,89 @@ const Subscription = () => {
           let actionButtons = null;
 
           if (isActive && PANEL_PLANS.includes(original.plan_name)) {
-            actionButtons = panelAccounts[original.plan_name] ? (
-              <>
+            // Special handling for Create Cashier: always show Manage Cashiers button
+            if (original.plan_name === 'Create Cashier') {
+              actionButtons = (
                 <Button
                   variant="none"
                   size="sm"
                   className="subscription-custom-btn-outline"
                   style={{ width: '30px', height: '30px', padding: 0 }}
-                  onClick={() => handleEditPanel(original.plan_name)}
-                  disabled={loading || actionLoading.renew}
-                  title="Edit Panel Credentials"
-                >
-                  <CsLineIcons icon="edit" size="15" />
-                </Button>
-                <Button
-                  variant="none"
-                  size="sm"
-                  className="subscription-custom-btn-danger"
-                  onClick={() => openDeletePanelModal(original.plan_name)}
+                  onClick={() => setShowManageCashiersModal(true)}
                   disabled={loading}
-                  title="Remove Panel Credentials"
+                  title="Manage Cashiers"
                 >
-                  <CsLineIcons icon="bin" size="15" />
+                  <CsLineIcons icon="user" size="15" />
                 </Button>
-                {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Manager', 'QSR'].includes(original.plan_name) && (
+              );
+            } else {
+              actionButtons = panelAccounts[original.plan_name] ? (
+                <>
                   <Button
                     variant="none"
                     size="sm"
                     className="subscription-custom-btn-outline"
                     style={{ width: '30px', height: '30px', padding: 0 }}
-                    onClick={() => handleRedirect(original.plan_name)}
-                    disabled={loading || actionLoading.redirect}
-                    title="Go to Module"
+                    onClick={() => handleEditPanel(original.plan_name)}
+                    disabled={loading || actionLoading.renew}
+                    title="Edit Panel Credentials"
                   >
-                    <CsLineIcons icon="eye" size="15" />
+                    <CsLineIcons icon="edit" size="15" />
                   </Button>
-                )}
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="none"
-                  size="sm"
-                  className="subscription-custom-btn-outline"
-                  style={{ width: '30px', height: '30px', padding: 0 }}
-                  onClick={() => handleAddPanel(original.plan_name)}
-                  disabled={loading}
-                  title="Set Panel Credentials"
-                >
-                  <CsLineIcons icon="plus" size="15" />
-                </Button>
-                {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Manager', 'QSR'].includes(original.plan_name) && (
+                  <Button
+                    variant="none"
+                    size="sm"
+                    className="subscription-custom-btn-danger"
+                    onClick={() => openDeletePanelModal(original.plan_name)}
+                    disabled={loading}
+                    title="Remove Panel Credentials"
+                  >
+                    <CsLineIcons icon="bin" size="15" />
+                  </Button>
+                  {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Manager', 'QSR'].includes(original.plan_name) && (
+                    <Button
+                      variant="none"
+                      size="sm"
+                      className="subscription-custom-btn-outline"
+                      style={{ width: '30px', height: '30px', padding: 0 }}
+                      onClick={() => handleRedirect(original.plan_name)}
+                      disabled={loading || actionLoading.redirect}
+                      title="Go to Module"
+                    >
+                      <CsLineIcons icon="eye" size="15" />
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <>
                   <Button
                     variant="none"
                     size="sm"
                     className="subscription-custom-btn-outline"
                     style={{ width: '30px', height: '30px', padding: 0 }}
-                    onClick={() => handleRedirect(original.plan_name)}
-                    disabled={loading || actionLoading.redirect}
-                    title="Go to Module"
+                    onClick={() => handleAddPanel(original.plan_name)}
+                    disabled={loading}
+                    title="Set Panel Credentials"
                   >
-                    <CsLineIcons icon="eye" size="15" />
+                    <CsLineIcons icon="plus" size="15" />
                   </Button>
-                )}
-              </>
-            );
-          } else if (isActive) {
+                  {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Manager', 'QSR'].includes(original.plan_name) && (
+                    <Button
+                      variant="none"
+                      size="sm"
+                      className="subscription-custom-btn-outline"
+                      style={{ width: '30px', height: '30px', padding: 0 }}
+                      onClick={() => handleRedirect(original.plan_name)}
+                      disabled={loading || actionLoading.redirect}
+                      title="Go to Module"
+                    >
+                      <CsLineIcons icon="eye" size="15" />
+                    </Button>
+                  )}
+                </>
+              );
+            }
+          } else if (isActive && ['Staff Management', 'Feedback', 'Scan For Menu', 'Reservation Manager', 'Dynamic Reports', 'Restaurant Website'].includes(original.plan_name)) {
             actionButtons = (
               <Button
                 variant="none"
@@ -488,7 +593,7 @@ const Subscription = () => {
     {
       columns,
       data: userSubscription,
-      initialState: { pageIndex: 0 },
+      initialState: { pageIndex: 0, pageSize: 100 },
     },
     useGlobalFilter,
     useSortBy,
@@ -595,6 +700,27 @@ const Subscription = () => {
               <div className="mt-4">
                 <TablePagination tableInstance={tableInstance} />
               </div>
+
+              {activePlanFeatures.length > 0 && (
+                <div className="mt-5 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div className="section-header mb-4" style={{ borderLeft: '4px solid #4ade80', paddingLeft: '15px' }}>
+                    <h5 className="fw-bold mb-1">Your Included Features</h5>
+                    <p className="text-muted small mb-0">These are all the features active in your current base plan.</p>
+                  </div>
+                  <Row className="g-3 mb-2">
+                    {activePlanFeatures.map((feat, i) => (
+                      <Col key={i} xs={12} sm={6} md={4} lg={3}>
+                        <div className="d-flex align-items-center gap-2">
+                          <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '20px', height: '20px', backgroundColor: 'transparent', border: '1.5px solid #4ade80' }}>
+                            <CsLineIcons icon="check" size="12" style={{ color: '#4ade80' }} />
+                          </div>
+                          <span className="fw-medium text-muted" style={{ fontSize: '0.9rem' }}>{feat}</span>
+                        </div>
+                      </Col>
+                    ))}
+                  </Row>
+                </div>
+              )}
             </>
           )}
         </Card.Body>
@@ -649,56 +775,83 @@ const Subscription = () => {
         </div>
       )}
 
-      {availablePlans.length > 0 && (
+      {missingFeatures.length > 0 && (
         <div className="mb-5">
-          <div className="section-header mb-4" style={{ borderLeft: '4px solid #1ea8e7', paddingLeft: '15px' }}>
-            <h3 className="fw-bold mb-1">Available Add-ons</h3>
-            <p className="text-muted small mb-0">Enhance your restaurant with powerful additional features.</p>
+          <div className="section-header mb-4" style={{ borderLeft: '4px solid #e53e3e', paddingLeft: '15px' }}>
+            <h3 className="fw-bold mb-1">Available Upgrades & Add-ons</h3>
+            <p className="text-muted small mb-0">Unlock more features to enhance your restaurant operations.</p>
           </div>
           <Row className="g-4">
-            {availablePlans.map((plan) => (
-              <Col key={plan._id} sm="12" md="6" lg="4">
-                <Card className="subscription-glass-card border-0 h-100 subscription-plan-card">
-                  <Card.Body className="p-4 d-flex flex-column">
-                    <h5 className="fw-bold mb-2">{getDisplayName(plan.plan_name)}</h5>
-                    <div className="subscription-plan-price mb-2">₹{plan.plan_price}</div>
-                    <div className="text-muted small mb-3">per {plan.plan_duration} month(s)</div>
-
-                    {plan.features?.length > 0 && (
-                      <ul className="subscription-feature-list">
-                        {plan.features.map((feature, i) => (
-                          <li key={i}>
-                            <CsLineIcons icon="check" size="14" className="text-success" />
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    <div className="mt-auto">
-                      <Button
-                        variant="none"
-                        className="subscription-custom-btn-solid w-100"
-                        onClick={() => handleBuyPlan(plan._id)}
-                        disabled={actionLoading.buy}
-                      >
-                        {actionLoading.buy ? (
-                          <>
-                            <Spinner as="span" animation="border" size="sm" className="me-2" />
-                            Processing...
-                          </>
-                        ) : (
-                          <>
-                            <CsLineIcons icon="cart" size="18" />
-                            Buy Now
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
+            {missingFeatures.map((feature, i) => {
+              const dbName = ADDON_LABEL_TO_DB[feature];
+              const availablePlan = dbName ? availablePlans.find(p => p.plan_name === dbName) : null;
+              
+              return (
+                <Col key={i} sm="12" md="6" lg="4">
+                  <Card className="subscription-glass-card border-0 h-100 subscription-plan-card">
+                    <Card.Body className="p-4 d-flex flex-column">
+                      <div className="d-flex align-items-center gap-2 mb-3">
+                        <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '24px', height: '24px', backgroundColor: 'transparent', border: '1.5px solid #e53e3e' }}>
+                          <CsLineIcons icon="close" size="14" style={{ color: '#e53e3e' }} />
+                        </div>
+                        <h6 className="fw-bold mb-0" style={{ fontSize: '1.1rem' }}>{feature}</h6>
+                      </div>
+                      
+                      {availablePlan ? (
+                        <>
+                          <div className="subscription-plan-price mb-2" style={{ color: '#1ea8e7' }}>₹{availablePlan.plan_price}</div>
+                          <div className="text-muted small mb-4">per {availablePlan.plan_duration} month(s)</div>
+                          <div className="mt-auto">
+                            <Button
+                              variant="none"
+                              className="subscription-custom-btn-solid w-100"
+                              onClick={() => handleBuyPlan(availablePlan._id)}
+                              disabled={actionLoading.buy}
+                            >
+                              {actionLoading.buy ? (
+                                <>
+                                  <Spinner as="span" animation="border" size="sm" className="me-2" />
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  <CsLineIcons icon="cart" size="18" className="me-2" />
+                                  Buy Add-on
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-muted small mb-4">Included in higher tier plans. Contact support to upgrade your base plan.</div>
+                          <div className="mt-auto pt-3" style={{ borderTop: '1px dashed rgba(0,0,0,0.1)' }}>
+                            <Button
+                              variant="outline-primary"
+                              className="w-100"
+                              onClick={() => handleSendFeatureInquiry(feature)}
+                              disabled={actionLoading[feature]}
+                            >
+                              {actionLoading[feature] ? (
+                                <>
+                                  <Spinner as="span" animation="border" size="sm" className="me-2" />
+                                  Sending...
+                                </>
+                              ) : (
+                                <>
+                                  <CsLineIcons icon="email" size="18" className="me-2" />
+                                  Send Inquiry
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </Card.Body>
+                  </Card>
+                </Col>
+              );
+            })}
           </Row>
         </div>
       )}
@@ -716,6 +869,11 @@ const Subscription = () => {
       {showDeletePanelModal && (
         <DeletePanelModal show={showDeletePanelModal} handleClose={() => setShowDeletePanelModal(false)} planName={deletePlanName} fetchData={fetchData} />
       )}
+
+      <ModalManageCashiers
+        show={showManageCashiersModal}
+        handleClose={() => setShowManageCashiersModal(false)}
+      />
 
       {showInquiryModal && (
         <RaiseInquiryModal show={showInquiryModal} handleClose={() => setShowInquiryModal(false)} subscriptionName={inquirySubName} fetchData={fetchData} />
