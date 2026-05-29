@@ -5,6 +5,7 @@ import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { setCurrentUser as setReduxUser } from 'auth/authSlice';
+import { plans } from '../config/plansConfig';
 
 export const AuthContext = createContext();
 
@@ -16,11 +17,8 @@ export const AuthProvider = ({ children }) => {
     const [isLogin, setIsLogin] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    const fetchUserSubscriptions = async () => {
+    const fetchUserSubscriptions = async (userData) => {
         try {
-            // setActivePlans(['Manager', 'Dynamic Reports', 'QSR', 'Captain Panel', 'KOT Panel', 'Hotel Manager'])
-            // Completed : Staff Management, Payroll By The Box, Feedback, Scan For Menu, Restaurant Website
-
             const response = await axios.get(
                 `${process.env.REACT_APP_API}/subscription/get`,
                 {
@@ -29,14 +27,28 @@ export const AuthProvider = ({ children }) => {
                     },
                 }
             );
-            console.log(response.data.data);
-            if (response.data.data.length > 0) {
+            
+            let allPlans = [];
+            if (response.data?.data?.length > 0) {
                 const fetchActivePlans = response.data.data.filter(
                     (plan) => plan.status === "active"
                 );
-                setActivePlans(fetchActivePlans.map((plan) => plan.plan_name));
-                console.log(fetchActivePlans.map((plan) => plan.plan_name));
+                allPlans = fetchActivePlans.map((plan) => plan.plan_name);
             }
+
+            const userTier = userData?.purchasedPlan || 'QSR';
+            const activePlanObj = plans.find(p => p.name === `${userTier} Plan` || p.name === userTier) || plans[0];
+            
+            const checkFeats = new Set([
+                ...allPlans,
+                ...(activePlanObj?.features?.billing || []),
+                ...(activePlanObj?.features?.addons || []),
+                ...(activePlanObj?.features?.loyalty || []),
+                ...(activePlanObj?.features?.advanced || []),
+                ...(activePlanObj?.features?.support || []),
+            ]);
+            
+            setActivePlans(Array.from(checkFeats));
         } catch (error) {
             console.error("Error fetching subscription plans:", error);
         }
@@ -64,19 +76,21 @@ export const AuthProvider = ({ children }) => {
                     setCurrentUser(res.data);
                     setIsLogin(true);
                     dispatch(setReduxUser(res.data));
+                    fetchUserSubscriptions(res.data);
                 })
                 .catch(() => {
                     localStorage.removeItem("token");
                     setCurrentUser(null);
                     setIsLogin(false);
                 })
-                .finally(() => setLoading(false));
+                .finally(() => {
+                    setLoading(false);
+                });
         } else {
             console.log("No Token Found");
             history.push("/login");
             setLoading(false);
         }
-        fetchUserSubscriptions();
     }, []);
 
 

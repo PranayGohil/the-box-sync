@@ -68,6 +68,8 @@ const SelectPlan = () => {
   const allAddons = [
     { label: 'Reservation Management', value: 'Reservation Manager' },
     { label: 'QSR Billing Panel', value: 'QSR' },
+    { label: 'Manager Panel', value: 'Manager Panel' },
+    { label: 'Create Cashier', value: 'Create Cashier' },
     { label: 'Captain Ordering Panel', value: 'Captain Panel' },
     { label: 'Kitchen Display System', value: 'KOT Panel' },
     { label: 'Restaurant Website', value: 'Restaurant Website' },
@@ -77,6 +79,7 @@ const SelectPlan = () => {
     { label: 'Dynamic Reports', value: 'Dynamic Reports' },
     { label: 'Whatsapp-Invoice', value: 'Whatsapp-Invoice' },
     { label: 'Token Management', value: 'Token Management' },
+    { label: 'Table Management', value: 'Table Management' },
   ];
 
   const handlePlanSelect = (plan) => {
@@ -144,7 +147,7 @@ const SelectPlan = () => {
       features: {
         billing: [
           'Inventory Management',
-          '80+ Reports',
+          'Statistics Management',
           'Third-party Integrations',
           'In-built CRM',
           'Menu Management',
@@ -183,7 +186,7 @@ const SelectPlan = () => {
       features: {
         billing: [
           'Inventory Management',
-          '80+ Reports',
+          'Statistics Management',
           'Third-party Integrations',
           'In-built CRM',
           'Menu Management',
@@ -224,7 +227,7 @@ const SelectPlan = () => {
       features: {
         billing: [
           'Inventory Management',
-          '80+ Reports',
+          'Statistics Management',
           'Third-party Integrations',
           'In-built CRM',
           'Menu Management',
@@ -237,12 +240,15 @@ const SelectPlan = () => {
           'Captain Panel',
           'Kitchen Display System',
           'Reservation Management',
+          'Table Management',
           'Scan & QR Order',
           'QR-based Feedback',
           'Waiter Calling System',
           'Dynamic Reports',
           'WhatsApp Invoice',
           'Restaurant Website',
+          'Manager Panel',
+          'Create Cashier',
         ],
         loyalty: [
           'Customer Profiles',
@@ -267,7 +273,7 @@ const SelectPlan = () => {
       features: {
         billing: [
           'Inventory Management',
-          '80+ Reports',
+          'Statistics Management',
           'Third-party Integrations',
           'In-built CRM',
           'Menu Management',
@@ -305,7 +311,7 @@ const SelectPlan = () => {
       features: {
         billing: [
           'Inventory Management',
-          '80+ Reports',
+          'Statistics Management',
           'Third-party Integrations',
           'In-built CRM',
           'Menu Management',
@@ -319,6 +325,7 @@ const SelectPlan = () => {
           'Captain Panel',
           'Kitchen Display System',
           'Reservation Management',
+          'Table Management',
           'Token Management',
           'Scan & QR Order',
           'QR-based Feedback',
@@ -326,6 +333,8 @@ const SelectPlan = () => {
           'Dynamic Reports',
           'WhatsApp Invoice',
           'Restaurant Website',
+          'Manager Panel',
+          'Create Cashier',
         ],
         loyalty: [
           'Customer Profiles',
@@ -615,7 +624,7 @@ const SelectPlan = () => {
                   title: 'Billing & Core',
                   features: [
                     'Inventory Management',
-                    '80+ Reports',
+                    'Statistics Management',
                     'Third-party Integrations',
                     'In-built CRM',
                     'Menu Management',
@@ -629,9 +638,12 @@ const SelectPlan = () => {
                   title: 'Add-ons',
                   features: [
                     'QSR Panel',
+                    'Manager Panel',
+                    'Create Cashier',
                     'Captain Panel',
                     'Kitchen Display System',
                     'Reservation Management',
+                    'Table Management',
                     'Token Management',
                     'Scan & QR Order',
                     'QR-based Feedback',
@@ -918,10 +930,13 @@ const SelectPlan = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* Success Modal */}
       <Modal
         show={showSuccessModal}
-        onHide={() => { window.location.href = '/dashboard'; }}
+        onHide={() => { 
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        }}
         centered
         dialogClassName="glass-modal"
       >
@@ -937,8 +952,12 @@ const SelectPlan = () => {
           </p>
         </Modal.Body>
         <Modal.Footer className="justify-content-center border-0 pt-0 pb-4">
-          <Button className="btn-glass-primary rounded-pill px-5" onClick={() => { window.location.href = '/dashboard'; }}>
-            Go to Dashboard
+          <Button className="btn-glass-primary rounded-pill px-5" onClick={() => { 
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login'; 
+          }}>
+            Okay, Logout
           </Button>
         </Modal.Footer>
       </Modal>

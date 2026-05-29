@@ -11,11 +11,13 @@ import RouteIdentifier from 'routing/components/RouteIdentifier';
 import { getRoutes } from 'routing/helper';
 import allRoutes from 'routes.js';
 import Loading from 'components/loading/Loading';
+import { AuthContext } from 'contexts/AuthContext';
 
 const App = () => {
   const { currentUser, isLogin } = useSelector((state) => state.auth);
+  const { activePlans } = React.useContext(AuthContext);
 
-  const routes = useMemo(() => getRoutes({ data: allRoutes, isLogin, userRole: currentUser.role }), [isLogin, currentUser]);
+  const routes = useMemo(() => getRoutes({ data: allRoutes, isLogin, userRole: currentUser.role, activePlans }), [isLogin, currentUser, activePlans]);
   if (routes) {
     if (isLogin && currentUser) {
       const path = window.location.pathname;

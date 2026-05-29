@@ -3,10 +3,12 @@ import { Col } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { getMenuItems } from 'routing/helper';
 import allRoutes from 'routes.js';
+import { AuthContext } from 'contexts/AuthContext';
 import SidebarMenuItems from './SidebarMenuItems';
 
 const SidebarMenu = () => {
   const { isLogin, currentUser } = useSelector((state) => state.auth);
+  const { activePlans } = React.useContext(AuthContext);
   const { useSidebar } = useSelector((state) => state.menu);
 
   const menuItemsMemo = useMemo(
@@ -15,8 +17,9 @@ const SidebarMenu = () => {
         data: allRoutes.sidebarItems,
         isLogin,
         userRole: currentUser.role,
+        activePlans,
       }),
-    [isLogin, currentUser]
+    [isLogin, currentUser, activePlans]
   );
 
   if (!useSidebar === true) {

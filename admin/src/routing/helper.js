@@ -36,6 +36,7 @@ export const convertToRoutes = ({
   loginPath = DEFAULT_PATHS.LOGIN,
   invalidAccessPath = DEFAULT_PATHS.INVALID_ACCESS,
   noLayout = false,
+  activePlans = [],
 }) => {
   let items = [];
   if (Array.isArray(data)) {
@@ -49,6 +50,11 @@ export const convertToRoutes = ({
     const itemMapper = (item) => {
       const tempItem = { ...item };
       if (item.hideInRoute) return itemMapper({});
+      
+      if (tempItem.planRequirement) {
+        const hasAccess = tempItem.planRequirement.some(req => activePlans.includes(req));
+        if (!hasAccess) return itemMapper({});
+      }
 
       if (item.subs) tempItem.exact = true;
 
@@ -130,7 +136,7 @@ export const convertToRoutes = ({
   };
 };
 
-export const convertToMenuItems = ({ data = [], authGuardActive = IS_AUTH_GUARD_ACTIVE, isLogin = false, userRole = null }) => {
+export const convertToMenuItems = ({ data = [], authGuardActive = IS_AUTH_GUARD_ACTIVE, isLogin = false, userRole = null, activePlans = [] }) => {
   let items = [];
   if (Array.isArray(data)) {
     items = data;
@@ -140,6 +146,11 @@ export const convertToMenuItems = ({ data = [], authGuardActive = IS_AUTH_GUARD_
 
   const itemMapper = (item) => {
     const tempItem = { ...item };
+
+    if (tempItem.planRequirement) {
+      const hasAccess = tempItem.planRequirement.some(req => activePlans.includes(req));
+      if (!hasAccess) return {};
+    }
 
     if (authGuardActive) {
       /* Authentication Guard */
@@ -207,7 +218,7 @@ export const convertToMenuItems = ({ data = [], authGuardActive = IS_AUTH_GUARD_
   return items.map(itemMapper).filter((x) => Object.keys(x).length > 0);
 };
 
-export const convertToSearchItems = ({ data = [], authGuardActive = IS_AUTH_GUARD_ACTIVE, isLogin = false, userRole = null }) => {
+export const convertToSearchItems = ({ data = [], authGuardActive = IS_AUTH_GUARD_ACTIVE, isLogin = false, userRole = null, activePlans = [] }) => {
   let items = [];
   if (Array.isArray(data)) {
     items = data;
@@ -223,6 +234,12 @@ export const convertToSearchItems = ({ data = [], authGuardActive = IS_AUTH_GUAR
       if (tempItem.hideInMenu || tempItem.isExternal || tempItem.hideInRoute) {
         return {};
       }
+
+      if (tempItem.planRequirement) {
+        const hasAccess = tempItem.planRequirement.some(req => activePlans.includes(req));
+        if (!hasAccess) return {};
+      }
+
       if (authGuardActive) {
         /* Authentication Guard */
         if (tempItem.roles) tempItem.protected = true;
@@ -286,11 +303,12 @@ export const convertToSearchItems = ({ data = [], authGuardActive = IS_AUTH_GUAR
   };
 };
 
-export const getRoutes = ({ data, isLogin, userRole }) =>
+export const getRoutes = ({ data, isLogin, userRole, activePlans }) =>
   convertToRoutes({
     data,
     isLogin,
     userRole,
+    activePlans,
     authGuardActive: IS_AUTH_GUARD_ACTIVE,
     unauthorizedPath: DEFAULT_PATHS.UNAUTHORIZED,
     loginPath: DEFAULT_PATHS.LOGIN,
@@ -298,7 +316,7 @@ export const getRoutes = ({ data, isLogin, userRole }) =>
     noLayout: false,
   })();
 
-export const getLayoutlessRoutes = ({ data }) => convertToRoutes({ data, noLayout: true })();
-export const getMenuItems = ({ data, isLogin, userRole }) => convertToMenuItems({ data, isLogin, userRole, authGuardActive: IS_AUTH_GUARD_ACTIVE });
+export const getLayoutlessRoutes = ({ data, activePlans }) => convertToRoutes({ data, noLayout: true, activePlans })();
+export const getMenuItems = ({ data, isLogin, userRole, activePlans }) => convertToMenuItems({ data, isLogin, userRole, activePlans, authGuardActive: IS_AUTH_GUARD_ACTIVE });
 
-export const getSearchItems = ({ data, isLogin, userRole }) => convertToSearchItems({ data, isLogin, userRole, authGuardActive: IS_AUTH_GUARD_ACTIVE });
+export const getSearchItems = ({ data, isLogin, userRole, activePlans }) => convertToSearchItems({ data, isLogin, userRole, activePlans, authGuardActive: IS_AUTH_GUARD_ACTIVE });

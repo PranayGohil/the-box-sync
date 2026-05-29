@@ -5,15 +5,17 @@ const Captain = require("../models/captainModel");
 const HotelManager = require("../models/hotelManagerModel");
 const User = require("../models/userModel");
 const Subscription = require("../models/subscriptionModel");
+const Cashier = require("../models/cashierModel");
 
 const bcrypt = require("bcryptjs");
 
 const panelModels = {
   Manager: Manager,
-  QSR: QSR,
+  QSR: Manager,
   "KOT Panel": Kot,
   "Captain Panel": Captain,
   "Hotel Manager": HotelManager,
+  "Create Cashier": Cashier,
 };
 
 const getModel = (planName) => {
@@ -28,8 +30,14 @@ exports.getPanelUser = async (req, res) => {
     const userId = req.user._id;
 
     const Model = getModel(planName);
-    const account = await Model.findOne({ user_id: userId });
 
+    // For Cashier, return all accounts (multi-cashier support)
+    if (planName === "Create Cashier") {
+      const accounts = await Model.find({ user_id: userId }).lean();
+      return res.status(200).json({ exists: accounts.length > 0, data: accounts });
+    }
+
+    const account = await Model.findOne({ user_id: userId });
     res.status(200).json({ exists: !!account, data: account });
   } catch (err) {
     console.error("Error in getPanelUser:", err);
@@ -41,45 +49,54 @@ exports.createOrUpdatePanelUser = async (req, res) => {
   try {
     const { planName } = req.params;
     const userId = req.user._id;
-    const { username, password, adminPassword } = req.body;
-    console.log("Plan name : ", planName);
-    console.log("User ID :", userId);
-    console.log("Body :", req.body)
+    const { username, password, adminPassword, accountId, cashier_type } = req.body;
 
-    // If creating new account or changing password, verify admin password
+    // Verify admin password if password is being set
     if (password) {
       const admin = await User.findById(userId).select('+password');
       if (!admin) {
         return res.status(404).json({ message: "Admin not found" });
       }
-
       if (!adminPassword) {
         return res.status(400).json({ message: "Admin password is required" });
       }
-
       const isMatch = await bcrypt.compare(adminPassword, admin.password);
       if (!isMatch) {
         return res.status(401).json({ message: "Invalid admin password" });
       }
-
     }
 
     const Model = getModel(planName);
-    let account = await Model.findOne({ user_id: userId });
+    let account;
 
-    if (account) {
-      // Update
-      account.username = username;
-      if (password) account.password = password; // will hash in pre-save
+    // Multi-cashier support: for Cashier plan, use accountId to determine create vs update
+    if (planName === "Create Cashier") {
+      if (accountId) {
+        // Edit existing cashier by its _id
+        account = await Model.findOne({ _id: accountId, user_id: userId });
+        if (!account) {
+          return res.status(404).json({ message: "Cashier account not found" });
+        }
+        if (username) account.username = username;
+        if (password) account.password = password;
+        if (cashier_type) account.cashier_type = cashier_type;
+      } else {
+        // Create a brand new cashier account
+        account = new Model({ user_id: userId, username, password, cashier_type: cashier_type || 'qsr' });
+      }
     } else {
-      // Create
-      account = new Model({ user_id: userId, username, password });
+      // Standard single-account panels: find or create
+      account = await Model.findOne({ user_id: userId });
+      if (account) {
+        account.username = username;
+        if (password) account.password = password;
+      } else {
+        account = new Model({ user_id: userId, username, password });
+      }
     }
 
     await account.save();
-    res
-      .status(200)
-      .json({ message: "Panel user saved successfully", data: account });
+    res.status(200).json({ message: "Panel user saved successfully", data: account });
   } catch (err) {
     console.error("Error in createOrUpdatePanelUser:", err);
     res.status(500).json({ message: "Internal server error" });
@@ -152,6 +169,37 @@ exports.deletePanelUser = async (req, res) => {
   }
 };
 
+// Delete a specific cashier by its _id (for multi-cashier support)
+exports.deleteCashierById = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { cashierId } = req.params;
+    const adminPassword = req.body.adminPassword;
+
+    if (!adminPassword) {
+      return res.status(400).json({ message: "Admin password is required." });
+    }
+
+    const admin = await User.findById(userId).select('+password');
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    const isMatch = await bcrypt.compare(adminPassword, admin.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid admin password" });
+    }
+
+    const deleted = await Cashier.findOneAndDelete({ _id: cashierId, user_id: userId });
+    if (!deleted) {
+      return res.status(404).json({ message: "Cashier not found" });
+    }
+
+    res.status(200).json({ message: "Cashier deleted successfully" });
+  } catch (err) {
+    console.error("Error in deleteCashierById:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 exports.panelLogin = async (req, res) => {
   try {
     const { planName } = req.params;
@@ -172,6 +220,11 @@ exports.panelLogin = async (req, res) => {
       return res.json({ message: "Invalid restaurant code" });
     }
 
+    if (!user.isApproved) {
+      console.log("User not approved by super admin");
+      return res.json({ message: "Your account is pending Super Admin approval." });
+    }
+
     const Model = getModel(planName);
     const panelUser = await Model.findOne({ username, user_id: user._id });
     console.log("Model : " + planName);
@@ -187,20 +240,41 @@ exports.panelLogin = async (req, res) => {
     }
 
     // Verify active subscription for the requested panel
-    const activeSubscription = await Subscription.findOne({
+    let subQuery = {
       user_id: user._id,
       plan_name: planName,
       status: "active",
       end_date: { $gt: new Date() }
-    });
+    };
 
-    if (!activeSubscription) {
+    if (planName === "Manager") {
+      subQuery.plan_name = { $in: ["Manager", "QSR"] };
+    }
+
+    let hasAccess = false;
+    const activeSubscription = await Subscription.findOne(subQuery);
+    if (activeSubscription) {
+      hasAccess = true;
+    }
+
+    // Check implicit access based on purchased base plan
+    const tier = user.purchasedPlan;
+    if (tier && !hasAccess) {
+      const fineDineFeats = ['Manager', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Reservation Manager', 'Table Management', 'Scan For Menu', 'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website', 'Create Cashier'];
+      const chainFeats = ['Manager', 'QSR', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Reservation Manager', 'Table Management', 'Token Management', 'Scan For Menu', 'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website', 'Payroll By The Box', 'Create Cashier'];
+      
+      if (tier === 'Fine Dine' && fineDineFeats.includes(planName)) hasAccess = true;
+      if (tier === 'Chain' && chainFeats.includes(planName)) hasAccess = true;
+      if ((tier === 'QSR' || tier === 'Café' || tier === 'Cloud') && ['QSR'].includes(planName)) hasAccess = true;
+    }
+
+    if (!hasAccess) {
       return res.status(403).json({ message: `No active subscription for ${planName}. Please purchase or renew the plan.` });
     }
 
-    token = await user.generateAuthToken(planName);
+    const token = await user.generateAuthToken(planName);
 
-    res.status(200).json({ message: "Logged In", token, user });
+    res.status(200).json({ message: "Logged In", token, user, panelUser });
   } catch (err) {
     console.error("Error in panelLogin:", err);
     res.status(500).json({ message: "Internal server error" });

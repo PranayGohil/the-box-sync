@@ -287,15 +287,25 @@ export const convertToSearchItems = ({ data = [], authGuardActive = IS_AUTH_GUAR
 };
 
 export const filterRoutesByPlans = (routesObj, activePlans = []) => {
-  const hasManager = activePlans.includes('Manager') || activePlans.length === 0;
-  const hasQsr = activePlans.includes('QSR') || activePlans.length === 0;
-  const hasKot = activePlans.includes('KOT Panel') || activePlans.length === 0;
-  const hasStaff = activePlans.includes('Staff Management') || activePlans.length === 0;
+  const hasManager = activePlans.includes('Manager');
+  const hasQsr = activePlans.includes('QSR');
+  const hasKot = activePlans.includes('KOT Panel');
+  const hasStaff = activePlans.includes('Staff Management');
 
   const qsrComponents = routesObj.qsrComponents || {};
+  const appRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
 
   const mainMenuItems = (routesObj.mainMenuItems || []).map(item => {
     const newItem = { ...item };
+
+    // 0. Base redirect filtering
+    if (newItem.path === DEFAULT_PATHS.APP && newItem.redirect) {
+      if (!hasManager && hasQsr) {
+        return { ...newItem, to: `${appRoot}/dashboard/qsr` };
+      } else {
+        return { ...newItem, to: `${appRoot}/dashboard/manager` };
+      }
+    }
 
     // 1. Dashboard filtering
     if (newItem.path && newItem.path.endsWith('/dashboard')) {
@@ -308,9 +318,13 @@ export const filterRoutesByPlans = (routesObj, activePlans = []) => {
         delete clonedItem.component;
       } else if (hasQsr) {
         delete clonedItem.subs;
+        clonedItem.path = `${appRoot}/dashboard/qsr`;
+        clonedItem.label = 'Dashboard';
         clonedItem.component = qsrComponents.dashboard;
       } else {
         delete clonedItem.subs;
+        clonedItem.path = `${appRoot}/dashboard/manager`;
+        clonedItem.label = 'Dashboard';
         // Keep default manager.dashboard component
       }
       return clonedItem;

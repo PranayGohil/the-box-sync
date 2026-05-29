@@ -8,8 +8,8 @@ import axios from 'axios';
 import { AuthContext } from 'contexts/AuthContext';
 
 const Login = () => {
-  const title = 'Manager Login — The Box';
-  const description = 'Secure manager access to the management portal.';
+  const title = 'Cashier Login — The Box';
+  const description = 'Secure cashier access to the POS portal.';
 
   const { login } = useContext(AuthContext);
   const [showPassword, setShowPassword] = useState(false);
@@ -25,10 +25,11 @@ const Login = () => {
 
   const onSubmit = async (values, { setSubmitting }) => {
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API}/panel-user/login/Manager`, values);
+      const res = await axios.post(`${process.env.REACT_APP_API}/panel-user/login/Create Cashier`, values);
       if (res.data.message === 'Logged In') {
-        login(res.data.token, res.data.user);
-        window.location.href = '/dashboard';
+        const cType = res.data.panelUser?.cashier_type || 'qsr';
+        login(res.data.token, res.data.user, cType);
+        window.location.href = cType === 'dine-in' ? '/dashboard/manager' : '/dashboard/qsr';
       } else {
         setWrongMsg(res.data.message);
       }
@@ -70,9 +71,9 @@ const Login = () => {
         {/* Right Panel — Login Form */}
         <div className="login-login-right-panel">
           <div className="login-login-form-header">
-            <div className="login-login-form-eyebrow">Manager Portal</div>
+            <div className="login-login-form-eyebrow">Cashier Portal</div>
             <h2 className="login-login-form-title">Welcome back</h2>
-            <p className="login-login-form-subtitle">Sign in to your dashboard</p>
+            <p className="login-login-form-subtitle">Sign in to your POS</p>
           </div>
 
           <form onSubmit={handleSubmit}>

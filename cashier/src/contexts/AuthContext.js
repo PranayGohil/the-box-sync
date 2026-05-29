@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [activePlans, setActivePlans] = useState([]);
   const [isLogin, setIsLogin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [cashierType, setCashierType] = useState('qsr');
 
   const fetchUserSubscriptions = async () => {
     try {
@@ -46,14 +47,21 @@ export const AuthProvider = ({ children }) => {
           if (res.data === 'Null') {
             console.log('Null Token Expired');
             localStorage.removeItem('token');
+            localStorage.removeItem('cashierType');
             setCurrentUser(null);
             setIsLogin(false);
+          } else {
+            setCurrentUser(res.data);
+            setIsLogin(true);
+            const savedCashierType = localStorage.getItem('cashierType');
+            if (savedCashierType) {
+              setCashierType(savedCashierType);
+            }
           }
-          setCurrentUser(res.data);
-          setIsLogin(true);
         })
         .catch(() => {
           localStorage.removeItem('token');
+          localStorage.removeItem('cashierType');
           setCurrentUser(null);
           setIsLogin(false);
         })
@@ -65,10 +73,12 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = async (token, userData) => {
+  const login = async (token, userData, cType = 'qsr') => {
     try {
       localStorage.setItem('token', token);
+      localStorage.setItem('cashierType', cType);
       setCurrentUser(userData);
+      setCashierType(cType);
       setIsLogin(true);
       return { success: true };
     } catch (err) {
@@ -78,9 +88,10 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('cashierType');
     setCurrentUser(null);
     setIsLogin(false);
   };
 
-  return <AuthContext.Provider value={{ currentUser, activePlans, isLogin, loading, login, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ currentUser, activePlans, isLogin, loading, cashierType, login, logout }}>{children}</AuthContext.Provider>;
 };
