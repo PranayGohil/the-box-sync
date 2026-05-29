@@ -129,7 +129,7 @@ const UserDetails = () => {
         // Construct the Manager URL with the token
         // In production, this would be your manager domain.
         // Assuming Manager runs on port 3000 locally.
-        const managerUrl = `http://localhost:4001/login?impersonate_token=${response.data.token}`;
+        const managerUrl = `${import.meta.env.VITE_APP_ADMIN_URL}/login?impersonate_token=${response.data.token}`;
         window.open(managerUrl, "_blank");
       }
     } catch (error) {

@@ -6,6 +6,7 @@ const {
   SMTP_PORT,
   SMTP_USER,
   SMTP_PASS,
+  SMTP_SUPPORT_PASS,
   SMTP_SUPPORT_USER,
   EMAIL_FROM,
   EMAIL_SUPPORT_FROM,
@@ -31,7 +32,7 @@ const transporterSupport = nodemailer.createTransport({
   secure: Number(SMTP_PORT) === 465, // true for 465 (SSL), false for 587 (STARTTLS)
   auth: {
     user: SMTP_SUPPORT_USER,
-    pass: SMTP_PASS,
+    pass: SMTP_SUPPORT_PASS,
   },
 });
 
