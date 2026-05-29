@@ -63,10 +63,16 @@ const Login = () => {
             const userRes = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
               headers: { Authorization: `Bearer ${res.data.token}` }
             });
-            login(res.data.token, userRes.data);
             if (userRes.data && userRes.data.purchasedPlan) {
+              if (!userRes.data.isApproved) {
+                toast.info("Your account is pending Super Admin approval.", { autoClose: 5000 });
+                setIsLoading(false);
+                return;
+              }
+              login(res.data.token, userRes.data);
               window.location.href = '/dashboard';
             } else {
+              login(res.data.token, userRes.data);
               window.location.href = '/select-plan';
             }
           } catch (err) {

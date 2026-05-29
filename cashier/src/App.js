@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 
 // import redux for auth guard
-import { useSelector } from 'react-redux';
+// (removed useSelector since we use AuthContext now)
 
 // import layout
 import Layout from 'layout/Layout';
@@ -14,14 +14,17 @@ import Loading from 'components/loading/Loading';
 import { AuthContext } from 'contexts/AuthContext';
 
 const App = () => {
-  const { currentUser, isLogin } = useSelector((state) => state.auth);
-  const { activePlans } = React.useContext(AuthContext);
+  const { activePlans, loading, isLogin, currentUser, cashierType } = React.useContext(AuthContext);
 
   const filteredRoutes = useMemo(() => {
-    return filterRoutesByPlans(allRoutes, activePlans);
-  }, [activePlans]);
+    return filterRoutesByPlans(allRoutes, activePlans, cashierType);
+  }, [activePlans, cashierType]);
 
-  const routes = useMemo(() => getRoutes({ data: filteredRoutes, isLogin, userRole: currentUser.role }), [isLogin, currentUser, filteredRoutes]);
+  const routes = useMemo(() => getRoutes({ data: filteredRoutes, isLogin, userRole: currentUser?.role || 'admin' }), [isLogin, currentUser, filteredRoutes]);
+
+  if (loading) {
+    return <Loading />;
+  }
   if (routes) {
     return (
       <Layout>

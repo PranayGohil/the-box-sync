@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Row, Col, Card, Form, Button, Tabs, Tab, Modal, Table } from 'react-bootstrap';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
+import { AuthContext } from 'contexts/AuthContext';
 
 const LoyaltySettings = () => {
+  const { activePlans } = useContext(AuthContext);
   const token = localStorage.getItem('token');
   const [activeTab, setActiveTab] = useState('loyalty');
   
@@ -601,6 +603,7 @@ const LoyaltySettings = () => {
           </Tab>
 
           {/* TAB 2: BEHAVIORAL CAMPAIGNS */}
+          {activePlans.includes('Automated Retention Campaigns') && (
           <Tab 
             eventKey="campaigns" 
             title={
@@ -761,8 +764,10 @@ const LoyaltySettings = () => {
               </Row>
             </Form>
           </Tab>
+          )}
 
           {/* TAB 3: FOOD QUESTS GAMIFICATION */}
+          {activePlans.includes('Gamified Loyalty — Food Quests') && (
           <Tab 
             eventKey="quests" 
             title={
@@ -830,6 +835,7 @@ const LoyaltySettings = () => {
               )}
             </Card>
           </Tab>
+          )}
 
           {/* TAB 4: POINT LOGS */}
           <Tab 

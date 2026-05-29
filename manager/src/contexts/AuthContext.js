@@ -2,6 +2,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
+import { plans } from '../config/plansConfig';
 
 export const AuthContext = createContext();
 
@@ -12,7 +13,7 @@ export const AuthProvider = ({ children }) => {
   const [isLogin, setIsLogin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserSubscriptions = async () => {
+  const fetchUserSubscriptions = async (userData) => {
     try {
       const response = await axios.get(
         `${process.env.REACT_APP_API}/subscription/get`,
@@ -22,10 +23,31 @@ export const AuthProvider = ({ children }) => {
           },
         }
       );
+      
+      let allPlans = [];
       if (response.data?.data?.length > 0) {
         const active = response.data.data.filter((plan) => plan.status === 'active');
-        setActivePlans(active.map((plan) => plan.plan_name));
+        allPlans = active.map((plan) => plan.plan_name);
       }
+
+      // Add base plan capabilities
+      const userTier = userData?.purchasedPlan || 'QSR';
+      const activePlanObj = plans.find(p => p.name === `${userTier} Plan` || p.name === userTier) || plans[0];
+      
+      const checkFeats = new Set([
+        ...allPlans,
+        ...(activePlanObj?.features?.billing || []),
+        ...(activePlanObj?.features?.addons || []),
+        ...(activePlanObj?.features?.loyalty || []),
+        ...(activePlanObj?.features?.advanced || []),
+        ...(activePlanObj?.features?.support || []),
+      ]);
+      
+      // Ensure 'Manager' and 'QSR' are available if not explicitly listed but implied by plan tier
+      if (['Fine Dine', 'Chain'].includes(userTier)) checkFeats.add('Manager');
+      if (['QSR', 'Café', 'Chain', 'Fine Dine', 'Cloud'].includes(userTier)) checkFeats.add('QSR');
+      
+      setActivePlans(Array.from(checkFeats));
     } catch (error) {
       console.error('Error fetching subscription plans:', error);
     }
@@ -42,15 +64,17 @@ export const AuthProvider = ({ children }) => {
             Authorization: `Bearer ${token}`,
           },
         })
-        .then((res) => {
+        .then(async (res) => {
           if (res.data === 'Null') {
             console.log('Null Token Expired');
             localStorage.removeItem('token');
             setCurrentUser(null);
             setIsLogin(false);
+          } else {
+            setCurrentUser(res.data);
+            setIsLogin(true);
+            await fetchUserSubscriptions(res.data);
           }
-          setCurrentUser(res.data);
-          setIsLogin(true);
         })
         .catch(() => {
           localStorage.removeItem('token');
@@ -58,7 +82,6 @@ export const AuthProvider = ({ children }) => {
           setIsLogin(false);
         })
         .finally(() => setLoading(false));
-      fetchUserSubscriptions();
     } else {
       history.push('/login');
       setLoading(false);

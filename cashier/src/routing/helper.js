@@ -286,7 +286,7 @@ export const convertToSearchItems = ({ data = [], authGuardActive = IS_AUTH_GUAR
   };
 };
 
-export const filterRoutesByPlans = (routesObj, activePlans = []) => {
+export const filterRoutesByPlans = (routesObj, activePlans = [], cashierType = 'qsr') => {
   const hasManager = activePlans.includes('Manager') || activePlans.length === 0;
   const hasQsr = activePlans.includes('QSR') || activePlans.length === 0;
   const hasKot = activePlans.includes('KOT Panel') || activePlans.length === 0;
@@ -297,21 +297,29 @@ export const filterRoutesByPlans = (routesObj, activePlans = []) => {
   const mainMenuItems = (routesObj.mainMenuItems || []).map(item => {
     const newItem = { ...item };
 
+    // Redirect filtering
+    if (newItem.redirect && newItem.to && newItem.to.endsWith('/dashboard')) {
+      const clonedItem = { ...newItem };
+      const localAppRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
+      if (cashierType === 'dine-in') {
+        clonedItem.to = `${localAppRoot}/dashboard/manager`;
+      } else {
+        clonedItem.to = `${localAppRoot}/dashboard/qsr`;
+      }
+      return clonedItem;
+    }
+
     // 1. Dashboard filtering
     if (newItem.path && newItem.path.endsWith('/dashboard')) {
       const clonedItem = { ...newItem };
-      if (hasManager && hasQsr) {
-        clonedItem.subs = [
-          { path: '/manager', label: 'Manager Dashboard', component: clonedItem.component },
-          { path: '/qsr', label: 'QSR Dashboard', component: qsrComponents.dashboard }
-        ];
-        delete clonedItem.component;
-      } else if (hasQsr) {
-        delete clonedItem.subs;
-        clonedItem.component = qsrComponents.dashboard;
+      const localAppRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
+      delete clonedItem.subs;
+      if (cashierType === 'dine-in') {
+        clonedItem.component = newItem.component; // It's named manager.dashboard in routes.js
+        clonedItem.path = `${localAppRoot}/dashboard/manager`;
       } else {
-        delete clonedItem.subs;
-        // Keep default manager.dashboard component
+        clonedItem.component = qsrComponents.dashboard;
+        clonedItem.path = `${localAppRoot}/dashboard/qsr`;
       }
       return clonedItem;
     }
@@ -331,10 +339,10 @@ export const filterRoutesByPlans = (routesObj, activePlans = []) => {
       const clonedItem = { ...newItem };
       if (clonedItem.subs) {
         clonedItem.subs = clonedItem.subs.map(sub => ({ ...sub })).filter(sub => {
-          if (['/dine-in', '/takeaway', '/delivery'].includes(sub.path) && !hasManager) {
+          if (['/dine-in', '/takeaway', '/delivery'].includes(sub.path) && cashierType !== 'dine-in') {
             return false;
           }
-          if (sub.path === '/qsr-pos' && !hasQsr) {
+          if (sub.path === '/qsr-pos' && cashierType !== 'qsr') {
             return false;
           }
           return true;

@@ -28,7 +28,7 @@ const Login = () => {
       const res = await axios.post(`${process.env.REACT_APP_API}/panel-user/login/Manager`, values);
       if (res.data.message === 'Logged In') {
         login(res.data.token, res.data.user);
-        window.location.href = '/dashboard';
+        window.location.href = '/';
       } else {
         setWrongMsg(res.data.message);
       }
