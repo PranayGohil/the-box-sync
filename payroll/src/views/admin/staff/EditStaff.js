@@ -191,27 +191,7 @@ const EditStaff = () => {
       }),
 
     salary_structure: Yup.object().shape({
-      earnings: Yup.object({
-        basic: Yup.number()
-          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-          .min(0, 'Must be 0 or more')
-          .required('Basic is required'),
-        hra: Yup.number()
-          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-          .min(0),
-        conveyance: Yup.number()
-          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-          .min(0),
-        medical: Yup.number()
-          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-          .min(0),
-        special: Yup.number()
-          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-          .min(0),
-        other: Yup.number()
-          .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-          .min(0),
-      }),
+      custom_earnings: Yup.object(),
       deductions: Yup.object({
         pf_percentage: Yup.number()
           .transform((value, originalValue) => (originalValue === '' ? 0 : value))
@@ -226,6 +206,11 @@ const EditStaff = () => {
           .min(0),
       }),
     }),
+    increment_plan: Yup.object().shape({
+      type: Yup.string().oneOf(['percentage', 'flat']),
+      value: Yup.number().min(0).nullable(),
+      scheduled_date: Yup.string().nullable()
+    }).nullable()
   });
 
   const loadModels = async () => {
@@ -316,6 +301,10 @@ const EditStaff = () => {
       phone_no: '',
       email: '',
       salary: '',
+      salary_calculation_base: 'working_days',
+      weekly_off_policy: 'global',
+      custom_weekly_offs: [{ day: 'Sunday', type: 'all_weeks', weeks: [] }],
+      leave_policy_configuration: [],
       position: '',
       photo: '',
       document_type: '',
@@ -323,20 +312,18 @@ const EditStaff = () => {
       front_image: '',
       back_image: '',
       salary_structure: {
-        earnings: {
-          basic: 0,
-          hra: 0,
-          conveyance: 0,
-          medical: 0,
-          special: 0,
-          other: 0,
-        },
+        custom_earnings: {},
         deductions: {
           pf_percentage: 0,
           esi_percentage: 0,
           pt: 0,
         },
       },
+      increment_plan: {
+        type: 'percentage',
+        value: '',
+        scheduled_date: ''
+      }
     },
     validationSchema: editStaff,
     enableReinitialize: true,
@@ -347,7 +334,7 @@ const EditStaff = () => {
         const formData = new FormData();
         Object.keys(values).forEach((key) => {
           if (!['photo', 'front_image', 'back_image'].includes(key)) {
-            if (key === 'salary_structure') {
+            if (['salary_structure', 'increment_plan', 'custom_weekly_offs', 'leave_policy_configuration'].includes(key)) {
               formData.append(key, JSON.stringify(values[key]));
             } else {
               formData.append(key, values[key]);
@@ -426,7 +413,7 @@ const EditStaff = () => {
       try {
         setLoading((prev) => ({ ...prev, initial: true }));
 
-        const [positionsRes, staffRes, leavePolicyRes] = await Promise.all([
+        const [positionsRes, staffRes, leavePolicyRes, configRes] = await Promise.all([
           axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
@@ -435,11 +422,18 @@ const EditStaff = () => {
           }),
           axios.get(`${process.env.REACT_APP_API}/leave-policy`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          }),
+          axios.get(`${process.env.REACT_APP_API}/payroll-config`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           })
         ]);
         
         if (leavePolicyRes?.data?.success && leavePolicyRes?.data?.data?.leave_types) {
           setGlobalLeavePolicies(leavePolicyRes.data.data.leave_types);
+        }
+
+        if (configRes.data.success && configRes.data.data) {
+          setPayrollConfig(configRes.data.data);
         }
 
         setPositions(positionsRes.data.data);
@@ -475,9 +469,38 @@ const EditStaff = () => {
         setFieldValue('city', staff.city || '');
         setFieldValue('pincode', staff.pincode || '');
         setFieldValue('gender', staff.gender || '');
-        if (staff.salary_structure) {
-          setFieldValue('salary_structure', staff.salary_structure);
+
+        setFieldValue('salary_calculation_base', staff.salary_calculation_base || 'working_days');
+        setFieldValue('weekly_off_policy', staff.weekly_off_policy || 'global');
+        setFieldValue('custom_weekly_offs', staff.custom_weekly_offs || [{ day: 'Sunday', type: 'all_weeks', weeks: [] }]);
+        setFieldValue('leave_policy_configuration', staff.leave_policy_configuration || []);
+
+        // Pre-fill custom_earnings
+        const activeEarnings = (configRes.data.data?.custom_earnings || []).filter(e => e.is_active);
+        const mappedCustomEarnings = {};
+        activeEarnings.forEach(e => {
+          mappedCustomEarnings[e.id] = (staff.salary_structure?.custom_earnings?.[e.id] !== undefined)
+            ? staff.salary_structure.custom_earnings[e.id]
+            : 0;
+        });
+
+        setFieldValue('salary_structure', {
+          custom_earnings: mappedCustomEarnings,
+          deductions: {
+            pf_percentage: staff.salary_structure?.deductions?.pf_percentage !== undefined ? staff.salary_structure.deductions.pf_percentage : 0,
+            esi_percentage: staff.salary_structure?.deductions?.esi_percentage !== undefined ? staff.salary_structure.deductions.esi_percentage : 0,
+            pt: staff.salary_structure?.deductions?.pt !== undefined ? staff.salary_structure.deductions.pt : 0,
+          }
+        });
+
+        if (staff.increment_plan) {
+          setFieldValue('increment_plan', {
+            type: staff.increment_plan.type || 'percentage',
+            value: staff.increment_plan.value !== undefined ? staff.increment_plan.value : '',
+            scheduled_date: staff.increment_plan.scheduled_date || ''
+          });
         }
+
         setFieldValue('phone_no', staff.phone_no || '');
         setFieldValue('email', staff.email || '');
         setFieldValue('salary', staff.salary || '');
@@ -1031,7 +1054,7 @@ const EditStaff = () => {
                 </div>
 
                 <Row className="g-3">
-                  <Col md={6}>
+                  <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label className="small fw-bold">Job Position</Form.Label>
                       <CreatableSelect
@@ -1051,7 +1074,27 @@ const EditStaff = () => {
                       )}
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-bold">Salary Calculation Base</Form.Label>
+                      <Select
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                        name="salary_calculation_base"
+                        options={[
+                          { value: 'working_days', label: 'Based on Working Days' },
+                          { value: 'working_hours', label: 'Based on Working Hours' }
+                        ]}
+                        value={values.salary_calculation_base ? { label: values.salary_calculation_base === 'working_hours' ? 'Based on Working Hours' : 'Based on Working Days', value: values.salary_calculation_base } : null}
+                        onChange={(selected) => setFieldValue('salary_calculation_base', selected ? selected.value : 'working_days')}
+                        onBlur={() => formik.setFieldTouched('salary_calculation_base', true)}
+                        isDisabled={loading.submitting}
+                        placeholder="Select Base"
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label className="small fw-bold">Salary (Base)</Form.Label>
                       <div className="input-group">
@@ -1071,62 +1114,35 @@ const EditStaff = () => {
                   </Col>
                 </Row>
 
-                <hr className="my-4 opacity-5" />
+                <hr className="my-4 opacity-50" />
 
                 <h6 className="fw-bold mb-3 text-primary">Salary Structure Breakdown</h6>
                 <Row className="g-3">
                   <Col md={6}>
-                    <div className="bg-light rounded-3 p-3">
+                    <div className="bg-light rounded-3 p-3 shadow-sm border border-faint h-100">
                       <div className="small fw-bold text-muted mb-3 text-uppercase letter-spacing-1">Monthly Earnings</div>
-                      <Form.Group className="mb-2">
-                        <Form.Label className="x-small fw-bold">Basic Pay</Form.Label>
-                        <Form.Control
-                          type="number"
-                          name="salary_structure.earnings.basic"
-                          value={values.salary_structure?.earnings?.basic}
-                          onChange={handleChange}
-                          isInvalid={touched.salary_structure?.earnings?.basic && !!errors.salary_structure?.earnings?.basic}
-                          size="sm"
-                        />
-                        {touched.salary_structure?.earnings?.basic && errors.salary_structure?.earnings?.basic && (
-                          <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.earnings.basic}</div>
-                        )}
-                      </Form.Group>
-                      <Form.Group className="mb-2">
-                        <Form.Label className="x-small fw-bold">HRA</Form.Label>
-                        <Form.Control
-                          type="number"
-                          name="salary_structure.earnings.hra"
-                          value={values.salary_structure?.earnings?.hra}
-                          onChange={handleChange}
-                          isInvalid={touched.salary_structure?.earnings?.hra && !!errors.salary_structure?.earnings?.hra}
-                          size="sm"
-                        />
-                        {touched.salary_structure?.earnings?.hra && errors.salary_structure?.earnings?.hra && (
-                          <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.earnings.hra}</div>
-                        )}
-                      </Form.Group>
-                      <Form.Group className="mb-0">
-                        <Form.Label className="x-small fw-bold">Special Allowance</Form.Label>
-                        <Form.Control
-                          type="number"
-                          name="salary_structure.earnings.special"
-                          value={values.salary_structure?.earnings?.special}
-                          onChange={handleChange}
-                          isInvalid={touched.salary_structure?.earnings?.special && !!errors.salary_structure?.earnings?.special}
-                          size="sm"
-                        />
-                        {touched.salary_structure?.earnings?.special && errors.salary_structure?.earnings?.special && (
-                          <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.earnings.special}</div>
-                        )}
-                      </Form.Group>
+                      {payrollConfig?.custom_earnings?.filter(e => e.is_active).map((earning) => (
+                        <Form.Group className="mb-2" key={earning.id}>
+                          <Form.Label className="small fw-bold opacity-75">{earning.label}</Form.Label>
+                          <Form.Control
+                            type="number"
+                            name={`salary_structure.custom_earnings.${earning.id}`}
+                            value={values.salary_structure?.custom_earnings?.[earning.id] ?? 0}
+                            onChange={(e) => setFieldValue(`salary_structure.custom_earnings.${earning.id}`, Number(e.target.value))}
+                            size="sm"
+                          />
+                        </Form.Group>
+                      ))}
+                      {(!payrollConfig?.custom_earnings || payrollConfig.custom_earnings.filter(e => e.is_active).length === 0) && (
+                        <div className="text-muted small">No active earning components defined.</div>
+                      )}
                     </div>
                   </Col>
                   <Col md={6}>
-                    <div className="bg-light rounded-3 p-3">
+                    <div className="bg-light rounded-3 p-3 shadow-sm border border-faint">
                       <div className="small fw-bold text-muted mb-3 text-uppercase letter-spacing-1">Statutory Deductions</div>
                       <Form.Group className="mb-2">
-                        <Form.Label className="x-small fw-bold">PF (%)</Form.Label>
+                        <Form.Label className="small fw-bold opacity-75">PF (%)</Form.Label>
                         <Form.Control
                           type="number"
                           name="salary_structure.deductions.pf_percentage"
@@ -1140,7 +1156,7 @@ const EditStaff = () => {
                         )}
                       </Form.Group>
                       <Form.Group className="mb-2">
-                        <Form.Label className="x-small fw-bold">ESI (%)</Form.Label>
+                        <Form.Label className="small fw-bold opacity-75">ESI (%)</Form.Label>
                         <Form.Control
                           type="number"
                           name="salary_structure.deductions.esi_percentage"
@@ -1154,7 +1170,7 @@ const EditStaff = () => {
                         )}
                       </Form.Group>
                       <Form.Group className="mb-0">
-                        <Form.Label className="x-small fw-bold">PT (Monthly)</Form.Label>
+                        <Form.Label className="small fw-bold opacity-75">PT (Monthly)</Form.Label>
                         <Form.Control
                           type="number"
                           name="salary_structure.deductions.pt"
@@ -1170,6 +1186,214 @@ const EditStaff = () => {
                     </div>
                   </Col>
                 </Row>
+                
+                <hr className="my-4 opacity-50" />
+                <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                  <CsLineIcons icon="calendar" size="18" />
+                  Weekly Off Policy
+                </h6>
+                <div className="bg-light rounded-3 p-3 shadow-sm border border-faint mb-4">
+                  <Row className="g-3">
+                    <Col md={12}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold opacity-75">Select Policy</Form.Label>
+                        <Select
+                          classNamePrefix="react-select"
+                          menuPortalTarget={document.body}
+                          styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                          name="weekly_off_policy"
+                          options={[
+                            { value: 'global', label: 'Global Company Policy (Use Settings)' },
+                            { value: 'custom', label: 'Custom Employee Policy' }
+                          ]}
+                          value={values.weekly_off_policy ? { label: values.weekly_off_policy === 'custom' ? 'Custom Employee Policy' : 'Global Company Policy (Use Settings)', value: values.weekly_off_policy } : null}
+                          onChange={(selected) => setFieldValue('weekly_off_policy', selected ? selected.value : 'global')}
+                          onBlur={() => formik.setFieldTouched('weekly_off_policy', true)}
+                        />
+                      </Form.Group>
+                    </Col>
+                    
+                    {values.weekly_off_policy === 'custom' && (
+                      <Col md={12}>
+                        <div className="d-flex justify-content-between align-items-center mb-2 mt-3">
+                            <Form.Label className="small fw-bold opacity-75 mb-0">Custom Weekly Offs</Form.Label>
+                            <Badge bg="primary" style={{ cursor: 'pointer' }} onClick={handleAddCustomWeeklyOff}>+ Add Day</Badge>
+                        </div>
+                        <div className="d-flex flex-column gap-3">
+                            {values.custom_weekly_offs && values.custom_weekly_offs.map((woff, idx) => (
+                                <div key={idx} className="p-3 border rounded-3 bg-white shadow-sm position-relative">
+                                    {values.custom_weekly_offs.length > 1 && (
+                                        <span 
+                                            className="position-absolute top-0 end-0 p-2 text-danger" 
+                                            style={{ cursor: 'pointer', zIndex: 10 }}
+                                            onClick={() => handleRemoveCustomWeeklyOff(idx)}
+                                        >
+                                            <CsLineIcons icon="bin" size="15" />
+                                        </span>
+                                    )}
+                                    <Row className="g-2">
+                                        <Col md={6}>
+                                            <Select
+                                                classNamePrefix="react-select"
+                                                menuPortalTarget={document.body}
+                                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                                options={[
+                                                    { value: 'Sunday', label: 'Sunday' },
+                                                    { value: 'Monday', label: 'Monday' },
+                                                    { value: 'Tuesday', label: 'Tuesday' },
+                                                    { value: 'Wednesday', label: 'Wednesday' },
+                                                    { value: 'Thursday', label: 'Thursday' },
+                                                    { value: 'Friday', label: 'Friday' },
+                                                    { value: 'Saturday', label: 'Saturday' }
+                                                ]}
+                                                value={woff.day ? { value: woff.day, label: woff.day } : null}
+                                                onChange={(selected) => handleUpdateCustomWeeklyOff(idx, 'day', selected.value)}
+                                            />
+                                        </Col>
+                                        <Col md={6}>
+                                            <Select
+                                                classNamePrefix="react-select"
+                                                menuPortalTarget={document.body}
+                                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                                options={[
+                                                    { value: 'all_weeks', label: 'Every Week' },
+                                                    { value: 'specific_weeks', label: 'Specific Weeks' }
+                                                ]}
+                                                value={woff.type ? { value: woff.type, label: woff.type === 'all_weeks' ? 'Every Week' : 'Specific Weeks' } : null}
+                                                onChange={(selected) => handleUpdateCustomWeeklyOff(idx, 'type', selected.value)}
+                                            />
+                                        </Col>
+                                    </Row>
+                                    
+                                    {woff.type === 'specific_weeks' && (
+                                        <div className="mt-2">
+                                            <div className="small text-muted mb-1">Select Weeks:</div>
+                                            <div className="d-flex flex-wrap gap-2">
+                                                {[1, 2, 3, 4, 5].map(w => (
+                                                    <Badge
+                                                        key={w}
+                                                        bg={(woff.weeks || []).includes(w) ? 'primary' : 'light'}
+                                                        text={(woff.weeks || []).includes(w) ? 'white' : 'dark'}
+                                                        className="border cursor-pointer px-2 py-1"
+                                                        onClick={() => toggleSpecificCustomWeek(idx, w)}
+                                                    >
+                                                        {w}{w === 1 ? 'st' : w === 2 ? 'nd' : w === 3 ? 'rd' : 'th'}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                      </Col>
+                    )}
+                  </Row>
+                </div>
+
+                <hr className="my-4 opacity-50" />
+                <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                  <CsLineIcons icon="airplane" size="18" />
+                  Leave Policy Configuration
+                </h6>
+                <div className="bg-light rounded-3 p-3 shadow-sm border border-faint mb-4">
+                  {globalLeavePolicies.length === 0 ? (
+                    <div className="text-muted small">No global leave policies configured.</div>
+                  ) : (
+                    <Row className="g-3">
+                      {globalLeavePolicies.map((policy) => {
+                         const currentConfig = values.leave_policy_configuration?.find(c => c.leave_type_id === policy.leave_type_id);
+                         const isChecked = currentConfig ? currentConfig.is_active : true;
+                         return (
+                           <Col md={4} key={policy.leave_type_id}>
+                             <div className="d-flex justify-content-between align-items-center p-2 border rounded bg-white">
+                               <div>
+                                 <div className="fw-bold small">{policy.name}</div>
+                                 <div className="text-muted" style={{ fontSize: '0.75rem' }}>{policy.days_per_year} Days / Year</div>
+                               </div>
+                               <Form.Check
+                                 type="switch"
+                                 id={`leave-switch-${policy.leave_type_id}`}
+                                 checked={isChecked}
+                                 onChange={(e) => {
+                                     const newConfig = [...(values.leave_policy_configuration || [])];
+                                     const index = newConfig.findIndex(c => c.leave_type_id === policy.leave_type_id);
+                                     if (index >= 0) {
+                                       newConfig[index].is_active = e.target.checked;
+                                     } else {
+                                       newConfig.push({ leave_type_id: policy.leave_type_id, is_active: e.target.checked });
+                                     }
+                                     setFieldValue('leave_policy_configuration', newConfig);
+                                 }}
+                               />
+                             </div>
+                           </Col>
+                         );
+                      })}
+                    </Row>
+                  )}
+                </div>
+                
+                <hr className="my-4 opacity-50" />
+                <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                  <CsLineIcons icon="trend-up" size="18" />
+                  Upcoming Increment Plan
+                </h6>
+                <div className="bg-light rounded-3 p-3 shadow-sm border border-faint">
+                  <Row className="g-3 align-items-end">
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold opacity-75">Scheduled Date</Form.Label>
+                        <Form.Control
+                          type="date"
+                          name="increment_plan.scheduled_date"
+                          value={values.increment_plan?.scheduled_date}
+                          onChange={handleChange}
+                          size="sm"
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold opacity-75">Increment Type</Form.Label>
+                        <Select
+                          classNamePrefix="react-select"
+                          menuPortalTarget={document.body}
+                          styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                          name="increment_plan.type"
+                          options={[
+                            { value: 'percentage', label: 'Percentage (%)' },
+                            { value: 'flat', label: 'Flat Amount (₹)' }
+                          ]}
+                          value={values.increment_plan?.type ? { label: values.increment_plan.type === 'percentage' ? 'Percentage (%)' : 'Flat Amount (₹)', value: values.increment_plan.type } : null}
+                          onChange={(selected) => setFieldValue('increment_plan.type', selected ? selected.value : 'percentage')}
+                          onBlur={() => formik.setFieldTouched('increment_plan.type', true)}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold opacity-75">Increment Value</Form.Label>
+                        <Form.Control
+                          type="number"
+                          name="increment_plan.value"
+                          value={values.increment_plan?.value}
+                          onChange={handleChange}
+                          placeholder={values.increment_plan?.type === 'percentage' ? "e.g. 10" : "e.g. 5000"}
+                          size="sm"
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  {values.increment_plan?.scheduled_date && values.increment_plan?.value > 0 && (
+                    <div className="mt-3 p-2 bg-white border rounded small text-muted d-flex align-items-center gap-2">
+                      <CsLineIcons icon="info-hexagon" size="14" className="text-info" />
+                      <span>
+                        An increment of <strong>{values.increment_plan.type === 'percentage' ? `${values.increment_plan.value}%` : `₹${values.increment_plan.value}`}</strong> is scheduled for <strong>{new Date(values.increment_plan.scheduled_date).toLocaleDateString()}</strong>.
+                      </span>
+                    </div>
+                  )}
+                </div>
                 
                 {/* Submit Button inside Card */}
                 <div className="d-flex justify-content-center mt-4">
