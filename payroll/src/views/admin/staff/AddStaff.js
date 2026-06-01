@@ -138,7 +138,7 @@ const AddStaff = () => {
 
     photo: Yup.mixed()
       .required('Photo is required')
-      .test('fileSize', 'File size is too large (max 2MB)', (value) => !value || (value && value.size <= 2 * 1024 * 1024))
+      .test('fileSize', 'File size is too large (max 20MB)', (value) => !value || (value && value.size <= 20 * 1024 * 1024))
       .test(
         'fileType',
         'Unsupported file format (JPEG, PNG, JPG, WebP only)',
@@ -168,7 +168,7 @@ const AddStaff = () => {
 
     front_image: Yup.mixed()
       .required('Front ID image is required')
-      .test('fileSize', 'File size is too large (max 2MB)', (value) => !value || (value && value.size <= 2 * 1024 * 1024))
+      .test('fileSize', 'File size is too large (max 20MB)', (value) => !value || (value && value.size <= 20 * 1024 * 1024))
       .test(
         'fileType',
         'Unsupported file format (JPEG, PNG, JPG, WebP only)',
@@ -182,7 +182,7 @@ const AddStaff = () => {
         }
         return schema.notRequired();
       })
-      .test('fileSize', 'File size is too large (max 2MB)', (value) => !value || (value && value.size <= 2 * 1024 * 1024))
+      .test('fileSize', 'File size is too large (max 20MB)', (value) => !value || (value && value.size <= 20 * 1024 * 1024))
       .test(
         'fileType',
         'Unsupported file format (JPEG, PNG, JPG, WebP only)',

@@ -2,6 +2,43 @@ const Staff = require("../models/staffModel");
 const StaffAttendance = require("../models/staffAttendanceModel");
 const fs = require("fs");
 const path = require("path");
+const sharp = require("sharp");
+
+// Helper to convert and compress image to webp
+const convertToWebp = async (file) => {
+  if (!file) return null;
+  
+  const originalPath = file.path;
+  const ext = path.extname(originalPath);
+  const directory = path.dirname(originalPath);
+  const baseName = path.basename(originalPath, ext);
+  
+  const newFilename = `${baseName}.webp`;
+  const destinationPath = path.join(directory, newFilename);
+  
+  try {
+    await sharp(originalPath)
+      .resize({
+        width: 1200,
+        height: 1200,
+        fit: sharp.fit.inside,
+        withoutEnlargement: true
+      })
+      .webp({ quality: 80 })
+      .toFile(destinationPath);
+      
+    // Delete the original file
+    fs.unlink(originalPath, (err) => {
+      if (err) console.error(`Error deleting original file: ${originalPath}`, err);
+    });
+    
+    return newFilename;
+  } catch (error) {
+    console.error("Error converting image to webp:", error);
+    // Fallback to original filename if sharp fails
+    return file.filename;
+  }
+};
 
 // ── Helper: get today's date in IST (YYYY-MM-DD) ─────────────────────────────
 const getTodayIST = () => {
@@ -144,13 +181,16 @@ const addStaff = async (req, res) => {
     }
 
     if (req.files?.photo?.[0]) {
-      staffData.photo = `/staff/profile/${req.files.photo[0].filename}`;
+      const webpFilename = await convertToWebp(req.files.photo[0]);
+      staffData.photo = `/staff/profile/${webpFilename}`;
     }
     if (req.files?.front_image?.[0]) {
-      staffData.front_image = `/staff/id_cards/${req.files.front_image[0].filename}`;
+      const webpFilename = await convertToWebp(req.files.front_image[0]);
+      staffData.front_image = `/staff/id_cards/${webpFilename}`;
     }
     if (req.files?.back_image?.[0]) {
-      staffData.back_image = `/staff/id_cards/${req.files.back_image[0].filename}`;
+      const webpFilename = await convertToWebp(req.files.back_image[0]);
+      staffData.back_image = `/staff/id_cards/${webpFilename}`;
     }
 
     const staff = await Staff.create(staffData);
@@ -188,15 +228,18 @@ const updateStaff = async (req, res) => {
 
     if (req.files?.photo?.[0]) {
       removeFile(existingStaff.photo);
-      staffData.photo = `/staff/profile/${req.files.photo[0].filename}`;
+      const webpFilename = await convertToWebp(req.files.photo[0]);
+      staffData.photo = `/staff/profile/${webpFilename}`;
     }
     if (req.files?.front_image?.[0]) {
       removeFile(existingStaff.front_image);
-      staffData.front_image = `/staff/id_cards/${req.files.front_image[0].filename}`;
+      const webpFilename = await convertToWebp(req.files.front_image[0]);
+      staffData.front_image = `/staff/id_cards/${webpFilename}`;
     }
     if (req.files?.back_image?.[0]) {
       removeFile(existingStaff.back_image);
-      staffData.back_image = `/staff/id_cards/${req.files.back_image[0].filename}`;
+      const webpFilename = await convertToWebp(req.files.back_image[0]);
+      staffData.back_image = `/staff/id_cards/${webpFilename}`;
     }
 
     const faceDataRaw = req.body.face_descriptor || req.body.face_encoding;

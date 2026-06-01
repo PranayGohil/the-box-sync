@@ -85,7 +85,7 @@ const EditStaff = () => {
   const isFileObject = (val) => !!val && (val instanceof File || (typeof val === 'object' && 'size' in val && 'type' in val));
 
   const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
-  const maxSize = 2 * 1024 * 1024;
+  const maxSize = 20 * 1024 * 1024;
 
   const editStaff = Yup.object({
     staff_id: Yup.string()
@@ -120,7 +120,7 @@ const EditStaff = () => {
         if (typeof value === 'string') return true;
         return isFileObject(value);
       })
-      .test('fileSize', 'File size is too large (max 2MB)', (value) => {
+      .test('fileSize', 'File size is too large (max 20MB)', (value) => {
         if (!value) return true;
         if (typeof value === 'string') return true;
         return isFileObject(value) ? value.size <= maxSize : true;
@@ -158,7 +158,7 @@ const EditStaff = () => {
         if (typeof value === 'string') return true;
         return isFileObject(value);
       })
-      .test('fileSize', 'File size is too large (max 2MB)', (value) => {
+      .test('fileSize', 'File size is too large (max 20MB)', (value) => {
         if (!value) return true;
         if (typeof value === 'string') return true;
         return isFileObject(value) ? value.size <= maxSize : true;
@@ -180,7 +180,7 @@ const EditStaff = () => {
         }
         return schema;
       })
-      .test('fileSize', 'File size is too large (max 2MB)', (value) => {
+      .test('fileSize', 'File size is too large (max 20MB)', (value) => {
         if (!value) return true;
         if (typeof value === 'string') return true;
         return isFileObject(value) ? value.size <= maxSize : true;
