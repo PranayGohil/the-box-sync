@@ -61,6 +61,7 @@ const AddStaff = () => {
   const [showFaceModal, setShowFaceModal] = useState(false);
   const webcamRef = useRef(null);
   const [faceDescriptor, setFaceDescriptor] = useState(null);
+  const faceDescriptorRef = useRef(null);
   const [faceBox, setFaceBox] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [captureStatus, setCaptureStatus] = useState('none');
@@ -271,7 +272,10 @@ const AddStaff = () => {
         if (values.photo) formData.append('photo', values.photo);
         if (values.front_image) formData.append('front_image', values.front_image);
         if (values.back_image) formData.append('back_image', values.back_image);
-        if (typeof faceDescriptor !== 'undefined' && faceDescriptor) formData.append('face_descriptor', JSON.stringify(faceDescriptor));
+        const currentFaceDescriptor = faceDescriptorRef.current;
+        if (currentFaceDescriptor) {
+          formData.append('face_descriptor', JSON.stringify(currentFaceDescriptor));
+        }
 
         const addResponse = await axios.post(`${process.env.REACT_APP_API}/staff/add`, formData, {
           headers: {
@@ -364,7 +368,9 @@ const AddStaff = () => {
       const img = await faceapi.fetchImage(screenshot);
       const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
       if (detection) {
-        setFaceDescriptor(Array.from(detection.descriptor));
+        const descriptorArray = Array.from(detection.descriptor);
+        setFaceDescriptor(descriptorArray);
+        faceDescriptorRef.current = descriptorArray;
         setCaptureStatus('success');
         setShowFaceModal(false);
         toast.success('Face captured successfully!');

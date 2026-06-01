@@ -45,6 +45,7 @@ const EditStaff = () => {
   const [showFaceModal, setShowFaceModal] = useState(false);
   const webcamRef = useRef(null);
   const [faceDescriptor, setFaceDescriptor] = useState(null);
+  const faceDescriptorRef = useRef(null);
   const [faceBox, setFaceBox] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [captureStatus, setCaptureStatus] = useState('none');
@@ -271,7 +272,9 @@ const EditStaff = () => {
       const img = await faceapi.fetchImage(screenshot);
       const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
       if (detection) {
-        setFaceDescriptor(Array.from(detection.descriptor));
+        const descriptorArray = Array.from(detection.descriptor);
+        setFaceDescriptor(descriptorArray);
+        faceDescriptorRef.current = descriptorArray;
         setCaptureStatus('success');
         setShowFaceModal(false);
         toast.success('Face captured successfully!');
@@ -345,7 +348,10 @@ const EditStaff = () => {
         if (values.photo instanceof File) formData.append('photo', values.photo);
         if (values.front_image instanceof File) formData.append('front_image', values.front_image);
         if (values.back_image instanceof File) formData.append('back_image', values.back_image);
-        if (faceDescriptor) formData.append('face_descriptor', JSON.stringify(faceDescriptor));
+        const currentFaceDescriptor = faceDescriptorRef.current;
+        if (currentFaceDescriptor) {
+          formData.append('face_descriptor', JSON.stringify(currentFaceDescriptor));
+        }
 
         await axios.put(`${process.env.REACT_APP_API}/staff/edit/${id}`, formData, {
           headers: {
@@ -510,6 +516,12 @@ const EditStaff = () => {
         setFieldValue('photo', staff.photo || '');
         setFieldValue('front_image', staff.front_image || '');
         setFieldValue('back_image', staff.back_image || '');
+
+        // Load existing face encoding if present
+        if (staff.face_encoding && staff.face_encoding.length > 0) {
+          setFaceDescriptor(staff.face_encoding);
+          faceDescriptorRef.current = staff.face_encoding;
+        }
 
         setPhotoPreview(staff.photo ? `${process.env.REACT_APP_UPLOAD_DIR}/${staff.photo}` : null);
         setFrontImagePreview(staff.front_image ? `${process.env.REACT_APP_UPLOAD_DIR}/${staff.front_image}` : null);
