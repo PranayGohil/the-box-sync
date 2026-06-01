@@ -100,6 +100,17 @@ const addStaff = async (req, res) => {
       user_id: userId,
     };
 
+    // Support mapping face_descriptor or face_encoding from frontend
+    const faceDataRaw = req.body.face_descriptor || req.body.face_encoding;
+    if (faceDataRaw) {
+      try {
+        staffData.face_encoding = typeof faceDataRaw === "string" ? JSON.parse(faceDataRaw) : faceDataRaw;
+      } catch (error) {
+        console.error("Error parsing face_encoding/face_descriptor:", error);
+        return res.status(400).json({ error: "Invalid face encoding data" });
+      }
+    }
+
     if (staffData.salary_structure && typeof staffData.salary_structure === "string") {
       try {
         staffData.salary_structure = JSON.parse(staffData.salary_structure);
@@ -188,11 +199,12 @@ const updateStaff = async (req, res) => {
       staffData.back_image = `/staff/id_cards/${req.files.back_image[0].filename}`;
     }
 
-    if (staffData.face_encoding) {
+    const faceDataRaw = req.body.face_descriptor || req.body.face_encoding;
+    if (faceDataRaw) {
       try {
-        staffData.face_encoding = JSON.parse(staffData.face_encoding);
+        staffData.face_encoding = typeof faceDataRaw === "string" ? JSON.parse(faceDataRaw) : faceDataRaw;
       } catch (error) {
-        console.error("Error parsing face_encoding:", error);
+        console.error("Error parsing face_encoding/face_descriptor:", error);
         return res.status(400).json({ error: "Invalid face encoding data" });
       }
     }
