@@ -411,6 +411,9 @@ const getUserData = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Inject role field for the kiosk and other dashboard components that expect it
+    fetchuser.role = "admin";
+
     res.json(fetchuser);
   } catch (error) {
     console.log(error);

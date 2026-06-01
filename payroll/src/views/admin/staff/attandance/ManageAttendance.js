@@ -849,7 +849,7 @@ export default function ManageAttendance() {
       {/* Search and Controls */}
       <div>
         <Row className="mb-3 g-2 align-items-center">
-          <Col xs="12" sm="auto" className="flex-grow-1" style={{ minWidth: '200px' }}>
+          <Col xs="12" md="6" lg="8" className="flex-grow-1">
             <div className="order-history-custom-search-container shadow-sm d-flex align-items-center px-2">
               <CsLineIcons icon="search" size="18" className="text-primary opacity-75 ms-1 me-2" />
               <Form.Control
@@ -867,25 +867,25 @@ export default function ManageAttendance() {
               )}
             </div>
           </Col>
-          <Col xs="12" sm="auto" className="text-end d-none d-lg-block">
-            <div className="d-inline-block me-3 text-muted small fw-bold">
+          <Col xs="12" md="auto" className="d-flex align-items-center justify-content-between justify-content-md-end gap-3 ms-md-auto">
+            <div className="text-muted small fw-bold">
               Showing {totalFiltered > 0 ? pageIndex * pageSize + 1 : 0}&ndash;{Math.min((pageIndex + 1) * pageSize, totalFiltered)} of {totalFiltered}
             </div>
-            <div className="d-inline-block">
+            <div>
               <LocalControlsPageSize tableInstance={tableInstance} />
             </div>
           </Col>
         </Row>
 
         {/* Desktop View (Table Layout) */}
-        <Row className="d-none d-md-flex">
+        <Row className="d-none d-lg-flex">
           <Col xs="12" style={{ overflow: 'auto' }}>
             <Table className="react-table rows" tableInstance={tableInstance} />
           </Col>
         </Row>
 
-        {/* Mobile View (Premium Space-Saving Card Grid) */}
-        <Row className="d-md-none g-3">
+        {/* Mobile & Tablet View (Premium Space-Saving Card Grid) */}
+        <Row className="d-lg-none g-3">
           {page.map((row) => {
             prepareRow(row);
             const staff = row.original;
@@ -922,9 +922,9 @@ export default function ManageAttendance() {
             const actionsDisabled = loading.actions.checkin || loading.actions.checkout || loading.actions.absent || loading.actions.leave;
 
             return (
-              <Col key={staff._id} xs="12">
-                <Card className="border-0 shadow-sm hover-scale-up" style={{ borderRadius: '1.25rem', overflow: 'hidden' }}>
-                  <Card.Body className="p-3 position-relative">
+              <Col key={staff._id} xs="12" sm="6" md="6">
+                <Card className="border-0 shadow-sm hover-scale-up h-100" style={{ borderRadius: '1.25rem', overflow: 'hidden' }}>
+                  <Card.Body className="p-3 position-relative d-flex flex-column justify-content-between h-100">
                     <div
                       className="position-absolute"
                       style={{
@@ -937,39 +937,41 @@ export default function ManageAttendance() {
                         filter: 'blur(10px)',
                       }}
                     />
-                    {/* Top Row: Avatar + Name + ID + Status */}
-                    <div className="d-flex align-items-center justify-content-between mb-3 position-relative">
-                      <div className="d-flex align-items-center gap-2">
-                        <div className="mobile-avatar rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold bg-soft-primary" style={{ width: '40px', height: '40px', fontSize: '14px' }}>
-                          {staff.f_name?.[0]}
-                          {staff.l_name?.[0]}
-                        </div>
-                        <div>
-                          <div className="fw-bold text-dark text-truncate" style={{ maxWidth: '140px' }}>
-                            {staff.f_name} {staff.l_name}
+                    <div>
+                      {/* Top Row: Avatar + Name + ID + Status */}
+                      <div className="d-flex align-items-center justify-content-between mb-3 position-relative">
+                        <div className="d-flex align-items-center gap-2">
+                          <div className="mobile-avatar rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold bg-soft-primary" style={{ width: '40px', height: '40px', fontSize: '14px' }}>
+                            {staff.f_name?.[0]}
+                            {staff.l_name?.[0]}
                           </div>
-                          <div className="small-role text-muted small text-truncate" style={{ maxWidth: '140px' }}>
-                            {staff.position} • #{staff.staff_id}
+                          <div>
+                            <div className="fw-bold text-dark text-truncate" style={{ maxWidth: '140px' }}>
+                              {staff.f_name} {staff.l_name}
+                            </div>
+                            <div className="small-role text-muted small text-truncate" style={{ maxWidth: '140px' }}>
+                              {staff.position} • #{staff.staff_id}
+                            </div>
                           </div>
                         </div>
+                        <Badge bg={statusVariant} className="rounded-pill px-3 py-1">{status}</Badge>
                       </div>
-                      <Badge bg={statusVariant} className="rounded-pill px-3 py-1">{status}</Badge>
+
+                      {/* Middle Row: Check-In and Check-Out times */}
+                      <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
+                        <Col xs="6">
+                          <div className="text-muted small">CHECK-IN</div>
+                          <div className="fw-bold small">{todayAttendance?.in_time || '—'}</div>
+                        </Col>
+                        <Col xs="6" className="text-end">
+                          <div className="text-muted small">CHECK-OUT</div>
+                          <div className="fw-bold small">{todayAttendance?.out_time || '—'}</div>
+                        </Col>
+                      </Row>
                     </div>
 
-                    {/* Middle Row: Check-In and Check-Out times */}
-                    <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
-                      <Col xs="6">
-                        <div className="text-muted small">CHECK-IN</div>
-                        <div className="fw-bold small">{todayAttendance?.in_time || '—'}</div>
-                      </Col>
-                      <Col xs="6" className="text-end">
-                        <div className="text-muted small">CHECK-OUT</div>
-                        <div className="fw-bold small">{todayAttendance?.out_time || '—'}</div>
-                      </Col>
-                    </Row>
-
                     {/* Bottom Row: Actions */}
-                    <div className="d-flex align-items-center justify-content-end gap-2 pt-2 border-top" style={{ borderColor: '#f3f4f6' }}>
+                    <div className="d-flex align-items-center justify-content-end gap-2 pt-2 border-top mt-auto" style={{ borderColor: '#f3f4f6' }}>
                       {!todayAttendance ? (
                         <>
                           <Button

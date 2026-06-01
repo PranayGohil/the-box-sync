@@ -2,11 +2,14 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
+import { useDispatch } from 'react-redux';
+import { setCurrentUser as setCurrentUserRedux } from 'auth/authSlice';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const history = useHistory();
+  const dispatch = useDispatch();
   const [currentUser, setCurrentUser] = useState(null);
   const [isLogin, setIsLogin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -28,14 +31,18 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('token');
             setCurrentUser(null);
             setIsLogin(false);
+            dispatch(setCurrentUserRedux(null));
+          } else {
+            setCurrentUser(res.data);
+            setIsLogin(true);
+            dispatch(setCurrentUserRedux(res.data));
           }
-          setCurrentUser(res.data);
-          setIsLogin(true);
         })
         .catch(() => {
           localStorage.removeItem('token');
           setCurrentUser(null);
           setIsLogin(false);
+          dispatch(setCurrentUserRedux(null));
         })
         .finally(() => setLoading(false));
     } else {
@@ -49,6 +56,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       setCurrentUser(userData);
       setIsLogin(true);
+      dispatch(setCurrentUserRedux(userData));
       return { success: true };
     } catch (err) {
       return { success: false, message: err.response?.data?.message || 'Login failed' };
@@ -59,6 +67,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setCurrentUser(null);
     setIsLogin(false);
+    dispatch(setCurrentUserRedux(null));
   };
 
   return <AuthContext.Provider value={{ currentUser, isLogin, loading, login, logout }}>{children}</AuthContext.Provider>;
