@@ -30,6 +30,26 @@ const customStyles = `
       align-items: center;
       justify-content: space-between;
     }
+    .card-title-container h2.small-title {
+      height: auto !important;
+      line-height: 1.2 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      display: inline-flex;
+      align-items: center;
+    }
+    .card-title-container button,
+    .card-title-container a,
+    .card-title-container svg,
+    .card-title-container .btn-link {
+      margin: 0 !important;
+      padding: 0 !important;
+      line-height: 1 !important;
+      display: inline-flex;
+      align-items: center;
+      height: auto !important;
+      vertical-align: middle !important;
+    }
     .stat-card-inner {
       background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(35, 179, 244, 0.02) 100%);
     }
