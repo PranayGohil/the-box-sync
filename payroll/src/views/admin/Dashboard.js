@@ -86,6 +86,7 @@ const Dashboard = () => {
   const [staffCount, setStaffCount] = useState(0);
   const [positions, setPositions] = useState({});
   const [recentStaff, setRecentStaff] = useState([]);
+  const [recentLeaves, setRecentLeaves] = useState([]);
   
   const [todayPresentCount, setTodayPresentCount] = useState(0);
   const [totalLeavesPending, setTotalLeavesPending] = useState(0);
@@ -122,6 +123,7 @@ const Dashboard = () => {
         const allLeaves = leaveRes.data.data || [];
         const pendingCount = allLeaves.filter(req => req.status === 'Pending' || req.status === 'pending').length;
         setTotalLeavesPending(pendingCount);
+        setRecentLeaves(allLeaves.slice(0, 5));
       } catch (err) {
         console.error('Error fetching pending leaves:', err);
       }
@@ -194,7 +196,7 @@ const Dashboard = () => {
               <div className="d-flex justify-content-between align-items-start">
                 <div>
                   <div className="stat-label mb-2">Total Staff</div>
-                  <div className="stat-value mb-2">{staffCount || 15}</div>
+                  <div className="stat-value mb-2">{staffCount}</div>
                   <div className="text-muted smaller fw-bold" style={{ color: brandColor }}>
                     Active Employees
                   </div>
@@ -327,41 +329,77 @@ const Dashboard = () => {
                   All Leaves
                 </Button>
               </div>
-              <Table responsive className="align-middle mb-0">
-                <thead>
-                  <tr className="text-muted small uppercase">
-                    <th>Employee</th>
-                    <th>Leave Type</th>
-                    <th>Period</th>
-                    <th>Reason</th>
-                    <th className="text-end">Action Required</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <span className="fw-bold text-dark">Arjun Sharma</span>
-                    </td>
-                    <td><Badge bg="info">Sick Leave</Badge></td>
-                    <td className="text-muted small">May 19 - May 20 (2 days)</td>
-                    <td className="text-muted small">Medical appointment</td>
-                    <td className="text-end">
-                      <Button size="sm" variant="success" className="rounded-pill me-1 px-3 py-1" onClick={() => history.push('/payroll/leave-requests')}>Review</Button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <span className="fw-bold text-dark">Pooja Patel</span>
-                    </td>
-                    <td><Badge bg="warning" text="dark">Casual Leave</Badge></td>
-                    <td className="text-muted small">May 24 (1 day)</td>
-                    <td className="text-muted small">Personal work</td>
-                    <td className="text-end">
-                      <Button size="sm" variant="success" className="rounded-pill me-1 px-3 py-1" onClick={() => history.push('/payroll/leave-requests')}>Review</Button>
-                    </td>
-                  </tr>
-                </tbody>
-              </Table>
+              {recentLeaves.length > 0 ? (
+                <Table responsive className="align-middle mb-0">
+                  <thead>
+                    <tr className="text-muted small uppercase">
+                      <th>Employee</th>
+                      <th>Leave Type</th>
+                      <th>Period</th>
+                      <th>Reason</th>
+                      <th className="text-end">Status / Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentLeaves.map((leave) => {
+                      const staffName = leave.staff_id ? `${leave.staff_id.f_name} ${leave.staff_id.l_name}` : 'Unknown Staff';
+                      const leaveTypeLabel = leave.leave_type_id
+                        ? leave.leave_type_id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                        : 'Leave';
+                      
+                      // Format dates
+                      const formatDateStr = (dateStr) => {
+                        if (!dateStr) return '';
+                        const date = new Date(dateStr);
+                        return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                      };
+                      
+                      const period = `${formatDateStr(leave.from_date)} - ${formatDateStr(leave.to_date)} (${leave.days} day${leave.days !== 1 ? 's' : ''})`;
+                      
+                      // Badge color based on type
+                      let badgeBg = 'info';
+                      if (leave.leave_type_id?.includes('casual')) badgeBg = 'warning';
+                      else if (leave.leave_type_id?.includes('unpaid')) badgeBg = 'danger';
+                      else if (leave.leave_type_id?.includes('annual')) badgeBg = 'success';
+
+                      const isPending = leave.status === 'Pending' || leave.status === 'pending';
+
+                      return (
+                        <tr key={leave._id}>
+                          <td>
+                            <span className="fw-bold text-dark">{staffName}</span>
+                          </td>
+                          <td>
+                            <Badge bg={badgeBg} text={badgeBg === 'warning' ? 'dark' : 'white'}>
+                              {leaveTypeLabel}
+                            </Badge>
+                          </td>
+                          <td className="text-muted small">{period}</td>
+                          <td className="text-muted small text-truncate" style={{ maxWidth: '200px' }} title={leave.reason}>
+                            {leave.reason || 'N/A'}
+                          </td>
+                          <td className="text-end">
+                            {isPending ? (
+                              <Button size="sm" variant="success" className="rounded-pill px-3 py-1" onClick={() => history.push('/payroll/leave-requests')}>
+                                Review
+                              </Button>
+                            ) : (
+                              <Badge 
+                                bg={leave.status?.toLowerCase() === 'approved' ? 'success' : 'danger'} 
+                                className="rounded-pill px-3 py-1 text-capitalize"
+                              >
+                                {leave.status}
+                              </Badge>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </Table>
+              ) : (
+                <div className="text-muted text-center py-4">No recent leave requests found.</div>
+              )}
             </Card.Body>
           </Card>
         </Col>
