@@ -1407,26 +1407,7 @@ const EditStaff = () => {
                   )}
                 </div>
                 
-                {/* Submit Button inside Card */}
-                <div className="d-flex justify-content-center mt-4">
-                  <Button
-                    className="custom-btn-outline px-5 py-3"
-                    type="submit"
-                    disabled={loading.submitting}
-                  >
-                    {loading.submitting ? (
-                      <>
-                        <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                        Updating...
-                      </>
-                    ) : (
-                      <>
-                        <CsLineIcons icon="save" size="20" />
-                        Update Staff Member
-                      </>
-                    )}
-                  </Button>
-                </div>
+
               </Card.Body>
             </Card>
           </Col>
@@ -1610,6 +1591,27 @@ const EditStaff = () => {
                       </Button>
                     </div>
                   )}
+
+                  {/* Submit Button inside Identification Card */}
+                  <div className="d-flex justify-content-center mt-4 pt-3 border-top" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
+                    <Button
+                      className="custom-btn-solid px-5 py-3 w-100"
+                      type="submit"
+                      disabled={loading.submitting}
+                    >
+                      {loading.submitting ? (
+                        <>
+                          <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          <CsLineIcons icon="save" size="20" />
+                          Update Staff Member
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </Card.Body>
             </Card>
