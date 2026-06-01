@@ -131,7 +131,7 @@ const EditStaff = () => {
         return isFileObject(value) ? allowedTypes.includes(value.type) : true;
       }),
 
-    document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Pan Card', 'Voter Card'], 'Invalid document type'),
+    document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Aadhar Card', 'Pan Card', 'Voter Card', 'Voter ID Card', 'Driving License', 'Passport'], 'Invalid document type'),
 
     id_number: Yup.string()
       .required('ID number is required')
@@ -140,13 +140,13 @@ const EditStaff = () => {
         const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
         const voterRegex = /^[A-Z]{3}[0-9]{7}$/;
 
-        if (docType === 'National Identity Card') {
+        if (docType === 'National Identity Card' || docType === 'Aadhar Card') {
           return schema.matches(aadharRegex, 'Aadhar number must be 12 digits (format: XXXX XXXX XXXX)');
         }
         if (docType === 'Pan Card') {
           return schema.matches(panRegex, 'PAN card format must be ABCDE1234F (5 letters, 4 digits, 1 letter)');
         }
-        if (docType === 'Voter Card') {
+        if (docType === 'Voter Card' || docType === 'Voter ID Card') {
           return schema.matches(voterRegex, 'Voter ID format must be ABC1234567 (3 letters, 7 digits)');
         }
         return schema;
@@ -171,7 +171,7 @@ const EditStaff = () => {
 
     back_image: Yup.mixed()
       .when('document_type', (docType, schema) => {
-        if (docType === 'National Identity Card') {
+        if (docType === 'National Identity Card' || docType === 'Aadhar Card') {
           return schema.test('required-or-existing', 'Back ID image is required for Aadhar card', (value) => {
             if (!value) return false;
             if (typeof value === 'string') return true;
@@ -1502,7 +1502,7 @@ const EditStaff = () => {
                         value={values.document_type ? { label: values.document_type, value: values.document_type } : null}
                         onChange={(selected) => {
                           setFieldValue('document_type', selected ? selected.value : '');
-                          if (selected && selected.value !== 'National Identity Card') {
+                          if (selected && selected.value !== 'National Identity Card' && selected.value !== 'Aadhar Card') {
                             setFieldValue('back_image', '');
                           }
                         }}
@@ -1559,7 +1559,7 @@ const EditStaff = () => {
                     </Button>
                   </div>
 
-                  {values.document_type === 'National Identity Card' && (
+                  {(values.document_type === 'National Identity Card' || values.document_type === 'Aadhar Card') && (
                     <div className="mb-2">
                       <div className="small text-muted mb-2 fw-bold text-uppercase opacity-50 letter-spacing-1">Back Image</div>
                       <div className="bg-light rounded-3 p-2 mb-2 text-center border border-dashed" style={{ minHeight: '120px' }}>
@@ -1595,7 +1595,7 @@ const EditStaff = () => {
                   {/* Submit Button inside Identification Card */}
                   <div className="d-flex justify-content-center mt-4 pt-3 border-top" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
                     <Button
-                      className="custom-btn-solid px-5 py-3 w-100"
+                      className="custom-btn-outline px-5 py-3 w-100"
                       type="submit"
                       disabled={loading.submitting}
                     >
