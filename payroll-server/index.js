@@ -13,7 +13,7 @@ const staffRouter = require("./router/staffRoutes");
 const staffAttendanceRouter = require("./router/staffAttendanceRoutes");
 const staffPayrollRouter = require("./router/staffPayrollRouter.js");
 const payrollConfigRouter = require("./router/payrollConfigRouter.js");
-const subscriptionRouter = require("./router/subscriptionRoutes");
+
 const userRouter = require("./router/userRoutes");
 const superAdminRouter = require("./router/superAdminRoutes");
 const PanelRouter = require("./router/panelUserRoutes");
@@ -75,7 +75,7 @@ app.use("/api/staff", staffRouter);
 app.use("/api/attendance", staffAttendanceRouter);
 app.use("/api/payroll", staffPayrollRouter);
 app.use("/api/payroll-config", payrollConfigRouter);
-app.use("/api/subscription", subscriptionRouter);
+
 app.use("/api/user", userRouter);
 app.use("/api/superadmin", superAdminRouter);
 app.use("/api/panel-user", PanelRouter);

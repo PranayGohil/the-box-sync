@@ -260,7 +260,7 @@ const AddStaff = () => {
 
         Object.keys(values).forEach((key) => {
           if (key !== 'photo' && key !== 'front_image' && key !== 'back_image') {
-            if (key === 'salary_structure' || key === 'increment_plan' || key === 'custom_weekly_offs') {
+          if (key === 'salary_structure' || key === 'increment_plan' || key === 'custom_weekly_offs' || key === 'leave_policy_configuration') {
               formData.append(key, JSON.stringify(values[key]));
             } else {
               formData.append(key, values[key]);
