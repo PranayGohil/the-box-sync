@@ -65,7 +65,7 @@ const Login = () => {
             });
             if (userRes.data && userRes.data.purchasedPlan) {
               if (!userRes.data.isApproved) {
-                toast.info("Your account is pending Super Admin approval.", { autoClose: 5000 });
+                toast.info("Your account is pending activation from the Theboxsync side. We will notify you once it is activated.", { autoClose: 5000 });
                 setIsLoading(false);
                 return;
               }
@@ -102,7 +102,7 @@ const Login = () => {
 
   return (
     <>
-      
+
       <HtmlHead title={title} description={description} />
 
       <div className="login-login-page-wrapper">

@@ -736,6 +736,16 @@ const UnifiedOrder = () => {
   const requiredFields = REQUIRED_FIELDS[orderType];
 
   // ── Render ────────────────────────────────────────────────────────────────
+  if (orderType === 'Dine In' && activePlans && activePlans.length > 0 && !activePlans.includes('Table Management')) {
+    return (
+      <div className="text-center p-5 mt-5">
+        <CsLineIcons icon="warning-hexagon" className="text-warning mb-3" size="50" />
+        <h4 className="fw-bold">Access Restricted</h4>
+        <p className="text-muted">Dine In ordering is restricted. You need the 'Table Management' plan to access this feature.</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <HtmlHead title={title} description={description} />

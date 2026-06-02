@@ -144,6 +144,7 @@ export const plans = [
         'Multi-terminal Billing',
       ],
       addons: [
+        'QSR Panel',
         'Kitchen Display System',
         'QR-based Feedback',
         'Dynamic Reports',

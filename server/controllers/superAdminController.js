@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const SuperAdmin = require("../models/superAdminModel");
 const { logActivity } = require("../utils/auditLogger");
+const { sendEmail } = require("../utils/emailService");
 
 const superAdminLogin = async (req, res) => {
   try {
@@ -205,6 +206,48 @@ const toggleApproval = async (req, res) => {
       id,
       { restaurant_name: user.name }
     );
+
+    if (user.isApproved) {
+      try {
+        const approvalEmailHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+            <div style="background: #7444FD; padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+              <h2 style="color: #fff; margin: 0;">Account Activated!</h2>
+            </div>
+            <div style="padding: 24px; background: #fafafa;">
+              <p style="color: #333; font-size: 16px;">Dear <strong>${user.name}</strong>,</p>
+              <p style="color: #555;">We are pleased to inform you that your restaurant account at <strong>TheBox</strong> has been approved and activated by the Super Admin.</p>
+              <p style="color: #555;">You can now log in to your admin panel and start setting up your restaurant management features.</p>
+              
+              <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                <p style="margin: 0 0 8px 0; color: #4a5568;"><strong>Restaurant Details:</strong></p>
+                <p style="margin: 0 0 6px 0; color: #555;"><strong>Restaurant Code:</strong> ${user.restaurant_code}</p>
+                <p style="margin: 0; color: #555;"><strong>Registered Email:</strong> ${user.email}</p>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="https://theboxsync.com/login" style="background: #7444FD; color: #fff; padding: 12px 30px; font-size: 16px; font-weight: bold; border-radius: 6px; text-decoration: none; display: inline-block;">Log In to Dashboard</a>
+              </div>
+
+              <p style="color: #555;">If you have any questions or require assistance setting up your menus or staff, feel free to reach out to our customer support team at <a href="mailto:support@theboxsync.com" style="color: #7444FD; text-decoration: none;">support@theboxsync.com</a>.</p>
+              <p style="color: #555; margin-top: 24px;">Best regards,<br><strong>The TheBox Team</strong></p>
+            </div>
+            <div style="padding: 12px 24px; background: #f0f0f0; border-radius: 0 0 6px 6px; text-align: center; font-size: 12px; color: #999;">
+              © TheBox | <a href="https://theboxsync.com" style="color: #7444FD; text-decoration: none;">theboxsync.com</a>
+            </div>
+          </div>
+        `;
+
+        await sendEmail({
+          to: user.email,
+          subject: "Your TheBox Account Has Been Approved and Activated!",
+          html: approvalEmailHtml,
+        });
+        console.log(`Approval email successfully sent to ${user.email}`);
+      } catch (emailError) {
+        console.error("Failed to send approval email:", emailError);
+      }
+    }
 
     return res.status(200).json({ message: "Approval status updated", isApproved: user.isApproved });
   } catch (error) {

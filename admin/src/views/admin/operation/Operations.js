@@ -52,22 +52,24 @@ const NavContent = () => {
           </div>
         </div>
 
-        <div className="mb-1">
-          <div className="operations-section-header">
-            <CsLineIcons icon="layout-5" size="17" />
-            <span className="align-middle">Table</span>
+        {activePlans.includes('Table Management') && (
+          <div className="mb-1">
+            <div className="operations-section-header">
+              <CsLineIcons icon="layout-5" size="17" />
+              <span className="align-middle">Table</span>
+            </div>
+            <div className="operations-sub-menu-container">
+              <Nav.Link as={NavLink} to="/operations/manage-table" className="px-0">
+                <i className="me-2 sw-3 d-inline-block" />
+                <span className="align-middle">Manage Table</span>
+              </Nav.Link>
+              <Nav.Link as={NavLink} to="/operations/add-table" className="px-0">
+                <i className="me-2 sw-3 d-inline-block" />
+                <span className="align-middle">Add Table</span>
+              </Nav.Link>
+            </div>
           </div>
-          <div className="operations-sub-menu-container">
-            <Nav.Link as={NavLink} to="/operations/manage-table" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Manage Table</span>
-            </Nav.Link>
-            <Nav.Link as={NavLink} to="/operations/add-table" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Add Table</span>
-            </Nav.Link>
-          </div>
-        </div>
+        )}
 
         <div className="mb-1">
           <div className="operations-section-header">
@@ -175,7 +177,7 @@ const MobileBottomNav = () => {
 
   const navItems = [
     { label: 'Order', icon: 'cart', to: '/operations/order-history' },
-    { label: 'Table', icon: 'layout-5', to: '/operations/manage-table' },
+    { label: 'Table', icon: 'layout-5', to: '/operations/manage-table', hide: !activePlans.includes('Table Management') },
     { label: 'Menu', icon: 'book-open', to: '/operations/manage-menu' },
     { label: 'Inventory', icon: 'boxes', to: '/operations/inventory-history' },
     { label: 'Feedback', icon: 'message', to: '/operations/feedback', hide: !activePlans.includes('Feedback') },
@@ -282,8 +284,40 @@ const Operations = () => {
             <Route exact path="/operations/order-history" render={() => <OrderHistory />} />
             <Route exact path="/operations/order-details/:id" render={() => <OrderDetails />} />
 
-            <Route exact path="/operations/manage-table" render={() => <ManageTable />} />
-            <Route exact path="/operations/add-table" render={() => <AddTable />} />
+            <Route
+              exact
+              path="/operations/manage-table"
+              render={() => (
+                <>
+                  {activePlans.includes('Table Management') ? (
+                    <ManageTable />
+                  ) : (
+                    <div className="text-center p-5">
+                      <CsLineIcons icon="warning-hexagon" className="text-warning mb-3" size="50" />
+                      <h4>Access Restricted</h4>
+                      <p className="text-muted">You need the 'Table Management' plan to access this page.</p>
+                    </div>
+                  )}
+                </>
+              )}
+            />
+            <Route
+              exact
+              path="/operations/add-table"
+              render={() => (
+                <>
+                  {activePlans.includes('Table Management') ? (
+                    <AddTable />
+                  ) : (
+                    <div className="text-center p-5">
+                      <CsLineIcons icon="warning-hexagon" className="text-warning mb-3" size="50" />
+                      <h4>Access Restricted</h4>
+                      <p className="text-muted">You need the 'Table Management' plan to access this page.</p>
+                    </div>
+                  )}
+                </>
+              )}
+            />
 
             <Route exact path="/operations/manage-menu" render={() => <ManageMenu />} />
             <Route exact path="/operations/add-dish" render={() => <AddDishes />} />

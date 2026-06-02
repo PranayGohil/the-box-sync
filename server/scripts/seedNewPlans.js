@@ -119,6 +119,7 @@ const seedNewPlans = async () => {
           "Manager",
           "Staff Management",
           "Online Order Reconciliation",
+          "QSR",
           "KOT Panel",
           "Kitchen Display System",
           "Feedback",
