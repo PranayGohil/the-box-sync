@@ -1,3 +1,7 @@
 server/uploads/*
 !server/uploads/.gitkeep
 */public/css/styles.css
+
+node_modules/
+dist/
+build/

@@ -137,6 +137,8 @@ const ViewStaff = () => {
                             </div>
                           </div>
 
+                          <div className="view-staff-status-badge mb-2">#{staffMember.staff_id}</div>
+
                           <div className="view-staff-position-badge">{staffMember.position}</div>
 
                           <h5 className="mb-0 fw-bold text-dark text-truncate w-100 px-1">
