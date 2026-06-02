@@ -145,7 +145,7 @@ const AddStaff = () => {
         (value) => !value || (value && ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(value.type))
       ),
 
-    document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Pan Card', 'Voter Card'], 'Invalid document type'),
+    document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Aadhar Card', 'Pan Card', 'Voter Card', 'Voter ID Card', 'Driving License', 'Passport'], 'Invalid document type'),
 
     id_number: Yup.string()
       .required('ID number is required')
@@ -154,13 +154,13 @@ const AddStaff = () => {
         const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
         const voterRegex = /^[A-Z]{3}[0-9]{7}$/;
 
-        if (docType === 'National Identity Card') {
+        if (docType === 'National Identity Card' || docType === 'Aadhar Card') {
           return schema.matches(aadharRegex, 'Aadhar number must be 12 digits (format: XXXX XXXX XXXX)');
         }
         if (docType === 'Pan Card') {
           return schema.matches(panRegex, 'PAN card format must be ABCDE1234F (5 letters, 4 digits, 1 letter)');
         }
-        if (docType === 'Voter Card') {
+        if (docType === 'Voter Card' || docType === 'Voter ID Card') {
           return schema.matches(voterRegex, 'Voter ID format must be ABC1234567 (3 letters, 7 digits)');
         }
         return schema;
@@ -177,7 +177,7 @@ const AddStaff = () => {
 
     back_image: Yup.mixed()
       .when('document_type', (docType, schema) => {
-        if (docType === 'National Identity Card') {
+        if (docType === 'National Identity Card' || docType === 'Aadhar Card') {
           return schema.required('Back ID image is required for Aadhar card');
         }
         return schema.notRequired();
@@ -820,7 +820,9 @@ const AddStaff = () => {
                         isDisabled={loading.submitting}
                         placeholder="Select Gender"
                       />
-                      <Form.Control.Feedback type="invalid">{errors.gender}</Form.Control.Feedback>
+                      {touched.gender && errors.gender && (
+                        <div className="text-danger mt-1 small fw-bold">{errors.gender}</div>
+                      )}
                     </Form.Group>
                   </Col>
 
@@ -907,7 +909,9 @@ const AddStaff = () => {
                         isDisabled={loading.submitting}
                         placeholder="Select Country"
                       />
-                      <Form.Control.Feedback type="invalid">{errors.country}</Form.Control.Feedback>
+                      {touched.country && errors.country && (
+                        <div className="text-danger mt-1 small fw-bold">{errors.country}</div>
+                      )}
                     </Form.Group>
                   </Col>
                   <Col md={3}>
@@ -925,7 +929,9 @@ const AddStaff = () => {
                         isDisabled={!values.country || loading.submitting}
                         placeholder="Select State"
                       />
-                      <Form.Control.Feedback type="invalid">{errors.state}</Form.Control.Feedback>
+                      {touched.state && errors.state && (
+                        <div className="text-danger mt-1 small fw-bold">{errors.state}</div>
+                      )}
                     </Form.Group>
                   </Col>
                   <Col md={3}>
@@ -943,7 +949,9 @@ const AddStaff = () => {
                         isDisabled={!values.state || loading.submitting}
                         placeholder="Select City"
                       />
-                      <Form.Control.Feedback type="invalid">{errors.city}</Form.Control.Feedback>
+                      {touched.city && errors.city && (
+                        <div className="text-danger mt-1 small fw-bold">{errors.city}</div>
+                      )}
                     </Form.Group>
                   </Col>
                   <Col md={3}>
@@ -1043,7 +1051,9 @@ const AddStaff = () => {
                         isDisabled={loading.submitting}
                         placeholder="Select Base"
                       />
-                      <Form.Control.Feedback type="invalid">{errors.salary_calculation_base}</Form.Control.Feedback>
+                      {touched.salary_calculation_base && errors.salary_calculation_base && (
+                        <div className="text-danger mt-1 small fw-bold">{errors.salary_calculation_base}</div>
+                      )}
                     </Form.Group>
                   </Col>
                   <Col md={4}>
@@ -1436,7 +1446,7 @@ const AddStaff = () => {
                         value={values.document_type ? { label: values.document_type, value: values.document_type } : null}
                         onChange={(selected) => {
                           setFieldValue('document_type', selected ? selected.value : '');
-                          if (selected && selected.value !== 'National Identity Card') {
+                          if (selected && selected.value !== 'National Identity Card' && selected.value !== 'Aadhar Card') {
                             setFieldValue('back_image', '');
                           }
                         }}
@@ -1444,7 +1454,9 @@ const AddStaff = () => {
                         isDisabled={loading.submitting}
                         placeholder="Select Document"
                       />
-                  <Form.Control.Feedback type="invalid">{errors.document_type}</Form.Control.Feedback>
+                  {touched.document_type && errors.document_type && (
+                    <div className="text-danger mt-1 small fw-bold">{errors.document_type}</div>
+                  )}
                 </Form.Group>
 
                 <Form.Group className="mb-4">
@@ -1493,7 +1505,7 @@ const AddStaff = () => {
                     </Button>
                     {touched.front_image && errors.front_image && <div className="text-danger mt-1 small fw-bold">{errors.front_image}</div>}
                     
-                    {values.document_type !== 'National Identity Card' && (
+                    {values.document_type !== 'National Identity Card' && values.document_type !== 'Aadhar Card' && (
                       <Button
                         variant="primary"
                         type="submit"
@@ -1516,7 +1528,7 @@ const AddStaff = () => {
                   </div>
                 </Form.Group>
 
-                {values.document_type === 'National Identity Card' && (
+                {(values.document_type === 'National Identity Card' || values.document_type === 'Aadhar Card') && (
                   <Form.Group className="mb-4">
                     <Form.Label>Back Image</Form.Label>
                     <div className="id-preview-container mb-2">
