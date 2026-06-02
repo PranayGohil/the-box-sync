@@ -236,6 +236,41 @@ const getAllFaceEncodings = async (req, res) => {
   }
 };
 
+// ── GET /staff/get-next-id ────────────────────────────────────────────────────
+const getNextStaffIdController = async (req, res) => {
+  try {
+    const userId = req.user?._id || req.user;
+    const lastStaff = await Staff.findOne({ user_id: userId })
+      .sort({ _id: -1 })
+      .select("staff_id")
+      .lean();
+      
+    const lastId = lastStaff ? lastStaff.staff_id : null;
+    
+    const getNextStaffId = (lastId) => {
+      if (!lastId) return "STF001";
+      
+      const match = lastId.match(/^(.*?)(\d+)$/);
+      if (!match) {
+        return `${lastId}001`;
+      }
+      
+      const prefix = match[1];
+      const numberStr = match[2];
+      const nextNumber = parseInt(numberStr, 10) + 1;
+      const paddedNumber = String(nextNumber).padStart(numberStr.length, '0');
+      
+      return `${prefix}${paddedNumber}`;
+    };
+    
+    const nextId = getNextStaffId(lastId);
+    res.json({ success: true, data: nextId });
+  } catch (error) {
+    console.error("Error generating next staff ID:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 module.exports = {
   getStaffPositions,
   getStaffData,
@@ -244,4 +279,5 @@ module.exports = {
   updateStaff,
   deleteStaff,
   getAllFaceEncodings,
+  getNextStaffIdController,
 };

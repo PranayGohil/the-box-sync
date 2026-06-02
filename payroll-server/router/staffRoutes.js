@@ -8,6 +8,7 @@ const {
   updateStaff,
   deleteStaff,
   getAllFaceEncodings,
+  getNextStaffIdController,
   // checkIn, checkOut, markAbsent removed — now in attendanceRouter
 } = require("../controllers/staffController");
 const adminAuth = require("../middlewares/adminAuth");
@@ -15,6 +16,7 @@ const upload = require("../middlewares/upload");
 
 const staffRouter = express.Router();
 
+staffRouter.route("/get-next-id").get(authMiddleware, getNextStaffIdController);
 staffRouter.route("/get-all").get(authMiddleware, getStaffData);
 staffRouter.route("/get/:id").get(authMiddleware, getStaffDataById);
 staffRouter.route("/get-positions").get(authMiddleware, getStaffPositions);

@@ -421,7 +421,7 @@ const AddStaff = () => {
         setLoading((prev) => ({ ...prev, initial: true }));
         setCountries(Country.getAllCountries());
 
-        const [positionsRes, configRes, leavePolicyRes] = await Promise.all([
+        const [positionsRes, configRes, leavePolicyRes, nextIdRes] = await Promise.all([
           axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
@@ -430,10 +430,17 @@ const AddStaff = () => {
           }),
           axios.get(`${process.env.REACT_APP_API}/leave-policy`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          }),
+          axios.get(`${process.env.REACT_APP_API}/staff/get-next-id`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           })
         ]);
         
         setPositions(positionsRes.data.data);
+        if (nextIdRes.data?.success) {
+          formik.setFieldValue('staff_id', nextIdRes.data.data);
+        }
+
         if (leavePolicyRes?.data?.success && leavePolicyRes?.data?.data?.leave_types) {
           setGlobalLeavePolicies(leavePolicyRes.data.data.leave_types);
           

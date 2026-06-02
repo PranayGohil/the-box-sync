@@ -250,13 +250,21 @@ const AddStaff = () => {
         setLoading((prev) => ({ ...prev, initial: true }));
         setCountries(Country.getAllCountries());
 
-        const response = await axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
-        setPositions(response.data.data);
+        const [positionsRes, nextIdRes] = await Promise.all([
+          axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          }),
+          axios.get(`${process.env.REACT_APP_API}/staff/get-next-id`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          })
+        ]);
+        setPositions(positionsRes.data.data);
+        if (nextIdRes.data?.success) {
+          formik.setFieldValue('staff_id', nextIdRes.data.data);
+        }
       } catch (error) {
-        console.error('Error fetching positions:', error);
-        toast.error('Failed to fetch positions.');
+        console.error('Error initializing form data:', error);
+        toast.error('Failed to initialize form.');
       } finally {
         setLoading((prev) => ({ ...prev, initial: false }));
       }
