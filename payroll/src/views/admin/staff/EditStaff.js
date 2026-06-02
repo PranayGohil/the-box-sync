@@ -45,6 +45,7 @@ const EditStaff = () => {
   const [showFaceModal, setShowFaceModal] = useState(false);
   const webcamRef = useRef(null);
   const [faceDescriptor, setFaceDescriptor] = useState(null);
+  const faceDescriptorRef = useRef(null);
   const [faceBox, setFaceBox] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [captureStatus, setCaptureStatus] = useState('none');
@@ -84,7 +85,7 @@ const EditStaff = () => {
   const isFileObject = (val) => !!val && (val instanceof File || (typeof val === 'object' && 'size' in val && 'type' in val));
 
   const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
-  const maxSize = 2 * 1024 * 1024;
+  const maxSize = 20 * 1024 * 1024;
 
   const editStaff = Yup.object({
     staff_id: Yup.string()
@@ -119,7 +120,7 @@ const EditStaff = () => {
         if (typeof value === 'string') return true;
         return isFileObject(value);
       })
-      .test('fileSize', 'File size is too large (max 2MB)', (value) => {
+      .test('fileSize', 'File size is too large (max 20MB)', (value) => {
         if (!value) return true;
         if (typeof value === 'string') return true;
         return isFileObject(value) ? value.size <= maxSize : true;
@@ -130,7 +131,7 @@ const EditStaff = () => {
         return isFileObject(value) ? allowedTypes.includes(value.type) : true;
       }),
 
-    document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Pan Card', 'Voter Card'], 'Invalid document type'),
+    document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Aadhar Card', 'Pan Card', 'Voter Card', 'Voter ID Card', 'Driving License', 'Passport'], 'Invalid document type'),
 
     id_number: Yup.string()
       .required('ID number is required')
@@ -139,13 +140,13 @@ const EditStaff = () => {
         const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
         const voterRegex = /^[A-Z]{3}[0-9]{7}$/;
 
-        if (docType === 'National Identity Card') {
+        if (docType === 'National Identity Card' || docType === 'Aadhar Card') {
           return schema.matches(aadharRegex, 'Aadhar number must be 12 digits (format: XXXX XXXX XXXX)');
         }
         if (docType === 'Pan Card') {
           return schema.matches(panRegex, 'PAN card format must be ABCDE1234F (5 letters, 4 digits, 1 letter)');
         }
-        if (docType === 'Voter Card') {
+        if (docType === 'Voter Card' || docType === 'Voter ID Card') {
           return schema.matches(voterRegex, 'Voter ID format must be ABC1234567 (3 letters, 7 digits)');
         }
         return schema;
@@ -157,7 +158,7 @@ const EditStaff = () => {
         if (typeof value === 'string') return true;
         return isFileObject(value);
       })
-      .test('fileSize', 'File size is too large (max 2MB)', (value) => {
+      .test('fileSize', 'File size is too large (max 20MB)', (value) => {
         if (!value) return true;
         if (typeof value === 'string') return true;
         return isFileObject(value) ? value.size <= maxSize : true;
@@ -170,7 +171,7 @@ const EditStaff = () => {
 
     back_image: Yup.mixed()
       .when('document_type', (docType, schema) => {
-        if (docType === 'National Identity Card') {
+        if (docType === 'National Identity Card' || docType === 'Aadhar Card') {
           return schema.test('required-or-existing', 'Back ID image is required for Aadhar card', (value) => {
             if (!value) return false;
             if (typeof value === 'string') return true;
@@ -179,7 +180,7 @@ const EditStaff = () => {
         }
         return schema;
       })
-      .test('fileSize', 'File size is too large (max 2MB)', (value) => {
+      .test('fileSize', 'File size is too large (max 20MB)', (value) => {
         if (!value) return true;
         if (typeof value === 'string') return true;
         return isFileObject(value) ? value.size <= maxSize : true;
@@ -271,7 +272,9 @@ const EditStaff = () => {
       const img = await faceapi.fetchImage(screenshot);
       const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
       if (detection) {
-        setFaceDescriptor(Array.from(detection.descriptor));
+        const descriptorArray = Array.from(detection.descriptor);
+        setFaceDescriptor(descriptorArray);
+        faceDescriptorRef.current = descriptorArray;
         setCaptureStatus('success');
         setShowFaceModal(false);
         toast.success('Face captured successfully!');
@@ -345,7 +348,10 @@ const EditStaff = () => {
         if (values.photo instanceof File) formData.append('photo', values.photo);
         if (values.front_image instanceof File) formData.append('front_image', values.front_image);
         if (values.back_image instanceof File) formData.append('back_image', values.back_image);
-        if (faceDescriptor) formData.append('face_descriptor', JSON.stringify(faceDescriptor));
+        const currentFaceDescriptor = faceDescriptorRef.current;
+        if (currentFaceDescriptor) {
+          formData.append('face_descriptor', JSON.stringify(currentFaceDescriptor));
+        }
 
         await axios.put(`${process.env.REACT_APP_API}/staff/edit/${id}`, formData, {
           headers: {
@@ -510,6 +516,12 @@ const EditStaff = () => {
         setFieldValue('photo', staff.photo || '');
         setFieldValue('front_image', staff.front_image || '');
         setFieldValue('back_image', staff.back_image || '');
+
+        // Load existing face encoding if present
+        if (staff.face_encoding && staff.face_encoding.length > 0) {
+          setFaceDescriptor(staff.face_encoding);
+          faceDescriptorRef.current = staff.face_encoding;
+        }
 
         setPhotoPreview(staff.photo ? `${process.env.REACT_APP_UPLOAD_DIR}/${staff.photo}` : null);
         setFrontImagePreview(staff.front_image ? `${process.env.REACT_APP_UPLOAD_DIR}/${staff.front_image}` : null);
@@ -1395,26 +1407,7 @@ const EditStaff = () => {
                   )}
                 </div>
                 
-                {/* Submit Button inside Card */}
-                <div className="d-flex justify-content-center mt-4">
-                  <Button
-                    className="custom-btn-outline px-5 py-3"
-                    type="submit"
-                    disabled={loading.submitting}
-                  >
-                    {loading.submitting ? (
-                      <>
-                        <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                        Updating...
-                      </>
-                    ) : (
-                      <>
-                        <CsLineIcons icon="save" size="20" />
-                        Update Staff Member
-                      </>
-                    )}
-                  </Button>
-                </div>
+
               </Card.Body>
             </Card>
           </Col>
@@ -1509,7 +1502,7 @@ const EditStaff = () => {
                         value={values.document_type ? { label: values.document_type, value: values.document_type } : null}
                         onChange={(selected) => {
                           setFieldValue('document_type', selected ? selected.value : '');
-                          if (selected && selected.value !== 'National Identity Card') {
+                          if (selected && selected.value !== 'National Identity Card' && selected.value !== 'Aadhar Card') {
                             setFieldValue('back_image', '');
                           }
                         }}
@@ -1566,7 +1559,7 @@ const EditStaff = () => {
                     </Button>
                   </div>
 
-                  {values.document_type === 'National Identity Card' && (
+                  {(values.document_type === 'National Identity Card' || values.document_type === 'Aadhar Card') && (
                     <div className="mb-2">
                       <div className="small text-muted mb-2 fw-bold text-uppercase opacity-50 letter-spacing-1">Back Image</div>
                       <div className="bg-light rounded-3 p-2 mb-2 text-center border border-dashed" style={{ minHeight: '120px' }}>
@@ -1598,6 +1591,27 @@ const EditStaff = () => {
                       </Button>
                     </div>
                   )}
+
+                  {/* Submit Button inside Identification Card */}
+                  <div className="d-flex justify-content-center mt-4 pt-3 border-top" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
+                    <Button
+                      className="custom-btn-outline px-5 py-3 w-100"
+                      type="submit"
+                      disabled={loading.submitting}
+                    >
+                      {loading.submitting ? (
+                        <>
+                          <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          <CsLineIcons icon="save" size="20" />
+                          Update Staff Member
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </Card.Body>
             </Card>

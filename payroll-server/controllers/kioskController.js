@@ -24,7 +24,7 @@ exports.kioskLogin = async (req, res) => {
     }
 
     // Issue token — same format as payroll
-    const token = await user.generateAuthToken("Payroll By The Box");
+    const token = await user.generateAuthToken("Admin");
 
     return res.status(200).json({
       message: "Logged In",
@@ -34,6 +34,7 @@ exports.kioskLogin = async (req, res) => {
         name: user.name,
         logo: user.logo,
         email: user.email,
+        role: "admin",
       },
     });
   } catch (err) {

@@ -273,6 +273,51 @@ const customStyles = `
     letter-spacing: 0.05em;
     z-index: 12;
   }
+
+  /* Tablet and Mobile Responsiveness */
+  @media (max-width: 767.98px) {
+    .kiosk-wrapper {
+      min-height: calc(100vh - 80px);
+      padding: 0.75rem;
+    }
+    .kiosk-card {
+      border-radius: 1.5rem !important;
+    }
+    .kiosk-header-banner {
+      padding: 2rem 1rem;
+    }
+    .company-logo-wrapper {
+      width: 90px;
+      height: 90px;
+      margin-bottom: 1rem;
+      padding: 6px;
+    }
+    .kiosk-action-area {
+      padding: 2.5rem 1rem;
+    }
+    .scan-btn {
+      padding: 0.8rem 2rem !important;
+      font-size: 1.1rem !important;
+    }
+    .staff-match-card {
+      padding: 1.75rem 1rem;
+      border-radius: 1.25rem;
+    }
+    .action-btn {
+      padding: 0.75rem 1.75rem !important;
+      font-size: 1rem !important;
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    .kiosk-header-banner h1 {
+      font-size: 1.5rem !important;
+    }
+    .scan-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
 `;
 
 export default function Dashboard() {

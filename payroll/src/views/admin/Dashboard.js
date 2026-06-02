@@ -30,6 +30,26 @@ const customStyles = `
       align-items: center;
       justify-content: space-between;
     }
+    .card-title-container h2.small-title {
+      height: auto !important;
+      line-height: 1.2 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      display: inline-flex;
+      align-items: center;
+    }
+    .card-title-container button,
+    .card-title-container a,
+    .card-title-container svg,
+    .card-title-container .btn-link {
+      margin: 0 !important;
+      padding: 0 !important;
+      line-height: 1 !important;
+      display: inline-flex;
+      align-items: center;
+      height: auto !important;
+      vertical-align: middle !important;
+    }
     .stat-card-inner {
       background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(35, 179, 244, 0.02) 100%);
     }
@@ -86,6 +106,7 @@ const Dashboard = () => {
   const [staffCount, setStaffCount] = useState(0);
   const [positions, setPositions] = useState({});
   const [recentStaff, setRecentStaff] = useState([]);
+  const [recentLeaves, setRecentLeaves] = useState([]);
   
   const [todayPresentCount, setTodayPresentCount] = useState(0);
   const [totalLeavesPending, setTotalLeavesPending] = useState(0);
@@ -122,6 +143,7 @@ const Dashboard = () => {
         const allLeaves = leaveRes.data.data || [];
         const pendingCount = allLeaves.filter(req => req.status === 'Pending' || req.status === 'pending').length;
         setTotalLeavesPending(pendingCount);
+        setRecentLeaves(allLeaves.slice(0, 5));
       } catch (err) {
         console.error('Error fetching pending leaves:', err);
       }
@@ -194,7 +216,7 @@ const Dashboard = () => {
               <div className="d-flex justify-content-between align-items-start">
                 <div>
                   <div className="stat-label mb-2">Total Staff</div>
-                  <div className="stat-value mb-2">{staffCount || 15}</div>
+                  <div className="stat-value mb-2">{staffCount}</div>
                   <div className="text-muted smaller fw-bold" style={{ color: brandColor }}>
                     Active Employees
                   </div>
@@ -279,45 +301,78 @@ const Dashboard = () => {
               </div>
               
               {recentStaff.length > 0 ? (
-                <Table responsive hover className="align-middle mb-0">
-                  <thead>
-                    <tr className="text-muted small uppercase">
-                      <th>Name</th>
-                      <th>Role</th>
-                      <th>Email</th>
-                      <th>Contact No</th>
-                      <th className="text-end">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <>
+                  {/* Desktop Table View */}
+                  <Table responsive hover className="align-middle mb-0 d-none d-md-table">
+                    <thead>
+                      <tr className="text-muted small uppercase">
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Email</th>
+                        <th>Contact No</th>
+                        <th className="text-end">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentStaff.map((member) => (
+                        <tr key={member._id}>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              <div className="sw-4 sh-4 rounded-circle bg-light d-flex justify-content-center align-items-center me-2 text-primary fw-bold" style={{ fontSize: '12px' }}>
+                                {member.f_name?.[0]}{member.l_name?.[0]}
+                              </div>
+                              <span className="fw-bold text-dark">{member.f_name} {member.l_name}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <span className="role-badge">{member.position}</span>
+                          </td>
+                          <td className="text-muted small">{member.email || 'N/A'}</td>
+                          <td className="text-muted small">{member.contact_no || 'N/A'}</td>
+                          <td className="text-end">
+                            <Badge bg="success" className="rounded-pill">Active</Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+
+                  {/* Mobile Card View */}
+                  <div className="d-md-none">
                     {recentStaff.map((member) => (
-                      <tr key={member._id}>
-                        <td>
+                      <div key={member._id} className="p-3 mb-3 bg-light rounded-3 border" style={{ borderColor: '#e2e8f0' }}>
+                        <div className="d-flex align-items-center justify-content-between mb-2">
                           <div className="d-flex align-items-center">
-                            <div className="sw-4 sh-4 rounded-circle bg-light d-flex justify-content-center align-items-center me-2 text-primary fw-bold" style={{ fontSize: '12px' }}>
+                            <div className="sw-4 sh-4 rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2 fw-bold" style={{ fontSize: '12px', minWidth: '32px' }}>
                               {member.f_name?.[0]}{member.l_name?.[0]}
                             </div>
-                            <span className="fw-bold text-dark">{member.f_name} {member.l_name}</span>
+                            <div>
+                              <span className="fw-bold text-dark d-block leading-tight">{member.f_name} {member.l_name}</span>
+                              <span className="text-muted smaller" style={{ fontSize: '11px' }}>{member.position}</span>
+                            </div>
                           </div>
-                        </td>
-                        <td>
-                          <span className="role-badge">{member.position}</span>
-                        </td>
-                        <td className="text-muted small">{member.email || 'N/A'}</td>
-                        <td className="text-muted small">{member.contact_no || 'N/A'}</td>
-                        <td className="text-end">
                           <Badge bg="success" className="rounded-pill">Active</Badge>
-                        </td>
-                      </tr>
+                        </div>
+                        <div className="pt-2 border-top" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
+                          <div className="d-flex justify-content-between smaller text-muted mb-1" style={{ fontSize: '12px' }}>
+                            <span>Email:</span>
+                            <span className="text-dark fw-semibold text-truncate ms-2" style={{ maxWidth: '180px' }}>{member.email || 'N/A'}</span>
+                          </div>
+                          <div className="d-flex justify-content-between smaller text-muted" style={{ fontSize: '12px' }}>
+                            <span>Contact:</span>
+                            <span className="text-dark fw-semibold">{member.contact_no || 'N/A'}</span>
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </Table>
+                  </div>
+                </>
               ) : (
                 <div className="text-muted text-center py-4">No staff members found. Start by adding one in Staff Management!</div>
               )}
             </Card.Body>
           </Card>
-
+ 
           {/* Pending Leave Tasks Panel */}
           <Card className="interactive-card border-0 shadow-sm" style={{ borderTop: `4px solid ${brandColor}` }}>
             <Card.Body className="p-4">
@@ -327,41 +382,148 @@ const Dashboard = () => {
                   All Leaves
                 </Button>
               </div>
-              <Table responsive className="align-middle mb-0">
-                <thead>
-                  <tr className="text-muted small uppercase">
-                    <th>Employee</th>
-                    <th>Leave Type</th>
-                    <th>Period</th>
-                    <th>Reason</th>
-                    <th className="text-end">Action Required</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <span className="fw-bold text-dark">Arjun Sharma</span>
-                    </td>
-                    <td><Badge bg="info">Sick Leave</Badge></td>
-                    <td className="text-muted small">May 19 - May 20 (2 days)</td>
-                    <td className="text-muted small">Medical appointment</td>
-                    <td className="text-end">
-                      <Button size="sm" variant="success" className="rounded-pill me-1 px-3 py-1" onClick={() => history.push('/payroll/leave-requests')}>Review</Button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <span className="fw-bold text-dark">Pooja Patel</span>
-                    </td>
-                    <td><Badge bg="warning" text="dark">Casual Leave</Badge></td>
-                    <td className="text-muted small">May 24 (1 day)</td>
-                    <td className="text-muted small">Personal work</td>
-                    <td className="text-end">
-                      <Button size="sm" variant="success" className="rounded-pill me-1 px-3 py-1" onClick={() => history.push('/payroll/leave-requests')}>Review</Button>
-                    </td>
-                  </tr>
-                </tbody>
-              </Table>
+              {recentLeaves.length > 0 ? (
+                <>
+                  {/* Desktop Table View */}
+                  <Table responsive className="align-middle mb-0 d-none d-md-table">
+                    <thead>
+                      <tr className="text-muted small uppercase">
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>Period</th>
+                        <th>Reason</th>
+                        <th className="text-end">Status / Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentLeaves.map((leave) => {
+                        const staffName = leave.staff_id ? `${leave.staff_id.f_name} ${leave.staff_id.l_name}` : 'Unknown Staff';
+                        const leaveTypeLabel = leave.leave_type_id
+                          ? leave.leave_type_id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                          : 'Leave';
+                        
+                        // Format dates
+                        const formatDateStr = (dateStr) => {
+                          if (!dateStr) return '';
+                          const date = new Date(dateStr);
+                          return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                        };
+                        
+                        const period = `${formatDateStr(leave.from_date)} - ${formatDateStr(leave.to_date)} (${leave.days} day${leave.days !== 1 ? 's' : ''})`;
+                        
+                        // Badge color based on type
+                        let badgeBg = 'info';
+                        if (leave.leave_type_id?.includes('casual')) badgeBg = 'warning';
+                        else if (leave.leave_type_id?.includes('unpaid')) badgeBg = 'danger';
+                        else if (leave.leave_type_id?.includes('annual')) badgeBg = 'success';
+  
+                        const isPending = leave.status === 'Pending' || leave.status === 'pending';
+  
+                        return (
+                          <tr key={leave._id}>
+                            <td>
+                              <span className="fw-bold text-dark">{staffName}</span>
+                            </td>
+                            <td>
+                              <Badge bg={badgeBg} text={badgeBg === 'warning' ? 'dark' : 'white'}>
+                                {leaveTypeLabel}
+                              </Badge>
+                            </td>
+                            <td className="text-muted small">{period}</td>
+                            <td className="text-muted small text-truncate" style={{ maxWidth: '200px' }} title={leave.reason}>
+                              {leave.reason || 'N/A'}
+                            </td>
+                            <td className="text-end">
+                              {isPending ? (
+                                <Button size="sm" variant="success" className="rounded-pill px-3 py-1" onClick={() => history.push('/payroll/leave-requests')}>
+                                  Review
+                                </Button>
+                              ) : (
+                                <Badge 
+                                  bg={leave.status?.toLowerCase() === 'approved' ? 'success' : 'danger'} 
+                                  className="rounded-pill px-3 py-1 text-capitalize"
+                                >
+                                  {leave.status}
+                                </Badge>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </Table>
+
+                  {/* Mobile Card View */}
+                  <div className="d-md-none">
+                    {recentLeaves.map((leave) => {
+                      const staffName = leave.staff_id ? `${leave.staff_id.f_name} ${leave.staff_id.l_name}` : 'Unknown Staff';
+                      const leaveTypeLabel = leave.leave_type_id
+                        ? leave.leave_type_id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                        : 'Leave';
+                      
+                      // Format dates
+                      const formatDateStr = (dateStr) => {
+                        if (!dateStr) return '';
+                        const date = new Date(dateStr);
+                        return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                      };
+                      
+                      const period = `${formatDateStr(leave.from_date)} - ${formatDateStr(leave.to_date)} (${leave.days} day${leave.days !== 1 ? 's' : ''})`;
+                      
+                      // Badge color based on type
+                      let badgeBg = 'info';
+                      if (leave.leave_type_id?.includes('casual')) badgeBg = 'warning';
+                      else if (leave.leave_type_id?.includes('unpaid')) badgeBg = 'danger';
+                      else if (leave.leave_type_id?.includes('annual')) badgeBg = 'success';
+  
+                      const isPending = leave.status === 'Pending' || leave.status === 'pending';
+  
+                      return (
+                        <div key={leave._id} className="p-3 mb-3 bg-light rounded-3 border" style={{ borderColor: '#e2e8f0' }}>
+                          <div className="d-flex align-items-center justify-content-between mb-2">
+                            <div>
+                              <span className="fw-bold text-dark d-block leading-tight">{staffName}</span>
+                              <span className="text-muted smaller" style={{ fontSize: '11px' }}>{leave.staff_id?.position || 'Staff'}</span>
+                            </div>
+                            <Badge bg={badgeBg} text={badgeBg === 'warning' ? 'dark' : 'white'} className="rounded-pill">
+                              {leaveTypeLabel}
+                            </Badge>
+                          </div>
+                          <div className="py-2 border-top border-bottom my-2" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
+                            <div className="d-flex justify-content-between smaller text-muted mb-1" style={{ fontSize: '12px' }}>
+                              <span>Period:</span>
+                              <span className="text-dark fw-semibold">{period}</span>
+                            </div>
+                            <div className="d-flex flex-column smaller text-muted" style={{ fontSize: '12px' }}>
+                              <span>Reason:</span>
+                              <span className="text-dark fw-medium mt-1 bg-white p-2 rounded border" style={{ fontStyle: 'italic', wordBreak: 'break-word' }}>
+                                {leave.reason || 'N/A'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="d-flex align-items-center justify-content-between">
+                            <span className="smaller text-muted" style={{ fontSize: '12px' }}>Status:</span>
+                            {isPending ? (
+                              <Button size="sm" variant="success" className="rounded-pill px-3 py-1 shadow-sm fw-bold" style={{ fontSize: '11px' }} onClick={() => history.push('/payroll/leave-requests')}>
+                                Review
+                              </Button>
+                            ) : (
+                              <Badge 
+                                bg={leave.status?.toLowerCase() === 'approved' ? 'success' : 'danger'} 
+                                className="rounded-pill px-3 py-1 text-capitalize"
+                              >
+                                {leave.status}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <div className="text-muted text-center py-4">No recent leave requests found.</div>
+              )}
             </Card.Body>
           </Card>
         </Col>
