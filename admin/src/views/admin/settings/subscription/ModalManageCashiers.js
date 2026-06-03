@@ -11,6 +11,9 @@ const AUTH_HEADER = () => ({ Authorization: `Bearer ${localStorage.getItem('toke
 // ─── Inner Form: Add / Edit a single cashier ────────────────────────────────
 function CashierForm({ editing, onSave, onCancel }) {
   const isEdit = !!editing;
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validationSchema = Yup.object({
     username: Yup.string().required('Username is required'),
@@ -113,15 +116,33 @@ function CashierForm({ editing, onSave, onCancel }) {
         <div className="col-md-6">
           <Form.Group>
             <Form.Label className="text-small">{isEdit ? 'New Password (optional)' : 'Password'}</Form.Label>
-            <Form.Control
-              size="sm"
-              type="password"
-              name="password"
-              value={formik.values.password}
-              onChange={formik.handleChange}
-              isInvalid={!!(formik.touched.password && formik.errors.password)}
-            />
-            <Form.Control.Feedback type="invalid">{formik.errors.password}</Form.Control.Feedback>
+            <div style={{ position: 'relative' }}>
+              <Form.Control
+                size="sm"
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={formik.values.password}
+                onChange={formik.handleChange}
+                isInvalid={!!(formik.touched.password && formik.errors.password)}
+                style={{ paddingRight: '35px' }}
+              />
+              <span
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  cursor: 'pointer',
+                  zIndex: 10,
+                }}
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="14" />
+              </span>
+            </div>
+            <Form.Control.Feedback type="invalid" style={{ display: formik.touched.password && formik.errors.password ? 'block' : 'none' }}>
+              {formik.errors.password}
+            </Form.Control.Feedback>
           </Form.Group>
         </div>
 
@@ -129,15 +150,33 @@ function CashierForm({ editing, onSave, onCancel }) {
         <div className="col-md-6">
           <Form.Group>
             <Form.Label className="text-small">Confirm Password</Form.Label>
-            <Form.Control
-              size="sm"
-              type="password"
-              name="confirmPassword"
-              value={formik.values.confirmPassword}
-              onChange={formik.handleChange}
-              isInvalid={!!(formik.touched.confirmPassword && formik.errors.confirmPassword)}
-            />
-            <Form.Control.Feedback type="invalid">{formik.errors.confirmPassword}</Form.Control.Feedback>
+            <div style={{ position: 'relative' }}>
+              <Form.Control
+                size="sm"
+                type={showConfirmPassword ? 'text' : 'password'}
+                name="confirmPassword"
+                value={formik.values.confirmPassword}
+                onChange={formik.handleChange}
+                isInvalid={!!(formik.touched.confirmPassword && formik.errors.confirmPassword)}
+                style={{ paddingRight: '35px' }}
+              />
+              <span
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  cursor: 'pointer',
+                  zIndex: 10,
+                }}
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                <CsLineIcons icon={showConfirmPassword ? 'eye-off' : 'eye'} size="14" />
+              </span>
+            </div>
+            <Form.Control.Feedback type="invalid" style={{ display: formik.touched.confirmPassword && formik.errors.confirmPassword ? 'block' : 'none' }}>
+              {formik.errors.confirmPassword}
+            </Form.Control.Feedback>
           </Form.Group>
         </div>
 
@@ -145,15 +184,33 @@ function CashierForm({ editing, onSave, onCancel }) {
         <div className="col-md-12">
           <Form.Group>
             <Form.Label className="text-small">Your Admin Password (verification)</Form.Label>
-            <Form.Control
-              size="sm"
-              type="password"
-              name="adminPassword"
-              value={formik.values.adminPassword}
-              onChange={formik.handleChange}
-              isInvalid={!!(formik.touched.adminPassword && formik.errors.adminPassword)}
-            />
-            <Form.Control.Feedback type="invalid">{formik.errors.adminPassword}</Form.Control.Feedback>
+            <div style={{ position: 'relative' }}>
+              <Form.Control
+                size="sm"
+                type={showAdminPassword ? 'text' : 'password'}
+                name="adminPassword"
+                value={formik.values.adminPassword}
+                onChange={formik.handleChange}
+                isInvalid={!!(formik.touched.adminPassword && formik.errors.adminPassword)}
+                style={{ paddingRight: '35px' }}
+              />
+              <span
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  cursor: 'pointer',
+                  zIndex: 10,
+                }}
+                onClick={() => setShowAdminPassword(!showAdminPassword)}
+              >
+                <CsLineIcons icon={showAdminPassword ? 'eye-off' : 'eye'} size="14" />
+              </span>
+            </div>
+            <Form.Control.Feedback type="invalid" style={{ display: formik.touched.adminPassword && formik.errors.adminPassword ? 'block' : 'none' }}>
+              {formik.errors.adminPassword}
+            </Form.Control.Feedback>
           </Form.Group>
         </div>
       </div>
@@ -174,6 +231,7 @@ function CashierForm({ editing, onSave, onCancel }) {
 function ConfirmDeleteModal({ show, cashier, onConfirm, onCancel }) {
   const [adminPassword, setAdminPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showDeleteAdminPassword, setShowDeleteAdminPassword] = useState(false);
 
   const handleDelete = async () => {
     if (!adminPassword) {
@@ -206,13 +264,29 @@ function ConfirmDeleteModal({ show, cashier, onConfirm, onCancel }) {
       </Modal.Header>
       <Modal.Body>
         <p>Are you sure you want to delete <strong>{cashier?.username}</strong>? This cannot be undone.</p>
-        <Form.Control
-          type="password"
-          placeholder="Enter your admin password"
-          value={adminPassword}
-          onChange={(e) => setAdminPassword(e.target.value)}
-          size="sm"
-        />
+        <div style={{ position: 'relative' }}>
+          <Form.Control
+            type={showDeleteAdminPassword ? 'text' : 'password'}
+            placeholder="Enter your admin password"
+            value={adminPassword}
+            onChange={(e) => setAdminPassword(e.target.value)}
+            size="sm"
+            style={{ paddingRight: '35px' }}
+          />
+          <span
+            style={{
+              position: 'absolute',
+              right: '10px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              cursor: 'pointer',
+              zIndex: 10,
+            }}
+            onClick={() => setShowDeleteAdminPassword(!showDeleteAdminPassword)}
+          >
+            <CsLineIcons icon={showDeleteAdminPassword ? 'eye-off' : 'eye'} size="14" />
+          </span>
+        </div>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" size="sm" onClick={onCancel}>Cancel</Button>

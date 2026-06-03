@@ -20,7 +20,7 @@ import DeletePanelModal from './DeletePanelModal';
 import RaiseInquiryModal from './RaiseInquiryModal';
 import ModalManageCashiers from './ModalManageCashiers';
 
-const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'Payroll By The Box', 'KOT Panel', 'Kitchen Display System', 'Hotel Manager', 'Create Cashier'];
+const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'Payroll By The Box', 'KOT Panel', 'Hotel Manager', 'Create Cashier'];
 
 const PLAN_DISPLAY_NAMES = {
   'Manager': 'Manager Panel',
@@ -33,8 +33,7 @@ const PLAN_DISPLAY_NAMES = {
   'Table Management': 'Table Management',
   'Waiter Calling System': 'Waiter Calling System',
   'Whatsapp-Invoice': 'WhatsApp Invoice',
-  'KOT Panel': 'KOT Panel',
-  'Kitchen Display System': 'Kitchen Display System',
+  'KOT Panel': 'Kitchen Display System',
   'Create Cashier': 'Create Cashier',
 };
 
@@ -59,28 +58,28 @@ const ADDON_LABEL_TO_DB = {
 const ALLOWED_PLANS_BY_TIER = {
   'QSR': [
     'Staff Management',
-    'QSR', 'KOT Panel', 'Kitchen Display System', 'Token Management', 'Scan For Menu',
+    'QSR', 'KOT Panel', 'Token Management', 'Scan For Menu',
     'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
   ],
   'Café': [
     'Staff Management',
-    'QSR', 'KOT Panel', 'Kitchen Display System', 'Token Management', 'Scan For Menu',
+    'QSR', 'KOT Panel', 'Token Management', 'Scan For Menu',
     'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'
   ],
   'Fine Dine': [
     'Manager', 'Staff Management',
-    'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Reservation Manager', 'Table Management', 'Scan For Menu',
+    'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Table Management', 'Scan For Menu',
     'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website',
     'Create Cashier'
   ],
   'Cloud': [
     'Staff Management',
     'QSR',
-    'KOT Panel', 'Kitchen Display System', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
+    'KOT Panel', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'
   ],
   'Chain': [
     'Manager', 'Staff Management',
-    'QSR', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Reservation Manager', 'Table Management', 'Token Management',
+    'QSR', 'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Table Management', 'Token Management',
     'Scan For Menu', 'Feedback', 'Waiter Calling System', 'Dynamic Reports',
     'Whatsapp-Invoice', 'Restaurant Website', 'Payroll By The Box', 'Create Cashier'
   ]
@@ -489,7 +488,7 @@ const Subscription = () => {
                   >
                     <CsLineIcons icon="bin" size="15" />
                   </Button>
-                  {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Manager', 'QSR'].includes(original.plan_name) && (
+                  {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Manager', 'QSR'].includes(original.plan_name) && (
                     <Button
                       variant="none"
                       size="sm"
@@ -516,7 +515,7 @@ const Subscription = () => {
                   >
                     <CsLineIcons icon="plus" size="15" />
                   </Button>
-                  {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Manager', 'QSR'].includes(original.plan_name) && (
+                  {['Payroll By The Box', 'Captain Panel', 'KOT Panel', 'Manager', 'QSR'].includes(original.plan_name) && (
                     <Button
                       variant="none"
                       size="sm"

@@ -19,6 +19,8 @@ const ForgotPassword = () => {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -194,26 +196,54 @@ const ForgotPassword = () => {
           {/* STEP 3 */}
           {step === 3 && (
             <form onSubmit={handleResetPassword}>
-              <div className="mb-3 filled form-group tooltip-end-top">
+              <div className="mb-3 filled form-group tooltip-end-top" style={{ position: 'relative' }}>
                 <CsLineIcons icon="lock-off" />
                 <Form.Control
-                  type="password"
+                  type={showNewPassword ? 'text' : 'password'}
                   placeholder="New Password"
                   value={newPassword}
                   disabled={isLoading}
                   onChange={(e) => setNewPassword(e.target.value)}
+                  style={{ paddingRight: '45px' }}
                 />
+                <span
+                  style={{
+                    position: 'absolute',
+                    right: '15px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                  }}
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  <CsLineIcons icon={showNewPassword ? 'eye-off' : 'eye'} size="18" />
+                </span>
               </div>
 
-              <div className="mb-3 filled form-group tooltip-end-top">
+              <div className="mb-3 filled form-group tooltip-end-top" style={{ position: 'relative' }}>
                 <CsLineIcons icon="lock-off" />
                 <Form.Control
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="Confirm Password"
                   value={confirmPassword}
                   disabled={isLoading}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  style={{ paddingRight: '45px' }}
                 />
+                <span
+                  style={{
+                    position: 'absolute',
+                    right: '15px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                  }}
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  <CsLineIcons icon={showConfirmPassword ? 'eye-off' : 'eye'} size="18" />
+                </span>
               </div>
 
               {error && <div className="text-danger mb-2">{error}</div>}
