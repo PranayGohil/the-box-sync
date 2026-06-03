@@ -76,7 +76,7 @@ const ALLOWED_PLANS_BY_TIER = {
   'Cloud': [
     'Staff Management',
     'QSR',
-    'KOT Panel', 'Kitchen Display System', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
+    'KOT Panel', 'Kitchen Display System', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'
   ],
   'Chain': [
     'Manager', 'Staff Management',

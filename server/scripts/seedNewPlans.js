@@ -124,7 +124,8 @@ const seedNewPlans = async () => {
           "Kitchen Display System",
           "Feedback",
           "Dynamic Reports",
-          "Whatsapp-Invoice"
+          "Whatsapp-Invoice",
+          "Restaurant Website"
         ]
       },
       {

@@ -24,6 +24,8 @@ function ForgotPassword() {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -216,27 +218,59 @@ function ForgotPassword() {
                 <Form onSubmit={handleResetPassword}>
                   <Form.Group className="mb-3">
                     <Form.Label className="small fw-bold text-muted">New Password</Form.Label>
-                    <Form.Control
-                      className="forgot-password-pill-input"
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                      placeholder="Enter your new password"
-                      disabled={isLoading}
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <Form.Control
+                        className="forgot-password-pill-input"
+                        type={showNewPassword ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                        placeholder="Enter your new password"
+                        disabled={isLoading}
+                        style={{ paddingRight: '45px' }}
+                      />
+                      <span
+                        style={{
+                          position: 'absolute',
+                          right: '15px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          cursor: 'pointer',
+                          zIndex: 10,
+                        }}
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                      >
+                        <CsLineIcons icon={showNewPassword ? 'eye-off' : 'eye'} size="18" />
+                      </span>
+                    </div>
                   </Form.Group>
                   <Form.Group className="mb-4">
                     <Form.Label className="small fw-bold text-muted">Confirm New Password</Form.Label>
-                    <Form.Control
-                      className="forgot-password-pill-input"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      placeholder="Confirm your new password"
-                      disabled={isLoading}
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <Form.Control
+                        className="forgot-password-pill-input"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        placeholder="Confirm your new password"
+                        disabled={isLoading}
+                        style={{ paddingRight: '45px' }}
+                      />
+                      <span
+                        style={{
+                          position: 'absolute',
+                          right: '15px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          cursor: 'pointer',
+                          zIndex: 10,
+                        }}
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        <CsLineIcons icon={showConfirmPassword ? 'eye-off' : 'eye'} size="18" />
+                      </span>
+                    </div>
                   </Form.Group>
                   <div className="d-flex forgot-password-button-group-responsive justify-content-between align-items-center">
                     <Button className="forgot-password-custom-btn-outline px-4 py-2" type="submit" disabled={isLoading}>

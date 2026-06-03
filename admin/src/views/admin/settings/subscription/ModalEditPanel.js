@@ -12,6 +12,9 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const isAddMode = !data?._id;
 
@@ -103,6 +106,9 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
     if (!show) {
       formik.resetForm();
       setShowPasswordFields(false);
+      setShowAdminPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
       setError(null);
     }
   }, [show]);
@@ -173,44 +179,92 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
             <>
               <Form.Group className="mb-3">
                 <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Admin Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="adminPassword"
-                  placeholder="Your admin password"
-                  value={formik.values.adminPassword}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  disabled={isLoading}
-                  className="shadow-sm"
-                />
+                <div style={{ position: 'relative' }}>
+                  <Form.Control
+                    type={showAdminPassword ? 'text' : 'password'}
+                    name="adminPassword"
+                    placeholder="Your admin password"
+                    value={formik.values.adminPassword}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled={isLoading}
+                    className="shadow-sm"
+                    style={{ paddingRight: '45px' }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      right: '15px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      cursor: 'pointer',
+                      zIndex: 10,
+                    }}
+                    onClick={() => setShowAdminPassword(!showAdminPassword)}
+                  >
+                    <CsLineIcons icon={showAdminPassword ? 'eye-off' : 'eye'} size="18" />
+                  </span>
+                </div>
                 {renderError('adminPassword')}
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Panel Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="newPassword"
-                  placeholder="Set panel password"
-                  value={formik.values.newPassword}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  disabled={isLoading}
-                  className="shadow-sm"
-                />
+                <div style={{ position: 'relative' }}>
+                  <Form.Control
+                    type={showNewPassword ? 'text' : 'password'}
+                    name="newPassword"
+                    placeholder="Set panel password"
+                    value={formik.values.newPassword}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled={isLoading}
+                    className="shadow-sm"
+                    style={{ paddingRight: '45px' }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      right: '15px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      cursor: 'pointer',
+                      zIndex: 10,
+                    }}
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                  >
+                    <CsLineIcons icon={showNewPassword ? 'eye-off' : 'eye'} size="18" />
+                  </span>
+                </div>
                 {renderError('newPassword')}
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Confirm Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="confirmPassword"
-                  placeholder="Confirm panel password"
-                  value={formik.values.confirmPassword}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  disabled={isLoading}
-                  className="shadow-sm"
-                />
+                <div style={{ position: 'relative' }}>
+                  <Form.Control
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    name="confirmPassword"
+                    placeholder="Confirm panel password"
+                    value={formik.values.confirmPassword}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled={isLoading}
+                    className="shadow-sm"
+                    style={{ paddingRight: '45px' }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      right: '15px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      cursor: 'pointer',
+                      zIndex: 10,
+                    }}
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    <CsLineIcons icon={showConfirmPassword ? 'eye-off' : 'eye'} size="18" />
+                  </span>
+                </div>
                 {renderError('confirmPassword')}
               </Form.Group>
             </>
@@ -233,44 +287,92 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
               <hr className="my-4 opacity-10" />
               <Form.Group className="mb-3">
                 <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Admin Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="adminPassword"
-                  placeholder="Your admin password"
-                  value={formik.values.adminPassword}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  disabled={isLoading}
-                  className="shadow-sm"
-                />
+                <div style={{ position: 'relative' }}>
+                  <Form.Control
+                    type={showAdminPassword ? 'text' : 'password'}
+                    name="adminPassword"
+                    placeholder="Your admin password"
+                    value={formik.values.adminPassword}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled={isLoading}
+                    className="shadow-sm"
+                    style={{ paddingRight: '45px' }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      right: '15px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      cursor: 'pointer',
+                      zIndex: 10,
+                    }}
+                    onClick={() => setShowAdminPassword(!showAdminPassword)}
+                  >
+                    <CsLineIcons icon={showAdminPassword ? 'eye-off' : 'eye'} size="18" />
+                  </span>
+                </div>
                 {renderError('adminPassword')}
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label className="small fw-bold text-muted text-uppercase mb-2">New Panel Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="newPassword"
-                  placeholder="Set new panel password"
-                  value={formik.values.newPassword}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  disabled={isLoading}
-                  className="shadow-sm"
-                />
+                <div style={{ position: 'relative' }}>
+                  <Form.Control
+                    type={showNewPassword ? 'text' : 'password'}
+                    name="newPassword"
+                    placeholder="Set new panel password"
+                    value={formik.values.newPassword}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled={isLoading}
+                    className="shadow-sm"
+                    style={{ paddingRight: '45px' }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      right: '15px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      cursor: 'pointer',
+                      zIndex: 10,
+                    }}
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                  >
+                    <CsLineIcons icon={showNewPassword ? 'eye-off' : 'eye'} size="18" />
+                  </span>
+                </div>
                 {renderError('newPassword')}
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Confirm New Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="confirmPassword"
-                  placeholder="Confirm new password"
-                  value={formik.values.confirmPassword}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  disabled={isLoading}
-                  className="shadow-sm"
-                />
+                <div style={{ position: 'relative' }}>
+                  <Form.Control
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    name="confirmPassword"
+                    placeholder="Confirm new password"
+                    value={formik.values.confirmPassword}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled={isLoading}
+                    className="shadow-sm"
+                    style={{ paddingRight: '45px' }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      right: '15px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      cursor: 'pointer',
+                      zIndex: 10,
+                    }}
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    <CsLineIcons icon={showConfirmPassword ? 'eye-off' : 'eye'} size="18" />
+                  </span>
+                </div>
                 {renderError('confirmPassword')}
               </Form.Group>
             </>
