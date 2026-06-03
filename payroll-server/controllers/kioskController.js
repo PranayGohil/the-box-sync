@@ -1,5 +1,7 @@
 const User = require("../models/userModel");
+const Staff = require("../models/staffModel");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 // ── POST /api/kiosk/login ─────────────────────────────────────────────────────
 // Attendance kiosk login — uses the SAME email + password as the Payroll login.
@@ -12,30 +14,56 @@ exports.kioskLogin = async (req, res) => {
       return res.status(400).json({ message: "Email and password are required." });
     }
 
-    // Find by email — same as payroll login
-    const user = await User.findOne({ email }).select("+password");
-    if (!user) {
-      return res.status(401).json({ message: "Invalid email or password." });
-    }
+    // Find by email (case-insensitive) — first check user (admin)
+    const emailRegex = new RegExp("^" + email.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i");
+    const user = await User.findOne({ email: emailRegex }).select("+password");
+    let token;
+    let userData;
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password." });
-    }
+    if (user) {
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid email or password." });
+      }
 
-    // Issue token — same format as payroll
-    const token = await user.generateAuthToken("Admin");
-
-    return res.status(200).json({
-      message: "Logged In",
-      token,
-      user: {
+      // Issue token — same format as payroll
+      token = await user.generateAuthToken("Admin");
+      userData = {
         _id: user._id,
         name: user.name,
         logo: user.logo,
         email: user.email,
         role: "admin",
-      },
+      };
+    } else {
+      // Check Staff collection (case-insensitive)
+      const staff = await Staff.findOne({ email: emailRegex }).select("+password");
+      if (!staff) {
+        return res.status(401).json({ message: "Invalid email or password." });
+      }
+
+      const isMatch = await staff.comparePassword(password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid email or password." });
+      }
+
+      token = jwt.sign(
+        { _id: staff.user_id, staff_id: staff._id.toString(), Role: "Staff" },
+        process.env.JWT_SECRETKEY,
+        { expiresIn: "30d" }
+      );
+      userData = {
+        _id: staff._id,
+        name: `${staff.f_name} ${staff.l_name}`,
+        email: staff.email,
+        role: "staff",
+      };
+    }
+
+    return res.status(200).json({
+      message: "Logged In",
+      token,
+      user: userData,
     });
   } catch (err) {
     console.error("Kiosk login error:", err);

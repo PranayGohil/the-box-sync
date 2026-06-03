@@ -378,7 +378,28 @@ const getMonthlyPayrollSummary = async (req, res) => {
 const getPayrollByStaff = async (req, res) => {
     try {
         const { staffId } = req.params;
-        const staff = await Staff.findOne({ _id: staffId, user_id: req.user }).select("staff_id f_name l_name position photo salary salary_structure overtime_rate joining_date").lean();
+
+        let adminUserId;
+        let isStaff = false;
+        let loggedInStaffId = null;
+
+        if (req.user && typeof req.user === "object") {
+            if (req.user.Role === "Staff") {
+                adminUserId = req.user._id;
+                isStaff = true;
+                loggedInStaffId = req.user.staff_id;
+            } else {
+                adminUserId = req.user._id || req.user;
+            }
+        } else {
+            adminUserId = req.user;
+        }
+
+        if (isStaff && staffId !== loggedInStaffId) {
+            return res.status(403).json({ success: false, message: "Forbidden: You can only access your own records." });
+        }
+
+        const staff = await Staff.findOne({ _id: staffId, user_id: adminUserId }).select("staff_id f_name l_name position photo salary salary_structure overtime_rate joining_date").lean();
         if (!staff) return res.status(404).json({ success: false, message: "Staff not found" });
 
         const payrollHistory = await StaffPayroll.find({ staff_id: staffId }).sort({ year: -1, month: -1 }).lean();

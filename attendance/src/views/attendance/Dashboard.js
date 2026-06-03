@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import axios from 'axios';
 import * as faceapi from 'face-api.js';
 import Webcam from 'react-webcam';
@@ -332,6 +333,7 @@ export default function Dashboard() {
   ];
 
   const [userData, setUserData] = useState('');
+  const { currentUser } = useSelector((state) => state.auth);
   const [staffList, setStaffList] = useState([]);
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [detectedStaff, setDetectedStaff] = useState(null);
@@ -531,8 +533,14 @@ export default function Dashboard() {
               <div className="py-3">
                 <div className="mb-5 text-muted">
                   <CsLineIcons icon="scan" size={54} className="text-primary opacity-50 mb-4" />
-                  <h4 className="fw-bold text-dark mb-2">Facial Recognition System</h4>
-                  <p className="mb-0 mx-auto" style={{ maxWidth: '350px' }}>Please align your face in front of the camera to automatically identify and clock in.</p>
+                  <h4 className="fw-bold text-dark mb-2">
+                    {currentUser?.role === 'staff' ? 'Facial Recognition — Personal Access' : 'Facial Recognition System'}
+                  </h4>
+                  <p className="mb-0 mx-auto" style={{ maxWidth: '350px' }}>
+                    {currentUser?.role === 'staff'
+                      ? `Hello ${currentUser?.name || ''}! Please align your face in front of the camera to verify your identity and clock in/out.`
+                      : 'Please align your face in front of the camera to automatically identify and clock in/out.'}
+                  </p>
                 </div>
 
                 <div className="scan-btn-container">

@@ -1,4 +1,5 @@
 const User = require("../models/userModel");
+const Staff = require("../models/staffModel");
 const bcrypt = require("bcryptjs");
 const { sendEmail, sendSupportEmail } = require("../utils/emailService");
 
@@ -333,7 +334,8 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const userExists = await User.findOne({ email }).select("+password");
+    const emailRegex = new RegExp("^" + email.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i");
+    const userExists = await User.findOne({ email: emailRegex }).select("+password");
 
     if (!userExists) {
       return res
@@ -378,6 +380,30 @@ const getUserData = async (req, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    if (req.user && req.user.Role === "Staff") {
+      const staff = await Staff.findById(req.user.staff_id).lean();
+      if (!staff) {
+        return res.status(404).json({ message: "Staff not found" });
+      }
+
+      const adminUser = await User.findById(staff.user_id).select("name logo").lean();
+
+      return res.json({
+        _id: staff._id,
+        f_name: staff.f_name,
+        l_name: staff.l_name,
+        name: `${staff.f_name} ${staff.l_name}`,
+        email: staff.email,
+        phone_no: staff.phone_no,
+        position: staff.position,
+        photo: staff.photo,
+        role: "staff",
+        admin_id: staff.user_id,
+        restaurant_name: adminUser?.name || "",
+        logo: adminUser?.logo || "",
+      });
     }
 
     const userId = req.user._id || req.user; // depending on how auth stores it

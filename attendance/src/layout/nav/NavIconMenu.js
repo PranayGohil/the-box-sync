@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Modal, Button } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { settingsChangeColor } from 'settings/settingsSlice';
+import { AuthContext } from 'contexts/AuthContext';
 import IconMenuNotifications from './notifications/Notifications';
 import SearchModal from './search/SearchModal';
 
@@ -51,6 +52,7 @@ const customStyles = `
 const NavIconMenu = () => {
   const history = useHistory();
   const { color } = useSelector((state) => state.settings);
+  const { logout } = useContext(AuthContext);
   const dispatch = useDispatch();
   const brandColor = '#23b3f4';
   
@@ -70,7 +72,7 @@ const NavIconMenu = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    logout();
     console.log('User logged out');
     setShowLogoutModal(false);
     history.push('/login');

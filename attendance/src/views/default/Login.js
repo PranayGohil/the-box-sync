@@ -1,4 +1,6 @@
 import React, { useState, useContext } from 'react';
+import { useSelector } from 'react-redux';
+import { Redirect } from 'react-router-dom';
 import { Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import * as Yup from 'yup';
@@ -8,6 +10,12 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import { AuthContext } from 'contexts/AuthContext';
 
 const Login = () => {
+  const { isLogin } = useSelector((state) => state.auth);
+
+  if (isLogin) {
+    return <Redirect to="/dashboard" />;
+  }
+
   const title = 'Login — Attendance';
   const description = 'Attendance kiosk login — use your Payroll account email and password.';
 

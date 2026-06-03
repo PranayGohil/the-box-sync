@@ -113,9 +113,28 @@ const getStaffData = async (req, res) => {
 const getStaffDataById = async (req, res) => {
   try {
     const staffId = req.params.id;
-    const userId = req.user?._id || req.user;
+    
+    let adminUserId;
+    let isStaff = false;
+    let loggedInStaffId = null;
 
-    const staff = await Staff.findOne({ _id: staffId, user_id: userId }).lean();
+    if (req.user && typeof req.user === "object") {
+        if (req.user.Role === "Staff") {
+            adminUserId = req.user._id;
+            isStaff = true;
+            loggedInStaffId = req.user.staff_id;
+        } else {
+            adminUserId = req.user._id || req.user;
+        }
+    } else {
+        adminUserId = req.user;
+    }
+
+    if (isStaff && staffId !== loggedInStaffId) {
+        return res.status(403).json({ success: false, message: "Forbidden: You can only access your own profile." });
+    }
+
+    const staff = await Staff.findOne({ _id: staffId, user_id: adminUserId }).lean();
 
     if (!staff) {
       return res.status(404).json({ success: false, message: "Staff member not found" });
@@ -284,11 +303,12 @@ const updateStaff = async (req, res) => {
       }
     }
 
-    const updatedStaff = await Staff.findOneAndUpdate(
-      { _id: id, user_id: userId },
-      { $set: staffData },
-      { new: true, runValidators: true }
-    );
+    if (!staffData.password) {
+      delete staffData.password;
+    }
+
+    Object.assign(existingStaff, staffData);
+    const updatedStaff = await existingStaff.save();
 
     res.json({ success: true, message: "Staff updated successfully", staff: updatedStaff });
   } catch (error) {
@@ -338,10 +358,16 @@ const getAllFaceEncodings = async (req, res) => {
     const userId = req.user?._id || req.user;
     const today = getTodayIST();
 
-    const staff = await Staff.find({
+    const query = {
       user_id: userId,
       face_encoding: { $exists: true, $ne: null, $not: { $size: 0 } },
-    })
+    };
+
+    if (req.user && typeof req.user === "object" && req.user.Role === "Staff") {
+      query._id = req.user.staff_id;
+    }
+
+    const staff = await Staff.find(query)
       .select("_id staff_id f_name l_name email position photo face_encoding")
       .lean();
 

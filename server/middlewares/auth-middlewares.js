@@ -13,7 +13,7 @@ const authMiddleware = async (req, res, next) => {
     req.user = user;
     
     // Subscription Check for Non-Admin Panels
-    if (user.Role && user.Role !== "Admin" && user.Role !== "Super Admin") {
+    if (user.Role && user.Role !== "Admin" && user.Role !== "Super Admin" && user.Role !== "Staff") {
       let planQuery = user.Role;
       if (user.Role === "Manager") {
         planQuery = { $in: ["Manager", "QSR"] };

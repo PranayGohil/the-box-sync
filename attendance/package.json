@@ -27,10 +27,13 @@
     "country-state-city": "^3.2.1",
     "date-fns": "^2.22.1",
     "face-api.js": "^0.22.2",
+    "file-saver": "^2.0.5",
     "formik": "^2.2.9",
     "fuse.js": "^6.4.6",
     "intro.js": "^4.2.2",
     "intro.js-react": "^0.5.0",
+    "jspdf": "^2.5.1",
+    "jspdf-autotable": "^3.8.2",
     "luxon": "^2.0.1",
     "overlayscrollbars": "^1.13.1",
     "overlayscrollbars-react": "^0.2.3",
@@ -69,6 +72,7 @@
     "reduxjs-toolkit-persist": "^7.0.1",
     "sortablejs": "^1.14.0",
     "web-vitals": "^0.2.4",
+    "xlsx": "^0.18.5",
     "yup": "^0.32.9"
   },
   "scripts": {

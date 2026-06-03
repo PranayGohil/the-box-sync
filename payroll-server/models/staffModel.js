@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const bcrypt = require("bcryptjs");
 
 const addStaff = new Schema({
   staff_id: {
@@ -124,6 +125,10 @@ const addStaff = new Schema({
   user_id: {
     type: String,
   },
+  password: {
+    type: String,
+    select: false,
+  },
   // ── Compliance & Bank Details ──────────────────────────────────────────────
   bank_account: {
     account_number: { type: String, default: "" },
@@ -140,6 +145,25 @@ addStaff.index({ user_id: 1, position: 1 });
 addStaff.index({ user_id: 1, email: 1 }, { sparse: true });
 addStaff.index({ user_id: 1, staff_id: 1 }, { sparse: true });
 addStaff.index({ user_id: 1 });
+
+addStaff.pre("save", async function (next) {
+  const staff = this;
+  if (!staff.isModified("password") || !staff.password) {
+    return next();
+  }
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(staff.password, salt);
+    staff.password = hash;
+    return next();
+  } catch (error) {
+    return next(error);
+  }
+});
+
+addStaff.methods.comparePassword = async function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
 
 const Staff = mongoose.model("staff", addStaff);
 module.exports = Staff;

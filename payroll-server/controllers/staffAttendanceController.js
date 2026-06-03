@@ -108,9 +108,28 @@ const getTodayAttendance = async (req, res) => {
 const getAttendanceByStaff = async (req, res) => {
     try {
         const { staffId } = req.params;
-        const userId = req.user;
+        
+        let adminUserId;
+        let isStaff = false;
+        let loggedInStaffId = null;
 
-        const staff = await Staff.findOne({ _id: staffId, user_id: userId })
+        if (req.user && typeof req.user === "object") {
+            if (req.user.Role === "Staff") {
+                adminUserId = req.user._id;
+                isStaff = true;
+                loggedInStaffId = req.user.staff_id;
+            } else {
+                adminUserId = req.user._id || req.user;
+            }
+        } else {
+            adminUserId = req.user;
+        }
+
+        if (isStaff && staffId !== loggedInStaffId) {
+            return res.status(403).json({ success: false, message: "Forbidden: You can only access your own records." });
+        }
+
+        const staff = await Staff.findOne({ _id: staffId, user_id: adminUserId })
             .select("staff_id f_name l_name position photo salary joining_date weekly_off_policy custom_weekly_offs")
             .lean();
 
@@ -140,10 +159,29 @@ const getAttendanceByStaff = async (req, res) => {
 const getAttendanceSummary = async (req, res) => {
     try {
         const { staffId } = req.params;
-        const userId = req.user;
+        
+        let adminUserId;
+        let isStaff = false;
+        let loggedInStaffId = null;
+
+        if (req.user && typeof req.user === "object") {
+            if (req.user.Role === "Staff") {
+                adminUserId = req.user._id;
+                isStaff = true;
+                loggedInStaffId = req.user.staff_id;
+            } else {
+                adminUserId = req.user._id || req.user;
+            }
+        } else {
+            adminUserId = req.user;
+        }
+
+        if (isStaff && staffId !== loggedInStaffId) {
+            return res.status(403).json({ success: false, message: "Forbidden: You can only access your own records." });
+        }
 
         // Verify staff belongs to this user
-        const staff = await Staff.findOne({ _id: staffId, user_id: userId }).lean();
+        const staff = await Staff.findOne({ _id: staffId, user_id: adminUserId }).lean();
         if (!staff) {
             return res.status(404).json({ success: false, message: "Staff member not found" });
         }
@@ -199,6 +237,10 @@ const getAttendanceSummary = async (req, res) => {
 const checkIn = async (req, res) => {
     const { staff_id, date, in_time } = req.body;
 
+    if (req.user && typeof req.user === "object" && req.user.Role === "Staff" && req.user.staff_id !== staff_id) {
+        return res.status(403).json({ success: false, message: "Forbidden: You can only check-in for yourself." });
+    }
+
     try {
         const staff = await Staff.findById(staff_id).lean();
         if (!staff) {
@@ -232,6 +274,10 @@ const checkIn = async (req, res) => {
 // ── POST /attendance/check-out ────────────────────────────────────────────────
 const checkOut = async (req, res) => {
     const { staff_id, date, out_time } = req.body;
+
+    if (req.user && typeof req.user === "object" && req.user.Role === "Staff" && req.user.staff_id !== staff_id) {
+        return res.status(403).json({ success: false, message: "Forbidden: You can only check-out for yourself." });
+    }
 
     try {
         const staff = await Staff.findById(staff_id).lean();

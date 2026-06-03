@@ -70,5 +70,15 @@ export const AuthProvider = ({ children }) => {
     dispatch(setCurrentUserRedux(null));
   };
 
+  if (loading) {
+    return (
+      <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh', background: '#f8fafc' }}>
+        <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
   return <AuthContext.Provider value={{ currentUser, isLogin, loading, login, logout }}>{children}</AuthContext.Provider>;
 };

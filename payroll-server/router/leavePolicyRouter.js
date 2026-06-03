@@ -6,7 +6,9 @@ const authMiddleware = require('../middlewares/auth-middlewares');
 // Get leave policy for the user
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const userId = String(req.user._id || req.user);
+    const userId = (req.user && req.user.role === 'staff')
+      ? req.user.user_id
+      : String(req.user?._id || req.user);
     
     let policy = await LeavePolicy.findOne({ user_id: userId });
     

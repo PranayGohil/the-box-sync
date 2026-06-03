@@ -170,11 +170,12 @@ const updateStaff = async (req, res) => {
       }
     }
 
-    const updatedStaff = await Staff.findOneAndUpdate(
-      { _id: id, user_id: userId },
-      { $set: staffData },
-      { new: true, runValidators: true }
-    );
+    if (!staffData.password) {
+      delete staffData.password;
+    }
+
+    Object.assign(existingStaff, staffData);
+    const updatedStaff = await existingStaff.save();
 
     res.json({ success: true, message: "Staff updated successfully", staff: updatedStaff });
   } catch (error) {
