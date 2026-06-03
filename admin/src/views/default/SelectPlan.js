@@ -84,7 +84,11 @@ const SelectPlan = () => {
 
   const handlePlanSelect = (plan) => {
     setSelectedPlan(plan);
-    setSelectedAddons([]);
+    if (plan === 'Cloud') {
+      setSelectedAddons(['QSR']);
+    } else {
+      setSelectedAddons([]);
+    }
     setShowModal(true);
   };
 
@@ -152,7 +156,6 @@ const SelectPlan = () => {
           'In-built CRM',
           'Menu Management',
           'Staff Management',
-          'Unlimited Users & Terminals',
           'Unlimited Cash Register',
           'Multi-terminal Billing',
         ],
@@ -191,7 +194,6 @@ const SelectPlan = () => {
           'In-built CRM',
           'Menu Management',
           'Staff Management',
-          'Unlimited Users & Terminals',
           'Unlimited Cash Register',
           'Multi-terminal Billing',
         ],
@@ -278,15 +280,16 @@ const SelectPlan = () => {
           'In-built CRM',
           'Menu Management',
           'Staff Management',
-          'Unlimited Users & Terminals',
           'Unlimited Cash Register',
           'Multi-terminal Billing',
         ],
         addons: [
+          'QSR Panel',
           'Kitchen Display System',
           'QR-based Feedback',
           'Dynamic Reports',
           'WhatsApp Invoice',
+          'Restaurant Website',
         ],
         loyalty: [
           'Customer Profiles',
@@ -686,12 +689,12 @@ const SelectPlan = () => {
                 'Cloud Plan': { accent: '#06b6d4', glow: 'rgba(6, 182, 212, 0.35)' },
                 'Chain Plan': { accent: '#f43f5e', glow: 'rgba(244, 63, 94, 0.35)' }
               };
-              
+
               const colors = planColorMap[plan.name] || { accent: '#23b3f4', glow: 'rgba(35, 179, 244, 0.3)' };
 
               return (
                 <div key={index} className="col-12 col-md-6 col-lg-4 col-xl-5-custom mb-4">
-                  <div 
+                  <div
                     className="plan-column d-flex flex-column position-relative"
                     style={{
                       '--plan-accent': colors.accent,
@@ -932,7 +935,7 @@ const SelectPlan = () => {
 
       <Modal
         show={showSuccessModal}
-        onHide={() => { 
+        onHide={() => {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           window.location.href = '/login';
@@ -952,12 +955,12 @@ const SelectPlan = () => {
           </p>
         </Modal.Body>
         <Modal.Footer className="justify-content-center border-0 pt-0 pb-4">
-          <Button className="btn-glass-primary rounded-pill px-5" onClick={() => { 
+          <Button className="btn-glass-primary rounded-pill px-5" onClick={() => {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            window.location.href = '/login'; 
+            window.location.href = '/login';
           }}>
-            Okay, Logout
+            Okay
           </Button>
         </Modal.Footer>
       </Modal>

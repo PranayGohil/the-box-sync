@@ -825,8 +825,8 @@ const EditStaff = () => {
                         value={values.staff_id}
                         onChange={handleChange}
                         isInvalid={touched.staff_id && errors.staff_id}
-                        disabled={loading.submitting}
                         className="bg-light border-0"
+                        readOnly
                       />
                       <Form.Control.Feedback type="invalid">{errors.staff_id}</Form.Control.Feedback>
                     </Form.Group>
