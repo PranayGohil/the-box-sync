@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useContext } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
 import { MENU_PLACEMENT, MENU_BEHAVIOUR } from 'constants.js';
@@ -8,6 +8,7 @@ import { useWindowSize } from 'hooks/useWindowSize';
 import { useWindowScroll } from 'hooks/useWindowScroll';
 import allRoutes from 'routes.js';
 import { layoutShowingNavMenu } from 'layout/layoutSlice';
+import { AuthContext } from 'contexts/AuthContext';
 import MainMenuItems from './MainMenuItems';
 import {
   menuChangeAttrMenuAnimate,
@@ -24,17 +25,30 @@ const MainMenu = () => {
   const dispatch = useDispatch();
   const { placement, behaviour, placementStatus, behaviourStatus, attrMobile, breakpoints, useSidebar } = useSelector((state) => state.menu);
   const { isLogin, currentUser } = useSelector((state) => state.auth);
+  const { currentUser: contextUser } = useContext(AuthContext);
   const scrolled = useWindowScroll();
   const { width } = useWindowSize();
+
+  const filteredRoutesData = useMemo(() => {
+    const plan = contextUser?.purchasedPlan?.toLowerCase();
+    const hideKotDisplay = plan === 'cloud' || plan === 'fine dine' || plan === 'cloud kitchen' || plan === 'cloud plan' || plan === 'fine dine plan';
+    if (hideKotDisplay) {
+      return {
+        ...allRoutes,
+        mainMenuItems: allRoutes.mainMenuItems.filter((item) => !item.path?.includes('/kot-display')),
+      };
+    }
+    return allRoutes;
+  }, [contextUser]);
 
   const menuItemsMemo = useMemo(
     () =>
       getMenuItems({
-        data: attrMobile && useSidebar ? allRoutes : allRoutes.mainMenuItems,
+        data: attrMobile && useSidebar ? filteredRoutesData : filteredRoutesData.mainMenuItems,
         isLogin,
         userRole: currentUser.role,
       }),
-    [isLogin, currentUser, attrMobile, useSidebar]
+    [isLogin, currentUser, attrMobile, useSidebar, filteredRoutesData]
   );
 
   useEffect(() => {
