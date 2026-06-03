@@ -781,7 +781,7 @@ const SelectPlan = () => {
                         return (
                           <Button
                             className={`rounded-pill w-100 ${plan.recommended ? 'btn-glass-primary' : 'btn-glass'}`}
-                            onClick={() => handlePlanSelect(plan.name.split(' ')[0])}
+                            onClick={() => handlePlanSelect(plan.name.replace(' Plan', ''))}
                           >
                             Select Plan
                           </Button>
