@@ -222,7 +222,7 @@ exports.panelLogin = async (req, res) => {
 
     if (!user.isApproved) {
       console.log("User not approved by super admin");
-      return res.json({ message: "Your account is pending Super Admin approval." });
+      return res.json({ message: "Your account is pending activation from the Theboxsync side. We will notify you once it is activated." });
     }
 
     const Model = getModel(planName);
@@ -262,7 +262,7 @@ exports.panelLogin = async (req, res) => {
     if (tier && !hasAccess) {
       const fineDineFeats = ['Manager', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Reservation Manager', 'Table Management', 'Scan For Menu', 'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website', 'Create Cashier'];
       const chainFeats = ['Manager', 'QSR', 'Captain Panel', 'KOT Panel', 'Kitchen Display System', 'Reservation Manager', 'Table Management', 'Token Management', 'Scan For Menu', 'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website', 'Payroll By The Box', 'Create Cashier'];
-      
+
       if (tier === 'Fine Dine' && fineDineFeats.includes(planName)) hasAccess = true;
       if (tier === 'Chain' && chainFeats.includes(planName)) hasAccess = true;
       if ((tier === 'QSR' || tier === 'Café' || tier === 'Cloud') && ['QSR'].includes(planName)) hasAccess = true;

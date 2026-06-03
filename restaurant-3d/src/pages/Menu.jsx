@@ -13,7 +13,6 @@ export default function MenuPage() {
   const [vegFilter, setVegFilter] = useState('all'); // 'all' | 'veg' | 'nonveg'
   const [sortBy, setSortBy] = useState('popular'); // 'popular' | 'price-asc' | 'price-desc' | 'rating'
   const [showFilters, setShowFilters] = useState(false);
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [collapsedCategories, setCollapsedCategories] = useState({});
   const containerRef = useRef(null);
   const { menu, restaurantCode } = useRestaurant();
@@ -201,49 +200,30 @@ export default function MenuPage() {
           )}
         </AnimatePresence>
 
-        {/* Category Selector (Custom Dropdown) */}
-        <div className="mb-4 d-flex justify-content-center position-relative" style={{ zIndex: showCategoryDropdown ? 2000 : 10 }}>
-          <div className="position-relative w-100" style={{ maxWidth: '400px', zIndex: showCategoryDropdown ? 2000 : 10 }}>
-            <button
-              onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-              className="btn glass w-100 d-flex align-items-center justify-content-between px-4 py-3 rounded-4 border-0 transition-all"
-              type="button"
-              style={{ 
-                background: 'rgba(255, 255, 255, 0.05)',
-                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-                zIndex: 2001
-              }}
-            >
-              <span className="fw-bold text-white fs-5">{dynamicCategories.find(c => c.id === activeTab)?.label}</span>
-              <ChevronDown size={20} className={`text-brand-400 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
-            </button>
-            
-            <AnimatePresence>
-              {showCategoryDropdown && (
-                <motion.ul 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  data-lenis-prevent
-                  className="position-absolute glass-strong border-0 shadow-2xl rounded-4 mt-2 p-2 w-100 overflow-auto list-unstyled scrollbar-custom"
-                  style={{ maxHeight: '250px', zIndex: 2002, top: '100%' }}
+        {/* Category Selector (Inline Grid) */}
+        <div data-reveal="bottom" data-delay="0.2" className="mb-5">
+          <div className="row g-3 justify-content-center">
+            {dynamicCategories.map((cat) => (
+              <div key={cat.id} className="col-6 col-sm-4 col-md-3 col-lg-2">
+                <button
+                  onClick={() => handleTab(cat.id)}
+                  className={`btn w-100 h-100 d-flex align-items-center justify-content-center py-3 px-2 rounded-4 border-0 transition-all text-wrap ${
+                    activeTab === cat.id
+                      ? 'bg-brand-500 text-white shadow-lg'
+                      : 'glass text-white-60 hover:bg-white-10'
+                  }`}
+                  style={{
+                    background: activeTab === cat.id ? 'var(--brand)' : 'rgba(255, 255, 255, 0.05)',
+                    boxShadow: activeTab === cat.id ? '0 8px 24px rgba(242, 122, 26, 0.4)' : '0 8px 32px 0 rgba(0, 0, 0, 0.2)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: activeTab === cat.id ? 'scale(1.05)' : 'scale(1)',
+                    whiteSpace: 'normal',
+                  }}
                 >
-                  {dynamicCategories.map(cat => (
-                    <li key={cat.id}>
-                      <button 
-                        onClick={() => {
-                          handleTab(cat.id);
-                          setShowCategoryDropdown(false);
-                        }}
-                        className={`w-100 text-start border-0 bg-transparent rounded-3 py-2 px-3 d-flex align-items-center gap-3 transition-all ${activeTab === cat.id ? 'bg-brand-500 text-white' : 'text-white-60 hover:bg-white-10'}`}
-                      >
-                        <span className="fw-medium">{cat.label}</span>
-                      </button>
-                    </li>
-                  ))}
-                </motion.ul>
-              )}
-            </AnimatePresence>
+                  <span className="fw-semibold text-center small w-100" style={{ letterSpacing: '0.02em', whiteSpace: 'normal', wordBreak: 'break-word' }}>{cat.label}</span>
+                </button>
+              </div>
+            ))}
           </div>
         </div>
 
