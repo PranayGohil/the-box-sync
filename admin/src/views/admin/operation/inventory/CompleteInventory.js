@@ -68,6 +68,7 @@ const completeInventorySchema = Yup.object().shape({
 const CompleteInventory = () => {
   const { id } = useParams();
   const history = useHistory();
+  const dateInputRef = React.useRef(null);
   const brandColor = '#23b3f4';
   const [suggestions, setSuggestions] = useState({ vendors: [], categories: [] });
   const [initialValues, setInitialValues] = useState(null);
@@ -227,8 +228,17 @@ const CompleteInventory = () => {
                       <Col xs={12} md={3}>
                         <div className="complete-inventory-input-group-label">Bill Date</div>
                         <div className="position-relative">
-                          <Field type="date" name="bill_date" className={`complete-inventory-modern-input form-control ${touched.bill_date && errors.bill_date ? 'is-invalid' : ''}`} />
-                          <div className="position-absolute end-0 top-50 translate-middle-y me-3" style={{ pointerEvents: 'none', zIndex: 5 }}>
+                          <Field 
+                            innerRef={dateInputRef}
+                            type="date" 
+                            name="bill_date" 
+                            className={`complete-inventory-modern-input form-control ${touched.bill_date && errors.bill_date ? 'is-invalid' : ''}`} 
+                          />
+                          <div 
+                            className="position-absolute end-0 top-50 translate-middle-y me-3" 
+                            style={{ cursor: 'pointer', zIndex: 5 }}
+                            onClick={() => dateInputRef.current?.showPicker()}
+                          >
                             <CsLineIcons icon="calendar" size="16" className="text-muted" />
                           </div>
                         </div>

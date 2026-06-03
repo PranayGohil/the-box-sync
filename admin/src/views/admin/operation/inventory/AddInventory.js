@@ -32,6 +32,7 @@ const validationSchema = Yup.object().shape({
 
 const AddInventory = () => {
   const history = useHistory();
+  const dateInputRef = React.useRef(null);
   const title = 'Add Inventory';
   const brandColor = '#23b3f4';
   const [suggestions, setSuggestions] = useState({ vendors: [], categories: [], items: [] });
@@ -160,6 +161,7 @@ const AddInventory = () => {
                   <div className="add-inventory-input-group-label">Bill Date</div>
                   <div className="position-relative">
                     <Form.Control
+                      ref={dateInputRef}
                       type="date"
                       className="add-inventory-modern-input"
                       name="bill_date"
@@ -167,7 +169,11 @@ const AddInventory = () => {
                       onChange={handleChange}
                       isInvalid={touched.bill_date && errors.bill_date}
                     />
-                    <div className="position-absolute end-0 top-50 translate-middle-y me-3" style={{ pointerEvents: 'none', zIndex: 5 }}>
+                    <div 
+                      className="position-absolute end-0 top-50 translate-middle-y me-3" 
+                      style={{ cursor: 'pointer', zIndex: 5 }}
+                      onClick={() => dateInputRef.current?.showPicker()}
+                    >
                       <CsLineIcons icon="calendar" size="16" className="text-muted" />
                     </div>
                   </div>
