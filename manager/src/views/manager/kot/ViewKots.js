@@ -135,7 +135,7 @@ const ViewKots = () => {
     try {
       setLoading((prev) => ({ ...prev, initial: true }));
       setError('');
-      const response = await axios.get(`${process.env.REACT_APP_API}/kot/show?order_source=Manager,Captain`, {
+      const response = await axios.get(`${process.env.REACT_APP_API}/kot/show?order_source=Manager,Captain,QSR`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       console.log('Response:', response);
@@ -178,9 +178,9 @@ const ViewKots = () => {
     }
 
     if (dish.status !== 'Preparing') return;
-    
+
     const pendingItems = data.order_items.filter(item => item.special_notes !== 'Parcel Charge' && item.status !== 'Completed');
-    
+
     if (pendingItems.length === 1 && pendingItems[0]._id === dish._id) {
       setConfirmData({ orderSource: data.order_source, orderId: data._id, dishId: dish._id, type: 'SINGLE' });
       setShowConfirmModal(true);
@@ -436,7 +436,7 @@ const ViewKots = () => {
         </Modal.Header>
         <Modal.Body className="pt-3">
           <p className="text-muted fw-bold mb-0">
-            {confirmData?.type === 'SINGLE' 
+            {confirmData?.type === 'SINGLE'
               ? 'This is the last pending item. Marking it as completed will complete the entire KOT. Do you want to proceed?'
               : 'Are you sure you want to mark the entire KOT and all its items as completed?'}
           </p>
