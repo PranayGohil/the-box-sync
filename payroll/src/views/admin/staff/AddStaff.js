@@ -63,6 +63,8 @@ const AddStaff = () => {
   const webcamRef = useRef(null);
   const [faceDescriptor, setFaceDescriptor] = useState(null);
   const faceDescriptorRef = useRef(null);
+  const birthDateRef = useRef(null);
+  const joiningDateRef = useRef(null);
   const [faceBox, setFaceBox] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [captureStatus, setCaptureStatus] = useState('none');
@@ -844,6 +846,7 @@ const AddStaff = () => {
                       <Form.Label>Birth Date</Form.Label>
                       <div className="position-relative date-input-container">
                         <Form.Control
+                          ref={birthDateRef}
                           type="date"
                           name="birth_date"
                           value={values.birth_date}
@@ -854,7 +857,8 @@ const AddStaff = () => {
                         />
                         <div 
                           className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
-                          style={{ pointerEvents: 'none', zIndex: 4 }}
+                          style={{ cursor: 'pointer', zIndex: 5 }}
+                          onClick={() => birthDateRef.current?.showPicker()}
                         >
                           <CsLineIcons icon="calendar" size="18" className="text-primary" />
                         </div>
@@ -869,6 +873,7 @@ const AddStaff = () => {
                       <Form.Label>Joining Date</Form.Label>
                       <div className="position-relative date-input-container">
                         <Form.Control
+                          ref={joiningDateRef}
                           type="date"
                           name="joining_date"
                           value={values.joining_date}
@@ -879,7 +884,8 @@ const AddStaff = () => {
                         />
                         <div 
                           className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
-                          style={{ pointerEvents: 'none', zIndex: 4 }}
+                          style={{ cursor: 'pointer', zIndex: 5 }}
+                          onClick={() => joiningDateRef.current?.showPicker()}
                         >
                           <CsLineIcons icon="calendar" size="18" className="text-primary" />
                         </div>
