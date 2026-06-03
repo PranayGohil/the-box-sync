@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import { Row, Col, Card, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -14,6 +14,8 @@ import CreatableSelect from 'react-select/creatable';
 
 const EditStaff = () => {
   const title = 'Edit Staff';
+  const birthDateRef = useRef(null);
+  const joiningDateRef = useRef(null);
   const description = 'Edit staff details.';
   const breadcrumbs = [
     { to: '', text: 'Home' },
@@ -588,6 +590,7 @@ const EditStaff = () => {
                       <Form.Label className="small fw-bold">Birthday</Form.Label>
                       <div className="position-relative date-input-container">
                         <Form.Control
+                          ref={birthDateRef}
                           type="date"
                           name="birth_date"
                           value={values.birth_date}
@@ -598,7 +601,8 @@ const EditStaff = () => {
                         />
                         <div 
                           className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
-                          style={{ pointerEvents: 'none', zIndex: 4 }}
+                          style={{ cursor: 'pointer', zIndex: 5 }}
+                          onClick={() => birthDateRef.current?.showPicker()}
                         >
                           <CsLineIcons icon="calendar" size="18" className="text-primary" />
                         </div>
@@ -613,6 +617,7 @@ const EditStaff = () => {
                       <Form.Label className="small fw-bold">Joining Date</Form.Label>
                       <div className="position-relative date-input-container">
                         <Form.Control
+                          ref={joiningDateRef}
                           type="date"
                           name="joining_date"
                           value={values.joining_date}
@@ -623,7 +628,8 @@ const EditStaff = () => {
                         />
                         <div 
                           className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
-                          style={{ pointerEvents: 'none', zIndex: 4 }}
+                          style={{ cursor: 'pointer', zIndex: 5 }}
+                          onClick={() => joiningDateRef.current?.showPicker()}
                         >
                           <CsLineIcons icon="calendar" size="18" className="text-primary" />
                         </div>
