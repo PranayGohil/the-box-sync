@@ -177,19 +177,18 @@ const AddDishes = () => {
 
   const isFromManageMenu = location.state?.fromManageMenu || false;
   const prefilledCategory = isFromManageMenu ? location.state?.category || '' : '';
-  const prefilledMealType = isFromManageMenu ? location.state?.mealType || 'veg' : 'veg';
   const prefilledCounter = isFromManageMenu ? location.state?.counter || '' : '';
   const prefilledHideOnKot = isFromManageMenu ? location.state?.hide_on_kot || false : false;
 
   const initialValues = {
     category: prefilledCategory,
-    mealType: prefilledMealType,
     counter: prefilledCounter,
     hideOnKot: prefilledHideOnKot,
     dishes: [
       {
         _id: '',
         dish_name: '',
+        meal_type: 'veg',
         dish_img: null,
         description: '',
         variants: [{ size_name: '', price: '', extra: '', is_available: true }],
@@ -198,10 +197,10 @@ const AddDishes = () => {
     ],
   };
 
-  const getMenuCategories = async (mealType) => {
+  const getMenuCategories = async () => {
     try {
       setLoadingCategories(true);
-      const response = await axios.get(`${process.env.REACT_APP_API}/menu/get-categories?meal_type=${mealType}`, {
+      const response = await axios.get(`${process.env.REACT_APP_API}/menu/get-categories`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setSuggestions((prev) => ({ ...prev, categories: response.data.data, dishes: [] }));
@@ -293,13 +292,13 @@ const AddDishes = () => {
   };
 
   useEffect(() => {
-    getMenuCategories(prefilledMealType);
+    getMenuCategories();
     getCounters();
     fetchFullMenuData();
     if (prefilledCategory) {
       getDishesByCategory(prefilledCategory);
     }
-  }, [prefilledCategory, prefilledMealType]);
+  }, [prefilledCategory]);
 
   const handleDishNameChange = (selected, index, values, setFieldValue) => {
     const name = selected ? selected.value : '';
@@ -307,10 +306,10 @@ const AddDishes = () => {
 
     if (name) {
       const currentCategory = values.category;
-      const currentMealType = values.mealType;
 
       const matchedCategory = fullMenuData.find(
-        (c) => c.category.toLowerCase() === currentCategory.toLowerCase() && c.meal_type === currentMealType
+        (c) => c.category.toLowerCase() === currentCategory.toLowerCase() &&
+               (c.dishes || []).some((d) => d.dish_name.toLowerCase() === name.toLowerCase())
       );
 
       if (matchedCategory) {
@@ -323,6 +322,8 @@ const AddDishes = () => {
           setFieldValue(`dishes[${index}]._id`, matchedDish._id || '');
           // Autofill description
           setFieldValue(`dishes[${index}].description`, matchedDish.description || '');
+          // Autofill meal type
+          setFieldValue(`dishes[${index}].meal_type`, matchedDish.meal_type || matchedCategory.meal_type || 'veg');
 
           // Autofill variants
           if (matchedDish.variants && matchedDish.variants.length > 0) {
@@ -375,12 +376,12 @@ const AddDishes = () => {
 
   const validationSchema = Yup.object().shape({
     category: Yup.string().required('Category is required'),
-    mealType: Yup.string().required('Meal type is required'),
     counter: Yup.string(),
     hideOnKot: Yup.boolean(),
     dishes: Yup.array().of(
       Yup.object().shape({
         dish_name: Yup.string().required('Dish name is required'),
+        meal_type: Yup.string().required('Meal type is required'),
         description: Yup.string(),
         variants: Yup.array()
           .of(
@@ -406,7 +407,6 @@ const AddDishes = () => {
     try {
       const formData = new FormData();
       formData.append('category', values.category);
-      formData.append('meal_type', values.mealType);
       formData.append('counter', values.counter);
       formData.append('hide_on_kot', values.hideOnKot);
       const dishData = values.dishes.map((dish, i) => {
@@ -436,6 +436,7 @@ const AddDishes = () => {
         return {
           _id: dish._id || undefined,
           dish_name: dish.dish_name,
+          meal_type: dish.meal_type || 'veg',
           dish_price: cleanedVariants[0] ? Number(cleanedVariants[0].price) || 0 : 0,
           description: dish.description,
           has_variants: cleanedVariants.length > 1,
@@ -503,33 +504,7 @@ const AddDishes = () => {
               <Card className="glass-card mb-4 border-0">
                 <Card.Body className="p-3 p-sm-4">
                   <Row className="g-4">
-                    <Col lg={4}>
-                      <BForm.Label className="fw-bold text-muted text-uppercase small mb-3">Meal Type</BForm.Label>
-                      <div className="d-flex flex-wrap gap-2">
-                        {['veg', 'egg', 'non-veg'].map((type) => (
-                          <div
-                            key={type}
-                            className={`meal-type-radio ${type} ${values.mealType === type ? 'active' : ''}`}
-                            onClick={() => {
-                              setFieldValue('mealType', type);
-                              setFieldValue('category', '');
-                              getMenuCategories(type);
-                            }}
-                          >
-                            <div
-                              className="rounded-circle"
-                              style={{
-                                width: '12px',
-                                height: '12px',
-                                background: type === 'veg' ? '#10b981' : type === 'egg' ? '#f59e0b' : '#ef4444',
-                              }}
-                            />
-                            {type === 'veg' ? 'Veg' : type === 'egg' ? 'Egg' : 'Non-Veg'}
-                          </div>
-                        ))}
-                      </div>
-                    </Col>
-                    <Col lg={4}>
+                    <Col lg={6}>
                       <BForm.Group>
                         <BForm.Label className="fw-bold text-muted text-uppercase small mb-2">Dish Category</BForm.Label>
                         <div className="position-relative">
@@ -559,7 +534,7 @@ const AddDishes = () => {
                         </div>
                       </BForm.Group>
                     </Col>
-                    <Col lg={4}>
+                    <Col lg={6}>
                       <BForm.Group>
                         <BForm.Label className="fw-bold text-muted text-uppercase small mb-2">Counter</BForm.Label>
                         <CreatableSelect
@@ -599,7 +574,7 @@ const AddDishes = () => {
                           {values.dishes.map((dish, index) => (
                             <div
                               key={index}
-                              className="p-3 p-md-4 border-0 position-relative shadow-sm mb-3"
+                              className="p-3 p-md-4 rounded-xl border-0 position-relative shadow-sm mb-3"
                               style={{ background: '#f8fafc', borderRadius: '1.25rem' }}
                             >
                               <Button
@@ -612,7 +587,7 @@ const AddDishes = () => {
                                 <CsLineIcons icon="bin" size="16" />
                               </Button>
                               <Row className="g-2 g-md-3 align-items-end">
-                                <Col xs={12} md={4}>
+                                <Col xs={12} md={6}>
                                   <BForm.Group>
                                     <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>
                                       Dish Name
@@ -640,8 +615,33 @@ const AddDishes = () => {
                                     </div>
                                   </BForm.Group>
                                 </Col>
+                                <Col xs={12} md={6}>
+                                  <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>
+                                    Meal Type
+                                  </BForm.Label>
+                                  <div className="d-flex flex-wrap gap-2" style={{ height: '48px', alignItems: 'center' }}>
+                                    {['veg', 'egg', 'non-veg'].map((type) => (
+                                      <div
+                                        key={type}
+                                        className={`meal-type-radio ${type} ${dish.meal_type === type ? 'active' : ''}`}
+                                        onClick={() => setFieldValue(`dishes[${index}].meal_type`, type)}
+                                        style={{ flexGrow: 1, height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                      >
+                                        <div
+                                          className="rounded-circle"
+                                          style={{
+                                            width: '10px',
+                                            height: '10px',
+                                            background: type === 'veg' ? '#10b981' : type === 'egg' ? '#f59e0b' : '#ef4444',
+                                          }}
+                                        />
+                                        {type === 'veg' ? 'Veg' : type === 'egg' ? 'Egg' : 'Non-Veg'}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </Col>
                                 <Col xs={12} className="mt-3">
-                                  <div className="p-3  border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
+                                  <div className="p-3 rounded-xl border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
                                     <div className="d-flex justify-content-between align-items-center mb-3">
                                       <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '0.9rem' }}>
                                         Sizes, Pricing & Details
@@ -760,7 +760,7 @@ const AddDishes = () => {
                                 </Col>
 
                                 <Col xs={12} className="mt-2">
-                                  <div className="p-3  border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
+                                  <div className="p-3 rounded-xl border mb-3 bg-white" style={{ borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
                                     <div className="d-flex justify-content-between align-items-center mb-3">
                                       <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '0.9rem' }}>
                                         Configure Add-ons (Optional)
@@ -901,6 +901,7 @@ const AddDishes = () => {
                                 push({
                                   _id: '',
                                   dish_name: '',
+                                  meal_type: 'veg',
                                   dish_price: '',
                                   dish_img: null,
                                   description: '',

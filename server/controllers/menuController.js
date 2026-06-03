@@ -7,7 +7,7 @@ const { count } = require("console");
 const addMenu = async (req, res) => {
   try {
     const user_id = req.user;
-    let { category, meal_type, counter, hide_on_kot, dishes } = req.body;
+    let { category, counter, hide_on_kot, dishes } = req.body;
 
     let parsedDishes;
 
@@ -30,7 +30,6 @@ const addMenu = async (req, res) => {
 
     if (
       !category ||
-      !meal_type ||
       !Array.isArray(parsedDishes) ||
       parsedDishes.length === 0
     ) {
@@ -75,6 +74,7 @@ const addMenu = async (req, res) => {
 
       return {
         ...dish,
+        meal_type: dish.meal_type || "veg",
         dish_price:
           Array.isArray(parsedVariants) && parsedVariants[0]
             ? Number(parsedVariants[0].price)
@@ -101,54 +101,68 @@ const addMenu = async (req, res) => {
 
     const isHideOnKot = typeof hide_on_kot === "string" ? hide_on_kot === "true" : !!hide_on_kot;
 
-    const filter = { user_id, category, meal_type };
+    // Group parsed dishes by meal_type
+    const dishesByMealType = {};
+    parsedDishes.forEach((dish) => {
+      const mt = dish.meal_type || "veg";
+      if (!dishesByMealType[mt]) {
+        dishesByMealType[mt] = [];
+      }
+      dishesByMealType[mt].push(dish);
+    });
 
-    const existingMenu = await Menu.findOne(filter);
+    const resultMenus = [];
 
-    let resultMenu;
-    if (existingMenu) {
-      const updatedDishes = [...existingMenu.dishes];
+    for (const [mt, dishesGroup] of Object.entries(dishesByMealType)) {
+      const filter = { user_id, category, meal_type: mt };
+      const existingMenu = await Menu.findOne(filter);
 
-      parsedDishes.forEach((newDish) => {
-        const existingIndex = updatedDishes.findIndex((d) => 
-          (newDish._id && d._id.toString() === newDish._id.toString()) ||
-          (d.dish_name.toLowerCase() === newDish.dish_name.toLowerCase())
-        );
+      let resultMenu;
+      if (existingMenu) {
+        const updatedDishes = [...existingMenu.dishes];
 
-        if (existingIndex !== -1) {
-          const existingDish = updatedDishes[existingIndex];
-          updatedDishes[existingIndex] = {
-            ...existingDish.toObject ? existingDish.toObject() : existingDish,
-            ...newDish,
-            _id: existingDish._id,
-            dish_img: newDish.dish_img || existingDish.dish_img,
-          };
-        } else {
-          updatedDishes.push(newDish);
-        }
-      });
+        dishesGroup.forEach((newDish) => {
+          const existingIndex = updatedDishes.findIndex((d) => 
+            (newDish._id && d._id.toString() === newDish._id.toString()) ||
+            (d.dish_name.toLowerCase() === newDish.dish_name.toLowerCase())
+          );
 
-      existingMenu.dishes = updatedDishes;
-      existingMenu.counter = counter || existingMenu.counter;
-      existingMenu.hide_on_kot = isHideOnKot;
+          if (existingIndex !== -1) {
+            const existingDish = updatedDishes[existingIndex];
+            updatedDishes[existingIndex] = {
+              ...existingDish.toObject ? existingDish.toObject() : existingDish,
+              ...newDish,
+              _id: existingDish._id,
+              dish_img: newDish.dish_img || existingDish.dish_img,
+            };
+          } else {
+            updatedDishes.push(newDish);
+          }
+        });
 
-      resultMenu = await existingMenu.save();
-    } else {
-      resultMenu = new Menu({
-        user_id,
-        category,
-        meal_type,
-        counter: counter || null,
-        hide_on_kot: isHideOnKot,
-        dishes: parsedDishes,
-      });
-      await resultMenu.save();
+        existingMenu.dishes = updatedDishes;
+        existingMenu.counter = counter || existingMenu.counter;
+        existingMenu.hide_on_kot = isHideOnKot;
+
+        resultMenu = await existingMenu.save();
+      } else {
+        resultMenu = new Menu({
+          user_id,
+          category,
+          meal_type: mt,
+          counter: counter || null,
+          hide_on_kot: isHideOnKot,
+          dishes: dishesGroup,
+        });
+        await resultMenu.save();
+      }
+      resultMenus.push(resultMenu);
     }
 
     res.status(200).json({
       success: true,
       message: "Menu saved",
-      data: resultMenu,
+      data: resultMenus,
     });
   } catch (error) {
     console.error("Error adding menu:", error);
@@ -424,6 +438,7 @@ const updateMenu = async (req, res) => {
       has_variants,
       variants,
       addons,
+      meal_type,
     } = req.body;
 
     const userId = req.user;
@@ -454,54 +469,110 @@ const updateMenu = async (req, res) => {
       }
     }
 
-    const updateFields = {
-      "dishes.$.dish_name": dish_name,
-      "dishes.$.dish_price":
+    // Find the current menu document containing this dish
+    const currentMenu = await Menu.findOne({ user_id: userId, "dishes._id": _id });
+    if (!currentMenu) {
+      return res.status(404).json({ success: false, message: "Dish not found" });
+    }
+
+    // Find the dish inside the current menu
+    const currentDishIndex = currentMenu.dishes.findIndex(d => d._id.toString() === _id.toString());
+    if (currentDishIndex === -1) {
+      return res.status(404).json({ success: false, message: "Dish not found in menu" });
+    }
+
+    const currentDishObj = currentMenu.dishes[currentDishIndex].toObject ? currentMenu.dishes[currentDishIndex].toObject() : currentMenu.dishes[currentDishIndex];
+
+    const updatedDishObj = {
+      ...currentDishObj,
+      dish_name: dish_name !== undefined ? dish_name : currentDishObj.dish_name,
+      dish_price:
         Array.isArray(parsedVariants) && parsedVariants[0]
           ? Number(parsedVariants[0].price)
           : dish_price !== "" && dish_price != null
           ? Number(dish_price)
-          : undefined,
-      "dishes.$.description": description,
-      "dishes.$.is_special":
+          : currentDishObj.dish_price,
+      description: description !== undefined ? description : currentDishObj.description,
+      is_special:
         is_special !== undefined
           ? typeof is_special === "string" ? is_special === "true" : !!is_special
-          : undefined,
-      "dishes.$.is_available":
+          : currentDishObj.is_special,
+      is_available:
         is_available !== undefined
           ? typeof is_available === "string" ? is_available === "true" : !!is_available
-          : undefined,
-      "dishes.$.has_variants":
-        Array.isArray(parsedVariants) ? parsedVariants.length > 1 : false,
-      "dishes.$.variants": Array.isArray(parsedVariants)
+          : currentDishObj.is_available,
+      has_variants:
+        Array.isArray(parsedVariants) ? parsedVariants.length > 1 : currentDishObj.has_variants,
+      variants: Array.isArray(parsedVariants)
         ? parsedVariants.map((v) => ({
             size_name: v.size_name,
             price: v.price != null && v.price !== "" ? Number(v.price) : 0,
             extra: v.extra,
             is_available: v.is_available !== false,
           }))
-        : undefined,
-      "dishes.$.addons": Array.isArray(parsedAddons)
+        : currentDishObj.variants,
+      addons: Array.isArray(parsedAddons)
         ? parsedAddons.map((a) => ({
             addon_name: a.addon_name,
             price: a.price != null && a.price !== "" ? Number(a.price) : 0,
             is_available: a.is_available !== false,
           }))
-        : undefined,
+        : currentDishObj.addons,
+      meal_type: meal_type !== undefined ? meal_type : currentDishObj.meal_type || currentMenu.meal_type || "veg",
     };
 
     if (req.file) {
-      updateFields["dishes.$.dish_img"] = "/menu/dishes/" + req.file.filename;
+      updatedDishObj.dish_img = "/menu/dishes/" + req.file.filename;
     }
 
-    Object.keys(updateFields).forEach(
-      (key) => updateFields[key] === undefined && delete updateFields[key],
-    );
+    // Determine target meal_type
+    const targetMealType = meal_type !== undefined ? meal_type : currentMenu.meal_type || "veg";
 
-    const result = await Menu.updateOne(
-      { user_id: userId, "dishes._id": _id },
-      { $set: updateFields },
-    );
+    let result;
+    // If meal_type changed from the current menu's meal_type:
+    if (targetMealType !== currentMenu.meal_type) {
+      // 1. Pull from current menu
+      await Menu.updateOne(
+        { _id: currentMenu._id },
+        { $pull: { dishes: { _id: _id } } }
+      );
+
+      // 2. Push to target menu (find or create)
+      const targetMenu = await Menu.findOne({ user_id: userId, category: currentMenu.category, meal_type: targetMealType });
+      if (targetMenu) {
+        targetMenu.dishes.push(updatedDishObj);
+        await targetMenu.save();
+      } else {
+        const newMenu = new Menu({
+          user_id: userId,
+          category: currentMenu.category,
+          meal_type: targetMealType,
+          counter: currentMenu.counter,
+          hide_on_kot: currentMenu.hide_on_kot,
+          dishes: [updatedDishObj]
+        });
+        await newMenu.save();
+      }
+
+      // 3. Delete old menu document if it's now empty
+      const checkedOldMenu = await Menu.findById(currentMenu._id);
+      if (checkedOldMenu && checkedOldMenu.dishes.length === 0) {
+        await Menu.deleteOne({ _id: currentMenu._id });
+      }
+      result = { modifiedCount: 1 };
+    } else {
+      // If meal_type has not changed, just update in place
+      const updateFields = {};
+      Object.keys(updatedDishObj).forEach(key => {
+        if (key !== "_id") {
+          updateFields[`dishes.$.${key}`] = updatedDishObj[key];
+        }
+      });
+      result = await Menu.updateOne(
+        { user_id: userId, "dishes._id": _id },
+        { $set: updateFields }
+      );
+    }
 
     // Update hide_on_kot at the menu (category) level if provided
     if (hide_on_kot !== undefined && hide_on_kot !== null) {
@@ -510,12 +581,6 @@ const updateMenu = async (req, res) => {
         { user_id: userId, "dishes._id": _id },
         { $set: { hide_on_kot: isHideOnKot } },
       );
-    }
-
-    if (result.matchedCount === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Dish not found" });
     }
 
     res.json({ success: true, message: "Dish updated", result });

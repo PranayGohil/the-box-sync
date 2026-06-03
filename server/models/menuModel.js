@@ -25,6 +25,9 @@ const menu = new Schema({
       description: {
         type: String,
       },
+      meal_type: {
+        type: String,
+      },
       is_special: {
         type: Boolean,
         default: false,
