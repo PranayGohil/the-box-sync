@@ -135,7 +135,7 @@ const updateDishStatus = async (req, res) => {
 
 const updateAllDishStatus = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id;
     const { orderSource, orderId, status, forOnlyPreparing = false } = req.body;
 
     if (!isValidId(orderId) || !status) {
