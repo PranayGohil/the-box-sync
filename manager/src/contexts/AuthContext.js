@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }) => {
       
       // Ensure 'Manager' and 'QSR' are available if not explicitly listed but implied by plan tier
       if (['Fine Dine', 'Chain'].includes(userTier)) checkFeats.add('Manager');
-      if (['QSR', 'Café', 'Chain', 'Fine Dine', 'Cloud'].includes(userTier)) checkFeats.add('QSR');
+      if (['QSR', 'Café', 'Chain', 'Cloud'].includes(userTier)) checkFeats.add('QSR');
       
       setActivePlans(Array.from(checkFeats));
     } catch (error) {
