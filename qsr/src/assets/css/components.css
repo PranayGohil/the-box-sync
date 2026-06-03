@@ -1500,3 +1500,15 @@ textarea.add-dishes-pill-input {
 .manage-menu-text-alternate {
   color: #4b5563 !important;
 }
+
+.veg-dot {
+  background: rgb(16, 185, 129);
+}
+
+.nonveg-dot {
+  background: rgb(220, 38, 38);
+}
+
+.egg-dot {
+  background: rgb(245, 158, 11);
+}

@@ -352,7 +352,7 @@ const ManageMenu = () => {
                       <Col xs={12} sm={6} md={4} lg={3} xxl={2} key={dish.id || dish._id}>
                         <div className="pos-menu-card h-100 position-relative">
                           {/* Meal-type dot — identical to MenuGrid */}
-                          <div className={`pos-type-dot ${(dish.meal_type || category.meal_type || 'veg') === 'veg' ? 'veg' : (dish.meal_type || category.meal_type || 'veg') === 'egg' ? 'egg' : 'nonveg'}`} />
+                          <div className={`pos-type-dot ${(dish.meal_type || category.meal_type || 'veg') === 'veg' ? 'veg-dot' : (dish.meal_type || category.meal_type || 'veg') === 'egg' ? 'egg-dot' : 'nonveg-dot'}`} style={{ left: '8px' }} />
 
                           {/* Management buttons — absolute top-right overlay, icon-only, ManageTable link style */}
                           <div
