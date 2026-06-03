@@ -217,7 +217,7 @@ const MenuGrid = ({
                             {addedQty > 0 && <div className="pos-added-badge">{addedQty} Added</div>}
 
                             {/* Type Indicator */}
-                            <div className={`pos-type-dot ${category.meal_type === 'veg' ? 'veg-dot' : category.meal_type === 'egg' ? 'egg-dot' : 'nonveg-dot'}`} />
+                            <div className={`pos-type-dot ${(dish.meal_type || category.meal_type || 'veg') === 'veg' ? 'veg' : (dish.meal_type || category.meal_type || 'veg') === 'egg' ? 'egg' : 'nonveg'}`} />
 
                             {/* Image */}
                             <div className="pos-menu-img-wrap">

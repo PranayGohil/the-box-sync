@@ -175,9 +175,11 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                 }))
                 : [{ size_name: '', price: data?.dish_price || '', extra: '', is_available: true }],
             addons: data?.addons || [],
+            meal_type: data?.meal_type || 'veg',
         },
         validationSchema: Yup.object().shape({
             dish_name: Yup.string().required('Dish name is required'),
+            meal_type: Yup.string().required('Meal type is required'),
             description: Yup.string(),
             variants: Yup.array()
                 .of(
@@ -206,6 +208,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                 formData.append('is_special', values.is_special);
                 formData.append('is_available', values.is_available);
                 formData.append('hide_on_kot', values.hide_on_kot);
+                formData.append('meal_type', values.meal_type);
 
                 let cleanedVariants = [];
                 if (Array.isArray(values.variants)) {
@@ -290,7 +293,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
             <Modal.Body className="py-4">
                 <Form id="edit_dish_form" onSubmit={formik.handleSubmit}>
                     <Row className="g-3">
-                        <Col md={8}>
+                        <Col md={5}>
                             <Form.Group className="mb-4">
                                 <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Dish Name</Form.Label>
                                 <Form.Control
@@ -301,6 +304,28 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                                     disabled={isSubmitting}
                                     className="pill-input shadow-sm"
                                     placeholder="Enter dish name"
+                                />
+                            </Form.Group>
+                        </Col>
+
+                        <Col md={3}>
+                            <Form.Group className="mb-4">
+                                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Meal Type</Form.Label>
+                                <Select
+                                    classNamePrefix="react-select"
+                                    options={[
+                                        { value: 'veg', label: 'Veg' },
+                                        { value: 'non-veg', label: 'Non-Veg' },
+                                        { value: 'egg', label: 'Egg' },
+                                    ]}
+                                    value={{
+                                        value: formik.values.meal_type,
+                                        label: formik.values.meal_type === 'veg' ? 'Veg' : formik.values.meal_type === 'non-veg' ? 'Non-Veg' : 'Egg'
+                                    }}
+                                    onChange={(selected) => formik.setFieldValue('meal_type', selected ? selected.value : 'veg')}
+                                    placeholder="Select type"
+                                    isDisabled={isSubmitting}
+                                    styles={selectStyles}
                                 />
                             </Form.Group>
                         </Col>

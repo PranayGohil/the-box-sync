@@ -447,8 +447,7 @@ const dineInController = async (req, res) => {
   try {
     let { orderInfo, tableId, customerInfo } = req.body;
     const orderId = orderInfo.order_id;
-    orderInfo.user_id = req.user;
-    console.log("Order Info : ", req.body);
+    orderInfo.user_id = req.user._id;
 
     orderInfo = recalculateOrderTotals(orderInfo);
 
@@ -690,7 +689,7 @@ const takeawayController = async (req, res) => {
   try {
     let { orderInfo, customerInfo } = req.body;
     const orderId = orderInfo.order_id;
-    orderInfo.user_id = req.user;
+    orderInfo.user_id = req.user._id;
 
     orderInfo = recalculateOrderTotals(orderInfo);
 
@@ -901,7 +900,7 @@ const deliveryController = async (req, res) => {
   try {
     let { orderInfo, customerInfo } = req.body;
     const orderId = orderInfo.order_id;
-    orderInfo.user_id = req.user;
+    orderInfo.user_id = req.user._id;
 
     orderInfo = recalculateOrderTotals(orderInfo);
 
