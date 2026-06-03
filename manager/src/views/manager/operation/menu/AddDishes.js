@@ -498,7 +498,7 @@ const AddDishes = () => {
         </div>
 
         <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit} enableReinitialize>
-          {({ values, handleChange, setFieldValue }) => (
+          {({ values, handleChange, setFieldValue, errors }) => (
             <Form>
               <Card className="glass-card mb-4 border-0">
                 <Card.Body className="p-3 p-sm-4">
@@ -646,7 +646,9 @@ const AddDishes = () => {
                                       <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '0.9rem' }}>
                                         Sizes, Pricing & Details
                                       </h6>
-                                      <ErrorMessage name={`dishes[${index}].variants`} component="div" className="text-danger small fw-bold" />
+                                      {errors.dishes?.[index]?.variants && typeof errors.dishes[index].variants === 'string' && (
+                                        <div className="text-danger small fw-bold">{errors.dishes[index].variants}</div>
+                                      )}
                                     </div>
                                     <FieldArray name={`dishes[${index}].variants`}>
                                       {({ push: pushVariant, remove: removeVariant }) => (

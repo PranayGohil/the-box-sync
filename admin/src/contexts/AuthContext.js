@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
                     Authorization: `Bearer ${token}`,
                 },
             })
-                .then((res) => {
+                .then(async (res) => {
                     if (res.data === "Null") {
                         console.log("Null Token Expired");
                         localStorage.removeItem("token");
@@ -76,7 +76,7 @@ export const AuthProvider = ({ children }) => {
                     setCurrentUser(res.data);
                     setIsLogin(true);
                     dispatch(setReduxUser(res.data));
-                    fetchUserSubscriptions(res.data);
+                    await fetchUserSubscriptions(res.data);
                 })
                 .catch(() => {
                     localStorage.removeItem("token");

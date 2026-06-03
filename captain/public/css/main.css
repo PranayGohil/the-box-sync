@@ -706,6 +706,18 @@ main,
   width: 20%; /* 5 items per row */
 }
 
+.veg-dot {
+  background: rgb(16, 185, 129);
+}
+
+.nonveg-dot {
+  background: rgb(220, 38, 38);
+}
+
+.egg-dot {
+  background: rgb(245, 158, 11);
+}
+
 @media (max-width: 1199px) {
   .pos-order-panel {
     display: none !important;
