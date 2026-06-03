@@ -1,6 +1,7 @@
 require("dotenv").config({ path: __dirname + "/../.env" });
 const mongoose = require("mongoose");
 const SubscriptionPlan = require("../models/subscriptionPlanModel");
+const Subscription = require("../models/subscriptionModel");
 
 const seedNewPlans = async () => {
   try {
@@ -23,8 +24,7 @@ const seedNewPlans = async () => {
       { plan_name: "Reservation Manager", plan_price: 100, plan_duration: 12, is_addon: true, features: ["Reservation management"] },
       { plan_name: "Payroll By The Box", plan_price: 100, plan_duration: 12, is_addon: true, features: ["TheBoxSync Payroll"] },
       { plan_name: "Dynamic Reports", plan_price: 100, plan_duration: 12, is_addon: true, features: ["Dynamic Reports"] },
-      { plan_name: "KOT Panel", plan_price: 100, plan_duration: 12, is_addon: true, features: ["Kitchen Order Management"] },
-      { plan_name: "Kitchen Display System", plan_price: 100, plan_duration: 12, is_addon: true, features: ["Kitchen Display System"] },
+      { plan_name: "KOT Panel", plan_price: 100, plan_duration: 12, is_addon: true, features: ["Kitchen Display System"] },
       { plan_name: "Waiter Calling System", plan_price: 100, plan_duration: 12, is_addon: true, features: ["Waiter calling system"] },
       { plan_name: "Token Management", plan_price: 100, plan_duration: 12, is_addon: true, features: ["Token management"] },
       { plan_name: "Whatsapp-Invoice", plan_price: 100, plan_duration: 12, is_addon: true, features: ["WhatsApp Invoice"] }
@@ -58,7 +58,6 @@ const seedNewPlans = async () => {
           "Online Order Reconciliation",
           "QSR",
           "KOT Panel",
-          "Kitchen Display System",
           "Token Management",
           "Scan For Menu",
           "Feedback",
@@ -78,7 +77,6 @@ const seedNewPlans = async () => {
           "Online Order Reconciliation",
           "QSR",
           "KOT Panel",
-          "Kitchen Display System",
           "Token Management",
           "Scan For Menu",
           "Feedback",
@@ -99,7 +97,6 @@ const seedNewPlans = async () => {
           "Online Order Reconciliation",
           "Captain Panel",
           "KOT Panel",
-          "Kitchen Display System",
           "Reservation Manager",
           "Scan For Menu",
           "Feedback",
@@ -121,7 +118,6 @@ const seedNewPlans = async () => {
           "Online Order Reconciliation",
           "QSR",
           "KOT Panel",
-          "Kitchen Display System",
           "Feedback",
           "Dynamic Reports",
           "Whatsapp-Invoice",
@@ -141,7 +137,6 @@ const seedNewPlans = async () => {
           "QSR",
           "Captain Panel",
           "KOT Panel",
-          "Kitchen Display System",
           "Reservation Manager",
           "Token Management",
           "Scan For Menu",
@@ -163,6 +158,11 @@ const seedNewPlans = async () => {
       );
       console.log(`✅ Upserted New Bundle: ${bundle.plan_name}`);
     }
+
+    // Delete old Kitchen Display System plan and subscription records
+    await SubscriptionPlan.deleteMany({ plan_name: "Kitchen Display System" });
+    await Subscription.deleteMany({ plan_name: "Kitchen Display System" });
+    console.log("🗑️ Cleaned up Kitchen Display System records from DB.");
 
     console.log("Seeding complete successfully.");
     process.exit(0);
