@@ -56,12 +56,6 @@ const allRoutes = {
       planRequirement: ['Staff Management'],
     },
     {
-      path: `${appRoot}/settings`,
-      label: 'Settings',
-      icon: 'gear',
-      component: admin.settings,
-    },
-    {
       path: `${appRoot}/crm-settings`,
       label: 'CRM & Loyalty',
       icon: 'gift',
@@ -83,6 +77,12 @@ const allRoutes = {
         { path: '/financial', label: 'Financial Report', component: report.financial },
         { path: '/inventory', label: 'Inventory Report', component: report.inventory },
       ],
+    },
+    {
+      path: `${appRoot}/settings`,
+      label: 'Settings',
+      icon: 'gear',
+      component: admin.settings,
     },
     {
       path: `${appRoot}/select-plan`,
