@@ -6,7 +6,7 @@ const { count } = require("console");
 
 const addMenu = async (req, res) => {
   try {
-    const user_id = req.user;
+    const user_id = req.user._id;
     let { category, counter, hide_on_kot, dishes } = req.body;
 
     let parsedDishes;
@@ -174,7 +174,7 @@ const addMenu = async (req, res) => {
 
 const getMenuData = async (req, res) => {
   try {
-    const query = { user_id: req.user };
+    const query = { user_id: req.user._id };
 
     const projection = {
       category: 1,
@@ -250,7 +250,7 @@ const getMenuDataByToken = async (req, res) => {
 
 const getMenuCategories = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id;
     const { meal_type } = req.query;
     const filter = { user_id: userId };
 
@@ -269,7 +269,7 @@ const getMenuCategories = async (req, res) => {
 
 const getMenuCounterOptions = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id;
 
     const counters = await Menu.distinct("counter", {
       user_id: userId,
@@ -285,7 +285,7 @@ const getMenuCounterOptions = async (req, res) => {
 
 const getMenuSuggestions = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id;
     const { types } = req.query;
 
     if (!types) {
@@ -338,7 +338,7 @@ const getMenuSuggestions = async (req, res) => {
 
 const getDishesByCategory = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id;
     const { category } = req.query;
 
     if (!category) {
@@ -370,7 +370,7 @@ const getDishesByCategory = async (req, res) => {
 const getMenuDataById = async (req, res) => {
   try {
     const dishId = req.params.id;
-    const userId = req.user;
+    const userId = req.user._id;
 
     const menu = await Menu.findOne(
       { user_id: userId, "dishes._id": dishId },
@@ -394,7 +394,7 @@ const updateMenuCategoryAndMealType = async (req, res) => {
   try {
     const id = req.params.id;
     let { category, meal_type, counter, hide_on_kot } = req.body;
-    const userId = req.user;
+    const userId = req.user._id;
 
     if (counter === "") {
       counter = null;
@@ -441,7 +441,7 @@ const updateMenu = async (req, res) => {
       meal_type,
     } = req.body;
 
-    const userId = req.user;
+    const userId = req.user._id;
 
     let parsedVariants;
     if (variants) {
@@ -592,7 +592,7 @@ const updateMenu = async (req, res) => {
 
 const deleteMenu = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id;
     const dishId = req.params.id;
 
     const menu = await Menu.findOne(
