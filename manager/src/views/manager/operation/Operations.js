@@ -303,18 +303,20 @@ const Operations = () => {
             <Route path="/operations/order-details/:id" component={OrderDetails} />
 
             {activePlans.includes('Reservation Manager') && (
-              <>
-                <Route path="/operations/manage-reservations" component={ManageReservations} />
-                <Route path="/operations/reservation-form" render={() => <ReservationForm restaurantUserId={currentUser?._id} />} />
-                <Route path="/operations/qr-for-reservation" component={QRforReservation} />
-              </>
+              <Route path="/operations/manage-reservations" component={ManageReservations} />
+            )}
+            {activePlans.includes('Reservation Manager') && (
+              <Route path="/operations/reservation-form" render={() => <ReservationForm restaurantUserId={currentUser?._id} />} />
+            )}
+            {activePlans.includes('Reservation Manager') && (
+              <Route path="/operations/qr-for-reservation" component={QRforReservation} />
             )}
 
             {activePlans.includes('Table Management') && (
-              <>
-                <Route path="/operations/manage-table" component={ManageTable} />
-                <Route path="/operations/add-table" component={AddTable} />
-              </>
+              <Route path="/operations/manage-table" component={ManageTable} />
+            )}
+            {activePlans.includes('Table Management') && (
+              <Route path="/operations/add-table" component={AddTable} />
             )}
 
             <Route path="/operations/manage-menu" component={ManageMenu} />
@@ -336,10 +338,10 @@ const Operations = () => {
             <Route path="/operations/inventory-report" component={InventoryReport} />
 
             {activePlans.includes('Feedback') && (
-              <>
-                <Route path="/operations/feedback" component={Feedback} />
-                <Route path="/operations/qr-for-feedback" component={QRforFeedback} />
-              </>
+              <Route path="/operations/feedback" component={Feedback} />
+            )}
+            {activePlans.includes('Feedback') && (
+              <Route path="/operations/qr-for-feedback" component={QRforFeedback} />
             )}
           </Switch>
         </Col>
