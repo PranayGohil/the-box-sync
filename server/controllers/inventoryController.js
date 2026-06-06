@@ -6,7 +6,7 @@ const StockUsageLog = require("../models/stockUsageLogModel");
 
 const getInventoryData = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id || req.user;
     const { page = 1, limit = 20 } = req.query;
     const pageNumber = parseInt(page, 10) || 1;
     const pageSize = parseInt(limit, 10) || 20;
@@ -54,7 +54,7 @@ const getInventoryData = async (req, res) => {
 
 const getInventoryDataByStatus = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id || req.user;
     const { status } = req.params;
     const {
       page = 1,
@@ -162,7 +162,7 @@ const getInventoryDataByStatus = async (req, res) => {
 const getInventoryDataById = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user;
+    const userId = req.user._id || req.user;
 
     const data = await Inventory.findOne({ _id: id, user_id: userId }).lean();
 
@@ -179,7 +179,7 @@ const getInventoryDataById = async (req, res) => {
 
 const getInventorySuggestions = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id || req.user;
     const { types } = req.query;
 
     if (!types) {
@@ -235,7 +235,7 @@ const getInventorySuggestions = async (req, res) => {
 
 const addInventory = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id || req.user;
     const fileNames = (req.files || []).map(
       (file) => `/inventory/bills/${file.filename}`
     );
@@ -281,7 +281,7 @@ const addInventory = async (req, res) => {
 const addInventoryRequest = async (req, res) => {
   try {
     let { items, ...rest } = req.body;
-    const user = req.user; // assuming auth middleware attaches user object
+    const userId = req.user._id || req.user;
 
     if (typeof items === "string") {
       try {
@@ -294,7 +294,7 @@ const addInventoryRequest = async (req, res) => {
 
     const inventoryData = {
       ...rest,
-      user_id: user._id || user,
+      user_id: userId,
       items,
       status: "Requested",
     };
@@ -304,10 +304,10 @@ const addInventoryRequest = async (req, res) => {
     const io = req.app.get("io");
     const connectedUsers = req.app.get("connectedUsers");
 
-    const adminKey = `${user._id}_Admin`; // or however you store admin socket
+    const adminKey = `${userId}_Admin`; // or however you store admin socket
     if (io && connectedUsers && connectedUsers[adminKey]) {
       const notification = await Notification.create({
-        restaurant_id: user._id,
+        restaurant_id: userId,
         sender: "Manager",
         receiver: "Admin",
         type: "new_inventory_request",
@@ -333,7 +333,7 @@ const addInventoryRequest = async (req, res) => {
 
 const updateInventory = async (req, res) => {
   const { id } = req.params;
-  const userId = req.user;
+  const userId = req.user._id || req.user;
   const updatedData = { ...req.body };
 
   try {
@@ -411,7 +411,7 @@ const updateInventory = async (req, res) => {
 const deleteInventory = async (req, res) => {
   try {
     const inventoryId = req.params.id;
-    const userId = req.user;
+    const userId = req.user._id || req.user;
 
     const result = await Inventory.deleteOne({
       _id: inventoryId,
@@ -529,7 +529,7 @@ const completeInventoryRequest = async (req, res) => {
 
 const rejectInventoryRequest = async (req, res) => {
   const id = req.params.id;
-  const userId = req.user;
+  const userId = req.user._id || req.user;
   const { reject_reason } = req.body;
 
   try {
