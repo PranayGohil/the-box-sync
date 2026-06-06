@@ -429,10 +429,29 @@
                                     <div class="field-error" id="err-name">Please enter your full name.</div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="email">Email</label>
-                                    <input type="email" name="email" id="email" class="form-control w-100"
-                                        placeholder="Enter your email address">
+                                    <label for="email">Email <span style="color:#c8121c;">*</span></label>
+                                    <div class="input-group">
+                                        <input type="email" name="email" id="email" class="form-control"
+                                            placeholder="Enter your email address" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                                        <button class="theme-btn btn-sm" type="button" id="sendOtpBtn" style="padding: 10px 20px; font-size: 13px; height: auto; border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                            Send OTP
+                                        </button>
+                                    </div>
                                     <div class="field-error" id="err-email">Enter a valid email address.</div>
+                                </div>
+                            </div>
+
+                            <div class="form-group row" id="otpGroup" style="display: none; margin-top: 15px;">
+                                <div class="col-12">
+                                    <label for="otp">Enter Verification Code (OTP) <span style="color:#c8121c;">*</span></label>
+                                    <div class="input-group" style="max-width: 400px;">
+                                        <input type="text" name="otp" id="otp" class="form-control" placeholder="Enter 6-digit OTP" maxlength="6" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                                        <button class="theme-btn btn-sm" type="button" id="verifyOtpBtn" style="padding: 10px 20px; font-size: 13px; height: auto; border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                            Verify Code
+                                        </button>
+                                    </div>
+                                    <div class="field-error" id="err-otp">Invalid or expired code. Please check and try again.</div>
+                                    <div class="alert-msg alert-success" id="otpSuccess" style="display: none; margin-top: 8px; padding: 8px 12px;">Email verified successfully!</div>
                                 </div>
                             </div>
 
@@ -689,6 +708,8 @@
 
         // ── STATE ──────────────────────────────────────────────────────────────
         let feedbackToken = null;
+        let emailVerified = false;
+        let otpCooldownTimer = null;
 
         // ── HELPERS ────────────────────────────────────────────────────────────
         const qs = (id) => document.getElementById(id);
@@ -703,10 +724,11 @@
         }
 
         // ── Show / hide the top banner error ──
-        function showFormError(msg) {
+        function showFormError(msg, isSuccess = false) {
             const el = qs('formError');
             el.textContent = msg;
-            el.classList.add('show');
+            el.classList.remove('alert-danger', 'alert-success');
+            el.classList.add('show', isSuccess ? 'alert-success' : 'alert-danger');
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
@@ -717,7 +739,9 @@
         }
 
         function hideFormError() {
-            qs('formError').classList.remove('show');
+            const el = qs('formError');
+            el.classList.remove('show', 'alert-success');
+            el.classList.add('alert-danger');
         }
 
         // ── Show / hide a field-level error ──
@@ -751,7 +775,111 @@
             // Token exists — show the form
             qs('feedbackContent').style.display = 'block';
             qs('feedbackForm').addEventListener('submit', handleSubmit);
+
+            // -- Event listener for Send OTP --
+            qs('sendOtpBtn').addEventListener('click', async () => {
+                const email = qs('email').value.trim();
+                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    showFieldError('err-email', true);
+                    setInputError('email', true);
+                    return;
+                }
+                showFieldError('err-email', false);
+                setInputError('email', false);
+                hideFormError();
+
+                const btn = qs('sendOtpBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spin" style="width:12px; height:12px; margin-right:4px;"></span> Sending...';
+
+                try {
+                    const res = await fetch(`${API_BASE}/otp/send-verification`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, purpose: 'feedback_verification' })
+                    });
+                    const data = await res.json();
+                    if (!data.success) throw new Error(data.message);
+
+                    // Show OTP input group
+                    qs('otpGroup').style.display = 'flex';
+                    startOtpCooldown();
+                    showFieldError('err-otp', false);
+                    qs('otpSuccess').style.display = 'none';
+
+                    // Alert success
+                    showFormError('Verification code sent to your email.', true);
+                } catch (err) {
+                    showFormError(err.message || 'Failed to send OTP code. Please try again.');
+                    btn.disabled = false;
+                    btn.textContent = 'Send OTP';
+                }
+            });
+
+            // -- Event listener for Verify OTP --
+            qs('verifyOtpBtn').addEventListener('click', async () => {
+                const email = qs('email').value.trim();
+                const code = qs('otp').value.trim();
+                if (!code || code.length !== 6) {
+                    showFieldError('err-otp', true);
+                    setInputError('otp', true);
+                    return;
+                }
+                showFieldError('err-otp', false);
+                setInputError('otp', false);
+                hideFormError();
+
+                const btn = qs('verifyOtpBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spin" style="width:12px; height:12px; margin-right:4px;"></span> Verifying...';
+
+                try {
+                    const res = await fetch(`${API_BASE}/otp/verify-email`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, code, purpose: 'feedback_verification' })
+                    });
+                    const data = await res.json();
+                    if (!data.success) throw new Error(data.message);
+
+                    emailVerified = true;
+                    qs('otpSuccess').style.display = 'block';
+                    qs('otpSuccess').textContent = 'Email verified successfully!';
+                    qs('email').disabled = true;
+                    qs('otp').disabled = true;
+                    qs('sendOtpBtn').disabled = true;
+                    qs('verifyOtpBtn').disabled = true;
+                    showFieldError('err-otp', false);
+
+                    // Alert success
+                    showFormError('Email verified successfully! You can now submit feedback.', true);
+                } catch (err) {
+                    showFieldError('err-otp', true);
+                    qs('err-otp').textContent = err.message || 'Invalid or expired OTP.';
+                    setInputError('otp', true);
+                    btn.disabled = false;
+                    btn.textContent = 'Verify Code';
+                }
+            });
         });
+
+        function startOtpCooldown() {
+            let cooldown = 60;
+            const btn = qs('sendOtpBtn');
+            btn.disabled = true;
+            
+            if (otpCooldownTimer) clearInterval(otpCooldownTimer);
+            otpCooldownTimer = setInterval(() => {
+                cooldown--;
+                if (cooldown <= 0) {
+                    clearInterval(otpCooldownTimer);
+                    btn.disabled = false;
+                    btn.textContent = 'Resend OTP';
+                } else {
+                    btn.textContent = `Resend in ${cooldown}s`;
+                }
+            }, 1000);
+        }
 
 
         // ── HANDLE SUBMIT ──────────────────────────────────────────────────────
@@ -786,9 +914,16 @@
                 setInputError('name', false);
             }
 
-            if (customer_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer_email)) {
+            if (!customer_email) {
                 showFieldError('err-email', true);
                 setInputError('email', true);
+                valid = false;
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer_email)) {
+                showFieldError('err-email', true);
+                setInputError('email', true);
+                valid = false;
+            } else if (!emailVerified) {
+                showFormError('Please verify your email address using OTP.');
                 valid = false;
             } else {
                 showFieldError('err-email', false);

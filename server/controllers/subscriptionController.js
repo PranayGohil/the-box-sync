@@ -81,7 +81,7 @@ const getAddonPlans = async (req, res) => {
 
 const getUserSubscriptionInfo = async (req, res) => {
   try {
-    const userId = req.user; // if this is already the _id from JWT
+    const userId = req.user._id; // if this is already the _id from JWT
 
     // Only For Testing Remove in Production and Trust on Cron Job
     // -------------------------------------------------------------
@@ -135,7 +135,7 @@ const getUserSubscriptionInfoById = async (req, res) => {
 const buySubscriptionPlan = async (req, res) => {
   try {
     const planId = req.params.id;
-    const userId = req.user;
+    const userId = req.user._id;
 
     if (!userId) {
       return res.status(401).json({ message: "User not authenticated" });
@@ -340,7 +340,7 @@ const renewSubscription = async (req, res) => {
 
 const buyCompletePlan = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id;
     const { planType, chosenAddons = [] } = req.body;
 
     if (!userId || !planType) {

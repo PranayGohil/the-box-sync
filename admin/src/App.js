@@ -15,9 +15,14 @@ import { AuthContext } from 'contexts/AuthContext';
 
 const App = () => {
   const { currentUser, isLogin } = useSelector((state) => state.auth);
-  const { activePlans } = React.useContext(AuthContext);
+  const { activePlans, loading } = React.useContext(AuthContext);
 
   const routes = useMemo(() => getRoutes({ data: allRoutes, isLogin, userRole: currentUser.role, activePlans }), [isLogin, currentUser, activePlans]);
+
+  if (loading) {
+    return <Loading />;
+  }
+
   if (routes) {
     if (isLogin && currentUser) {
       const path = window.location.pathname;

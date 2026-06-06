@@ -112,7 +112,6 @@ const QRforMenu = ({ setSection }) => {
           <div class="print-container">
             <h2>Scan to View Menu</h2>
             ${printContent}
-            <div class="url">${menuLink}</div>
           </div>
         </body>
       </html>

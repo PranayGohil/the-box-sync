@@ -68,7 +68,7 @@ const ManageWebsite = () => {
 
   const { currentUser } = React.useContext(AuthContext);
   const restaurant_code = currentUser?.restaurant_code;
-  const publicLink = restaurant_code ? `http://localhost:5173/${restaurant_code}` : '';
+  const publicLink = restaurant_code ? `${process.env.REACT_APP_WEBSITE_URL}/${restaurant_code}` : '';
 
   const formik = useFormik({
     initialValues: {

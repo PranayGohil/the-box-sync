@@ -136,7 +136,6 @@ const QRforFeedback = () => {
           <div class="print-container">
             <h2>Scan to Provide Feedback</h2>
             ${printContent}
-            <div class="url">${feedbackLink}</div>
           </div>
         </body>
       </html>
