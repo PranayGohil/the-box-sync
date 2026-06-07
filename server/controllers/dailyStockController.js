@@ -578,11 +578,37 @@ const getDailyReport = async (req, res) => {
         return a.days_until_stockout - b.days_until_stockout;
       });
 
+    // Build a map of opening items
+    const openingMap = {};
+    if (openings && openings.length > 0) {
+      openings.forEach((op) => {
+        if (op.items) {
+          op.items.forEach((item) => {
+            openingMap[item.item_name] = (openingMap[item.item_name] || 0) + item.quantity;
+          });
+        }
+      });
+    }
+
+    // Build a map of closing items
+    const closingMap = {};
+    if (closings && closings.length > 0) {
+      closings.forEach((cl) => {
+        if (cl.items) {
+          cl.items.forEach((item) => {
+            closingMap[item.item_name] = (closingMap[item.item_name] || 0) + item.quantity;
+          });
+        }
+      });
+    }
+
     // Build per-item summary
     const allItems = [...new Set([
       ...liveStock.map((s) => s._id),
       ...receivedAgg.map((r) => r._id),
       ...wastageAgg.map((w) => w._id),
+      ...Object.keys(openingMap),
+      ...Object.keys(closingMap),
     ])];
 
     const receivedMap = {};
@@ -605,7 +631,19 @@ const getDailyReport = async (req, res) => {
       const unit = liveMap[name]?.unit || receivedMap[name]?.unit || "";
       const totalHandled = used + wasted;
       const wastagePercent = totalHandled > 0 ? Math.round((wasted / totalHandled) * 100) : 0;
-      return { item_name: name, unit, received, used, wasted, current_stock: current, wastage_percent: wastagePercent };
+      const openingQty = openingMap[name] !== undefined ? openingMap[name] : null;
+      const closingQty = closingMap[name] !== undefined ? closingMap[name] : null;
+      return {
+        item_name: name,
+        unit,
+        received,
+        used,
+        wasted,
+        current_stock: current,
+        wastage_percent: wastagePercent,
+        opening: openingQty,
+        closing: closingQty,
+      };
     }).sort((a, b) => a.item_name.localeCompare(b.item_name));
 
     // Wastage pattern summary (top wasted items)

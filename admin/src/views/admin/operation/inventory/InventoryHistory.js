@@ -1,329 +1,982 @@
-import React, { useState, useEffect, useCallback, useContext, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Badge, Button, Col, Row, Modal, Spinner, Alert, Card, Collapse, Form } from 'react-bootstrap';
-import { useTable, useGlobalFilter, useSortBy } from 'react-table';
+import { Badge, Button, Col, Row, Modal, Spinner, Alert, Card, Form, Table, Nav } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import { AuthContext } from 'contexts/AuthContext';
-import ControlsSearch from './components/ControlsSearch';
-import ControlsPageSize from './components/ControlsPageSize';
-import TablePagination from './components/TablePagination';
+import Select from 'react-select';
+import { format } from 'date-fns';
 
+// ── API Imports ──────────────────────────────────────────────────────────────
+import {
+  getCurrentStock,
+  updateItemSettings,
+  getDailyReport,
+  getWastageLog,
+  deleteWastageEntry,
+  getCorrectionRequests,
+  resolveCorrectionRequest
+} from 'api/inventory';
 
+// ── Custom Shared Styles ─────────────────────────────────────────────────────
+const customStyles = `
+  .workstation-container {
+    background: #f8fafc;
+    min-height: 100vh;
+    padding-bottom: 5rem;
+  }
+  .nav-pills-custom .nav-link {
+    border-radius: 50px !important;
+    padding: 0.6rem 1.5rem !important;
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+    color: #64748b !important;
+    background: #ffffff !important;
+    border: 1.5px solid #e2e8f0 !important;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.25s ease;
+  }
+  .nav-pills-custom .nav-link.active {
+    color: #ffffff !important;
+    background: #23b3f4 !important;
+    border-color: #23b3f4 !important;
+    box-shadow: 0 4px 15px rgba(35, 179, 244, 0.25) !important;
+  }
+  .workstation-card {
+    background: #ffffff !important;
+    border-radius: 1.5rem !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.01) !important;
+    overflow: hidden;
+  }
+  .table-reconcile thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 1rem 1.25rem;
+    border-bottom: 2px solid #e2e8f0;
+  }
+  .table-reconcile tbody td {
+    padding: 1rem 1.25rem;
+    font-size: 0.875rem;
+    color: #334155;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .modern-input {
+    border-radius: 10px !important;
+    border: 1.5px solid #e2e8f0 !important;
+    padding: 0.5rem 1rem !important;
+    font-weight: 600 !important;
+    height: 42px !important;
+    background: #fcfdfe !important;
+    transition: all 0.25s ease !important;
+  }
+  .modern-input:focus {
+    border-color: #23b3f4 !important;
+    box-shadow: 0 0 0 3px rgba(35, 179, 244, 0.1) !important;
+    background: #ffffff !important;
+  }
+  .stats-card-sub {
+    border-radius: 1.25rem !important;
+    border: 1px solid #f1f5f9 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+  }
+  .select-modern .react-select__control {
+    border-radius: 10px !important;
+    border: 1.5px solid #e2e8f0 !important;
+    min-height: 40px !important;
+    background: #fcfdfe !important;
+    font-weight: 600 !important;
+  }
+  .select-modern .react-select__control--is-focused {
+    border-color: #23b3f4 !important;
+    box-shadow: 0 0 0 3px rgba(35, 179, 244, 0.1) !important;
+  }
+  .inventory-history-status-badge {
+    font-size: 0.65rem !important;
+    font-weight: 800 !important;
+    text-transform: uppercase;
+    padding: 0.45rem 1rem !important;
+    border-radius: 50px !important;
+  }
+`;
 
-// Shared Sub-Components
-const TableControls = ({ onSearch, showFilters, setShowFilters, activeFilterCount, pageIndex, pageSize, totalRecords, onPageSizeChange, isLoading }) => (
-  <div className="inventory-history-search-filter-hub border-0 shadow-sm">
+const typeColors = {
+  expired: 'danger',
+  spillage: 'info',
+  damaged: 'warning',
+  overcook: 'secondary',
+  theft: 'dark',
+  other: 'light',
+};
 
-    {/* ── DESKTOP layout (md+): search + filter icon | showing text + page size ── */}
-    <div className="d-none d-md-flex align-items-center gap-3">
-      {/* Search bar */}
-      <div className="inventory-history-search-input-container flex-grow-1">
-        <ControlsSearch onSearch={onSearch} />
-      </div>
-      {/* Filter circle icon button */}
-      <Button
-        variant={showFilters ? 'primary' : 'outline-primary'}
-        className="btn-icon btn-icon-only position-relative rounded-circle border-2 flex-shrink-0"
-        style={{ width: '40px', height: '40px' }}
-        onClick={() => setShowFilters(!showFilters)}
-      >
-        <CsLineIcons icon={showFilters ? 'close' : 'filter'} size="16" />
-        {activeFilterCount > 0 && (
-          <Badge bg="danger" className="position-absolute top-0 start-100 translate-middle rounded-circle border border-2 border-white" style={{ fontSize: '0.6rem', padding: '0.3em 0.5em' }}>
-            {activeFilterCount}
-          </Badge>
+// ── Component: Daily Tracker Tab ─────────────────────────────────────────────
+const DailyTrackerTab = ({ brandColor }) => {
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [loading, setLoading] = useState(true);
+  const [report, setReport] = useState(null);
+  const [openingLog, setOpeningLog] = useState(null);
+  const [closingLog, setClosingLog] = useState(null);
+
+  const fetchDailyData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await getDailyReport({ from: selectedDate, to: selectedDate });
+      setReport(res.data);
+      
+      const op = (res.data.openings || []).find((o) => o.shift === 'opening');
+      const cl = (res.data.closings || []).find((c) => c.shift === 'closing');
+      setOpeningLog(op || null);
+      setClosingLog(cl || null);
+    } catch (err) {
+      toast.error('Failed to load daily report log');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedDate]);
+
+  useEffect(() => {
+    fetchDailyData();
+  }, [fetchDailyData]);
+
+  return (
+    <Card className="workstation-card border-0 mb-4">
+      <Card.Body className="p-4 p-lg-5">
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+          <div>
+            <h4 className="fw-bold mb-1">Daily Reconciliation Board</h4>
+            <p className="text-muted small mb-0">Reconcile opening, received, used, wasted, and closing stock metrics</p>
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <Form.Control
+              type="date"
+              className="modern-input"
+              style={{ width: '170px' }}
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+            <Button variant="outline-primary" size="sm" className="rounded-pill p-2" onClick={fetchDailyData}>
+              <CsLineIcons icon="refresh" size="16" />
+            </Button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-5">
+            <Spinner animation="border" variant="primary" />
+          </div>
+        ) : (
+          <>
+            {/* Daily Shift Status Row */}
+            <Row className="g-3 mb-4">
+              <Col md={6}>
+                <Card className="stats-card-sub bg-light border-0">
+                  <Card.Body className="p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                      <div className="text-muted small fw-bold">MORNING SHIFT</div>
+                      <h5 className="mb-0 fw-bold">Opening Stock</h5>
+                    </div>
+                    <div>
+                      {openingLog ? (
+                        <Badge bg={openingLog.log_status === 'manager_verified' ? 'success' : 'warning'} className="px-3 py-2 text-uppercase">
+                          {openingLog.log_status === 'manager_verified' ? 'Verified by Manager' : 'Auto Generated'}
+                        </Badge>
+                      ) : (
+                        <Badge bg="danger" className="px-3 py-2 text-uppercase">Pending</Badge>
+                      )}
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+
+              <Col md={6}>
+                <Card className="stats-card-sub bg-light border-0">
+                  <Card.Body className="p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                      <div className="text-muted small fw-bold">NIGHT SHIFT</div>
+                      <h5 className="mb-0 fw-bold">Closing Stock</h5>
+                    </div>
+                    <div>
+                      {closingLog ? (
+                        <Badge bg={closingLog.log_status === 'manager_verified' ? 'success' : 'secondary'} className="px-3 py-2 text-uppercase">
+                          {closingLog.log_status === 'manager_verified' ? 'Verified by Manager' : 'Auto Recorded'}
+                        </Badge>
+                      ) : (
+                        <Badge bg="danger" className="px-3 py-2 text-uppercase">Pending</Badge>
+                      )}
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+
+            <div className="d-flex flex-wrap gap-2 mb-4">
+              <Button as={Link} to="/operations/daily-stock-logs" variant="outline-primary" className="rounded-pill fw-bold py-2 px-3 small border-2" size="sm">
+                <CsLineIcons icon="file-text" size="14" className="me-1" /> Adjust Log Details (Stock Audit)
+              </Button>
+            </div>
+
+            {/* Reconciliation Sheet Grid */}
+            <div className="table-responsive">
+              <Table hover className="align-middle table-reconcile mb-0">
+                <thead>
+                  <tr>
+                    <th>Ingredient</th>
+                    <th className="text-center">Opening Stock</th>
+                    <th className="text-center">Added Today</th>
+                    <th className="text-center">Used Today</th>
+                    <th className="text-center">Wasted Today</th>
+                    <th className="text-center">Expected Closing</th>
+                    <th className="text-center">Actual Closing</th>
+                    <th className="text-end">Variance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(!report || !report.itemSummary || report.itemSummary.length === 0) ? (
+                    <tr>
+                      <td colSpan={8} className="text-center text-muted py-5 fw-bold">
+                        No daily transactions or tracking logs recorded for this date.
+                      </td>
+                    </tr>
+                  ) : (
+                    report.itemSummary.map((item, idx) => {
+                      const openingQty = item.opening;
+                      const closingQty = item.closing;
+                      const expected = openingQty !== null ? (openingQty + item.received - item.used - item.wasted) : null;
+                      const variance = (closingQty !== null && expected !== null) ? (closingQty - expected) : null;
+
+                      return (
+                        <tr key={idx}>
+                          <td>
+                            <div className="fw-bold text-dark">{item.item_name}</div>
+                            <span className="small text-muted text-uppercase">{item.unit || 'unit'}</span>
+                          </td>
+                          <td className="text-center font-monospace fw-bold text-secondary">
+                            {openingQty !== null ? openingQty.toFixed(2) : <span className="text-muted fw-normal">—</span>}
+                          </td>
+                          <td className="text-center font-monospace fw-bold text-info">
+                            {item.received > 0 ? `+${item.received.toFixed(2)}` : '—'}
+                          </td>
+                          <td className="text-center font-monospace fw-bold text-primary">
+                            {item.used > 0 ? `-${item.used.toFixed(2)}` : '—'}
+                          </td>
+                          <td className="text-center font-monospace fw-bold text-danger">
+                            {item.wasted > 0 ? `-${item.wasted.toFixed(2)}` : '—'}
+                          </td>
+                          <td className="text-center font-monospace fw-bold text-dark">
+                            {expected !== null ? expected.toFixed(2) : <span className="text-muted fw-normal">—</span>}
+                          </td>
+                          <td className="text-center font-monospace fw-bold text-success">
+                            {closingQty !== null ? closingQty.toFixed(2) : <span className="text-muted fw-normal">—</span>}
+                          </td>
+                          <td className="text-end font-monospace">
+                            {variance !== null ? (
+                              <span className={`fw-bold ${variance < 0 ? 'text-danger' : variance > 0 ? 'text-warning' : 'text-success'}`}>
+                                {variance > 0 ? `+${variance.toFixed(2)}` : variance.toFixed(2)} {item.unit}
+                              </span>
+                            ) : (
+                              <span className="text-muted">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </Table>
+            </div>
+          </>
         )}
-      </Button>
-      {/* Spacer */}
-      <div className="flex-grow-1" />
-      {/* Record count */}
-      <span className="smaller text-muted fw-bold flex-shrink-0">
-        {isLoading ? 'Processing...' : `Showing ${totalRecords > 0 ? pageIndex * pageSize + 1 : 0}–${Math.min((pageIndex + 1) * pageSize, totalRecords)} of ${totalRecords}`}
-      </span>
-      {/* Page size */}
-      <div className="flex-shrink-0">
-        <ControlsPageSize pageSize={pageSize} onPageSizeChange={onPageSizeChange} />
-      </div>
-    </div>
+      </Card.Body>
+    </Card>
+  );
+};
 
-    {/* ── MOBILE layout (<md): search stacked, filter icon + page size inline below ── */}
-    <div className="d-flex d-md-none flex-column gap-2">
-      {/* Search bar */}
-      <div className="inventory-history-search-input-container">
-        <ControlsSearch onSearch={onSearch} />
-      </div>
-      {/* Filter icon & Page size side-by-side */}
-      <div className="d-flex align-items-center gap-2">
-        <Button
-          variant={showFilters ? 'primary' : 'outline-primary'}
-          className="btn-icon btn-icon-only position-relative rounded-circle border-2 flex-shrink-0"
-          style={{ width: '40px', height: '40px' }}
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <CsLineIcons icon={showFilters ? 'close' : 'filter'} size="16" />
-          {activeFilterCount > 0 && (
-            <Badge bg="danger" className="position-absolute top-0 start-100 translate-middle rounded-circle border border-2 border-white" style={{ fontSize: '0.6rem', padding: '0.3em 0.5em' }}>
-              {activeFilterCount}
-            </Badge>
+// ── Component: Stock Control Tab ─────────────────────────────────────────────
+const StockControlTab = ({ brandColor }) => {
+  const [stockData, setStockData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Threshold modal
+  const [showThresholdModal, setShowThresholdModal] = useState(false);
+  const [thresholdItem, setThresholdItem] = useState(null);
+  const [threshold, setThreshold] = useState('');
+  const [trackingLevel, setTrackingLevel] = useState('auto');
+
+  const fetchStock = async () => {
+    try {
+      setLoading(true);
+      const res = await getCurrentStock();
+      if (res.data.success) setStockData(res.data.data);
+    } catch (err) {
+      toast.error('Failed to load stock data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStock();
+  }, []);
+
+  const openThresholdModal = (item) => {
+    setThresholdItem(item);
+    setThreshold(item.low_stock_threshold || 0);
+    setTrackingLevel(item.tracking_level || 'auto');
+    setShowThresholdModal(true);
+  };
+
+  const handleThresholdSave = async () => {
+    try {
+      setIsSubmitting(true);
+      await updateItemSettings({
+        item_name: thresholdItem._id,
+        low_stock_threshold: threshold,
+        tracking_level: trackingLevel,
+      });
+      toast.success('Item settings saved');
+      setShowThresholdModal(false);
+      fetchStock();
+    } catch (err) {
+      toast.error('Failed to save settings');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const lowStockCount = stockData.filter((s) => s.low_stock_threshold > 0 && s.totalStock < s.low_stock_threshold).length;
+
+  return (
+    <>
+      <Card className="workstation-card border-0 mb-4">
+        <Card.Body className="p-4 p-lg-5">
+          <div className="mb-4">
+            <h4 className="fw-bold mb-1">Live Stock Control</h4>
+            <p className="text-muted small mb-0">Monitor active quantities, safetymins, and mark ingredients used</p>
+          </div>
+
+          {lowStockCount > 0 && (
+            <Alert variant="warning" className="border-0 shadow-sm rounded-4 d-flex align-items-center gap-3 mb-4 p-3 bg-light-warning">
+              <div className="bg-warning text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
+                <CsLineIcons icon="warning-hexagon" size="20" />
+              </div>
+              <div>
+                <div className="fw-bold text-dark">{lowStockCount} ingredient{lowStockCount > 1 ? 's are' : ' is'} below safety threshold!</div>
+                <div className="text-muted small">Please order/purchase fresh inventory to avoid stockouts.</div>
+              </div>
+            </Alert>
           )}
-        </Button>
-        <div className="flex-shrink-0">
-          <ControlsPageSize pageSize={pageSize} onPageSizeChange={onPageSizeChange} />
-        </div>
-        {!isLoading && totalRecords > 0 && (
-          <span className="ms-2 small text-muted fw-bold">of {totalRecords}</span>
-        )}
-      </div>
-    </div>
 
-  </div>
-);
+          {loading ? (
+            <div className="text-center py-5">
+              <Spinner animation="border" variant="primary" />
+            </div>
+          ) : stockData.length === 0 ? (
+            <Alert variant="light" className="text-center py-5 border-dashed rounded-4">No tracking items found.</Alert>
+          ) : (
+            <div className="table-responsive">
+              <Table hover className="align-middle table-reconcile mb-0">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th className="text-center">Live Stock</th>
+                    <th className="text-center">Safety Minimum</th>
+                    <th className="text-center">Tracking level</th>
+                    <th className="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stockData.map((item, idx) => {
+                    const isBelow = item.low_stock_threshold > 0 && item.totalStock < item.low_stock_threshold;
+                    return (
+                      <tr key={idx} className={isBelow ? 'bg-danger-subtle' : ''}>
+                        <td>
+                          <div className="fw-bold text-dark">{item._id}</div>
+                          {isBelow && <Badge bg="danger" className="text-uppercase small">Low Stock Alert</Badge>}
+                        </td>
+                        <td className="text-center font-monospace fw-bold fs-6">
+                          <span className={item.totalStock <= 0 ? 'text-danger' : isBelow ? 'text-warning' : 'text-success'}>
+                            {item.totalStock.toFixed(2)} <small className="text-muted">{item.unit}</small>
+                          </span>
+                        </td>
+                        <td className="text-center fw-bold">
+                          {item.low_stock_threshold > 0 ? (
+                            <Badge bg="light" text="dark" className="border px-3 py-2">Min: {item.low_stock_threshold}</Badge>
+                          ) : (
+                            <span className="text-muted">—</span>
+                          )}
+                        </td>
+                        <td className="text-center">
+                          <Badge bg="secondary" className="text-uppercase">{item.tracking_level || 'auto'}</Badge>
+                        </td>
+                        <td className="text-end">
+                          <Button variant="outline-secondary" size="sm" className="rounded-pill" onClick={() => openThresholdModal(item)}>
+                            <CsLineIcons icon="gear" size="14" className="me-1" /> Configure
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </Table>
+            </div>
+          )}
+        </Card.Body>
+      </Card>
 
-const RowCardList = ({ data, columns, actions }) => (
-  <div className="inventory-list-wrapper">
-    <div className="inventory-history-table-header-row">
-      {columns.map((col, idx) => <div key={idx} className="inventory-history-table-header-col" style={{ width: col.width || 'auto', flex: col.flex || 1 }}>{col.Header}</div>)}
-      <div className="inventory-history-table-header-col text-end" style={{ width: '120px' }}>Action</div>
-    </div>
-    {data.map((item, idx) => (
-      <div key={idx} className="inventory-history-inventory-row-card shadow-sm">
-        {columns.map((col, cidx) => (
-          <div key={cidx} style={{ width: col.width || 'auto', flex: col.flex || 1 }}>
-            <span className="inventory-history-mobile-label">{col.Header}</span>
-            <div className="inventory-history-col-val">{col.Cell ? col.Cell({ value: item[col.accessor], row: { original: item }, cell: { value: item[col.accessor] } }) : item[col.accessor]}</div>
-          </div>
-        ))}
-        <div className="text-md-end" style={{ width: '120px' }}>
-          <span className="inventory-history-mobile-label">Action</span>
-          <div className="d-flex gap-2 justify-content-md-end">{actions(item)}</div>
-        </div>
-      </div>
-    ))}
-  </div>
-);
+      {/* Threshold Modal */}
+      <Modal show={showThresholdModal} onHide={() => !isSubmitting && setShowThresholdModal(false)} centered>
+        <Modal.Header closeButton={!isSubmitting}>
+          <Modal.Title className="fw-bold">Configure Item Settings</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="fw-bold h5 mb-3">{thresholdItem?._id}</div>
+          <Form.Group className="mb-3">
+            <Form.Label className="fw-semibold">Safety Minimum Level</Form.Label>
+            <Form.Control
+              type="number"
+              className="modern-input"
+              value={threshold}
+              onChange={(e) => setThreshold(e.target.value)}
+              placeholder="0 = no alert trigger"
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label className="fw-semibold">Tracking Frequency Strategy</Form.Label>
+            <Form.Control as="select" className="modern-input Form-select" value={trackingLevel} onChange={(e) => setTrackingLevel(e.target.value)}>
+              <option value="auto">Auto (System only)</option>
+              <option value="daily_critical">Daily Critical (Required counting)</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </Form.Control>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={() => setShowThresholdModal(false)} disabled={isSubmitting}>Cancel</Button>
+          <Button variant="primary" onClick={handleThresholdSave} disabled={isSubmitting}>
+            {isSubmitting ? <Spinner animation="border" size="sm" /> : 'Save Settings'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+  );
+};
 
-// --- Requested Section ---
-const RequestedInventory = ({ brandColor, onRejectClick, refreshKey }) => {
-  const [data, setData] = useState([]);
+// ── Component: Wastage Logs Tab (Admin can delete logs) ─────────────────────
+const WastageLogsTab = () => {
+  const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalRecords, setTotalRecords] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({ requestFromDate: '', requestToDate: '' });
+  const [deletingId, setDeletingId] = useState(null);
 
-  const fetchData = useCallback(async () => {
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const [fromDate, setFromDate] = useState(today);
+  const [toDate, setToDate] = useState(today);
+
+  const fetchLogs = useCallback(async () => {
     try {
       setLoading(true);
-      const params = { page: pageIndex + 1, limit: pageSize, search: searchTerm, request_from: filters.requestFromDate, request_to: filters.requestToDate };
-      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Requested`, { params, headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      if (res.data.success) {
-        setData(res.data.data.map(item => ({ ...item, formatted_date: new Date(item.request_date).toLocaleString('en-IN') })));
-        setTotalRecords(res.data.pagination?.total || 0);
-        setTotalPages(res.data.pagination?.totalPages || 0);
-      }
-    } catch (err) { toast.error('Error fetching requests'); } finally { setLoading(false); }
-  }, [pageIndex, pageSize, searchTerm, filters]);
+      const res = await getWastageLog({ from: fromDate, to: toDate, limit: 100 });
+      setLogs(res.data.data || []);
+    } catch (err) {
+      toast.error('Failed to load logs');
+    } finally {
+      setLoading(false);
+    }
+  }, [fromDate, toDate]);
 
-  useEffect(() => { fetchData(); }, [fetchData, refreshKey]);
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
 
-  const columns = [
-    { Header: 'Requested Date', accessor: 'formatted_date', flex: 1.5 },
-    { Header: 'Items', accessor: 'items', flex: 2, Cell: ({ cell }) => cell.value.map((it, i) => <div key={i} className="small fw-bold text-muted">{it.item_name} <span className="text-primary">({it.item_quantity} {it.unit})</span></div>) },
-    { Header: 'Status', accessor: 'status', flex: 1, Cell: ({ cell }) => <Badge bg="warning" text="dark" className="inventory-history-status-badge">{cell.value}</Badge> },
-  ];
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this wastage entry and restore its stock quantity?')) return;
+    try {
+      setDeletingId(id);
+      await deleteWastageEntry(id);
+      toast.success('Wastage entry removed and stock restored!');
+      fetchLogs();
+    } catch (err) {
+      toast.error('Failed to delete wastage entry');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
-    <Card className="inventory-history-interactive-card border-0">
-      <Card.Body className="p-4 p-lg-5">
-        <div className="inventory-history-section-title-wrapper mb-4">
-          <div className="sw-6 sh-6 rounded-xl d-flex align-items-center justify-content-center shadow-sm" style={{ background: 'rgba(35, 179, 244, 0.12)', borderRadius: '1rem' }}>
-            <CsLineIcons icon="boxes" size="24" style={{ color: brandColor }} />
-          </div>
+    <Card className="workstation-card border-0 mb-4">
+      <Card.Body className="p-0">
+        <div className="p-4 border-bottom bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
           <div>
-            <h2 className="h4 mb-0 fw-bold">Requested Inventory</h2>
-            <p className="text-muted small mb-0">Pending arrivals from vendors</p>
+            <h5 className="fw-bold mb-1">Wastage History Logs</h5>
+            <p className="text-muted small mb-0">Revert or review wasted quantities</p>
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <Form.Control type="date" className="modern-input" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+            <Form.Control type="date" className="modern-input" value={toDate} onChange={(e) => setToDate(e.target.value)} />
           </div>
         </div>
-        <TableControls onSearch={(v) => { setSearchTerm(v); setPageIndex(0); }} showFilters={showFilters} setShowFilters={setShowFilters} activeFilterCount={Object.values(filters).filter(x => x !== '').length} pageIndex={pageIndex} pageSize={pageSize} totalRecords={totalRecords} onPageSizeChange={(s) => { setPageSize(s); setPageIndex(0); }} isLoading={loading} />
-        <Collapse in={showFilters}><div><div className="inventory-history-filter-panel mb-4 shadow-sm"><Row className="g-3"><Col md="4"><span className="text-uppercase small fw-bold text-muted d-block mb-1">From Date</span><Form.Control type="date" value={filters.requestFromDate} onChange={(e) => setFilters({ ...filters, requestFromDate: e.target.value })} /></Col><Col md="4"><span className="text-uppercase small fw-bold text-muted d-block mb-1">To Date</span><Form.Control type="date" value={filters.requestToDate} onChange={(e) => setFilters({ ...filters, requestToDate: e.target.value })} /></Col><Col md="4" className="d-flex align-items-end"><Button variant="light" size="sm" className="rounded-pill px-4 fw-bold" onClick={() => setFilters({ requestFromDate: '', requestToDate: '' })}>Clear Filters</Button></Col></Row></div></div></Collapse>
-        {loading ? <div className="text-center py-5"><Spinner animation="border" variant="primary" /></div> : data.length === 0 ? <Alert variant="light" className="text-center py-5 border-dashed rounded-4">No active requests.</Alert> : (
-          <>
-            <RowCardList data={data} columns={columns} actions={(d) => <><Button variant="outline-success" size="sm" className="btn-icon btn-icon-only rounded-circle border-2" as={Link} to={`/operations/complete-inventory/${d._id}`}><CsLineIcons icon="check" size="14" /></Button><Button variant="outline-danger" size="sm" className="btn-icon btn-icon-only rounded-circle border-2" onClick={() => onRejectClick(d)}><CsLineIcons icon="close" size="14" /></Button></>} />
-            <div className="mt-4"><TablePagination paginationProps={{ canPreviousPage: pageIndex > 0, canNextPage: pageIndex < totalPages - 1, pageCount: totalPages, pageIndex, gotoPage: setPageIndex, nextPage: () => setPageIndex(p => p + 1), previousPage: () => setPageIndex(p => p - 1) }} /></div>
-          </>
+
+        {loading ? (
+          <div className="text-center py-5">
+            <Spinner animation="border" variant="primary" />
+          </div>
+        ) : logs.length === 0 ? (
+          <Alert variant="light" className="text-center py-5 border-dashed m-4">No wastage logs found.</Alert>
+        ) : (
+          <div className="table-responsive">
+            <Table hover className="align-middle table-reconcile mb-0">
+              <thead>
+                <tr>
+                  <th className="ps-4">Date/Time</th>
+                  <th>Item</th>
+                  <th>Quantity</th>
+                  <th>Type</th>
+                  <th>Reason</th>
+                  <th className="pe-4 text-end">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log._id}>
+                    <td className="ps-4">
+                      <div className="fw-bold text-dark">{format(new Date(log.date), 'dd MMM')}</div>
+                      <small className="text-muted">{format(new Date(log.date), 'hh:mm a')}</small>
+                    </td>
+                    <td className="fw-bold text-primary">{log.item_name}</td>
+                    <td className="fw-bold text-danger">-{log.quantity.toFixed(2)} {log.unit}</td>
+                    <td>
+                      <Badge bg={typeColors[log.wastage_type] || 'secondary'} className="text-uppercase">{log.wastage_type}</Badge>
+                    </td>
+                    <td className="text-muted" style={{ maxWidth: '200px' }}>{log.reason || '—'}</td>
+                    <td className="pe-4 text-end">
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        disabled={deletingId === log._id}
+                        onClick={() => handleDelete(log._id)}
+                      >
+                        {deletingId === log._id ? 'Deleting...' : 'Delete'}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
         )}
       </Card.Body>
     </Card>
   );
 };
 
-// --- Completed Section ---
-const CompletedInventory = ({ history, onDeleteClick, refreshKey }) => {
-  const [data, setData] = useState([]);
+// ── Component: Correction Requests Tab ───────────────────────────────────────
+const CorrectionRequestsTab = () => {
+  const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalRecords, setTotalRecords] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({ requestFromDate: '', requestToDate: '', billFromDate: '', billToDate: '' });
+  const [resolvingId, setResolvingId] = useState(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       setLoading(true);
-      const params = { page: pageIndex + 1, limit: pageSize, search: searchTerm, request_from: filters.requestFromDate, request_to: filters.requestToDate, bill_from: filters.billFromDate, bill_to: filters.billToDate };
-      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Completed`, { params, headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      if (res.data.success) {
-        setData(res.data.data.map(item => ({ ...item, formatted_request_date: new Date(item.request_date).toLocaleString('en-IN') })));
-        setTotalRecords(res.data.pagination?.total || 0);
-        setTotalPages(res.data.pagination?.totalPages || 0);
-      }
-    } catch (err) { toast.error('Error fetching records'); } finally { setLoading(false); }
-  }, [pageIndex, pageSize, searchTerm, filters]);
+      const res = await getCorrectionRequests();
+      setRequests((res.data.data || []).filter((r) => r.status === 'pending'));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData, refreshKey]);
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
 
-  const columns = [
-    { Header: 'Requested Date', accessor: 'formatted_request_date', flex: 1.5 },
-    { Header: 'Bill Number', accessor: 'bill_number', flex: 1 },
-    { Header: 'Vendor', accessor: 'vendor_name', flex: 1.5 },
-    { Header: 'Amount', accessor: 'total_amount', flex: 1, Cell: ({ cell }) => <span className="fw-bold text-primary">₹{cell.value}</span> },
-    { Header: 'Unpaid', accessor: 'unpaid_amount', flex: 1, Cell: ({ cell }) => <span className="fw-bold text-danger">₹{cell.value}</span> },
-  ];
+  const handleResolve = async (reqId, status) => {
+    try {
+      setResolvingId(reqId);
+      await resolveCorrectionRequest(reqId, { status });
+      toast.success(`Request marked as ${status}`);
+      fetchRequests();
+    } catch (err) {
+      toast.error('Failed to update request');
+    } finally {
+      setResolvingId(null);
+    }
+  };
 
   return (
-    <Card className="inventory-history-interactive-card border-0">
-      <Card.Body className="p-4 p-lg-5">
-        <div className="inventory-history-section-title-wrapper mb-4">
-          <div className="sw-6 sh-6 rounded-xl d-flex align-items-center justify-content-center shadow-sm" style={{ background: 'rgba(16, 185, 129, 0.12)', borderRadius: '1rem' }}>
-            <CsLineIcons icon="check-circle" size="24" style={{ color: '#10b981' }} />
+    <Card className="workstation-card border-0 mb-4">
+      <Card.Body className="p-4">
+        <h5 className="fw-bold mb-3">Pending Correction Requests</h5>
+        {loading ? (
+          <div className="text-center py-4"><Spinner animation="border" variant="primary" /></div>
+        ) : requests.length === 0 ? (
+          <Alert variant="light" className="text-center py-4 border-dashed mb-0">No pending requests</Alert>
+        ) : (
+          <div className="table-responsive">
+            <Table hover className="align-middle table-reconcile mb-0">
+              <thead>
+                <tr>
+                  <th>Log Date</th>
+                  <th>Shift</th>
+                  <th>Reason for correction</th>
+                  <th className="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map((req) => (
+                  <tr key={req._id}>
+                    <td className="fw-bold text-dark">{format(new Date(req.log_date), 'dd MMM yyyy')}</td>
+                    <td><Badge bg={req.shift === 'opening' ? 'primary' : 'dark'} className="text-capitalize">{req.shift}</Badge></td>
+                    <td className="text-muted">"{req.reason}"</td>
+                    <td className="text-end">
+                      <div className="d-flex justify-content-end gap-1">
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          as={Link}
+                          to="/operations/daily-stock-logs"
+                          disabled={resolvingId === req._id}
+                        >
+                          Adjust Log
+                        </Button>
+                        <Button
+                          variant="outline-success"
+                          size="sm"
+                          disabled={resolvingId === req._id}
+                          onClick={() => handleResolve(req._id, 'approved')}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          disabled={resolvingId === req._id}
+                          onClick={() => handleResolve(req._id, 'rejected')}
+                        >
+                          Dismiss
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
           </div>
-          <div>
-            <h2 className="h4 mb-0 fw-bold">Completed Requests</h2>
-            <p className="text-muted small mb-0">History of fulfilled orders</p>
-          </div>
-        </div>
-        <TableControls onSearch={(v) => { setSearchTerm(v); setPageIndex(0); }} showFilters={showFilters} setShowFilters={setShowFilters} activeFilterCount={Object.values(filters).filter(x => x !== '').length} pageIndex={pageIndex} pageSize={pageSize} totalRecords={totalRecords} onPageSizeChange={(s) => { setPageSize(s); setPageIndex(0); }} isLoading={loading} />
-        <Collapse in={showFilters}><div><div className="inventory-history-filter-panel mb-4 shadow-sm"><Row className="g-3"><Col md="3"><span className="text-uppercase small fw-bold text-muted d-block mb-1">Req From</span><Form.Control type="date" value={filters.requestFromDate} onChange={(e) => setFilters({ ...filters, requestFromDate: e.target.value })} /></Col><Col md="3"><span className="text-uppercase small fw-bold text-muted d-block mb-1">Req To</span><Form.Control type="date" value={filters.requestToDate} onChange={(e) => setFilters({ ...filters, requestToDate: e.target.value })} /></Col><Col md="3"><span className="text-uppercase small fw-bold text-muted d-block mb-1">Bill From</span><Form.Control type="date" value={filters.billFromDate} onChange={(e) => setFilters({ ...filters, billFromDate: e.target.value })} /></Col><Col md="3"><span className="text-uppercase small fw-bold text-muted d-block mb-1">Bill To</span><Form.Control type="date" value={filters.billToDate} onChange={(e) => setFilters({ ...filters, billToDate: e.target.value })} /></Col><Col md="12" className="text-end mt-3"><Button variant="light" size="sm" className="rounded-pill px-4 fw-bold" onClick={() => setFilters({ requestFromDate: '', requestToDate: '', billFromDate: '', billToDate: '' })}>Clear All</Button></Col></Row></div></div></Collapse>
-        {loading ? <div className="text-center py-5"><Spinner animation="border" variant="success" /></div> : data.length === 0 ? <Alert variant="light" className="text-center py-5 border-dashed rounded-4">No records found.</Alert> : (
-          <>
-            <RowCardList data={data} columns={columns} actions={(d) => <><Button variant="outline-primary" size="sm" onClick={() => history.push(`/operations/inventory-details/${d._id}`)} className="btn-icon btn-icon-only rounded-circle border-2"><CsLineIcons icon="eye" size="14" /></Button><Button variant="outline-warning" size="sm" onClick={() => history.push(`/operations/edit-inventory/${d._id}`)} className="btn-icon btn-icon-only rounded-circle border-2"><CsLineIcons icon="edit" size="14" /></Button><Button variant="outline-danger" size="sm" onClick={() => onDeleteClick(d)} className="btn-icon btn-icon-only rounded-circle border-2"><CsLineIcons icon="bin" size="14" /></Button></>} />
-            <div className="mt-4"><TablePagination paginationProps={{ canPreviousPage: pageIndex > 0, canNextPage: pageIndex < totalPages - 1, pageCount: totalPages, pageIndex, gotoPage: setPageIndex, nextPage: () => setPageIndex(p => p + 1), previousPage: () => setPageIndex(p => p - 1) }} /></div>
-          </>
         )}
       </Card.Body>
     </Card>
   );
 };
 
-// --- Rejected Section ---
-const RejectedInventory = ({ history, onDeleteClick, refreshKey }) => {
+// ── Components: Old requested list controllers local definitions ────────────
+const RequestedInventory = ({ refreshKey, onRejectClick }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalRecords, setTotalRecords] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({ requestFromDate: '', requestToDate: '', billFromDate: '', billToDate: '' });
 
-  const fetchData = useCallback(async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       setLoading(true);
-      const params = { page: pageIndex + 1, limit: pageSize, search: searchTerm, request_from: filters.requestFromDate, request_to: filters.requestToDate, bill_from: filters.billFromDate, bill_to: filters.billToDate };
-      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Rejected`, { params, headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Requested`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
       if (res.data.success) {
-        setData(res.data.data.map(item => ({ ...item, formatted_request_date: new Date(item.request_date).toLocaleString('en-IN') })));
-        setTotalRecords(res.data.pagination?.total || 0);
-        setTotalPages(res.data.pagination?.totalPages || 0);
+        setData(res.data.data);
       }
-    } catch (err) { toast.error('Error fetching records'); } finally { setLoading(false); }
-  }, [pageIndex, pageSize, searchTerm, filters]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData, refreshKey]);
-
-  const columns = [
-    { Header: 'Requested Date', accessor: 'formatted_request_date', flex: 1.5 },
-    { Header: 'Status', accessor: 'status', flex: 1, Cell: ({ cell }) => <Badge bg="danger" className="inventory-history-status-badge">{cell.value}</Badge> },
-    { Header: 'Reason', accessor: 'reject_reason', flex: 2, Cell: ({ cell }) => <span className="text-muted italic">"{cell.value}"</span> },
-  ];
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests, refreshKey]);
 
   return (
-    <Card className="inventory-history-interactive-card border-0">
-      <Card.Body className="p-4 p-lg-5">
-        <div className="inventory-history-section-title-wrapper mb-4">
-          <div className="sw-6 sh-6 rounded-xl d-flex align-items-center justify-content-center shadow-sm" style={{ background: 'rgba(244, 63, 94, 0.12)', borderRadius: '1rem' }}>
-            <CsLineIcons icon="close" size="24" style={{ color: '#f43f5e' }} />
+    <Card className="workstation-card border-0 mb-4">
+      <Card.Body className="p-4">
+        <h5 className="fw-bold mb-3">Requested Inventory</h5>
+        {loading ? (
+          <div className="text-center py-4"><Spinner animation="border" variant="primary" /></div>
+        ) : data.length === 0 ? (
+          <Alert variant="light" className="text-center py-4 border-dashed mb-0">No active requests</Alert>
+        ) : (
+          <div className="table-responsive">
+            <Table hover className="align-middle table-reconcile mb-0">
+              <thead>
+                <tr>
+                  <th>Requested Date</th>
+                  <th>Category</th>
+                  <th>Items</th>
+                  <th className="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((item) => (
+                  <tr key={item._id}>
+                    <td>{new Date(item.request_date).toLocaleDateString('en-IN')}</td>
+                    <td><Badge bg="light" text="dark" className="border">{item.category}</Badge></td>
+                    <td>
+                      {item.items.map((it, i) => (
+                        <div key={i} className="small fw-semibold">
+                          {it.item_name} <span className="text-primary">({it.item_quantity} {it.unit})</span>
+                        </div>
+                      ))}
+                    </td>
+                    <td className="text-end">
+                      <div className="d-flex justify-content-end gap-1">
+                        <Button variant="outline-success" size="sm" as={Link} to={`/operations/complete-inventory/${item._id}`}>
+                          Approve/Complete
+                        </Button>
+                        <Button variant="outline-danger" size="sm" onClick={() => onRejectClick(item)}>
+                          Reject
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
           </div>
-          <div>
-            <h2 className="h4 mb-0 fw-bold">Rejected Requests</h2>
-            <p className="text-muted small mb-0">Cancelled or invalid entries</p>
-          </div>
-        </div>
-        <TableControls onSearch={(v) => { setSearchTerm(v); setPageIndex(0); }} showFilters={showFilters} setShowFilters={setShowFilters} activeFilterCount={Object.values(filters).filter(x => x !== '').length} pageIndex={pageIndex} pageSize={pageSize} totalRecords={totalRecords} onPageSizeChange={(s) => { setPageSize(s); setPageIndex(0); }} isLoading={loading} />
-        <Collapse in={showFilters}><div><div className="inventory-history-filter-panel mb-4 shadow-sm"><Row className="g-3"><Col md="3"><span className="text-uppercase small fw-bold text-muted d-block mb-1">Req From</span><Form.Control type="date" value={filters.requestFromDate} onChange={(e) => setFilters({ ...filters, requestFromDate: e.target.value })} /></Col><Col md="3"><span className="text-uppercase small fw-bold text-muted d-block mb-1">Req To</span><Form.Control type="date" value={filters.requestToDate} onChange={(e) => setFilters({ ...filters, requestToDate: e.target.value })} /></Col><Col md="3"><span className="text-uppercase small fw-bold text-muted d-block mb-1">Bill From</span><Form.Control type="date" value={filters.billFromDate} onChange={(e) => setFilters({ ...filters, billFromDate: e.target.value })} /></Col><Col md="3"><span className="text-uppercase small fw-bold text-muted d-block mb-1">Bill To</span><Form.Control type="date" value={filters.billToDate} onChange={(e) => setFilters({ ...filters, billToDate: e.target.value })} /></Col><Col md="12" className="text-end mt-3"><Button variant="light" size="sm" className="rounded-pill px-4 fw-bold" onClick={() => setFilters({ requestFromDate: '', requestToDate: '', billFromDate: '', billToDate: '' })}>Clear All</Button></Col></Row></div></div></Collapse>
-        {loading ? <div className="text-center py-5"><Spinner animation="border" variant="danger" /></div> : data.length === 0 ? <Alert variant="light" className="text-center py-5 border-dashed rounded-4">No records found.</Alert> : (
-          <>
-            <RowCardList data={data} columns={columns} actions={(d) => <><Button variant="outline-primary" size="sm" onClick={() => history.push(`/operations/inventory-details/${d._id}`)} className="btn-icon btn-icon-only rounded-circle border-2"><CsLineIcons icon="eye" size="14" /></Button><Button variant="outline-danger" size="sm" onClick={() => onDeleteClick(d)} className="btn-icon btn-icon-only rounded-circle border-2"><CsLineIcons icon="bin" size="14" /></Button></>} />
-            <div className="mt-4"><TablePagination paginationProps={{ canPreviousPage: pageIndex > 0, canNextPage: pageIndex < totalPages - 1, pageCount: totalPages, pageIndex, gotoPage: setPageIndex, nextPage: () => setPageIndex(p => p + 1), previousPage: () => setPageIndex(p => p - 1) }} /></div>
-          </>
         )}
       </Card.Body>
     </Card>
   );
 };
 
-// --- Main Component ---
+const CompletedInventory = ({ refreshKey, history, onDeleteClick }) => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCompleted = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Completed`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (res.data.success) {
+        setData(res.data.data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCompleted();
+  }, [fetchCompleted, refreshKey]);
+
+  return (
+    <Card className="workstation-card border-0 mb-4">
+      <Card.Body className="p-4">
+        <h5 className="fw-bold mb-3">Completed Requests</h5>
+        {loading ? (
+          <div className="text-center py-4"><Spinner animation="border" variant="success" /></div>
+        ) : data.length === 0 ? (
+          <Alert variant="light" className="text-center py-4 border-dashed mb-0">No records found</Alert>
+        ) : (
+          <div className="table-responsive">
+            <Table hover className="align-middle table-reconcile mb-0">
+              <thead>
+                <tr>
+                  <th>Fulfill Date</th>
+                  <th>Bill Number</th>
+                  <th>Vendor</th>
+                  <th>Total Amount</th>
+                  <th className="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((item) => (
+                  <tr key={item._id}>
+                    <td>{item.bill_date ? new Date(item.bill_date).toLocaleDateString('en-IN') : new Date(item.request_date).toLocaleDateString('en-IN')}</td>
+                    <td className="fw-bold text-dark">{item.bill_number || '—'}</td>
+                    <td>{item.vendor_name || '—'}</td>
+                    <td className="fw-bold text-primary">₹{item.total_amount || 0}</td>
+                    <td className="text-end">
+                      <div className="d-flex justify-content-end gap-1">
+                        <Button variant="outline-primary" size="sm" onClick={() => history.push(`/operations/inventory-details/${item._id}`)}>
+                          View
+                        </Button>
+                        <Button variant="outline-warning" size="sm" onClick={() => history.push(`/operations/edit-inventory/${item._id}`)}>
+                          Edit
+                        </Button>
+                        <Button variant="outline-danger" size="sm" onClick={() => onDeleteClick(item)}>
+                          Delete
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        )}
+      </Card.Body>
+    </Card>
+  );
+};
+
+const RejectedInventory = ({ refreshKey, history, onDeleteClick }) => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchRejected = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${process.env.REACT_APP_API}/inventory/get-by-status/Rejected`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (res.data.success) {
+        setData(res.data.data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRejected();
+  }, [fetchRejected, refreshKey]);
+
+  return (
+    <Card className="workstation-card border-0 mb-4">
+      <Card.Body className="p-4">
+        <h5 className="fw-bold mb-3">Rejected Requests</h5>
+        {loading ? (
+          <div className="text-center py-4"><Spinner animation="border" variant="danger" /></div>
+        ) : data.length === 0 ? (
+          <Alert variant="light" className="text-center py-4 border-dashed mb-0">No records found</Alert>
+        ) : (
+          <div className="table-responsive">
+            <Table hover className="align-middle table-reconcile mb-0">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Category</th>
+                  <th>Reason</th>
+                  <th className="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((item) => (
+                  <tr key={item._id}>
+                    <td>{new Date(item.request_date).toLocaleDateString('en-IN')}</td>
+                    <td><Badge bg="danger" className="text-uppercase">{item.category}</Badge></td>
+                    <td className="text-muted small">"{item.reject_reason || 'No reason provided'}"</td>
+                    <td className="text-end">
+                      <div className="d-flex justify-content-end gap-1">
+                        <Button variant="outline-primary" size="sm" onClick={() => history.push(`/operations/inventory-details/${item._id}`)}>
+                          View
+                        </Button>
+                        <Button variant="outline-danger" size="sm" onClick={() => onDeleteClick(item)}>
+                          Delete
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        )}
+      </Card.Body>
+    </Card>
+  );
+};
+
+// ── Main Controller Workstation Component ─────────────────────────────────────
 const InventoryHistory = () => {
   const history = useHistory();
-  const { activePlans } = useContext(AuthContext);
-  const title = 'Manage Inventory';
   const brandColor = '#23b3f4';
-  const breadcrumbs = [{ to: '', text: 'Home' }, { to: 'operations/inventory-history', text: 'Operations' }, { to: 'operations/inventory-history', title: 'Manage Inventory' }];
+  const title = 'Inventory Control Hub (Admin)';
+  const breadcrumbs = [
+    { to: '', text: 'Home' },
+    { to: 'operations/inventory-history', text: 'Operations' },
+    { to: 'operations/inventory-history', title: 'Inventory Control Hub' }
+  ];
 
+  const [activeTab, setActiveTab] = useState('tracker');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [rejectInventoryModal, setRejectInventoryModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
-  const [rejecting, setRejecting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
+  const [isRejecting, setIsRejecting] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const triggerRefresh = () => setRefreshKey(prev => prev + 1);
+  const [pendingCorrectionCount, setPendingCorrectionCount] = useState(0);
 
-  const handleReject = async () => {
-    if (!selectedItem?._id) return;
-    setRejecting(true);
+  const triggerRefresh = () => setRefreshKey((prev) => prev + 1);
+
+  const fetchCorrectionCount = useCallback(async () => {
     try {
-      await axios.post(`${process.env.REACT_APP_API}/inventory/reject-request/${selectedItem._id}`, { reject_reason: rejectReason }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setRejectInventoryModal(false); setRejectReason(''); triggerRefresh();
-      toast.success('Inventory rejected successfully!');
-    } catch (err) { toast.error('Failed to reject'); } finally { setRejecting(false); }
-  };
+      const res = await getCorrectionRequests();
+      const pending = (res.data.data || []).filter((r) => r.status === 'pending');
+      setPendingCorrectionCount(pending.length);
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCorrectionCount();
+  }, [fetchCorrectionCount, refreshKey]);
 
   const handleDelete = async () => {
     if (!selectedItem?._id) return;
     setIsDeleting(true);
     try {
-      await axios.delete(`${process.env.REACT_APP_API}/inventory/delete/${selectedItem._id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setShowDeleteModal(false); triggerRefresh();
+      await axios.delete(`${process.env.REACT_APP_API}/inventory/delete/${selectedItem._id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setShowDeleteModal(false);
+      triggerRefresh();
       toast.success('Deleted successfully!');
-    } catch (err) { toast.error('Failed to delete'); } finally { setIsDeleting(false); }
+    } catch (err) {
+      toast.error('Failed to delete request.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!selectedItem?._id) return;
+    setIsRejecting(true);
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API}/inventory/reject-request/${selectedItem._id}`,
+        { reject_reason: rejectReason },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      setShowRejectModal(false);
+      setRejectReason('');
+      triggerRefresh();
+      toast.success('Inventory rejected successfully!');
+    } catch (err) {
+      toast.error('Failed to reject request.');
+    } finally {
+      setIsRejecting(false);
+    }
   };
 
   return (
-    <div className="inventory-history-inventory-container">
-
-      <HtmlHead title={title} description="Manage your inventory hub." />
+    <div className="workstation-container">
+      <style>{customStyles}</style>
+      <HtmlHead title={title} description="Unified Admin Daily Stock and Inventory tracker hub." />
       <div className="container-fluid px-lg-5">
         <div className="page-title-container mb-4 mt-5 mt-lg-0">
           <Row className="g-0 align-items-center">
@@ -331,27 +984,79 @@ const InventoryHistory = () => {
               <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
-            <Col xs="12" md="auto" className="d-flex flex-column flex-md-row gap-2 mt-3 mt-md-0 justify-content-md-end">
-              <Button as={Link} to="/operations/stock-management" className="manage-menu-custom-btn-outline shadow-sm border-0 px-4 py-2 w-100 w-md-auto">
-                <CsLineIcons icon="activity" size="18" className="me-2" /> Manage Stock
-              </Button>
-              <Button as={Link} to="/operations/add-inventory" className="manage-menu-custom-btn-outline shadow-sm border-0 px-4 py-2 w-100 w-md-auto">
-                <CsLineIcons icon="plus" size="18" className="me-2" /> Add Inventory
-              </Button>
-            </Col>
           </Row>
         </div>
 
-        <RequestedInventory refreshKey={refreshKey} brandColor={brandColor} onRejectClick={(item) => { setSelectedItem(item); setRejectInventoryModal(true); }} />
-        <CompletedInventory refreshKey={refreshKey} history={history} onDeleteClick={(item) => { setSelectedItem(item); setShowDeleteModal(true); }} />
-        <RejectedInventory refreshKey={refreshKey} history={history} onDeleteClick={(item) => { setSelectedItem(item); setShowDeleteModal(true); }} />
+        {/* Tab pill navigation */}
+        <Nav className="nav-pills-custom mb-4" variant="pills">
+          <Nav.Item>
+            <Nav.Link className={activeTab === 'tracker' ? 'active' : ''} onClick={() => setActiveTab('tracker')}>
+              <CsLineIcons icon="calendar" size="16" className="me-2" /> Daily Stock Tracker
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link className={activeTab === 'stock' ? 'active' : ''} onClick={() => setActiveTab('stock')}>
+              <CsLineIcons icon="activity" size="16" className="me-2" /> Stock Control
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link className={activeTab === 'requests' ? 'active' : ''} onClick={() => setActiveTab('requests')}>
+              <CsLineIcons icon="boxes" size="16" className="me-2" /> Purchase Requests
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link className={activeTab === 'wastage' ? 'active' : ''} onClick={() => setActiveTab('wastage')}>
+              <CsLineIcons icon="bin" size="16" className="me-2" /> Wastage logs
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link className={activeTab === 'corrections' ? 'active' : ''} onClick={() => setActiveTab('corrections')}>
+              <CsLineIcons icon="warning-hexagon" size="16" className="me-2" /> Correction Requests
+              {pendingCorrectionCount > 0 && (
+                <Badge bg="danger" className="ms-2 rounded-circle" style={{ fontSize: '0.65rem' }}>{pendingCorrectionCount}</Badge>
+              )}
+            </Nav.Link>
+          </Nav.Item>
+        </Nav>
 
-        <Modal show={rejectInventoryModal} onHide={() => setRejectInventoryModal(false)} centered contentClassName="border-0 shadow-lg" style={{ backdropFilter: 'blur(5px)' }}><div className="bg-white p-4 rounded-3"><Modal.Header closeButton className="border-0 p-0 mb-3"><Modal.Title className="fw-bold text-danger">Reject Request</Modal.Title></Modal.Header><Modal.Body className="p-0"><p className="fw-bold text-muted mb-3">Reason for rejection:</p><Form.Control as="textarea" rows={4} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Reason..." /></Modal.Body><Modal.Footer className="border-0 p-0 d-flex gap-2 justify-content-end mt-4"><Button variant="light" className="inventory-history-custom-btn-outline border-0 text-muted" onClick={() => setRejectInventoryModal(false)}>Cancel</Button><Button variant="danger" className="inventory-history-custom-btn-outline border-danger text-danger px-4" onClick={handleReject} disabled={rejecting}>{rejecting ? 'Processing...' : 'Confirm Reject'}</Button></Modal.Footer></div></Modal>
-        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered backdrop="static">
+        {/* Tab content renderer */}
+        {activeTab === 'tracker' && <DailyTrackerTab brandColor={brandColor} />}
+        {activeTab === 'stock' && <StockControlTab brandColor={brandColor} />}
+        {activeTab === 'requests' && (
+          <>
+            <RequestedInventory
+              refreshKey={refreshKey}
+              brandColor={brandColor}
+              onRejectClick={(item) => {
+                setSelectedItem(item);
+                setShowRejectModal(true);
+              }}
+            />
+            <CompletedInventory
+              refreshKey={refreshKey}
+              history={history}
+              onDeleteClick={(item) => {
+                setSelectedItem(item);
+                setShowDeleteModal(true);
+              }}
+            />
+            <RejectedInventory
+              refreshKey={refreshKey}
+              history={history}
+              onDeleteClick={(item) => {
+                setSelectedItem(item);
+                setShowDeleteModal(true);
+              }}
+            />
+          </>
+        )}
+        {activeTab === 'wastage' && <WastageLogsTab />}
+        {activeTab === 'corrections' && <CorrectionRequestsTab />}
+
+        {/* Deletion Modal */}
+        <Modal show={showDeleteModal} onHide={() => !isDeleting && setShowDeleteModal(false)} centered backdrop="static">
           <Modal.Header closeButton className="border-0 pb-0">
-            <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>
-              Confirm Deletion
-            </Modal.Title>
+            <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>Confirm Deletion</Modal.Title>
           </Modal.Header>
           <Modal.Body className="py-4">
             <div className="d-flex align-items-center mb-3">
@@ -360,37 +1065,44 @@ const InventoryHistory = () => {
               </div>
               <div>
                 <p className="mb-0 fw-bold text-dark">Permanently delete this record?</p>
-                <p className="mb-1 text-muted small">This clears the inventory log from your historical logs.</p>
-                <p className="mb-0 text-success small fw-semibold">Don't worry, your physical stock quantities remain perfectly safe.</p>
+                <p className="mb-1 text-muted small">This clears the inventory request log from history.</p>
+                <p className="mb-0 text-success small fw-semibold">Your physical stock quantities remain perfectly safe.</p>
               </div>
             </div>
           </Modal.Body>
           <Modal.Footer className="border-0 pt-0">
-            <Button 
-              variant="light" 
-              onClick={() => setShowDeleteModal(false)} 
-              disabled={isDeleting}
-              className="rounded-pill px-4 fw-bold inventory-history-custom-btn-outline border-0 text-muted"
-            >
+            <Button variant="light" className="rounded-pill px-4 fw-bold border-0 text-muted" onClick={() => setShowDeleteModal(false)} disabled={isDeleting}>
               Cancel
             </Button>
-            <Button 
-              variant="danger" 
-              onClick={handleDelete} 
-              disabled={isDeleting}
-              className="rounded-pill px-4 fw-bold shadow-sm inventory-history-custom-btn-outline border-danger text-danger"
-            >
-              {isDeleting ? (
-                <>
-                  <Spinner as="span" animation="border" size="sm" className="me-2" />
-                  Deleting...
-                </>
-              ) : (
-                <div className="d-flex align-items-center">
-                  <CsLineIcons icon="bin" size="16" className="me-2" stroke="currentColor" />
-                  Delete
-                </div>
-              )}
+            <Button variant="danger" className="rounded-pill px-4 fw-bold shadow-sm" onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+        {/* Reject Request Modal */}
+        <Modal show={showRejectModal} onHide={() => !isRejecting && setShowRejectModal(false)} centered>
+          <Modal.Header closeButton className="border-0 pb-0">
+            <Modal.Title className="fw-bold text-danger">Reject Request</Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="py-3">
+            <Form.Group>
+              <Form.Label className="fw-semibold">Reason for rejection:</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={4}
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Describe why this request is being rejected..."
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer className="border-0 pt-0">
+            <Button variant="light" className="rounded-pill px-4 fw-bold border-0 text-muted" onClick={() => setShowRejectModal(false)} disabled={isRejecting}>
+              Cancel
+            </Button>
+            <Button variant="danger" className="rounded-pill px-4 fw-bold shadow-sm" onClick={handleReject} disabled={isRejecting}>
+              {isRejecting ? 'Rejecting...' : 'Reject'}
             </Button>
           </Modal.Footer>
         </Modal>

@@ -124,23 +124,21 @@ const NavContent = () => {
           </div>
           <div className="operations-sub-menu-container">
             <Nav.Link as={NavLink} to="/operations/inventory-history" className="px-0" isActive={(match, location) => {
-              const inventoryPaths = ['/operations/inventory-history', '/operations/add-inventory', '/operations/edit-inventory', '/operations/complete-inventory', '/operations/inventory-details', '/operations/requested-inventory'];
+              const inventoryPaths = [
+                '/operations/inventory-history',
+                '/operations/add-inventory',
+                '/operations/edit-inventory',
+                '/operations/complete-inventory',
+                '/operations/inventory-details',
+                '/operations/requested-inventory',
+                '/operations/stock-management',
+                '/operations/daily-stock-logs',
+                '/operations/wastage-log'
+              ];
               return inventoryPaths.some(p => location.pathname.startsWith(p));
             }}>
               <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Manage Inventory</span>
-            </Nav.Link>
-            <Nav.Link as={NavLink} to="/operations/stock-management" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Stock Control</span>
-            </Nav.Link>
-            <Nav.Link as={NavLink} to="/operations/daily-stock-logs" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Stock Audit Logs</span>
-            </Nav.Link>
-            <Nav.Link as={NavLink} to="/operations/wastage-log" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Wastage Logs</span>
+              <span className="align-middle">Daily Inventory Workstation</span>
             </Nav.Link>
           </div>
         </div>
