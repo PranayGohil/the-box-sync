@@ -90,3 +90,8 @@ export const resolveCorrectionRequest = async (id, payload) => {
 export const getRestaurantTimings = async () => {
   return await axios.get(`${API_URL}/daily-stock/timings`, getHeaders());
 };
+
+// ── AI Insights ───────────────────────────────────────────────────────────────
+export const getAIInsights = async (payload = {}) => {
+  return await axios.post(`${API_URL}/daily-stock/ai-insights`, payload, getHeaders());
+};

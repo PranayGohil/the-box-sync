@@ -931,18 +931,195 @@ const resolveCorrectionRequest = async (req, res) => {
   }
 };
 
-// ─── GET /daily-stock/timings — Restaurant opening/closing time ──────────────
-const getRestaurantTimings = async (req, res) => {
+// ─── POST /daily-stock/ai-insights — Generate AI Inventory Insights ────────
+const getAIInsights = async (req, res) => {
   try {
     const userId = String(req.user._id || req.user);
-    const website = await Website.findOne({ user_id: userId }).lean();
+    const { customPrompt } = req.body;
+
+    const liveStock = await getLiveStock(userId);
+    const sevenDaysAgo = toMidnightUTC(new Date(Date.now() - 7 * 86400000));
+    const today = toMidnightUTC(new Date());
+
+    const [usageLast7, wastageLast7, openings, closings] = await Promise.all([
+      StockUsageLog.aggregate([
+        { $match: { user_id: userId, usage_date: { $gte: sevenDaysAgo } } },
+        { $group: { _id: "$item_name", total: { $sum: "$quantity_used" } } },
+      ]),
+      WastageLog.aggregate([
+        { $match: { user_id: userId, date: { $gte: sevenDaysAgo } } },
+        { $group: { _id: "$item_name", total: { $sum: "$quantity" } } },
+      ]),
+      DailyStockLog.findOne({ user_id: userId, shift: "opening", date: today }).lean(),
+      DailyStockLog.findOne({ user_id: userId, shift: "closing", date: today }).lean(),
+    ]);
+
+    const usageMap = {};
+    usageLast7.forEach((u) => { usageMap[u._id] = u.total; });
+
+    const wastageMap = {};
+    wastageLast7.forEach((w) => { wastageMap[w._id] = w.total; });
+
+    const openingMap = {};
+    if (openings && openings.items) {
+      openings.items.forEach((item) => { openingMap[item.item_name] = item.quantity; });
+    }
+
+    const closingMap = {};
+    if (closings && closings.items) {
+      closings.items.forEach((item) => { closingMap[item.item_name] = item.quantity; });
+    }
+
+    // Process items data for the engine
+    const itemsData = liveStock.map((s) => {
+      const name = s._id;
+      const unit = s.unit || "units";
+      const current = s.totalStock || 0;
+      const threshold = s.low_stock_threshold || 0;
+      const weeklyUsage = usageMap[name] || 0;
+      const weeklyWasted = wastageMap[name] || 0;
+      const dailyAverage = weeklyUsage / 7;
+      const daysRemaining = dailyAverage > 0 ? (current / dailyAverage) : 999;
+      
+      const opening = openingMap[name] !== undefined ? openingMap[name] : null;
+      const closing = closingMap[name] !== undefined ? closingMap[name] : null;
+
+      return {
+        item_name: name,
+        unit,
+        current_stock: current,
+        safety_minimum: threshold,
+        is_below_min: threshold > 0 && current < threshold,
+        weekly_usage: weeklyUsage,
+        weekly_wasted: weeklyWasted,
+        daily_average: dailyAverage,
+        days_remaining: daysRemaining,
+        opening_today: opening,
+        closing_today: closing,
+      };
+    });
+
+    // Compile local highlights (alerts, anomalies, reorders)
+    const alerts = itemsData
+      .filter((i) => i.is_below_min || i.days_remaining <= 3)
+      .map((i) => ({
+        item_name: i.item_name,
+        current_stock: i.current_stock,
+        unit: i.unit,
+        safety_minimum: i.safety_minimum,
+        days_remaining: i.days_remaining === 999 ? "N/A" : Math.round(i.days_remaining * 10) / 10,
+        reason: i.is_below_min ? "Below safety minimum level" : "Stock running out in less than 3 days",
+      }));
+
+    const anomalies = itemsData
+      .filter((i) => i.weekly_wasted > 0 && i.weekly_usage > 0 && (i.weekly_wasted / (i.weekly_usage + i.weekly_wasted)) > 0.2)
+      .map((i) => ({
+        item_name: i.item_name,
+        weekly_usage: i.weekly_usage,
+        weekly_wasted: i.weekly_wasted,
+        unit: i.unit,
+        wastage_rate: Math.round((i.weekly_wasted / (i.weekly_usage + i.weekly_wasted)) * 100),
+      }));
+
+    // Draft Purchase Order
+    const reorderList = itemsData
+      .filter((i) => i.is_below_min || i.days_remaining <= 3)
+      .map((i) => {
+        // Recommend refilling to Safety Minimum + 5 days of usage
+        const targetLevel = i.safety_minimum + (i.daily_average * 5);
+        const recommendQty = Math.ceil(Math.max(1, targetLevel - i.current_stock));
+        return {
+          item_name: i.item_name,
+          recommend_qty: recommendQty,
+          unit: i.unit,
+        };
+      });
+
+    let reorderDraftText = "AI DRAFTED PURCHASE ORDER\n";
+    reorderDraftText += "===========================\n";
+    if (reorderList.length === 0) {
+      reorderDraftText += "All items are well-stocked. No reorders needed.";
+    } else {
+      reorderList.forEach((r) => {
+        reorderDraftText += `- ${r.item_name}: ${r.recommend_qty} ${r.unit}\n`;
+      });
+    }
+
+    let conversationalSummary = "";
+    let isGeminiUsed = false;
+
+    // Check for GEMINI_API_KEY
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        const prompt = `You are a restaurant AI Inventory Co-pilot called The Box Sync.
+Based on the following JSON inventory data, write an audit analysis.
+Format your output with beautiful Markdown (including emojis, bold text, lists). Keep it concise, professional, and actionable.
+
+Inventory JSON:
+${JSON.stringify({
+  alerts,
+  anomalies,
+  reorderList,
+  itemsOverview: itemsData.slice(0, 10),
+})}
+
+User Custom Query (if any): "${customPrompt || ''}"
+
+Ensure you cover:
+1. Critical Warnings & Shortages (items running low or below safety levels).
+2. Wastage & Usage Anomalies (unusual waste ratios).
+3. Suggestions for optimal restocking.
+
+Be engaging and direct as a helpful AI assistant.`;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+          })
+        });
+
+        if (response.ok) {
+          const resData = await response.json();
+          conversationalSummary = resData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          if (conversationalSummary) {
+            isGeminiUsed = true;
+          }
+        }
+      } catch (err) {
+        console.error("Gemini API call failed, falling back to local engine:", err.message);
+      }
+    }
+
+    if (!isGeminiUsed) {
+      // Local Heuristics summary
+      conversationalSummary = `### 🤖 AI Inventory Audit Summary (Local Engine)
+
+Here is your automated daily inventory audit summary:
+
+${alerts.length > 0 ? `#### ⚠️ Critical Shortages / Alerts:
+${alerts.map(a => `- **${a.item_name}**: Current stock is **${a.current_stock} ${a.unit}**. *${a.reason}* (Estimated supply: **${a.days_remaining}** days).`).join('\n')}` : `- **All items are well-stocked!** Current quantities are above safety minimum thresholds.`}
+
+${anomalies.length > 0 ? `#### 🗑️ Wastage Alerts:
+${anomalies.map(w => `- **${w.item_name}**: Excessive wastage flagged! **${w.weekly_wasted} ${w.unit}** wasted vs **${w.weekly_usage} ${w.unit}** used in the last 7 days (Wastage Rate: **${w.wastage_rate}%**).`).join('\n')}` : `- **No high-wastage anomalies detected.** Wastage ratios are within acceptable limits (<20%).`}
+
+#### 📦 Smart Restock Suggestions:
+*Safety minimums suggest drafting order for ${reorderList.length} items.* Refer to the reorder draft below for supplier copy-paste details.
+`;
+    }
+
     res.json({
       success: true,
-      open_time_from: website?.open_time_from || null,
-      open_time_to: website?.open_time_to || null,
+      alerts,
+      anomalies,
+      reorderList,
+      reorderDraftText,
+      conversationalSummary,
+      geminiActive: isGeminiUsed,
     });
   } catch (error) {
-    console.error("getRestaurantTimings error:", error);
+    console.error("getAIInsights error:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -964,4 +1141,5 @@ module.exports = {
   getCorrectionRequests,
   resolveCorrectionRequest,
   getRestaurantTimings,
+  getAIInsights,
 };

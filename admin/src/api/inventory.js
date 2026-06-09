@@ -85,3 +85,8 @@ export const getCorrectionRequests = async () => {
 export const resolveCorrectionRequest = async (id, payload) => {
   return await axios.put(`${API_URL}/daily-stock/correction-request/${id}`, payload, getHeaders());
 };
+
+// ── AI Insights ───────────────────────────────────────────────────────────────
+export const getAIInsights = async (payload = {}) => {
+  return await axios.post(`${API_URL}/daily-stock/ai-insights`, payload, getHeaders());
+};

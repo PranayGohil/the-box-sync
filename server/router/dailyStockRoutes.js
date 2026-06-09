@@ -17,6 +17,7 @@ const {
   getCorrectionRequests,
   resolveCorrectionRequest,
   getRestaurantTimings,
+  getAIInsights,
 } = require("../controllers/dailyStockController");
 
 const dailyStockRouter = express.Router();
@@ -46,5 +47,8 @@ dailyStockRouter.put("/item/threshold", authMiddleware, updateItemThreshold);
 // Report
 dailyStockRouter.get("/report", authMiddleware, getDailyReport);
 dailyStockRouter.get("/report/export", authMiddleware, exportDailyReport);
+
+// AI Insights / Chat Co-pilot
+dailyStockRouter.post("/ai-insights", authMiddleware, getAIInsights);
 
 module.exports = dailyStockRouter;

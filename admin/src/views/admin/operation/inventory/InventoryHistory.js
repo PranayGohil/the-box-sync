@@ -18,7 +18,8 @@ import {
   getWastageLog,
   deleteWastageEntry,
   getCorrectionRequests,
-  resolveCorrectionRequest
+  resolveCorrectionRequest,
+  getAIInsights
 } from 'api/inventory';
 
 // ── Custom Shared Styles ─────────────────────────────────────────────────────
@@ -104,6 +105,63 @@ const customStyles = `
     font-weight: 800 !important;
     text-transform: uppercase;
     padding: 0.45rem 1rem !important;
+    border-radius: 50px !important;
+  }
+  .chat-box {
+    background: #ffffff;
+    border-radius: 1.25rem;
+    border: 1px solid #e2e8f0;
+    height: 400px;
+    overflow-y: auto;
+    padding: 1.5rem;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  }
+  .chat-bubble-assistant {
+    background: #f1f5f9;
+    color: #1e293b;
+    border-radius: 1rem 1rem 1rem 0;
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    max-width: 85%;
+    align-self: flex-start;
+  }
+  .chat-bubble-user {
+    background: #23b3f4;
+    color: #ffffff;
+    border-radius: 1rem 1rem 0 1rem;
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    max-width: 85%;
+    align-self: flex-end;
+  }
+  .prompt-btn {
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    border-radius: 20px !important;
+    padding: 0.45rem 1rem !important;
+    border: 1.5px solid rgba(35, 179, 244, 0.2) !important;
+    background: #ffffff !important;
+    color: #23b3f4 !important;
+    transition: all 0.2s ease;
+  }
+  .prompt-btn:hover {
+    background: #23b3f4 !important;
+    color: #ffffff !important;
+    border-color: #23b3f4 !important;
+    box-shadow: 0 4px 10px rgba(35, 179, 244, 0.15) !important;
+  }
+  .ai-card-glow {
+    border-left: 4px solid #8b5cf6 !important;
+  }
+  .ai-badge {
+    background: linear-gradient(135deg, #8b5cf6, #23b3f4) !important;
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    text-transform: uppercase;
+    font-size: 0.65rem !important;
+    padding: 0.35rem 0.75rem !important;
     border-radius: 50px !important;
   }
 `;
@@ -677,6 +735,210 @@ const CorrectionRequestsTab = () => {
   );
 };
 
+
+// ── Component: AI Co-pilot Tab ──────────────────────────────────────────────
+const AICopilotTab = () => {
+  const [messages, setMessages] = useState([
+    {
+      sender: 'assistant',
+      text: "Hello! I am your AI Inventory Co-pilot. I can analyze counts, detect stockout risks, track waste anomalies, or draft supplier orders. How can I help you today?",
+    },
+  ]);
+  const [inputValue, setInputValue] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [insights, setInsights] = useState(null);
+
+  const fetchAIInsights = useCallback(async (customQuery = '') => {
+    try {
+      setLoading(true);
+      const res = await getAIInsights({ customPrompt: customQuery });
+      if (res.data.success) {
+        setInsights(res.data);
+        if (customQuery) {
+          setMessages((prev) => [
+            ...prev,
+            { sender: 'assistant', text: res.data.conversationalSummary },
+          ]);
+        }
+      }
+    } catch (err) {
+      toast.error("Failed to load AI Insights");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAIInsights();
+  }, [fetchAIInsights]);
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!inputValue.trim()) return;
+    const query = inputValue;
+    setMessages((prev) => [...prev, { sender: 'user', text: query }]);
+    setInputValue('');
+    await fetchAIInsights(query);
+  };
+
+  const handleQuickPrompt = async (promptText) => {
+    setMessages((prev) => [...prev, { sender: 'user', text: promptText }]);
+    await fetchAIInsights(promptText);
+  };
+
+  return (
+    <Row className="g-3">
+      {/* Left Chat Column */}
+      <Col lg={7}>
+        <Card className="workstation-card border-0 mb-4 h-100">
+          <Card.Body className="p-4 d-flex flex-column h-100">
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <div>
+                <h5 className="fw-bold mb-1">
+                  AI Co-pilot Chat <Badge className="ai-badge ms-2">Gemini Pro</Badge>
+                </h5>
+                <p className="text-muted small mb-0">Ask questions about inventory levels, order calculations, or trends.</p>
+              </div>
+            </div>
+
+            {/* Chat Box */}
+            <div className="chat-box d-flex flex-column mb-3 flex-grow-1" style={{ minHeight: '350px' }}>
+              {messages.map((m, idx) => (
+                <div key={idx} className={m.sender === 'user' ? 'chat-bubble-user align-self-end' : 'chat-bubble-assistant align-self-start'}>
+                  <div style={{ whiteSpace: 'pre-wrap' }}>
+                    {m.text}
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div className="chat-bubble-assistant align-self-start d-flex align-items-center gap-2">
+                  <Spinner animation="grow" size="sm" variant="primary" />
+                  <span>AI Co-pilot is thinking...</span>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Prompts */}
+            <div className="d-flex flex-wrap gap-2 mb-3">
+              <Button className="prompt-btn" size="sm" onClick={() => handleQuickPrompt("Generate Reorder Draft")}>
+                📋 Draft Supplier Order
+              </Button>
+              <Button className="prompt-btn" size="sm" onClick={() => handleQuickPrompt("Identify ingredients at risk of stockout")}>
+                ⚠️ Scan Stockout Risks
+              </Button>
+              <Button className="prompt-btn" size="sm" onClick={() => handleQuickPrompt("Wastage patterns and anomalies")}>
+                🗑️ Wastage Analysis
+              </Button>
+            </div>
+
+            {/* Chat Input */}
+            <Form onSubmit={handleSendMessage} className="d-flex gap-2">
+              <Form.Control
+                type="text"
+                className="modern-input"
+                placeholder="Ask Co-pilot..."
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                disabled={loading}
+              />
+              <Button type="submit" variant="primary" className="rounded-pill px-4" disabled={loading || !inputValue.trim()}>
+                Send
+              </Button>
+            </Form>
+          </Card.Body>
+        </Card>
+      </Col>
+
+      {/* Right Insights Column */}
+      <Col lg={5}>
+        <Row className="g-3">
+          {/* Critical Warnings */}
+          <Col xs={12}>
+            <Card className="workstation-card border-0 mb-2 ai-card-glow shadow-sm">
+              <Card.Body className="p-4">
+                <h6 className="fw-bold text-danger mb-2 d-flex align-items-center">
+                  <CsLineIcons icon="warning-hexagon" className="me-2 text-danger" size="18" />
+                  Critical Stock Warnings
+                </h6>
+                {insights?.alerts?.length === 0 ? (
+                  <p className="text-muted small mb-0">No urgent shortages detected. All counts are safe.</p>
+                ) : (
+                  <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                    {insights?.alerts?.map((a, idx) => (
+                      <div key={idx} className="mb-2 pb-2 border-bottom last-border-0">
+                        <div className="fw-bold small text-dark">{a.item_name}</div>
+                        <div className="text-muted small">
+                          Stock: <span className="text-danger fw-bold">{a.current_stock}</span> / Min: {a.safety_minimum} ({a.reason})
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+
+          {/* Wastage Anomalies */}
+          <Col xs={12}>
+            <Card className="workstation-card border-0 mb-2 ai-card-glow shadow-sm" style={{ borderLeftColor: '#f59e0b' }}>
+              <Card.Body className="p-4">
+                <h6 className="fw-semibold text-warning mb-2 d-flex align-items-center">
+                  <CsLineIcons icon="bin" className="me-2 text-warning" size="18" />
+                  High Wastage Anomalies
+                </h6>
+                {insights?.anomalies?.length === 0 ? (
+                  <p className="text-muted small mb-0">Wastage ratios look healthy (&lt;20% of weekly usage).</p>
+                ) : (
+                  <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                    {insights?.anomalies?.map((w, idx) => (
+                      <div key={idx} className="mb-2 pb-2 border-bottom last-border-0">
+                        <div className="fw-bold small text-dark">{w.item_name}</div>
+                        <div className="text-muted small">
+                          Wasted: <span className="text-warning fw-bold">{w.weekly_wasted} {w.unit}</span> / Wastage Rate: <span className="text-danger fw-bold">{w.wastage_rate}%</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+
+          {/* Supplier Reorder Draft */}
+          <Col xs={12}>
+            <Card className="workstation-card border-0 shadow-sm">
+              <Card.Body className="p-4">
+                <h6 className="fw-bold text-primary mb-2 d-flex align-items-center">
+                  <CsLineIcons icon="file-text" className="me-2 text-primary" size="18" />
+                  Supplier Purchase Order Draft
+                </h6>
+                <textarea
+                  className="form-control font-monospace small bg-light p-3 border-0 rounded-3 mb-2"
+                  rows={6}
+                  readOnly
+                  value={insights?.reorderDraftText || 'Loading reorder list...'}
+                />
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  className="w-100 rounded-pill fw-bold border-2"
+                  disabled={!insights?.reorderList || insights.reorderList.length === 0}
+                  onClick={() => {
+                    navigator.clipboard.writeText(insights?.reorderDraftText);
+                    toast.success("Purchase order copied to clipboard!");
+                  }}
+                >
+                  Copy Order Text
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Col>
+    </Row>
+  );
+};
+
 // ── Components: Old requested list controllers local definitions ────────────
 const RequestedInventory = ({ refreshKey, onRejectClick }) => {
   const [data, setData] = useState([]);
@@ -1017,6 +1279,11 @@ const InventoryHistory = () => {
               )}
             </Nav.Link>
           </Nav.Item>
+          <Nav.Item>
+            <Nav.Link className={activeTab === 'ai' ? 'active' : ''} onClick={() => setActiveTab('ai')}>
+              <CsLineIcons icon="message" size="16" className="me-2" /> AI Co-pilot
+            </Nav.Link>
+          </Nav.Item>
         </Nav>
 
         {/* Tab content renderer */}
@@ -1052,6 +1319,7 @@ const InventoryHistory = () => {
         )}
         {activeTab === 'wastage' && <WastageLogsTab />}
         {activeTab === 'corrections' && <CorrectionRequestsTab />}
+        {activeTab === 'ai' && <AICopilotTab />}
 
         {/* Deletion Modal */}
         <Modal show={showDeleteModal} onHide={() => !isDeleting && setShowDeleteModal(false)} centered backdrop="static">
