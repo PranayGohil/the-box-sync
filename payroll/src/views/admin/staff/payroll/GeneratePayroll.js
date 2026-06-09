@@ -154,6 +154,9 @@ const customStyles = `
   }
   .react-select-premium {
     font-weight: 600 !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
   }
   .react-select-premium .react-select__control {
     border-radius: 10px !important;
@@ -477,18 +480,7 @@ export default function GeneratePayroll() {
                                 styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                             />
                         </Col>
-                        <Col xs={12} md={2}>
-                            <Form.Label className="small fw-bold text-muted text-uppercase">Working Days</Form.Label>
-                            <Select 
-                                classNamePrefix="react-select"
-                                className="react-select-premium shadow-sm"
-                                options={Array.from({length: 31}, (_, i) => ({ value: i + 1, label: i + 1 }))}
-                                value={{ value: workingDays, label: workingDays }}
-                                onChange={(opt) => { setWorkingDays(opt.value); setPreviewFetched(false); }}
-                                menuPortalTarget={document.body}
-                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                            />
-                        </Col>
+
                         <Col xs={12} md={3}>
                             <Form.Label className="small fw-bold text-muted text-uppercase">Batch Mode</Form.Label>
                             <Select 

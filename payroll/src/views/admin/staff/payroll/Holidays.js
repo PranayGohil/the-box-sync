@@ -25,6 +25,7 @@ const Holidays = () => {
     const [showModal, setShowModal] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [editingGroupIds, setEditingGroupIds] = useState([]);
 
     const payTypeOptions = [
         { value: 'true', label: 'Paid Holiday' },
@@ -65,31 +66,6 @@ const Holidays = () => {
         // eslint-disable-next-line
     }, [year]);
 
-    const handleShowModal = (holiday = null) => {
-        if (holiday) {
-            setEditingId(holiday._id);
-            setForm({
-                name: holiday.name,
-                date: new Date(holiday.date).toISOString().split('T')[0],
-                end_date: '', // Edit targets this specific holiday date first
-                holiday_type: holiday.holiday_type,
-                is_paid: holiday.is_paid,
-                notes: holiday.notes || ''
-            });
-        } else {
-            setEditingId(null);
-            setForm({
-                name: '',
-                date: '',
-                end_date: '',
-                holiday_type: 'public',
-                is_paid: true,
-                notes: ''
-            });
-        }
-        setShowModal(true);
-    };
-
     const getDatesInRange = (startDateStr, endDateStr) => {
         const dates = [];
         let currentDate = new Date(startDateStr);
@@ -105,6 +81,90 @@ const Holidays = () => {
         return dates;
     };
 
+    const groupHolidays = (holidayList) => {
+        if (!holidayList || holidayList.length === 0) return [];
+        
+        // Sort by date ascending
+        const sorted = [...holidayList].sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        const groups = [];
+        
+        sorted.forEach((item) => {
+            const itemDate = new Date(item.date);
+            itemDate.setHours(12, 0, 0, 0);
+            
+            let foundGroup = null;
+            for (let g of groups) {
+                if (g.name === item.name &&
+                    g.holiday_type === item.holiday_type &&
+                    g.is_paid === item.is_paid &&
+                    (g.notes || '') === (item.notes || '')) {
+                    
+                    const lastDateStr = g.dates[g.dates.length - 1];
+                    const lastDateObj = new Date(lastDateStr);
+                    lastDateObj.setHours(12, 0, 0, 0);
+                    
+                    const diffTime = Math.abs(itemDate - lastDateObj);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    if (diffDays === 1) {
+                        foundGroup = g;
+                        break;
+                    }
+                }
+            }
+            
+            if (foundGroup) {
+                foundGroup.dates.push(item.date);
+                foundGroup.ids.push(item._id);
+                foundGroup.items.push(item);
+            } else {
+                groups.push({
+                    name: item.name,
+                    holiday_type: item.holiday_type,
+                    is_paid: item.is_paid,
+                    notes: item.notes,
+                    dates: [item.date],
+                    ids: [item._id],
+                    items: [item]
+                });
+            }
+        });
+        
+        return groups;
+    };
+
+    const handleShowModal = (group = null) => {
+        if (group) {
+            setEditingId(group.ids[0]);
+            setEditingGroupIds(group.ids);
+            
+            const startDateStr = group.dates[0];
+            const endDateStr = group.dates.length > 1 ? group.dates[group.dates.length - 1] : '';
+            
+            setForm({
+                name: group.name,
+                date: new Date(startDateStr).toISOString().split('T')[0],
+                end_date: endDateStr ? new Date(endDateStr).toISOString().split('T')[0] : '',
+                holiday_type: group.holiday_type,
+                is_paid: group.is_paid,
+                notes: group.notes || ''
+            });
+        } else {
+            setEditingId(null);
+            setEditingGroupIds([]);
+            setForm({
+                name: '',
+                date: '',
+                end_date: '',
+                holiday_type: 'public',
+                is_paid: true,
+                notes: ''
+            });
+        }
+        setShowModal(true);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
@@ -115,27 +175,20 @@ const Holidays = () => {
             }
 
             if (editingId) {
-                // Update original holiday
-                await updateHoliday(editingId, {
+                // Delete all previous documents in the edited group
+                const deletePromises = editingGroupIds.map(id => deleteHoliday(id));
+                await Promise.all(deletePromises);
+
+                // Create new ones for the updated range
+                const promises = dates.map(d => addHoliday({
                     name: form.name,
-                    date: dates[0],
+                    date: d,
                     holiday_type: form.holiday_type,
                     is_paid: form.is_paid,
                     notes: form.notes
-                });
-
-                // If end date specified and generates range, insert rest as new
-                if (dates.length > 1) {
-                    const promises = dates.slice(1).map(d => addHoliday({
-                        name: form.name,
-                        date: d,
-                        holiday_type: form.holiday_type,
-                        is_paid: form.is_paid,
-                        notes: form.notes
-                    }));
-                    await Promise.all(promises);
-                }
-                toast.success(dates.length > 1 ? 'Holidays generated and updated successfully' : 'Holiday updated successfully');
+                }));
+                await Promise.all(promises);
+                toast.success('Holiday updated successfully');
             } else {
                 // Create multiple days in database
                 const promises = dates.map(d => addHoliday({
@@ -157,10 +210,11 @@ const Holidays = () => {
         }
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (ids) => {
         if (!window.confirm("Are you sure you want to delete this holiday?")) return;
         try {
-            await deleteHoliday(id);
+            const promises = ids.map(id => deleteHoliday(id));
+            await Promise.all(promises);
             toast.success('Holiday deleted successfully');
             fetchHolidays();
         } catch (err) {
@@ -476,17 +530,22 @@ const Holidays = () => {
                 </div>
             ) : (
                 <Row className="g-4">
-                    {holidays.map((h, idx) => {
-                        const dateObj = new Date(h.date);
-                        const day = format(dateObj, 'dd');
-                        const month = format(dateObj, 'MMM');
-                        const yearStr = format(dateObj, 'yyyy');
-                        const weekday = format(dateObj, 'EEEE');
+                    {groupHolidays(holidays).map((g, idx) => {
+                        const startDate = new Date(g.dates[0]);
+                        const endDate = new Date(g.dates[g.dates.length - 1]);
+                        const day = format(startDate, 'dd');
+                        const month = format(startDate, 'MMM');
+                        const yearStr = format(startDate, 'yyyy');
                         
-                        const theme = getHolidayTypeTheme(h.holiday_type);
+                        let dateSubtitle = format(startDate, 'EEEE');
+                        if (g.dates.length > 1) {
+                            dateSubtitle = `${format(startDate, 'dd MMM')} - ${format(endDate, 'dd MMM yyyy')} (${g.dates.length} Days)`;
+                        }
+                        
+                        const theme = getHolidayTypeTheme(g.holiday_type);
 
                         return (
-                            <Col lg="4" md="6" key={h._id || idx}>
+                            <Col lg="4" md="6" key={g.ids[0] || idx}>
                                 <Card className="holiday-glass-card border-0 h-100 shadow-sm">
                                     <Card.Body className="p-4">
                                         <div className="d-flex justify-content-between align-items-start mb-4">
@@ -500,15 +559,15 @@ const Holidays = () => {
                                                     <span className="holiday-calendar-year">{yearStr}</span>
                                                 </div>
                                                 <div>
-                                                    <span className="fw-bold text-dark fs-5 d-block leading-tight">{h.name}</span>
-                                                    <span className="text-muted small fw-medium mt-1 d-block">{weekday}</span>
+                                                    <span className="fw-bold text-dark fs-5 d-block leading-tight">{g.name}</span>
+                                                    <span className="text-muted small fw-medium mt-1 d-block">{dateSubtitle}</span>
                                                 </div>
                                             </div>
                                             <div className="d-flex align-items-center">
-                                                <Button variant="none" className="holiday-card-icon-btn edit-btn me-1.5" onClick={() => handleShowModal(h)} title="Edit">
+                                                <Button variant="none" className="holiday-card-icon-btn edit-btn me-1.5" onClick={() => handleShowModal(g)} title="Edit">
                                                     <CsLineIcons icon="edit" size="15" />
                                                 </Button>
-                                                <Button variant="none" className="holiday-card-icon-btn delete-btn" onClick={() => handleDelete(h._id)} title="Delete">
+                                                <Button variant="none" className="holiday-card-icon-btn delete-btn" onClick={() => handleDelete(g.ids)} title="Delete">
                                                     <CsLineIcons icon="bin" size="15" />
                                                 </Button>
                                             </div>
@@ -529,7 +588,7 @@ const Holidays = () => {
                                                     }}
                                                     className="text-capitalize"
                                                 >
-                                                    {h.holiday_type}
+                                                    {g.holiday_type}
                                                 </Badge>
                                             </span>
                                         </div>
@@ -537,7 +596,7 @@ const Holidays = () => {
                                         <div className="holiday-data-row align-items-center">
                                             <span className="text-muted fw-bold small">Paid Status:</span>
                                             <span>
-                                                {h.is_paid ? (
+                                                {g.is_paid ? (
                                                     <Badge bg="none" style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.15)', borderRadius: '50px', padding: '0.35rem 0.75rem', fontWeight: '700' }}>Paid Holiday</Badge>
                                                 ) : (
                                                     <Badge bg="none" style={{ backgroundColor: 'rgba(245, 158, 11, 0.08)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.15)', borderRadius: '50px', padding: '0.35rem 0.75rem', fontWeight: '700' }}>Unpaid</Badge>
@@ -545,11 +604,11 @@ const Holidays = () => {
                                             </span>
                                         </div>
                                         
-                                        {h.notes && (
+                                        {g.notes && (
                                             <div className="holiday-data-row flex-column align-items-start mt-2 border-0 pb-0">
                                                 <span className="text-muted fw-bold small mb-1">Notes:</span>
                                                 <p className="text-muted small mb-0 fw-medium bg-light p-2.5 w-100 rounded-3">
-                                                    {h.notes}
+                                                    {g.notes}
                                                 </p>
                                             </div>
                                         )}

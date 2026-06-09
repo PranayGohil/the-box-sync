@@ -176,9 +176,15 @@ const PayrollSettings = () => {
     const [saving, setSaving] = useState(false);
 
     const [newEarningLabel, setNewEarningLabel] = useState('');
+    const [newDeductionLabel, setNewDeductionLabel] = useState('');
+
+    const [expandEPF, setExpandEPF] = useState(false);
+    const [expandESI, setExpandESI] = useState(false);
+    const [expandPT, setExpandPT] = useState(false);
 
     const [config, setConfig] = useState({
         custom_earnings: [],
+        custom_deductions: [],
         global_weekly_offs: [{ day: 'Sunday', type: 'all_weeks', weeks: [] }],
         statutory_config: {
             pf: { is_mandatory: false, employee_percentage: 12, employer_percentage: 12, salary_limit: 15000, auto_calculate: true },
@@ -189,7 +195,9 @@ const PayrollSettings = () => {
             leave_year_start: 'january',
             weekly_off_days: [0],
             half_day_hours: 4,
-            full_day_hours: 8
+            full_day_hours: 8,
+            lunch_start_time: '01:00 PM',
+            lunch_end_time: '02:00 PM'
         }
     });
 
@@ -198,9 +206,15 @@ const PayrollSettings = () => {
             setLoading(true);
             const res = await getPayrollConfig();
             if (res.success && res.data) {
+                const statutory = res.data.statutory_config || {};
+                if (statutory.pf?.is_mandatory) setExpandEPF(true);
+                if (statutory.esi?.is_mandatory) setExpandESI(true);
+                if (statutory.pt?.is_applicable) setExpandPT(true);
+
                 // Merge with defaults to prevent undefined errors
                 setConfig({
                     custom_earnings: res.data.custom_earnings || [],
+                    custom_deductions: res.data.custom_deductions || [],
                     global_weekly_offs: res.data.global_weekly_offs && res.data.global_weekly_offs.length > 0 ? res.data.global_weekly_offs : [{ day: 'Sunday', type: 'all_weeks', weeks: [] }],
                     statutory_config: {
                         pf: { ...config.statutory_config.pf, ...(res.data.statutory_config?.pf || {}) },
@@ -294,6 +308,34 @@ const PayrollSettings = () => {
         const current = [...config.custom_earnings];
         current.splice(idx, 1);
         setConfig({ ...config, custom_earnings: current });
+    };
+
+    const toggleDeduction = (idx) => {
+        const current = [...config.custom_deductions];
+        current[idx].is_active = !current[idx].is_active;
+        setConfig({ ...config, custom_deductions: current });
+    };
+
+    const addCustomDeduction = () => {
+        if (!newDeductionLabel.trim()) return;
+        const newId = newDeductionLabel.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        const current = [...config.custom_deductions];
+        
+        // Prevent duplicate IDs
+        if (current.some(e => e.id === newId)) {
+            toast.error("A deduction component with this name already exists");
+            return;
+        }
+
+        current.push({ id: newId, label: newDeductionLabel.trim(), is_active: true });
+        setConfig({ ...config, custom_deductions: current });
+        setNewDeductionLabel('');
+    };
+
+    const deleteCustomDeduction = (idx) => {
+        const current = [...config.custom_deductions];
+        current.splice(idx, 1);
+        setConfig({ ...config, custom_deductions: current });
     };
 
     const toggleWeekDay = (dayValue) => {
@@ -612,6 +654,18 @@ const PayrollSettings = () => {
                                         <Form.Control type="number" value={config.org_rules.half_day_hours} onChange={e => updateOrg('half_day_hours', Number(e.target.value))} className="form-control-premium shadow-sm" />
                                     </Form.Group>
                                 </Col>
+                                <Col md="6">
+                                    <Form.Group>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Lunch Start Time</Form.Label>
+                                        <Form.Control type="text" value={config.org_rules.lunch_start_time || ''} onChange={e => updateOrg('lunch_start_time', e.target.value)} placeholder="e.g. 01:00 PM" className="form-control-premium shadow-sm" />
+                                    </Form.Group>
+                                </Col>
+                                <Col md="6">
+                                    <Form.Group>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Lunch End Time</Form.Label>
+                                        <Form.Control type="text" value={config.org_rules.lunch_end_time || ''} onChange={e => updateOrg('lunch_end_time', e.target.value)} placeholder="e.g. 02:00 PM" className="form-control-premium shadow-sm" />
+                                    </Form.Group>
+                                </Col>
                             </Row>
                         </Card.Body>
                     </Card>
@@ -664,190 +718,257 @@ const PayrollSettings = () => {
                     </Card>
                 </Col>
 
-                {/* ── EPF Configuration ── */}
-                <Col xl="6">
-                    <Card className="h-100 glass-card">
-                        <Card.Body className="p-4">
-                            <h5 className="fw-bold mb-4 text-primary">Provident Fund (EPF)</h5>
-                            <Form.Group className="mb-4 bg-light p-3 rounded-lg border">
-                                <Form.Check 
-                                    type="switch" 
-                                    label={<span className="fw-bold ms-2 fs-6 text-primary">Enable PF Deduction</span>} 
-                                    checked={config.statutory_config.pf.is_mandatory} 
-                                    onChange={e => updatePF('is_mandatory', e.target.checked)} 
-                                />
-                            </Form.Group>
-                            
-                            {config.statutory_config.pf.is_mandatory && (
-                                <Row className="g-4 mt-2">
-                                    <Col md="6">
-                                        <Form.Group>
-                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Employee Contribution (%)</Form.Label>
-                                            <Form.Control type="number" step="0.01" value={config.statutory_config.pf.employee_percentage} onChange={e => updatePF('employee_percentage', Number(e.target.value))} className="form-control-premium shadow-sm" />
-                                        </Form.Group>
-                                    </Col>
-                                    <Col md="6">
-                                        <Form.Group>
-                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Employer Contribution (%)</Form.Label>
-                                            <Form.Control type="number" step="0.01" value={config.statutory_config.pf.employer_percentage} onChange={e => updatePF('employer_percentage', Number(e.target.value))} className="form-control-premium shadow-sm" />
-                                        </Form.Group>
-                                    </Col>
-                                    <Col md="12">
-                                        <Form.Group>
-                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Basic Salary Limit (₹)</Form.Label>
-                                            <Form.Control type="number" value={config.statutory_config.pf.salary_limit} onChange={e => updatePF('salary_limit', Number(e.target.value))} className="form-control-premium shadow-sm" />
-                                            <Form.Text className="text-muted ms-1">Statutory limit is ₹15,000. Set to 0 to apply to all basic salaries without a cap.</Form.Text>
-                                        </Form.Group>
-                                    </Col>
-                                </Row>
-                            )}
-                        </Card.Body>
-                    </Card>
-                </Col>
-
-                {/* ── ESI Configuration ── */}
-                <Col xl="6">
-                    <Card className="h-100 glass-card">
-                        <Card.Body className="p-4">
-                            <h5 className="fw-bold mb-4 text-primary">Employee State Insurance (ESI)</h5>
-                            <Form.Group className="mb-4 bg-light p-3 rounded-lg border">
-                                <Form.Check 
-                                    type="switch" 
-                                    label={<span className="fw-bold ms-2 fs-6 text-primary">Enable ESI Deduction</span>} 
-                                    checked={config.statutory_config.esi.is_mandatory} 
-                                    onChange={e => updateESI('is_mandatory', e.target.checked)} 
-                                />
-                            </Form.Group>
-
-                            {config.statutory_config.esi.is_mandatory && (
-                                <Row className="g-4 mt-2">
-                                    <Col md="6">
-                                        <Form.Group>
-                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Employee Contribution (%)</Form.Label>
-                                            <Form.Control type="number" step="0.01" value={config.statutory_config.esi.employee_percentage} onChange={e => updateESI('employee_percentage', Number(e.target.value))} className="form-control-premium shadow-sm" />
-                                        </Form.Group>
-                                    </Col>
-                                    <Col md="6">
-                                        <Form.Group>
-                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Employer Contribution (%)</Form.Label>
-                                            <Form.Control type="number" step="0.01" value={config.statutory_config.esi.employer_percentage} onChange={e => updateESI('employer_percentage', Number(e.target.value))} className="form-control-premium shadow-sm" />
-                                        </Form.Group>
-                                    </Col>
-                                    <Col md="12">
-                                        <Form.Group>
-                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Gross Salary Limit (₹)</Form.Label>
-                                            <Form.Control type="number" value={config.statutory_config.esi.gross_limit} onChange={e => updateESI('gross_limit', Number(e.target.value))} className="form-control-premium shadow-sm" />
-                                            <Form.Text className="text-muted ms-1">ESI applies only if gross salary is ≤ ₹21,000.</Form.Text>
-                                        </Form.Group>
-                                    </Col>
-                                </Row>
-                            )}
-                        </Card.Body>
-                    </Card>
-                </Col>
-
-                {/* ── Professional Tax (PT) ── */}
+                {/* ── Deductions Components ── */}
                 <Col xl="12">
                     <Card className="glass-card">
                         <Card.Body className="p-4">
-                            <h5 className="fw-bold mb-4 text-primary">Professional Tax (PT) Config</h5>
-                            <Row className="align-items-center mb-4 g-4">
-                                <Col>
-                                    <Form.Check 
-                                        type="switch" 
-                                        label={<span className="fw-bold ms-2 fs-5 text-primary">Enable Professional Tax</span>} 
-                                        checked={config.statutory_config.pt.is_applicable} 
-                                        onChange={e => updatePT('is_applicable', e.target.checked)} 
-                                    />
-                                </Col>
-                                {config.statutory_config.pt.is_applicable && (
-                                    <Col md="4">
-                                        <Form.Group>
-                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">State</Form.Label>
-                                            <Select
-                                                options={INDIAN_STATES}
-                                                value={INDIAN_STATES.find(opt => opt.value === config.statutory_config.pt.state)}
-                                                onChange={handleStateChange}
-                                                placeholder="Select State"
-                                                classNamePrefix="react-select"
-                                                className="react-select-premium shadow-sm"
-                                            />
-                                        </Form.Group>
-                                    </Col>
-                                )}
-                            </Row>
+                            <div className="d-flex justify-content-between align-items-center mb-4">
+                                <h5 className="fw-bold mb-0 text-primary">Deductions Components</h5>
+                            </div>
+                            <p className="text-muted mb-4 small fw-medium">Configure active statutory deductions like Provident Fund (EPF), Employee State Insurance (ESI), and Professional Tax (PT), or define custom deductions.</p>
 
-                            {config.statutory_config.pt.is_applicable && (
-                                <>
-                                    <h6 className="mb-3 mt-4 text-primary fw-bold">Tax Slabs (Monthly)</h6>
-                                    {config.statutory_config.pt.slabs.length === 0 ? (
-                                        <div className="text-muted mb-3 bg-light p-3 rounded text-center border">No slabs added. Click below to add a salary range.</div>
-                                    ) : (
-                                        <>
-                                            {/* Desktop View */}
-                                            <div className="table-responsive d-none d-md-block mb-4">
-                                                <Table hover className="mb-0 custom-table-glass">
-                                                    <thead>
-                                                        <tr>
-                                                            <th className="text-muted fw-bold small text-uppercase ps-4">Min Salary (₹)</th>
-                                                            <th className="text-muted fw-bold small text-uppercase">Max Salary (₹)</th>
-                                                            <th className="text-muted fw-bold small text-uppercase">PT Amount (₹/mo)</th>
-                                                            <th className="text-muted fw-bold small text-uppercase text-center pe-4" style={{ width: '100px' }}>Action</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {config.statutory_config.pt.slabs.map((slab, idx) => (
-                                                            <tr key={idx}>
-                                                                <td className="align-middle ps-4"><Form.Control type="number" size="sm" value={slab.min_salary} onChange={e => updateSlab(idx, 'min_salary', e.target.value)} className="form-control-premium shadow-sm" style={{ height: '35px', minHeight: '35px' }} /></td>
-                                                                <td className="align-middle"><Form.Control type="number" size="sm" value={slab.max_salary} onChange={e => updateSlab(idx, 'max_salary', e.target.value)} className="form-control-premium shadow-sm" style={{ height: '35px', minHeight: '35px' }} /></td>
-                                                                <td className="align-middle"><Form.Control type="number" size="sm" value={slab.amount} onChange={e => updateSlab(idx, 'amount', e.target.value)} className="form-control-premium shadow-sm" style={{ height: '35px', minHeight: '35px' }} /></td>
-                                                                <td className="text-center align-middle pe-4">
-                                                                    <Button variant="none" size="sm" className="text-danger p-1 hover-scale" onClick={() => removePTSlab(idx)}>
-                                                                        <CsLineIcons icon="bin" size="18" />
-                                                                    </Button>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </Table>
-                                            </div>
+                            <Form.Group className="mb-4 d-flex gap-2">
+                                <Form.Control 
+                                    type="text" 
+                                    placeholder="Enter custom deduction name (e.g. Loans)" 
+                                    className="form-control-premium shadow-sm"
+                                    value={newDeductionLabel}
+                                    onChange={(e) => setNewDeductionLabel(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && addCustomDeduction()}
+                                />
+                                <Button variant="none" className="custom-btn-primary-outline text-nowrap rounded" onClick={addCustomDeduction}>
+                                    <CsLineIcons icon="plus" size="18" className="me-1" /> Add
+                                </Button>
+                            </Form.Group>
 
-                                            {/* Mobile View */}
-                                            <div className="d-block d-md-none mb-4">
-                                                {config.statutory_config.pt.slabs.map((slab, idx) => (
-                                                    <Card key={idx} className="mb-3 border bg-light shadow-none" style={{ borderRadius: '12px' }}>
-                                                        <Card.Body className="p-3">
-                                                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                                                <span className="fw-bold text-primary small">Slab {idx + 1}</span>
-                                                                <Button variant="none" size="sm" className="text-danger p-0 m-0" onClick={() => removePTSlab(idx)}>
-                                                                    <CsLineIcons icon="bin" size="18" />
-                                                                </Button>
-                                                            </div>
-                                                            <Row className="g-3">
-                                                                <Col xs="6">
-                                                                    <Form.Label className="small fw-bold text-muted text-uppercase mb-1">Min (₹)</Form.Label>
-                                                                    <Form.Control type="number" size="sm" value={slab.min_salary} onChange={e => updateSlab(idx, 'min_salary', e.target.value)} className="form-control-premium shadow-sm" />
-                                                                </Col>
-                                                                <Col xs="6">
-                                                                    <Form.Label className="small fw-bold text-muted text-uppercase mb-1">Max (₹)</Form.Label>
-                                                                    <Form.Control type="number" size="sm" value={slab.max_salary} onChange={e => updateSlab(idx, 'max_salary', e.target.value)} className="form-control-premium shadow-sm" />
-                                                                </Col>
-                                                                <Col xs="12">
-                                                                    <Form.Label className="small fw-bold text-muted text-uppercase mb-1">PT Amount (₹/mo)</Form.Label>
-                                                                    <Form.Control type="number" size="sm" value={slab.amount} onChange={e => updateSlab(idx, 'amount', e.target.value)} className="form-control-premium shadow-sm" />
-                                                                </Col>
-                                                            </Row>
-                                                        </Card.Body>
-                                                    </Card>
-                                                ))}
-                                            </div>
-                                        </>
+                            <div className="d-flex flex-column gap-3">
+                                {/* EPF Component */}
+                                <div className="p-3 border rounded bg-light">
+                                    <div className="d-flex justify-content-between align-items-center">
+                                        <Form.Check
+                                            type="switch"
+                                            id="switch-epf"
+                                            label={<span className="fw-bold ms-1 text-dark">Provident Fund (EPF)</span>}
+                                            checked={config.statutory_config.pf.is_mandatory}
+                                            onChange={e => {
+                                                updatePF('is_mandatory', e.target.checked);
+                                                if (e.target.checked) setExpandEPF(true);
+                                            }}
+                                            className="mb-0"
+                                        />
+                                        {config.statutory_config.pf.is_mandatory && (
+                                            <Button variant="none" size="sm" className="text-primary p-0 m-0 hover-scale" onClick={() => setExpandEPF(!expandEPF)}>
+                                                <CsLineIcons icon={expandEPF ? "chevron-up" : "gear"} size="18" />
+                                            </Button>
+                                        )}
+                                    </div>
+
+                                    {config.statutory_config.pf.is_mandatory && expandEPF && (
+                                        <div className="mt-3 pt-3 border-top">
+                                            <Row className="g-3">
+                                                <Col md="4">
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Employee Contribution (%)</Form.Label>
+                                                        <Form.Control type="number" step="0.01" value={config.statutory_config.pf.employee_percentage} onChange={e => updatePF('employee_percentage', Number(e.target.value))} className="form-control-premium shadow-sm" />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md="4">
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Employer Contribution (%)</Form.Label>
+                                                        <Form.Control type="number" step="0.01" value={config.statutory_config.pf.employer_percentage} onChange={e => updatePF('employer_percentage', Number(e.target.value))} className="form-control-premium shadow-sm" />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md="4">
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Basic Salary Limit (₹)</Form.Label>
+                                                        <Form.Control type="number" value={config.statutory_config.pf.salary_limit} onChange={e => updatePF('salary_limit', Number(e.target.value))} className="form-control-premium shadow-sm" />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md="12">
+                                                    <Form.Text className="text-muted ms-1">Statutory limit is ₹15,000. Set to 0 to apply to all basic salaries without a cap.</Form.Text>
+                                                </Col>
+                                            </Row>
+                                        </div>
                                     )}
-                                    <Button variant="none" size="sm" onClick={addPTSlab} className="custom-btn-primary-outline rounded-pill px-4 mt-2 shadow-sm">
-                                        <CsLineIcons icon="plus" size="14" className="me-2" /> Add New Slab
-                                    </Button>
-                                </>
-                            )}
+                                </div>
+
+                                {/* ESI Component */}
+                                <div className="p-3 border rounded bg-light">
+                                    <div className="d-flex justify-content-between align-items-center">
+                                        <Form.Check
+                                            type="switch"
+                                            id="switch-esi"
+                                            label={<span className="fw-bold ms-1 text-dark">Employee State Insurance (ESI)</span>}
+                                            checked={config.statutory_config.esi.is_mandatory}
+                                            onChange={e => {
+                                                updateESI('is_mandatory', e.target.checked);
+                                                if (e.target.checked) setExpandESI(true);
+                                            }}
+                                            className="mb-0"
+                                        />
+                                        {config.statutory_config.esi.is_mandatory && (
+                                            <Button variant="none" size="sm" className="text-primary p-0 m-0 hover-scale" onClick={() => setExpandESI(!expandESI)}>
+                                                <CsLineIcons icon={expandESI ? "chevron-up" : "gear"} size="18" />
+                                            </Button>
+                                        )}
+                                    </div>
+
+                                    {config.statutory_config.esi.is_mandatory && expandESI && (
+                                        <div className="mt-3 pt-3 border-top">
+                                            <Row className="g-3">
+                                                <Col md="4">
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Employee Contribution (%)</Form.Label>
+                                                        <Form.Control type="number" step="0.01" value={config.statutory_config.esi.employee_percentage} onChange={e => updateESI('employee_percentage', Number(e.target.value))} className="form-control-premium shadow-sm" />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md="4">
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Employer Contribution (%)</Form.Label>
+                                                        <Form.Control type="number" step="0.01" value={config.statutory_config.esi.employer_percentage} onChange={e => updateESI('employer_percentage', Number(e.target.value))} className="form-control-premium shadow-sm" />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md="4">
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Gross Salary Limit (₹)</Form.Label>
+                                                        <Form.Control type="number" value={config.statutory_config.esi.gross_limit} onChange={e => updateESI('gross_limit', Number(e.target.value))} className="form-control-premium shadow-sm" />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md="12">
+                                                    <Form.Text className="text-muted ms-1">ESI applies only if gross salary is ≤ ₹21,000.</Form.Text>
+                                                </Col>
+                                            </Row>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* PT Component */}
+                                <div className="p-3 border rounded bg-light">
+                                    <div className="d-flex justify-content-between align-items-center">
+                                        <Form.Check
+                                            type="switch"
+                                            id="switch-pt"
+                                            label={<span className="fw-bold ms-1 text-dark">Professional Tax (PT)</span>}
+                                            checked={config.statutory_config.pt.is_applicable}
+                                            onChange={e => {
+                                                updatePT('is_applicable', e.target.checked);
+                                                if (e.target.checked) setExpandPT(true);
+                                            }}
+                                            className="mb-0"
+                                        />
+                                        {config.statutory_config.pt.is_applicable && (
+                                            <Button variant="none" size="sm" className="text-primary p-0 m-0 hover-scale" onClick={() => setExpandPT(!expandPT)}>
+                                                <CsLineIcons icon={expandPT ? "chevron-up" : "gear"} size="18" />
+                                            </Button>
+                                        )}
+                                    </div>
+
+                                    {config.statutory_config.pt.is_applicable && expandPT && (
+                                        <div className="mt-3 pt-3 border-top">
+                                            <Row className="g-3 align-items-end mb-4">
+                                                <Col md="6">
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">State</Form.Label>
+                                                        <Select
+                                                            options={INDIAN_STATES}
+                                                            value={INDIAN_STATES.find(opt => opt.value === config.statutory_config.pt.state)}
+                                                            onChange={handleStateChange}
+                                                            placeholder="Select State"
+                                                            classNamePrefix="react-select"
+                                                            className="react-select-premium shadow-sm"
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                            </Row>
+
+                                            <h6 className="mb-3 mt-4 text-primary fw-bold">Tax Slabs (Monthly)</h6>
+                                            {config.statutory_config.pt.slabs.length === 0 ? (
+                                                <div className="text-muted mb-3 bg-white p-3 rounded text-center border">No slabs added. Click below to add a salary range.</div>
+                                            ) : (
+                                                <>
+                                                    {/* Desktop View */}
+                                                    <div className="table-responsive d-none d-md-block mb-4">
+                                                        <Table hover className="mb-0 custom-table-glass">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th className="text-muted fw-bold small text-uppercase ps-4">Min Salary (₹)</th>
+                                                                    <th className="text-muted fw-bold small text-uppercase">Max Salary (₹)</th>
+                                                                    <th className="text-muted fw-bold small text-uppercase">PT Amount (₹/mo)</th>
+                                                                    <th className="text-muted fw-bold small text-uppercase text-center pe-4" style={{ width: '100px' }}>Action</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {config.statutory_config.pt.slabs.map((slab, idx) => (
+                                                                    <tr key={idx}>
+                                                                        <td className="align-middle ps-4"><Form.Control type="number" size="sm" value={slab.min_salary} onChange={e => updateSlab(idx, 'min_salary', e.target.value)} className="form-control-premium shadow-sm" style={{ height: '35px', minHeight: '35px' }} /></td>
+                                                                        <td className="align-middle"><Form.Control type="number" size="sm" value={slab.max_salary} onChange={e => updateSlab(idx, 'max_salary', e.target.value)} className="form-control-premium shadow-sm" style={{ height: '35px', minHeight: '35px' }} /></td>
+                                                                        <td className="align-middle"><Form.Control type="number" size="sm" value={slab.amount} onChange={e => updateSlab(idx, 'amount', e.target.value)} className="form-control-premium shadow-sm" style={{ height: '35px', minHeight: '35px' }} /></td>
+                                                                        <td className="text-center align-middle pe-4">
+                                                                            <Button variant="none" size="sm" className="text-danger p-1 hover-scale" onClick={() => removePTSlab(idx)}>
+                                                                                <CsLineIcons icon="bin" size="18" />
+                                                                            </Button>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </Table>
+                                                    </div>
+
+                                                    {/* Mobile View */}
+                                                    <div className="d-block d-md-none mb-4">
+                                                        {config.statutory_config.pt.slabs.map((slab, idx) => (
+                                                            <Card key={idx} className="mb-3 border bg-white shadow-none" style={{ borderRadius: '12px' }}>
+                                                                <Card.Body className="p-3">
+                                                                    <div className="d-flex justify-content-between align-items-center mb-3">
+                                                                        <span className="fw-bold text-primary small">Slab {idx + 1}</span>
+                                                                        <Button variant="none" size="sm" className="text-danger p-0 m-0" onClick={() => removePTSlab(idx)}>
+                                                                            <CsLineIcons icon="bin" size="18" />
+                                                                        </Button>
+                                                                    </div>
+                                                                    <Row className="g-3">
+                                                                        <Col xs="6">
+                                                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-1">Min (₹)</Form.Label>
+                                                                            <Form.Control type="number" size="sm" value={slab.min_salary} onChange={e => updateSlab(idx, 'min_salary', e.target.value)} className="form-control-premium shadow-sm" />
+                                                                        </Col>
+                                                                        <Col xs="6">
+                                                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-1">Max (₹)</Form.Label>
+                                                                            <Form.Control type="number" size="sm" value={slab.max_salary} onChange={e => updateSlab(idx, 'max_salary', e.target.value)} className="form-control-premium shadow-sm" />
+                                                                        </Col>
+                                                                        <Col xs="12">
+                                                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-1">PT Amount (₹/mo)</Form.Label>
+                                                                            <Form.Control type="number" size="sm" value={slab.amount} onChange={e => updateSlab(idx, 'amount', e.target.value)} className="form-control-premium shadow-sm" />
+                                                                        </Col>
+                                                                    </Row>
+                                                                </Card.Body>
+                                                            </Card>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            )}
+                                            <Button variant="none" size="sm" onClick={addPTSlab} className="custom-btn-primary-outline rounded-pill px-4 mt-2 shadow-sm">
+                                                <CsLineIcons icon="plus" size="14" className="me-2" /> Add New Slab
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Custom Deductions */}
+                                {config.custom_deductions && config.custom_deductions.map((opt, idx) => (
+                                    <div key={opt.id} className="d-flex justify-content-between align-items-center p-3 border rounded bg-light">
+                                        <Form.Check
+                                            type="switch"
+                                            id={`switch-${opt.id}`}
+                                            label={<span className="fw-bold ms-1 text-dark">{opt.label}</span>}
+                                            checked={opt.is_active}
+                                            onChange={() => toggleDeduction(idx)}
+                                            className="mb-0"
+                                        />
+                                        <Button variant="none" size="sm" className="text-danger p-0 m-0 hover-scale" onClick={() => deleteCustomDeduction(idx)}>
+                                            <CsLineIcons icon="bin" size="18" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
                         </Card.Body>
                     </Card>
                 </Col>

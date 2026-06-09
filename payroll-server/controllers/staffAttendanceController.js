@@ -2,6 +2,65 @@ const StaffAttendance = require("../models/staffAttendanceModel");
 const Staff = require("../models/staffModel");
 const PayrollConfig = require("../models/PayrollConfig");
 
+// Time utility: Parses a string like "09:00 AM" or "01:00 PM" into total minutes from midnight
+const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    const [time, period] = timeStr.split(" ");
+    if (!time || !period) return 0;
+    let [hours, minutes] = time.split(":").map(Number);
+    if (period === "PM" && hours !== 12) hours += 12;
+    else if (period === "AM" && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+};
+
+// Calculates the working minutes for a day, including paid lunch break overlap duration
+const calculateRecordWorkingMinutes = (record, config) => {
+    const lunchStartStr = (config && config.org_rules && config.org_rules.lunch_start_time) || "01:00 PM";
+    const lunchEndStr = (config && config.org_rules && config.org_rules.lunch_end_time) || "02:00 PM";
+    
+    const lunchStart = parseTimeToMinutes(lunchStartStr);
+    const lunchEnd = parseTimeToMinutes(lunchEndStr);
+    
+    let totalMins = 0;
+    
+    if (record.sessions && record.sessions.length > 0) {
+        // 1. Sum up durations of each session
+        record.sessions.forEach(session => {
+            if (session.in_time && session.out_time) {
+                let diff = parseTimeToMinutes(session.out_time) - parseTimeToMinutes(session.in_time);
+                if (diff < 0) diff += 24 * 60; // overnight shift fallback
+                totalMins += diff;
+            }
+        });
+        
+        // 2. Add lunch break overlaps for gaps between sessions
+        for (let i = 0; i < record.sessions.length - 1; i++) {
+            const currentOut = record.sessions[i].out_time;
+            const nextIn = record.sessions[i+1].in_time;
+            
+            if (currentOut && nextIn) {
+                let gapStart = parseTimeToMinutes(currentOut);
+                let gapEnd = parseTimeToMinutes(nextIn);
+                
+                if (gapEnd < gapStart) gapEnd += 24 * 60; // overnight fallback
+                
+                // Calculate overlap with lunch window
+                const overlapStart = Math.max(gapStart, lunchStart);
+                const overlapEnd = Math.min(gapEnd, lunchEnd);
+                const overlap = Math.max(0, overlapEnd - overlapStart);
+                totalMins += overlap;
+            }
+        }
+    } else if (record.in_time && record.out_time) {
+        // Fallback to legacy in_time / out_time
+        let diff = parseTimeToMinutes(record.out_time) - parseTimeToMinutes(record.in_time);
+        if (diff < 0) diff += 24 * 60;
+        totalMins = diff;
+    }
+    
+    return totalMins;
+};
+
 // ── Helper: get today's date in IST (YYYY-MM-DD) ─────────────────────────────
 const getTodayIST = () => {
     const options = {
@@ -64,7 +123,7 @@ const generateWeekOffs = (staff, globalOffs, existingRecords) => {
 const getTodayAttendance = async (req, res) => {
     try {
         const userId = req.user;
-        const today = getTodayIST();
+        const today = req.query.date || getTodayIST();
 
         // Fetch all staff for this user
         const staffList = await Staff.find({ user_id: userId })
@@ -187,6 +246,7 @@ const getAttendanceSummary = async (req, res) => {
         }
 
         const records = await StaffAttendance.find({ staff_id: staffId }).lean();
+        const config = await PayrollConfig.findOne({ user_id: adminUserId }).lean();
 
         const present = records.filter((r) => r.status === "present").length;
         const absent = records.filter((r) => r.status === "absent").length;
@@ -197,18 +257,10 @@ const getAttendanceSummary = async (req, res) => {
         let validShifts = 0;
 
         records.forEach((r) => {
-            if (r.in_time && r.out_time) {
-                const parseTime = (timeStr) => {
-                    const [time, period] = timeStr.split(" ");
-                    let [hours, minutes] = time.split(":").map(Number);
-                    if (period === "PM" && hours !== 12) hours += 12;
-                    else if (period === "AM" && hours === 12) hours = 0;
-                    return hours * 60 + minutes;
-                };
-
-                let diff = parseTime(r.out_time) - parseTime(r.in_time);
-                if (diff < 0) diff += 24 * 60; // overnight shift
-                totalMinutes += diff;
+            const hasPunches = (r.sessions && r.sessions.length > 0) || (r.in_time && r.out_time);
+            if (hasPunches) {
+                let mins = calculateRecordWorkingMinutes(r, config);
+                totalMinutes += mins;
                 validShifts++;
             }
         });
@@ -247,23 +299,48 @@ const checkIn = async (req, res) => {
             return res.status(404).json({ message: "Staff not found" });
         }
 
-        // Upsert: update if exists, create if not
-        await StaffAttendance.findOneAndUpdate(
-            { staff_id, date },
-            {
-                $set: {
-                    in_time,
-                    status: "present",
-                    user_id: staff.user_id,
-                },
-                $setOnInsert: {
-                    staff_id,
-                    date,
-                },
-            },
-            { upsert: true, new: true }
-        );
+        // Find existing attendance
+        let record = await StaffAttendance.findOne({ staff_id, date });
 
+        if (!record) {
+            // Create a new record
+            record = new StaffAttendance({
+                staff_id,
+                date,
+                in_time,
+                out_time: null,
+                status: "present",
+                user_id: staff.user_id,
+                sessions: [{ in_time, out_time: null }]
+            });
+        } else {
+            // Handle existing record
+            record.status = "present";
+            record.user_id = staff.user_id;
+
+            // Make sure sessions array is initialized
+            if (!record.sessions) record.sessions = [];
+
+            // If sessions array is empty but in_time exists, migrate/populate it
+            if (record.sessions.length === 0 && record.in_time) {
+                record.sessions.push({ in_time: record.in_time, out_time: record.out_time });
+            }
+
+            // Check if they are currently checked in (last session out_time is null)
+            const lastSession = record.sessions[record.sessions.length - 1];
+            if (lastSession && lastSession.out_time === null) {
+                // Already checked in, just update/ensure times
+                record.in_time = record.in_time || in_time;
+                lastSession.in_time = lastSession.in_time || in_time;
+            } else {
+                // Not checked in, start a new session
+                record.in_time = record.in_time || in_time; // Keep first check-in as daily in_time
+                record.out_time = null; // Currently checked in, so daily out_time is reset/null
+                record.sessions.push({ in_time, out_time: null });
+            }
+        }
+
+        await record.save();
         res.status(200).json({ success: true, message: "Check-in successful" });
     } catch (error) {
         console.error("Error in Check-In:", error);
@@ -285,22 +362,44 @@ const checkOut = async (req, res) => {
             return res.status(404).json({ message: "Staff not found" });
         }
 
-        await StaffAttendance.findOneAndUpdate(
-            { staff_id, date },
-            {
-                $set: {
-                    out_time,
-                    user_id: staff.user_id,
-                },
-                $setOnInsert: {
-                    staff_id,
-                    date,
-                    status: "present",
-                },
-            },
-            { upsert: true, new: true }
-        );
+        let record = await StaffAttendance.findOne({ staff_id, date });
 
+        if (!record) {
+            // If checking out without check-in (should be rare, but handle it)
+            record = new StaffAttendance({
+                staff_id,
+                date,
+                in_time: out_time,
+                out_time,
+                status: "present",
+                user_id: staff.user_id,
+                sessions: [{ in_time: out_time, out_time }]
+            });
+        } else {
+            record.user_id = staff.user_id;
+            record.status = "present";
+
+            if (!record.sessions) record.sessions = [];
+
+            // Migrate if sessions empty but in_time exists
+            if (record.sessions.length === 0 && record.in_time) {
+                record.sessions.push({ in_time: record.in_time, out_time: record.out_time });
+            }
+
+            if (record.sessions.length === 0) {
+                // If somehow sessions is still empty, add a session
+                record.sessions.push({ in_time: record.in_time || out_time, out_time });
+            } else {
+                // Update the last session's checkout time
+                const lastSession = record.sessions[record.sessions.length - 1];
+                lastSession.out_time = out_time;
+            }
+
+            // Always update top-level out_time to the latest checkout
+            record.out_time = out_time;
+        }
+
+        await record.save();
         res.status(200).json({ success: true, message: "Check-out successful" });
     } catch (error) {
         console.error("Error in Check-Out:", error);
@@ -377,6 +476,63 @@ const markLeave = async (req, res) => {
     }
 };
 
+// ── POST /attendance/update ───────────────────────────────────────────────────
+const updateAttendance = async (req, res) => {
+    const { staff_id, date, status, in_time, out_time, leave_type_id, manual_entry_reason } = req.body;
+
+    if (!staff_id || !date || !status) {
+        return res.status(400).json({ success: false, message: "Staff ID, date, and status are required." });
+    }
+
+    try {
+        const staff = await Staff.findById(staff_id).lean();
+        if (!staff) {
+            return res.status(404).json({ success: false, message: "Staff not found" });
+        }
+
+        const adminUserId = req.user && typeof req.user === "object" ? req.user._id : req.user;
+
+        // Build update object
+        const updateFields = {
+            status,
+            user_id: staff.user_id,
+            is_manual_entry: true,
+            manual_entry_reason: manual_entry_reason || "Admin manual edit",
+        };
+
+        if (status === "present" || status === "half_day") {
+            updateFields.in_time = in_time || null;
+            updateFields.out_time = out_time || null;
+            if (in_time) {
+                updateFields.sessions = [{ in_time, out_time: out_time || null }];
+            } else {
+                updateFields.sessions = [];
+            }
+        } else {
+            updateFields.in_time = null;
+            updateFields.out_time = null;
+            updateFields.sessions = [];
+        }
+
+        if (status === "leave" || status === "half_day") {
+            updateFields.leave_type_id = leave_type_id || null;
+        } else {
+            updateFields.leave_type_id = null;
+        }
+
+        const updatedRecord = await StaffAttendance.findOneAndUpdate(
+            { staff_id, date },
+            { $set: updateFields },
+            { upsert: true, new: true }
+        );
+
+        res.status(200).json({ success: true, message: "Attendance updated successfully", data: updatedRecord });
+    } catch (error) {
+        console.error("Error in Update Attendance:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
 module.exports = {
     getTodayAttendance,
     getAttendanceByStaff,
@@ -385,4 +541,5 @@ module.exports = {
     checkOut,
     markAbsent,
     markLeave,
+    updateAttendance,
 };

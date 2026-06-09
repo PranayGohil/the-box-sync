@@ -323,6 +323,7 @@ const EditStaff = () => {
       back_image: '',
       salary_structure: {
         custom_earnings: {},
+        custom_deductions: {},
         deductions: {
           pf_percentage: 0,
           esi_percentage: 0,
@@ -497,8 +498,18 @@ const EditStaff = () => {
             : 0;
         });
 
+        // Pre-fill custom_deductions
+        const activeDeductions = (configRes.data.data?.custom_deductions || []).filter(d => d.is_active);
+        const mappedCustomDeductions = {};
+        activeDeductions.forEach(d => {
+          mappedCustomDeductions[d.id] = (staff.salary_structure?.custom_deductions?.[d.id] !== undefined)
+            ? staff.salary_structure.custom_deductions[d.id]
+            : 0;
+        });
+
         setFieldValue('salary_structure', {
           custom_earnings: mappedCustomEarnings,
+          custom_deductions: mappedCustomDeductions,
           deductions: {
             pf_percentage: staff.salary_structure?.deductions?.pf_percentage !== undefined ? staff.salary_structure.deductions.pf_percentage : 0,
             esi_percentage: staff.salary_structure?.deductions?.esi_percentage !== undefined ? staff.salary_structure.deductions.esi_percentage : 0,
@@ -1234,6 +1245,25 @@ const EditStaff = () => {
                           <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.pt}</div>
                         )}
                       </Form.Group>
+
+                      {payrollConfig?.custom_deductions?.filter(d => d.is_active).length > 0 && (
+                        <>
+                          <hr className="my-3 opacity-50" />
+                          <div className="small fw-bold text-muted mb-3 text-uppercase letter-spacing-1">Custom Deductions</div>
+                          {payrollConfig.custom_deductions.filter(d => d.is_active).map((deduction) => (
+                            <Form.Group className="mb-2" key={deduction.id}>
+                              <Form.Label className="small fw-bold opacity-75">{deduction.label}</Form.Label>
+                              <Form.Control
+                                type="number"
+                                name={`salary_structure.custom_deductions.${deduction.id}`}
+                                value={values.salary_structure?.custom_deductions?.[deduction.id] ?? 0}
+                                onChange={(e) => setFieldValue(`salary_structure.custom_deductions.${deduction.id}`, Number(e.target.value))}
+                                size="sm"
+                              />
+                            </Form.Group>
+                          ))}
+                        </>
+                      )}
                     </div>
                   </Col>
                 </Row>
