@@ -31,7 +31,6 @@ const AddStaff = () => {
     submitting: false,
   });
   const [fileUploadError, setFileUploadError] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [frontImagePreview, setFrontImagePreview] = useState(null);
   const [backImagePreview, setBackImagePreview] = useState(null);
@@ -109,10 +108,6 @@ const AddStaff = () => {
 
     email: Yup.string().required('Email is required').email('Enter a valid email address'),
 
-    password: Yup.string()
-      .min(6, 'Password must be at least 6 characters')
-      .required('Password is required'),
-
     salary: Yup.number().required('Salary is required').positive('Salary must be a positive number'),
 
     position: Yup.string().required('Position is required'),
@@ -183,7 +178,6 @@ const AddStaff = () => {
       gender: '',
       phone_no: '',
       email: '',
-      password: '',
       salary: '',
       position: '',
       photo: '',
@@ -654,7 +648,7 @@ const AddStaff = () => {
                       </Form.Group>
                     </Col>
 
-                    <Col md={4} xs={12}>
+                    <Col md={6} xs={12}>
                       <Form.Group className="mb-3">
                         <Form.Label>Contact Number</Form.Label>
                         <Form.Control
@@ -669,7 +663,7 @@ const AddStaff = () => {
                         <Form.Control.Feedback type="invalid">{errors.phone_no}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
-                    <Col md={4} xs={12}>
+                    <Col md={6} xs={12}>
                       <Form.Group className="mb-3">
                         <Form.Label>Email Address</Form.Label>
                         <Form.Control
@@ -682,34 +676,6 @@ const AddStaff = () => {
                           disabled={loading.submitting}
                         />
                         <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                    <Col md={4} xs={12}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Password</Form.Label>
-                        <div className="position-relative">
-                          <Form.Control
-                            type={showPassword ? 'text' : 'password'}
-                            name="password"
-                            placeholder="Password for staff login"
-                            value={values.password}
-                            onChange={handleChange}
-                            isInvalid={touched.password && errors.password}
-                            disabled={loading.submitting}
-                            style={{ paddingRight: '40px' }}
-                          />
-                          <Button
-                            variant="link"
-                            className="position-absolute end-0 top-50 translate-middle-y me-2 p-0 text-muted"
-                            style={{ zIndex: 5, textDecoration: 'none' }}
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="18" />
-                          </Button>
-                        </div>
-                        {touched.password && errors.password && (
-                          <div className="text-danger mt-1 small">{errors.password}</div>
-                        )}
                       </Form.Group>
                     </Col>
                   </Row>
