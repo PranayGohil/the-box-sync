@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Col, Row, Card, Table, Form, Spinner, Alert, Badge, Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
+import { useHistory } from 'react-router-dom';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import { getTodayLog, saveClosingStock, getWastageLog, createCorrectionRequest, getRestaurantTimings } from 'api/inventory';
@@ -100,6 +101,7 @@ const DailyClosingStock = () => {
   ];
 
   const today = format(new Date(), 'yyyy-MM-dd');
+  const history = useHistory();
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -169,7 +171,7 @@ const DailyClosingStock = () => {
       const res = await saveClosingStock({ items, notes, date: today });
       if (res.data.success) {
         toast.success('Closing stock verified and saved successfully!');
-        fetchData();
+        history.push('/operations/inventory-history');
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save closing stock');

@@ -138,24 +138,14 @@ const NavContent = () => {
               '/operations/stock-management',
               '/operations/daily-stock-logs',
               '/operations/wastage-log',
+              '/operations/daily-opening-stock',
+              '/operations/daily-closing-stock',
               '/operations/inventory-report'
             ];
             return inventoryPaths.some(p => location.pathname.startsWith(p));
           }}>
             <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Manage Inventory</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/daily-opening-stock" className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Opening Stock</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/daily-closing-stock" className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Closing Stock</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to="/operations/wastage-log" className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Wastage Log</span>
+            <span className="align-middle">Daily Inventory Workstation</span>
           </Nav.Link>
         </div>
       </div>
@@ -303,18 +293,20 @@ const Operations = () => {
             <Route path="/operations/order-details/:id" component={OrderDetails} />
 
             {activePlans.includes('Reservation Manager') && (
-              <>
-                <Route path="/operations/manage-reservations" component={ManageReservations} />
-                <Route path="/operations/reservation-form" render={() => <ReservationForm restaurantUserId={currentUser?._id} />} />
-                <Route path="/operations/qr-for-reservation" component={QRforReservation} />
-              </>
+              <Route path="/operations/manage-reservations" component={ManageReservations} />
+            )}
+            {activePlans.includes('Reservation Manager') && (
+              <Route path="/operations/reservation-form" render={() => <ReservationForm restaurantUserId={currentUser?._id} />} />
+            )}
+            {activePlans.includes('Reservation Manager') && (
+              <Route path="/operations/qr-for-reservation" component={QRforReservation} />
             )}
 
             {activePlans.includes('Table Management') && (
-              <>
-                <Route path="/operations/manage-table" component={ManageTable} />
-                <Route path="/operations/add-table" component={AddTable} />
-              </>
+              <Route path="/operations/manage-table" component={ManageTable} />
+            )}
+            {activePlans.includes('Table Management') && (
+              <Route path="/operations/add-table" component={AddTable} />
             )}
 
             <Route path="/operations/manage-menu" component={ManageMenu} />
@@ -336,10 +328,10 @@ const Operations = () => {
             <Route path="/operations/inventory-report" component={InventoryReport} />
 
             {activePlans.includes('Feedback') && (
-              <>
-                <Route path="/operations/feedback" component={Feedback} />
-                <Route path="/operations/qr-for-feedback" component={QRforFeedback} />
-              </>
+              <Route path="/operations/feedback" component={Feedback} />
+            )}
+            {activePlans.includes('Feedback') && (
+              <Route path="/operations/qr-for-feedback" component={QRforFeedback} />
             )}
           </Switch>
         </Col>

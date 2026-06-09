@@ -3,7 +3,7 @@ const Staff = require("../models/staffModel");
 
 const addWaiter = async (req, res) => {
   try {
-    const user_id = req.user;
+    const user_id = req.user._id;
     const { full_name } = req.body;
     console.log(user_id, full_name);
     const newWaiter = new Waiter({ user_id, full_name });

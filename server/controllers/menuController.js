@@ -6,7 +6,7 @@ const { count } = require("console");
 
 const addMenu = async (req, res) => {
   try {
-    const user_id = req.user;
+    const user_id = req.user._id;
     let { category, counter, hide_on_kot, dishes } = req.body;
 
     let parsedDishes;
@@ -83,18 +83,18 @@ const addMenu = async (req, res) => {
           Array.isArray(parsedVariants) ? parsedVariants.length > 1 : false,
         variants: Array.isArray(parsedVariants)
           ? parsedVariants.map((v) => ({
-              size_name: v.size_name,
-              price: v.price != null && v.price !== "" ? Number(v.price) : 0,
-              extra: v.extra,
-              is_available: v.is_available !== false,
-            }))
+            size_name: v.size_name,
+            price: v.price != null && v.price !== "" ? Number(v.price) : 0,
+            extra: v.extra,
+            is_available: v.is_available !== false,
+          }))
           : undefined,
         addons: Array.isArray(parsedAddons)
           ? parsedAddons.map((a) => ({
-              addon_name: a.addon_name,
-              price: a.price != null && a.price !== "" ? Number(a.price) : 0,
-              is_available: a.is_available !== false,
-            }))
+            addon_name: a.addon_name,
+            price: a.price != null && a.price !== "" ? Number(a.price) : 0,
+            is_available: a.is_available !== false,
+          }))
           : undefined,
       };
     });
@@ -109,7 +109,7 @@ const addMenu = async (req, res) => {
       const updatedDishes = [...existingMenu.dishes];
 
       parsedDishes.forEach((newDish) => {
-        const existingIndex = updatedDishes.findIndex((d) => 
+        const existingIndex = updatedDishes.findIndex((d) =>
           (newDish._id && d._id.toString() === newDish._id.toString()) ||
           (d.dish_name.toLowerCase() === newDish.dish_name.toLowerCase())
         );
@@ -158,7 +158,7 @@ const addMenu = async (req, res) => {
 
 const getMenuData = async (req, res) => {
   try {
-    const query = { user_id: req.user };
+    const query = { user_id: req.user._id };
 
     const projection = {
       category: 1,
@@ -233,7 +233,7 @@ const getMenuDataByToken = async (req, res) => {
 
 const getMenuCategories = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id;
     const { meal_type } = req.query;
     const filter = { user_id: userId };
 
@@ -252,7 +252,7 @@ const getMenuCategories = async (req, res) => {
 
 const getMenuCounterOptions = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id;
 
     const counters = await Menu.distinct("counter", {
       user_id: userId,
@@ -268,7 +268,7 @@ const getMenuCounterOptions = async (req, res) => {
 
 const getMenuSuggestions = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id;
     const { types } = req.query;
 
     if (!types) {
@@ -321,7 +321,7 @@ const getMenuSuggestions = async (req, res) => {
 
 const getDishesByCategory = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id;
     const { category } = req.query;
 
     if (!category) {
@@ -353,7 +353,7 @@ const getDishesByCategory = async (req, res) => {
 const getMenuDataById = async (req, res) => {
   try {
     const dishId = req.params.id;
-    const userId = req.user;
+    const userId = req.user._id;
 
     const menu = await Menu.findOne(
       { user_id: userId, "dishes._id": dishId },
@@ -376,6 +376,7 @@ const getMenuDataById = async (req, res) => {
 const updateMenuCategoryAndMealType = async (req, res) => {
   try {
     const id = req.params.id;
+
     let { category, counter, hide_on_kot } = req.body;
     const userId = req.user;
 
@@ -424,7 +425,7 @@ const updateMenu = async (req, res) => {
       meal_type,
     } = req.body;
 
-    const userId = req.user;
+    const userId = req.user._id;
 
     let parsedVariants;
     if (variants) {
@@ -473,8 +474,8 @@ const updateMenu = async (req, res) => {
         Array.isArray(parsedVariants) && parsedVariants[0]
           ? Number(parsedVariants[0].price)
           : dish_price !== "" && dish_price != null
-          ? Number(dish_price)
-          : currentDishObj.dish_price,
+            ? Number(dish_price)
+            : currentDishObj.dish_price,
       description: description !== undefined ? description : currentDishObj.description,
       is_special:
         is_special !== undefined
@@ -488,18 +489,18 @@ const updateMenu = async (req, res) => {
         Array.isArray(parsedVariants) ? parsedVariants.length > 1 : currentDishObj.has_variants,
       variants: Array.isArray(parsedVariants)
         ? parsedVariants.map((v) => ({
-            size_name: v.size_name,
-            price: v.price != null && v.price !== "" ? Number(v.price) : 0,
-            extra: v.extra,
-            is_available: v.is_available !== false,
-          }))
+          size_name: v.size_name,
+          price: v.price != null && v.price !== "" ? Number(v.price) : 0,
+          extra: v.extra,
+          is_available: v.is_available !== false,
+        }))
         : currentDishObj.variants,
       addons: Array.isArray(parsedAddons)
         ? parsedAddons.map((a) => ({
-            addon_name: a.addon_name,
-            price: a.price != null && a.price !== "" ? Number(a.price) : 0,
-            is_available: a.is_available !== false,
-          }))
+          addon_name: a.addon_name,
+          price: a.price != null && a.price !== "" ? Number(a.price) : 0,
+          is_available: a.is_available !== false,
+        }))
         : currentDishObj.addons,
       meal_type: meal_type !== undefined ? meal_type : currentDishObj.meal_type || "veg",
     };
@@ -538,7 +539,7 @@ const updateMenu = async (req, res) => {
 
 const deleteMenu = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id;
     const dishId = req.params.id;
 
     const menu = await Menu.findOne(

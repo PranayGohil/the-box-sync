@@ -155,7 +155,7 @@ const DailyOpeningStock = () => {
       const res = await saveOpeningStock({ items, notes, date: today });
       if (res.data.success) {
         toast.success('Opening stock verified and saved successfully!');
-        fetchToday();
+        history.push('/operations/inventory-history');
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save opening stock');
@@ -169,7 +169,7 @@ const DailyOpeningStock = () => {
       setSubmitting(true);
       await autoGenerateOpening();
       toast.success('Opening stock auto-generated from yesterday\'s closing');
-      fetchToday();
+      history.push('/operations/inventory-history');
     } catch (err) {
       toast.error('Failed to auto-generate');
     } finally {

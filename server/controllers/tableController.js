@@ -2,7 +2,7 @@ const Table = require("../models/tableModel");
 
 const getTables = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id;
 
     const tables = await Table.find({ user_id: userId }).lean();
 
@@ -16,7 +16,7 @@ const getTables = async (req, res) => {
 const getTableDataById = async (req, res) => {
   try {
     const tableId = req.params.id;
-    const userId = req.user;
+    const userId = req.user._id;
 
     const doc = await Table.findOne(
       { user_id: userId, "tables._id": tableId },
@@ -41,7 +41,7 @@ const getTableDataById = async (req, res) => {
 
 const getDiningAreas = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id;
     const areas = await Table.distinct("area", { user_id: userId });
 
     res.json({ success: true, data: areas });
@@ -54,7 +54,7 @@ const getDiningAreas = async (req, res) => {
 const checkTable = async (req, res) => {
   try {
     const { area, table_no } = req.query;
-    const userId = req.user;
+    const userId = req.user._id;
 
     if (!area || !table_no) {
       return res
@@ -77,7 +77,7 @@ const checkTable = async (req, res) => {
 
 const addTable = async (req, res) => {
   try {
-    const userId = req.user;
+    const userId = req.user._id;
     const { area, tables } = req.body;
 
     if (!area || !Array.isArray(tables) || tables.length === 0) {
@@ -151,7 +151,7 @@ const updateTableArea = async (req, res) => {
   try {
     const id = req.params.id;
     const { area } = req.body;
-    const userId = req.user;
+    const userId = req.user._id;
 
     if (!id || !area) {
       return res
@@ -181,7 +181,7 @@ const updateTable = async (req, res) => {
   try {
     const id = req.params.id; // table _id
     const { table_no, max_person } = req.body;
-    const userId = req.user;
+    const userId = req.user._id;
 
     if (!id || !table_no) {
       return res
@@ -255,7 +255,7 @@ const updateTable = async (req, res) => {
 const deleteTable = async (req, res) => {
   try {
     const tableId = req.params.id;
-    const userId = req.user;
+    const userId = req.user._id;
 
     const tableDoc = await Table.findOne(
       { user_id: userId, "tables._id": tableId },

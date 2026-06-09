@@ -595,7 +595,7 @@ const resetAdminPassword = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-  const userId = req.user;
+  const userId = req.user._id;
   const { password, ...updates } = req.body;
   console.log(req.body);
 
@@ -643,7 +643,7 @@ const updateUser = async (req, res) => {
 
 const updateTax = async (req, res) => {
   const { gst_no, taxInfo } = req.body;
-  const userId = req.user;
+  const userId = req.user._id;
 
   try {
     await User.findByIdAndUpdate(userId, {

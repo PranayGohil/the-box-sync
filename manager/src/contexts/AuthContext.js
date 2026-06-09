@@ -93,6 +93,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       setCurrentUser(userData);
       setIsLogin(true);
+      await fetchUserSubscriptions(userData);
       return { success: true };
     } catch (err) {
       return { success: false, message: err.response?.data?.message || 'Login failed' };
