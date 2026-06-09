@@ -11,6 +11,7 @@ import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import ImageCropperModal from 'components/cropper/ImageCropperModal';
 
 const AddStaff = () => {
   const title = 'Add Staff';
@@ -42,6 +43,13 @@ const AddStaff = () => {
     photo: false,
     front_image: false,
     back_image: false,
+  });
+  const [cropperState, setCropperState] = useState({
+    show: false,
+    imageSrc: '',
+    fieldName: '',
+    setPreview: null,
+    aspect: undefined,
   });
 
   // Common restaurant staff positions
@@ -120,7 +128,7 @@ const AddStaff = () => {
         (value) => !value || (value && ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(value.type))
       ),
 
-    document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Pan Card', 'Voter Card'], 'Invalid document type'),
+    document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Aadhar Card', 'Pan Card', 'Voter Card', 'Voter ID Card', 'Driving License', 'Passport'], 'Invalid document type'),
 
     id_number: Yup.string()
       .required('ID number is required')
@@ -129,13 +137,13 @@ const AddStaff = () => {
         const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
         const voterRegex = /^[A-Z]{3}[0-9]{7}$/;
 
-        if (docType === 'National Identity Card') {
+        if (docType === 'National Identity Card' || docType === 'Aadhar Card') {
           return schema.matches(aadharRegex, 'Aadhar number must be 12 digits (format: XXXX XXXX XXXX)');
         }
         if (docType === 'Pan Card') {
           return schema.matches(panRegex, 'PAN card format must be ABCDE1234F (5 letters, 4 digits, 1 letter)');
         }
-        if (docType === 'Voter Card') {
+        if (docType === 'Voter Card' || docType === 'Voter ID Card') {
           return schema.matches(voterRegex, 'Voter ID format must be ABC1234567 (3 letters, 7 digits)');
         }
         return schema;
@@ -151,7 +159,7 @@ const AddStaff = () => {
 
     back_image: Yup.mixed()
       .when('document_type', (docType, schema) => {
-        if (docType === 'National Identity Card') {
+        if (docType === 'National Identity Card' || docType === 'Aadhar Card') {
           return schema.required('Back ID image is required for Aadhar card');
         }
         return schema.notRequired();
@@ -369,13 +377,34 @@ const AddStaff = () => {
     });
   };
 
-  const handleFileChange = async (fieldName, file, setPreview) => {
+  const handleFileChange = (fieldName, file, setPreview, aspect = undefined) => {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      setCropperState({
+        show: true,
+        imageSrc: reader.result?.toString() || "",
+        fieldName,
+        setPreview,
+        aspect,
+      });
+    });
+    reader.readAsDataURL(file);
+
+    // To clear the file input so the same file can be selected again if cancelled
+    const fileInput = document.getElementById(`${fieldName.replace('_', '-')}-upload`);
+    if (fileInput) fileInput.value = '';
+  };
+
+  const handleCropComplete = async (croppedFile) => {
+    const { fieldName, setPreview } = cropperState;
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: true }));
 
-    let processedFile = file;
-    if (file) {
+    let processedFile = croppedFile;
+    if (croppedFile) {
       try {
-        processedFile = await convertToWebPAndResize(file);
+        processedFile = await convertToWebPAndResize(croppedFile);
       } catch (err) {
         console.error('Failed to process image:', err);
       }
@@ -389,12 +418,12 @@ const AddStaff = () => {
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: false }));
   };
 
-  
+
 
   if (loading.initial) {
     return (
       <div className="container-fluid py-5">
-        
+
         <HtmlHead title={title} description={description} />
         <div className="d-flex flex-column align-items-center justify-content-center py-5 mt-5">
           <Spinner animation="border" style={{ color: '#1ea8e7' }} className="mb-3" />
@@ -526,7 +555,7 @@ const AddStaff = () => {
                             disabled={loading.submitting}
                             className="pe-5"
                           />
-                          <div 
+                          <div
                             className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
                             style={{ cursor: 'pointer', zIndex: 5 }}
                             onClick={() => birthDateRef.current?.showPicker()}
@@ -553,7 +582,7 @@ const AddStaff = () => {
                             disabled={loading.submitting}
                             className="pe-5"
                           />
-                          <div 
+                          <div
                             className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
                             style={{ cursor: 'pointer', zIndex: 5 }}
                             onClick={() => joiningDateRef.current?.showPicker()}
@@ -681,7 +710,7 @@ const AddStaff = () => {
                   </Row>
                 </Card.Body>
               </Card>
- 
+
               {/* Employment & Payroll Section */}
               <Card className="add-staff-glass-card border-0 mb-4">
                 <Card.Body className="p-4">
@@ -691,7 +720,7 @@ const AddStaff = () => {
                       Employment & Payroll
                     </h5>
                   </div>
- 
+
                   <Row className="g-3">
                     <Col md={6} xs={12}>
                       <Form.Group className="mb-3">
@@ -763,7 +792,7 @@ const AddStaff = () => {
                         accept="image/*"
                         onChange={(e) => {
                           const file = e.target.files[0];
-                          if (file) handleFileChange('photo', file, setPhotoPreview);
+                          if (file) handleFileChange('photo', file, setPhotoPreview, 1);
                         }}
                       />
                       <Button
@@ -797,21 +826,34 @@ const AddStaff = () => {
                     <Select
                       classNamePrefix="react-select"
                       options={[
-                        { label: 'National Identity Card (Aadhar)', value: 'National Identity Card' },
+                        { label: 'Aadhar Card', value: 'Aadhar Card' },
                         { label: 'PAN Card', value: 'Pan Card' },
-                        { label: 'Voter ID', value: 'Voter Card' },
+                        { label: 'National Identity Card', value: 'National Identity Card' },
+                        { label: 'Driving License', value: 'Driving License' },
+                        { label: 'Voter ID Card', value: 'Voter ID Card' },
+                        { label: 'Passport', value: 'Passport' },
                       ]}
                       value={
                         values.document_type
                           ? {
-                              label:
-                                values.document_type === 'National Identity Card'
-                                  ? 'National Identity Card (Aadhar)'
+                            label:
+                              values.document_type === 'National Identity Card'
+                                ? 'National Identity Card'
+                                : values.document_type === 'Aadhar Card'
+                                  ? 'Aadhar Card'
                                   : values.document_type === 'Pan Card'
-                                  ? 'PAN Card'
-                                  : 'Voter ID',
-                              value: values.document_type,
-                            }
+                                    ? 'PAN Card'
+                                    : values.document_type === 'Voter Card'
+                                      ? 'Voter Card'
+                                      : values.document_type === 'Voter ID Card'
+                                        ? 'Voter ID Card'
+                                        : values.document_type === 'Driving License'
+                                          ? 'Driving License'
+                                          : values.document_type === 'Passport'
+                                            ? 'Passport'
+                                            : values.document_type,
+                            value: values.document_type,
+                          }
                           : null
                       }
                       onChange={(selected) => setFieldValue('document_type', selected ? selected.value : '')}
@@ -854,7 +896,7 @@ const AddStaff = () => {
                       id="front-image-upload"
                       className="d-none"
                       accept="image/*"
-                      onChange={(e) => handleFileChange('front_image', e.target.files[0], setFrontImagePreview)}
+                      onChange={(e) => handleFileChange('front_image', e.target.files[0], setFrontImagePreview, 1.58)}
                     />{' '}
                     <div className="d-flex flex-column gap-3 align-items-start w-100">
                       <Button
@@ -868,8 +910,8 @@ const AddStaff = () => {
                         {frontImagePreview ? 'Change Front Image' : 'Upload Front Image'}
                       </Button>
                       {touched.front_image && errors.front_image && <div className="text-danger mt-1 small fw-bold">{errors.front_image}</div>}
-                      
-                      {values.document_type !== 'National Identity Card' && (
+
+                      {values.document_type !== 'National Identity Card' && values.document_type !== 'Aadhar Card' && (
                         <Button
                           variant="primary"
                           type="submit"
@@ -892,7 +934,7 @@ const AddStaff = () => {
                     </div>
                   </Form.Group>
 
-                  {values.document_type === 'National Identity Card' && (
+                  {(values.document_type === 'National Identity Card' || values.document_type === 'Aadhar Card') && (
                     <Form.Group className="mb-4">
                       <Form.Label>Back Image</Form.Label>
                       <div className="id-add-staff-preview-container mb-2">
@@ -910,7 +952,7 @@ const AddStaff = () => {
                         id="back-image-upload"
                         className="d-none"
                         accept="image/*"
-                        onChange={(e) => handleFileChange('back_image', e.target.files[0], setBackImagePreview)}
+                        onChange={(e) => handleFileChange('back_image', e.target.files[0], setBackImagePreview, 1.58)}
                       />
                       <div className="d-flex flex-column gap-3 align-items-start w-100">
                         <Button
@@ -924,7 +966,7 @@ const AddStaff = () => {
                           {backImagePreview ? 'Change Back Image' : 'Upload Back Image'}
                         </Button>
                         {touched.back_image && errors.back_image && <div className="text-danger mt-1 small fw-bold">{errors.back_image}</div>}
-                        
+
                         <Button
                           variant="primary"
                           type="submit"
@@ -965,6 +1007,14 @@ const AddStaff = () => {
             </Card>
           </div>
         )}
+
+        <ImageCropperModal
+          show={cropperState.show}
+          onHide={() => setCropperState({ ...cropperState, show: false })}
+          imageSrc={cropperState.imageSrc}
+          onCropComplete={handleCropComplete}
+          aspect={cropperState.aspect}
+        />
       </div>
     </div>
   );
