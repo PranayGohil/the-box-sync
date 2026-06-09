@@ -27,6 +27,23 @@ const payrollConfigSchema = new Schema(
       ]
     },
     
+    // ── Active Deduction Modules ────────────────────────────────────────
+    custom_deductions: {
+      type: [
+        {
+          id: { type: String, required: true },
+          label: { type: String, required: true },
+          is_active: { type: Boolean, default: true }
+        }
+      ],
+      default: [
+        { id: "tds", label: "Income Tax (TDS)", is_active: false },
+        { id: "loan", label: "Loan Recovery", is_active: false },
+        { id: "advance", label: "Salary Advance", is_active: false },
+        { id: "other_deduction", label: "Other Deduction", is_active: false }
+      ]
+    },
+    
     // ── Statutory Deductions (Fully Configurable) ──────────────────────
     statutory_config: {
       pf: {
@@ -61,7 +78,9 @@ const payrollConfigSchema = new Schema(
       leave_year_start: { type: String, enum: ["january", "april"], default: "january" },
       weekly_off_days: { type: [Number], default: [0] }, // Legacy
       half_day_hours: { type: Number, default: 4 },
-      full_day_hours: { type: Number, default: 8 }
+      full_day_hours: { type: Number, default: 8 },
+      lunch_start_time: { type: String, default: "01:00 PM" },
+      lunch_end_time: { type: String, default: "02:00 PM" }
     },
 
     // ── Global Weekly Off Config ─────────────────────────────────────────

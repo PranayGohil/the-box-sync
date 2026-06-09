@@ -145,6 +145,7 @@ export default function ManagePayroll() {
     const [totals, setTotals] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [payrollConfig, setPayrollConfig] = useState(null);
 
     const [selectedIds, setSelectedIds] = useState(new Set());
 
@@ -182,7 +183,27 @@ export default function ManagePayroll() {
         }
     };
 
-    useEffect(() => { fetchSummary(); }, [month, year]);
+    const fetchConfig = async () => {
+        try {
+            const res = await axios.get(
+                `${process.env.REACT_APP_API}/payroll-config`,
+                authHeader()
+            );
+            if (res.data.success) {
+                setPayrollConfig(res.data.data);
+            }
+        } catch (err) {
+            console.error("Error fetching payroll config:", err);
+        }
+    };
+
+    useEffect(() => {
+        fetchSummary();
+    }, [month, year]);
+
+    useEffect(() => {
+        fetchConfig();
+    }, []);
 
     const toggleSelect = (id) => {
         setSelectedIds((prev) => {
@@ -241,27 +262,157 @@ export default function ManagePayroll() {
         }
     };
 
+    const COMPONENT_LABELS = {
+        basic: 'Basic Salary',
+        hra: 'HRA',
+        conveyance: 'Conveyance',
+        medical: 'Medical Allowance',
+        special: 'Special Allowance',
+        other: 'Other Allowance',
+        pf: 'Provident Fund (PF)',
+        esi: 'Employee State Insurance (ESI)',
+        pt: 'Professional Tax (PT)',
+        advance_deduction: 'Salary Advance',
+        tds: 'Income Tax (TDS)',
+        deductions: 'Extra Deductions'
+    };
+
+    const getComponentLabel = (key) => {
+        const customEarning = payrollConfig?.custom_earnings?.find(e => e.id === key);
+        if (customEarning) return customEarning.label;
+        const customDeduction = payrollConfig?.custom_deductions?.find(d => d.id === key);
+        if (customDeduction) return customDeduction.label;
+        return COMPONENT_LABELS[key] || key;
+    };
+
     const openEditModal = (payroll, staff) => {
         setEditingPayroll({ ...payroll, staff });
+        
+        const activeE = ['basic', 'hra', 'conveyance', 'medical', 'special', 'other'].filter(
+            key => (payroll.earned_breakdown?.[key] || 0) > 0
+        );
+        if (activeE.length === 0) activeE.push('basic');
+
+        const activeD = ['pf', 'esi', 'pt', 'advance_deduction', 'tds', 'deductions'].filter(
+            key => {
+                if (key === 'pf' || key === 'esi' || key === 'pt') {
+                    return (payroll.deduction_breakdown?.[key] || 0) > 0;
+                }
+                return (payroll[key] || 0) > 0;
+            }
+        );
+
         setEditForm({
-            overtime_hours: payroll.overtime_hours,
-            bonus: payroll.bonus,
-            deductions: payroll.deductions,
+            overtime_hours: payroll.overtime_hours || 0,
+            bonus: payroll.bonus || 0,
+            deductions: payroll.deductions || 0,
             deduction_reason: payroll.deduction_reason || '',
             notes: payroll.notes || '',
-            working_days_in_month: payroll.working_days_in_month,
+            working_days_in_month: payroll.working_days_in_month || 26,
+            earned_breakdown: {
+                basic: payroll.earned_breakdown?.basic || 0,
+                hra: payroll.earned_breakdown?.hra || 0,
+                conveyance: payroll.earned_breakdown?.conveyance || 0,
+                medical: payroll.earned_breakdown?.medical || 0,
+                special: payroll.earned_breakdown?.special || 0,
+                other: payroll.earned_breakdown?.other || 0,
+            },
+            deduction_breakdown: {
+                pf: payroll.deduction_breakdown?.pf || 0,
+                esi: payroll.deduction_breakdown?.esi || 0,
+                pt: payroll.deduction_breakdown?.pt || 0,
+            },
+            advance_deduction: payroll.advance_deduction || 0,
+            tds: payroll.tds || 0,
+            visibleEarnings: activeE,
+            visibleDeductions: activeD,
         });
         setShowEditModal(true);
     };
 
     const editNetPreview = () => {
         if (!editingPayroll) return 0;
-        const safeDays = (Number(editForm.working_days_in_month) || 1);
-        const base = editingPayroll.staff?.salary || editingPayroll.base_salary || 0;
-        const earned = editingPayroll.earned_breakdown?.total_gross || ((base / safeDays) * editingPayroll.present_days);
+        
+        const earningsTotal = Object.keys(editForm.earned_breakdown || {}).reduce((sum, key) => {
+            if (!editForm.visibleEarnings?.includes(key)) return sum;
+            return sum + (parseFloat(editForm.earned_breakdown[key]) || 0);
+        }, 0);
+        
+        const statutoryTotal = Object.keys(editForm.deduction_breakdown || {}).reduce((sum, key) => {
+            if (!editForm.visibleDeductions?.includes(key)) return sum;
+            return sum + (parseFloat(editForm.deduction_breakdown[key]) || 0);
+        }, 0);
+        
+        const otherDeductionsTotal = 
+            (editForm.visibleDeductions?.includes('advance_deduction') ? (parseFloat(editForm.advance_deduction) || 0) : 0) + 
+            (editForm.visibleDeductions?.includes('tds') ? (parseFloat(editForm.tds) || 0) : 0) + 
+            (editForm.visibleDeductions?.includes('deductions') ? (parseFloat(editForm.deductions) || 0) : 0);
+        
         const ot_pay = (parseFloat(editForm.overtime_hours) || 0) * (editingPayroll.overtime_rate || 0);
-        const net = earned + ot_pay + (parseFloat(editForm.bonus) || 0) - (parseFloat(editForm.deductions) || 0);
+        const lwp_ded = editingPayroll.lwp_deduction || 0;
+        
+        const net = earningsTotal + ot_pay + (parseFloat(editForm.bonus) || 0) - statutoryTotal - otherDeductionsTotal - lwp_ded;
         return parseFloat(net.toFixed(2));
+    };
+
+    const removeEarning = (key) => {
+        setEditForm(prev => ({
+            ...prev,
+            visibleEarnings: prev.visibleEarnings.filter(k => k !== key),
+            earned_breakdown: {
+                ...prev.earned_breakdown,
+                [key]: 0
+            }
+        }));
+    };
+
+    const addEarning = (key) => {
+        if (!key) return;
+        setEditForm(prev => ({
+            ...prev,
+            visibleEarnings: [...prev.visibleEarnings, key],
+            earned_breakdown: {
+                ...prev.earned_breakdown,
+                [key]: 0
+            }
+        }));
+    };
+
+    const removeDeduction = (key) => {
+        setEditForm(prev => {
+            const updated = {
+                ...prev,
+                visibleDeductions: prev.visibleDeductions.filter(k => k !== key)
+            };
+            if (key === 'pf' || key === 'esi' || key === 'pt') {
+                updated.deduction_breakdown = {
+                    ...prev.deduction_breakdown,
+                    [key]: 0
+                };
+            } else {
+                updated[key] = 0;
+            }
+            return updated;
+        });
+    };
+
+    const addDeduction = (key) => {
+        if (!key) return;
+        setEditForm(prev => {
+            const updated = {
+                ...prev,
+                visibleDeductions: [...prev.visibleDeductions, key]
+            };
+            if (key === 'pf' || key === 'esi' || key === 'pt') {
+                updated.deduction_breakdown = {
+                    ...prev.deduction_breakdown,
+                    [key]: 0
+                };
+            } else {
+                updated[key] = 0;
+            }
+            return updated;
+        });
     };
 
     const handleSaveEdit = async () => {
@@ -725,16 +876,155 @@ export default function ManagePayroll() {
                                     <Form.Control className="rounded-3 border-0 bg-light py-2 px-3 text-success fw-bold" type="number" value={editForm.bonus} onChange={(e) => setEditForm({ ...editForm, bonus: e.target.value })} />
                                 </Col>
                                 <Col xs={12} md={6}>
-                                    <Form.Label className="small fw-bold text-muted text-uppercase">Extra Deductions (₹)</Form.Label>
-                                    <Form.Control className="rounded-3 border-0 bg-light py-2 px-3 text-danger fw-bold" type="number" value={editForm.deductions} onChange={(e) => setEditForm({ ...editForm, deductions: e.target.value })} />
-                                </Col>
-                                <Col xs={12}>
                                     <Form.Label className="small fw-bold text-muted text-uppercase">Adjustment Reason</Form.Label>
                                     <Form.Control className="rounded-3 border-0 bg-light py-2 px-3" type="text" placeholder="e.g. Performance bonus or late fine" value={editForm.deduction_reason} onChange={(e) => setEditForm({ ...editForm, deduction_reason: e.target.value })} />
                                 </Col>
                                 <Col xs={12}>
                                     <Form.Label className="small fw-bold text-muted text-uppercase">Internal Notes</Form.Label>
                                     <Form.Control className="rounded-3 border-0 bg-light py-2 px-3" as="textarea" rows={2} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
+                                </Col>
+                                <Col xs={12}>
+                                    <hr className="my-2 opacity-50" />
+                                </Col>
+                                <Col xs={12}>
+                                    <div className="mb-4">
+                                        <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                                            <CsLineIcons icon="trend-up" size="18" />
+                                            Earnings Components
+                                        </h6>
+                                        <div className="p-3 rounded-3 bg-light border border-light">
+                                            <Row className="g-3">
+                                                {editForm.visibleEarnings?.map(key => (
+                                                    <Col xs={12} md={6} key={key}>
+                                                        <div>
+                                                            <Form.Label className="small fw-semibold text-muted text-uppercase mb-1">{getComponentLabel(key)}</Form.Label>
+                                                            <InputGroup size="sm" className="shadow-sm rounded-3 overflow-hidden">
+                                                                <InputGroup.Text className="bg-white border-0">₹</InputGroup.Text>
+                                                                <Form.Control 
+                                                                    type="number" 
+                                                                    className="border-0 px-2"
+                                                                    value={editForm.earned_breakdown?.[key] ?? 0} 
+                                                                    onChange={(e) => {
+                                                                        const val = parseFloat(e.target.value) || 0;
+                                                                        setEditForm(prev => ({
+                                                                            ...prev,
+                                                                            earned_breakdown: {
+                                                                                ...prev.earned_breakdown,
+                                                                                [key]: val
+                                                                            }
+                                                                        }));
+                                                                    }}
+                                                                />
+                                                                <Button 
+                                                                    variant="outline-danger" 
+                                                                    className="border-0 bg-white text-danger px-2 d-flex align-items-center"
+                                                                    onClick={() => removeEarning(key)}
+                                                                >
+                                                                    <CsLineIcons icon="bin" size="14" />
+                                                                </Button>
+                                                            </InputGroup>
+                                                        </div>
+                                                    </Col>
+                                                ))}
+                                            </Row>
+                                            {(() => {
+                                                const availableEarnings = ['basic', 'hra', 'conveyance', 'medical', 'special', 'other'].filter(
+                                                    key => !editForm.visibleEarnings?.includes(key)
+                                                );
+                                                return availableEarnings.length > 0 && (
+                                                    <div className="mt-3 pt-2 border-top border-separator-light" style={{ width: '240px' }}>
+                                                        <Select 
+                                                            classNamePrefix="react-select"
+                                                            menuPortalTarget={document.body}
+                                                            styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                                            options={availableEarnings.map(key => ({ value: key, label: getComponentLabel(key) }))}
+                                                            value={null}
+                                                            onChange={(selected) => {
+                                                                if (selected) addEarning(selected.value);
+                                                            }}
+                                                            placeholder="+ Add Earning Component"
+                                                        />
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
+                                </Col>
+                                <Col xs={12}>
+                                    <div className="mb-4">
+                                        <h6 className="fw-bold mb-3 text-danger d-flex align-items-center gap-2">
+                                            <CsLineIcons icon="trend-down" size="18" />
+                                            Deductions Components
+                                        </h6>
+                                        <div className="p-3 rounded-3 bg-light border border-light">
+                                            <Row className="g-3">
+                                                {editForm.visibleDeductions?.map(key => (
+                                                    <Col xs={12} md={6} key={key}>
+                                                        <div>
+                                                            <Form.Label className="small fw-semibold text-muted text-uppercase mb-1">{getComponentLabel(key)}</Form.Label>
+                                                            <InputGroup size="sm" className="shadow-sm rounded-3 overflow-hidden">
+                                                                <InputGroup.Text className="bg-white border-0">₹</InputGroup.Text>
+                                                                <Form.Control 
+                                                                    type="number" 
+                                                                    className="border-0 px-2"
+                                                                    value={
+                                                                        (key === 'pf' || key === 'esi' || key === 'pt') 
+                                                                            ? (editForm.deduction_breakdown?.[key] ?? 0)
+                                                                            : (editForm[key] ?? 0)
+                                                                    } 
+                                                                    onChange={(e) => {
+                                                                        const val = parseFloat(e.target.value) || 0;
+                                                                        setEditForm(prev => {
+                                                                            if (key === 'pf' || key === 'esi' || key === 'pt') {
+                                                                                return {
+                                                                                    ...prev,
+                                                                                    deduction_breakdown: {
+                                                                                        ...prev.deduction_breakdown,
+                                                                                        [key]: val
+                                                                                    }
+                                                                                };
+                                                                            }
+                                                                            return {
+                                                                                ...prev,
+                                                                                [key]: val
+                                                                            };
+                                                                        });
+                                                                    }}
+                                                                />
+                                                                <Button 
+                                                                    variant="outline-danger" 
+                                                                    className="border-0 bg-white text-danger px-2 d-flex align-items-center"
+                                                                    onClick={() => removeDeduction(key)}
+                                                                >
+                                                                    <CsLineIcons icon="bin" size="14" />
+                                                                </Button>
+                                                            </InputGroup>
+                                                        </div>
+                                                    </Col>
+                                                ))}
+                                            </Row>
+                                            {(() => {
+                                                const availableDeductions = ['pf', 'esi', 'pt', 'advance_deduction', 'tds', 'deductions'].filter(
+                                                    key => !editForm.visibleDeductions?.includes(key)
+                                                );
+                                                return availableDeductions.length > 0 && (
+                                                    <div className="mt-3 pt-2 border-top border-separator-light" style={{ width: '240px' }}>
+                                                        <Select 
+                                                            classNamePrefix="react-select"
+                                                            menuPortalTarget={document.body}
+                                                            styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                                            options={availableDeductions.map(key => ({ value: key, label: getComponentLabel(key) }))}
+                                                            value={null}
+                                                            onChange={(selected) => {
+                                                                if (selected) addDeduction(selected.value);
+                                                            }}
+                                                            placeholder="+ Add Deduction Component"
+                                                        />
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
                                 </Col>
                             </Row>
 

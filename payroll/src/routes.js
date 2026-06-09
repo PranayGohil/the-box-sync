@@ -14,6 +14,7 @@ const payroll = {
   payrollSystem: lazy(() => import('views/admin/staff/payroll/PayrollSystem')),
   generatePayroll: lazy(() => import('views/admin/staff/payroll/GeneratePayroll')),
   managePayroll: lazy(() => import('views/admin/staff/payroll/ManagePayroll')),
+  assets: lazy(() => import('views/admin/staff/assets/Assets')),
 };
 
 const appRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
@@ -67,6 +68,12 @@ const allRoutes = {
         { path: '/view', label: 'View Attendance', component: payroll.attendance, hideInMenu: true },
         { path: '/manage', label: 'Mark Attendance', component: payroll.manageAttendance, hideInMenu: true },
       ],
+    },
+    {
+      path: `${appRoot}/assets`,
+      label: 'Assets',
+      icon: 'boxes',
+      component: payroll.assets,
     },
     {
       path: `${appRoot}/payroll`,

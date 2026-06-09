@@ -35,6 +35,15 @@ const staffAttendanceSchema = new Schema(
       type: String,
       default: null,
     },
+    sessions: {
+      type: [
+        {
+          in_time: { type: String, required: true },
+          out_time: { type: String, default: null }
+        }
+      ],
+      default: []
+    },
     late_by_minutes: {
       type: Number,
       default: 0

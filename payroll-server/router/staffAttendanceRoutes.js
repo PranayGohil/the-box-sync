@@ -8,6 +8,7 @@ const {
     checkOut,
     markAbsent,
     markLeave,
+    updateAttendance,
 } = require("../controllers/staffAttendanceController");
 
 const staffAttendanceRouter = express.Router();
@@ -26,5 +27,6 @@ staffAttendanceRouter.post("/check-in", checkIn);
 staffAttendanceRouter.post("/check-out", checkOut);
 staffAttendanceRouter.post("/mark-absent", markAbsent);
 staffAttendanceRouter.post("/mark-leave", markLeave);
+staffAttendanceRouter.post("/update", authMiddleware, updateAttendance);
 
 module.exports = staffAttendanceRouter;
