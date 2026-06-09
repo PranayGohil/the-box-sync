@@ -494,28 +494,36 @@ export default function ManageAttendance() {
   const [actionType, setActionType] = useState('');
   const [error, setError] = useState('');
 
-  const authHeader = () => ({
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-  });
-
   const getTodayDate = () => {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
   };
+
+  const [targetDate, setTargetDate] = useState(getTodayDate());
+  const [positionFilter, setPositionFilter] = useState('all');
+
+  const authHeader = () => ({
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  });
 
   const getCurrentTime = () => {
     return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   const formatDateDisplay = (dateString) => {
+    if (!dateString) return '';
     const [year, month, day] = dateString.split('-');
-    return `${day}-${month}-${year}`;
+    return `${day}/${month}/${year}`;
   };
 
-  const fetchTodayAttendance = async () => {
+  const fetchTodayAttendance = async (date) => {
     try {
       setLoading((prev) => ({ ...prev, initial: true }));
       setError('');
-      const [attRes, polRes] = await Promise.all([axios.get(`${process.env.REACT_APP_API}/attendance/today`, authHeader()), getLeavePolicy()]);
+      const queryDate = date || targetDate;
+      const [attRes, polRes] = await Promise.all([
+        axios.get(`${process.env.REACT_APP_API}/attendance/today?date=${queryDate}`, authHeader()),
+        getLeavePolicy()
+      ]);
       setStaffList(attRes.data.data);
       if (polRes.success && polRes.data) {
         setLeaveTypes(polRes.data.leave_types || []);
@@ -530,19 +538,19 @@ export default function ManageAttendance() {
   };
 
   useEffect(() => {
-    fetchTodayAttendance();
-  }, []);
+    fetchTodayAttendance(targetDate);
+  }, [targetDate]);
 
   const handleCheckIn = async (staffId, staffName) => {
     setLoading((prev) => ({ ...prev, actions: { ...prev.actions, checkin: true } }));
     try {
       await axios.post(
         `${process.env.REACT_APP_API}/attendance/check-in`,
-        { staff_id: staffId, date: getTodayDate(), in_time: getCurrentTime() },
+        { staff_id: staffId, date: targetDate, in_time: getCurrentTime() },
         authHeader()
       );
       toast.success(`${staffName} checked in successfully!`);
-      fetchTodayAttendance();
+      fetchTodayAttendance(targetDate);
     } catch (err) {
       console.error('Error during Check-In:', err);
       toast.error(err.response?.data?.message || 'Failed to check in.');
@@ -556,11 +564,11 @@ export default function ManageAttendance() {
     try {
       await axios.post(
         `${process.env.REACT_APP_API}/attendance/check-out`,
-        { staff_id: staffId, date: getTodayDate(), out_time: getCurrentTime() },
+        { staff_id: staffId, date: targetDate, out_time: getCurrentTime() },
         authHeader()
       );
       toast.success(`${staffName} checked out successfully!`);
-      fetchTodayAttendance();
+      fetchTodayAttendance(targetDate);
     } catch (err) {
       console.error('Error during Check-Out:', err);
       toast.error(err.response?.data?.message || 'Failed to check out.');
@@ -572,9 +580,9 @@ export default function ManageAttendance() {
   const handleAbsent = async (staffId, staffName) => {
     setLoading((prev) => ({ ...prev, actions: { ...prev.actions, absent: true } }));
     try {
-      await axios.post(`${process.env.REACT_APP_API}/attendance/mark-absent`, { staff_id: staffId, date: getTodayDate() }, authHeader());
+      await axios.post(`${process.env.REACT_APP_API}/attendance/mark-absent`, { staff_id: staffId, date: targetDate }, authHeader());
       toast.success(`${staffName} marked as absent!`);
-      fetchTodayAttendance();
+      fetchTodayAttendance(targetDate);
     } catch (err) {
       console.error('Error marking Absent:', err);
       toast.error(err.response?.data?.message || 'Failed to mark as absent.');
@@ -588,11 +596,11 @@ export default function ManageAttendance() {
     try {
       await axios.post(
         `${process.env.REACT_APP_API}/attendance/mark-leave`,
-        { staff_id: staffId, date: getTodayDate(), leave_type_id: selectedLeaveType, is_half_day: isHalfDay },
+        { staff_id: staffId, date: targetDate, leave_type_id: selectedLeaveType, is_half_day: isHalfDay },
         authHeader()
       );
       toast.success(`${staffName} marked on leave!`);
-      fetchTodayAttendance();
+      fetchTodayAttendance(targetDate);
     } catch (err) {
       console.error('Error marking Leave:', err);
       toast.error(err.response?.data?.message || 'Failed to mark leave.');
@@ -791,8 +799,24 @@ export default function ManageAttendance() {
     [loading]
   );
 
+  const uniquePositions = React.useMemo(() => {
+    const positions = staffList.map((s) => s.position).filter(Boolean);
+    return ['all', ...new Set(positions)];
+  }, [staffList]);
+
+  const filteredStaffList = React.useMemo(() => {
+    if (positionFilter === 'all') return staffList;
+    return staffList.filter((s) => s.position === positionFilter);
+  }, [staffList, positionFilter]);
+
+  const formatDateDDMMYYYY = (dateStr) => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   const tableInstance = useTable(
-    { columns, data: staffList, initialState: { pageIndex: 0, pageSize: 10 } },
+    { columns, data: filteredStaffList, initialState: { pageIndex: 0, pageSize: 10 } },
     useGlobalFilter,
     useSortBy,
     usePagination,
@@ -823,13 +847,28 @@ export default function ManageAttendance() {
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-5">
+      <div className="page-title-container mb-4">
         <Row className="g-3 align-items-center">
-          <Col md={12}>
+          <Col md={6}>
             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
               {title}
             </h1>
             <BreadcrumbList items={breadcrumbs} />
+          </Col>
+          <Col md={6} className="d-flex justify-content-md-end align-items-center mt-md-0 mt-3">
+            <Badge
+              bg="soft-primary"
+              className="px-4 py-2 fs-6 border border-primary border-opacity-25"
+              style={{
+                borderRadius: '50px',
+                fontSize: '0.9rem',
+                fontWeight: '700',
+                backgroundColor: 'rgba(30, 168, 231, 0.08)',
+                color: '#1ea8e7'
+              }}
+            >
+              📅 Date: {formatDateDDMMYYYY(targetDate)}
+            </Badge>
           </Col>
         </Row>
       </div>
@@ -840,7 +879,7 @@ export default function ManageAttendance() {
             <CsLineIcons icon="error" size="24" />
             <span>{error}</span>
           </div>
-          <Button variant="none" className="custom-btn-danger-outline px-4" onClick={fetchTodayAttendance}>
+          <Button variant="none" className="custom-btn-danger-outline px-4" onClick={() => fetchTodayAttendance(targetDate)}>
             Retry
           </Button>
         </Alert>
@@ -848,8 +887,9 @@ export default function ManageAttendance() {
 
       {/* Search and Controls */}
       <div>
-        <Row className="mb-3 g-2 align-items-center">
-          <Col xs="12" md="6" lg="8" className="flex-grow-1">
+        <Row className="mb-3 g-3 align-items-center">
+          {/* Search Bar */}
+          <Col xs="12" md="4" lg="5">
             <div className="order-history-custom-search-container shadow-sm d-flex align-items-center px-2">
               <CsLineIcons icon="search" size="18" className="text-primary opacity-75 ms-1 me-2" />
               <Form.Control
@@ -867,8 +907,54 @@ export default function ManageAttendance() {
               )}
             </div>
           </Col>
-          <Col xs="12" md="auto" className="d-flex align-items-center justify-content-between justify-content-md-end gap-3 ms-md-auto">
-            <div className="text-muted small fw-bold">
+
+          {/* Position Filter */}
+          <Col xs="6" md="3" lg="3">
+            <Form.Select
+              value={positionFilter}
+              onChange={(e) => setPositionFilter(e.target.value)}
+              className="filter-pill-input shadow-sm"
+              style={{
+                borderRadius: '10px',
+                height: '42px',
+                border: '1px solid #eee',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#475569',
+                backgroundColor: '#fff',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="all">All Positions</option>
+              {uniquePositions.filter(p => p !== 'all').map((pos) => (
+                <option key={pos} value={pos}>{pos}</option>
+              ))}
+            </Form.Select>
+          </Col>
+
+          {/* Datewise Filter */}
+          <Col xs="6" md="3" lg="2">
+            <Form.Control
+              type="date"
+              value={targetDate}
+              onChange={(e) => setTargetDate(e.target.value)}
+              className="filter-pill-input shadow-sm"
+              style={{
+                borderRadius: '10px',
+                height: '42px',
+                border: '1px solid #eee',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#475569',
+                backgroundColor: '#fff',
+                cursor: 'pointer'
+              }}
+            />
+          </Col>
+
+          {/* Showing metrics / page size */}
+          <Col xs="12" md="2" lg="2" className="d-flex align-items-center justify-content-between justify-content-md-end gap-3 ms-md-auto">
+            <div className="text-muted small fw-bold d-none d-xl-block">
               Showing {totalFiltered > 0 ? pageIndex * pageSize + 1 : 0}&ndash;{Math.min((pageIndex + 1) * pageSize, totalFiltered)} of {totalFiltered}
             </div>
             <div>
@@ -1079,7 +1165,7 @@ export default function ManageAttendance() {
               <p className="text-muted mb-4">
                 Are you sure you want to{' '}
                 {actionType === 'checkin' ? 'check-in' : actionType === 'checkout' ? 'check-out' : actionType === 'leave' ? 'mark on leave' : 'mark as absent'}{' '}
-                this staff member for today?
+                this staff member for {formatDateDisplay(targetDate)}?
               </p>
 
               {actionType === 'leave' && (

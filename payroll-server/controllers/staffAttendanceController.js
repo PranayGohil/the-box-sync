@@ -64,7 +64,7 @@ const generateWeekOffs = (staff, globalOffs, existingRecords) => {
 const getTodayAttendance = async (req, res) => {
     try {
         const userId = req.user;
-        const today = getTodayIST();
+        const today = req.query.date || getTodayIST();
 
         // Fetch all staff for this user
         const staffList = await Staff.find({ user_id: userId })
