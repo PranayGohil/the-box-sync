@@ -191,12 +191,6 @@ const MenuGrid = ({
               filteredMenuData.map((category) => (
                 <div key={category._id} className="mb-4">
                   <div className="pos-section-header">
-                    <div
-                      className="pos-section-dot"
-                      style={{
-                        background: category.meal_type === 'veg' ? '#10b981' : category.meal_type === 'egg' ? '#f59e0b' : '#ef4444',
-                      }}
-                    />
                     <span>{category.category}</span>
                     <div className="pos-section-line" />
                     <span className="pos-section-count">{category.dishes.length}</span>
@@ -218,7 +212,7 @@ const MenuGrid = ({
 
                             {/* Type Indicator */}
 
-                            <div className={`pos-type-dot ${(dish.meal_type || category.meal_type || 'veg') === 'veg' ? 'veg-dot' : (dish.meal_type || category.meal_type || 'veg') === 'egg' ? 'egg-dot' : 'nonveg-dot'}`} />
+                            <div className={`pos-type-dot ${(dish.meal_type || 'veg') === 'veg' ? 'veg-dot' : (dish.meal_type || 'veg') === 'egg' ? 'egg-dot' : 'nonveg-dot'}`} />
 
                             {/* Image */}
                             <div className="pos-menu-img-wrap">

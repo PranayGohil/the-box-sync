@@ -329,11 +329,11 @@ const DineInOrder = () => {
                             <Badge
                               variant="outline"
                               className={`text-white mb-2 ${
-                                category.meal_type === 'veg' ? 'bg-success' : category.meal_type === 'egg' ? 'bg-warning' : 'bg-danger'
+                                (dish.meal_type || 'veg') === 'veg' ? 'bg-success' : (dish.meal_type || 'veg') === 'egg' ? 'bg-warning' : 'bg-danger'
                               }`}
                               style={{ position: 'absolute', top: '5px', right: '5px' }}
                             >
-                              {category.meal_type === 'veg' ? 'Veg' : category.meal_type === 'egg' ? 'Egg' : 'Non-Veg'}
+                              {(dish.meal_type || 'veg') === 'veg' ? 'Veg' : (dish.meal_type || 'veg') === 'egg' ? 'Egg' : 'Non-Veg'}
                             </Badge>
                             {dish.is_special && (
                               <i className="bi bi-stars text-warning" style={{ fontSize: '20px', position: 'absolute', top: '0px', left: '2px' }} />

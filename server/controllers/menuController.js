@@ -83,86 +83,70 @@ const addMenu = async (req, res) => {
           Array.isArray(parsedVariants) ? parsedVariants.length > 1 : false,
         variants: Array.isArray(parsedVariants)
           ? parsedVariants.map((v) => ({
-              size_name: v.size_name,
-              price: v.price != null && v.price !== "" ? Number(v.price) : 0,
-              extra: v.extra,
-              is_available: v.is_available !== false,
-            }))
+            size_name: v.size_name,
+            price: v.price != null && v.price !== "" ? Number(v.price) : 0,
+            extra: v.extra,
+            is_available: v.is_available !== false,
+          }))
           : undefined,
         addons: Array.isArray(parsedAddons)
           ? parsedAddons.map((a) => ({
-              addon_name: a.addon_name,
-              price: a.price != null && a.price !== "" ? Number(a.price) : 0,
-              is_available: a.is_available !== false,
-            }))
+            addon_name: a.addon_name,
+            price: a.price != null && a.price !== "" ? Number(a.price) : 0,
+            is_available: a.is_available !== false,
+          }))
           : undefined,
       };
     });
 
     const isHideOnKot = typeof hide_on_kot === "string" ? hide_on_kot === "true" : !!hide_on_kot;
 
-    // Group parsed dishes by meal_type
-    const dishesByMealType = {};
-    parsedDishes.forEach((dish) => {
-      const mt = dish.meal_type || "veg";
-      if (!dishesByMealType[mt]) {
-        dishesByMealType[mt] = [];
-      }
-      dishesByMealType[mt].push(dish);
-    });
+    const filter = { user_id, category };
+    const existingMenu = await Menu.findOne(filter);
 
-    const resultMenus = [];
+    let resultMenu;
+    if (existingMenu) {
+      const updatedDishes = [...existingMenu.dishes];
 
-    for (const [mt, dishesGroup] of Object.entries(dishesByMealType)) {
-      const filter = { user_id, category, meal_type: mt };
-      const existingMenu = await Menu.findOne(filter);
+      parsedDishes.forEach((newDish) => {
+        const existingIndex = updatedDishes.findIndex((d) =>
+          (newDish._id && d._id.toString() === newDish._id.toString()) ||
+          (d.dish_name.toLowerCase() === newDish.dish_name.toLowerCase())
+        );
 
-      let resultMenu;
-      if (existingMenu) {
-        const updatedDishes = [...existingMenu.dishes];
+        if (existingIndex !== -1) {
+          const existingDish = updatedDishes[existingIndex];
+          updatedDishes[existingIndex] = {
+            ...existingDish.toObject ? existingDish.toObject() : existingDish,
+            ...newDish,
+            _id: existingDish._id,
+            dish_img: newDish.dish_img || existingDish.dish_img,
+          };
+        } else {
+          updatedDishes.push(newDish);
+        }
+      });
 
-        dishesGroup.forEach((newDish) => {
-          const existingIndex = updatedDishes.findIndex((d) => 
-            (newDish._id && d._id.toString() === newDish._id.toString()) ||
-            (d.dish_name.toLowerCase() === newDish.dish_name.toLowerCase())
-          );
+      existingMenu.dishes = updatedDishes;
+      existingMenu.counter = counter || existingMenu.counter;
+      existingMenu.hide_on_kot = isHideOnKot;
 
-          if (existingIndex !== -1) {
-            const existingDish = updatedDishes[existingIndex];
-            updatedDishes[existingIndex] = {
-              ...existingDish.toObject ? existingDish.toObject() : existingDish,
-              ...newDish,
-              _id: existingDish._id,
-              dish_img: newDish.dish_img || existingDish.dish_img,
-            };
-          } else {
-            updatedDishes.push(newDish);
-          }
-        });
-
-        existingMenu.dishes = updatedDishes;
-        existingMenu.counter = counter || existingMenu.counter;
-        existingMenu.hide_on_kot = isHideOnKot;
-
-        resultMenu = await existingMenu.save();
-      } else {
-        resultMenu = new Menu({
-          user_id,
-          category,
-          meal_type: mt,
-          counter: counter || null,
-          hide_on_kot: isHideOnKot,
-          dishes: dishesGroup,
-        });
-        await resultMenu.save();
-      }
-      resultMenus.push(resultMenu);
+      resultMenu = await existingMenu.save();
+    } else {
+      resultMenu = new Menu({
+        user_id,
+        category,
+        counter: counter || null,
+        hide_on_kot: isHideOnKot,
+        dishes: parsedDishes,
+      });
+      await resultMenu.save();
     }
 
     res.status(200).json({
       success: true,
       message: "Menu saved",
-      data: resultMenus,
+      data: [resultMenu],
     });
   } catch (error) {
     console.error("Error adding menu:", error);
@@ -178,7 +162,6 @@ const getMenuData = async (req, res) => {
 
     const projection = {
       category: 1,
-      meal_type: 1,
       counter: 1,
       hide_on_kot: 1,
       dishes: 1,
@@ -255,7 +238,7 @@ const getMenuCategories = async (req, res) => {
     const filter = { user_id: userId };
 
     if (meal_type) {
-      filter.meal_type = meal_type;
+      filter["dishes.meal_type"] = meal_type;
     }
 
     const categories = await Menu.distinct("category", filter);
@@ -393,8 +376,9 @@ const getMenuDataById = async (req, res) => {
 const updateMenuCategoryAndMealType = async (req, res) => {
   try {
     const id = req.params.id;
-    let { category, meal_type, counter, hide_on_kot } = req.body;
-    const userId = req.user._id;
+
+    let { category, counter, hide_on_kot } = req.body;
+    const userId = req.user;
 
     if (counter === "") {
       counter = null;
@@ -406,7 +390,7 @@ const updateMenuCategoryAndMealType = async (req, res) => {
 
     const updatedMenu = await Menu.findOneAndUpdate(
       { user_id: userId, _id: id },
-      { category, meal_type, counter, hide_on_kot },
+      { category, counter, hide_on_kot },
       { new: true },
     );
 
@@ -416,7 +400,7 @@ const updateMenuCategoryAndMealType = async (req, res) => {
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
-        message: "A menu category with this name and meal type already exists."
+        message: "A menu category with this name already exists."
       });
     }
     res.status(500).json({ success: false, message: "Server error" });
@@ -490,8 +474,8 @@ const updateMenu = async (req, res) => {
         Array.isArray(parsedVariants) && parsedVariants[0]
           ? Number(parsedVariants[0].price)
           : dish_price !== "" && dish_price != null
-          ? Number(dish_price)
-          : currentDishObj.dish_price,
+            ? Number(dish_price)
+            : currentDishObj.dish_price,
       description: description !== undefined ? description : currentDishObj.description,
       is_special:
         is_special !== undefined
@@ -505,74 +489,37 @@ const updateMenu = async (req, res) => {
         Array.isArray(parsedVariants) ? parsedVariants.length > 1 : currentDishObj.has_variants,
       variants: Array.isArray(parsedVariants)
         ? parsedVariants.map((v) => ({
-            size_name: v.size_name,
-            price: v.price != null && v.price !== "" ? Number(v.price) : 0,
-            extra: v.extra,
-            is_available: v.is_available !== false,
-          }))
+          size_name: v.size_name,
+          price: v.price != null && v.price !== "" ? Number(v.price) : 0,
+          extra: v.extra,
+          is_available: v.is_available !== false,
+        }))
         : currentDishObj.variants,
       addons: Array.isArray(parsedAddons)
         ? parsedAddons.map((a) => ({
-            addon_name: a.addon_name,
-            price: a.price != null && a.price !== "" ? Number(a.price) : 0,
-            is_available: a.is_available !== false,
-          }))
+          addon_name: a.addon_name,
+          price: a.price != null && a.price !== "" ? Number(a.price) : 0,
+          is_available: a.is_available !== false,
+        }))
         : currentDishObj.addons,
-      meal_type: meal_type !== undefined ? meal_type : currentDishObj.meal_type || currentMenu.meal_type || "veg",
+      meal_type: meal_type !== undefined ? meal_type : currentDishObj.meal_type || "veg",
     };
 
     if (req.file) {
       updatedDishObj.dish_img = "/menu/dishes/" + req.file.filename;
     }
 
-    // Determine target meal_type
-    const targetMealType = meal_type !== undefined ? meal_type : currentMenu.meal_type || "veg";
-
-    let result;
-    // If meal_type changed from the current menu's meal_type:
-    if (targetMealType !== currentMenu.meal_type) {
-      // 1. Pull from current menu
-      await Menu.updateOne(
-        { _id: currentMenu._id },
-        { $pull: { dishes: { _id: _id } } }
-      );
-
-      // 2. Push to target menu (find or create)
-      const targetMenu = await Menu.findOne({ user_id: userId, category: currentMenu.category, meal_type: targetMealType });
-      if (targetMenu) {
-        targetMenu.dishes.push(updatedDishObj);
-        await targetMenu.save();
-      } else {
-        const newMenu = new Menu({
-          user_id: userId,
-          category: currentMenu.category,
-          meal_type: targetMealType,
-          counter: currentMenu.counter,
-          hide_on_kot: currentMenu.hide_on_kot,
-          dishes: [updatedDishObj]
-        });
-        await newMenu.save();
+    const updateFields = {};
+    Object.keys(updatedDishObj).forEach(key => {
+      if (key !== "_id") {
+        updateFields[`dishes.$.${key}`] = updatedDishObj[key];
       }
+    });
 
-      // 3. Delete old menu document if it's now empty
-      const checkedOldMenu = await Menu.findById(currentMenu._id);
-      if (checkedOldMenu && checkedOldMenu.dishes.length === 0) {
-        await Menu.deleteOne({ _id: currentMenu._id });
-      }
-      result = { modifiedCount: 1 };
-    } else {
-      // If meal_type has not changed, just update in place
-      const updateFields = {};
-      Object.keys(updatedDishObj).forEach(key => {
-        if (key !== "_id") {
-          updateFields[`dishes.$.${key}`] = updatedDishObj[key];
-        }
-      });
-      result = await Menu.updateOne(
-        { user_id: userId, "dishes._id": _id },
-        { $set: updateFields }
-      );
-    }
+    const result = await Menu.updateOne(
+      { user_id: userId, "dishes._id": _id },
+      { $set: updateFields }
+    );
 
     // Update hide_on_kot at the menu (category) level if provided
     if (hide_on_kot !== undefined && hide_on_kot !== null) {
@@ -597,7 +544,7 @@ const deleteMenu = async (req, res) => {
 
     const menu = await Menu.findOne(
       { user_id: userId, "dishes._id": dishId },
-      { category: 1, meal_type: 1, dishes: 1 }, // projection
+      { category: 1, dishes: 1 }, // projection
     );
 
     if (!menu) {
@@ -637,18 +584,16 @@ const deleteMenu = async (req, res) => {
         .json({ message: "Dish not found or already deleted" });
     }
 
-    // Delete empty menu documents for that category + meal_type
+    // Delete empty menu documents for that category
     const updatedMenu = await Menu.findOne({
       user_id: userId,
       category: menu.category,
-      meal_type: menu.meal_type,
     }).select("dishes");
 
     if (updatedMenu && updatedMenu.dishes.length === 0) {
       await Menu.deleteOne({
         user_id: userId,
         category: menu.category,
-        meal_type: menu.meal_type,
       });
     }
 

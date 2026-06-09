@@ -323,7 +323,7 @@ const AddDishes = () => {
           // Autofill description
           setFieldValue(`dishes[${index}].description`, matchedDish.description || '');
           // Autofill meal type
-          setFieldValue(`dishes[${index}].meal_type`, matchedDish.meal_type || matchedCategory.meal_type || 'veg');
+          setFieldValue(`dishes[${index}].meal_type`, matchedDish.meal_type || 'veg');
 
           // Autofill variants
           if (matchedDish.variants && matchedDish.variants.length > 0) {

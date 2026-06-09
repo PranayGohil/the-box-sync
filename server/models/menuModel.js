@@ -7,9 +7,6 @@ const menu = new Schema({
   category: {
     type: String,
   },
-  meal_type: {
-    type: String,
-  },
   counter: { type: String, default: null },
   dishes: [
     {
@@ -67,17 +64,14 @@ const menu = new Schema({
   },
 });
 
-// One menu document per (user, category, meal_type)
-menu.index({ user_id: 1, category: 1, meal_type: 1 }, { unique: true });
+// One menu document per (user, category)
+menu.index({ user_id: 1, category: 1 }, { unique: true });
 
 // For listing menus by user
 menu.index({ user_id: 1 });
 
 // For website menu (if you filter by show_on_website)
 menu.index({ user_id: 1, show_on_website: 1 });
-
-// Optional: if you often search by category alone
-menu.index({ user_id: 1, category: 1 });
 
 menu.index({ user_id: 1, "dishes.dish_name": 1 });
 

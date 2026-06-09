@@ -144,7 +144,7 @@ const replyFeedback = async (req, res) => {
       _id: userId,
       "feedbacks._id": feedbackId,
     })
-      .select("feedbacks.$") // only the matching feedback
+      .select("name feedbacks.$") // only the matching feedback
       .lean();
 
     if (!user || !user.feedbacks || user.feedbacks.length === 0) {
@@ -162,10 +162,36 @@ const replyFeedback = async (req, res) => {
       });
     }
 
+    const textContent = `Hi ${feedback.customer_name},\n\nThank you for sharing your feedback with ${user.name || "us"}.\n\nReply:\n${reply}\n\nOriginal Feedback:\n"${feedback.feedback}"\nRating: ${feedback.rating || "N/A"}/5\n\nBest regards,\nThe ${user.name || "TheBox"} Team`;
+
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+        <div style="background: #7444FD; padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+          <h2 style="color: #fff; margin: 0;">Feedback Reply</h2>
+        </div>
+        <div style="padding: 24px; background: #fafafa;">
+          <p style="color: #333; font-size: 16px;">Hi <strong>${feedback.customer_name}</strong>,</p>
+          <p style="color: #555; font-size: 15px; line-height: 1.6; white-space: pre-line;">${reply}</p>
+          
+          <div style="margin-top: 24px; padding: 16px; background: #f1f5f9; border-left: 4px solid #7444FD; border-radius: 4px;">
+            <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold; color: #64748b; text-transform: uppercase;">Your Feedback:</p>
+            <p style="margin: 0; font-style: italic; color: #334155; line-height: 1.5;">"${feedback.feedback}"</p>
+            ${feedback.rating ? `<p style="margin: 8px 0 0 0; font-size: 14px; color: #fbbf24;">Rating: ${'★'.repeat(feedback.rating)}${'☆'.repeat(5 - feedback.rating)}</p>` : ''}
+          </div>
+          
+          <p style="color: #555; margin-top: 24px; font-size: 15px;">Best regards,<br><strong>The ${user.name || 'TheBox'} Team</strong></p>
+        </div>
+        <div style="padding: 12px 24px; background: #f0f0f0; border-radius: 0 0 6px 6px; text-align: center; font-size: 12px; color: #999;">
+          Sent via <strong style="color: #7444FD;">TheBox</strong>
+        </div>
+      </div>
+    `;
+
     await sendEmail({
       to: feedback.customer_email,
-      subject: "Feedback Reply",
-      html: reply,
+      subject: `Feedback Reply - ${user.name || 'TheBox'}`,
+      text: textContent,
+      html: htmlContent,
     });
 
     return res.json({
