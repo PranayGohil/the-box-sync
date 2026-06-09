@@ -639,6 +639,13 @@ export default function ManageAttendance() {
         Cell: ({ value }) => <span className="fw-bold text-dark">#{value}</span>,
       },
       {
+        Header: 'Date',
+        id: 'date',
+        headerClassName: 'text-small text-uppercase w-15',
+        sortable: false,
+        Cell: () => <span className="fw-bold text-muted">{formatDateDisplay(targetDate)}</span>,
+      },
+      {
         Header: 'Staff Member',
         accessor: (row) => `${row.f_name} ${row.l_name}`,
         headerClassName: 'text-small text-uppercase w-25',
@@ -796,7 +803,7 @@ export default function ManageAttendance() {
         },
       },
     ],
-    [loading]
+    [loading, targetDate]
   );
 
   const uniquePositions = React.useMemo(() => {
@@ -1037,6 +1044,9 @@ export default function ManageAttendance() {
                             </div>
                             <div className="small-role text-muted small text-truncate" style={{ maxWidth: '140px' }}>
                               {staff.position} • #{staff.staff_id}
+                            </div>
+                            <div className="text-primary fw-bold mt-1" style={{ fontSize: '0.7rem' }}>
+                              📅 {formatDateDisplay(targetDate)}
                             </div>
                           </div>
                         </div>
