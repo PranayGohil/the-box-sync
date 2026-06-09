@@ -87,7 +87,12 @@ const ManageMenu = () => {
     let filtered = [...menuData];
 
     if (meal_type) {
-      filtered = filtered.filter((item) => item.meal_type === meal_type);
+      filtered = filtered
+        .map((item) => ({
+          ...item,
+          dishes: item.dishes.filter((dish) => dish.meal_type === meal_type),
+        }))
+        .filter((item) => item.dishes.length > 0);
     }
 
     if (category) {
@@ -301,16 +306,16 @@ const ManageMenu = () => {
               >
                 <div className="d-flex align-items-center gap-2 gap-sm-3 min-width-0 w-100 w-sm-auto">
                   <div
-                    className="rounded-circle flex-shrink-0"
+                    className="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
                     style={{
-                      width: '14px',
-                      height: '14px',
-                      backgroundColor:
-                        category.meal_type === 'veg' ? '#10b981'
-                          : category.meal_type === 'egg' ? '#f59e0b'
-                            : '#ef4444',
+                      width: '32px',
+                      height: '32px',
+                      backgroundColor: 'rgba(35, 179, 244, 0.1)',
+                      color: '#23b3f4',
                     }}
-                  />
+                  >
+                    <CsLineIcons icon="folder" size="16" />
+                  </div>
                   <h2 className="h5 mb-0 fw-bold text-dark text-truncate" style={{ maxWidth: '100%' }}>{category.category}</h2>
                 </div>
                 <div className="d-flex align-items-center justify-content-between justify-content-sm-end gap-2 w-100 w-sm-auto mt-2 mt-sm-0 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -335,7 +340,7 @@ const ManageMenu = () => {
                       variant="light"
                       size="sm"
                       className="btn-icon btn-icon-only shadow-sm rounded-circle border-0 text-primary flex-shrink-0"
-                      onClick={() => history.push('/operations/add-dish', { category: category.category, mealType: category.meal_type, counter: category.counter, hide_on_kot: category.hide_on_kot, fromManageMenu: true })}
+                      onClick={() => history.push('/operations/add-dish', { category: category.category, counter: category.counter, hide_on_kot: category.hide_on_kot, fromManageMenu: true })}
                       title="Add Dish to Category"
                     >
                       <CsLineIcons icon="plus" size="15" />
@@ -352,7 +357,7 @@ const ManageMenu = () => {
                       <Col xs={12} sm={6} md={4} lg={3} xxl={2} key={dish.id || dish._id}>
                         <div className="pos-menu-card h-100 position-relative">
                           {/* Meal-type dot — identical to MenuGrid */}
-                          <div className={`pos-type-dot ${(dish.meal_type || category.meal_type || 'veg') === 'veg' ? 'veg-dot' : (dish.meal_type || category.meal_type || 'veg') === 'egg' ? 'egg-dot' : 'nonveg-dot'}`} style={{ left: '8px' }} />
+                          <div className={`pos-type-dot ${(dish.meal_type || 'veg') === 'veg' ? 'veg-dot' : (dish.meal_type || 'veg') === 'egg' ? 'egg-dot' : 'nonveg-dot'}`} style={{ left: '8px' }} />
 
                           {/* Management buttons — absolute top-right overlay, icon-only, ManageTable link style */}
                           <div

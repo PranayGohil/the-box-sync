@@ -335,7 +335,7 @@ const getTopDishes = async (req, res) => {
             {
               $project: {
                 category: 1,
-                meal_type: 1,
+                meal_type: "$dishes.meal_type",
                 is_special: "$dishes.is_special",
                 dish_price: "$dishes.dish_price",
                 dish_img: "$dishes.dish_img",
@@ -1420,7 +1420,7 @@ const getMenuPerformanceReport = async (req, res) => {
             {
               $project: {
                 category: 1,
-                meal_type: 1,
+                meal_type: "$dishes.meal_type",
                 is_special: "$dishes.is_special",
                 is_available: "$dishes.is_available",
               },
@@ -1602,7 +1602,7 @@ const getMenuPerformanceReport = async (req, res) => {
                 $expr: { $eq: ["$normalizedMenuDish", "$$dishName"] },
               },
             },
-            { $project: { meal_type: 1 } },
+            { $project: { meal_type: "$dishes.meal_type" } },
           ],
           as: "menuInfo",
         },

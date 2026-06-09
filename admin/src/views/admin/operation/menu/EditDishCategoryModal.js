@@ -171,7 +171,6 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
             category: data?.category || '',
             counter: data?.counter || '',
             hide_on_kot: data?.hide_on_kot || false,
-            meal_type: data?.meal_type || 'veg',
         },
         enableReinitialize: true,
         onSubmit: async (values) => {
@@ -182,7 +181,6 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                     category: values.category,
                     counter: values.counter,
                     hide_on_kot: values.hide_on_kot,
-                    meal_type: values.meal_type,
                 };
 
                 await axios.put(
@@ -265,29 +263,6 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                 )}
                 <Form id="edit_category_form" onSubmit={formik.handleSubmit}>
                     <Row className="g-4">
-                        <Col md={12}>
-                            <Form.Label className="small fw-bold text-muted text-uppercase mb-3">Meal Type</Form.Label>
-                            <div className="d-flex flex-wrap gap-2">
-                                {['veg', 'egg', 'non-veg'].map((type) => (
-                                    <div
-                                        key={type}
-                                        className={`edit-dish-category-modal-radio-pill ${type} ${formik.values.meal_type === type ? 'active' : ''}`}
-                                        onClick={() => formik.setFieldValue('meal_type', type)}
-                                    >
-                                        <div
-                                            className="rounded-circle"
-                                            style={{
-                                                width: '12px',
-                                                height: '12px',
-                                                background: type === 'veg' ? '#10b981' : type === 'egg' ? '#f59e0b' : '#ef4444',
-                                            }}
-                                        />
-                                        {type === 'veg' ? 'Veg' : type === 'egg' ? 'Egg' : 'Non-Veg'}
-                                    </div>
-                                ))}
-                            </div>
-                        </Col>
-
                         <Col md={6}>
                             <Form.Group>
                                 <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Category Name</Form.Label>

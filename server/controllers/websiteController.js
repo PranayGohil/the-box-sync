@@ -158,7 +158,6 @@ exports.getAllDishes = async (req, res) => {
 
       return {
         category: menu.category,
-        meal_type: menu.meal_type,
         dishes: dishesWithFlag,
       };
     });
@@ -233,7 +232,6 @@ exports.getFeaturedDishesByCode = async (req, res) => {
         );
         return {
           category: menu.category,
-          meal_type: menu.meal_type,
           dishes: filtered,
         };
       })
