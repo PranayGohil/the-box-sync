@@ -1124,6 +1124,21 @@ ${anomalies.map(w => `- **${w.item_name}**: Excessive wastage flagged! **${w.wee
   }
 };
 
+const getRestaurantTimings = async (req, res) => {
+  try {
+    const userId = String(req.user._id || req.user);
+    const website = await Website.findOne({ user_id: userId }).lean();
+    res.json({
+      success: true,
+      open_time_from: website?.open_time_from || null,
+      open_time_to: website?.open_time_to || null,
+    });
+  } catch (error) {
+    console.error("getRestaurantTimings error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 module.exports = {
   saveOpeningStock,
   saveClosingStock,
