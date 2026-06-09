@@ -11,7 +11,7 @@ import ControlsSearch from 'components/table/ControlsSearch';
 import Table from 'components/table/Table';
 import TablePagination from 'components/table/TablePagination';
 import { toast } from 'react-toastify';
-import { getLeavePolicy } from 'api/payrollConfig';
+import { getLeavePolicy, getPayrollConfig } from 'api/payrollConfig';
 
 const customStyles = `
   .glass-card {
@@ -414,6 +414,16 @@ const customStyles = `
     .page-title-container {
       margin-top: 2rem !important;
     }
+    .w-100-mobile {
+      width: 100% !important;
+      display: block !important;
+    }
+    .w-100-mobile .dropdown-toggle {
+      width: 100% !important;
+    }
+    .w-100-mobile .dropdown-menu {
+      width: 100% !important;
+    }
   }
 `;
 
@@ -434,18 +444,18 @@ const LocalControlsPageSize = ({ tableInstance }) => {
   return (
     <OverlayTrigger placement="top" delay={{ show: 1000, hide: 0 }} overlay={<Tooltip>Item Count</Tooltip>}>
       {({ ref, ...triggerHandler }) => (
-        <Dropdown className="d-inline-block" align="end">
+        <Dropdown className="d-inline-block w-100-mobile" align="end">
           <Dropdown.Toggle
             ref={ref}
             {...triggerHandler}
             variant="outline-primary"
-            className="rounded-pill shadow-sm px-3 fw-bold border-2 d-flex align-items-center justify-content-center"
-            style={{ height: '40px', color: '#1ea8e7', borderColor: '#1ea8e7' }}
+            className="rounded-pill shadow-sm px-3 fw-bold border-2 d-flex align-items-center justify-content-center w-100"
+            style={{ height: '42px', color: '#1ea8e7', borderColor: '#1ea8e7' }}
           >
             <span className="me-2">{pageSize} Items</span>
           </Dropdown.Toggle>
           <Dropdown.Menu
-            className="shadow-lg border-0"
+            className="shadow-lg border-0 w-100-mobile"
             style={{ borderRadius: '15px', overflow: 'hidden' }}
           >
             {options.map((pSize) => (
@@ -488,37 +498,128 @@ export default function ManageAttendance() {
   const [selectedLeaveType, setSelectedLeaveType] = useState('');
   const [isHalfDay, setIsHalfDay] = useState(false);
   const [localSearchTerm, setLocalSearchTerm] = useState('');
+  const [payrollConfig, setPayrollConfig] = useState(null);
 
   const [showActionModal, setShowActionModal] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [actionType, setActionType] = useState('');
   const [error, setError] = useState('');
 
-  const authHeader = () => ({
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-  });
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedAttendance, setSelectedAttendance] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editStatus, setEditStatus] = useState('');
+  const [editInTime, setEditInTime] = useState('');
+  const [editOutTime, setEditOutTime] = useState('');
+  const [editLeaveType, setEditLeaveType] = useState('');
+  const [editReason, setEditReason] = useState('');
+  const [submittingEdit, setSubmittingEdit] = useState(false);
+
+
 
   const getTodayDate = () => {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
   };
+
+  const [targetDate, setTargetDate] = useState(getTodayDate());
+  const [positionFilter, setPositionFilter] = useState('all');
+
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    const [time, period] = timeStr.split(' ');
+    if (!time || !period) return 0;
+    let [hours, minutes] = time.split(':').map(Number);
+    if (period === 'PM' && hours !== 12) hours += 12;
+    else if (period === 'AM' && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+  };
+
+  const isCurrentlyCheckedIn = (attendance) => {
+    if (!attendance) return false;
+    if (attendance.sessions && attendance.sessions.length > 0) {
+      const lastSession = attendance.sessions[attendance.sessions.length - 1];
+      return lastSession && lastSession.out_time === null;
+    }
+    return attendance.in_time && !attendance.out_time;
+  };
+
+  const calculateTotalWorkingHours = (attendance, config) => {
+    if (!attendance) return '—';
+    const lunchStartStr = (config && config.org_rules && config.org_rules.lunch_start_time) || "01:00 PM";
+    const lunchEndStr = (config && config.org_rules && config.org_rules.lunch_end_time) || "02:00 PM";
+    
+    const lunchStart = parseTimeToMinutes(lunchStartStr);
+    const lunchEnd = parseTimeToMinutes(lunchEndStr);
+    
+    let totalMins = 0;
+    
+    if (attendance.sessions && attendance.sessions.length > 0) {
+      attendance.sessions.forEach(session => {
+        if (session.in_time && session.out_time) {
+          let diff = parseTimeToMinutes(session.out_time) - parseTimeToMinutes(session.in_time);
+          if (diff < 0) diff += 24 * 60;
+          totalMins += diff;
+        }
+      });
+      
+      for (let i = 0; i < attendance.sessions.length - 1; i++) {
+        const currentOut = attendance.sessions[i].out_time;
+        const nextIn = attendance.sessions[i+1].in_time;
+        
+        if (currentOut && nextIn) {
+          let gapStart = parseTimeToMinutes(currentOut);
+          let gapEnd = parseTimeToMinutes(nextIn);
+          if (gapEnd < gapStart) gapEnd += 24 * 60;
+          
+          const overlapStart = Math.max(gapStart, lunchStart);
+          const overlapEnd = Math.min(gapEnd, lunchEnd);
+          const overlap = Math.max(0, overlapEnd - overlapStart);
+          totalMins += overlap;
+        }
+      }
+    } else if (attendance.in_time && attendance.out_time) {
+      let diff = parseTimeToMinutes(attendance.out_time) - parseTimeToMinutes(attendance.in_time);
+      if (diff < 0) diff += 24 * 60;
+      totalMins = diff;
+    } else {
+      return '—';
+    }
+    
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    return `${h}h ${m}m`;
+  };
+
+  const authHeader = () => ({
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  });
 
   const getCurrentTime = () => {
     return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   const formatDateDisplay = (dateString) => {
+    if (!dateString) return '';
     const [year, month, day] = dateString.split('-');
-    return `${day}-${month}-${year}`;
+    return `${day}/${month}/${year}`;
   };
 
-  const fetchTodayAttendance = async () => {
+  const fetchTodayAttendance = async (date) => {
     try {
       setLoading((prev) => ({ ...prev, initial: true }));
       setError('');
-      const [attRes, polRes] = await Promise.all([axios.get(`${process.env.REACT_APP_API}/attendance/today`, authHeader()), getLeavePolicy()]);
+      const queryDate = date || targetDate;
+      const [attRes, polRes, configRes] = await Promise.all([
+        axios.get(`${process.env.REACT_APP_API}/attendance/today?date=${queryDate}`, authHeader()),
+        getLeavePolicy(),
+        getPayrollConfig().catch(() => null)
+      ]);
       setStaffList(attRes.data.data);
       if (polRes.success && polRes.data) {
         setLeaveTypes(polRes.data.leave_types || []);
+      }
+      if (configRes && configRes.success) {
+        setPayrollConfig(configRes.data);
       }
     } catch (err) {
       console.error('Error fetching attendance:', err);
@@ -530,19 +631,83 @@ export default function ManageAttendance() {
   };
 
   useEffect(() => {
-    fetchTodayAttendance();
-  }, []);
+    fetchTodayAttendance(targetDate);
+  }, [targetDate]);
+
+  const convertTo24Hour = (time12) => {
+    if (!time12) return '';
+    const parts = time12.split(' ');
+    if (parts.length !== 2) return '';
+    const [time, period] = parts;
+    let [hours, minutes] = time.split(':').map(Number);
+    if (period === 'PM' && hours !== 12) hours += 12;
+    else if (period === 'AM' && hours === 12) hours = 0;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  };
+
+  const convertTo12Hour = (time24) => {
+    if (!time24) return null;
+    const [hoursStr, minutesStr] = time24.split(':');
+    let hours = parseInt(hoursStr, 10);
+    const minutes = minutesStr;
+    const period = hours >= 12 ? 'PM' : 'AM';
+    hours %= 12;
+    hours = hours || 12;
+    const hoursFormatted = String(hours).padStart(2, '0');
+    return `${hoursFormatted}:${minutes} ${period}`;
+  };
+
+  const handleOpenDetailModal = (att, staffId) => {
+    setSelectedAttendance({ ...att, staff_id: att.staff_id || staffId });
+    setIsEditing(false);
+    setEditStatus(att.status || 'present');
+    setEditInTime(convertTo24Hour(att.in_time) || '');
+    setEditOutTime(convertTo24Hour(att.out_time) || '');
+    setEditLeaveType(att.leave_type_id || (leaveTypes.length > 0 ? leaveTypes[0].leave_type_id : ''));
+    setEditReason(att.manual_entry_reason || '');
+    setShowDetailModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedAttendance) return;
+    setSubmittingEdit(true);
+    try {
+      const payload = {
+        staff_id: selectedAttendance.staff_id,
+        date: selectedAttendance.date || targetDate,
+        status: editStatus,
+        in_time: (editStatus === 'present' || editStatus === 'half_day') ? convertTo12Hour(editInTime) : null,
+        out_time: (editStatus === 'present' || editStatus === 'half_day') ? convertTo12Hour(editOutTime) : null,
+        leave_type_id: (editStatus === 'leave' || editStatus === 'half_day') ? editLeaveType : null,
+        manual_entry_reason: editReason || "Admin manual edit"
+      };
+
+      const response = await axios.post(`${process.env.REACT_APP_API}/attendance/update`, payload, authHeader());
+      if (response.data.success) {
+        toast.success('Attendance updated successfully!');
+        setShowDetailModal(false);
+        fetchTodayAttendance(targetDate);
+      } else {
+        toast.error(response.data.message || 'Failed to update attendance.');
+      }
+    } catch (err) {
+      console.error('Error saving attendance edit:', err);
+      toast.error(err.response?.data?.message || 'Failed to save changes.');
+    } finally {
+      setSubmittingEdit(false);
+    }
+  };
 
   const handleCheckIn = async (staffId, staffName) => {
     setLoading((prev) => ({ ...prev, actions: { ...prev.actions, checkin: true } }));
     try {
       await axios.post(
         `${process.env.REACT_APP_API}/attendance/check-in`,
-        { staff_id: staffId, date: getTodayDate(), in_time: getCurrentTime() },
+        { staff_id: staffId, date: targetDate, in_time: getCurrentTime() },
         authHeader()
       );
       toast.success(`${staffName} checked in successfully!`);
-      fetchTodayAttendance();
+      fetchTodayAttendance(targetDate);
     } catch (err) {
       console.error('Error during Check-In:', err);
       toast.error(err.response?.data?.message || 'Failed to check in.');
@@ -556,11 +721,11 @@ export default function ManageAttendance() {
     try {
       await axios.post(
         `${process.env.REACT_APP_API}/attendance/check-out`,
-        { staff_id: staffId, date: getTodayDate(), out_time: getCurrentTime() },
+        { staff_id: staffId, date: targetDate, out_time: getCurrentTime() },
         authHeader()
       );
       toast.success(`${staffName} checked out successfully!`);
-      fetchTodayAttendance();
+      fetchTodayAttendance(targetDate);
     } catch (err) {
       console.error('Error during Check-Out:', err);
       toast.error(err.response?.data?.message || 'Failed to check out.');
@@ -572,9 +737,9 @@ export default function ManageAttendance() {
   const handleAbsent = async (staffId, staffName) => {
     setLoading((prev) => ({ ...prev, actions: { ...prev.actions, absent: true } }));
     try {
-      await axios.post(`${process.env.REACT_APP_API}/attendance/mark-absent`, { staff_id: staffId, date: getTodayDate() }, authHeader());
+      await axios.post(`${process.env.REACT_APP_API}/attendance/mark-absent`, { staff_id: staffId, date: targetDate }, authHeader());
       toast.success(`${staffName} marked as absent!`);
-      fetchTodayAttendance();
+      fetchTodayAttendance(targetDate);
     } catch (err) {
       console.error('Error marking Absent:', err);
       toast.error(err.response?.data?.message || 'Failed to mark as absent.');
@@ -588,11 +753,11 @@ export default function ManageAttendance() {
     try {
       await axios.post(
         `${process.env.REACT_APP_API}/attendance/mark-leave`,
-        { staff_id: staffId, date: getTodayDate(), leave_type_id: selectedLeaveType, is_half_day: isHalfDay },
+        { staff_id: staffId, date: targetDate, leave_type_id: selectedLeaveType, is_half_day: isHalfDay },
         authHeader()
       );
       toast.success(`${staffName} marked on leave!`);
-      fetchTodayAttendance();
+      fetchTodayAttendance(targetDate);
     } catch (err) {
       console.error('Error marking Leave:', err);
       toast.error(err.response?.data?.message || 'Failed to mark leave.');
@@ -631,6 +796,13 @@ export default function ManageAttendance() {
         Cell: ({ value }) => <span className="fw-bold text-dark">#{value}</span>,
       },
       {
+        Header: 'Date',
+        id: 'date',
+        headerClassName: 'text-small text-uppercase w-15',
+        sortable: false,
+        Cell: () => <span className="fw-bold text-muted">{formatDateDisplay(targetDate)}</span>,
+      },
+      {
         Header: 'Staff Member',
         accessor: (row) => `${row.f_name} ${row.l_name}`,
         headerClassName: 'text-small text-uppercase w-25',
@@ -667,12 +839,25 @@ export default function ManageAttendance() {
             } else if (todayAttendance.status === 'half_day') {
               statusBg = 'warning';
               statusLabel = 'Half Day';
-            } else if (todayAttendance.in_time && todayAttendance.out_time) {
-              statusBg = 'primary';
-              statusLabel = 'Completed';
-            } else if (todayAttendance.in_time && !todayAttendance.out_time) {
-              statusBg = 'success';
-              statusLabel = 'Checked In';
+            } else {
+              const lastSession = todayAttendance.sessions && todayAttendance.sessions.length > 0
+                ? todayAttendance.sessions[todayAttendance.sessions.length - 1]
+                : null;
+              if (lastSession) {
+                if (lastSession.out_time === null) {
+                  statusBg = 'success';
+                  statusLabel = 'Checked In';
+                } else {
+                  statusBg = 'primary';
+                  statusLabel = 'Completed';
+                }
+              } else if (todayAttendance.in_time && !todayAttendance.out_time) {
+                statusBg = 'success';
+                statusLabel = 'Checked In';
+              } else if (todayAttendance.in_time && todayAttendance.out_time) {
+                statusBg = 'primary';
+                statusLabel = 'Completed';
+              }
             }
           }
           return <Badge bg={statusBg}>{statusLabel}</Badge>;
@@ -684,7 +869,20 @@ export default function ManageAttendance() {
         headerClassName: 'text-small text-uppercase w-15',
         sortable: true,
         Cell: ({ row }) => {
-          const time = row.original.todayAttendance?.in_time;
+          const { todayAttendance } = row.original;
+          if (!todayAttendance) return <span className="text-muted fw-medium">—</span>;
+          if (todayAttendance.sessions && todayAttendance.sessions.length > 0) {
+            return (
+              <div className="d-flex flex-column gap-1">
+                {todayAttendance.sessions.map((session, idx) => (
+                  <span key={idx} className="time-badge time-badge-in">
+                    <CsLineIcons icon="clock" size="12" className="me-1 text-success" /> {session.in_time}
+                  </span>
+                ))}
+              </div>
+            );
+          }
+          const time = todayAttendance.in_time;
           if (!time) return <span className="text-muted fw-medium">—</span>;
           return (
             <span className="time-badge time-badge-in">
@@ -699,11 +897,39 @@ export default function ManageAttendance() {
         headerClassName: 'text-small text-uppercase w-15',
         sortable: true,
         Cell: ({ row }) => {
-          const time = row.original.todayAttendance?.out_time;
+          const { todayAttendance } = row.original;
+          if (!todayAttendance) return <span className="text-muted fw-medium">—</span>;
+          if (todayAttendance.sessions && todayAttendance.sessions.length > 0) {
+            return (
+              <div className="d-flex flex-column gap-1">
+                {todayAttendance.sessions.map((session, idx) => (
+                  <span key={idx} className={session.out_time ? "time-badge time-badge-out" : "time-badge bg-soft-warning text-warning"}>
+                    <CsLineIcons icon="clock" size="12" className={session.out_time ? "me-1 text-danger" : "me-1 text-warning"} /> {session.out_time || 'Active'}
+                  </span>
+                ))}
+              </div>
+            );
+          }
+          const time = todayAttendance.out_time;
           if (!time) return <span className="text-muted fw-medium">—</span>;
           return (
             <span className="time-badge time-badge-out">
               <CsLineIcons icon="clock" size="12" className="me-1 text-danger" /> {time}
+            </span>
+          );
+        },
+      },
+      {
+        Header: 'Working Hours',
+        id: 'working_hours',
+        headerClassName: 'text-small text-uppercase w-15',
+        sortable: false,
+        Cell: ({ row }) => {
+          const { todayAttendance } = row.original;
+          if (!todayAttendance) return <span className="text-muted fw-medium">—</span>;
+          return (
+            <span className="fw-bold text-primary">
+              {calculateTotalWorkingHours(todayAttendance, payrollConfig)}
             </span>
           );
         },
@@ -752,7 +978,7 @@ export default function ManageAttendance() {
                     <CsLineIcons icon="calendar" />
                   </Button>
                 </>
-              ) : todayAttendance.in_time && !todayAttendance.out_time ? (
+              ) : isCurrentlyCheckedIn(todayAttendance) ? (
                 <Button
                   variant="outline-primary"
                   size="sm"
@@ -763,6 +989,17 @@ export default function ManageAttendance() {
                 >
                   <CsLineIcons icon="logout" />
                 </Button>
+              ) : todayAttendance.status === 'present' ? (
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  className="btn-icon btn-icon-only"
+                  onClick={() => handleAction(row.original, 'checkin')}
+                  title="Check-In Again"
+                  disabled={actionsDisabled}
+                >
+                  <CsLineIcons icon="login" />
+                </Button>
               ) : (
                 <Button
                   variant={todayAttendance.status === 'absent' ? 'outline-danger' : todayAttendance.status === 'leave' ? 'outline-info' : 'outline-success'}
@@ -772,6 +1009,17 @@ export default function ManageAttendance() {
                   title={todayAttendance.status === 'absent' ? 'Absent' : todayAttendance.status === 'leave' ? 'On Leave' : 'Done'}
                 >
                   <CsLineIcons icon={todayAttendance.status === 'absent' ? 'close-circle' : todayAttendance.status === 'leave' ? 'calendar' : 'check'} />
+                </Button>
+              )}
+              {todayAttendance && (
+                <Button
+                  variant="outline-warning"
+                  size="sm"
+                  className="btn-icon btn-icon-only"
+                  onClick={() => handleOpenDetailModal(todayAttendance, row.original._id)}
+                  title="Edit Attendance"
+                >
+                  <CsLineIcons icon="edit" />
                 </Button>
               )}
               <Button
@@ -788,11 +1036,27 @@ export default function ManageAttendance() {
         },
       },
     ],
-    [loading]
+    [loading, targetDate, payrollConfig]
   );
 
+  const uniquePositions = React.useMemo(() => {
+    const positions = staffList.map((s) => s.position).filter(Boolean);
+    return ['all', ...new Set(positions)];
+  }, [staffList]);
+
+  const filteredStaffList = React.useMemo(() => {
+    if (positionFilter === 'all') return staffList;
+    return staffList.filter((s) => s.position === positionFilter);
+  }, [staffList, positionFilter]);
+
+  const formatDateDDMMYYYY = (dateStr) => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   const tableInstance = useTable(
-    { columns, data: staffList, initialState: { pageIndex: 0, pageSize: 10 } },
+    { columns, data: filteredStaffList, initialState: { pageIndex: 0, pageSize: 10 } },
     useGlobalFilter,
     useSortBy,
     usePagination,
@@ -823,13 +1087,28 @@ export default function ManageAttendance() {
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-5">
+      <div className="page-title-container mb-4">
         <Row className="g-3 align-items-center">
-          <Col md={12}>
+          <Col md={6}>
             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
               {title}
             </h1>
             <BreadcrumbList items={breadcrumbs} />
+          </Col>
+          <Col md={6} className="d-flex justify-content-md-end align-items-center mt-md-0 mt-3">
+            <Badge
+              bg="soft-primary"
+              className="px-4 py-2 fs-6 border border-primary border-opacity-25"
+              style={{
+                borderRadius: '50px',
+                fontSize: '0.9rem',
+                fontWeight: '700',
+                backgroundColor: 'rgba(30, 168, 231, 0.08)',
+                color: '#1ea8e7'
+              }}
+            >
+              📅 Date: {formatDateDDMMYYYY(targetDate)}
+            </Badge>
           </Col>
         </Row>
       </div>
@@ -840,7 +1119,7 @@ export default function ManageAttendance() {
             <CsLineIcons icon="error" size="24" />
             <span>{error}</span>
           </div>
-          <Button variant="none" className="custom-btn-danger-outline px-4" onClick={fetchTodayAttendance}>
+          <Button variant="none" className="custom-btn-danger-outline px-4" onClick={() => fetchTodayAttendance(targetDate)}>
             Retry
           </Button>
         </Alert>
@@ -848,8 +1127,9 @@ export default function ManageAttendance() {
 
       {/* Search and Controls */}
       <div>
-        <Row className="mb-3 g-2 align-items-center">
-          <Col xs="12" md="6" lg="8" className="flex-grow-1">
+        <Row className="mb-3 g-3 align-items-center">
+          {/* Search Bar */}
+          <Col xs="12" md="4" lg="5">
             <div className="order-history-custom-search-container shadow-sm d-flex align-items-center px-2">
               <CsLineIcons icon="search" size="18" className="text-primary opacity-75 ms-1 me-2" />
               <Form.Control
@@ -867,11 +1147,57 @@ export default function ManageAttendance() {
               )}
             </div>
           </Col>
-          <Col xs="12" md="auto" className="d-flex align-items-center justify-content-between justify-content-md-end gap-3 ms-md-auto">
-            <div className="text-muted small fw-bold">
+
+          {/* Position Filter */}
+          <Col xs="6" md="3" lg="3">
+            <Form.Select
+              value={positionFilter}
+              onChange={(e) => setPositionFilter(e.target.value)}
+              className="filter-pill-input shadow-sm"
+              style={{
+                borderRadius: '10px',
+                height: '42px',
+                border: '1px solid #eee',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#475569',
+                backgroundColor: '#fff',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="all">All Positions</option>
+              {uniquePositions.filter(p => p !== 'all').map((pos) => (
+                <option key={pos} value={pos}>{pos}</option>
+              ))}
+            </Form.Select>
+          </Col>
+
+          {/* Datewise Filter */}
+          <Col xs="6" md="3" lg="2">
+            <Form.Control
+              type="date"
+              value={targetDate}
+              onChange={(e) => setTargetDate(e.target.value)}
+              className="filter-pill-input shadow-sm"
+              style={{
+                borderRadius: '10px',
+                height: '42px',
+                border: '1px solid #eee',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#475569',
+                backgroundColor: '#fff',
+                cursor: 'pointer'
+              }}
+            />
+          </Col>
+
+          {/* Showing metrics / page size */}
+          <Col xs="12" md="2" lg="2" className="d-flex align-items-center justify-content-between justify-content-md-end gap-3 ms-md-auto w-100-mobile">
+            <div className="text-muted small fw-bold d-none d-xl-block">
               Showing {totalFiltered > 0 ? pageIndex * pageSize + 1 : 0}&ndash;{Math.min((pageIndex + 1) * pageSize, totalFiltered)} of {totalFiltered}
             </div>
-            <div>
+            <div className="w-100-mobile">
               <LocalControlsPageSize tableInstance={tableInstance} />
             </div>
           </Col>
@@ -908,14 +1234,29 @@ export default function ManageAttendance() {
                 status = 'Half Day';
                 statusVariant = 'warning';
                 statusIcon = 'clock';
-              } else if (todayAttendance.in_time && todayAttendance.out_time) {
-                status = 'Completed';
-                statusVariant = 'primary';
-                statusIcon = 'check';
-              } else if (todayAttendance.in_time && !todayAttendance.out_time) {
-                status = 'Checked In';
-                statusVariant = 'success';
-                statusIcon = 'log-in';
+              } else {
+                const lastSession = todayAttendance.sessions && todayAttendance.sessions.length > 0
+                  ? todayAttendance.sessions[todayAttendance.sessions.length - 1]
+                  : null;
+                if (lastSession) {
+                  if (lastSession.out_time === null) {
+                    status = 'Checked In';
+                    statusVariant = 'success';
+                    statusIcon = 'log-in';
+                  } else {
+                    status = 'Completed';
+                    statusVariant = 'primary';
+                    statusIcon = 'check';
+                  }
+                } else if (todayAttendance.in_time && !todayAttendance.out_time) {
+                  status = 'Checked In';
+                  statusVariant = 'success';
+                  statusIcon = 'log-in';
+                } else if (todayAttendance.in_time && todayAttendance.out_time) {
+                  status = 'Completed';
+                  statusVariant = 'primary';
+                  statusIcon = 'check';
+                }
               }
             }
 
@@ -952,6 +1293,9 @@ export default function ManageAttendance() {
                             <div className="small-role text-muted small text-truncate" style={{ maxWidth: '140px' }}>
                               {staff.position} • #{staff.staff_id}
                             </div>
+                            <div className="text-primary fw-bold mt-1" style={{ fontSize: '0.7rem' }}>
+                              📅 {formatDateDisplay(targetDate)}
+                            </div>
                           </div>
                         </div>
                         <Badge bg={statusVariant} className="rounded-pill px-3 py-1">{status}</Badge>
@@ -959,13 +1303,31 @@ export default function ManageAttendance() {
 
                       {/* Middle Row: Check-In and Check-Out times */}
                       <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
-                        <Col xs="6">
-                          <div className="text-muted small">CHECK-IN</div>
-                          <div className="fw-bold small">{todayAttendance?.in_time || '—'}</div>
+                        <Col xs="4">
+                          <div className="text-muted small" style={{ fontSize: '10px' }}>CHECK-IN</div>
+                          {todayAttendance?.sessions && todayAttendance.sessions.length > 0 ? (
+                            todayAttendance.sessions.map((s, i) => (
+                              <div key={i} className="fw-bold mt-1" style={{ fontSize: '11px' }}>{s.in_time}</div>
+                            ))
+                          ) : (
+                            <div className="fw-bold mt-1" style={{ fontSize: '11px' }}>{todayAttendance?.in_time || '—'}</div>
+                          )}
                         </Col>
-                        <Col xs="6" className="text-end">
-                          <div className="text-muted small">CHECK-OUT</div>
-                          <div className="fw-bold small">{todayAttendance?.out_time || '—'}</div>
+                        <Col xs="4" className="text-center">
+                          <div className="text-muted small" style={{ fontSize: '10px' }}>CHECK-OUT</div>
+                          {todayAttendance?.sessions && todayAttendance.sessions.length > 0 ? (
+                            todayAttendance.sessions.map((s, i) => (
+                              <div key={i} className="fw-bold mt-1" style={{ fontSize: '11px' }}>{s.out_time || 'Active'}</div>
+                            ))
+                          ) : (
+                            <div className="fw-bold mt-1" style={{ fontSize: '11px' }}>{todayAttendance?.out_time || '—'}</div>
+                          )}
+                        </Col>
+                        <Col xs="4" className="text-end">
+                          <div className="text-muted small" style={{ fontSize: '10px' }}>HOURS</div>
+                          <div className="fw-bold mt-1 text-primary" style={{ fontSize: '11px' }}>
+                            {calculateTotalWorkingHours(todayAttendance, payrollConfig)}
+                          </div>
                         </Col>
                       </Row>
                     </div>
@@ -1005,7 +1367,7 @@ export default function ManageAttendance() {
                             <CsLineIcons icon="calendar" size="14" />
                           </Button>
                         </>
-                      ) : todayAttendance.in_time && !todayAttendance.out_time ? (
+                      ) : isCurrentlyCheckedIn(todayAttendance) ? (
                         <Button
                           variant="none"
                           size="sm"
@@ -1015,6 +1377,17 @@ export default function ManageAttendance() {
                           title="Check-Out"
                         >
                           <CsLineIcons icon="logout" size="14" />
+                        </Button>
+                      ) : todayAttendance.status === 'present' ? (
+                        <Button
+                          variant="none"
+                          size="sm"
+                          className="btn-icon btn-icon-only rounded-circle custom-btn-primary-outline me-auto"
+                          onClick={() => handleAction(staff, 'checkin')}
+                          disabled={actionsDisabled}
+                          title="Check-In Again"
+                        >
+                          <CsLineIcons icon="login" size="14" />
                         </Button>
                       ) : (
                         <span
@@ -1028,6 +1401,17 @@ export default function ManageAttendance() {
                           />
                           {todayAttendance.status === 'absent' ? 'Absent' : todayAttendance.status === 'leave' ? 'On Leave' : 'Marked'}
                         </span>
+                      )}
+                      {todayAttendance && (
+                        <Button
+                          variant="none"
+                          size="sm"
+                          className="btn-icon btn-icon-only rounded-circle custom-btn-primary-outline"
+                          onClick={() => handleOpenDetailModal(todayAttendance, staff._id)}
+                          title="Edit Attendance"
+                        >
+                          <CsLineIcons icon="edit" size="14" />
+                        </Button>
                       )}
                       <Button
                         variant="none"
@@ -1079,7 +1463,7 @@ export default function ManageAttendance() {
               <p className="text-muted mb-4">
                 Are you sure you want to{' '}
                 {actionType === 'checkin' ? 'check-in' : actionType === 'checkout' ? 'check-out' : actionType === 'leave' ? 'mark on leave' : 'mark as absent'}{' '}
-                this staff member for today?
+                this staff member for {formatDateDisplay(targetDate)}?
               </p>
 
               {actionType === 'leave' && (
@@ -1137,6 +1521,168 @@ export default function ManageAttendance() {
               'Confirm Action'
             )}
           </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} centered className="rounded-4">
+        <Modal.Header closeButton className="border-0">
+          <Modal.Title className="fw-bold">{isEditing ? 'Edit Attendance' : 'Record Details'}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="py-4">
+          {selectedAttendance && (
+            isEditing ? (
+              <Form className="text-start">
+                <h4 className="fw-bold text-center mb-1">{formatDateDisplay(selectedAttendance.date || targetDate)}</h4>
+                <p className="text-muted text-center fw-medium mb-4">
+                  {new Date(selectedAttendance.date || targetDate).toLocaleDateString('en-IN', { weekday: 'long' })}
+                </p>
+                
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-bold text-uppercase letter-spacing-1 text-muted">Attendance Status</Form.Label>
+                  <Form.Select className="rounded-3 border-0 shadow-sm py-2 px-3 fw-bold text-dark" value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>
+                    <option value="present">Present</option>
+                    <option value="absent">Absent</option>
+                    <option value="half_day">Half Day</option>
+                    <option value="leave">On Leave</option>
+                    <option value="week_off">Week Off</option>
+                    <option value="holiday">Holiday</option>
+                    <option value="comp_off">Comp Off</option>
+                  </Form.Select>
+                </Form.Group>
+
+                {(editStatus === 'present' || editStatus === 'half_day') && (
+                  <Row className="g-3 mb-3">
+                    <Col xs={6}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold text-uppercase letter-spacing-1 text-muted">Check-In Time</Form.Label>
+                        <Form.Control 
+                          type="time" 
+                          className="rounded-3 border-0 shadow-sm py-2 px-3 fw-bold text-dark"
+                          value={editInTime} 
+                          onChange={(e) => setEditInTime(e.target.value)} 
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col xs={6}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold text-uppercase letter-spacing-1 text-muted">Check-Out Time</Form.Label>
+                        <Form.Control 
+                          type="time" 
+                          className="rounded-3 border-0 shadow-sm py-2 px-3 fw-bold text-dark"
+                          value={editOutTime} 
+                          onChange={(e) => setEditOutTime(e.target.value)} 
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                )}
+
+                {(editStatus === 'leave' || editStatus === 'half_day') && (
+                  <Form.Group className="mb-3">
+                    <Form.Label className="small fw-bold text-uppercase letter-spacing-1 text-muted">Leave Type</Form.Label>
+                    <Form.Select className="rounded-3 border-0 shadow-sm py-2 px-3 fw-bold text-dark" value={editLeaveType} onChange={(e) => setEditLeaveType(e.target.value)}>
+                      {leaveTypes.map((lt) => (
+                        <option key={lt.leave_type_id} value={lt.leave_type_id}>
+                          {lt.name} ({lt.short_code})
+                        </option>
+                      ))}
+                      {leaveTypes.length === 0 && <option value="other">Other Leave</option>}
+                    </Form.Select>
+                  </Form.Group>
+                )}
+
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-bold text-uppercase letter-spacing-1 text-muted">Reason for manual edit</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={2}
+                    className="rounded-3 border-0 shadow-sm py-2 px-3 fw-bold text-dark"
+                    placeholder="E.g., Forgot to check out"
+                    value={editReason}
+                    onChange={(e) => setEditReason(e.target.value)}
+                  />
+                </Form.Group>
+              </Form>
+            ) : (
+              <div className="text-center">
+                <div className={`bg-soft-${selectedAttendance.status === 'present' ? 'success' : 'danger'} d-inline-flex p-4 rounded-circle mb-3`}>
+                  <CsLineIcons icon={selectedAttendance.status === 'present' ? 'check-circle' : 'close-circle'} size="48" className={`text-${selectedAttendance.status === 'present' ? 'success' : 'danger'}`} />
+                </div>
+                <h4 className="fw-bold mb-1">{formatDateDisplay(selectedAttendance.date || targetDate)}</h4>
+                <p className="text-muted fw-medium">{new Date(selectedAttendance.date || targetDate).toLocaleDateString('en-IN', { weekday: 'long' })}</p>
+                
+                <div className="glass-card bg-light border-0 p-4 mt-4 text-start">
+                  <Row className="g-4">
+                    <Col xs={6}>
+                      <div className="small fw-bold text-muted text-uppercase mb-1">Check-In</div>
+                      <div className="fw-bold text-dark h5 mb-0 d-flex align-items-center gap-2">
+                        <CsLineIcons icon="login" size="18" className="text-success" />
+                        {selectedAttendance.in_time || '—'}
+                      </div>
+                    </Col>
+                    <Col xs={6}>
+                      <div className="small fw-bold text-muted text-uppercase mb-1">Check-Out</div>
+                      <div className="fw-bold text-dark h5 mb-0 d-flex align-items-center gap-2">
+                        <CsLineIcons icon="logout" size="18" className="text-danger" />
+                        {selectedAttendance.out_time || '—'}
+                      </div>
+                    </Col>
+                    {selectedAttendance.status === 'leave' && (
+                      <Col xs={12}>
+                        <div className="small fw-bold text-muted text-uppercase mb-1">Leave Type</div>
+                        <div className="fw-bold text-info h5 mb-0 d-flex align-items-center gap-2">
+                          <CsLineIcons icon="calendar" size="18" className="text-info" />
+                          {(() => {
+                            const leaveType = leaveTypes.find((lt) => lt.leave_type_id === selectedAttendance.leave_type_id);
+                            return leaveType ? `${leaveType.name} (${leaveType.short_code})` : 'On Leave';
+                          })()}
+                        </div>
+                      </Col>
+                    )}
+                    {selectedAttendance.manual_entry_reason && (
+                      <Col xs={12}>
+                        <div className="small fw-bold text-muted text-uppercase mb-1">Edit Reason</div>
+                        <div className="text-dark fw-medium" style={{ fontSize: '0.85rem' }}>
+                          {selectedAttendance.manual_entry_reason}
+                        </div>
+                      </Col>
+                    )}
+                    <Col xs={12}>
+                      <div className="small fw-bold text-muted text-uppercase mb-1">Total Duration</div>
+                      <div className="fw-bold text-primary h4 mb-0 d-flex align-items-center gap-2">
+                        <CsLineIcons icon="clock" size="24" />
+                        {(() => {
+                          const h = calculateTotalWorkingHours(selectedAttendance, payrollConfig);
+                          return h && h !== '—' ? h : '—';
+                        })()}
+                      </div>
+                    </Col>
+                  </Row>
+                </div>
+              </div>
+            )
+          )}
+        </Modal.Body>
+        <Modal.Footer className="border-0">
+          {isEditing ? (
+            <div className="d-flex gap-3 w-100">
+              <Button variant="none" className="custom-btn-primary-outline flex-grow-1 py-3" onClick={() => setIsEditing(false)} disabled={submittingEdit}>
+                Cancel
+              </Button>
+              <Button className="custom-btn-solid flex-grow-1 py-3" onClick={handleSaveEdit} disabled={submittingEdit}>
+                {submittingEdit ? <Spinner animation="border" size="sm" /> : 'Save Changes'}
+              </Button>
+            </div>
+          ) : (
+            <div className="d-flex gap-3 w-100">
+              <Button variant="none" className="custom-btn-primary-outline flex-grow-1 py-3" onClick={() => setIsEditing(true)}>
+                <CsLineIcons icon="edit" size="14" className="me-2" /> Edit
+              </Button>
+              <Button className="custom-btn-solid flex-grow-1 py-3" onClick={() => setShowDetailModal(false)}>
+                Close
+              </Button>
+            </div>
+          )}
         </Modal.Footer>
       </Modal>
     </div>

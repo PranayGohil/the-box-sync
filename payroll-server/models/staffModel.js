@@ -83,6 +83,11 @@ const addStaff = new Schema({
       of: Number,
       default: {}
     },
+    custom_deductions: {
+      type: Map,
+      of: Number,
+      default: {}
+    },
     deductions: {
       pf_percentage: { type: Number, default: 12 },
       esi_percentage: { type: Number, default: 0 },

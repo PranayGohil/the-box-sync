@@ -419,8 +419,98 @@ const getPayrollByStaff = async (req, res) => {
 };
 
 const updatePayroll = async (req, res) => {
-    // Basic recalculation for manual edits
-    res.status(501).json({ success: false, message: "Recalculation endpoint needs update for new architecture" });
+    try {
+        const user_id = req.user;
+        const { id } = req.params;
+        const {
+            working_days_in_month,
+            overtime_hours,
+            bonus,
+            deductions,
+            deduction_reason,
+            notes,
+            earned_breakdown,
+            deduction_breakdown,
+            advance_deduction,
+            tds
+        } = req.body;
+
+        const payroll = await StaffPayroll.findOne({ _id: id, user_id });
+        if (!payroll) {
+            return res.status(404).json({ success: false, message: "Payroll record not found" });
+        }
+
+        // Update fields if passed
+        if (working_days_in_month !== undefined) payroll.working_days_in_month = Number(working_days_in_month) || 0;
+        if (overtime_hours !== undefined) payroll.overtime_hours = Number(overtime_hours) || 0;
+        if (bonus !== undefined) payroll.bonus = Number(bonus) || 0;
+        if (deductions !== undefined) payroll.deductions = Number(deductions) || 0;
+        if (deduction_reason !== undefined) payroll.deduction_reason = deduction_reason;
+        if (notes !== undefined) payroll.notes = notes;
+
+        // Update breakdowns
+        if (earned_breakdown) {
+            payroll.earned_breakdown = {
+                basic: Number(earned_breakdown.basic) || 0,
+                hra: Number(earned_breakdown.hra) || 0,
+                conveyance: Number(earned_breakdown.conveyance) || 0,
+                medical: Number(earned_breakdown.medical) || 0,
+                special: Number(earned_breakdown.special) || 0,
+                other: Number(earned_breakdown.other) || 0,
+            };
+            // Calculate total gross
+            payroll.earned_breakdown.total_gross = parseFloat((
+                payroll.earned_breakdown.basic +
+                payroll.earned_breakdown.hra +
+                payroll.earned_breakdown.conveyance +
+                payroll.earned_breakdown.medical +
+                payroll.earned_breakdown.special +
+                payroll.earned_breakdown.other
+            ).toFixed(2));
+        }
+
+        if (deduction_breakdown) {
+            payroll.deduction_breakdown = {
+                pf: Number(deduction_breakdown.pf) || 0,
+                esi: Number(deduction_breakdown.esi) || 0,
+                pt: Number(deduction_breakdown.pt) || 0,
+            };
+            // Calculate total statutory
+            payroll.deduction_breakdown.total_statutory = parseFloat((
+                payroll.deduction_breakdown.pf +
+                payroll.deduction_breakdown.esi +
+                payroll.deduction_breakdown.pt
+            ).toFixed(2));
+        }
+
+        if (advance_deduction !== undefined) payroll.advance_deduction = Number(advance_deduction) || 0;
+        if (tds !== undefined) payroll.tds = Number(tds) || 0;
+
+        // Recalculate overtime pay and net salary
+        payroll.overtime_pay = parseFloat((payroll.overtime_hours * (payroll.overtime_rate || 0)).toFixed(2));
+
+        const lwpDed = payroll.lwp_deduction || 0;
+        const totalGross = payroll.earned_breakdown?.total_gross || 0;
+        const totalStatutory = payroll.deduction_breakdown?.total_statutory || 0;
+        
+        payroll.net_salary = parseFloat((
+            totalGross +
+            payroll.overtime_pay +
+            payroll.bonus -
+            totalStatutory -
+            payroll.deductions -
+            payroll.advance_deduction -
+            payroll.tds -
+            lwpDed
+        ).toFixed(2));
+
+        await payroll.save();
+
+        res.json({ success: true, data: payroll, message: "Payroll updated successfully" });
+    } catch (error) {
+        console.error("Error updating payroll:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
 };
 
 const markAsPaid = async (req, res) => {

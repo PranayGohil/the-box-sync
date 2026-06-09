@@ -17,7 +17,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Document, Packer, Paragraph, Table as DocTable, TableCell, TableRow, TextRun, AlignmentType, WidthType } from 'docx';
 import { format } from 'date-fns';
-import { getLeavePolicy } from 'api/payrollConfig';
+import { getLeavePolicy, getPayrollConfig } from 'api/payrollConfig';
 import Select from 'react-select';
 
 const customStyles = `
@@ -433,7 +433,6 @@ const ViewAttendance = () => {
 
   const [staffData, setStaffData] = useState(null);
   const [attendance, setAttendance] = useState([]);
-  const [attendanceEvents, setAttendanceEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -441,6 +440,7 @@ const ViewAttendance = () => {
   const [endDate, setEndDate] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [leaveTypes, setLeaveTypes] = useState([]);
+  const [payrollConfig, setPayrollConfig] = useState(null);
 
   const statusOptions = [
     { value: 'all', label: 'All Records' },
@@ -534,6 +534,17 @@ const ViewAttendance = () => {
 
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
+  const [calendarView, setCalendarView] = useState('month'); // 'month' | 'week' | 'year'
+  const calendarRef = React.useRef(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editStatus, setEditStatus] = useState('');
+  const [editInTime, setEditInTime] = useState('');
+  const [editOutTime, setEditOutTime] = useState('');
+  const [editLeaveType, setEditLeaveType] = useState('');
+  const [editReason, setEditReason] = useState('');
+  const [submittingEdit, setSubmittingEdit] = useState(false);
+
 
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
@@ -561,20 +572,72 @@ const ViewAttendance = () => {
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
   });
 
-  const calculateWorkingHours = (inTime, outTime) => {
-    if (!inTime || !outTime) return null;
-    const parseTime = (timeStr) => {
-      const [time, period] = timeStr.split(' ');
-      let [hours, minutes] = time.split(':').map(Number);
-      if (period === 'PM' && hours !== 12) hours += 12;
-      else if (period === 'AM' && hours === 12) hours = 0;
-      return { hours, minutes };
-    };
-    const inParsed = parseTime(inTime);
-    const outParsed = parseTime(outTime);
-    let totalMinutes =
-      outParsed.hours * 60 + outParsed.minutes -
-      (inParsed.hours * 60 + inParsed.minutes);
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    const [time, period] = timeStr.split(' ');
+    if (!time || !period) return 0;
+    let [hours, minutes] = time.split(':').map(Number);
+    if (period === 'PM' && hours !== 12) hours += 12;
+    else if (period === 'AM' && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+  };
+
+  const calculateWorkingHours = (inTime, outTime, record) => {
+    let targetRecord = null;
+    let fallbackIn = inTime;
+    let fallbackOut = outTime;
+    
+    if (inTime && typeof inTime === 'object') {
+      targetRecord = inTime;
+    } else if (record && typeof record === 'object') {
+      targetRecord = record;
+    }
+    
+    const config = payrollConfig;
+    
+    if (targetRecord) {
+      const lunchStartStr = (config && config.org_rules && config.org_rules.lunch_start_time) || "01:00 PM";
+      const lunchEndStr = (config && config.org_rules && config.org_rules.lunch_end_time) || "02:00 PM";
+      
+      const lunchStart = parseTimeToMinutes(lunchStartStr);
+      const lunchEnd = parseTimeToMinutes(lunchEndStr);
+      
+      let totalMins = 0;
+      const hasSessions = targetRecord.sessions && targetRecord.sessions.length > 0;
+      
+      if (hasSessions) {
+        targetRecord.sessions.forEach(session => {
+          if (session.in_time && session.out_time) {
+            let diff = parseTimeToMinutes(session.out_time) - parseTimeToMinutes(session.in_time);
+            if (diff < 0) diff += 24 * 60;
+            totalMins += diff;
+          }
+        });
+        
+        for (let i = 0; i < targetRecord.sessions.length - 1; i++) {
+          const currentOut = targetRecord.sessions[i].out_time;
+          const nextIn = targetRecord.sessions[i+1].in_time;
+          
+          if (currentOut && nextIn) {
+            let gapStart = parseTimeToMinutes(currentOut);
+            let gapEnd = parseTimeToMinutes(nextIn);
+            if (gapEnd < gapStart) gapEnd += 24 * 60;
+            
+            const overlapStart = Math.max(gapStart, lunchStart);
+            const overlapEnd = Math.min(gapEnd, lunchEnd);
+            const overlap = Math.max(0, overlapEnd - overlapStart);
+            totalMins += overlap;
+          }
+        }
+        return { hours: Math.floor(totalMins / 60), minutes: totalMins % 60, total: totalMins / 60 };
+      } else {
+        fallbackIn = targetRecord.in_time;
+        fallbackOut = targetRecord.out_time;
+      }
+    }
+    
+    if (!fallbackIn || !fallbackOut) return null;
+    let totalMinutes = parseTimeToMinutes(fallbackOut) - parseTimeToMinutes(fallbackIn);
     if (totalMinutes < 0) totalMinutes += 24 * 60;
     return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60, total: totalMinutes / 60 };
   };
@@ -594,8 +657,9 @@ const ViewAttendance = () => {
   };
 
   const formatDateDisplay = (dateString) => {
+    if (!dateString) return '';
     const [year, month, day] = dateString.split('-');
-    return `${day}-${month}-${year}`;
+    return `${day}/${month}/${year}`;
   };
 
   const showSuccessToast = (message) => {
@@ -638,7 +702,7 @@ const ViewAttendance = () => {
     let totalHours = 0;
     let validShifts = 0;
     filteredAttendance.forEach((att) => {
-      const hours = calculateWorkingHours(att.in_time, att.out_time);
+      const hours = calculateWorkingHours(att.in_time, att.out_time, att);
       if (hours) { totalHours += hours.total; validShifts++; }
     });
 
@@ -649,15 +713,64 @@ const ViewAttendance = () => {
       attendanceRate: total > 0 ? ((present / total) * 100).toFixed(1) : '0',
       avgHoursWorked: validShifts > 0 ? (totalHours / validShifts).toFixed(1) : '0',
     };
-  }, [filteredAttendance]);
+  }, [filteredAttendance, payrollConfig]);
+
+  const attendanceEvents = useMemo(() => {
+    return (attendance || []).map((att) => {
+      let title = '';
+      let backgroundColor = '';
+
+      if (att.status === 'present') {
+        const hours = calculateWorkingHours(att.in_time, att.out_time, att);
+        const overnight = isOvernightShift(att.in_time, att.out_time);
+        if (att.in_time && att.out_time && hours) {
+          title = `${overnight ? '🌙 ' : ''}${hours.hours}h ${hours.minutes}m`;
+          backgroundColor = overnight ? '#6366f1' : '#10b981';
+        } else if (att.in_time && !att.out_time) {
+          title = '⏳ In Progress';
+          backgroundColor = '#f59e0b';
+        } else {
+          title = '✓ Present';
+          backgroundColor = '#10b981';
+        }
+      } else if (att.status === 'absent') {
+        title = '✗ Absent';
+        backgroundColor = '#ef4444';
+      } else if (att.status === 'leave') {
+        const leaveType = leaveTypes.find((lt) => lt.leave_type_id === att.leave_type_id);
+        title = leaveType ? `🍃 ${leaveType.name}` : '🍃 On Leave';
+        backgroundColor = '#0ea5e9';
+      } else if (att.status === 'half_day') {
+        const leaveType = leaveTypes.find((lt) => lt.leave_type_id === att.leave_type_id);
+        title = leaveType ? `🌓 Half Day: ${leaveType.name}` : '🌓 Half Day';
+        backgroundColor = '#f59e0b';
+      } else if (att.status === 'week_off') {
+        title = '🏖 Week Off';
+        backgroundColor = '#94a3b8';
+      } else if (att.status === 'holiday') {
+        title = '🎉 Holiday';
+        backgroundColor = '#ec4899';
+      }
+
+      return {
+        title,
+        date: att.date,
+        backgroundColor,
+        borderColor: backgroundColor,
+        textColor: '#ffffff',
+        extendedProps: { attendance: att },
+      };
+    });
+  }, [attendance, leaveTypes, payrollConfig]);
 
   const fetchAttendance = async () => {
     try {
       setLoading(true);
       setError(null);
-      const [response, polRes] = await Promise.all([
+      const [response, polRes, configRes] = await Promise.all([
         axios.get(`${process.env.REACT_APP_API}/attendance/get/${id}`, authHeader()),
-        getLeavePolicy()
+        getLeavePolicy(),
+        getPayrollConfig().catch(() => null)
       ]);
 
       const { attendance: records, ...staff } = response.data.data;
@@ -666,54 +779,9 @@ const ViewAttendance = () => {
       setStaffData(staff);
       setAttendance(records || []);
       setLeaveTypes(types);
-
-      const events = (records || []).map((att) => {
-        let title = '';
-        let backgroundColor = '';
-
-        if (att.status === 'present') {
-          const hours = calculateWorkingHours(att.in_time, att.out_time);
-          const overnight = isOvernightShift(att.in_time, att.out_time);
-          if (att.in_time && att.out_time && hours) {
-            title = `${overnight ? '🌙 ' : ''}${hours.hours}h ${hours.minutes}m`;
-            backgroundColor = overnight ? '#6366f1' : '#10b981';
-          } else if (att.in_time && !att.out_time) {
-            title = '⏳ In Progress';
-            backgroundColor = '#f59e0b';
-          } else {
-            title = '✓ Present';
-            backgroundColor = '#10b981';
-          }
-        } else if (att.status === 'absent') {
-          title = '✗ Absent';
-          backgroundColor = '#ef4444';
-        } else if (att.status === 'leave') {
-          const leaveType = types.find((lt) => lt.leave_type_id === att.leave_type_id);
-          title = leaveType ? `🍃 ${leaveType.name}` : '🍃 On Leave';
-          backgroundColor = '#0ea5e9';
-        } else if (att.status === 'half_day') {
-          const leaveType = types.find((lt) => lt.leave_type_id === att.leave_type_id);
-          title = leaveType ? `🌓 Half Day: ${leaveType.name}` : '🌓 Half Day';
-          backgroundColor = '#f59e0b';
-        } else if (att.status === 'week_off') {
-          title = '🏖 Week Off';
-          backgroundColor = '#94a3b8';
-        } else if (att.status === 'holiday') {
-          title = '🎉 Holiday';
-          backgroundColor = '#ec4899';
-        }
-
-        return {
-          title,
-          date: att.date,
-          backgroundColor,
-          borderColor: backgroundColor,
-          textColor: '#ffffff',
-          extendedProps: { attendance: att },
-        };
-      });
-
-      setAttendanceEvents(events);
+      if (configRes && configRes.success) {
+        setPayrollConfig(configRes.data);
+      }
     } catch (err) {
       console.error('Error fetching attendance:', err);
       setError('Failed to load attendance data. Please try again.');
@@ -726,9 +794,73 @@ const ViewAttendance = () => {
     fetchAttendance();
   }, [id]);
 
-  const handleEventClick = (clickInfo) => {
-    setSelectedAttendance(clickInfo.event.extendedProps.attendance);
+  const convertTo24Hour = (time12) => {
+    if (!time12) return '';
+    const parts = time12.split(' ');
+    if (parts.length !== 2) return '';
+    const [time, period] = parts;
+    let [hours, minutes] = time.split(':').map(Number);
+    if (period === 'PM' && hours !== 12) hours += 12;
+    else if (period === 'AM' && hours === 12) hours = 0;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  };
+
+  const convertTo12Hour = (time24) => {
+    if (!time24) return null;
+    const [hoursStr, minutesStr] = time24.split(':');
+    let hours = parseInt(hoursStr, 10);
+    const minutes = minutesStr;
+    const period = hours >= 12 ? 'PM' : 'AM';
+    hours %= 12;
+    hours = hours || 12;
+    const hoursFormatted = String(hours).padStart(2, '0');
+    return `${hoursFormatted}:${minutes} ${period}`;
+  };
+
+  const handleOpenDetailModal = (att) => {
+    setSelectedAttendance(att);
+    setIsEditing(false);
+    setEditStatus(att.status || 'present');
+    setEditInTime(convertTo24Hour(att.in_time) || '');
+    setEditOutTime(convertTo24Hour(att.out_time) || '');
+    setEditLeaveType(att.leave_type_id || (leaveTypes.length > 0 ? leaveTypes[0].leave_type_id : ''));
+    setEditReason(att.manual_entry_reason || '');
     setShowDetailModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedAttendance) return;
+    setSubmittingEdit(true);
+    try {
+      const payload = {
+        staff_id: selectedAttendance.staff_id || id,
+        date: selectedAttendance.date,
+        status: editStatus,
+        in_time: (editStatus === 'present' || editStatus === 'half_day') ? convertTo12Hour(editInTime) : null,
+        out_time: (editStatus === 'present' || editStatus === 'half_day') ? convertTo12Hour(editOutTime) : null,
+        leave_type_id: (editStatus === 'leave' || editStatus === 'half_day') ? editLeaveType : null,
+        manual_entry_reason: editReason || "Admin manual edit"
+      };
+
+      const response = await axios.post(`${process.env.REACT_APP_API}/attendance/update`, payload, authHeader());
+      if (response.data.success) {
+        setToastMessage('Attendance updated successfully!');
+        setShowToast(true);
+        setShowDetailModal(false);
+        fetchAttendance();
+      } else {
+        alert(response.data.message || 'Failed to update attendance.');
+      }
+    } catch (err) {
+      console.error('Error saving attendance edit:', err);
+      alert(err.response?.data?.message || 'Failed to save changes.');
+    } finally {
+      setSubmittingEdit(false);
+    }
+  };
+
+  const handleEventClick = (clickInfo) => {
+    handleOpenDetailModal(clickInfo.event.extendedProps.attendance);
   };
 
   const clearFilters = () => {
@@ -775,7 +907,7 @@ const ViewAttendance = () => {
           ['Check-In Date', 'Status', 'Check-In Time', 'Check-Out Time', 'Check-Out Date', 'Working Hours', 'Shift Type'],
         ];
         records.forEach((att) => {
-          const hours = calculateWorkingHours(att.in_time, att.out_time);
+          const hours = calculateWorkingHours(att.in_time, att.out_time, att);
           const overnight = isOvernightShift(att.in_time, att.out_time);
           const checkoutDate = overnight ? getCheckoutDisplayDate(att.date, att.in_time, att.out_time) : null;
           data.push([
@@ -866,7 +998,7 @@ const ViewAttendance = () => {
           : filteredAttendance.slice(0, parseInt(exportOptions.recordsLimit, 10));
 
         const tableData = records.map((att) => {
-          const hours = calculateWorkingHours(att.in_time, att.out_time);
+          const hours = calculateWorkingHours(att.in_time, att.out_time, att);
           const overnight = isOvernightShift(att.in_time, att.out_time);
           const checkoutDate = overnight ? getCheckoutDisplayDate(att.date, att.in_time, att.out_time) : null;
           return [
@@ -1083,24 +1215,143 @@ const ViewAttendance = () => {
                 <CsLineIcons icon="calendar" size="20" className="text-primary" />
                 Attendance Calendar
               </h5>
-              <div className="d-flex gap-2">
-                <Badge bg="soft-success" className="text-success px-2 py-1 small rounded-pill fw-bold">Present</Badge>
-                <Badge bg="soft-danger" className="text-danger px-2 py-1 small rounded-pill fw-bold">Absent</Badge>
+              <div className="d-flex gap-1 bg-light rounded-pill p-1" style={{ border: '1.5px solid #edf2f7' }}>
+                {['month', 'week', 'year'].map((view) => (
+                  <button
+                    type="button"
+                    key={view}
+                    onClick={() => {
+                      setCalendarView(view);
+                      if (view !== 'year' && calendarRef.current) {
+                        const api = calendarRef.current.getApi();
+                        api.changeView(view === 'month' ? 'dayGridMonth' : 'dayGridWeek');
+                      }
+                    }}
+                    style={{
+                      border: 'none',
+                      outline: 'none',
+                      borderRadius: '50px',
+                      padding: '0.3rem 1rem',
+                      fontSize: '0.8rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      backgroundColor: calendarView === view ? '#1ea8e7' : 'transparent',
+                      color: calendarView === view ? '#fff' : '#475569',
+                      boxShadow: calendarView === view ? '0 2px 8px rgba(30,168,231,0.25)' : 'none',
+                    }}
+                  >
+                    {view.charAt(0).toUpperCase() + view.slice(1)}
+                  </button>
+                ))}
               </div>
             </Card.Header>
             <Card.Body className="p-4 pt-2">
-              <div className="calendar-container">
-                <FullCalendar
-                  plugins={[dayGridPlugin, interactionPlugin]}
-                  initialView="dayGridMonth"
-                  events={attendanceEvents}
-                  eventClick={handleEventClick}
-                  height="auto"
-                  headerToolbar={{ left: 'prev,next today', center: 'title', right: 'dayGridMonth,dayGridWeek' }}
-                  dayMaxEvents
-                  eventDisplay="block"
-                />
-              </div>
+              {calendarView === 'year' ? (
+                /* ── Custom Yearly Grid View ── */
+                <div style={{ overflowY: 'auto', maxHeight: '520px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
+                    {Array.from({ length: 12 }, (_, monthIdx) => {
+                      const now = new Date();
+                      const year = now.getFullYear();
+                      const monthDate = new Date(year, monthIdx, 1);
+                      const monthName = monthDate.toLocaleString('default', { month: 'long' });
+                      const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
+                      const firstDayOfWeek = monthDate.getDay(); // 0=Sun
+
+                      // Build attendance map for this month
+                      const monthAttMap = {};
+                      attendance.forEach(att => {
+                        const d = new Date(att.date);
+                        if (d.getFullYear() === year && d.getMonth() === monthIdx) {
+                          monthAttMap[d.getDate()] = att.status;
+                        }
+                      });
+
+                      const statusColor = (status) => {
+                        if (status === 'present') return '#10b981';
+                        if (status === 'absent') return '#ef4444';
+                        if (status === 'leave' || status === 'half_day') return '#0ea5e9';
+                        if (status === 'week_off') return '#94a3b8';
+                        if (status === 'holiday') return '#ec4899';
+                        return '#e2e8f0';
+                      };
+
+                      return (
+                        <div key={monthIdx} style={{ background: '#f8fafc', borderRadius: '12px', padding: '0.75rem', border: '1px solid #edf2f7' }}>
+                          <div style={{ fontWeight: '700', fontSize: '0.8rem', color: '#1ea8e7', marginBottom: '0.5rem', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            {monthName} {year}
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '4px' }}>
+                            {['S','M','T','W','T','F','S'].map((d, i) => (
+                              <div key={i} style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: '700', textAlign: 'center' }}>{d}</div>
+                            ))}
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
+                            {Array.from({ length: firstDayOfWeek }).map((_empty, i) => (
+                              <div key={`empty-${i}`} />
+                            ))}
+                            {Array.from({ length: daysInMonth }, (_dayNum, i) => i + 1).map(day => {
+                              const status = monthAttMap[day];
+                              const isToday = new Date().getDate() === day && new Date().getMonth() === monthIdx && new Date().getFullYear() === year;
+                              return (
+                                <div
+                                  key={day}
+                                  title={status ? status.replace('_', ' ') : 'No record'}
+                                  style={{
+                                    width: '100%',
+                                    aspectRatio: '1',
+                                    borderRadius: '4px',
+                                    backgroundColor: statusColor(status),
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.55rem',
+                                    fontWeight: '700',
+                                    color: status ? '#fff' : '#cbd5e1',
+                                    border: isToday ? '2px solid #1ea8e7' : '1px solid transparent',
+                                    cursor: status ? 'pointer' : 'default',
+                                  }}
+                                  onClick={() => {
+                                    const dateStr = `${year}-${String(monthIdx+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                                    const att = attendance.find(a => a.date && a.date.startsWith(dateStr));
+                                    if (att) { handleOpenDetailModal(att); }
+                                  }}
+                                >
+                                  {day}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* Legend */}
+                  <div className="d-flex flex-wrap gap-3 mt-3 justify-content-center">
+                    {[['#10b981','Present'],['#ef4444','Absent'],['#0ea5e9','Leave'],['#94a3b8','Week Off'],['#ec4899','Holiday'],['#e2e8f0','No Record']].map(([color, label]) => (
+                      <div key={label} className="d-flex align-items-center gap-1">
+                        <div style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: color }} />
+                        <span style={{ fontSize: '0.72rem', fontWeight: '600', color: '#64748b' }}>{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="calendar-container">
+                  <FullCalendar
+                    ref={calendarRef}
+                    plugins={[dayGridPlugin, interactionPlugin]}
+                    initialView={calendarView === 'week' ? 'dayGridWeek' : 'dayGridMonth'}
+                    events={attendanceEvents}
+                    eventClick={handleEventClick}
+                    height="auto"
+                    headerToolbar={{ left: 'prev,next today', center: 'title', right: '' }}
+                    dayMaxEvents
+                    eventDisplay="block"
+                  />
+                </div>
+              )}
             </Card.Body>
           </Card>
         </Col>
@@ -1142,7 +1393,7 @@ const ViewAttendance = () => {
                   filteredAttendance
                     .sort((a, b) => new Date(b.date) - new Date(a.date))
                     .map((att, index) => {
-                      const hours = calculateWorkingHours(att.in_time, att.out_time);
+                      const hours = calculateWorkingHours(att.in_time, att.out_time, att);
                       const overnight = isOvernightShift(att.in_time, att.out_time);
                       const checkoutDate = overnight ? getCheckoutDisplayDate(att.date, att.in_time, att.out_time) : null;
 
@@ -1189,15 +1440,36 @@ const ViewAttendance = () => {
                             })()}
                           </td>
                           <td>
-                            <div className="d-flex align-items-center gap-2 text-dark fw-medium">
-                              {att.in_time ? <><CsLineIcons icon="login" size="14" className="text-success" />{att.in_time}</> : '—'}
-                            </div>
+                            {att.sessions && att.sessions.length > 0 ? (
+                              <div className="d-flex flex-column gap-1">
+                                {att.sessions.map((session, idx) => (
+                                  <span key={idx} className="time-badge time-badge-in">
+                                    <CsLineIcons icon="login" size="12" className="me-1 text-success" /> {session.in_time}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : att.in_time ? (
+                              <span className="time-badge time-badge-in">
+                                <CsLineIcons icon="login" size="12" className="me-1 text-success" /> {att.in_time}
+                              </span>
+                            ) : '—'}
                           </td>
                           <td>
-                            <div className="d-flex align-items-center gap-2 text-dark fw-medium">
-                              {att.out_time ? <><CsLineIcons icon="logout" size="14" className="text-danger" />{att.out_time}</> : 
-                                att.in_time ? <Badge bg="soft-warning" className="text-warning small px-2 py-1 rounded-pill fw-bold">Active</Badge> : '—'}
-                            </div>
+                            {att.sessions && att.sessions.length > 0 ? (
+                              <div className="d-flex flex-column gap-1">
+                                {att.sessions.map((session, idx) => (
+                                  <span key={idx} className={session.out_time ? "time-badge time-badge-out" : "time-badge bg-soft-warning text-warning"}>
+                                    <CsLineIcons icon="logout" size="12" className={session.out_time ? "me-1 text-danger" : "me-1 text-warning"} /> {session.out_time || 'Active'}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : att.out_time ? (
+                              <span className="time-badge time-badge-out">
+                                <CsLineIcons icon="logout" size="12" className="me-1 text-danger" /> {att.out_time}
+                              </span>
+                            ) : att.in_time ? (
+                              <Badge bg="soft-warning" className="text-warning small px-2 py-1 rounded-pill fw-bold">Active</Badge>
+                            ) : '—'}
                             {checkoutDate && <div className="small text-muted mt-1">🌙 Out: {formatDateDisplay(checkoutDate)}</div>}
                           </td>
                           <td>
@@ -1217,7 +1489,7 @@ const ViewAttendance = () => {
                               variant="none"
                               size="sm"
                               className="btn-icon btn-icon-only rounded-circle custom-btn-primary-outline mx-auto"
-                              onClick={() => { setSelectedAttendance(att); setShowDetailModal(true); }}
+                              onClick={() => handleOpenDetailModal(att)}
                               title="View Detail"
                               style={{ width: '36px', height: '36px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                             >
@@ -1243,7 +1515,7 @@ const ViewAttendance = () => {
               filteredAttendance
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
                 .map((att, index) => {
-                  const hours = calculateWorkingHours(att.in_time, att.out_time);
+                  const hours = calculateWorkingHours(att.in_time, att.out_time, att);
                   const overnight = isOvernightShift(att.in_time, att.out_time);
                   const checkoutDate = overnight ? getCheckoutDisplayDate(att.date, att.in_time, att.out_time) : null;
 
@@ -1298,17 +1570,35 @@ const ViewAttendance = () => {
                         <Row className="g-3 mb-3 text-start">
                           <Col xs={6}>
                             <div className="small text-muted text-uppercase fw-bold" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>Check-In</div>
-                            <div className="d-flex align-items-center gap-1 text-dark fw-bold mt-1" style={{ fontSize: '13px' }}>
-                              <CsLineIcons icon="login" size="14" className="text-success" />
-                              {att.in_time || '—'}
-                            </div>
+                            {att.sessions && att.sessions.length > 0 ? (
+                              att.sessions.map((s, i) => (
+                                <div key={i} className="d-flex align-items-center gap-1 text-dark fw-bold mt-1" style={{ fontSize: '12px' }}>
+                                  <CsLineIcons icon="login" size="12" className="text-success" />
+                                  {s.in_time}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="d-flex align-items-center gap-1 text-dark fw-bold mt-1" style={{ fontSize: '12px' }}>
+                                <CsLineIcons icon="login" size="12" className="text-success" />
+                                {att.in_time || '—'}
+                              </div>
+                            )}
                           </Col>
                           <Col xs={6}>
                             <div className="small text-muted text-uppercase fw-bold" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>Check-Out</div>
-                            <div className="d-flex align-items-center gap-1 text-dark fw-bold mt-1" style={{ fontSize: '13px' }}>
-                              <CsLineIcons icon="logout" size="14" className="text-danger" />
-                              {att.out_time ? att.out_time : att.in_time ? 'Active' : '—'}
-                            </div>
+                            {att.sessions && att.sessions.length > 0 ? (
+                              att.sessions.map((s, i) => (
+                                <div key={i} className="d-flex align-items-center gap-1 text-dark fw-bold mt-1" style={{ fontSize: '12px' }}>
+                                  <CsLineIcons icon="logout" size="12" className={s.out_time ? "text-danger" : "text-warning"} />
+                                  {s.out_time || 'Active'}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="d-flex align-items-center gap-1 text-dark fw-bold mt-1" style={{ fontSize: '12px' }}>
+                                <CsLineIcons icon="logout" size="12" className="text-danger" />
+                                {att.out_time ? att.out_time : att.in_time ? 'Active' : '—'}
+                              </div>
+                            )}
                             {checkoutDate && <div className="small text-muted mt-1" style={{ fontSize: '10px' }}>🌙 Out: {formatDateDisplay(checkoutDate)}</div>}
                           </Col>
                           <Col xs={6}>
@@ -1334,7 +1624,7 @@ const ViewAttendance = () => {
                           <Button
                             variant="none"
                             className="custom-btn-primary-outline w-100 py-2 d-flex align-items-center justify-content-center gap-2"
-                            onClick={() => { setSelectedAttendance(att); setShowDetailModal(true); }}
+                            onClick={() => handleOpenDetailModal(att)}
                             style={{ fontSize: '12px' }}
                           >
                             <CsLineIcons icon="eye" size="14" /> View Details
@@ -1351,50 +1641,161 @@ const ViewAttendance = () => {
 
       <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} centered className="rounded-4">
         <Modal.Header closeButton className="border-0">
-          <Modal.Title className="fw-bold">Record Details</Modal.Title>
+          <Modal.Title className="fw-bold">{isEditing ? 'Edit Attendance' : 'Record Details'}</Modal.Title>
         </Modal.Header>
         <Modal.Body className="py-4">
           {selectedAttendance && (
-            <div className="text-center">
-              <div className={`bg-soft-${selectedAttendance.status === 'present' ? 'success' : 'danger'} d-inline-flex p-4 rounded-circle mb-3`}>
-                <CsLineIcons icon={selectedAttendance.status === 'present' ? 'check-circle' : 'close-circle'} size="48" className={`text-${selectedAttendance.status === 'present' ? 'success' : 'danger'}`} />
+            isEditing ? (
+              <Form className="text-start">
+                <h4 className="fw-bold text-center mb-1">{formatDateDisplay(selectedAttendance.date)}</h4>
+                <p className="text-muted text-center fw-medium mb-4">{new Date(selectedAttendance.date).toLocaleDateString('en-IN', { weekday: 'long' })}</p>
+                
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-bold text-uppercase letter-spacing-1 text-muted">Attendance Status</Form.Label>
+                  <Form.Select className="rounded-3 border-0 shadow-sm py-2 px-3 fw-bold text-dark" value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>
+                    <option value="present">Present</option>
+                    <option value="absent">Absent</option>
+                    <option value="half_day">Half Day</option>
+                    <option value="leave">On Leave</option>
+                    <option value="week_off">Week Off</option>
+                    <option value="holiday">Holiday</option>
+                    <option value="comp_off">Comp Off</option>
+                  </Form.Select>
+                </Form.Group>
+
+                {(editStatus === 'present' || editStatus === 'half_day') && (
+                  <Row className="g-3 mb-3">
+                    <Col xs={6}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold text-uppercase letter-spacing-1 text-muted">Check-In Time</Form.Label>
+                        <Form.Control 
+                          type="time" 
+                          className="rounded-3 border-0 shadow-sm py-2 px-3 fw-bold text-dark"
+                          value={editInTime} 
+                          onChange={(e) => setEditInTime(e.target.value)} 
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col xs={6}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold text-uppercase letter-spacing-1 text-muted">Check-Out Time</Form.Label>
+                        <Form.Control 
+                          type="time" 
+                          className="rounded-3 border-0 shadow-sm py-2 px-3 fw-bold text-dark"
+                          value={editOutTime} 
+                          onChange={(e) => setEditOutTime(e.target.value)} 
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                )}
+
+                {(editStatus === 'leave' || editStatus === 'half_day') && (
+                  <Form.Group className="mb-3">
+                    <Form.Label className="small fw-bold text-uppercase letter-spacing-1 text-muted">Leave Type</Form.Label>
+                    <Form.Select className="rounded-3 border-0 shadow-sm py-2 px-3 fw-bold text-dark" value={editLeaveType} onChange={(e) => setEditLeaveType(e.target.value)}>
+                      {leaveTypes.map((lt) => (
+                        <option key={lt.leave_type_id} value={lt.leave_type_id}>
+                          {lt.name} ({lt.short_code})
+                        </option>
+                      ))}
+                      {leaveTypes.length === 0 && <option value="other">Other Leave</option>}
+                    </Form.Select>
+                  </Form.Group>
+                )}
+
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-bold text-uppercase letter-spacing-1 text-muted">Reason for manual edit</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={2}
+                    className="rounded-3 border-0 shadow-sm py-2 px-3 fw-bold text-dark"
+                    placeholder="E.g., Forgot to check out"
+                    value={editReason}
+                    onChange={(e) => setEditReason(e.target.value)}
+                  />
+                </Form.Group>
+              </Form>
+            ) : (
+              <div className="text-center">
+                <div className={`bg-soft-${selectedAttendance.status === 'present' ? 'success' : 'danger'} d-inline-flex p-4 rounded-circle mb-3`}>
+                  <CsLineIcons icon={selectedAttendance.status === 'present' ? 'check-circle' : 'close-circle'} size="48" className={`text-${selectedAttendance.status === 'present' ? 'success' : 'danger'}`} />
+                </div>
+                <h4 className="fw-bold mb-1">{formatDateDisplay(selectedAttendance.date)}</h4>
+                <p className="text-muted fw-medium">{new Date(selectedAttendance.date).toLocaleDateString('en-IN', { weekday: 'long' })}</p>
+                
+                <div className="glass-card bg-light border-0 p-4 mt-4 text-start">
+                  <Row className="g-4">
+                    <Col xs={6}>
+                      <div className="small fw-bold text-muted text-uppercase mb-1">Check-In</div>
+                      <div className="fw-bold text-dark h5 mb-0 d-flex align-items-center gap-2">
+                        <CsLineIcons icon="login" size="18" className="text-success" />
+                        {selectedAttendance.in_time || '—'}
+                      </div>
+                    </Col>
+                    <Col xs={6}>
+                      <div className="small fw-bold text-muted text-uppercase mb-1">Check-Out</div>
+                      <div className="fw-bold text-dark h5 mb-0 d-flex align-items-center gap-2">
+                        <CsLineIcons icon="logout" size="18" className="text-danger" />
+                        {selectedAttendance.out_time || '—'}
+                      </div>
+                    </Col>
+                    {selectedAttendance.status === 'leave' && (
+                      <Col xs={12}>
+                        <div className="small fw-bold text-muted text-uppercase mb-1">Leave Type</div>
+                        <div className="fw-bold text-info h5 mb-0 d-flex align-items-center gap-2">
+                          <CsLineIcons icon="calendar" size="18" className="text-info" />
+                          {(() => {
+                            const leaveType = leaveTypes.find((lt) => lt.leave_type_id === selectedAttendance.leave_type_id);
+                            return leaveType ? `${leaveType.name} (${leaveType.short_code})` : 'On Leave';
+                          })()}
+                        </div>
+                      </Col>
+                    )}
+                    {selectedAttendance.manual_entry_reason && (
+                      <Col xs={12}>
+                        <div className="small fw-bold text-muted text-uppercase mb-1">Edit Reason</div>
+                        <div className="text-dark fw-medium" style={{ fontSize: '0.85rem' }}>
+                          {selectedAttendance.manual_entry_reason}
+                        </div>
+                      </Col>
+                    )}
+                    <Col xs={12}>
+                      <div className="small fw-bold text-muted text-uppercase mb-1">Total Duration</div>
+                      <div className="fw-bold text-primary h4 mb-0 d-flex align-items-center gap-2">
+                        <CsLineIcons icon="clock" size="24" />
+                        {(() => {
+                          const h = calculateWorkingHours(selectedAttendance.in_time, selectedAttendance.out_time, selectedAttendance);
+                          return h ? `${h.hours} Hours ${h.minutes} Minutes` : '—';
+                        })()}
+                      </div>
+                    </Col>
+                  </Row>
+                </div>
               </div>
-              <h4 className="fw-bold mb-1">{formatDateDisplay(selectedAttendance.date)}</h4>
-              <p className="text-muted fw-medium">{new Date(selectedAttendance.date).toLocaleDateString('en-IN', { weekday: 'long' })}</p>
-              
-              <div className="glass-card bg-light border-0 p-4 mt-4 text-start">
-                <Row className="g-4">
-                  <Col xs={6}>
-                    <div className="small fw-bold text-muted text-uppercase mb-1">Check-In</div>
-                    <div className="fw-bold text-dark h5 mb-0 d-flex align-items-center gap-2">
-                      <CsLineIcons icon="login" size="18" className="text-success" />
-                      {selectedAttendance.in_time || '—'}
-                    </div>
-                  </Col>
-                  <Col xs={6}>
-                    <div className="small fw-bold text-muted text-uppercase mb-1">Check-Out</div>
-                    <div className="fw-bold text-dark h5 mb-0 d-flex align-items-center gap-2">
-                      <CsLineIcons icon="logout" size="18" className="text-danger" />
-                      {selectedAttendance.out_time || '—'}
-                    </div>
-                  </Col>
-                  <Col xs={12}>
-                    <div className="small fw-bold text-muted text-uppercase mb-1">Total Duration</div>
-                    <div className="fw-bold text-primary h4 mb-0 d-flex align-items-center gap-2">
-                      <CsLineIcons icon="clock" size="24" />
-                      {(() => {
-                        const h = calculateWorkingHours(selectedAttendance.in_time, selectedAttendance.out_time);
-                        return h ? `${h.hours} Hours ${h.minutes} Minutes` : '—';
-                      })()}
-                    </div>
-                  </Col>
-                </Row>
-              </div>
-            </div>
+            )
           )}
         </Modal.Body>
         <Modal.Footer className="border-0">
-          <Button className="custom-btn-solid rounded-pill w-100 py-3" onClick={() => setShowDetailModal(false)}>Close Detail</Button>
+          {isEditing ? (
+            <div className="d-flex gap-3 w-100">
+              <Button variant="none" className="custom-btn-primary-outline flex-grow-1 py-3" onClick={() => setIsEditing(false)} disabled={submittingEdit}>
+                Cancel
+              </Button>
+              <Button className="custom-btn-solid flex-grow-1 py-3" onClick={handleSaveEdit} disabled={submittingEdit}>
+                {submittingEdit ? <Spinner animation="border" size="sm" /> : 'Save Changes'}
+              </Button>
+            </div>
+          ) : (
+            <div className="d-flex gap-3 w-100">
+              <Button variant="none" className="custom-btn-primary-outline flex-grow-1 py-3" onClick={() => setIsEditing(true)}>
+                <CsLineIcons icon="edit" size="14" className="me-2" /> Edit
+              </Button>
+              <Button className="custom-btn-solid flex-grow-1 py-3" onClick={() => setShowDetailModal(false)}>
+                Close
+              </Button>
+            </div>
+          )}
         </Modal.Footer>
       </Modal>
 

@@ -9,8 +9,11 @@ const getConfig = async (req, res) => {
     if (!config) {
       config = await PayrollConfig.create({ user_id });
     } else {
-      // Migration: If config doesn't have custom_earnings, add default.
-      if (!config.custom_earnings || config.custom_earnings.length === 0) {
+      let isUpdated = false;
+      
+      // Migration: If config doesn't have custom_earnings field at all, seed defaults.
+      // IMPORTANT: do NOT reset if it's an empty array — that means user deleted all earnings.
+      if (config.custom_earnings == null) {
         config.custom_earnings = [
           { id: "basic", label: "Basic Salary", is_active: true },
           { id: "hra", label: "HRA", is_active: true },
@@ -27,6 +30,22 @@ const getConfig = async (req, res) => {
             is_active: config.active_earnings.includes(e.id)
           }));
         }
+        isUpdated = true;
+      }
+
+      // Migration: If config doesn't have custom_deductions field at all, seed defaults.
+      // IMPORTANT: do NOT reset if it's an empty array — that means user deleted all deductions.
+      if (config.custom_deductions == null) {
+        config.custom_deductions = [
+          { id: "tds", label: "Income Tax (TDS)", is_active: false },
+          { id: "loan", label: "Loan Recovery", is_active: false },
+          { id: "advance", label: "Salary Advance", is_active: false },
+          { id: "other_deduction", label: "Other Deduction", is_active: false }
+        ];
+        isUpdated = true;
+      }
+
+      if (isUpdated) {
         await config.save();
       }
     }
@@ -42,7 +61,7 @@ const getConfig = async (req, res) => {
 const updateConfig = async (req, res) => {
   try {
     const user_id = req.user;
-    const { custom_earnings, statutory_config, org_rules } = req.body;
+    const { custom_earnings, custom_deductions, statutory_config, org_rules } = req.body;
 
     let config = await PayrollConfig.findOne({ user_id });
 
@@ -50,13 +69,21 @@ const updateConfig = async (req, res) => {
       config = new PayrollConfig({ user_id });
     }
 
-    if (custom_earnings) config.custom_earnings = custom_earnings;
+    if (custom_earnings !== undefined) {
+      config.custom_earnings = custom_earnings;
+      config.markModified('custom_earnings');
+    }
+    if (custom_deductions !== undefined) {
+      config.custom_deductions = custom_deductions;
+      config.markModified('custom_deductions');
+    }
     
     if (statutory_config) {
         config.statutory_config = {
             ...config.statutory_config,
             ...statutory_config
         };
+        config.markModified('statutory_config');
     }
     
     if (org_rules) {
@@ -64,6 +91,7 @@ const updateConfig = async (req, res) => {
             ...config.org_rules,
             ...org_rules
         };
+        config.markModified('org_rules');
     }
 
     await config.save();

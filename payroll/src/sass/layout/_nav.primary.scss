@@ -159,17 +159,15 @@ html[data-placement="vertical"] {
           content: initial;
         }
 
-        &:hover {
-          @include shadow-basic();
-          background: rgba(255, 255, 255, 0.05);
-        }
-
         .profile {
           margin: 0 auto;
           margin-bottom: 5px;
-          width: 60px;
-          height: 60px;
-          border-radius: var(--border-radius-xl);
+          width: auto;
+          height: auto;
+          max-width: 100%;
+          max-height: 60px;
+          border-radius: 0;
+          object-fit: contain;
         }
 
         .name {
@@ -406,9 +404,13 @@ html[data-placement="horizontal"] {
 
         .profile {
           order: 1;
-          width: var(--input-height);
-          height: var(--input-height);
+          width: auto;
+          height: auto;
+          max-height: 30px;
+          max-width: 100%;
           margin-bottom: 0;
+          border-radius: 0;
+          object-fit: contain;
         }
 
         .name {
@@ -576,9 +578,13 @@ html[data-placement="vertical"] .nav-container.mobile-side-ready {
 
         .profile {
           order: initial;
-          width: 50px;
-          height: 50px;
+          width: auto;
+          height: auto;
+          max-width: 140px;
+          max-height: 50px;
           margin-bottom: 5px;
+          border-radius: 0;
+          object-fit: contain;
         }
       }
     }
@@ -799,8 +805,11 @@ html[data-placement="horizontal"][data-dimension="mobile"] {
 
     .user {
       .profile {
-        width: 30px;
-        height: 30px;
+        width: auto;
+        height: auto;
+        max-width: 30px;
+        max-height: 30px;
+        border-radius: 0;
       }
 
       .name {
@@ -862,7 +871,7 @@ html[data-placement="vertical"][data-behaviour="unpinned"][data-menu-animate="hi
     .user {
       .profile {
         transition-duration: var(--transition-time);
-        transition-property: width, height;
+        transition-property: max-width, max-height;
       }
     }
   }
@@ -906,7 +915,7 @@ html[data-placement="vertical"][data-behaviour="unpinned"][data-menu-animate="sh
     .user {
       .profile {
         transition-duration: var(--transition-time);
-        transition-property: width, height;
+        transition-property: max-width, max-height;
       }
 
       .name {
