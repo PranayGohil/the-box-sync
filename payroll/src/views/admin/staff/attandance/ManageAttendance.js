@@ -515,6 +515,31 @@ export default function ManageAttendance() {
   const [editReason, setEditReason] = useState('');
   const [submittingEdit, setSubmittingEdit] = useState(false);
 
+  // Attendance Settings panel state
+  const [showAttSettings, setShowAttSettings] = useState(false);
+  const [attSettings, setAttSettings] = useState({ 
+    shift_start_time: '09:00 AM', 
+    late_threshold_minutes: 0, 
+    shift_end_time: '06:00 PM',
+    network_restrictions: { is_enabled: false, allowed_ips: '' }
+  });
+  const [savingAttSettings, setSavingAttSettings] = useState(false);
+  const [attSettingsMsg, setAttSettingsMsg] = useState('');
+  const [adminPublicIp, setAdminPublicIp] = useState('');
+
+  useEffect(() => {
+    // Fetch admin's current IP as seen by our backend
+    axios.get(`${process.env.REACT_APP_API}/kiosk/me`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    })
+      .then(res => {
+        if (res.data && res.data.client_ip) {
+          setAdminPublicIp(res.data.client_ip);
+        }
+      })
+      .catch(err => console.error('Failed to get backend IP', err));
+  }, []);
+
 
 
   const getTodayDate = () => {
@@ -620,6 +645,25 @@ export default function ManageAttendance() {
       }
       if (configRes && configRes.success) {
         setPayrollConfig(configRes.data);
+        // Sync attendance settings from loaded config
+        if (configRes.data.org_rules) {
+          const r = configRes.data.org_rules;
+          setAttSettings(prev => ({
+            ...prev,
+            shift_start_time: r.shift_start_time || '09:00 AM',
+            late_threshold_minutes: r.late_threshold_minutes ?? 0,
+            shift_end_time: r.shift_end_time || '06:00 PM',
+          }));
+        }
+        if (configRes.data.network_restrictions) {
+          setAttSettings(prev => ({
+            ...prev,
+            network_restrictions: {
+              is_enabled: configRes.data.network_restrictions.is_enabled || false,
+              allowed_ips: (configRes.data.network_restrictions.allowed_ips || []).join(', ')
+            }
+          }));
+        }
       }
     } catch (err) {
       console.error('Error fetching attendance:', err);
@@ -633,6 +677,72 @@ export default function ManageAttendance() {
   useEffect(() => {
     fetchTodayAttendance(targetDate);
   }, [targetDate]);
+
+  const convertTo24HourInput = (time12) => {
+    // Convert '09:30 AM' -> '09:30' for <input type="time">
+    if (!time12) return '';
+    const parts = time12.split(' ');
+    if (parts.length !== 2) return '';
+    const [time, period] = parts;
+    let [hours, minutes] = time.split(':').map(Number);
+    if (period === 'PM' && hours !== 12) hours += 12;
+    else if (period === 'AM' && hours === 12) hours = 0;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  };
+
+  const convertFromTimeInput = (time24) => {
+    // Convert '09:30' -> '09:30 AM' for storage
+    if (!time24) return '';
+    const [hoursStr, minutesStr] = time24.split(':');
+    let hours = parseInt(hoursStr, 10);
+    const minutes = minutesStr;
+    const period = hours >= 12 ? 'PM' : 'AM';
+    hours %= 12;
+    hours = hours || 12;
+    return `${String(hours).padStart(2, '0')}:${minutes} ${period}`;
+  };
+
+  const handleSaveAttSettings = async () => {
+    setSavingAttSettings(true);
+    setAttSettingsMsg('');
+    try {
+      const allowed_ips_array = attSettings.network_restrictions.allowed_ips
+        .split(',')
+        .map(ip => ip.trim())
+        .filter(ip => ip !== '');
+
+      const payload = {
+        org_rules: {
+          shift_start_time: attSettings.shift_start_time,
+          late_threshold_minutes: attSettings.late_threshold_minutes,
+          shift_end_time: attSettings.shift_end_time
+        },
+        network_restrictions: {
+          is_enabled: attSettings.network_restrictions.is_enabled,
+          allowed_ips: allowed_ips_array
+        }
+      };
+
+      const res = await axios.put(
+        `${process.env.REACT_APP_API}/payroll-config`,
+        payload,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      if (res.data.success) {
+        setAttSettingsMsg('✅ Settings saved successfully!');
+        setPayrollConfig(res.data.data);
+        toast.success('Settings saved!');
+      } else {
+        setAttSettingsMsg('❌ Failed to save settings.');
+      }
+    } catch (err) {
+      console.error(err);
+      setAttSettingsMsg('❌ Error saving settings.');
+    } finally {
+      setSavingAttSettings(false);
+      setTimeout(() => setAttSettingsMsg(''), 3500);
+    }
+  };
 
   const convertTo24Hour = (time12) => {
     if (!time12) return '';
@@ -871,12 +981,19 @@ export default function ManageAttendance() {
         Cell: ({ row }) => {
           const { todayAttendance } = row.original;
           if (!todayAttendance) return <span className="text-muted fw-medium">—</span>;
+          const lateMin = todayAttendance.late_by_minutes || 0;
+          const lateBadge = lateMin > 0 ? (
+            <span className="ms-1" style={{ display: 'inline-flex', alignItems: 'center', padding: '0.2rem 0.55rem', borderRadius: '50px', fontSize: '0.7rem', fontWeight: 700, background: 'rgba(239,68,68,0.1)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.2)' }}>
+              🔴 Late {lateMin}m
+            </span>
+          ) : null;
           if (todayAttendance.sessions && todayAttendance.sessions.length > 0) {
             return (
               <div className="d-flex flex-column gap-1">
                 {todayAttendance.sessions.map((session, idx) => (
                   <span key={idx} className="time-badge time-badge-in">
                     <CsLineIcons icon="clock" size="12" className="me-1 text-success" /> {session.in_time}
+                    {idx === 0 && lateBadge}
                   </span>
                 ))}
               </div>
@@ -887,6 +1004,7 @@ export default function ManageAttendance() {
           return (
             <span className="time-badge time-badge-in">
               <CsLineIcons icon="clock" size="12" className="me-1 text-success" /> {time}
+              {lateBadge}
             </span>
           );
         },
@@ -899,12 +1017,19 @@ export default function ManageAttendance() {
         Cell: ({ row }) => {
           const { todayAttendance } = row.original;
           if (!todayAttendance) return <span className="text-muted fw-medium">—</span>;
+          const otHours = todayAttendance.overtime_hours || 0;
+          const otBadge = otHours > 0 ? (
+            <span className="ms-1" style={{ display: 'inline-flex', alignItems: 'center', padding: '0.2rem 0.55rem', borderRadius: '50px', fontSize: '0.7rem', fontWeight: 700, background: 'rgba(109,40,217,0.1)', color: '#7c3aed', border: '1px solid rgba(109,40,217,0.2)' }}>
+              ⚡ OT {otHours}h
+            </span>
+          ) : null;
           if (todayAttendance.sessions && todayAttendance.sessions.length > 0) {
             return (
               <div className="d-flex flex-column gap-1">
                 {todayAttendance.sessions.map((session, idx) => (
                   <span key={idx} className={session.out_time ? "time-badge time-badge-out" : "time-badge bg-soft-warning text-warning"}>
                     <CsLineIcons icon="clock" size="12" className={session.out_time ? "me-1 text-danger" : "me-1 text-warning"} /> {session.out_time || 'Active'}
+                    {idx === todayAttendance.sessions.length - 1 && session.out_time && otBadge}
                   </span>
                 ))}
               </div>
@@ -915,6 +1040,7 @@ export default function ManageAttendance() {
           return (
             <span className="time-badge time-badge-out">
               <CsLineIcons icon="clock" size="12" className="me-1 text-danger" /> {time}
+              {otBadge}
             </span>
           );
         },
@@ -1124,6 +1250,154 @@ export default function ManageAttendance() {
           </Button>
         </Alert>
       )}
+
+      {/* ── Attendance Settings Panel ─────────────────────────────────── */}
+      <div className="mb-4">
+        <Button
+          variant="none"
+          className="custom-btn-primary-outline d-flex align-items-center gap-2 px-4 py-2"
+          onClick={() => setShowAttSettings(v => !v)}
+        >
+          <CsLineIcons icon="settings" size={16} />
+          Attendance Settings
+          <CsLineIcons icon={showAttSettings ? 'chevron-up' : 'chevron-down'} size={14} className="ms-1" />
+        </Button>
+
+        {showAttSettings && (
+          <Card className="glass-card border-0 shadow-sm mt-3">
+            <Card.Body className="p-4">
+              <h6 className="fw-bold mb-1 text-dark">Shift & Timing Rules</h6>
+              <p className="text-muted small mb-4">
+                Configure the official shift start/end times and the late arrival grace period. These values are used to automatically flag late check-ins and overtime check-outs.
+              </p>
+              {attSettingsMsg && (
+                <Alert variant={attSettingsMsg.startsWith('✅') ? 'success' : 'danger'} className="py-2 px-3 mb-3 rounded-3" style={{ fontSize: '0.88rem' }}>
+                  {attSettingsMsg}
+                </Alert>
+              )}
+              <Row className="g-3 align-items-end">
+                <Col xs={12} sm={6} md={3}>
+                  <Form.Label className="fw-semibold text-dark small mb-1">Shift Start Time</Form.Label>
+                  <Form.Control
+                    type="time"
+                    value={convertTo24HourInput(attSettings.shift_start_time)}
+                    onChange={e => setAttSettings(s => ({ ...s, shift_start_time: convertFromTimeInput(e.target.value) }))}
+                    style={{ borderRadius: '10px', height: '42px', border: '1px solid #e2e8f0', fontSize: '14px' }}
+                  />
+                  <Form.Text className="text-muted" style={{ fontSize: '0.75rem' }}>Official shift start (e.g. 09:00 AM)</Form.Text>
+                </Col>
+                <Col xs={12} sm={6} md={3}>
+                  <Form.Label className="fw-semibold text-dark small mb-1">Late Grace Period (Minutes)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    min={0}
+                    max={120}
+                    value={attSettings.late_threshold_minutes}
+                    onChange={e => setAttSettings(s => ({ ...s, late_threshold_minutes: Number(e.target.value) }))}
+                    style={{ borderRadius: '10px', height: '42px', border: '1px solid #e2e8f0', fontSize: '14px' }}
+                  />
+                  <Form.Text className="text-muted" style={{ fontSize: '0.75rem' }}>0 = no grace, 15 = 15-min allowance</Form.Text>
+                </Col>
+                <Col xs={12} sm={6} md={3}>
+                  <Form.Label className="fw-semibold text-dark small mb-1">Shift End Time</Form.Label>
+                  <Form.Control
+                    type="time"
+                    value={convertTo24HourInput(attSettings.shift_end_time)}
+                    onChange={e => setAttSettings(s => ({ ...s, shift_end_time: convertFromTimeInput(e.target.value) }))}
+                    style={{ borderRadius: '10px', height: '42px', border: '1px solid #e2e8f0', fontSize: '14px' }}
+                  />
+                  <Form.Text className="text-muted" style={{ fontSize: '0.75rem' }}>Check-out after this = overtime</Form.Text>
+                </Col>
+                <Col xs={12} sm={6} md={3} className="d-flex align-items-end">
+                  <Button
+                    variant="none"
+                    className="custom-btn-solid w-100 d-flex align-items-center justify-content-center gap-2"
+                    onClick={handleSaveAttSettings}
+                    disabled={savingAttSettings}
+                    style={{ height: '42px' }}
+                  >
+                    {savingAttSettings ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="save" size={16} />}
+                    {savingAttSettings ? 'Saving...' : 'Save Settings'}
+                  </Button>
+                </Col>
+              </Row>
+
+              <div className="mt-4 pt-4 border-top">
+                <h6 className="fw-bold mb-1 text-dark">Network Restrictions (Office Wi-Fi)</h6>
+                <p className="text-muted small mb-3">
+                  Restrict check-in and check-out to specific networks by entering their public IP addresses. 
+                  (Browsers cannot read Wi-Fi names, so we use Public IPs).
+                </p>
+                <Row className="g-3 align-items-start">
+                  <Col xs={12} md={3}>
+                    <Form.Check 
+                      type="switch"
+                      id="network-restrict-switch"
+                      label={<span className="fw-semibold text-dark small ms-2">Enable IP Restrictions</span>}
+                      checked={attSettings.network_restrictions.is_enabled}
+                      onChange={e => setAttSettings(s => ({ 
+                        ...s, 
+                        network_restrictions: { ...s.network_restrictions, is_enabled: e.target.checked }
+                      }))}
+                      className="mt-2"
+                    />
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <Form.Label className="fw-semibold text-dark small mb-1">Allowed Public IP Addresses (Comma separated)</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="e.g. 192.168.1.1, 203.0.113.5"
+                      value={attSettings.network_restrictions.allowed_ips}
+                      onChange={e => setAttSettings(s => ({
+                        ...s,
+                        network_restrictions: { ...s.network_restrictions, allowed_ips: e.target.value }
+                      }))}
+                      style={{ borderRadius: '10px', height: '42px', border: '1px solid #e2e8f0', fontSize: '14px' }}
+                      disabled={!attSettings.network_restrictions.is_enabled}
+                    />
+                    {adminPublicIp && (
+                      <div className="mt-2">
+                        <span className="text-muted small me-2">Your current IP is: <strong>{adminPublicIp}</strong></span>
+                        <Button 
+                          variant="link" 
+                          className="p-0 text-decoration-none small" 
+                          style={{ fontSize: '0.75rem' }}
+                          disabled={!attSettings.network_restrictions.is_enabled}
+                          onClick={() => {
+                            setAttSettings(s => {
+                              const currentIps = s.network_restrictions.allowed_ips.split(',').map(i => i.trim()).filter(i => i);
+                              if (!currentIps.includes(adminPublicIp)) {
+                                return {
+                                  ...s,
+                                  network_restrictions: {
+                                    ...s.network_restrictions,
+                                    allowed_ips: currentIps.length > 0 ? `${currentIps.join(', ')}, ${adminPublicIp}` : adminPublicIp
+                                  }
+                                };
+                              }
+                              return s;
+                            });
+                          }}
+                        >
+                          + Add Current IP
+                        </Button>
+                      </div>
+                    )}
+                  </Col>
+                </Row>
+              </div>
+
+              <div className="mt-4 pt-3 border-top d-flex flex-wrap gap-3" style={{ fontSize: '0.8rem' }}>
+                <span className="text-muted">Current config:</span>
+                <span className="fw-semibold text-dark">⏰ Shift: {attSettings.shift_start_time} → {attSettings.shift_end_time}</span>
+                <span className="fw-semibold" style={{ color: '#dc2626' }}>🔴 Late after: {attSettings.late_threshold_minutes} min grace</span>
+                <span className="fw-semibold" style={{ color: '#7c3aed' }}>⚡ OT after: {attSettings.shift_end_time}</span>
+                <span className="fw-semibold text-dark">🌐 Network Restrict: {attSettings.network_restrictions.is_enabled ? 'Enabled' : 'Disabled'}</span>
+              </div>
+            </Card.Body>
+          </Card>
+        )}
+      </div>
 
       {/* Search and Controls */}
       <div>

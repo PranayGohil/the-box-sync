@@ -114,15 +114,40 @@ addStaff.index({ user_id: 1, email: 1 }, { sparse: true });
 addStaff.index({ user_id: 1, staff_id: 1 }, { sparse: true });
 addStaff.index({ user_id: 1 });
 
+const crypto = require("crypto");
+const algorithm = "aes-256-cbc";
+const secretKey = process.env.JWT_SECRETKEY || "Secret-X-D!g!talTr!polyStud!o_N_TheB0xSync_2o24";
+const key = crypto.scryptSync(secretKey, "salt", 32);
+const iv = Buffer.alloc(16, 0);
+
+function encrypt(text) {
+  if (!text) return text;
+  const cipher = crypto.createCipheriv(algorithm, key, iv);
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  return encrypted;
+}
+
+function decrypt(text) {
+  if (!text) return text;
+  try {
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    let decrypted = decipher.update(text, "hex", "utf8");
+    decrypted += decipher.final("utf8");
+    return decrypted;
+  } catch (err) {
+    return text;
+  }
+}
+
 addStaff.pre("save", async function (next) {
   const staff = this;
   if (!staff.isModified("password") || !staff.password) {
     return next();
   }
   try {
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(staff.password, salt);
-    staff.password = hash;
+    // Encrypt the password using AES
+    staff.password = encrypt(staff.password);
     return next();
   } catch (error) {
     return next(error);
@@ -130,8 +155,16 @@ addStaff.pre("save", async function (next) {
 });
 
 addStaff.methods.comparePassword = async function (candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+  const passwordInDb = this.password;
+  if (!passwordInDb) return false;
+  if (passwordInDb.startsWith("$2a$") || passwordInDb.startsWith("$2b$")) {
+    return bcrypt.compare(candidatePassword, passwordInDb);
+  }
+  const decryptedPassword = decrypt(passwordInDb);
+  return candidatePassword === decryptedPassword;
 };
 
 const Staff = mongoose.model("staff", addStaff);
+Staff.encrypt = encrypt;
+Staff.decrypt = decrypt;
 module.exports = Staff;

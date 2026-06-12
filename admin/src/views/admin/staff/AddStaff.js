@@ -691,6 +691,7 @@ const AddStaff = () => {
                           <Form.Control
                             type={showPassword ? 'text' : 'password'}
                             name="password"
+                            autoComplete="new-password"
                             placeholder="Password for staff login"
                             value={values.password}
                             onChange={handleChange}

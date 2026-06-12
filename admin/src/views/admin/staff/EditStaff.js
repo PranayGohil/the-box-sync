@@ -304,6 +304,7 @@ const EditStaff = () => {
         setFieldValue('gender', staff.gender || '');
         setFieldValue('phone_no', staff.phone_no || '');
         setFieldValue('email', staff.email || '');
+        setFieldValue('password', staff.password || '');
         setFieldValue('salary', staff.salary || '');
         setFieldValue('position', staff.position || '');
         setFieldValue('document_type', staff.document_type || '');
@@ -761,6 +762,7 @@ const EditStaff = () => {
                         <Form.Control
                           type={showPassword ? 'text' : 'password'}
                           name="password"
+                          autoComplete="new-password"
                           placeholder="Leave blank to keep current"
                           value={values.password}
                           onChange={handleChange}

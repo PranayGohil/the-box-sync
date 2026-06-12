@@ -8,13 +8,87 @@ const authMiddleware = require('../middlewares/auth-middlewares');
 
 // ── Leave Balances ────────────────────────────────────────────────────────────
 
-// Get balances for all staff in a year (Admin/Manager view)
+// Get balances (Admin view gets all, Staff view gets own)
 router.get('/balances', authMiddleware, async (req, res) => {
   try {
     const userId = String(req.user._id || req.user);
     const year = Number(req.query.year) || new Date().getFullYear();
 
-    const balances = await LeaveBalance.find({ user_id: userId, year }).populate('staff_id', 'f_name l_name staff_id position');
+    let query = { user_id: userId, year };
+    if (req.user && req.user.Role === 'Staff') {
+      query.staff_id = req.user.staff_id;
+    }
+
+    let balances = await LeaveBalance.find(query).populate('staff_id', 'f_name l_name staff_id position');
+
+    // Auto-initialize if no balances found for staff member accessing their own account
+    if (balances.length === 0 && req.user && req.user.Role === 'Staff' && req.user.staff_id) {
+      const staff_id = req.user.staff_id;
+      const policy = await LeavePolicy.findOne({ user_id: userId });
+      if (policy) {
+        const initialBalances = policy.leave_types.map(lt => ({
+          leave_type_id: lt.leave_type_id,
+          entitled: lt.days_per_year,
+          taken: 0,
+          pending: 0,
+          carried_forward: 0
+        }));
+
+        const newBalance = await LeaveBalance.findOneAndUpdate(
+          { staff_id, user_id: userId, year },
+          { balances: initialBalances },
+          { new: true, upsert: true }
+        ).populate('staff_id', 'f_name l_name staff_id position');
+
+        balances = [newBalance];
+      }
+    } else if (balances.length > 0) {
+      // Sync balances with current leave policy
+      const policy = await LeavePolicy.findOne({ user_id: userId });
+      if (policy) {
+        let anyUpdated = false;
+        for (const record of balances) {
+          const updatedBalancesList = [];
+          const balMap = {};
+          record.balances.forEach(b => {
+            balMap[b.leave_type_id] = b;
+          });
+
+          let recordUpdated = false;
+          policy.leave_types.forEach(lt => {
+            const existing = balMap[lt.leave_type_id];
+            const targetEntitled = lt.days_per_year;
+            
+            if (existing) {
+              if (existing.entitled !== targetEntitled) {
+                existing.entitled = targetEntitled;
+                recordUpdated = true;
+              }
+              updatedBalancesList.push(existing);
+            } else {
+              updatedBalancesList.push({
+                leave_type_id: lt.leave_type_id,
+                entitled: targetEntitled,
+                taken: 0,
+                pending: 0,
+                carried_forward: 0
+              });
+              recordUpdated = true;
+            }
+          });
+
+          if (recordUpdated) {
+            record.balances = updatedBalancesList;
+            await record.save();
+            anyUpdated = true;
+          }
+        }
+        if (anyUpdated) {
+          balances = await LeaveBalance.find(query).populate('staff_id', 'f_name l_name staff_id position');
+        }
+      }
+    }
+
     res.json({ success: true, data: balances });
   } catch (error) {
     console.error("Error fetching balances:", error);
@@ -35,7 +109,7 @@ router.post('/balances/init', authMiddleware, async (req, res) => {
     // Build initial balances based on policy
     const balances = policy.leave_types.map(lt => ({
       leave_type_id: lt.leave_type_id,
-      entitled: lt.accrual_type === 'upfront' ? lt.days_per_year : 0, // Monthly will accrue via cron/generation
+      entitled: lt.days_per_year,
       taken: 0,
       pending: 0,
       carried_forward: 0
@@ -56,13 +130,16 @@ router.post('/balances/init', authMiddleware, async (req, res) => {
 
 // ── Leave Requests ────────────────────────────────────────────────────────────
 
-// Get all leave requests (Admin view)
+// Get all leave requests (Admin view gets all, Staff view gets own)
 router.get('/requests', authMiddleware, async (req, res) => {
   try {
     const userId = String(req.user._id || req.user);
     const status = req.query.status; // Optional filter
     
     let query = { user_id: userId };
+    if (req.user && req.user.Role === 'Staff') {
+      query.staff_id = req.user.staff_id;
+    }
     if (status && status !== 'all') query.status = status;
 
     const requests = await LeaveRequest.find(query)
@@ -76,11 +153,23 @@ router.get('/requests', authMiddleware, async (req, res) => {
   }
 });
 
-// Apply for leave (Manager applying for staff, or staff portal)
+// Apply for leave (Staff applying for themselves, or Admin applying for staff)
 router.post('/requests', authMiddleware, async (req, res) => {
   try {
     const userId = String(req.user._id || req.user);
-    const { staff_id, leave_type_id, from_date, to_date, days, is_half_day, half_day_session, reason } = req.body;
+    let { staff_id, leave_type_id, from_date, to_date, days, is_half_day, half_day_session, reason } = req.body;
+
+    if (req.user && req.user.Role === 'Staff') {
+      staff_id = req.user.staff_id;
+    }
+
+    if (!staff_id) {
+      return res.status(400).json({ success: false, message: "Staff ID is required" });
+    }
+
+    if (!is_half_day) {
+      half_day_session = "none";
+    }
 
     const newReq = await LeaveRequest.create({
       user_id: userId,
@@ -108,7 +197,7 @@ router.post('/requests', authMiddleware, async (req, res) => {
   }
 });
 
-// Approve / Reject Leave
+// Approve / Reject Leave (Admin/Manager only)
 router.put('/requests/:id/status', authMiddleware, async (req, res) => {
   try {
     const userId = String(req.user._id || req.user);
