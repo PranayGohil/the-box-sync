@@ -1308,19 +1308,15 @@ export default function ManageAttendance() {
                   />
                   <Form.Text className="text-muted" style={{ fontSize: '0.75rem' }}>Check-out after this = overtime</Form.Text>
                 </Col>
-                <Col xs={12} sm={6} md={3} className="d-flex align-items-end">
-                  <Button
-                    variant="none"
-                    className="custom-btn-solid w-100 d-flex align-items-center justify-content-center gap-2"
-                    onClick={handleSaveAttSettings}
-                    disabled={savingAttSettings}
-                    style={{ height: '42px' }}
-                  >
-                    {savingAttSettings ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="save" size={16} />}
-                    {savingAttSettings ? 'Saving...' : 'Save Settings'}
-                  </Button>
-                </Col>
               </Row>
+
+              <div className="mt-4 pt-3 border-top d-flex flex-wrap gap-3" style={{ fontSize: '0.8rem' }}>
+                <span className="text-muted">Current config:</span>
+                <span className="fw-semibold text-dark">⏰ Shift: {attSettings.shift_start_time} → {attSettings.shift_end_time}</span>
+                <span className="fw-semibold" style={{ color: '#dc2626' }}>🔴 Late after: {attSettings.late_threshold_minutes} min grace</span>
+                <span className="fw-semibold" style={{ color: '#7c3aed' }}>⚡ OT after: {attSettings.shift_end_time}</span>
+                <span className="fw-semibold text-dark">🌐 Network Restrict: {attSettings.network_restrictions.is_enabled ? 'Enabled' : 'Disabled'}</span>
+              </div>
 
               <div className="mt-4 pt-4 border-top">
                 <h6 className="fw-bold mb-1 text-dark">Network Restrictions (Office Wi-Fi)</h6>
@@ -1387,12 +1383,17 @@ export default function ManageAttendance() {
                 </Row>
               </div>
 
-              <div className="mt-4 pt-3 border-top d-flex flex-wrap gap-3" style={{ fontSize: '0.8rem' }}>
-                <span className="text-muted">Current config:</span>
-                <span className="fw-semibold text-dark">⏰ Shift: {attSettings.shift_start_time} → {attSettings.shift_end_time}</span>
-                <span className="fw-semibold" style={{ color: '#dc2626' }}>🔴 Late after: {attSettings.late_threshold_minutes} min grace</span>
-                <span className="fw-semibold" style={{ color: '#7c3aed' }}>⚡ OT after: {attSettings.shift_end_time}</span>
-                <span className="fw-semibold text-dark">🌐 Network Restrict: {attSettings.network_restrictions.is_enabled ? 'Enabled' : 'Disabled'}</span>
+              <div className="mt-4 pt-4 border-top text-end">
+                <Button
+                  variant="none"
+                  className="custom-btn-solid d-inline-flex align-items-center justify-content-center gap-2 px-5"
+                  onClick={handleSaveAttSettings}
+                  disabled={savingAttSettings}
+                  style={{ height: '42px' }}
+                >
+                  {savingAttSettings ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="save" size={16} />}
+                  {savingAttSettings ? 'Saving...' : 'Save Settings'}
+                </Button>
               </div>
             </Card.Body>
           </Card>
