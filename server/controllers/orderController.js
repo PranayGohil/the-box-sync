@@ -321,6 +321,26 @@ const orderController = async (req, res) => {
     }
 
     if (orderInfo.order_status === "Cancelled") {
+      let isDeleted = false;
+      if (orderId) {
+        const existingOrder = await Order.findById(orderId);
+        if (existingOrder && existingOrder.order_status === "Save" && existingOrder.order_items.every(item => item.status === "Pending")) {
+          await Order.findByIdAndDelete(orderId);
+          isDeleted = true;
+        }
+      }
+
+      if (isDeleted) {
+        if (orderInfo.order_type === "Dine In" && tableId) {
+          await clearTable(tableId);
+        }
+        return res.status(200).json({
+          status: "success",
+          message: "Order deleted successfully",
+          deleted: true,
+        });
+      }
+
       orderInfo.order_items = orderInfo.order_items.map((item) => ({
         ...item,
         status: "Cancelled",
@@ -511,6 +531,34 @@ const dineInController = async (req, res) => {
 
     // ✅ 3. Handle order cancellation
     if (orderInfo.order_status === "Cancelled") {
+      let isDeleted = false;
+      if (orderId) {
+        const existingOrder = await Order.findById(orderId);
+        if (existingOrder && existingOrder.order_status === "Save" && existingOrder.order_items.every(item => item.status === "Pending")) {
+          await Order.findByIdAndDelete(orderId);
+          isDeleted = true;
+        }
+      }
+
+      if (isDeleted) {
+        // Clear the table
+        await clearTable(tableId);
+
+        const io = req.app.get("io");
+        const connectedUsers = req.app.get("connectedUsers");
+
+        const key = `${req.user._id}_KOT`; // or however you store admin socket
+        if (io && connectedUsers && connectedUsers[key]) {
+          io.to(connectedUsers[key]).emit("kot_update");
+        }
+
+        return res.status(200).json({
+          status: "success",
+          message: "Order deleted successfully",
+          deleted: true,
+        });
+      }
+
       orderInfo.order_items = orderInfo.order_items.map((item) => ({
         ...item,
         status: "Cancelled",
@@ -747,6 +795,31 @@ const takeawayController = async (req, res) => {
 
     // ✅ 3. Handle order cancellation
     if (orderInfo.order_status === "Cancelled") {
+      let isDeleted = false;
+      if (orderId) {
+        const existingOrder = await Order.findById(orderId);
+        if (existingOrder && existingOrder.order_status === "Save" && existingOrder.order_items.every(item => item.status === "Pending")) {
+          await Order.findByIdAndDelete(orderId);
+          isDeleted = true;
+        }
+      }
+
+      if (isDeleted) {
+        const io = req.app.get("io");
+        const connectedUsers = req.app.get("connectedUsers");
+
+        const key = `${req.user._id}_KOT`; // or however you store admin socket
+        if (io && connectedUsers && connectedUsers[key]) {
+          io.to(connectedUsers[key]).emit("kot_update");
+        }
+
+        return res.status(200).json({
+          status: "success",
+          message: "Order deleted successfully",
+          deleted: true,
+        });
+      }
+
       orderInfo.order_items = orderInfo.order_items.map((item) => ({
         ...item,
         status: "Cancelled",
@@ -969,6 +1042,31 @@ const deliveryController = async (req, res) => {
 
     // ✅ 3. Handle order cancellation
     if (orderInfo.order_status === "Cancelled") {
+      let isDeleted = false;
+      if (orderId) {
+        const existingOrder = await Order.findById(orderId);
+        if (existingOrder && existingOrder.order_status === "Save" && existingOrder.order_items.every(item => item.status === "Pending")) {
+          await Order.findByIdAndDelete(orderId);
+          isDeleted = true;
+        }
+      }
+
+      if (isDeleted) {
+        const io = req.app.get("io");
+        const connectedUsers = req.app.get("connectedUsers");
+
+        const key = `${req.user._id}_KOT`; // or however you store admin socket
+        if (io && connectedUsers && connectedUsers[key]) {
+          io.to(connectedUsers[key]).emit("kot_update");
+        }
+
+        return res.status(200).json({
+          status: "success",
+          message: "Order deleted successfully",
+          deleted: true,
+        });
+      }
+
       orderInfo.order_items = orderInfo.order_items.map((item) => ({
         ...item,
         status: "Cancelled",
@@ -1194,6 +1292,23 @@ const deliveryFromSiteController = async (req, res) => {
 
     // ✅ 3. Handle order cancellation
     if (orderInfo.order_status === "Cancelled") {
+      let isDeleted = false;
+      if (orderId) {
+        const existingOrder = await Order.findById(orderId);
+        if (existingOrder && existingOrder.order_status === "Save" && existingOrder.order_items.every(item => item.status === "Pending")) {
+          await Order.findByIdAndDelete(orderId);
+          isDeleted = true;
+        }
+      }
+
+      if (isDeleted) {
+        return res.status(200).json({
+          status: "success",
+          message: "Order deleted successfully",
+          deleted: true,
+        });
+      }
+
       orderInfo.order_items = orderInfo.order_items.map((item) => ({
         ...item,
         status: "Cancelled",

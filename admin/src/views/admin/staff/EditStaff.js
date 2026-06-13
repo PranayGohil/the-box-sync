@@ -11,6 +11,7 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import ImageCropperModal from 'components/cropper/ImageCropperModal';
 
 const EditStaff = () => {
   const title = 'Edit Staff';
@@ -26,7 +27,6 @@ const EditStaff = () => {
   const history = useHistory();
   const [loading, setLoading] = useState({ initial: true, submitting: false });
   const [fileUploadError, setFileUploadError] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [frontImagePreview, setFrontImagePreview] = useState(null);
   const [backImagePreview, setBackImagePreview] = useState(null);
@@ -38,6 +38,13 @@ const EditStaff = () => {
     photo: false,
     front_image: false,
     back_image: false,
+  });
+  const [cropperState, setCropperState] = useState({
+    show: false,
+    imageSrc: '',
+    fieldName: '',
+    setPreview: null,
+    aspect: undefined,
   });
 
 
@@ -102,9 +109,6 @@ const EditStaff = () => {
       .required('Phone number is required')
       .matches(/^[0-9]{10}$/, 'Phone number must be 10 digits'),
     email: Yup.string().required('Email is required').email('Enter a valid email address'),
-    password: Yup.string()
-      .min(6, 'Password must be at least 6 characters')
-      .notRequired(),
     salary: Yup.number().required('Salary is required').positive('Salary must be a positive number'),
     position: Yup.string().required('Position is required'),
 
@@ -120,7 +124,7 @@ const EditStaff = () => {
         return isFileObject(value) ? allowedTypes.includes(value.type) : true;
       }),
 
-    document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Pan Card', 'Voter Card'], 'Invalid document type'),
+    document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Aadhar Card', 'Pan Card', 'Voter Card', 'Voter ID Card', 'Driving License', 'Passport'], 'Invalid document type'),
 
     id_number: Yup.string()
       .required('ID number is required')
@@ -129,13 +133,13 @@ const EditStaff = () => {
         const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
         const voterRegex = /^[A-Z]{3}[0-9]{7}$/;
 
-        if (docType === 'National Identity Card') {
+        if (docType === 'National Identity Card' || docType === 'Aadhar Card') {
           return schema.matches(aadharRegex, 'Aadhar number must be 12 digits (format: XXXX XXXX XXXX)');
         }
         if (docType === 'Pan Card') {
           return schema.matches(panRegex, 'PAN card format must be ABCDE1234F (5 letters, 4 digits, 1 letter)');
         }
-        if (docType === 'Voter Card') {
+        if (docType === 'Voter Card' || docType === 'Voter ID Card') {
           return schema.matches(voterRegex, 'Voter ID format must be ABC1234567 (3 letters, 7 digits)');
         }
         return schema;
@@ -155,7 +159,7 @@ const EditStaff = () => {
 
     back_image: Yup.mixed()
       .when('document_type', (docType, schema) => {
-        if (docType === 'National Identity Card') {
+        if (docType === 'National Identity Card' || docType === 'Aadhar Card') {
           return schema.test('required-or-existing', 'Back ID image is required for Aadhar card', (value) => {
             if (!value) return false;
             if (typeof value === 'string') return true;
@@ -185,7 +189,6 @@ const EditStaff = () => {
       city: '',
       phone_no: '',
       email: '',
-      password: '',
       salary: '',
       position: '',
       photo: '',
@@ -442,13 +445,34 @@ const EditStaff = () => {
     });
   };
 
-  const handleFileChange = async (fieldName, file, setPreview) => {
+  const handleFileChange = (fieldName, file, setPreview, aspect = undefined) => {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      setCropperState({
+        show: true,
+        imageSrc: reader.result?.toString() || "",
+        fieldName,
+        setPreview,
+        aspect,
+      });
+    });
+    reader.readAsDataURL(file);
+
+    // To clear the file input so the same file can be selected again if cancelled
+    const fileInput = document.getElementById(`${fieldName.replace('_', '-')}-upload`);
+    if (fileInput) fileInput.value = '';
+  };
+
+  const handleCropComplete = async (croppedFile) => {
+    const { fieldName, setPreview } = cropperState;
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: true }));
 
-    let processedFile = file;
-    if (file) {
+    let processedFile = croppedFile;
+    if (croppedFile) {
       try {
-        processedFile = await convertToWebPAndResize(file);
+        processedFile = await convertToWebPAndResize(croppedFile);
       } catch (err) {
         console.error('Failed to process image:', err);
       }
@@ -462,12 +486,12 @@ const EditStaff = () => {
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: false }));
   };
 
-  
+
 
   if (loading.initial) {
     return (
       <div className="container-fluid py-5">
-        
+
         <HtmlHead title={title} description={description} />
         <div className="d-flex flex-column align-items-center justify-content-center py-5 mt-5">
           <Spinner animation="border" style={{ color: '#1ea8e7' }} className="mb-3" />
@@ -481,7 +505,7 @@ const EditStaff = () => {
     <div className="edit-staff-staff-container pb-5">
       <style>{calendarStyles}</style>
       <HtmlHead title={title} description={description} />
-      
+
       <div className="container-fluid px-lg-5">
         <div className="edit-staff-page-title-container mb-4 mt-5 mt-md-n3">
           <Row className="g-3 align-items-center">
@@ -499,570 +523,574 @@ const EditStaff = () => {
           </Row>
         </div>
 
-      {fileUploadError && (
-        <Alert variant="danger" className="mb-4 edit-staff-glass-card border-0">
-          <CsLineIcons icon="error" className="me-2" />
-          {fileUploadError}
-        </Alert>
-      )}
+        {fileUploadError && (
+          <Alert variant="danger" className="mb-4 edit-staff-glass-card border-0">
+            <CsLineIcons icon="error" className="me-2" />
+            {fileUploadError}
+          </Alert>
+        )}
 
-      <Form onSubmit={handleSubmit}>
-        <Row className="g-4">
-          {/* Main Content Column */}
-          <Col lg={8}>
-            {/* Personal Details Card */}
-            <Card className="edit-staff-glass-card border-0 mb-4">
-              <Card.Body className="p-4">
-                <div className="edit-staff-section-header mb-4">
-                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <CsLineIcons icon="user" size="20" className="text-primary" />
-                    Personal Details
-                  </h5>
-                </div>
+        <Form onSubmit={handleSubmit}>
+          <Row className="g-4">
+            {/* Main Content Column */}
+            <Col lg={8}>
+              {/* Personal Details Card */}
+              <Card className="edit-staff-glass-card border-0 mb-4">
+                <Card.Body className="p-4">
+                  <div className="edit-staff-section-header mb-4">
+                    <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                      <CsLineIcons icon="user" size="20" className="text-primary" />
+                      Personal Details
+                    </h5>
+                  </div>
 
-                <Row className="g-3">
-                  <Col md={4}>
-                    <Form.Group>
-                      <Form.Label className="small fw-bold">Staff ID</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="staff_id"
-                        value={values.staff_id}
-                        onChange={handleChange}
-                        isInvalid={touched.staff_id && errors.staff_id}
-                        className="bg-light border-0"
-                        readOnly
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.staff_id}</Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-                  <Col md={4}>
-                    <Form.Group>
-                      <Form.Label className="small fw-bold">First Name</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="f_name"
-                        value={values.f_name}
-                        onChange={handleChange}
-                        isInvalid={touched.f_name && errors.f_name}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.f_name}</Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-                  <Col md={4}>
-                    <Form.Group>
-                      <Form.Label className="small fw-bold">Last Name</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="l_name"
-                        value={values.l_name}
-                        onChange={handleChange}
-                        isInvalid={touched.l_name && errors.l_name}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.l_name}</Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-                </Row>
-
-                <Row className="g-3 mt-1">
-                  <Col md={4}>
-                    <Form.Group>
-                      <Form.Label className="small fw-bold">Gender</Form.Label>
-                      <Form.Select
-                        name="gender"
-                        value={values.gender}
-                        onChange={handleChange}
-                        isInvalid={touched.gender && errors.gender}
-                        disabled={loading.submitting}
-                      >
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                      </Form.Select>
-                      <Form.Control.Feedback type="invalid">{errors.gender}</Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-
-                  <Col md={4}>
-                    <Form.Group>
-                      <Form.Label className="small fw-bold">Birthday</Form.Label>
-                      <div className="position-relative date-input-container">
+                  <Row className="g-3">
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold">Staff ID</Form.Label>
                         <Form.Control
-                          ref={birthDateRef}
-                          type="date"
-                          name="birth_date"
-                          value={values.birth_date}
+                          type="text"
+                          name="staff_id"
+                          value={values.staff_id}
                           onChange={handleChange}
-                          isInvalid={touched.birth_date && errors.birth_date}
-                          disabled={loading.submitting}
-                          className="pe-5"
+                          isInvalid={touched.staff_id && errors.staff_id}
+                          className="bg-light border-0"
+                          readOnly
                         />
-                        <div 
-                          className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
-                          style={{ cursor: 'pointer', zIndex: 5 }}
-                          onClick={() => birthDateRef.current?.showPicker()}
+                        <Form.Control.Feedback type="invalid">{errors.staff_id}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold">First Name</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="f_name"
+                          value={values.f_name}
+                          onChange={handleChange}
+                          isInvalid={touched.f_name && errors.f_name}
+                          disabled={loading.submitting}
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.f_name}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold">Last Name</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="l_name"
+                          value={values.l_name}
+                          onChange={handleChange}
+                          isInvalid={touched.l_name && errors.l_name}
+                          disabled={loading.submitting}
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.l_name}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  <Row className="g-3 mt-1">
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold">Gender</Form.Label>
+                        <Form.Select
+                          name="gender"
+                          value={values.gender}
+                          onChange={handleChange}
+                          isInvalid={touched.gender && errors.gender}
+                          disabled={loading.submitting}
                         >
-                          <CsLineIcons icon="calendar" size="18" className="text-primary" />
+                          <option value="">Select Gender</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                        </Form.Select>
+                        <Form.Control.Feedback type="invalid">{errors.gender}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold">Birthday</Form.Label>
+                        <div className="position-relative date-input-container">
+                          <Form.Control
+                            ref={birthDateRef}
+                            type="date"
+                            name="birth_date"
+                            value={values.birth_date}
+                            onChange={handleChange}
+                            isInvalid={touched.birth_date && errors.birth_date}
+                            disabled={loading.submitting}
+                            className="pe-5"
+                          />
+                          <div
+                            className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
+                            style={{ cursor: 'pointer', zIndex: 5 }}
+                            onClick={() => birthDateRef.current?.showPicker()}
+                          >
+                            <CsLineIcons icon="calendar" size="18" className="text-primary" />
+                          </div>
                         </div>
-                      </div>
-                      {touched.birth_date && errors.birth_date && (
-                        <div className="text-danger mt-1 small">{errors.birth_date}</div>
-                      )}
-                    </Form.Group>
-                  </Col>
-                  <Col md={4}>
-                    <Form.Group>
-                      <Form.Label className="small fw-bold">Joining Date</Form.Label>
-                      <div className="position-relative date-input-container">
-                        <Form.Control
-                          ref={joiningDateRef}
-                          type="date"
-                          name="joining_date"
-                          value={values.joining_date}
-                          onChange={handleChange}
-                          isInvalid={touched.joining_date && errors.joining_date}
-                          disabled={loading.submitting}
-                          className="pe-5"
-                        />
-                        <div 
-                          className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
-                          style={{ cursor: 'pointer', zIndex: 5 }}
-                          onClick={() => joiningDateRef.current?.showPicker()}
-                        >
-                          <CsLineIcons icon="calendar" size="18" className="text-primary" />
+                        {touched.birth_date && errors.birth_date && (
+                          <div className="text-danger mt-1 small">{errors.birth_date}</div>
+                        )}
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold">Joining Date</Form.Label>
+                        <div className="position-relative date-input-container">
+                          <Form.Control
+                            ref={joiningDateRef}
+                            type="date"
+                            name="joining_date"
+                            value={values.joining_date}
+                            onChange={handleChange}
+                            isInvalid={touched.joining_date && errors.joining_date}
+                            disabled={loading.submitting}
+                            className="pe-5"
+                          />
+                          <div
+                            className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
+                            style={{ cursor: 'pointer', zIndex: 5 }}
+                            onClick={() => joiningDateRef.current?.showPicker()}
+                          >
+                            <CsLineIcons icon="calendar" size="18" className="text-primary" />
+                          </div>
                         </div>
-                      </div>
-                      {touched.joining_date && errors.joining_date && (
-                        <div className="text-danger mt-1 small">{errors.joining_date}</div>
-                      )}
-                    </Form.Group>
-                  </Col>
-                </Row>
+                        {touched.joining_date && errors.joining_date && (
+                          <div className="text-danger mt-1 small">{errors.joining_date}</div>
+                        )}
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-                <Row className="g-3 mt-1">
-                  <Col md={12}>
-                    <Form.Group>
-                      <Form.Label className="small fw-bold">Address</Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        rows={2}
-                        name="address"
-                        value={values.address}
-                        onChange={handleChange}
-                        isInvalid={touched.address && errors.address}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.address}</Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-                </Row>
-
-                <Row className="g-3 mt-1">
-                  <Col md={3} xs={12}>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="small fw-bold">Country</Form.Label>
-                      <Select
-                        classNamePrefix="react-select"
-                        options={countries.map((country) => ({ label: country.name, value: country.name }))}
-                        value={getSelectedCountryOption()}
-                        onChange={(selected) => handleCountryChange(selected)}
-                        isDisabled={loading.submitting}
-                        placeholder="Select Country"
-                        menuPortalTarget={document.body}
-                        styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
-                      />
-                      {touched.country && errors.country && <div className="text-danger mt-1 small fw-bold">{errors.country}</div>}
-                    </Form.Group>
-                  </Col>
-                  <Col md={3} xs={12}>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="small fw-bold">State</Form.Label>
-                      <Select
-                        classNamePrefix="react-select"
-                        options={states.map((state) => ({ label: state.name, value: state.name }))}
-                        value={getSelectedStateOption()}
-                        onChange={(selected) => handleStateChange(selected)}
-                        isDisabled={!values.country || loading.submitting}
-                        placeholder="Select State"
-                        menuPortalTarget={document.body}
-                        styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
-                      />
-                      {touched.state && errors.state && <div className="text-danger mt-1 small fw-bold">{errors.state}</div>}
-                    </Form.Group>
-                  </Col>
-                  <Col md={3} xs={12}>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="small fw-bold">City</Form.Label>
-                      <Select
-                        classNamePrefix="react-select"
-                        options={cities.map((city) => ({ label: city.name, value: city.name }))}
-                        value={values.city ? { label: values.city, value: values.city } : null}
-                        onChange={(selected) => setFieldValue('city', selected ? selected.value : '')}
-                        isDisabled={!values.state || loading.submitting}
-                        placeholder="Select City"
-                        menuPortalTarget={document.body}
-                        styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
-                      />
-                      {touched.city && errors.city && <div className="text-danger mt-1 small fw-bold">{errors.city}</div>}
-                    </Form.Group>
-                  </Col>
-                  <Col md={3} xs={12}>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="small fw-bold">Pincode</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="pincode"
-                        placeholder="e.g. 400001"
-                        value={values.pincode}
-                        onChange={handleChange}
-                        isInvalid={touched.pincode && errors.pincode}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.pincode}</Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-                </Row>
-
-                <Row className="g-3 mt-1">
-                  <Col md={4} xs={12}>
-                    <Form.Group>
-                      <Form.Label className="small fw-bold">Contact No.</Form.Label>
-                      <Form.Control
-                        type="number"
-                        name="phone_no"
-                        value={values.phone_no}
-                        onChange={handleChange}
-                        isInvalid={touched.phone_no && errors.phone_no}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.phone_no}</Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-                  <Col md={4} xs={12}>
-                    <Form.Group>
-                      <Form.Label className="small fw-bold">Email Address</Form.Label>
-                      <Form.Control
-                        type="email"
-                        name="email"
-                        value={values.email}
-                        onChange={handleChange}
-                        isInvalid={touched.email && errors.email}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-                  <Col md={4} xs={12}>
-                    <Form.Group>
-                      <Form.Label className="small fw-bold">Password</Form.Label>
-                      <div className="position-relative">
+                  <Row className="g-3 mt-1">
+                    <Col md={12}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold">Address</Form.Label>
                         <Form.Control
-                          type={showPassword ? 'text' : 'password'}
-                          name="password"
-                          autoComplete="new-password"
-                          placeholder="Leave blank to keep current"
-                          value={values.password}
+                          as="textarea"
+                          rows={2}
+                          name="address"
+                          value={values.address}
                           onChange={handleChange}
-                          isInvalid={touched.password && errors.password}
+                          isInvalid={touched.address && errors.address}
                           disabled={loading.submitting}
-                          style={{ paddingRight: '40px' }}
                         />
-                        <Button
-                          variant="link"
-                          className="position-absolute end-0 top-50 translate-middle-y me-2 p-0 text-muted"
-                          style={{ zIndex: 5, textDecoration: 'none' }}
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="18" />
-                        </Button>
-                      </div>
-                      {touched.password && errors.password && (
-                        <div className="text-danger mt-1 small">{errors.password}</div>
-                      )}
-                    </Form.Group>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
- 
-            {/* Employment & Payroll Section */}
-            <Card className="edit-staff-glass-card border-0 mb-4">
-              <Card.Body className="p-4">
-                <div className="edit-staff-section-header mb-4">
-                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <CsLineIcons icon="briefcase" size="20" className="text-primary" />
-                    Employment & Payroll
-                  </h5>
-                </div>
- 
-                <Row className="g-3">
-                  <Col md={6} xs={12}>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="small fw-bold">Job Position</Form.Label>
-                      <CreatableSelect
-                        isClearable
-                        isDisabled={loading.submitting}
-                        options={positionOptions}
-                        value={values.position ? { label: values.position, value: values.position } : null}
-                        onChange={(selected) => setFieldValue('position', selected ? selected.value : '')}
-                        onBlur={() => formik.setFieldTouched('position', true)}
-                        placeholder="Select or type..."
-                        classNamePrefix="react-select"
-                        menuPortalTarget={document.body}
-                        styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
-                      />
-                      {touched.position && errors.position && (
-                        <div className="text-danger mt-1 small fw-bold">{errors.position}</div>
-                      )}
-                    </Form.Group>
-                  </Col>
-                  <Col md={6} xs={12}>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="small fw-bold">Salary (Base)</Form.Label>
-                      <div className="input-group">
-                        <span className="input-group-text bg-light border-end-0">₹</span>
+                        <Form.Control.Feedback type="invalid">{errors.address}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  <Row className="g-3 mt-1">
+                    <Col md={3} xs={12}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="small fw-bold">Country</Form.Label>
+                        <Select
+                          classNamePrefix="react-select"
+                          options={countries.map((country) => ({ label: country.name, value: country.name }))}
+                          value={getSelectedCountryOption()}
+                          onChange={(selected) => handleCountryChange(selected)}
+                          isDisabled={loading.submitting}
+                          placeholder="Select Country"
+                          menuPortalTarget={document.body}
+                          styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                        />
+                        {touched.country && errors.country && <div className="text-danger mt-1 small fw-bold">{errors.country}</div>}
+                      </Form.Group>
+                    </Col>
+                    <Col md={3} xs={12}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="small fw-bold">State</Form.Label>
+                        <Select
+                          classNamePrefix="react-select"
+                          options={states.map((state) => ({ label: state.name, value: state.name }))}
+                          value={getSelectedStateOption()}
+                          onChange={(selected) => handleStateChange(selected)}
+                          isDisabled={!values.country || loading.submitting}
+                          placeholder="Select State"
+                          menuPortalTarget={document.body}
+                          styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                        />
+                        {touched.state && errors.state && <div className="text-danger mt-1 small fw-bold">{errors.state}</div>}
+                      </Form.Group>
+                    </Col>
+                    <Col md={3} xs={12}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="small fw-bold">City</Form.Label>
+                        <Select
+                          classNamePrefix="react-select"
+                          options={cities.map((city) => ({ label: city.name, value: city.name }))}
+                          value={values.city ? { label: values.city, value: values.city } : null}
+                          onChange={(selected) => setFieldValue('city', selected ? selected.value : '')}
+                          isDisabled={!values.state || loading.submitting}
+                          placeholder="Select City"
+                          menuPortalTarget={document.body}
+                          styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                        />
+                        {touched.city && errors.city && <div className="text-danger mt-1 small fw-bold">{errors.city}</div>}
+                      </Form.Group>
+                    </Col>
+                    <Col md={3} xs={12}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="small fw-bold">Pincode</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="pincode"
+                          placeholder="e.g. 400001"
+                          value={values.pincode}
+                          onChange={handleChange}
+                          isInvalid={touched.pincode && errors.pincode}
+                          disabled={loading.submitting}
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.pincode}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  <Row className="g-3 mt-1">
+                    <Col md={6} xs={12}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold">Contact No.</Form.Label>
                         <Form.Control
                           type="number"
-                          name="salary"
-                          placeholder="0.00"
-                          value={values.salary}
+                          name="phone_no"
+                          value={values.phone_no}
                           onChange={handleChange}
-                          isInvalid={touched.salary && errors.salary}
+                          isInvalid={touched.phone_no && errors.phone_no}
                           disabled={loading.submitting}
                         />
-                        <Form.Control.Feedback type="invalid">{errors.salary}</Form.Control.Feedback>
-                      </div>
-                    </Form.Group>
-                  </Col>
-
-                </Row>
-
-
-              </Card.Body>
-            </Card>
-          </Col>
-
-          {/* Sidebar Content Column */}
-          <Col lg={4}>
-            {/* Profile Photo Card */}
-            <Card className="edit-staff-glass-card border-0 mb-4 text-center">
-              <Card.Body className="p-4">
-                <div className="edit-staff-section-header text-start mb-3">
-                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <CsLineIcons icon="camera" size="20" className="text-primary" />
-                    Profile Photo
-                  </h5>
-                </div>
-
-                <div className="mb-3 d-flex justify-content-center">
-                  <div 
-                    className="rounded-circle border border-3 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center"
-                    style={{ width: '150px', height: '150px' }}
-                  >
-                    {photoPreview ? (
-                      <img src={photoPreview} alt="Staff" className="w-100 h-100 object-fit-cover" />
-                    ) : (
-                      <CsLineIcons icon="user" size="64" className="text-muted opacity-20" />
-                    )}
-                  </div>
-                </div>
-
-                <input
-                  type="file"
-                  id="photo-upload"
-                  className="d-none"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) handleFileChange('photo', file, setPhotoPreview);
-                  }}
-                  disabled={loading.submitting || uploadingFiles.photo}
-                />
-                <Button 
-                  as="label" 
-                  htmlFor="photo-upload" 
-                  className="edit-staff-custom-btn-outline px-4 mx-auto"
-                  style={{ maxWidth: 'fit-content' }}
-                  disabled={loading.submitting || uploadingFiles.photo}
-                >
-                  {uploadingFiles.photo ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
-                  {photoPreview ? 'Change Photo' : 'Upload Photo'}
-                </Button>
-              </Card.Body>
-            </Card>
-
-            {/* Identification Card */}
-            <Card className="edit-staff-glass-card border-0 mb-4">
-              <Card.Body className="p-4">
-                <div className="edit-staff-section-header mb-4">
-                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <CsLineIcons icon="badge" size="20" className="text-primary" />
-                    Identification
-                  </h5>
-                </div>
-
-                <Form.Group className="mb-3">
-                  <Select
-                    classNamePrefix="react-select"
-                    options={[
-                      { label: 'National Identity Card', value: 'National Identity Card' },
-                      { label: 'Pan Card', value: 'Pan Card' },
-                      { label: 'Voter Card', value: 'Voter Card' },
-                    ]}
-                    value={values.document_type ? { label: values.document_type, value: values.document_type } : null}
-                    onChange={(selected) => setFieldValue('document_type', selected ? selected.value : '')}
-                    placeholder="Select ID Type"
-                    isDisabled={loading.submitting}
-                    menuPortalTarget={document.body}
-                    styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
-                  />
-                  {touched.document_type && errors.document_type && <div className="text-danger mt-1 small fw-bold">{errors.document_type}</div>}
-                </Form.Group>
-
-                <Form.Group className="mb-4">
-                  <Form.Label className="small fw-bold">Document Number</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="id_number"
-                    value={values.id_number}
-                    onChange={handleChange}
-                    isInvalid={touched.id_number && errors.id_number}
-                    disabled={loading.submitting}
-                    placeholder="Enter ID Number"
-                  />
-                  <Form.Control.Feedback type="invalid">{errors.id_number}</Form.Control.Feedback>
-                </Form.Group>
-
-                <div className="id-previews">
-                  <div className="mb-3">
-                    <div className="small text-muted mb-2 fw-bold text-uppercase opacity-50 letter-spacing-1">Front Image</div>
-                    <div className="bg-light rounded-3 p-2 mb-2 text-center border border-dashed" style={{ minHeight: '120px' }}>
-                      {frontImagePreview ? (
-                        <img src={frontImagePreview} alt="Front" className="img-fluid rounded" style={{ maxHeight: '100px' }} />
-                      ) : (
-                        <div className="py-4"><CsLineIcons icon="image" size="32" className="text-muted opacity-20" /></div>
-                      )}
-                    </div>
-                    <input
-                      type="file"
-                      id="front-image-upload"
-                      className="d-none"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) handleFileChange('front_image', file, setFrontImagePreview);
-                      }}
-                    />
-                    <div className="d-flex flex-column gap-3 align-items-start w-100">
-                      <Button 
-                        as="label" 
-                        htmlFor="front-image-upload" 
-                        className="edit-staff-custom-btn-outline px-4"
-                        style={{ maxWidth: 'fit-content' }}
-                        disabled={loading.submitting || uploadingFiles.front_image}
-                      >
-                        {uploadingFiles.front_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
-                        {frontImagePreview ? 'Change Front Image' : 'Upload Front Image'}
-                      </Button>
-                      
-                      {values.document_type !== 'National Identity Card' && (
-                        <Button
-                          className="edit-staff-custom-btn-outline w-100 py-3 mt-2"
-                          type="submit"
+                        <Form.Control.Feedback type="invalid">{errors.phone_no}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                    <Col md={6} xs={12}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold">Email Address</Form.Label>
+                        <Form.Control
+                          type="email"
+                          name="email"
+                          value={values.email}
+                          onChange={handleChange}
+                          isInvalid={touched.email && errors.email}
                           disabled={loading.submitting}
-                        >
-                          {loading.submitting ? (
-                            <>
-                              <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                              Updating...
-                            </>
-                          ) : (
-                            <>
-                              <CsLineIcons icon="save" size="20" className="me-2" />
-                              Update Staff Member
-                            </>
-                          )}
-                        </Button>
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+
+              {/* Employment & Payroll Section */}
+              <Card className="edit-staff-glass-card border-0 mb-4">
+                <Card.Body className="p-4">
+                  <div className="edit-staff-section-header mb-4">
+                    <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                      <CsLineIcons icon="briefcase" size="20" className="text-primary" />
+                      Employment & Payroll
+                    </h5>
+                  </div>
+
+                  <Row className="g-3">
+                    <Col md={6} xs={12}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="small fw-bold">Job Position</Form.Label>
+                        <CreatableSelect
+                          isClearable
+                          isDisabled={loading.submitting}
+                          options={positionOptions}
+                          value={values.position ? { label: values.position, value: values.position } : null}
+                          onChange={(selected) => setFieldValue('position', selected ? selected.value : '')}
+                          onBlur={() => formik.setFieldTouched('position', true)}
+                          placeholder="Select or type..."
+                          classNamePrefix="react-select"
+                          menuPortalTarget={document.body}
+                          styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                        />
+                        {touched.position && errors.position && (
+                          <div className="text-danger mt-1 small fw-bold">{errors.position}</div>
+                        )}
+                      </Form.Group>
+                    </Col>
+                    <Col md={6} xs={12}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="small fw-bold">Salary (Base)</Form.Label>
+                        <div className="input-group">
+                          <span className="input-group-text bg-light border-end-0">₹</span>
+                          <Form.Control
+                            type="number"
+                            name="salary"
+                            placeholder="0.00"
+                            value={values.salary}
+                            onChange={handleChange}
+                            isInvalid={touched.salary && errors.salary}
+                            disabled={loading.submitting}
+                          />
+                          <Form.Control.Feedback type="invalid">{errors.salary}</Form.Control.Feedback>
+                        </div>
+                      </Form.Group>
+                    </Col>
+
+                  </Row>
+
+
+                </Card.Body>
+              </Card>
+            </Col>
+
+            {/* Sidebar Content Column */}
+            <Col lg={4}>
+              {/* Profile Photo Card */}
+              <Card className="edit-staff-glass-card border-0 mb-4 text-center">
+                <Card.Body className="p-4">
+                  <div className="edit-staff-section-header text-start mb-3">
+                    <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                      <CsLineIcons icon="camera" size="20" className="text-primary" />
+                      Profile Photo
+                    </h5>
+                  </div>
+
+                  <div className="mb-3 d-flex justify-content-center">
+                    <div
+                      className="rounded-circle border border-3 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center"
+                      style={{ width: '150px', height: '150px' }}
+                    >
+                      {photoPreview ? (
+                        <img src={photoPreview} alt="Staff" className="w-100 h-100 object-fit-cover" />
+                      ) : (
+                        <CsLineIcons icon="user" size="64" className="text-muted opacity-20" />
                       )}
                     </div>
                   </div>
 
-                  {values.document_type === 'National Identity Card' && (
-                    <div className="mb-2">
-                      <div className="small text-muted mb-2 fw-bold text-uppercase opacity-50 letter-spacing-1">Back Image</div>
+                  <input
+                    type="file"
+                    id="photo-upload"
+                    className="d-none"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) handleFileChange('photo', file, setPhotoPreview, 1);
+                    }}
+                    disabled={loading.submitting || uploadingFiles.photo}
+                  />
+                  <Button
+                    as="label"
+                    htmlFor="photo-upload"
+                    className="edit-staff-custom-btn-outline px-4 mx-auto"
+                    style={{ maxWidth: 'fit-content' }}
+                    disabled={loading.submitting || uploadingFiles.photo}
+                  >
+                    {uploadingFiles.photo ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                    {photoPreview ? 'Change Photo' : 'Upload Photo'}
+                  </Button>
+                </Card.Body>
+              </Card>
+
+              {/* Identification Card */}
+              <Card className="edit-staff-glass-card border-0 mb-4">
+                <Card.Body className="p-4">
+                  <div className="edit-staff-section-header mb-4">
+                    <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                      <CsLineIcons icon="badge" size="20" className="text-primary" />
+                      Identification
+                    </h5>
+                  </div>
+
+                  <Form.Group className="mb-3">
+                    <Select
+                      classNamePrefix="react-select"
+                      options={[
+                        { label: 'Aadhar Card', value: 'Aadhar Card' },
+                        { label: 'PAN Card', value: 'Pan Card' },
+                        { label: 'National Identity Card', value: 'National Identity Card' },
+                        { label: 'Driving License', value: 'Driving License' },
+                        { label: 'Voter ID Card', value: 'Voter ID Card' },
+                        { label: 'Passport', value: 'Passport' },
+                      ]}
+                      value={
+                        values.document_type
+                          ? {
+                            label:
+                              values.document_type === 'National Identity Card'
+                                ? 'National Identity Card'
+                                : values.document_type === 'Aadhar Card'
+                                  ? 'Aadhar Card'
+                                  : values.document_type === 'Pan Card'
+                                    ? 'PAN Card'
+                                    : values.document_type === 'Voter Card'
+                                      ? 'Voter Card'
+                                      : values.document_type === 'Voter ID Card'
+                                        ? 'Voter ID Card'
+                                        : values.document_type === 'Driving License'
+                                          ? 'Driving License'
+                                          : values.document_type === 'Passport'
+                                            ? 'Passport'
+                                            : values.document_type,
+                            value: values.document_type,
+                          }
+                          : null
+                      }
+                      onChange={(selected) => setFieldValue('document_type', selected ? selected.value : '')}
+                      placeholder="Select ID Type"
+                      isDisabled={loading.submitting}
+                      menuPortalTarget={document.body}
+                      styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                    />
+                    {touched.document_type && errors.document_type && <div className="text-danger mt-1 small fw-bold">{errors.document_type}</div>}
+                  </Form.Group>
+
+                  <Form.Group className="mb-4">
+                    <Form.Label className="small fw-bold">Document Number</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="id_number"
+                      value={values.id_number}
+                      onChange={handleChange}
+                      isInvalid={touched.id_number && errors.id_number}
+                      disabled={loading.submitting}
+                      placeholder="Enter ID Number"
+                    />
+                    <Form.Control.Feedback type="invalid">{errors.id_number}</Form.Control.Feedback>
+                  </Form.Group>
+
+                  <div className="id-previews">
+                    <div className="mb-3">
+                      <div className="small text-muted mb-2 fw-bold text-uppercase opacity-50 letter-spacing-1">Front Image</div>
                       <div className="bg-light rounded-3 p-2 mb-2 text-center border border-dashed" style={{ minHeight: '120px' }}>
-                        {backImagePreview ? (
-                          <img src={backImagePreview} alt="Back" className="img-fluid rounded" style={{ maxHeight: '100px' }} />
+                        {frontImagePreview ? (
+                          <img src={frontImagePreview} alt="Front" className="img-fluid rounded" style={{ maxHeight: '100px' }} />
                         ) : (
                           <div className="py-4"><CsLineIcons icon="image" size="32" className="text-muted opacity-20" /></div>
                         )}
                       </div>
                       <input
                         type="file"
-                        id="back-image-upload"
+                        id="front-image-upload"
                         className="d-none"
                         accept="image/*"
                         onChange={(e) => {
                           const file = e.target.files[0];
-                          if (file) handleFileChange('back_image', file, setBackImagePreview);
+                          if (file) handleFileChange('front_image', file, setFrontImagePreview, 1.58);
                         }}
                       />
                       <div className="d-flex flex-column gap-3 align-items-start w-100">
-                        <Button 
-                          as="label" 
-                          htmlFor="back-image-upload" 
+                        <Button
+                          as="label"
+                          htmlFor="front-image-upload"
                           className="edit-staff-custom-btn-outline px-4"
                           style={{ maxWidth: 'fit-content' }}
-                          disabled={loading.submitting || uploadingFiles.back_image}
+                          disabled={loading.submitting || uploadingFiles.front_image}
                         >
-                          {uploadingFiles.back_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
-                          {backImagePreview ? 'Change Back Image' : 'Upload Back Image'}
+                          {uploadingFiles.front_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                          {frontImagePreview ? 'Change Front Image' : 'Upload Front Image'}
                         </Button>
-                        
-                        <Button
-                          className="edit-staff-custom-btn-outline w-100 py-3 mt-2"
-                          type="submit"
-                          disabled={loading.submitting}
-                        >
-                          {loading.submitting ? (
-                            <>
-                              <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                              Updating...
-                            </>
-                          ) : (
-                            <>
-                              <CsLineIcons icon="save" size="20" className="me-2" />
-                              Update Staff Member
-                            </>
-                          )}
-                        </Button>
+
+                        {values.document_type !== 'National Identity Card' && values.document_type !== 'Aadhar Card' && (
+                          <Button
+                            className="edit-staff-custom-btn-outline w-100 py-3 mt-2"
+                            type="submit"
+                            disabled={loading.submitting}
+                          >
+                            {loading.submitting ? (
+                              <>
+                                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                                Updating...
+                              </>
+                            ) : (
+                              <>
+                                <CsLineIcons icon="save" size="20" className="me-2" />
+                                Update Staff Member
+                              </>
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </div>
-                  )}
-                </div>
-              </Card.Body>
+
+                    {(values.document_type === 'National Identity Card' || values.document_type === 'Aadhar Card') && (
+                      <div className="mb-2">
+                        <div className="small text-muted mb-2 fw-bold text-uppercase opacity-50 letter-spacing-1">Back Image</div>
+                        <div className="bg-light rounded-3 p-2 mb-2 text-center border border-dashed" style={{ minHeight: '120px' }}>
+                          {backImagePreview ? (
+                            <img src={backImagePreview} alt="Back" className="img-fluid rounded" style={{ maxHeight: '100px' }} />
+                          ) : (
+                            <div className="py-4"><CsLineIcons icon="image" size="32" className="text-muted opacity-20" /></div>
+                          )}
+                        </div>
+                        <input
+                          type="file"
+                          id="back-image-upload"
+                          className="d-none"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) handleFileChange('back_image', file, setBackImagePreview, 1.58);
+                          }}
+                        />
+                        <div className="d-flex flex-column gap-3 align-items-start w-100">
+                          <Button
+                            as="label"
+                            htmlFor="back-image-upload"
+                            className="edit-staff-custom-btn-outline px-4"
+                            style={{ maxWidth: 'fit-content' }}
+                            disabled={loading.submitting || uploadingFiles.back_image}
+                          >
+                            {uploadingFiles.back_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                            {backImagePreview ? 'Change Back Image' : 'Upload Back Image'}
+                          </Button>
+
+                          <Button
+                            className="edit-staff-custom-btn-outline w-100 py-3 mt-2"
+                            type="submit"
+                            disabled={loading.submitting}
+                          >
+                            {loading.submitting ? (
+                              <>
+                                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                                Updating...
+                              </>
+                            ) : (
+                              <>
+                                <CsLineIcons icon="save" size="20" className="me-2" />
+                                Update Staff Member
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Card.Body>
+              </Card>
+
+            </Col>
+          </Row>
+        </Form>
+
+        {/* Modern Overlay */}
+        {loading.submitting && (
+          <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}>
+            <Card className="edit-staff-glass-card border-0 p-5 shadow-lg text-center" style={{ maxWidth: '400px' }}>
+              <Spinner animation="grow" variant="primary" className="mb-4" />
+              <h4 className="fw-bold">Updating Profile</h4>
+              <p className="text-muted mb-0">Synchronizing records and securing identity documents.</p>
             </Card>
+          </div>
+        )}
 
-          </Col>
-        </Row>
-      </Form>
-
-      {/* Modern Overlay */}
-      {loading.submitting && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}>
-          <Card className="edit-staff-glass-card border-0 p-5 shadow-lg text-center" style={{ maxWidth: '400px' }}>
-            <Spinner animation="grow" variant="primary" className="mb-4" />
-            <h4 className="fw-bold">Updating Profile</h4>
-            <p className="text-muted mb-0">Synchronizing records and securing identity documents.</p>
-          </Card>
-        </div>
-      )}
+        <ImageCropperModal
+          show={cropperState.show}
+          onHide={() => setCropperState({ ...cropperState, show: false })}
+          imageSrc={cropperState.imageSrc}
+          onCropComplete={handleCropComplete}
+          aspect={cropperState.aspect}
+        />
+      </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default EditStaff;

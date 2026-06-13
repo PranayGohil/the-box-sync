@@ -98,15 +98,15 @@ const Profile = () => {
           name: data.name || '',
           logo: data.logo || '',
           email: data.email || '',
-          mobile: data.mobile || '',
+          mobile: data.mobile ? String(data.mobile) : '',
           fssai_no: data.fssai_no || '',
           address: data.address || '',
           country: data.country || '',
           state: data.state || '',
           city: data.city || '',
-          pincode: data.pincode || '',
+          pincode: data.pincode ? String(data.pincode) : '',
         };
-        
+
         setProfile(profileData);
 
         // Pre-load states and cities if data exists
@@ -142,7 +142,7 @@ const Profile = () => {
     setFieldValue('city', '');
     setStates([]);
     setCities([]);
- 
+
     if (countryName) {
       setLoadingStates((prev) => ({ ...prev, states: true }));
       const countryObj = Country.getAllCountries().find(c => c.name === countryName);
@@ -152,13 +152,13 @@ const Profile = () => {
       setLoadingStates((prev) => ({ ...prev, states: false }));
     }
   };
- 
+
   const handleStateChange = (selected, countryName, setFieldValue) => {
     const stateName = selected ? selected.value : '';
     setFieldValue('state', stateName);
     setFieldValue('city', '');
     setCities([]);
- 
+
     if (stateName && countryName) {
       setLoadingStates((prev) => ({ ...prev, cities: true }));
       const countryObj = Country.getAllCountries().find(c => c.name === countryName);
@@ -223,12 +223,12 @@ const Profile = () => {
 
       const updatedData = response.data.user || response.data;
       const { password, ...profileFields } = values;
-      setProfile({ ...profileFields, logo: updatedData.logo || profile.logo });
-      setLogoFile(null);
-      setLogoPreview('');
-      setEditMode(false);
+      // setProfile({ ...profileFields, logo: updatedData.logo || profile.logo });
+      // setLogoFile(null);
+      // setLogoPreview('');
+      // setEditMode(false);
       toast.success('Profile updated successfully!');
-      // window.location.reload(); // Removed to maintain SPA feel, but data is updated in state
+      window.location.reload(); // Removed to maintain SPA feel, but data is updated in state
     } catch (err) {
       console.error('Failed to update profile', err);
       const errorMessage = err.response?.data?.message || 'Failed to update profile. Please try again.';
@@ -254,12 +254,12 @@ const Profile = () => {
     return '';
   };
 
-  
+
 
   if (loading) {
     return (
       <div className="container-fluid py-5">
-        
+
         <HtmlHead title={title} description={description} />
         <div className="d-flex flex-column align-items-center justify-content-center py-5 mt-5">
           <Spinner animation="border" style={{ color: '#1ea8e7' }} className="mb-3" />
@@ -271,9 +271,9 @@ const Profile = () => {
 
   return (
     <div className="container-fluid pb-5">
-      
+
       <HtmlHead title={title} description={description} />
-      
+
       <Row className="g-3 align-items-center mb-4">
         <Col md={7}>
           <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
@@ -393,15 +393,15 @@ const Profile = () => {
                         <Col md={12}>
                           <Form.Group className="mt-2 animate__animated animate__fadeIn">
                             <Form.Label className="small fw-bold text-danger">Current Password * (Required to change Email or Phone Number)</Form.Label>
-                            <Form.Control 
-                              type="password" 
-                              name="password" 
-                              placeholder="Enter your current password to authorize this change" 
-                              value={values.password} 
-                              onChange={handleChange} 
-                              onBlur={handleBlur} 
+                            <Form.Control
+                              type="password"
+                              name="password"
+                              placeholder="Enter your current password to authorize this change"
+                              value={values.password}
+                              onChange={handleChange}
+                              onBlur={handleBlur}
                               disabled={saving}
-                              isInvalid={touched.password && !!errors.password} 
+                              isInvalid={touched.password && !!errors.password}
                             />
                             <Form.Control.Feedback type="invalid">{errors.password}</Form.Control.Feedback>
                           </Form.Group>
@@ -494,6 +494,16 @@ const Profile = () => {
                     </Row>
 
                     {error && <Alert variant="danger" className="mt-4 profile-glass-card border-0">{error}</Alert>}
+                    {editMode && Object.keys(errors).length > 0 && (
+                      <Alert variant="danger" className="mt-4 profile-glass-card border-0">
+                        <div className="fw-bold mb-2">Please correct the following errors:</div>
+                        <ul className="mb-0">
+                          {Object.entries(errors).map(([field, msg]) => (
+                            <li key={field}>{msg}</li>
+                          ))}
+                        </ul>
+                      </Alert>
+                    )}
 
                     {editMode && (
                       <div className="d-flex profile-button-group-responsive gap-3 mt-5">
