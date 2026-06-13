@@ -2,6 +2,25 @@ const StaffAttendance = require("../models/staffAttendanceModel");
 const Staff = require("../models/staffModel");
 const PayrollConfig = require("../models/PayrollConfig");
 
+// Helper: Compute minutes late (positive) given in_time string and org_rules config
+const computeLateMinutes = (inTimeStr, orgRules) => {
+    if (!inTimeStr || !orgRules) return 0;
+    const shiftStart = parseTimeToMinutes(orgRules.shift_start_time || '09:00 AM');
+    const threshold = Number(orgRules.late_threshold_minutes) || 0;
+    const inMins = parseTimeToMinutes(inTimeStr);
+    const lateBy = inMins - (shiftStart + threshold);
+    return lateBy > 0 ? lateBy : 0;
+};
+
+// Helper: Compute overtime hours (positive) given out_time string and org_rules config
+const computeOvertimeHours = (outTimeStr, orgRules) => {
+    if (!outTimeStr || !orgRules) return 0;
+    const shiftEnd = parseTimeToMinutes(orgRules.shift_end_time || '06:00 PM');
+    const outMins = parseTimeToMinutes(outTimeStr);
+    const overtimeMins = outMins - shiftEnd;
+    return overtimeMins > 0 ? Math.round((overtimeMins / 60) * 100) / 100 : 0;
+};
+
 // Time utility: Parses a string like "09:00 AM" or "01:00 PM" into total minutes from midnight
 const parseTimeToMinutes = (timeStr) => {
     if (!timeStr) return 0;
@@ -340,8 +359,22 @@ const checkIn = async (req, res) => {
             }
         }
 
+        // ── Compute late_by_minutes using PayrollConfig ──────────────────
+        try {
+            const config = await PayrollConfig.findOne({ user_id: staff.user_id }).lean();
+            if (config && config.org_rules && record.in_time) {
+                // Only set late on the first check-in of the day (i.e. the daily in_time)
+                const isFirstCheckIn = (record.sessions && record.sessions.length <= 1);
+                if (isFirstCheckIn) {
+                    record.late_by_minutes = computeLateMinutes(record.in_time, config.org_rules);
+                }
+            }
+        } catch (configErr) {
+            console.warn("Could not load PayrollConfig for late check:", configErr.message);
+        }
+
         await record.save();
-        res.status(200).json({ success: true, message: "Check-in successful" });
+        res.status(200).json({ success: true, message: "Check-in successful", data: record });
     } catch (error) {
         console.error("Error in Check-In:", error);
         res.status(500).json({ success: false, message: "Server error" });
@@ -399,8 +432,18 @@ const checkOut = async (req, res) => {
             record.out_time = out_time;
         }
 
+        // ── Compute overtime_hours using PayrollConfig ───────────────────
+        try {
+            const config = await PayrollConfig.findOne({ user_id: staff.user_id }).lean();
+            if (config && config.org_rules && record.out_time) {
+                record.overtime_hours = computeOvertimeHours(record.out_time, config.org_rules);
+            }
+        } catch (configErr) {
+            console.warn("Could not load PayrollConfig for overtime check:", configErr.message);
+        }
+
         await record.save();
-        res.status(200).json({ success: true, message: "Check-out successful" });
+        res.status(200).json({ success: true, message: "Check-out successful", data: record });
     } catch (error) {
         console.error("Error in Check-Out:", error);
         res.status(500).json({ success: false, message: "Server error" });

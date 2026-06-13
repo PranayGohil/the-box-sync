@@ -61,7 +61,7 @@ const getConfig = async (req, res) => {
 const updateConfig = async (req, res) => {
   try {
     const user_id = req.user;
-    const { custom_earnings, custom_deductions, statutory_config, org_rules } = req.body;
+    const { custom_earnings, custom_deductions, statutory_config, org_rules, network_restrictions } = req.body;
 
     let config = await PayrollConfig.findOne({ user_id });
 
@@ -92,6 +92,11 @@ const updateConfig = async (req, res) => {
             ...org_rules
         };
         config.markModified('org_rules');
+    }
+
+    if (network_restrictions !== undefined) {
+      config.network_restrictions = network_restrictions;
+      config.markModified('network_restrictions');
     }
 
     await config.save();

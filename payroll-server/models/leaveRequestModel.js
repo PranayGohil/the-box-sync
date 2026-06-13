@@ -36,7 +36,7 @@ const leaveRequestSchema = new Schema(
     },
     half_day_session: {
       type: String,
-      enum: ["morning", "evening", "none"],
+      enum: ["morning", "evening", "first_half", "second_half", "none"],
       default: "none",
     },
     reason: {

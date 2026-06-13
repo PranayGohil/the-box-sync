@@ -1,5 +1,6 @@
 const User = require("../models/userModel");
 const Staff = require("../models/staffModel");
+const PayrollConfig = require("../models/PayrollConfig");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -72,7 +73,7 @@ exports.kioskLogin = async (req, res) => {
 };
 
 // ── GET /api/kiosk/me ─────────────────────────────────────────────────────────
-// Returns company info for the kiosk header
+// Returns company info for the kiosk header and network restriction status
 exports.kioskMe = async (req, res) => {
   try {
     const userId = req.user?._id || req.user;
@@ -80,7 +81,35 @@ exports.kioskMe = async (req, res) => {
       .select("name logo restaurant_code email")
       .lean();
     if (!user) return res.status(404).json({ message: "User not found." });
-    return res.json(user);
+
+    // Determine client IP
+    let clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    if (clientIp) {
+      // Clean up IPv6 mapped IPv4 addresses and handle multiple forwarded IPs
+      clientIp = clientIp.split(',')[0].trim();
+      if (clientIp.includes('::ffff:')) {
+        clientIp = clientIp.split('::ffff:')[1];
+      }
+      if (clientIp === '::1') {
+        clientIp = '127.0.0.1';
+      }
+    }
+
+    // Check Network Restrictions
+    let is_restricted = false;
+    const config = await PayrollConfig.findOne({ user_id: userId }).lean();
+    if (config && config.network_restrictions && config.network_restrictions.is_enabled) {
+      const allowedIps = config.network_restrictions.allowed_ips || [];
+      if (!allowedIps.includes(clientIp)) {
+        is_restricted = true;
+      }
+    }
+
+    return res.json({
+      ...user,
+      client_ip: clientIp,
+      is_restricted
+    });
   } catch (err) {
     console.error("Kiosk me error:", err);
     return res.status(500).json({ message: "Internal server error." });
