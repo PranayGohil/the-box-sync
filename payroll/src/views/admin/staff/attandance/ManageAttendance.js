@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory, Link } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { Row, Col, Card, Button, Badge, Alert, Modal, Spinner, Form, Dropdown, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { useTable, useGlobalFilter, useSortBy, usePagination, useRowSelect } from 'react-table';
@@ -7,7 +7,6 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import ControlsPageSize from 'components/table/ControlsPageSize';
-import ControlsSearch from 'components/table/ControlsSearch';
 import Table from 'components/table/Table';
 import TablePagination from 'components/table/TablePagination';
 import { toast } from 'react-toastify';
@@ -526,6 +525,32 @@ export default function ManageAttendance() {
   const [savingAttSettings, setSavingAttSettings] = useState(false);
   const [attSettingsMsg, setAttSettingsMsg] = useState('');
   const [adminPublicIp, setAdminPublicIp] = useState('');
+
+  const [showRegularizationRequests, setShowRegularizationRequests] = useState(false);
+  const [regularizationRequests, setRegularizationRequests] = useState([]);
+
+  useEffect(() => {
+    if (showRegularizationRequests) {
+      const stored = JSON.parse(localStorage.getItem('regularization_requests') || '[]');
+      setRegularizationRequests(stored);
+    }
+  }, [showRegularizationRequests]);
+
+  const handleApproveReg = (id) => {
+    const stored = JSON.parse(localStorage.getItem('regularization_requests') || '[]');
+    const updated = stored.map(req => req.id === id ? { ...req, status: 'Approved' } : req);
+    localStorage.setItem('regularization_requests', JSON.stringify(updated));
+    setRegularizationRequests(updated);
+    toast.success('Regularization Request Approved');
+  };
+
+  const handleRejectReg = (id) => {
+    const stored = JSON.parse(localStorage.getItem('regularization_requests') || '[]');
+    const updated = stored.map(req => req.id === id ? { ...req, status: 'Rejected' } : req);
+    localStorage.setItem('regularization_requests', JSON.stringify(updated));
+    setRegularizationRequests(updated);
+    toast.success('Regularization Request Rejected');
+  };
 
   useEffect(() => {
     // Fetch admin's current IP as seen by our backend
@@ -1162,7 +1187,7 @@ export default function ManageAttendance() {
         },
       },
     ],
-    [loading, targetDate, payrollConfig]
+    [loading, targetDate, payrollConfig, history]
   );
 
   const uniquePositions = React.useMemo(() => {
@@ -1193,7 +1218,6 @@ export default function ManageAttendance() {
   const { pageIndex, pageSize } = tableState;
   const totalFiltered = tableInstance.rows.length;
 
-  // Debounced search wiring
   React.useEffect(() => {
     const timer = setTimeout(() => setGlobalFilter(localSearchTerm || undefined), 300);
     return () => clearTimeout(timer);
@@ -1238,30 +1262,48 @@ export default function ManageAttendance() {
           </Col>
         </Row>
       </div>
+          {error && (
+            <Alert variant="danger" className="glass-card border-0 mb-4 d-flex align-items-center justify-content-between p-4 shadow-sm">
+              <div className="d-flex align-items-center gap-2 text-danger fw-bold">
+                <CsLineIcons icon="error" size="24" />
+                <span>{error}</span>
+              </div>
+              <Button variant="none" className="custom-btn-danger-outline px-4" onClick={() => fetchTodayAttendance(targetDate)}>
+                Retry
+              </Button>
+            </Alert>
+          )}
 
-      {error && (
-        <Alert variant="danger" className="glass-card border-0 mb-4 d-flex align-items-center justify-content-between p-4 shadow-sm">
-          <div className="d-flex align-items-center gap-2 text-danger fw-bold">
-            <CsLineIcons icon="error" size="24" />
-            <span>{error}</span>
-          </div>
-          <Button variant="none" className="custom-btn-danger-outline px-4" onClick={() => fetchTodayAttendance(targetDate)}>
-            Retry
-          </Button>
-        </Alert>
-      )}
-
-      {/* ── Attendance Settings Panel ─────────────────────────────────── */}
-      <div className="mb-4">
+      <div className="mb-4 d-flex gap-3 flex-wrap">
         <Button
           variant="none"
           className="custom-btn-primary-outline d-flex align-items-center gap-2 px-4 py-2"
-          onClick={() => setShowAttSettings(v => !v)}
+          onClick={() => { setShowAttSettings(v => !v); setShowRegularizationRequests(false); }}
         >
           <CsLineIcons icon="settings" size={16} />
           Attendance Settings
           <CsLineIcons icon={showAttSettings ? 'chevron-up' : 'chevron-down'} size={14} className="ms-1" />
         </Button>
+
+        <Button
+          variant="none"
+          className="custom-btn-info-outline d-flex align-items-center gap-2 px-4 py-2"
+          onClick={() => history.push('/attendance/roster')}
+        >
+          <CsLineIcons icon="calendar" size={16} />
+          Roster Management
+        </Button>
+
+        <Button
+          variant="none"
+          className="custom-btn-info-outline d-flex align-items-center gap-2 px-4 py-2"
+          onClick={() => { setShowRegularizationRequests(v => !v); setShowAttSettings(false); }}
+        >
+          <CsLineIcons icon="edit" size={16} />
+          Regularization Requests
+          <CsLineIcons icon={showRegularizationRequests ? 'chevron-up' : 'chevron-down'} size={14} className="ms-1" />
+        </Button>
+      </div>
 
         {showAttSettings && (
           <Card className="glass-card border-0 shadow-sm mt-3">
@@ -1398,12 +1440,71 @@ export default function ManageAttendance() {
             </Card.Body>
           </Card>
         )}
-      </div>
 
-      {/* Search and Controls */}
+        {showRegularizationRequests && (
+          <Card className="glass-card border-0 shadow-sm mt-3 mb-4">
+            <Card.Body className="p-4">
+              <h6 className="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+                <CsLineIcons icon="edit" size="18" className="text-primary" />
+                Regularization Requests
+              </h6>
+              <p className="text-muted small mb-4">
+                Review and approve/reject staff requests to correct missed punches.
+              </p>
+              
+              <div className="table-responsive">
+                <table className="table table-hover align-middle border">
+                  <thead className="bg-light">
+                    <tr>
+                      <th>Staff</th>
+                      <th>Date</th>
+                      <th>Corrected In</th>
+                      <th>Corrected Out</th>
+                      <th>Reason</th>
+                      <th>Status</th>
+                      <th className="text-end">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {regularizationRequests.length === 0 ? (
+                      <tr><td colSpan="7" className="text-center py-4 text-muted">No pending regularization requests</td></tr>
+                    ) : regularizationRequests.map(req => (
+                      <tr key={req.id}>
+                        <td>
+                          <div className="fw-bold">{req.f_name} {req.l_name}</div>
+                          <div className="small text-muted">#{req.staff_id}</div>
+                        </td>
+                        <td>{formatDateDDMMYYYY(req.date)}</td>
+                        <td>{req.in_time || '—'}</td>
+                        <td>{req.out_time || '—'}</td>
+                        <td style={{ maxWidth: '200px' }} className="text-truncate" title={req.reason}>{req.reason}</td>
+                        <td>
+                          <Badge bg={req.status === 'Pending' ? 'warning' : req.status === 'Approved' ? 'success' : 'danger'}>
+                            {req.status}
+                          </Badge>
+                        </td>
+                        <td className="text-end">
+                          {req.status === 'Pending' && (
+                            <div className="d-flex justify-content-end gap-2">
+                              <Button size="sm" variant="success" className="d-flex align-items-center gap-1" onClick={() => handleApproveReg(req.id)}>
+                                <CsLineIcons icon="check" size="14" /> Approve
+                              </Button>
+                              <Button size="sm" variant="danger" className="d-flex align-items-center gap-1" onClick={() => handleRejectReg(req.id)}>
+                                <CsLineIcons icon="close" size="14" /> Reject
+                              </Button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card.Body>
+          </Card>
+        )}
       <div>
         <Row className="mb-3 g-3 align-items-center">
-          {/* Search Bar */}
           <Col xs="12" md="4" lg="5">
             <div className="order-history-custom-search-container shadow-sm d-flex align-items-center px-2">
               <CsLineIcons icon="search" size="18" className="text-primary opacity-75 ms-1 me-2" />
@@ -1423,7 +1524,6 @@ export default function ManageAttendance() {
             </div>
           </Col>
 
-          {/* Position Filter */}
           <Col xs="6" md="3" lg="3">
             <Form.Select
               value={positionFilter}
@@ -1447,7 +1547,6 @@ export default function ManageAttendance() {
             </Form.Select>
           </Col>
 
-          {/* Datewise Filter */}
           <Col xs="6" md="3" lg="2">
             <Form.Control
               type="date"
@@ -1467,7 +1566,6 @@ export default function ManageAttendance() {
             />
           </Col>
 
-          {/* Showing metrics / page size */}
           <Col xs="12" md="2" lg="2" className="d-flex align-items-center justify-content-between justify-content-md-end gap-3 ms-md-auto w-100-mobile">
             <div className="text-muted small fw-bold d-none d-xl-block">
               Showing {totalFiltered > 0 ? pageIndex * pageSize + 1 : 0}&ndash;{Math.min((pageIndex + 1) * pageSize, totalFiltered)} of {totalFiltered}
@@ -1478,37 +1576,30 @@ export default function ManageAttendance() {
           </Col>
         </Row>
 
-        {/* Desktop View (Table Layout) */}
         <Row className="d-none d-lg-flex">
           <Col xs="12" style={{ overflow: 'auto' }}>
             <Table className="react-table rows" tableInstance={tableInstance} />
           </Col>
         </Row>
 
-        {/* Mobile & Tablet View (Premium Space-Saving Card Grid) */}
         <Row className="d-lg-none g-3">
           {page.map((row) => {
             prepareRow(row);
             const staff = row.original;
             const { todayAttendance } = staff;
 
-            // Extract status values
             let status = 'Pending';
             let statusVariant = 'warning';
-            let statusIcon = 'clock';
             if (todayAttendance) {
               if (todayAttendance.status === 'absent') {
                 status = 'Absent';
                 statusVariant = 'danger';
-                statusIcon = 'close-circle';
               } else if (todayAttendance.status === 'leave') {
                 status = 'On Leave';
                 statusVariant = 'info';
-                statusIcon = 'calendar';
               } else if (todayAttendance.status === 'half_day') {
                 status = 'Half Day';
                 statusVariant = 'warning';
-                statusIcon = 'clock';
               } else {
                 const lastSession = todayAttendance.sessions && todayAttendance.sessions.length > 0
                   ? todayAttendance.sessions[todayAttendance.sessions.length - 1]
@@ -1517,20 +1608,16 @@ export default function ManageAttendance() {
                   if (lastSession.out_time === null) {
                     status = 'Checked In';
                     statusVariant = 'success';
-                    statusIcon = 'log-in';
                   } else {
                     status = 'Completed';
                     statusVariant = 'primary';
-                    statusIcon = 'check';
                   }
                 } else if (todayAttendance.in_time && !todayAttendance.out_time) {
                   status = 'Checked In';
                   statusVariant = 'success';
-                  statusIcon = 'log-in';
                 } else if (todayAttendance.in_time && todayAttendance.out_time) {
                   status = 'Completed';
                   statusVariant = 'primary';
-                  statusIcon = 'check';
                 }
               }
             }
@@ -1554,7 +1641,6 @@ export default function ManageAttendance() {
                       }}
                     />
                     <div>
-                      {/* Top Row: Avatar + Name + ID + Status */}
                       <div className="d-flex align-items-center justify-content-between mb-3 position-relative">
                         <div className="d-flex align-items-center gap-2">
                           <div className="mobile-avatar rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold bg-soft-primary" style={{ width: '40px', height: '40px', fontSize: '14px' }}>
@@ -1576,7 +1662,6 @@ export default function ManageAttendance() {
                         <Badge bg={statusVariant} className="rounded-pill px-3 py-1">{status}</Badge>
                       </div>
 
-                      {/* Middle Row: Check-In and Check-Out times */}
                       <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
                         <Col xs="4">
                           <div className="text-muted small" style={{ fontSize: '10px' }}>CHECK-IN</div>
@@ -1607,7 +1692,6 @@ export default function ManageAttendance() {
                       </Row>
                     </div>
 
-                    {/* Bottom Row: Actions */}
                     <div className="d-flex align-items-center justify-content-end gap-2 pt-2 border-top mt-auto" style={{ borderColor: '#f3f4f6' }}>
                       {!todayAttendance ? (
                         <>
@@ -1712,7 +1796,7 @@ export default function ManageAttendance() {
           </Col>
         </Row>
       </div>
-
+      
       <Modal show={showActionModal} onHide={() => setShowActionModal(false)} centered className="rounded-4">
         <Modal.Header closeButton className="border-0">
           <Modal.Title className="fw-bold">

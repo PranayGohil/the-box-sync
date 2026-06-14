@@ -58,6 +58,11 @@ const addStaff = new Schema({
     enum: ['global', 'custom'],
     default: 'global'
   },
+  attendance_method: {
+    type: String,
+    enum: ['any', 'wifi', 'ess'],
+    default: 'any'
+  },
   custom_weekly_offs: {
     type: [
       {
