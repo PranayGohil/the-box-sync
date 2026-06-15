@@ -385,11 +385,13 @@ const getWastageLog = async (req, res) => {
     const query = { user_id: userId };
     if (from || to) {
       query.date = {};
-      if (from) query.date.$gte = new Date(from);
+      if (from) {
+        const fromDate = new Date(`${from}T00:00:00+05:30`);
+        query.date.$gte = isNaN(fromDate.getTime()) ? new Date(from) : fromDate;
+      }
       if (to) {
-        const toDate = new Date(to);
-        toDate.setHours(23, 59, 59, 999);
-        query.date.$lte = toDate;
+        const toDate = new Date(`${to}T23:59:59.999+05:30`);
+        query.date.$lte = isNaN(toDate.getTime()) ? new Date(to) : toDate;
       }
     }
     if (item_name) query.item_name = new RegExp(item_name, "i");
@@ -1094,7 +1096,45 @@ Be engaging and direct as a helpful AI assistant.`;
 
     if (!isGeminiUsed) {
       // Local Heuristics summary
-      conversationalSummary = `### 🤖 AI Inventory Audit Summary (Local Engine)
+      if (customPrompt) {
+        const query = customPrompt.toLowerCase();
+        if (query.includes("reorder") || query.includes("draft") || query.includes("supplier") || query.includes("restock")) {
+          conversationalSummary = `### 🤖 AI Purchase Order Draft (Local Engine)
+
+Based on safety minimums, here is your restock recommendation:
+
+${reorderList.length > 0 ? `#### 📦 Recommended Restock Items:
+${reorderList.map(r => `- **${r.item_name}**: Suggest ordering **${r.recommend_qty} ${r.unit}** to reach safety target level.`).join('\n')}` : `- **No restock required.** All items are currently well above their safety minimums.`}
+
+Refer to the *Supplier Purchase Order Draft* card on the right to copy/paste the order details directly.`;
+        } else if (query.includes("stockout") || query.includes("risk") || query.includes("shortage") || query.includes("critical")) {
+          conversationalSummary = `### 🤖 AI Stockout Risk Assessment (Local Engine)
+
+Here are the items currently at risk of running out of stock:
+
+${alerts.length > 0 ? `#### ⚠️ Critical Shortages & Alerts:
+${alerts.map(a => `- **${a.item_name}**: Current stock is **${a.current_stock} ${a.unit}**. *${a.reason}* (Estimated supply: **${a.days_remaining}** days).`).join('\n')}` : `- **All items are well-stocked!** Current quantities are above safety minimum thresholds.`}`;
+        } else if (query.includes("wastage") || query.includes("waste") || query.includes("anomaly") || query.includes("anomalies")) {
+          conversationalSummary = `### 🤖 AI Wastage Analysis (Local Engine)
+
+Here is the wastage analysis for the past 7 days:
+
+${anomalies.length > 0 ? `#### 🗑️ Wastage Alerts:
+${anomalies.map(w => `- **${w.item_name}**: Excessive wastage flagged! **${w.weekly_wasted} ${w.unit}** wasted vs **${w.weekly_usage} ${w.unit}** used in the last 7 days (Wastage Rate: **${w.wastage_rate}%**).`).join('\n')}` : `- **No high-wastage anomalies detected.** Wastage ratios are within acceptable limits (<20% of weekly usage).`}`;
+        } else {
+          conversationalSummary = `### 🤖 AI Copilot (Local Engine)
+
+I received your prompt: "${customPrompt}"
+
+Here is a quick overview of your inventory status:
+- **Shortages**: ${alerts.length} items below safety levels.
+- **Wastage**: ${anomalies.length} items with high wastage flags.
+- **Reorder**: ${reorderList.length} items need to be restocked.
+
+*Tip: Add a \`GEMINI_API_KEY\` to your server env to enable full natural language responses.*`;
+        }
+      } else {
+        conversationalSummary = `### 🤖 AI Inventory Audit Summary (Local Engine)
 
 Here is your automated daily inventory audit summary:
 
@@ -1107,6 +1147,7 @@ ${anomalies.map(w => `- **${w.item_name}**: Excessive wastage flagged! **${w.wee
 #### 📦 Smart Restock Suggestions:
 *Safety minimums suggest drafting order for ${reorderList.length} items.* Refer to the reorder draft below for supplier copy-paste details.
 `;
+      }
     }
 
     res.json({

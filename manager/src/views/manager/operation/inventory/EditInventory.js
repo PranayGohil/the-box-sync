@@ -26,7 +26,7 @@ const validationSchema = Yup.object({
 
 const customStyles = `
   .inventory-container {
-    background: #f9f9fb;
+    background: #f8fafc;
     min-height: 100vh;
     padding-bottom: 5rem;
   }
@@ -39,7 +39,7 @@ const customStyles = `
   }
   @media (min-width: 992px) {
     .page-card {
-      border-radius: 2rem !important;
+      border-radius: 1.5rem !important;
     }
   }
   .section-label {
@@ -54,14 +54,14 @@ const customStyles = `
     gap: 0.75rem;
   }
   .modern-input {
-    border-radius: 20px !important;
-    padding: 0.375rem 0.85rem !important;
-    border: 1.5px solid #f1f5f9 !important;
+    border-radius: 12px !important;
+    padding: 0.8rem 1.25rem !important;
+    border: 1.5px solid #e2e8f0 !important;
     font-weight: 600 !important;
     color: #334155 !important;
     transition: all 0.3s ease !important;
     background: #fcfdfe !important;
-    height: 38px !important;
+    height: 48px !important;
     font-size: 0.875rem !important;
   }
   .modern-input:focus {
@@ -75,10 +75,10 @@ const customStyles = `
     border-color: #e2e8f0 !important;
   }
   .input-group-label {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: #64748b;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.5rem;
     padding-left: 0.25rem;
     text-transform: uppercase;
     letter-spacing: 0.03em;
@@ -97,20 +97,20 @@ const customStyles = `
     background: #ffffff !important;
     border-radius: 1rem !important;
     border: 1px solid #f1f5f9 !important;
-    padding: 0.875rem !important;
-    margin-bottom: 0.875rem;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
+    padding: 1rem !important;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01) !important;
     transition: all 0.25s ease;
   }
   @media (min-width: 992px) {
     .item-row-card {
-      border-radius: 1.25rem !important;
-      padding: 1.125rem 1.375rem !important;
+      border-radius: 1rem !important;
+      padding: 1.25rem 1.5rem !important;
     }
   }
   .item-row-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.05) !important;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.05) !important;
     border-color: rgba(35,179,244,0.2) !important;
   }
   .remove-btn {
@@ -140,10 +140,10 @@ const customStyles = `
     color: #94a3b8;
   }
   .select-modern .react-select__control {
-    border-radius: 20px !important;
-    border: 1.5px solid #f1f5f9 !important;
-    min-height: 38px !important;
-    max-height: 38px !important;
+    border-radius: 12px !important;
+    border: 1.5px solid #e2e8f0 !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
     background: #fcfdfe !important;
     font-weight: 600 !important;
     font-size: 0.875rem !important;
@@ -152,7 +152,7 @@ const customStyles = `
     padding: 0 0.75rem !important;
   }
   .select-modern .react-select__indicators {
-    height: 38px !important;
+    height: 48px !important;
   }
   .select-modern .react-select__control--is-focused {
     border-color: #23b3f4 !important;
@@ -163,7 +163,7 @@ const customStyles = `
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding-top: 0.35rem;
+    padding-top: 1.5rem;
   }
   @media (max-width: 991.98px) {
     .delete-col {
@@ -171,6 +171,96 @@ const customStyles = `
       padding-top: 0;
       margin-top: 0.25rem;
     }
+  }
+  .inventory-container .btn {
+    transition: all 0.2s ease-in-out !important;
+  }
+  .inventory-container .btn:hover {
+    transform: translateY(-2px) !important;
+  }
+  .inventory-container .btn:not(.btn-sm) {
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    padding: 10px 28px !important;
+    height: 48px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    font-size: 0.95rem !important;
+  }
+  .inventory-container .btn.btn-sm {
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    padding: 6px 16px !important;
+    height: 36px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    font-size: 0.85rem !important;
+  }
+  .inventory-container .btn-primary {
+    background-color: #23b3f4 !important;
+    border-color: #23b3f4 !important;
+    box-shadow: 0 4px 10px rgba(35, 179, 244, 0.15) !important;
+  }
+  .inventory-container .btn-primary:hover {
+    background-color: #179edb !important;
+    border-color: #179edb !important;
+    box-shadow: 0 6px 15px rgba(35, 179, 244, 0.25) !important;
+  }
+  .inventory-container .btn-outline-primary {
+    border: 1px solid #23b3f4 !important;
+    color: #23b3f4 !important;
+    background-color: #ffffff !important;
+  }
+  .inventory-container .btn-outline-primary:hover {
+    background-color: #23b3f4 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+  }
+  .inventory-container .btn-outline-primary:hover svg {
+    stroke: #ffffff !important;
+  }
+  .inventory-container .btn-outline-danger {
+    border: 1px solid #ef4444 !important;
+    color: #ef4444 !important;
+    background-color: #ffffff !important;
+  }
+  .inventory-container .btn-outline-danger:hover {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
+  }
+  .inventory-container .btn-outline-danger:hover svg {
+    stroke: #ffffff !important;
+  }
+  .inventory-container .btn-outline-warning {
+    border: 1px solid #f59e0b !important;
+    color: #f59e0b !important;
+    background-color: #ffffff !important;
+  }
+  .inventory-container .btn-outline-warning:hover {
+    background-color: #f59e0b !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25) !important;
+  }
+  .inventory-container .btn-outline-warning:hover svg {
+    stroke: #ffffff !important;
+  }
+  .inventory-container .btn-outline-secondary {
+    border: 1px solid #64748b !important;
+    color: #64748b !important;
+    background-color: #ffffff !important;
+  }
+  .inventory-container .btn-outline-secondary:hover {
+    background-color: #64748b !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(100, 116, 139, 0.25) !important;
+  }
+  .inventory-container .btn-outline-secondary:hover svg {
+    stroke: #ffffff !important;
   }
 `;
 

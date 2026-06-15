@@ -35,7 +35,7 @@ const completeInventorySchema = Yup.object().shape({
   bill_files: Yup.mixed().test('fileRequired', 'Bill files are required', (value) => value && value.length > 0),
   tax: Yup.number().min(0, 'Tax cannot be negative'),
   discount: Yup.number().min(0, 'Discount cannot be negative'),
-  paid_amount: Yup.number().required('Paid amount is required').positive('Must be positive'),
+  paid_amount: Yup.number().required('Paid amount is required').min(0, 'Paid amount cannot be negative'),
   items: Yup.array()
     .of(
       Yup.object().shape({
@@ -147,9 +147,107 @@ const CompleteInventory = () => {
     );
   }
 
+  const customStyles = `
+    .complete-inventory-inventory-container .btn {
+      transition: all 0.2s ease-in-out !important;
+    }
+    .complete-inventory-inventory-container .btn:hover {
+      transform: translateY(-2px) !important;
+    }
+    .complete-inventory-inventory-container .btn:not(.btn-sm) {
+      border-radius: 50px !important;
+      font-weight: 600 !important;
+      padding: 10px 28px !important;
+      height: 48px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      font-size: 0.95rem !important;
+    }
+    .complete-inventory-inventory-container .btn.btn-sm {
+      border-radius: 50px !important;
+      font-weight: 600 !important;
+      padding: 6px 16px !important;
+      height: 36px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 6px !important;
+      font-size: 0.85rem !important;
+    }
+    .complete-inventory-inventory-container .btn-primary {
+      background-color: #23b3f4 !important;
+      border-color: #23b3f4 !important;
+      box-shadow: 0 4px 10px rgba(35, 179, 244, 0.15) !important;
+    }
+    .complete-inventory-inventory-container .btn-primary:hover {
+      background-color: #179edb !important;
+      border-color: #179edb !important;
+      box-shadow: 0 6px 15px rgba(35, 179, 244, 0.25) !important;
+    }
+    .complete-inventory-inventory-container .btn-outline-primary {
+      border: 1px solid #23b3f4 !important;
+      color: #23b3f4 !important;
+      background-color: #ffffff !important;
+    }
+    .complete-inventory-inventory-container .btn-outline-primary:hover {
+      background-color: #23b3f4 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+    }
+    .complete-inventory-inventory-container .btn-outline-primary:hover svg {
+      stroke: #ffffff !important;
+    }
+    .complete-inventory-inventory-container .btn-outline-danger {
+      border: 1px solid #ef4444 !important;
+      color: #ef4444 !important;
+      background-color: #ffffff !important;
+    }
+    .complete-inventory-inventory-container .btn-outline-danger:hover {
+      background-color: #ef4444 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
+    }
+    .complete-inventory-inventory-container .btn-outline-danger:hover svg {
+      stroke: #ffffff !important;
+    }
+    .complete-inventory-inventory-container .btn-outline-warning {
+      border: 1px solid #f59e0b !important;
+      color: #f59e0b !important;
+      background-color: #ffffff !important;
+    }
+    .complete-inventory-inventory-container .btn-outline-warning:hover {
+      background-color: #f59e0b !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25) !important;
+    }
+    .complete-inventory-inventory-container .btn-outline-warning:hover svg {
+      stroke: #ffffff !important;
+    }
+    .complete-inventory-inventory-container .btn-outline-secondary {
+      border: 1px solid #64748b !important;
+      color: #64748b !important;
+      background-color: #ffffff !important;
+    }
+    .complete-inventory-inventory-container .btn-outline-secondary:hover {
+      background-color: #64748b !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(100, 116, 139, 0.25) !important;
+    }
+    .complete-inventory-inventory-container .btn-outline-secondary:hover svg {
+      stroke: #ffffff !important;
+    }
+
+    .modal-content {
+      border-radius: 1.5rem !important;
+      overflow: hidden !important;
+    }
+  `;
+
   return (
     <div className="complete-inventory-inventory-container">
-      
+      <style>{customStyles}</style>
       <HtmlHead title="Complete Inventory" />
       <div className="container-fluid px-3 px-lg-5">
         <div className="page-title-container mb-4 mt-5 mt-lg-0">
@@ -242,11 +340,59 @@ const CompleteInventory = () => {
                             <CsLineIcons icon="calendar" size="16" className="text-muted" />
                           </div>
                         </div>
+                        {touched.bill_date && errors.bill_date && <div className="text-danger small mt-1">{errors.bill_date}</div>}
                       </Col>
-                      <Col xs={12} md={3}><div className="complete-inventory-input-group-label">Bill Number</div><Field type="text" name="bill_number" className={`complete-inventory-modern-input form-control ${touched.bill_number && errors.bill_number ? 'is-invalid' : ''}`} placeholder="Enter bill #" /></Col>
-                      <Col xs={12} md={3}><div className="complete-inventory-input-group-label">Vendor</div><div className="complete-inventory-select-modern"><CreatableSelect isClearable menuPlacement="auto" menuPortalTarget={document.body} options={(suggestions.vendors || []).map(v => ({ label: v, value: v }))} value={values.vendor_name ? { label: values.vendor_name, value: values.vendor_name } : null} onChange={(s) => setFieldValue('vendor_name', s ? s.value : '')} placeholder="Vendor..." classNamePrefix="react-select" /></div></Col>
-                      <Col xs={12} md={3}><div className="complete-inventory-input-group-label">Category</div><div className="complete-inventory-select-modern"><CreatableSelect isClearable menuPlacement="auto" menuPortalTarget={document.body} options={(suggestions.categories || []).map(c => ({ label: c, value: c }))} value={values.category ? { label: values.category, value: values.category } : null} onChange={(s) => setFieldValue('category', s ? s.value : '')} placeholder="Category..." classNamePrefix="react-select" /></div></Col>
-                      <Col xs={12} md={12}><div className="complete-inventory-input-group-label">Final Bill Files</div><Form.Control type="file" multiple className="d-none" id="bill-upload" onChange={(e) => { setFieldValue('bill_files', e.currentTarget.files); previewFiles(e.currentTarget.files); }} /><label htmlFor="bill-upload" className="w-100 d-block p-4 text-center border-dashed rounded-4 bg-light cursor-pointer"><CsLineIcons icon="upload" size="24" className="mb-2 text-primary" /><div className="fw-bold text-muted small">Upload Verified Bills</div></label><div className="d-flex flex-wrap gap-2 mt-3">{filePreviews.map((f, i) => <div key={i} className="complete-inventory-file-pill"><CsLineIcons icon={f.type === 'pdf' ? 'file-text' : 'image'} size="14" /> {f.name.substring(0, 15)}...</div>)}</div></Col>
+                      <Col xs={12} md={3}>
+                        <div className="complete-inventory-input-group-label">Bill Number</div>
+                        <Field type="text" name="bill_number" className={`complete-inventory-modern-input form-control ${touched.bill_number && errors.bill_number ? 'is-invalid' : ''}`} placeholder="Enter bill #" />
+                        {touched.bill_number && errors.bill_number && <div className="text-danger small mt-1">{errors.bill_number}</div>}
+                      </Col>
+                      <Col xs={12} md={3}>
+                        <div className="complete-inventory-input-group-label">Vendor</div>
+                        <div className="complete-inventory-select-modern">
+                          <CreatableSelect 
+                            isClearable 
+                            menuPlacement="auto" 
+                            menuPortalTarget={document.body} 
+                            options={(suggestions.vendors || []).map(v => ({ label: v, value: v }))} 
+                            value={values.vendor_name ? { label: values.vendor_name, value: values.vendor_name } : null} 
+                            onChange={(s) => setFieldValue('vendor_name', s ? s.value : '')} 
+                            placeholder="Vendor..." 
+                            classNamePrefix="react-select" 
+                            styles={{ control: (base) => ({ ...base, borderColor: touched.vendor_name && errors.vendor_name ? '#dc3545' : base.borderColor }) }}
+                          />
+                        </div>
+                        {touched.vendor_name && errors.vendor_name && <div className="text-danger small mt-1">{errors.vendor_name}</div>}
+                      </Col>
+                      <Col xs={12} md={3}>
+                        <div className="complete-inventory-input-group-label">Category</div>
+                        <div className="complete-inventory-select-modern">
+                          <CreatableSelect 
+                            isClearable 
+                            menuPlacement="auto" 
+                            menuPortalTarget={document.body} 
+                            options={(suggestions.categories || []).map(c => ({ label: c, value: c }))} 
+                            value={values.category ? { label: values.category, value: values.category } : null} 
+                            onChange={(s) => setFieldValue('category', s ? s.value : '')} 
+                            placeholder="Category..." 
+                            classNamePrefix="react-select" 
+                            styles={{ control: (base) => ({ ...base, borderColor: touched.category && errors.category ? '#dc3545' : base.borderColor }) }}
+                          />
+                        </div>
+                        {touched.category && errors.category && <div className="text-danger small mt-1">{errors.category}</div>}
+                      </Col>
+                      <Col xs={12} md={12}>
+                        <div className="complete-inventory-input-group-label">Final Bill Files</div>
+                        <Form.Control type="file" multiple className="d-none" id="bill-upload" onChange={(e) => { setFieldValue('bill_files', e.currentTarget.files); previewFiles(e.currentTarget.files); }} />
+                        <label htmlFor="bill-upload" className="w-100 d-block p-4 text-center border-dashed rounded-4 bg-light cursor-pointer">
+                          <CsLineIcons icon="upload" size="24" className="mb-2 text-primary" />
+                          <div className="fw-bold text-muted small">Upload Verified Bills</div>
+                        </label>
+                        <div className="d-flex flex-wrap gap-2 mt-3">
+                          {filePreviews.map((f, i) => <div key={i} className="complete-inventory-file-pill"><CsLineIcons icon={f.type === 'pdf' ? 'file-text' : 'image'} size="14" /> {f.name.substring(0, 15)}...</div>)}
+                        </div>
+                        {touched.bill_files && errors.bill_files && <div className="text-danger small mt-1 text-center">{errors.bill_files}</div>}
+                      </Col>
                     </Row>
 
                     <div className="complete-inventory-section-label"><CsLineIcons icon="shopping-basket" size="18" /> Verification List</div>
@@ -270,11 +416,22 @@ const CompleteInventory = () => {
                             <Row className="g-2 g-lg-3">
                               <Col xs={3}>
                                 <div className="complete-inventory-input-group-label text-muted small text-uppercase fw-bold mb-1">Qty</div>
-                                <Field type="number" name={`items[${idx}].item_quantity`} className="complete-inventory-modern-input form-control" disabled={!item.completed} />
+                                <Field 
+                                  type="number" 
+                                  name={`items[${idx}].item_quantity`} 
+                                  className={`complete-inventory-modern-input form-control ${touched.items?.[idx]?.item_quantity && errors.items?.[idx]?.item_quantity ? 'is-invalid' : ''}`} 
+                                  disabled={!item.completed} 
+                                />
+                                {touched.items?.[idx]?.item_quantity && errors.items?.[idx]?.item_quantity && <div className="text-danger small mt-1">{errors.items[idx].item_quantity}</div>}
                               </Col>
                               <Col xs={4}>
                                 <div className="complete-inventory-input-group-label text-muted small text-uppercase fw-bold mb-1">Unit</div>
-                                <Field as="select" name={`items[${idx}].unit`} className="complete-inventory-modern-input form-control" disabled={!item.completed}>
+                                <Field 
+                                  as="select" 
+                                  name={`items[${idx}].unit`} 
+                                  className={`complete-inventory-modern-input form-control ${touched.items?.[idx]?.unit && errors.items?.[idx]?.unit ? 'is-invalid' : ''}`} 
+                                  disabled={!item.completed}
+                                >
                                   <option value="">Unit</option>
                                   <option value="kg">kg</option>
                                   <option value="g">g</option>
@@ -282,10 +439,17 @@ const CompleteInventory = () => {
                                   <option value="ml">ml</option>
                                   <option value="piece">pc</option>
                                 </Field>
+                                {touched.items?.[idx]?.unit && errors.items?.[idx]?.unit && <div className="text-danger small mt-1">{errors.items[idx].unit}</div>}
                               </Col>
                               <Col xs={5}>
                                 <div className="complete-inventory-input-group-label text-muted small text-uppercase fw-bold mb-1">Price (₹)</div>
-                                <Field type="number" name={`items[${idx}].item_price`} className="complete-inventory-modern-input form-control" disabled={!item.completed} />
+                                <Field 
+                                  type="number" 
+                                  name={`items[${idx}].item_price`} 
+                                  className={`complete-inventory-modern-input form-control ${touched.items?.[idx]?.item_price && errors.items?.[idx]?.item_price ? 'is-invalid' : ''}`} 
+                                  disabled={!item.completed} 
+                                />
+                                {touched.items?.[idx]?.item_price && errors.items?.[idx]?.item_price && <div className="text-danger small mt-1">{errors.items[idx].item_price}</div>}
                               </Col>
                             </Row>
                           </Col>
@@ -308,7 +472,14 @@ const CompleteInventory = () => {
                             </div>
                             <div className="complete-inventory-amount-paid-container">
                               <div className="complete-inventory-input-group-label">Amount Paid</div>
-                              <Field type="number" name="paid_amount" className="complete-inventory-modern-input form-control text-center fw-bold text-primary" style={{fontSize: '1.25rem'}} placeholder="0.00" />
+                              <Field 
+                                type="number" 
+                                name="paid_amount" 
+                                className={`complete-inventory-modern-input form-control text-center fw-bold text-primary ${touched.paid_amount && errors.paid_amount ? 'is-invalid' : ''}`} 
+                                style={{fontSize: '1.25rem'}} 
+                                placeholder="0.00" 
+                              />
+                              {touched.paid_amount && errors.paid_amount && <div className="text-danger small mt-1 text-center">{errors.paid_amount}</div>}
                             </div>
                           </div>
                         </Col>

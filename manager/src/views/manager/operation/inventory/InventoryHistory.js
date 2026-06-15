@@ -21,6 +21,8 @@ import {
   getTodayLog,
   autoGenerateOpening,
   createCorrectionRequest,
+  getCorrectionRequests,
+  resolveCorrectionRequest,
   getAIInsights
 } from 'api/inventory';
 
@@ -31,6 +33,14 @@ const customStyles = `
     min-height: 100vh;
     padding-bottom: 5rem;
   }
+  .nav-pills-custom {
+    border-bottom: 2px solid #f1f5f9 !important;
+    gap: 0.5rem;
+    margin-bottom: 2rem !important;
+    padding-bottom: 0.75rem !important;
+    display: flex;
+    flex-wrap: wrap;
+  }
   .nav-pills-custom .nav-link {
     border-radius: 50px !important;
     padding: 0.6rem 1.5rem !important;
@@ -39,15 +49,33 @@ const customStyles = `
     color: #64748b !important;
     background: #ffffff !important;
     border: 1.5px solid #e2e8f0 !important;
-    margin-right: 0.5rem;
-    margin-bottom: 0.5rem;
-    transition: all 0.25s ease;
+    margin-right: 0 !important;
+    margin-bottom: 0 !important;
+    transition: all 0.2s ease-in-out !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .nav-pills-custom .nav-link:hover {
+    color: #23b3f4 !important;
+    border-color: #23b3f4 !important;
+    background: #f0f9ff !important;
   }
   .nav-pills-custom .nav-link.active {
     color: #ffffff !important;
     background: #23b3f4 !important;
     border-color: #23b3f4 !important;
-    box-shadow: 0 4px 15px rgba(35, 179, 244, 0.25) !important;
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+  }
+  .nav-pills-custom .nav-link svg {
+    stroke: currentColor;
+    transition: stroke 0.2s ease;
+  }
+  .nav-pills-custom .nav-link:hover svg {
+    stroke: #23b3f4;
+  }
+  .nav-pills-custom .nav-link.active svg {
+    stroke: #ffffff;
   }
   .workstation-card {
     background: #ffffff !important;
@@ -56,34 +84,56 @@ const customStyles = `
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.01) !important;
     overflow: hidden;
   }
+  .table-reconcile {
+    border-collapse: separate !important;
+    border-spacing: 0 10px !important;
+  }
   .table-reconcile thead th {
-    background: #f8fafc;
-    color: #475569;
-    font-size: 0.7rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 1rem 1.25rem;
-    border-bottom: 2px solid #e2e8f0;
+    border: none !important;
+    background: transparent !important;
+    color: #64748b !important;
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    padding: 0.75rem 1.5rem !important;
+  }
+  .table-reconcile tbody tr {
+    transition: all 0.2s ease-in-out !important;
+  }
+  .table-reconcile tbody tr:hover {
+    transform: translateY(-2px);
   }
   .table-reconcile tbody td {
-    padding: 1rem 1.25rem;
-    font-size: 0.875rem;
-    color: #334155;
-    border-bottom: 1px solid #f1f5f9;
+    background: #ffffff !important;
+    border-top: 1px solid #f1f5f9 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    padding: 1.25rem 1.5rem !important;
+    vertical-align: middle !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01) !important;
+  }
+  .table-reconcile tbody tr td:first-child {
+    border-left: 1px solid #f1f5f9 !important;
+    border-top-left-radius: 1rem !important;
+    border-bottom-left-radius: 1rem !important;
+  }
+  .table-reconcile tbody tr td:last-child {
+    border-right: 1px solid #f1f5f9 !important;
+    border-top-right-radius: 1rem !important;
+    border-bottom-right-radius: 1rem !important;
   }
   .modern-input {
-    border-radius: 10px !important;
+    border-radius: 12px !important;
     border: 1.5px solid #e2e8f0 !important;
-    padding: 0.5rem 1rem !important;
+    padding: 0.6rem 1.25rem !important;
     font-weight: 600 !important;
-    height: 42px !important;
+    height: 48px !important;
     background: #fcfdfe !important;
     transition: all 0.25s ease !important;
   }
   .modern-input:focus {
     border-color: #23b3f4 !important;
-    box-shadow: 0 0 0 3px rgba(35, 179, 244, 0.1) !important;
+    box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
     background: #ffffff !important;
   }
   .stats-card-sub {
@@ -138,17 +188,21 @@ const customStyles = `
     max-width: 85%;
     align-self: flex-end;
   }
-  .prompt-btn {
+  .workstation-container .btn.prompt-btn {
     font-size: 0.78rem !important;
     font-weight: 700 !important;
-    border-radius: 20px !important;
-    padding: 0.45rem 1rem !important;
-    border: 1.5px solid rgba(35, 179, 244, 0.2) !important;
+    border-radius: 50px !important;
+    padding: 0.45rem 1.25rem !important;
+    border: 1.5px solid rgba(35, 179, 244, 0.3) !important;
     background: #ffffff !important;
     color: #23b3f4 !important;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease !important;
+    height: auto !important;
+    display: inline-block !important;
   }
-  .prompt-btn:hover {
+  .workstation-container .btn.prompt-btn:hover,
+  .workstation-container .btn.prompt-btn:focus,
+  .workstation-container .btn.prompt-btn:active {
     background: #23b3f4 !important;
     color: #ffffff !important;
     border-color: #23b3f4 !important;
@@ -165,6 +219,96 @@ const customStyles = `
     font-size: 0.65rem !important;
     padding: 0.35rem 0.75rem !important;
     border-radius: 50px !important;
+  }
+  .workstation-container .btn {
+    transition: all 0.2s ease-in-out !important;
+  }
+  .workstation-container .btn:hover {
+    transform: translateY(-2px) !important;
+  }
+  .workstation-container .btn:not(.btn-sm) {
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    padding: 10px 28px !important;
+    height: 48px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    font-size: 0.95rem !important;
+  }
+  .workstation-container .btn.btn-sm {
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    padding: 6px 16px !important;
+    height: 36px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    font-size: 0.85rem !important;
+  }
+  .workstation-container .btn-primary {
+    background-color: #23b3f4 !important;
+    border-color: #23b3f4 !important;
+    box-shadow: 0 4px 10px rgba(35, 179, 244, 0.15) !important;
+  }
+  .workstation-container .btn-primary:hover {
+    background-color: #179edb !important;
+    border-color: #179edb !important;
+    box-shadow: 0 6px 15px rgba(35, 179, 244, 0.25) !important;
+  }
+  .workstation-container .btn-outline-primary {
+    border: 1px solid #23b3f4 !important;
+    color: #23b3f4 !important;
+    background-color: #ffffff !important;
+  }
+  .workstation-container .btn-outline-primary:hover {
+    background-color: #23b3f4 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+  }
+  .workstation-container .btn-outline-primary:hover svg {
+    stroke: #ffffff !important;
+  }
+  .workstation-container .btn-outline-warning {
+    border: 1px solid #f59e0b !important;
+    color: #f59e0b !important;
+    background-color: #ffffff !important;
+  }
+  .workstation-container .btn-outline-warning:hover {
+    background-color: #f59e0b !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25) !important;
+  }
+  .workstation-container .btn-outline-warning:hover svg {
+    stroke: #ffffff !important;
+  }
+  .workstation-container .btn-outline-danger {
+    border: 1px solid #ef4444 !important;
+    color: #ef4444 !important;
+    background-color: #ffffff !important;
+  }
+  .workstation-container .btn-outline-danger:hover {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
+  }
+  .workstation-container .btn-outline-danger:hover svg {
+    stroke: #ffffff !important;
+  }
+  .workstation-container .btn-outline-secondary {
+    border: 1px solid #64748b !important;
+    color: #64748b !important;
+    background-color: #ffffff !important;
+  }
+  .workstation-container .btn-outline-secondary:hover {
+    background-color: #64748b !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(100, 116, 139, 0.25) !important;
+  }
+  .workstation-container .btn-outline-secondary:hover svg {
+    stroke: #ffffff !important;
   }
 `;
 
@@ -202,7 +346,7 @@ const DailyTrackerTab = ({ brandColor, history }) => {
       setLoading(true);
       const res = await getDailyReport({ from: selectedDate, to: selectedDate });
       setReport(res.data);
-      
+
       const op = (res.data.openings || []).find((o) => o.shift === 'opening');
       const cl = (res.data.closings || []).find((c) => c.shift === 'closing');
       setOpeningLog(op || null);
@@ -262,7 +406,7 @@ const DailyTrackerTab = ({ brandColor, history }) => {
                 onChange={(e) => setSelectedDate(e.target.value)}
               />
               <Button variant="outline-primary" size="sm" className="rounded-pill p-2" onClick={fetchDailyData}>
-                <CsLineIcons icon="refresh" size="16" />
+                <CsLineIcons icon="refresh-horizontal" size="16" />
               </Button>
             </div>
           </div>
@@ -1346,6 +1490,106 @@ const RejectedInventory = ({ refreshKey, history }) => {
   );
 };
 
+const CorrectionRequestsTab = () => {
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [resolvingId, setResolvingId] = useState(null);
+
+  const fetchRequests = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await getCorrectionRequests();
+      setRequests((res.data.data || []).filter((r) => r.status === 'pending'));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  const handleResolve = async (reqId, status) => {
+    try {
+      setResolvingId(reqId);
+      await resolveCorrectionRequest(reqId, { status });
+      toast.success(`Request marked as ${status}`);
+      fetchRequests();
+    } catch (err) {
+      toast.error('Failed to update request');
+    } finally {
+      setResolvingId(null);
+    }
+  };
+
+  return (
+    <Card className="workstation-card border-0 mb-4">
+      <Card.Body className="p-4">
+        <h5 className="fw-bold mb-3">Pending Correction Requests</h5>
+        {loading ? (
+          <div className="text-center py-4"><Spinner animation="border" variant="primary" /></div>
+        ) : requests.length === 0 ? (
+          <Alert variant="light" className="text-center py-4 border-dashed mb-0">No pending requests</Alert>
+        ) : (
+          <div className="table-responsive">
+            <Table hover className="align-middle table-reconcile mb-0">
+              <thead>
+                <tr>
+                  <th>Log Date</th>
+                  <th>Shift</th>
+                  <th>Reason for correction</th>
+                  <th className="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map((req) => (
+                  <tr key={req._id}>
+                    <td className="fw-bold text-dark">{format(new Date(req.log_date), 'dd MMM yyyy')}</td>
+                    <td><Badge bg={req.shift === 'opening' ? 'primary' : 'dark'} className="text-capitalize">{req.shift}</Badge></td>
+                    <td className="text-muted">"{req.reason}"</td>
+                    <td className="text-end">
+                      <div className="d-flex justify-content-end gap-1">
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          as={Link}
+                          to="/operations/daily-stock-logs"
+                          disabled={resolvingId === req._id}
+                        >
+                          Adjust Log
+                        </Button>
+                        <Button
+                          variant="outline-success"
+                          size="sm"
+                          disabled={resolvingId === req._id}
+                          onClick={() => handleResolve(req._id, 'approved')}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          disabled={resolvingId === req._id}
+                          onClick={() => handleResolve(req._id, 'rejected')}
+                        >
+                          Dismiss
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        )}
+      </Card.Body>
+    </Card>
+  );
+};
+
+
 // ── Main Controller Workstation Component ─────────────────────────────────────
 const InventoryHistory = () => {
   const history = useHistory();
@@ -1364,6 +1608,22 @@ const InventoryHistory = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const triggerRefresh = () => setRefreshKey((prev) => prev + 1);
+
+  const [pendingCorrectionCount, setPendingCorrectionCount] = useState(0);
+
+  const fetchCorrectionCount = useCallback(async () => {
+    try {
+      const res = await getCorrectionRequests();
+      const pending = (res.data.data || []).filter((r) => r.status === 'pending');
+      setPendingCorrectionCount(pending.length);
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCorrectionCount();
+  }, [fetchCorrectionCount, refreshKey]);
 
   const handleDelete = async () => {
     if (!selectedItem?._id) return;
@@ -1419,6 +1679,14 @@ const InventoryHistory = () => {
             </Nav.Link>
           </Nav.Item>
           <Nav.Item>
+            <Nav.Link className={activeTab === 'corrections' ? 'active' : ''} onClick={() => setActiveTab('corrections')}>
+              <CsLineIcons icon="warning-hexagon" size="16" className="me-2" /> Correction Requests
+              {pendingCorrectionCount > 0 && (
+                <Badge bg="danger" className="ms-2 rounded-circle" style={{ fontSize: '0.65rem' }}>{pendingCorrectionCount}</Badge>
+              )}
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
             <Nav.Link className={activeTab === 'ai' ? 'active' : ''} onClick={() => setActiveTab('ai')}>
               <CsLineIcons icon="message" size="16" className="me-2" /> AI Co-pilot
             </Nav.Link>
@@ -1436,6 +1704,7 @@ const InventoryHistory = () => {
           </>
         )}
         {activeTab === 'wastage' && <WastageLogsTab />}
+        {activeTab === 'corrections' && <CorrectionRequestsTab />}
         {activeTab === 'ai' && <AICopilotTab />}
 
         {/* Deletion Modal */}

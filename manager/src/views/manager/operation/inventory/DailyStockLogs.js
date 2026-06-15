@@ -113,11 +113,143 @@ const DailyStockLogs = () => {
   };
 
   const customStyles = `
+    .admin-daily-stock-logs-stock-container {
+      background: #f8fafc;
+      min-height: 100vh;
+      padding-bottom: 5rem;
+    }
+    .admin-daily-stock-logs-filter-bar {
+      background: #ffffff !important;
+      border-radius: 1.5rem !important;
+      border: 1px solid rgba(0, 0, 0, 0.05) !important;
+      padding: 1.5rem !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
+      margin-bottom: 2rem !important;
+    }
+    .admin-daily-stock-logs-modern-input {
+      border-radius: 12px !important;
+      padding: 0.8rem 1.25rem !important;
+      border: 1.5px solid #e2e8f0 !important;
+      font-weight: 600 !important;
+      color: #334155 !important;
+      transition: all 0.3s ease !important;
+      background: #fcfdfe !important;
+      height: 48px !important;
+    }
+    .admin-daily-stock-logs-modern-input:focus {
+      border-color: #23b3f4 !important;
+      box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
+      background: #ffffff !important;
+    }
+    .admin-daily-stock-logs-log-header-text {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 0.5rem;
+      padding-left: 0.25rem;
+    }
+    .admin-daily-stock-logs-btn-pill-action {
+      border-radius: 50px !important;
+      font-weight: 700 !important;
+      padding: 0.5rem 1.5rem !important;
+      height: 48px !important;
+      transition: all 0.2s ease-in-out !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn {
+      transition: all 0.2s ease-in-out !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn:hover {
+      transform: translateY(-2px) !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn:not(.btn-sm) {
+      border-radius: 50px !important;
+      font-weight: 600 !important;
+      padding: 10px 28px !important;
+      height: 48px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      font-size: 0.95rem !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn.btn-sm {
+      border-radius: 50px !important;
+      font-weight: 600 !important;
+      padding: 6px 16px !important;
+      height: 36px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 6px !important;
+      font-size: 0.85rem !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn-primary {
+      background-color: #23b3f4 !important;
+      border-color: #23b3f4 !important;
+      box-shadow: 0 4px 10px rgba(35, 179, 244, 0.15) !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn-primary:hover {
+      background-color: #179edb !important;
+      border-color: #179edb !important;
+      box-shadow: 0 6px 15px rgba(35, 179, 244, 0.25) !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn-outline-primary {
+      border: 1px solid #23b3f4 !important;
+      color: #23b3f4 !important;
+      background-color: #ffffff !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn-outline-primary:hover {
+      background-color: #23b3f4 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn-outline-primary:hover svg {
+      stroke: #ffffff !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn-outline-danger {
+      border: 1px solid #ef4444 !important;
+      color: #ef4444 !important;
+      background-color: #ffffff !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn-outline-danger:hover {
+      background-color: #ef4444 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn-outline-danger:hover svg {
+      stroke: #ffffff !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn-outline-warning {
+      border: 1px solid #f59e0b !important;
+      color: #f59e0b !important;
+      background-color: #ffffff !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn-outline-warning:hover {
+      background-color: #f59e0b !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25) !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn-outline-warning:hover svg {
+      stroke: #ffffff !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn-outline-secondary {
+      border: 1px solid #64748b !important;
+      color: #64748b !important;
+      background-color: #ffffff !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn-outline-secondary:hover {
+      background-color: #64748b !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(100, 116, 139, 0.25) !important;
+    }
+    .admin-daily-stock-logs-stock-container .btn-outline-secondary:hover svg {
+      stroke: #ffffff !important;
+    }
     .audit-logs-day-card {
       background: #ffffff !important;
-      border: 1px solid #e2e8f0 !important;
+      border: 1px solid rgba(0,0,0,0.05) !important;
       border-radius: 1.5rem !important;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -2px rgba(0, 0, 0, 0.02) !important;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.02) !important;
       margin-bottom: 2.5rem !important;
       overflow: hidden !important;
     }
@@ -129,9 +261,10 @@ const DailyStockLogs = () => {
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
+      transition: all 0.2s ease;
     }
     .audit-logs-day-header:hover {
-      background: linear-gradient(135deg, #eff6ff 0%, #e2e8f0 100%) !important;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
     }
     .audit-logs-day-header .expand-icon {
       transition: transform 0.2s ease;
@@ -161,6 +294,10 @@ const DailyStockLogs = () => {
       font-size: 1.15rem !important;
       font-weight: 800 !important;
       letter-spacing: -0.02em;
+    }
+    .modal-content {
+      border-radius: 1.5rem !important;
+      overflow: hidden !important;
     }
     .mobile-ribbon-bar {
       display: flex;

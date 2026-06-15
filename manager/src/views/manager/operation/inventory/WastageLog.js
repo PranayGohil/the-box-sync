@@ -11,13 +11,13 @@ import Select from 'react-select';
 
 const customStyles = `
     .wastage-container {
-      background: #f9f9fb;
+      background: #f8fafc;
       min-height: 100vh;
       padding-bottom: 5rem;
     }
     .page-card {
       background: #ffffff !important;
-      border-radius: 2rem !important;
+      border-radius: 1.5rem !important;
       border: 1px solid rgba(0, 0, 0, 0.05) !important;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.02) !important;
       overflow: hidden;
@@ -34,14 +34,14 @@ const customStyles = `
       gap: 0.75rem;
     }
     .modern-input {
-      border-radius: 10px !important;
-      padding: 0.4rem 0.8rem !important;
-      border: 1.5px solid #f1f5f9 !important;
+      border-radius: 12px !important;
+      padding: 0.8rem 1.25rem !important;
+      border: 1.5px solid #e2e8f0 !important;
       font-weight: 600 !important;
       color: #334155 !important;
       transition: all 0.3s ease !important;
       background: #fcfdfe !important;
-      height: 40px !important;
+      height: 48px !important;
     }
     input[type="date"].modern-input {
       padding-right: 0.8rem !important;
@@ -64,16 +64,16 @@ const customStyles = `
       background: #ffffff !important;
     }
     .input-group-label {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 700;
       color: #64748b;
       margin-bottom: 0.5rem;
       padding-left: 0.25rem;
     }
     .select-modern .react-select__control {
-      border-radius: 10px !important;
-      border: 1.5px solid #f1f5f9 !important;
-      min-height: 40px !important;
+      border-radius: 12px !important;
+      border: 1.5px solid #e2e8f0 !important;
+      min-height: 48px !important;
       background: #fcfdfe !important;
       font-weight: 600 !important;
     }
@@ -94,6 +94,134 @@ const customStyles = `
       letter-spacing: 0.02em;
       padding: 0.5em 1em;
       border-radius: 50px;
+    }
+    .table {
+      border-collapse: separate !important;
+      border-spacing: 0 10px !important;
+    }
+    .table thead th {
+      border: none !important;
+      background: transparent !important;
+      color: #64748b !important;
+      font-weight: 700 !important;
+      font-size: 0.85rem !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.05em !important;
+      padding: 0.75rem 1.5rem !important;
+    }
+    .table tbody tr {
+      transition: all 0.2s ease-in-out !important;
+    }
+    .table tbody tr:hover {
+      transform: translateY(-2px);
+    }
+    .table tbody td {
+      background: #ffffff !important;
+      border-top: 1px solid #f1f5f9 !important;
+      border-bottom: 1px solid #f1f5f9 !important;
+      padding: 1.25rem 1.5rem !important;
+      vertical-align: middle !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01) !important;
+    }
+    .table tbody tr td:first-child {
+      border-left: 1px solid #f1f5f9 !important;
+      border-top-left-radius: 1rem !important;
+      border-bottom-left-radius: 1rem !important;
+    }
+    .table tbody tr td:last-child {
+      border-right: 1px solid #f1f5f9 !important;
+      border-top-right-radius: 1rem !important;
+      border-bottom-right-radius: 1rem !important;
+    }
+    .wastage-container .btn {
+      transition: all 0.2s ease-in-out !important;
+    }
+    .wastage-container .btn:hover {
+      transform: translateY(-2px) !important;
+    }
+    .wastage-container .btn:not(.btn-sm) {
+      border-radius: 50px !important;
+      font-weight: 600 !important;
+      padding: 10px 28px !important;
+      height: 48px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      font-size: 0.95rem !important;
+    }
+    .wastage-container .btn.btn-sm {
+      border-radius: 50px !important;
+      font-weight: 600 !important;
+      padding: 6px 16px !important;
+      height: 36px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 6px !important;
+      font-size: 0.85rem !important;
+    }
+    .wastage-container .btn-primary {
+      background-color: #23b3f4 !important;
+      border-color: #23b3f4 !important;
+      box-shadow: 0 4px 10px rgba(35, 179, 244, 0.15) !important;
+    }
+    .wastage-container .btn-primary:hover {
+      background-color: #179edb !important;
+      border-color: #179edb !important;
+      box-shadow: 0 6px 15px rgba(35, 179, 244, 0.25) !important;
+    }
+    .wastage-container .btn-outline-primary {
+      border: 1px solid #23b3f4 !important;
+      color: #23b3f4 !important;
+      background-color: #ffffff !important;
+    }
+    .wastage-container .btn-outline-primary:hover {
+      background-color: #23b3f4 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+    }
+    .wastage-container .btn-outline-primary:hover svg {
+      stroke: #ffffff !important;
+    }
+    .wastage-container .btn-outline-danger {
+      border: 1px solid #ef4444 !important;
+      color: #ef4444 !important;
+      background-color: #ffffff !important;
+    }
+    .wastage-container .btn-outline-danger:hover {
+      background-color: #ef4444 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
+    }
+    .wastage-container .btn-outline-danger:hover svg {
+      stroke: #ffffff !important;
+    }
+    .wastage-container .btn-outline-warning {
+      border: 1px solid #f59e0b !important;
+      color: #f59e0b !important;
+      background-color: #ffffff !important;
+    }
+    .wastage-container .btn-outline-warning:hover {
+      background-color: #f59e0b !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25) !important;
+    }
+    .wastage-container .btn-outline-warning:hover svg {
+      stroke: #ffffff !important;
+    }
+    .wastage-container .btn-outline-secondary {
+      border: 1px solid #64748b !important;
+      color: #64748b !important;
+      background-color: #ffffff !important;
+    }
+    .wastage-container .btn-outline-secondary:hover {
+      background-color: #64748b !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(100, 116, 139, 0.25) !important;
+    }
+    .wastage-container .btn-outline-secondary:hover svg {
+      stroke: #ffffff !important;
     }
 `;
 
@@ -290,7 +418,7 @@ const WastageLog = () => {
                   />
                 </Form.Group>
 
-                <Button variant="danger" type="submit" className="w-100 rounded-pill fw-bold py-3 shadow-sm border-0" disabled={submitting}>
+                <Button variant="outline-danger" type="submit" className="w-100 rounded-pill fw-bold py-3 shadow-sm" disabled={submitting}>
                   {submitting ? <Spinner animation="border" size="sm" className="me-2" /> : <CsLineIcons icon="check-circle" className="me-2" />}
                   Log Wastage Entry
                 </Button>

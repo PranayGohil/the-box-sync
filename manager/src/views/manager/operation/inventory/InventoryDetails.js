@@ -129,16 +129,16 @@ const InventoryDetails = () => {
 
     const customStyles = `
     .details-container {
-      background: #f9f9fb;
+      background: #f8fafc;
       min-height: 100vh;
       padding-bottom: 5rem;
     }
     .overview-bar {
       background: #ffffff;
-      border-radius: 1.25rem;
+      border-radius: 1.5rem;
       padding: 1.5rem 2rem;
       border: 1px solid rgba(0,0,0,0.05);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.02);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -156,7 +156,7 @@ const InventoryDetails = () => {
       }
     }
     .info-label {
-      font-size: 0.65rem;
+      font-size: 0.75rem;
       font-weight: 800;
       color: #94a3b8;
       text-transform: uppercase;
@@ -172,7 +172,7 @@ const InventoryDetails = () => {
     }
     .section-card {
       background: #ffffff !important;
-      border-radius: 2rem !important;
+      border-radius: 1.5rem !important;
       border: 1px solid rgba(0,0,0,0.05) !important;
       padding: 2.5rem !important;
       box-shadow: 0 10px 40px rgba(0,0,0,0.02) !important;
@@ -188,20 +188,20 @@ const InventoryDetails = () => {
       padding: 0 1.5rem;
       margin-bottom: 1rem;
       color: #94a3b8;
-      font-size: 0.65rem;
+      font-size: 0.75rem;
       font-weight: 800;
       text-transform: uppercase;
     }
     .item-row-card {
       background: #ffffff !important;
-      border-radius: 1.25rem !important;
+      border-radius: 1rem !important;
       border: 1px solid #f1f5f9 !important;
       padding: 1.25rem 1.5rem !important;
-      margin-bottom: 1rem;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01) !important;
       display: flex;
       align-items: center;
-      transition: all 0.25s ease;
+      transition: all 0.2s ease-in-out !important;
     }
     @media (max-width: 991px) {
       .item-row-card {
@@ -229,7 +229,7 @@ const InventoryDetails = () => {
     }
     .item-row-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.05) !important;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.05) !important;
       border-color: rgba(35, 179, 244, 0.2) !important;
     }
     .summary-hub {
@@ -299,6 +299,120 @@ const InventoryDetails = () => {
     }
     .btn-action:hover {
       transform: translateY(-2px);
+    }
+    .details-container .btn {
+      transition: all 0.2s ease-in-out !important;
+    }
+    .details-container .btn:hover {
+      transform: translateY(-2px) !important;
+    }
+    .details-container .btn:not(.btn-sm) {
+      border-radius: 50px !important;
+      font-weight: 600 !important;
+      padding: 10px 28px !important;
+      height: 48px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      font-size: 0.95rem !important;
+    }
+    .details-container .btn.btn-sm {
+      border-radius: 50px !important;
+      font-weight: 600 !important;
+      padding: 6px 16px !important;
+      height: 36px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 6px !important;
+      font-size: 0.85rem !important;
+    }
+     .details-container .btn-primary {
+       background-color: #23b3f4 !important;
+       border-color: #23b3f4 !important;
+       box-shadow: 0 4px 10px rgba(35, 179, 244, 0.15) !important;
+     }
+     .details-container .btn-primary:hover {
+       background-color: #179edb !important;
+       border-color: #179edb !important;
+       box-shadow: 0 6px 15px rgba(35, 179, 244, 0.25) !important;
+     }
+     .details-container .btn-outline-primary {
+       border: 1px solid #23b3f4 !important;
+       color: #23b3f4 !important;
+       background-color: #ffffff !important;
+     }
+     .details-container .btn-outline-primary:hover {
+       background-color: #23b3f4 !important;
+       color: #ffffff !important;
+       box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+     }
+     .details-container .btn-outline-primary:hover svg {
+       stroke: #ffffff !important;
+     }
+     .details-container .btn-outline-success {
+       border: 1px solid #10b981 !important;
+       color: #10b981 !important;
+       background-color: #ffffff !important;
+     }
+     .details-container .btn-outline-success:hover {
+       background-color: #10b981 !important;
+       color: #ffffff !important;
+       box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+     }
+     .details-container .btn-outline-success:hover svg {
+       stroke: #ffffff !important;
+     }
+     .details-container .btn-outline-danger {
+       border: 1px solid #ef4444 !important;
+       color: #ef4444 !important;
+       background-color: #ffffff !important;
+     }
+     .details-container .btn-outline-danger:hover {
+       background-color: #ef4444 !important;
+       color: #ffffff !important;
+       box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
+     }
+     .details-container .btn-outline-danger:hover svg {
+       stroke: #ffffff !important;
+     }
+     .details-container .btn-outline-warning {
+       border: 1px solid #f59e0b !important;
+       color: #f59e0b !important;
+       background-color: #ffffff !important;
+     }
+     .details-container .btn-outline-warning:hover {
+       background-color: #f59e0b !important;
+       color: #ffffff !important;
+       box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25) !important;
+     }
+     .details-container .btn-outline-warning:hover svg {
+       stroke: #ffffff !important;
+     }
+     .details-container .btn-outline-secondary {
+       border: 1px solid #64748b !important;
+       color: #64748b !important;
+       background-color: #ffffff !important;
+     }
+     .details-container .btn-outline-secondary:hover {
+       background-color: #64748b !important;
+       color: #ffffff !important;
+       box-shadow: 0 4px 12px rgba(100, 116, 139, 0.25) !important;
+     }
+     .details-container .btn-outline-secondary:hover svg {
+       stroke: #ffffff !important;
+     }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
     }
 `;
 

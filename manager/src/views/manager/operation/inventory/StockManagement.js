@@ -9,13 +9,13 @@ import { getCurrentStock, useInventoryStock, updateItemSettings } from 'api/inve
 
 const customStyles = `
     .stock-container {
-      background: #f9f9fb;
+      background: #f8fafc;
       min-height: 100vh;
       padding-bottom: 5rem;
     }
     .page-card {
       background: #ffffff !important;
-      border-radius: 2rem !important;
+      border-radius: 1.5rem !important;
       border: 1px solid rgba(0, 0, 0, 0.05) !important;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.02) !important;
       overflow: hidden;
@@ -23,12 +23,12 @@ const customStyles = `
     .modern-input {
       border-radius: 12px !important;
       padding: 0.8rem 1.25rem !important;
-      border: 1.5px solid #f1f5f9 !important;
+      border: 1.5px solid #e2e8f0 !important;
       font-weight: 600 !important;
       color: #334155 !important;
       transition: all 0.3s ease !important;
       background: #fcfdfe !important;
-      height: 52px !important;
+      height: 48px !important;
     }
     .modern-input:focus {
       border-color: #23b3f4 !important;
@@ -58,12 +58,12 @@ const customStyles = `
     }
     .stock-management-item-row-card {
       background: #ffffff !important;
-      border-radius: 1.25rem !important;
+      border-radius: 1.5rem !important;
       border: 1px solid rgba(0, 0, 0, 0.05) !important;
       padding: 1.25rem !important;
       margin-bottom: 1.25rem !important;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02) !important;
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .stock-management-item-row-card:hover {
       border-color: rgba(35, 179, 244, 0.4) !important;
@@ -85,10 +85,10 @@ const customStyles = `
       color: #94a3b8;
     }
     .stock-management-status-pill {
-      padding: 0.35rem 0.75rem;
+      padding: 0.45rem 1rem;
       border-radius: 50px;
       font-weight: 700;
-      font-size: 0.6rem;
+      font-size: 0.7rem;
       text-transform: uppercase;
       letter-spacing: 0.03em;
     }
@@ -110,9 +110,15 @@ const customStyles = `
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1.5px solid #f1f5f9;
+      border: 1.5px solid #e2e8f0;
       color: #64748b;
       background: #ffffff;
+      transition: all 0.2s ease;
+    }
+    .stock-management-btn-icon-round:hover {
+      border-color: #23b3f4;
+      color: #23b3f4;
+      background: #f0f9ff;
     }
     .stock-management-alert-premium {
       border-radius: 1rem !important;
@@ -135,6 +141,104 @@ const customStyles = `
       margin-left: auto !important;
     }
 
+    .stock-container .btn {
+      transition: all 0.2s ease-in-out !important;
+    }
+    .stock-container .btn:hover {
+      transform: translateY(-2px) !important;
+    }
+    .stock-container .btn:not(.btn-sm) {
+      border-radius: 50px !important;
+      font-weight: 600 !important;
+      padding: 10px 28px !important;
+      height: 48px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      font-size: 0.95rem !important;
+    }
+    .stock-container .btn.btn-sm {
+      border-radius: 50px !important;
+      font-weight: 600 !important;
+      padding: 6px 16px !important;
+      height: 36px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 6px !important;
+      font-size: 0.85rem !important;
+    }
+    .stock-container .btn-primary {
+      background-color: #23b3f4 !important;
+      border-color: #23b3f4 !important;
+      box-shadow: 0 4px 10px rgba(35, 179, 244, 0.15) !important;
+    }
+    .stock-container .btn-primary:hover {
+      background-color: #179edb !important;
+      border-color: #179edb !important;
+      box-shadow: 0 6px 15px rgba(35, 179, 244, 0.25) !important;
+    }
+    .stock-container .btn-outline-primary,
+    .manage-menu-custom-btn-outline {
+      border: 1px solid #23b3f4 !important;
+      color: #23b3f4 !important;
+      background-color: #ffffff !important;
+    }
+    .stock-container .btn-outline-primary:hover,
+    .manage-menu-custom-btn-outline:hover {
+      background-color: #23b3f4 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+    }
+    .stock-container .btn-outline-primary:hover svg,
+    .manage-menu-custom-btn-outline:hover svg {
+      stroke: #ffffff !important;
+    }
+    .stock-container .btn-outline-danger {
+      border: 1px solid #ef4444 !important;
+      color: #ef4444 !important;
+      background-color: #ffffff !important;
+    }
+    .stock-container .btn-outline-danger:hover {
+      background-color: #ef4444 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
+    }
+    .stock-container .btn-outline-danger:hover svg {
+      stroke: #ffffff !important;
+    }
+    .stock-container .btn-outline-warning {
+      border: 1px solid #f59e0b !important;
+      color: #f59e0b !important;
+      background-color: #ffffff !important;
+    }
+    .stock-container .btn-outline-warning:hover {
+      background-color: #f59e0b !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25) !important;
+    }
+    .stock-container .btn-outline-warning:hover svg {
+      stroke: #ffffff !important;
+    }
+    .stock-container .btn-outline-secondary {
+      border: 1px solid #64748b !important;
+      color: #64748b !important;
+      background-color: #ffffff !important;
+    }
+    .stock-container .btn-outline-secondary:hover {
+      background-color: #64748b !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(100, 116, 139, 0.25) !important;
+    }
+    .stock-container .btn-outline-secondary:hover svg {
+      stroke: #ffffff !important;
+    }
+
+    .modal-content {
+      border-radius: 1.5rem !important;
+      overflow: hidden !important;
+    }
     @media (max-width: 991px) {
       .stock-management-main-workstation { padding: 1rem !important; }
       .stock-management-item-row-card { padding: 1.25rem !important; margin-bottom: 1rem; }

@@ -116,9 +116,97 @@ const AddInventory = () => {
       values.items.filter((_, i) => i !== idx)
     );
 
+  const customStyles = `
+    .add-inventory-inventory-container .btn {
+      transition: all 0.2s ease-in-out !important;
+    }
+    .add-inventory-inventory-container .btn:hover {
+      transform: translateY(-2px) !important;
+    }
+    .add-inventory-inventory-container .btn:not(.btn-sm) {
+      border-radius: 50px !important;
+      font-weight: 600 !important;
+      padding: 10px 28px !important;
+      height: 48px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      font-size: 0.95rem !important;
+    }
+    .add-inventory-inventory-container .btn.btn-sm {
+      border-radius: 50px !important;
+      font-weight: 600 !important;
+      padding: 6px 16px !important;
+      height: 36px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 6px !important;
+      font-size: 0.85rem !important;
+    }
+    .add-inventory-inventory-container .btn-primary {
+      background-color: #23b3f4 !important;
+      border-color: #23b3f4 !important;
+      box-shadow: 0 4px 10px rgba(35, 179, 244, 0.15) !important;
+    }
+    .add-inventory-inventory-container .btn-primary:hover {
+      background-color: #179edb !important;
+      border-color: #179edb !important;
+      box-shadow: 0 6px 15px rgba(35, 179, 244, 0.25) !important;
+    }
+    .add-inventory-inventory-container .btn-outline-primary,
+    .add-inventory-inventory-container .manage-menu-custom-btn-outline {
+      border: 1px solid #23b3f4 !important;
+      color: #23b3f4 !important;
+      background-color: #ffffff !important;
+    }
+    .add-inventory-inventory-container .btn-outline-primary:hover,
+    .add-inventory-inventory-container .manage-menu-custom-btn-outline:hover {
+      background-color: #23b3f4 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+    }
+    .add-inventory-inventory-container .btn-outline-primary:hover svg,
+    .add-inventory-inventory-container .manage-menu-custom-btn-outline:hover svg {
+      stroke: #ffffff !important;
+    }
+    .add-inventory-inventory-container .btn-outline-danger {
+      border: 1px solid #ef4444 !important;
+      color: #ef4444 !important;
+      background-color: #ffffff !important;
+    }
+    .add-inventory-inventory-container .btn-outline-danger:hover {
+      background-color: #ef4444 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
+    }
+    .add-inventory-inventory-container .btn-outline-danger:hover svg {
+      stroke: #ffffff !important;
+    }
+    .add-inventory-inventory-container .btn-outline-secondary {
+      border: 1px solid #64748b !important;
+      color: #64748b !important;
+      background-color: #ffffff !important;
+    }
+    .add-inventory-inventory-container .btn-outline-secondary:hover {
+      background-color: #64748b !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(100, 116, 139, 0.25) !important;
+    }
+    .add-inventory-inventory-container .btn-outline-secondary:hover svg {
+      stroke: #ffffff !important;
+    }
+
+    .modal-content {
+      border-radius: 1.5rem !important;
+      overflow: hidden !important;
+    }
+  `;
+
   return (
     <div className="add-inventory-inventory-container pb-5">
-      
+      <style>{customStyles}</style>
       <HtmlHead title={title} />
       <div className="container-fluid px-lg-5">
         <div className="page-title-container mb-4 mt-5 mt-lg-0">
@@ -281,6 +369,7 @@ const AddInventory = () => {
                           onChange={(s) => handleItemChange(idx, 'item_name', s ? s.value : '')}
                           placeholder="Select or type item..."
                           classNamePrefix="react-select"
+                          styles={{ control: (base) => ({ ...base, borderColor: touched.items?.[idx]?.item_name && errors.items?.[idx]?.item_name ? '#dc3545' : base.borderColor }) }}
                         />
                       </div>
                       {touched.items?.[idx]?.item_name && errors.items?.[idx]?.item_name && <div className="text-danger small mt-1">{errors.items[idx].item_name}</div>}
