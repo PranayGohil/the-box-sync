@@ -8,6 +8,11 @@ const payrollConfigSchema = new Schema(
       required: true,
       unique: true, // One global config per tenant/user
     },
+    // ── Network Restrictions ──────────────────────────────────────────
+    network_restrictions: {
+      is_enabled: { type: Boolean, default: false },
+      allowed_ips: { type: [String], default: [] }
+    },
     // ── Active Earning Modules ──────────────────────────────────────────
     custom_earnings: {
       type: [
@@ -80,7 +85,11 @@ const payrollConfigSchema = new Schema(
       half_day_hours: { type: Number, default: 4 },
       full_day_hours: { type: Number, default: 8 },
       lunch_start_time: { type: String, default: "01:00 PM" },
-      lunch_end_time: { type: String, default: "02:00 PM" }
+      lunch_end_time: { type: String, default: "02:00 PM" },
+      // Attendance timing rules
+      shift_start_time: { type: String, default: "09:00 AM" },        // Official shift start
+      late_threshold_minutes: { type: Number, default: 0 },           // Grace period in minutes (0 = no grace)
+      shift_end_time: { type: String, default: "06:00 PM" }           // Official shift end (for overtime)
     },
 
     // ── Global Weekly Off Config ─────────────────────────────────────────

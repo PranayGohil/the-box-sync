@@ -67,10 +67,20 @@ const getStaffDataById = async (req, res) => {
     const staffId = req.params.id;
     const userId = req.user?._id || req.user;
 
-    const staff = await Staff.findOne({ _id: staffId, user_id: userId }).lean();
+    const staff = await Staff.findOne({ _id: staffId, user_id: userId }).select("+password").lean();
 
     if (!staff) {
       return res.status(404).json({ success: false, message: "Staff member not found" });
+    }
+
+    if (staff.password) {
+      if (staff.password.startsWith("$2a$") || staff.password.startsWith("$2b$")) {
+        staff.password = "********";
+      } else {
+        staff.password = Staff.decrypt(staff.password);
+      }
+    } else {
+      staff.password = "";
     }
 
     res.json({ success: true, data: staff });
@@ -84,6 +94,8 @@ const getStaffDataById = async (req, res) => {
 const addStaff = async (req, res) => {
   try {
     const userId = req.user?._id || req.user;
+    console.log("addStaff (server) called. req.body keys:", Object.keys(req.body));
+    console.log("req.body.password:", req.body.password ? `Received (len: ${req.body.password.length})` : "NOT received/empty");
     const staffData = {
       ...req.body,
       user_id: userId,
@@ -120,8 +132,10 @@ const updateStaff = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user?._id || req.user;
+    console.log("updateStaff (server) called. req.body keys:", Object.keys(req.body));
+    console.log("req.body.password:", req.body.password ? `Received (len: ${req.body.password.length})` : "NOT received/empty");
 
-    const existingStaff = await Staff.findOne({ _id: id, user_id: userId });
+    const existingStaff = await Staff.findOne({ _id: id, user_id: userId }).select("+password");
     if (!existingStaff) {
       return res.status(404).json({ error: "Staff member not found" });
     }
@@ -170,7 +184,16 @@ const updateStaff = async (req, res) => {
       }
     }
 
-    if (!staffData.password) {
+    if (staffData.password) {
+      if (staffData.password === "********") {
+        delete staffData.password;
+      } else {
+        const decryptedExisting = Staff.decrypt(existingStaff.password);
+        if (staffData.password === decryptedExisting) {
+          delete staffData.password;
+        }
+      }
+    } else {
       delete staffData.password;
     }
 
