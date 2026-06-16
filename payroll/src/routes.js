@@ -11,9 +11,14 @@ const payroll = {
   editStaff: lazy(() => import('views/admin/staff/EditStaff')),
   attendance: lazy(() => import('views/admin/staff/attandance/ViewAttendance')),
   manageAttendance: lazy(() => import('views/admin/staff/attandance/ManageAttendance')),
+  roster: lazy(() => import('views/admin/staff/attandance/RosterManagement')),
+  essAttendance: lazy(() => import('views/ess/ESSAttendancePanel')),
   payrollSystem: lazy(() => import('views/admin/staff/payroll/PayrollSystem')),
   generatePayroll: lazy(() => import('views/admin/staff/payroll/GeneratePayroll')),
   managePayroll: lazy(() => import('views/admin/staff/payroll/ManagePayroll')),
+  expenses: lazy(() => import('views/admin/staff/payroll/ManageExpenses')),
+  essExpense: lazy(() => import('views/ess/ESSExpensePanel')),
+  reports: lazy(() => import('views/admin/staff/payroll/StatutoryReports')),
   assets: lazy(() => import('views/admin/staff/assets/Assets')),
 };
 
@@ -67,6 +72,8 @@ const allRoutes = {
       subs: [
         { path: '/view', label: 'View Attendance', component: payroll.attendance, hideInMenu: true },
         { path: '/manage', label: 'Mark Attendance', component: payroll.manageAttendance, hideInMenu: true },
+        { path: '/roster', label: 'Roster Management', component: payroll.roster, hideInMenu: true },
+        { path: '/ess', label: 'ESS My Attendance', component: payroll.essAttendance, hideInMenu: true },
       ],
     },
     {
@@ -74,6 +81,22 @@ const allRoutes = {
       label: 'Assets',
       icon: 'boxes',
       component: payroll.assets,
+    },
+    {
+      path: `${appRoot}/expenses`,
+      exact: true,
+      redirect: true,
+      to: `${appRoot}/expenses/manage`,
+    },
+    {
+      path: `${appRoot}/expenses`,
+      label: 'Expenses',
+      icon: 'money',
+      subs: [
+        { path: '/manage', label: 'Manage Expenses', component: payroll.expenses },
+        { path: '/ess', label: 'ESS Expenses', component: payroll.essExpense },
+        { path: '/reports', label: 'Statutory Reports', component: payroll.reports },
+      ],
     },
     {
       path: `${appRoot}/payroll`,

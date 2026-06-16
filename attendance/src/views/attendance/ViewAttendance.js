@@ -549,6 +549,35 @@ const ViewAttendance = () => {
     recordsLimit: 'all',
   });
 
+  // Regularization State
+  const [showRegModal, setShowRegModal] = useState(false);
+  const [regForm, setRegForm] = useState({ date: '', in_time: '', out_time: '', reason: '' });
+  const [regLoading, setRegLoading] = useState(false);
+
+  const handleRegSubmit = (e) => {
+    e.preventDefault();
+    setRegLoading(true);
+    setTimeout(() => {
+      const existing = JSON.parse(localStorage.getItem('regularization_requests') || '[]');
+      existing.push({
+        id: Date.now(),
+        staff_id: staffData?.staff_id || currentUser?._id,
+        f_name: staffData?.f_name || currentUser?.f_name,
+        l_name: staffData?.l_name || currentUser?.l_name,
+        ...regForm,
+        status: 'Pending',
+        submittedAt: new Date().toISOString()
+      });
+      localStorage.setItem('regularization_requests', JSON.stringify(existing));
+      
+      setRegLoading(false);
+      setShowRegModal(false);
+      setToastMessage('Regularization request submitted successfully!');
+      setShowToast(true);
+      setRegForm({ date: '', in_time: '', out_time: '', reason: '' });
+    }, 1000);
+  };
+
   const breadcrumbs = [
     { to: '', text: 'Home' },
     { to: 'dashboard', text: 'Dashboard' },
@@ -927,8 +956,11 @@ const ViewAttendance = () => {
             </h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
-          <Col md={5} className="d-flex justify-content-md-end">
-            <Button variant="none" className="custom-btn-primary-outline px-4 py-2 d-flex align-items-center gap-2" onClick={() => history.push('/dashboard')}>
+          <Col md={5} className="d-flex justify-content-md-end gap-2 flex-wrap">
+            <Button variant="none" className="custom-btn-info-outline px-4 py-2 d-flex align-items-center gap-2 mb-2 mb-md-0" onClick={() => setShowRegModal(true)}>
+              <CsLineIcons icon="edit" size="18" /> Request Regularization
+            </Button>
+            <Button variant="none" className="custom-btn-primary-outline px-4 py-2 d-flex align-items-center gap-2 mb-2 mb-md-0" onClick={() => history.push('/dashboard')}>
               <CsLineIcons icon="arrow-left" size="18" /> Back to Dashboard
             </Button>
           </Col>
@@ -1434,6 +1466,55 @@ const ViewAttendance = () => {
             <CsLineIcons icon="download" size="18" /> Export {exportType}
           </Button>
         </Modal.Footer>
+      </Modal>
+
+      {/* Regularization Modal */}
+      <Modal show={showRegModal} onHide={() => setShowRegModal(false)} centered className="rounded-4">
+        <Form onSubmit={handleRegSubmit}>
+          <Modal.Header closeButton className="border-0">
+            <Modal.Title className="fw-bold d-flex align-items-center gap-2">
+              <CsLineIcons icon="edit" size="24" className="text-primary" />
+              Request Regularization
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="py-4">
+            <div className="bg-soft-primary p-3 rounded-3 mb-4 d-flex align-items-center gap-3 border border-primary">
+              <CsLineIcons icon="info-hexagon" size="24" className="text-primary" />
+              <div className="small text-dark fw-medium">Submit a request to fix missing or incorrect punches. Admins will review this request.</div>
+            </div>
+            
+            <Form.Group className="mb-3">
+              <Form.Label className="small fw-bold text-muted text-uppercase">Date of Missed Punch</Form.Label>
+              <Form.Control type="date" required className="rounded-3 shadow-sm py-2" value={regForm.date} onChange={e => setRegForm({...regForm, date: e.target.value})} />
+            </Form.Group>
+            
+            <Row className="g-3 mb-3">
+              <Col xs={6}>
+                <Form.Group>
+                  <Form.Label className="small fw-bold text-muted text-uppercase">Correct In Time</Form.Label>
+                  <Form.Control type="time" className="rounded-3 shadow-sm py-2" value={regForm.in_time} onChange={e => setRegForm({...regForm, in_time: e.target.value})} />
+                </Form.Group>
+              </Col>
+              <Col xs={6}>
+                <Form.Group>
+                  <Form.Label className="small fw-bold text-muted text-uppercase">Correct Out Time</Form.Label>
+                  <Form.Control type="time" className="rounded-3 shadow-sm py-2" value={regForm.out_time} onChange={e => setRegForm({...regForm, out_time: e.target.value})} />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Form.Group className="mb-3">
+              <Form.Label className="small fw-bold text-muted text-uppercase">Reason</Form.Label>
+              <Form.Control as="textarea" rows={3} required placeholder="Explain why the punch was missed or needs correction..." className="rounded-3 shadow-sm py-2" value={regForm.reason} onChange={e => setRegForm({...regForm, reason: e.target.value})} />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer className="border-0">
+            <Button variant="secondary" className="rounded-pill px-4" onClick={() => setShowRegModal(false)}>Cancel</Button>
+            <Button type="submit" className="custom-btn-solid rounded-pill px-4" disabled={regLoading}>
+              {regLoading ? <Spinner animation="border" size="sm" /> : 'Submit Request'}
+            </Button>
+          </Modal.Footer>
+        </Form>
       </Modal>
 
       {/* Toast */}

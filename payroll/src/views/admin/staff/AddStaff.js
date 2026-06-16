@@ -140,6 +140,7 @@ const AddStaff = () => {
 
     salary: Yup.number().required('Salary is required').positive('Salary must be a positive number'),
     salary_calculation_base: Yup.string().required('Salary calculation base is required').oneOf(['working_days', 'working_hours']),
+    attendance_method: Yup.string().required('Attendance method is required').oneOf(['any', 'wifi', 'ess']),
 
     position: Yup.string().required('Position is required'),
 
@@ -237,6 +238,7 @@ const AddStaff = () => {
       password: '',
       salary: '',
       salary_calculation_base: 'working_days',
+      attendance_method: 'any',
       weekly_off_policy: 'global',
       custom_weekly_offs: [{ day: 'Sunday', type: 'all_weeks', weeks: [] }],
       leave_policy_configuration: [],
@@ -1327,9 +1329,38 @@ const AddStaff = () => {
                         </div>
                       </Col>
                     )}
-                  </Row>
-                </div>
 
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Attendance Method</Form.Label>
+                      <Select
+                        classNamePrefix="react-select"
+                        options={[
+                          { value: 'any', label: 'Any Method (Default)' },
+                          { value: 'wifi', label: 'Office Wi-Fi Only' },
+                          { value: 'ess', label: 'ESS Anywhere (Field Staff)' }
+                        ]}
+                        value={
+                          values.attendance_method
+                            ? {
+                                value: values.attendance_method,
+                                label: values.attendance_method === 'any' ? 'Any Method (Default)'
+                                  : values.attendance_method === 'wifi' ? 'Office Wi-Fi Only'
+                                  : 'ESS Anywhere (Field Staff)'
+                              }
+                            : null
+                        }
+                        onChange={(selected) => setFieldValue('attendance_method', selected ? selected.value : 'any')}
+                        onBlur={() => formik.setFieldTouched('attendance_method', true)}
+                        isDisabled={loading.submitting}
+                      />
+                      {touched.attendance_method && errors.attendance_method && (
+                        <div className="d-block invalid-feedback">{errors.attendance_method}</div>
+                      )}
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </div>
                 <hr className="my-4 opacity-50" />
                 <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
                   <CsLineIcons icon="airplane" size="18" />

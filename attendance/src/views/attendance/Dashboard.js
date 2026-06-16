@@ -514,6 +514,33 @@ export default function Dashboard() {
   const [overtimeHours, setOvertimeHours] = useState(0);
   const [isRestrictedNetwork, setIsRestrictedNetwork] = useState(false);
 
+  const [regularizationRequests, setRegularizationRequests] = useState([]);
+
+  useEffect(() => {
+    if (currentUser?.role === 'admin') {
+      const stored = JSON.parse(localStorage.getItem('regularization_requests') || '[]');
+      setRegularizationRequests(stored);
+    }
+  }, [currentUser]);
+
+  const handleApproveReg = (id) => {
+    const stored = JSON.parse(localStorage.getItem('regularization_requests') || '[]');
+    const updated = stored.map(req => req.id === id ? { ...req, status: 'Approved' } : req);
+    localStorage.setItem('regularization_requests', JSON.stringify(updated));
+    setRegularizationRequests(updated);
+    setSuccessMsg('Regularization Request Approved');
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
+
+  const handleRejectReg = (id) => {
+    const stored = JSON.parse(localStorage.getItem('regularization_requests') || '[]');
+    const updated = stored.map(req => req.id === id ? { ...req, status: 'Rejected' } : req);
+    localStorage.setItem('regularization_requests', JSON.stringify(updated));
+    setRegularizationRequests(updated);
+    setSuccessMsg('Regularization Request Rejected');
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
+
   const getTodayDate = () => {
     const today = new Date();
     const options = {
@@ -1668,6 +1695,7 @@ export default function Dashboard() {
 
   const renderKioskPortal = () => {
     return (
+      <div className="d-flex flex-column w-100">
       <div className="kiosk-wrapper">
         <Card className="kiosk-card">
           
@@ -1730,6 +1758,73 @@ export default function Dashboard() {
             </small>
           </div>
         </Card>
+      </div>
+      
+      {currentUser?.role === 'admin' && (
+        <div className="container pb-5">
+          <Card className="kiosk-card text-start shadow-sm mx-auto mb-5" style={{ padding: '2rem', maxWidth: '850px' }}>
+            <h5 className="fw-bold mb-4 d-flex align-items-center gap-2">
+              <CsLineIcons icon="edit" className="text-primary" size="24" />
+              Pending Regularization Requests
+            </h5>
+            
+            {successMsg && (
+              <Alert variant="success" className="py-2 px-3 mb-4 rounded-3 d-flex align-items-center gap-2" style={{ fontSize: '0.88rem' }}>
+                <CsLineIcons icon="check-circle" size="18" /> {successMsg}
+              </Alert>
+            )}
+
+            <div className="table-responsive">
+              <table className="table table-hover align-middle border">
+                <thead className="bg-light">
+                  <tr>
+                    <th>Staff</th>
+                    <th>Date</th>
+                    <th>Corrected In</th>
+                    <th>Corrected Out</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th className="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {regularizationRequests.length === 0 ? (
+                    <tr><td colSpan="7" className="text-center py-4 text-muted">No pending regularization requests</td></tr>
+                  ) : regularizationRequests.map(req => (
+                    <tr key={req.id}>
+                      <td>
+                        <div className="fw-bold">{req.f_name} {req.l_name}</div>
+                        <div className="small text-muted">#{req.staff_id}</div>
+                      </td>
+                      <td>{format(new Date(req.date), 'dd/MM/yyyy')}</td>
+                      <td>{req.in_time || '—'}</td>
+                      <td>{req.out_time || '—'}</td>
+                      <td style={{ maxWidth: '200px' }} className="text-truncate" title={req.reason}>{req.reason}</td>
+                      <td>
+                        <Badge bg={req.status === 'Pending' ? 'warning' : req.status === 'Approved' ? 'success' : 'danger'}>
+                          {req.status}
+                        </Badge>
+                      </td>
+                      <td className="text-end">
+                        {req.status === 'Pending' && (
+                          <div className="d-flex justify-content-end gap-2">
+                            <Button size="sm" variant="success" className="d-flex align-items-center gap-1" onClick={() => handleApproveReg(req.id)}>
+                              <CsLineIcons icon="check" size="14" />
+                            </Button>
+                            <Button size="sm" variant="danger" className="d-flex align-items-center gap-1" onClick={() => handleRejectReg(req.id)}>
+                              <CsLineIcons icon="close" size="14" />
+                            </Button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
+      )}
       </div>
     );
   };
