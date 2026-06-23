@@ -230,26 +230,30 @@
       <div class="search-cell m-xl-5 p-xl-5 w-50 ">
         <form action="" id="" method="POST" class="contact-form-items">
           <div class="row g-xl-4">
-            <h2 class="title mb-xl-1 mb-3">Quick Enquiry</h2>
-            <div class="col-lg-6">
+            <h2 class="title wow fadeInDown mb-xl-1 mb-3">Quick Enquiry</h2>
+            <div class="col-lg-6 wow fadeInUp">
               <div class="form-clt">
                 <input type="text" class="main-search-input" name="name" id="name" placeholder="Your Name" />
               </div>
             </div>
-            <div class="col-lg-6">
+            <div class="col-lg-6 wow fadeInUp" data-wow-delay=".5s"
+              style="visibility: visible; animation-delay: 0.5s; animation-name: fadeInUp;">
               <div class="form-clt">
                 <input type="text" class="main-search-input" name="email2" id="email2" placeholder="Your Email" />
               </div>
             </div>
-            <div class="col-lg-12">
+            <div class="col-lg-12 wow fadeInUp" data-wow-delay=".7s"
+              style="visibility: visible; animation-delay: 0.7s; animation-name: fadeInUp;">
               <div class="form-clt">
                 <input type="text" class="main-search-input" name="phone" id="phone" placeholder="Your Number" />
               </div>
             </div>
-            <div class="col-lg-12">
-              <div class="form-clt"><textarea name="message" class="main-search-input" id="message" placeholder="Write Message"></textarea></div>
+            <div class="col-lg-12 wow fadeInUp" data-wow-delay=".7s"
+              style="visibility: visible; animation-delay: 0.7s; animation-name: fadeInUp;">
+              <div class="form-clt"><textarea name="message" class="main-search-input" id="message"></textarea></div>
             </div>
-            <div class="col-lg-7 py-xl-1 py-3">
+            <div class="col-lg-7 wow fadeInUp py-xl-1 py-3" data-wow-delay=".9s"
+              style="visibility: visible; animation-delay: 0.9s; animation-name: fadeInUp;">
               <button type="submit" class="theme-btn ">Send Message <i
                   class="fa-solid fa-arrow-right-long ms-1"></i></button>
             </div>
@@ -653,7 +657,8 @@
                   </div>
                   <div style="margin-top:30px;">
                     <a class="theme-btn style5 search-trigger w-100 text-center"
-                      style="padding:15px 15px; font-size:16px;" href="#search-wrap"> Send Enquiry </a>
+                      style="padding:15px 15px; font-size:16px;" href="#search-wrap" data-bs-toggle="modal"
+                      data-bs-target="#staticBackdrop"> Send Enquiry </a>
                   </div>
                 </div>
               </div>
@@ -1022,7 +1027,8 @@
                   </div>
                   <div style="margin-top:30px;">
                     <a class="theme-btn style5 search-trigger w-100 text-center"
-                      style="padding:15px 15px; font-size:16px;" href="#search-wrap"> Send Enquiry </a>
+                      style="padding:15px 15px; font-size:16px;" href="#search-wrap" data-bs-toggle="modal"
+                      data-bs-target="#staticBackdrop"> Send Enquiry </a>
                   </div>
                 </div>
               </div>
@@ -1391,7 +1397,8 @@
                   </div>
                   <div style="margin-top:30px;">
                     <a class="theme-btn style5 search-trigger w-100 text-center"
-                      style="padding:15px 15px; font-size:16px;" href="#search-wrap"> Send Enquiry </a>
+                      style="padding:15px 15px; font-size:16px;" href="#search-wrap" data-bs-toggle="modal"
+                      data-bs-target="#staticBackdrop"> Send Enquiry </a>
                   </div>
                 </div>
               </div>
@@ -1760,7 +1767,8 @@
                   </div>
                   <div style="margin-top:30px;">
                     <a class="theme-btn style5 search-trigger w-100 text-center"
-                      style="padding:15px 15px; font-size:16px;" href="#search-wrap"> Send Enquiry </a>
+                      style="padding:15px 15px; font-size:16px;" href="#search-wrap" data-bs-toggle="modal"
+                      data-bs-target="#staticBackdrop"> Send Enquiry </a>
                   </div>
                 </div>
               </div>
@@ -2131,7 +2139,8 @@
                   </div>
                   <div style="margin-top:30px;">
                     <a class="theme-btn style5 search-trigger w-100 text-center"
-                      style="padding:15px 15px; font-size:16px;" href="#search-wrap"> Send Enquiry </a>
+                      style="padding:15px 15px; font-size:16px;" href="#search-wrap" data-bs-toggle="modal"
+                      data-bs-target="#staticBackdrop"> Send Enquiry </a>
                   </div>
                 </div>
               </div>
@@ -2266,7 +2275,50 @@
     </div>
   </footer>
 
-
+  <!-- Modal -->
+  <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="staticBackdropLabel">Quick Enquiry</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="get">
+            <div class="row g-4">
+              <div class="col-lg-6" data-wow-delay=".3s">
+                <div class="form-clt">
+                  <span>Your name*</span> <input type="text" name="name" id="name" placeholder="Your Name" />
+                </div>
+              </div>
+              <div class="col-lg-6 " data-wow-delay=".5s">
+                <div class="form-clt">
+                  <span>Your Email*</span> <input type="text" name="email2" id="email2" placeholder="Your Email" />
+                </div>
+              </div>
+              <div class="col-lg-12 " data-wow-delay=".7s">
+                <div class="form-clt">
+                  <span>Your Number*</span> <input type="text" name="phone" id="phone" placeholder="Your Number" />
+                </div>
+              </div>
+              <div class="col-lg-12 " data-wow-delay=".7s">
+                <div class="form-clt">
+                  <span>Write Message*</span> <textarea name="message" id="message"
+                    placeholder="Write Message"></textarea>
+                </div>
+              </div>
+              <div class="col-lg-7 " data-wow-delay=".9s">
+                <button type="submit" class="theme-btn">
+                  Send Message <i class="fa-solid fa-arrow-right-long ms-1"></i>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!--<< All JS Plugins >>-->
   <script src="assets/js/jquery-3.7.1.min.js"></script>
