@@ -49,6 +49,13 @@ const allRoutes = {
       roles: ['staff'],
     },
     {
+      path: `${appRoot}/expenses`,
+      label: 'Expenses',
+      icon: 'money',
+      component: lazy(() => import('views/attendance/ViewExpenses')),
+      roles: ['admin', 'staff'],
+    },
+    {
       path: `${appRoot}/profile`,
       label: 'Profile',
       icon: 'user',
