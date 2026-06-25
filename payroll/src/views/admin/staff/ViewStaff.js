@@ -11,29 +11,67 @@ const ViewStaff = () => {
   const [loading, setLoading] = useState(true);
   const [staff, setStaff] = useState([]);
   const [error, setError] = useState('');
+  const [processingId, setProcessingId] = useState(null);
 
-  const fetchStaff = async () => {
+  const [branches, setBranches] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState('all');
+
+  const fetchData = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await axios.get(`${process.env.REACT_APP_API}/staff/get-all`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
-      setStaff(response.data.data);
+      const [staffRes, branchRes] = await Promise.all([
+        axios.get(`${process.env.REACT_APP_API}/staff/get-all`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }),
+        axios.get(`${process.env.REACT_APP_API}/branch/all`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        })
+      ]);
+      setStaff(staffRes.data.data);
+      if (branchRes.data?.success) {
+        setBranches(branchRes.data.data);
+      }
     } catch (err) {
-      console.error('Error fetching staff data:', err);
-      setError('Failed to fetch staff data. Please try again.');
-      toast.error('Failed to fetch staff data.');
+      console.error('Error fetching data:', err);
+      setError('Failed to fetch data. Please try again.');
+      toast.error('Failed to fetch data.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleProcessResignation = async (id, status) => {
+    try {
+      setProcessingId(id);
+      const res = await axios.post(
+        `${process.env.REACT_APP_API}/staff/process-resignation/${id}`,
+        { status, admin_remarks: `Processed by HR on ${new Date().toLocaleDateString()}` },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      if (res.data.success) {
+        toast.success(`Resignation ${status} successfully!`);
+        fetchData(); // Refresh the list
+      }
+    } catch (err) {
+      console.error('Error processing resignation:', err);
+      toast.error(err.response?.data?.message || 'Error processing resignation');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+
   useEffect(() => {
-    fetchStaff();
+    fetchData();
   }, []);
 
-  const groupedStaff = staff.reduce((groups, member) => {
+  const filteredStaff = selectedBranch === 'all' 
+    ? staff 
+    : staff.filter(s => s.branch_id === selectedBranch || (s.branch_id && s.branch_id._id === selectedBranch));
+
+  const groupedStaff = filteredStaff.reduce((groups, member) => {
+    // Exclude pending resignations from the regular grid if desired, or keep them. Let's keep them but show alert above.
     const position = member.position || 'Other';
     if (!groups[position]) {
       groups[position] = [];
@@ -41,6 +79,8 @@ const ViewStaff = () => {
     groups[position].push(member);
     return groups;
   }, {});
+
+  const pendingResignations = filteredStaff.filter(m => m.resignation?.status === 'pending');
 
   if (loading) {
     return (
@@ -57,7 +97,7 @@ const ViewStaff = () => {
           <CsLineIcons icon="error" className="text-danger mb-3" size="48" />
           <h4 className="fw-bold mb-3">Failed to Load Staff</h4>
           <p className="text-muted mb-4">{error}</p>
-          <Button className="view-staff-custom-btn-solid px-5" onClick={fetchStaff}>
+          <Button className="view-staff-custom-btn-solid px-5" onClick={fetchData}>
             <CsLineIcons icon="refresh" className="me-2" size="18" />
             Try Again
           </Button>
@@ -78,12 +118,90 @@ const ViewStaff = () => {
               <div className="text-muted mt-1 small">Overview and management of your restaurant team</div>
             </Col>
             <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
-              <Button className="view-staff-custom-btn-outline d-flex align-items-center gap-2" onClick={() => history.push('/staff/add')}>
-                <CsLineIcons icon="plus" size="18" /> Add Staff
-              </Button>
+              <div className="d-flex align-items-center gap-2">
+                <select 
+                  className="form-select form-select-sm" 
+                  style={{ width: 'auto', borderRadius: '50px' }}
+                  value={selectedBranch}
+                  onChange={(e) => setSelectedBranch(e.target.value)}
+                >
+                  <option value="all">All Branches</option>
+                  {branches.map(b => (
+                    <option key={b._id} value={b._id}>{b.name}</option>
+                  ))}
+                </select>
+                <Button className="view-staff-custom-btn-outline d-flex align-items-center gap-2" onClick={() => history.push('/staff/add')}>
+                  <CsLineIcons icon="plus" size="18" /> Add Staff
+                </Button>
+              </div>
             </Col>
           </Row>
         </div>
+
+        {pendingResignations.length > 0 && (
+          <div className="mb-5">
+            <h4 className="view-staff-group-title mb-3 text-warning d-flex align-items-center">
+              <CsLineIcons icon="warning-hexagon" size="20" className="me-2" /> Pending Resignations
+            </h4>
+            <Row className="g-3">
+              {pendingResignations.map(member => (
+                <Col md="6" lg="4" key={`resignation-${member._id}`}>
+                  <Card className="border-warning shadow-sm h-100">
+                    <Card.Body>
+                      <div className="d-flex align-items-center mb-3">
+                        <div className="view-staff-staff-photo-wrapper me-3" style={{ width: '50px', height: '50px' }}>
+                          <div className="view-staff-staff-photo-inner">
+                            {!member.photo ? (
+                              <div className="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted">
+                                <CsLineIcons icon="user" size="20" />
+                              </div>
+                            ) : (
+                              <img
+                                src={`${process.env.REACT_APP_UPLOAD_DIR}${member.photo}`}
+                                alt={`${member.f_name} ${member.l_name}`}
+                              />
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <h6 className="mb-0 fw-bold">{member.f_name} {member.l_name}</h6>
+                          <div className="text-muted small">{member.position}</div>
+                        </div>
+                      </div>
+                      <div className="mb-3 small">
+                        <strong>Reason:</strong> {member.resignation.reason || 'No reason provided'}
+                        <br />
+                        <strong>Submitted:</strong> {new Date(member.resignation.submitted_on).toLocaleDateString()}
+                        <br />
+                        <strong>Notice Config:</strong> {member.resignation.notice_period_days} Days
+                      </div>
+                      <div className="d-flex gap-2">
+                        <Button 
+                          variant="success" 
+                          size="sm" 
+                          className="flex-grow-1 d-flex justify-content-center align-items-center"
+                          disabled={processingId === member._id}
+                          onClick={() => handleProcessResignation(member._id, 'approved')}
+                        >
+                          {processingId === member._id ? <Spinner size="sm" animation="border" /> : <><CsLineIcons icon="check" size="14" className="me-1" /> Accept</>}
+                        </Button>
+                        <Button 
+                          variant="danger" 
+                          size="sm" 
+                          className="flex-grow-1 d-flex justify-content-center align-items-center"
+                          disabled={processingId === member._id}
+                          onClick={() => handleProcessResignation(member._id, 'rejected')}
+                        >
+                          {processingId === member._id ? <Spinner size="sm" animation="border" /> : <><CsLineIcons icon="close" size="14" className="me-1" /> Reject</>}
+                        </Button>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          </div>
+        )}
 
         {Object.keys(groupedStaff).length > 0 ? (
           Object.entries(groupedStaff).map(([position, members]) => (

@@ -106,7 +106,7 @@ const StaffProfile = () => {
       setError('');
       const res = await axios.get(`${process.env.REACT_APP_API}/staff/get/${currentUser._id}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         },
       });
       setStaff(res.data.data);

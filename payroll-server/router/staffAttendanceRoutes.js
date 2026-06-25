@@ -9,6 +9,8 @@ const {
     markAbsent,
     markLeave,
     updateAttendance,
+    uploadWfhCapture,
+    logWfhIdle
 } = require("../controllers/staffAttendanceController");
 
 const staffAttendanceRouter = express.Router();
@@ -28,5 +30,9 @@ staffAttendanceRouter.post("/check-out", checkOut);
 staffAttendanceRouter.post("/mark-absent", markAbsent);
 staffAttendanceRouter.post("/mark-leave", markLeave);
 staffAttendanceRouter.post("/update", authMiddleware, updateAttendance);
+
+// WFH Tracking
+staffAttendanceRouter.post("/wfh-upload", uploadWfhCapture);
+staffAttendanceRouter.post("/wfh-idle", logWfhIdle);
 
 module.exports = staffAttendanceRouter;

@@ -142,6 +142,8 @@ export default function ManagePayroll() {
     const [year, setYear] = useState(Number(paramYear) || currentDate.getFullYear());
 
     const [summary, setSummary] = useState([]);
+    const [branches, setBranches] = useState([]);
+    const [selectedBranch, setSelectedBranch] = useState('all');
     const [totals, setTotals] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -169,12 +171,18 @@ export default function ManagePayroll() {
         setError('');
         setSelectedIds(new Set());
         try {
-            const res = await axios.get(
-                `${process.env.REACT_APP_API}/payroll/summary/${month}/${year}`,
-                authHeader()
-            );
+            const [res, branchRes] = await Promise.all([
+                axios.get(
+                    `${process.env.REACT_APP_API}/payroll/summary/${month}/${year}`,
+                    authHeader()
+                ),
+                axios.get(`${process.env.REACT_APP_API}/branch/all`, authHeader())
+            ]);
             setSummary(res.data.data || []);
             setTotals(res.data.totals || {});
+            if (branchRes.data?.success) {
+                setBranches(branchRes.data.data);
+            }
         } catch (err) {
             setError('Failed to load payroll data.');
             toast.error('Failed to load payroll data.');
@@ -302,8 +310,17 @@ export default function ManagePayroll() {
             }
         );
 
+        const baseSalary = staff?.salary || payroll.base_salary || 0;
+        const workingDays = payroll.working_days_in_month || 26;
+        const defaultOtRate = Math.round((baseSalary / workingDays) / 8 * 2);
+        
+        // If the DB has an explicit overtime_rate of 0, and we want to fallback to Indian OT rate,
+        // we can just use the calculated defaultOtRate if the existing one is falsy (0).
+        const finalOtRate = payroll.overtime_rate || staff?.overtime_rate || defaultOtRate || 0;
+
         setEditForm({
             overtime_hours: payroll.overtime_hours || 0,
+            overtime_rate: finalOtRate,
             bonus: payroll.bonus || 0,
             deductions: payroll.deductions || 0,
             deduction_reason: payroll.deduction_reason || '',
@@ -348,10 +365,11 @@ export default function ManagePayroll() {
             (editForm.visibleDeductions?.includes('tds') ? (parseFloat(editForm.tds) || 0) : 0) + 
             (editForm.visibleDeductions?.includes('deductions') ? (parseFloat(editForm.deductions) || 0) : 0);
         
-        const ot_pay = (parseFloat(editForm.overtime_hours) || 0) * (editingPayroll.overtime_rate || 0);
+        const ot_pay = (parseFloat(editForm.overtime_hours) || 0) * (parseFloat(editForm.overtime_rate) || 0);
         const lwp_ded = editingPayroll.lwp_deduction || 0;
+        const expenses = editingPayroll.expense_claims || 0;
         
-        const net = earningsTotal + ot_pay + (parseFloat(editForm.bonus) || 0) - statutoryTotal - otherDeductionsTotal - lwp_ded;
+        const net = earningsTotal + ot_pay + (parseFloat(editForm.bonus) || 0) + expenses - statutoryTotal - otherDeductionsTotal - lwp_ded;
         return parseFloat(net.toFixed(2));
     };
 
@@ -453,8 +471,17 @@ export default function ManagePayroll() {
     const yearOptions = [];
     for (let y = currentDate.getFullYear(); y >= currentDate.getFullYear() - 5; y--) yearOptions.push(y);
 
-    const payrollRows = summary.filter((s) => s.payroll);
+    const filteredSummary = selectedBranch === 'all' ? summary : summary.filter(s => s.staff?.branch_id === selectedBranch);
+    const payrollRows = filteredSummary.filter((s) => s.payroll);
     const allSelected = payrollRows.length > 0 && selectedIds.size === payrollRows.length;
+
+    // Recalculate totals based on filter
+    const filteredTotals = selectedBranch === 'all' ? totals : {
+        total_net_salary: payrollRows.reduce((sum, p) => sum + (p.payroll.net_salary || 0), 0),
+        total_paid: payrollRows.filter(p => p.payroll.status === "paid").reduce((sum, p) => sum + (p.payroll.net_salary || 0), 0),
+        total_unpaid: payrollRows.filter(p => p.payroll.status === "unpaid").reduce((sum, p) => sum + (p.payroll.net_salary || 0), 0),
+        count_not_generated: filteredSummary.length - payrollRows.length
+    };
 
     return (
         <div className="container-fluid px-lg-4 px-xl-5 pb-5">
@@ -507,6 +534,18 @@ export default function ManagePayroll() {
                                 styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                             />
                         </Col>
+                        <Col xs={12} md={3}>
+                            <Form.Label className="small fw-bold text-muted text-uppercase">Branch</Form.Label>
+                            <Select 
+                                classNamePrefix="react-select"
+                                className="react-select-premium shadow-sm"
+                                options={[{ value: 'all', label: 'All Branches' }, ...branches.map(b => ({ value: b._id, label: b.name }))]}
+                                value={{ value: selectedBranch, label: selectedBranch === 'all' ? 'All Branches' : branches.find(b => b._id === selectedBranch)?.name || '' }}
+                                onChange={(opt) => setSelectedBranch(opt.value)}
+                                menuPortalTarget={document.body}
+                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                            />
+                        </Col>
                     </Row>
                 </Card.Body>
             </Card>
@@ -514,10 +553,10 @@ export default function ManagePayroll() {
             {!loading && (
                 <Row className="g-4 mb-5">
                     {[
-                        { label: 'Total Net Payroll', value: `₹${(totals.total_net_salary || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}`, icon: 'dollar', color: 'primary' },
-                        { label: 'Total Paid', value: `₹${(totals.total_paid || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}`, icon: 'check-circle', color: 'success' },
-                        { label: 'Pending Payment', value: `₹${(totals.total_unpaid || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}`, icon: 'clock', color: 'warning' },
-                        { label: 'Pending Generation', value: totals.count_not_generated || 0, icon: 'info-hexagon', color: 'danger' },
+                        { label: 'Total Net Payroll', value: `₹${(filteredTotals.total_net_salary || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}`, icon: 'dollar', color: 'primary' },
+                        { label: 'Total Paid', value: `₹${(filteredTotals.total_paid || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}`, icon: 'check-circle', color: 'success' },
+                        { label: 'Pending Payment', value: `₹${(filteredTotals.total_unpaid || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}`, icon: 'clock', color: 'warning' },
+                        { label: 'Pending Generation', value: filteredTotals.count_not_generated || 0, icon: 'info-hexagon', color: 'danger' },
                     ].map((s) => (
                         <Col xs={6} md={3} key={s.label}>
                             <Card className="glass-card border-0 h-100 stat-card">
@@ -596,7 +635,7 @@ export default function ManagePayroll() {
                     ) : (
                         <div className="table-responsive">
                             <Table hover className="react-table-modern mb-0">
-                                <thead className="hide-on-mobile">
+                                <thead className="d-none d-lg-table-header-group">
                                     <tr>
                                         <th style={{ width: '60px' }}>
                                             <Form.Check
@@ -618,9 +657,9 @@ export default function ManagePayroll() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {summary.map(({ staff, payroll }) => (
+                                    {filteredSummary.map(({ staff, payroll }) => (
                                         <React.Fragment key={staff._id}>
-                                        <tr className={`hide-on-mobile ${selectedIds.has(payroll?._id) ? 'bg-soft-primary' : ''}`}>
+                                        <tr className={`d-none d-lg-table-row ${selectedIds.has(payroll?._id) ? 'bg-soft-primary' : ''}`}>
                                             <td>
                                                 {payroll ? (
                                                     <Form.Check
@@ -649,15 +688,25 @@ export default function ManagePayroll() {
                                                 <>
                                                     <td className="text-center">
                                                         <div className="d-flex align-items-center justify-content-center gap-2">
-                                                            <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill">{payroll.present_days}P</Badge>
-                                                            <Badge bg={payroll.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${payroll.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill`}>{payroll.absent_days}A</Badge>
+                                                            <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill fs-6 fw-bold">{payroll.present_days}P</Badge>
+                                                            <Badge bg={payroll.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${payroll.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill fs-6 fw-bold`}>{payroll.absent_days}A</Badge>
                                                         </div>
                                                     </td>
                                                     <td className="text-end fw-medium text-dark">₹{(staff.salary || payroll.base_salary || 0).toLocaleString('en-IN')}</td>
                                                     <td className="text-end text-success fw-bold">₹{(payroll.earned_breakdown?.total_gross || payroll.earned_salary || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</td>
                                                     <td className="text-end">
-                                                        <div className="small fw-bold text-primary">OT: +₹{(payroll.overtime_pay || 0).toLocaleString('en-IN')}</div>
-                                                        <div className="small fw-bold text-danger">Ded: -₹{((payroll.deduction_breakdown?.total_statutory || 0) + (payroll.deductions || 0)).toLocaleString('en-IN')}</div>
+                                                        <div className="d-flex flex-column align-items-end" style={{ whiteSpace: 'nowrap' }}>
+                                                            <div className="small fw-bold">
+                                                                <span className="text-primary me-2" title={`OT: ${payroll.overtime_hours||0}h @ ₹${payroll.overtime_rate || staff.overtime_rate || Math.round(((staff.salary || payroll.base_salary || 0) / 30 / 8) * 2)}/h`}>OT: +₹{(payroll.overtime_pay || 0).toLocaleString('en-IN')} <span className="text-muted fw-medium" style={{ fontSize: '0.85rem' }}>({payroll.overtime_hours||0}h)</span></span>
+                                                                <span className="text-danger">Ded: -₹{((payroll.deduction_breakdown?.total_statutory || 0) + (payroll.deductions || 0)).toLocaleString('en-IN')}</span>
+                                                            </div>
+                                                            {(payroll.bonus > 0 || payroll.expense_claims > 0) && (
+                                                                <div className="small fw-bold mt-1">
+                                                                    {payroll.bonus > 0 && <span className="text-success me-2">Bon: +₹{payroll.bonus.toLocaleString('en-IN')}</span>}
+                                                                    {payroll.expense_claims > 0 && <span className="text-success">Exp: +₹{payroll.expense_claims.toLocaleString('en-IN')}</span>}
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                     <td className="text-end fw-bold text-primary h5 mb-0">₹{payroll.net_salary.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</td>
                                                     <td className="text-center">
@@ -703,7 +752,7 @@ export default function ManagePayroll() {
                                             )}
                                         </tr>
                                         {/* Mobile View */}
-                                        <tr className="hide-on-desktop">
+                                        <tr className="d-lg-none">
                                             <td colSpan="9" className="p-0 border-0">
                                                 <div className="p-3 border-bottom">
                                                     <div className="d-flex justify-content-between align-items-start mb-3">
@@ -742,8 +791,8 @@ export default function ManagePayroll() {
                                                                 <Col xs={6}>
                                                                     <div className="text-muted small fw-bold text-uppercase mb-1">Days (P/A)</div>
                                                                     <div className="d-flex align-items-center gap-2">
-                                                                        <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill fw-bold" style={{ fontSize: '0.8rem' }}>{payroll.present_days}P</Badge>
-                                                                        <Badge bg={payroll.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${payroll.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill fw-bold`} style={{ fontSize: '0.8rem' }}>{payroll.absent_days}A</Badge>
+                                                                        <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill fw-bold" style={{ fontSize: '0.95rem' }}>{payroll.present_days}P</Badge>
+                                                                        <Badge bg={payroll.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${payroll.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill fw-bold`} style={{ fontSize: '0.95rem' }}>{payroll.absent_days}A</Badge>
                                                                     </div>
                                                                 </Col>
                                                                 <Col xs={6} className="text-end">
@@ -757,13 +806,29 @@ export default function ManagePayroll() {
                                                                     <div className="small fw-medium text-muted">Gross Earned</div>
                                                                     <div className="text-success fw-bold">₹{(payroll.earned_breakdown?.total_gross || payroll.earned_salary || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>
                                                                 </div>
-                                                                <div className="d-flex justify-content-between align-items-center mb-3">
-                                                                    <div className="small fw-medium text-muted">OT / Deductions</div>
-                                                                    <div className="fw-bold">
-                                                                        <span className="text-primary">+₹{(payroll.overtime_pay || 0).toLocaleString('en-IN')}</span>
-                                                                        <span className="text-muted mx-1">/</span>
-                                                                        <span className="text-danger">-₹{((payroll.deduction_breakdown?.total_statutory || 0) + (payroll.deductions || 0)).toLocaleString('en-IN')}</span>
+                                                                <div className="d-flex flex-column mb-3">
+                                                                    <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                        <div className="small fw-medium text-muted">
+                                                                            OT <span className="fw-medium" style={{fontSize: '0.85rem', opacity: 0.8}}>({payroll.overtime_hours || 0}h @ ₹{payroll.overtime_rate || staff.overtime_rate || Math.round(((staff.salary || payroll.base_salary || 0) / 30 / 8) * 2)}/h)</span>
+                                                                        </div>
+                                                                        <div className="fw-bold text-primary">
+                                                                            +₹{(payroll.overtime_pay || 0).toLocaleString('en-IN')}
+                                                                        </div>
                                                                     </div>
+                                                                    <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                        <div className="small fw-medium text-muted">Deductions</div>
+                                                                        <div className="fw-bold text-danger">
+                                                                            -₹{((payroll.deduction_breakdown?.total_statutory || 0) + (payroll.deductions || 0)).toLocaleString('en-IN')}
+                                                                        </div>
+                                                                    </div>
+                                                                    {(payroll.bonus > 0 || payroll.expense_claims > 0) && (
+                                                                        <div className="d-flex justify-content-between align-items-center">
+                                                                            <div className="small fw-medium text-muted">Bonus / Expenses</div>
+                                                                            <div className="fw-bold">
+                                                                                <span className="text-success">+₹{((payroll.bonus || 0) + (payroll.expense_claims || 0)).toLocaleString('en-IN')}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                                 <div className="d-flex justify-content-between align-items-center pt-2">
                                                                     <div className="small fw-bold text-uppercase text-muted" style={{ letterSpacing: '0.05em' }}>Net Payable</div>
@@ -847,37 +912,43 @@ export default function ManagePayroll() {
                         <>
                             <div className="glass-card bg-light border-0 p-4 mb-4">
                                 <Row className="text-center g-3">
-                                    <Col xs={4}>
+                                    <Col xs={6}>
                                         <div className="text-muted small fw-bold text-uppercase mb-1">Contract Base</div>
                                         <div className="fw-bold h5 mb-0 text-dark">₹{(editingPayroll.staff?.salary || editingPayroll.base_salary || 0).toLocaleString('en-IN')}</div>
                                     </Col>
-                                    <Col xs={4}>
+                                    <Col xs={6}>
                                         <div className="text-muted small fw-bold text-uppercase mb-1">Attendance</div>
                                         <div className="fw-bold h5 mb-0 text-success">{editingPayroll.present_days} Days</div>
-                                    </Col>
-                                    <Col xs={4}>
-                                        <div className="text-muted small fw-bold text-uppercase mb-1">OT Multiplier</div>
-                                        <div className="fw-bold h5 mb-0 text-primary">₹{editingPayroll.overtime_rate}/hr</div>
                                     </Col>
                                 </Row>
                             </div>
 
                             <Row className="g-4">
-                                <Col xs={12} md={6}>
+                                <Col xs={12} md={4}>
                                     <Form.Label className="small fw-bold text-muted text-uppercase">Working Days</Form.Label>
                                     <Form.Control className="rounded-3 border-0 bg-light py-2 px-3" type="number" value={editForm.working_days_in_month} onChange={(e) => setEditForm({ ...editForm, working_days_in_month: e.target.value })} />
                                 </Col>
-                                <Col xs={12} md={6}>
+                                <Col xs={12} md={4}>
                                     <Form.Label className="small fw-bold text-muted text-uppercase">Overtime Hours</Form.Label>
                                     <Form.Control className="rounded-3 border-0 bg-light py-2 px-3" type="number" value={editForm.overtime_hours} onChange={(e) => setEditForm({ ...editForm, overtime_hours: e.target.value })} />
                                 </Col>
-                                <Col xs={12} md={6}>
+                                <Col xs={12} md={4}>
+                                    <Form.Label className="small fw-bold text-muted text-uppercase">Overtime Rate (₹/hr)</Form.Label>
+                                    <Form.Control className="rounded-3 border-0 bg-light py-2 px-3 text-primary fw-bold" type="number" value={editForm.overtime_rate} onChange={(e) => setEditForm({ ...editForm, overtime_rate: e.target.value })} />
+                                </Col>
+                                <Col xs={12} md={4}>
                                     <Form.Label className="small fw-bold text-muted text-uppercase">Bonus Amount (₹)</Form.Label>
                                     <Form.Control className="rounded-3 border-0 bg-light py-2 px-3 text-success fw-bold" type="number" value={editForm.bonus} onChange={(e) => setEditForm({ ...editForm, bonus: e.target.value })} />
                                 </Col>
-                                <Col xs={12} md={6}>
+                                <Col xs={12} md={4}>
+                                    <Form.Label className="small fw-bold text-muted text-uppercase">Expense Claims (₹)</Form.Label>
+                                    <div className="rounded-3 border-0 bg-light py-2 px-3 text-success fw-bold">
+                                        ₹{(editingPayroll.expense_claims || 0).toLocaleString('en-IN')}
+                                    </div>
+                                </Col>
+                                <Col xs={12} md={4}>
                                     <Form.Label className="small fw-bold text-muted text-uppercase">Adjustment Reason</Form.Label>
-                                    <Form.Control className="rounded-3 border-0 bg-light py-2 px-3" type="text" placeholder="e.g. Performance bonus or late fine" value={editForm.deduction_reason} onChange={(e) => setEditForm({ ...editForm, deduction_reason: e.target.value })} />
+                                    <Form.Control className="rounded-3 border-0 bg-light py-2 px-3" type="text" placeholder="e.g. Fine" value={editForm.deduction_reason} onChange={(e) => setEditForm({ ...editForm, deduction_reason: e.target.value })} />
                                 </Col>
                                 <Col xs={12}>
                                     <Form.Label className="small fw-bold text-muted text-uppercase">Internal Notes</Form.Label>

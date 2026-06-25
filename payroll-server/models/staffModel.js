@@ -45,6 +45,18 @@ const addStaff = new Schema({
   position: {
     type: String,
   },
+  department: {
+    type: Schema.Types.ObjectId,
+    ref: "department",
+  },
+  branch_id: {
+    type: Schema.Types.ObjectId,
+    ref: "branch",
+  },
+  department_node_id: {
+    type: String,
+    default: null,
+  },
   salary: {
     type: Number,
   },
@@ -148,6 +160,22 @@ const addStaff = new Schema({
   },
   uan_number: { type: String, default: "" },    // EPF Universal Account Number
   esi_ip_number: { type: String, default: "" }, // ESI Insurance Number
+
+  // ── Resignation & Notice Period ──────────────────────────────────────────
+  resignation: {
+    status: { type: String, enum: ['none', 'pending', 'approved', 'rejected'], default: 'none' },
+    reason: { type: String, default: "" },
+    submitted_on: { type: Date, default: null },
+    notice_period_days: { type: Number, default: null }, // snapshot of config when submitted
+    last_working_day: { type: Date, default: null },     // calculated on approval
+    admin_remarks: { type: String, default: "" }
+  },
+  
+  // ── Leave Toggle ─────────────────────────────────────────────────────────
+  is_leave_enabled: {
+    type: Boolean,
+    default: true
+  }
 });
 
 // Indexes

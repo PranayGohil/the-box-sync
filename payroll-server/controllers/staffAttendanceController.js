@@ -1,6 +1,8 @@
 const StaffAttendance = require("../models/staffAttendanceModel");
 const Staff = require("../models/staffModel");
 const PayrollConfig = require("../models/PayrollConfig");
+const fs = require("fs");
+const path = require("path");
 
 // Helper: Compute minutes late (positive) given in_time string and org_rules config
 const computeLateMinutes = (inTimeStr, orgRules) => {
@@ -306,7 +308,7 @@ const getAttendanceSummary = async (req, res) => {
 
 // ── POST /attendance/check-in ─────────────────────────────────────────────────
 const checkIn = async (req, res) => {
-    const { staff_id, date, in_time } = req.body;
+    const { staff_id, date, in_time, is_wfh } = req.body;
 
     if (req.user && typeof req.user === "object" && req.user.Role === "Staff" && req.user.staff_id !== staff_id) {
         return res.status(403).json({ success: false, message: "Forbidden: You can only check-in for yourself." });
@@ -358,6 +360,9 @@ const checkIn = async (req, res) => {
                 record.sessions.push({ in_time, out_time: null });
             }
         }
+        
+        if (!record.wfh_tracking) record.wfh_tracking = {};
+        record.wfh_tracking.is_wfh = !!is_wfh;
 
         // ── Compute late_by_minutes using PayrollConfig ──────────────────
         try {
@@ -576,6 +581,67 @@ const updateAttendance = async (req, res) => {
     }
 };
 
+// ── POST /attendance/wfh-upload ───────────────────────────────────────────────
+const uploadWfhCapture = async (req, res) => {
+    const { staff_id, date, type, image_base64 } = req.body;
+
+    if (!staff_id || !date || !type || !image_base64) {
+        return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    try {
+        const record = await StaffAttendance.findOne({ staff_id, date });
+        if (!record || !record.wfh_tracking || !record.wfh_tracking.is_wfh) {
+            return res.status(400).json({ success: false, message: "Not clocked in as WFH today" });
+        }
+
+        // Decode base64 and save to disk
+        const base64Data = image_base64.replace(/^data:image\/\w+;base64,/, "");
+        const filename = `${type}-${staff_id}-${Date.now()}.webp`;
+        const dirPath = path.join(__dirname, "../uploads/wfh");
+        
+        if (!fs.existsSync(dirPath)) {
+            fs.mkdirSync(dirPath, { recursive: true });
+        }
+        
+        const filePath = path.join(dirPath, filename);
+        fs.writeFileSync(filePath, base64Data, "base64");
+        
+        const fileUrl = `/uploads/wfh/${filename}`;
+
+        if (type === "screenshot") {
+            record.wfh_tracking.screenshots.push({ url: fileUrl, timestamp: new Date() });
+        } else if (type === "webcam") {
+            record.wfh_tracking.webcam_snapshots.push({ url: fileUrl, timestamp: new Date() });
+        }
+
+        await record.save();
+        res.status(200).json({ success: true, message: "WFH capture uploaded" });
+    } catch (error) {
+        console.error("Error uploading WFH capture:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+// ── POST /attendance/wfh-idle ─────────────────────────────────────────────────
+const logWfhIdle = async (req, res) => {
+    const { staff_id, date, idle_minutes } = req.body;
+
+    try {
+        const record = await StaffAttendance.findOne({ staff_id, date });
+        if (!record || !record.wfh_tracking || !record.wfh_tracking.is_wfh) {
+            return res.status(400).json({ success: false, message: "Not clocked in as WFH today" });
+        }
+
+        record.wfh_tracking.total_idle_minutes += idle_minutes || 1;
+        await record.save();
+        res.status(200).json({ success: true, message: "Idle time logged" });
+    } catch (error) {
+        console.error("Error logging idle time:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
 module.exports = {
     getTodayAttendance,
     getAttendanceByStaff,
@@ -585,4 +651,6 @@ module.exports = {
     markAbsent,
     markLeave,
     updateAttendance,
+    uploadWfhCapture,
+    logWfhIdle
 };

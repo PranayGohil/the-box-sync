@@ -1,0 +1,5 @@
+- add employee panel and remove everything from attendance and add company_id for verification.
+- add expense is not working on attendance (Done)
+- off auto sign new added leave (Done)
+- disable leave display on attendance (Done)
+- view staff add leave and Expenses (Done)

@@ -59,6 +59,22 @@ const staffAttendanceSchema = new Schema(
     manual_entry_reason: {
       type: String,
       default: ""
+    },
+    wfh_tracking: {
+      is_wfh: { type: Boolean, default: false },
+      total_idle_minutes: { type: Number, default: 0 },
+      screenshots: [
+        {
+          url: { type: String, required: true },
+          timestamp: { type: Date, default: Date.now }
+        }
+      ],
+      webcam_snapshots: [
+        {
+          url: { type: String, required: true },
+          timestamp: { type: Date, default: Date.now }
+        }
+      ]
     }
   },
   {

@@ -13,6 +13,12 @@ const payrollConfigSchema = new Schema(
       is_enabled: { type: Boolean, default: false },
       allowed_ips: { type: [String], default: [] }
     },
+    // ── Work From Home Settings ───────────────────────────────────────
+    wfh_config: {
+      min_interval: { type: Number, default: 3 }, // in minutes
+      max_interval: { type: Number, default: 15 }, // in minutes
+      idle_threshold: { type: Number, default: 5 } // in minutes
+    },
     // ── Active Earning Modules ──────────────────────────────────────────
     custom_earnings: {
       type: [
@@ -89,7 +95,9 @@ const payrollConfigSchema = new Schema(
       // Attendance timing rules
       shift_start_time: { type: String, default: "09:00 AM" },        // Official shift start
       late_threshold_minutes: { type: Number, default: 0 },           // Grace period in minutes (0 = no grace)
-      shift_end_time: { type: String, default: "06:00 PM" }           // Official shift end (for overtime)
+      shift_end_time: { type: String, default: "06:00 PM" },          // Official shift end (for overtime)
+      // Notice Period
+      notice_period_days: { type: Number, default: 30 }
     },
 
     // ── Global Weekly Off Config ─────────────────────────────────────────
@@ -102,6 +110,20 @@ const payrollConfigSchema = new Schema(
         }
       ],
       default: [{ day: 'Sunday', type: 'all_weeks', weeks: [] }]
+    },
+
+    // ── Document Templates ──────────────────────────────────────────────
+    document_templates: {
+      joining_letter_template: { type: String, default: `<p>Dear [First Name] [Last Name],</p>
+<p>We are delighted to offer you the position of <strong>[Job Title]</strong> at our company.</p>
+<p>Your starting date will be <strong>[Date of Joining]</strong>.</p>
+<p>Your basic salary will be <strong>[Basic Salary]</strong> per month.</p>
+<p>Your Staff ID is <strong>[Staff ID]</strong>.</p>
+<p><br></p>
+<p>Please sign and return this letter to indicate your acceptance of this offer.</p>
+<p><br></p>
+<p>Sincerely,</p>
+<p>HR Department</p>` }
     }
   },
   {

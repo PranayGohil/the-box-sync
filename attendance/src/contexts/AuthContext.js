@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
 
   // Load user from token on initial load
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     console.log(token);
     if (token) {
       axios
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
         .then((res) => {
           if (res.data === 'Null') {
             console.log('Null Token Expired');
-            localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
             setCurrentUser(null);
             setIsLogin(false);
             dispatch(setCurrentUserRedux(null));
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
           }
         })
         .catch(() => {
-          localStorage.removeItem('token');
+          sessionStorage.removeItem('token');
           setCurrentUser(null);
           setIsLogin(false);
           dispatch(setCurrentUserRedux(null));
@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (token, userData) => {
     try {
-      localStorage.setItem('token', token);
+      sessionStorage.setItem('token', token);
       setCurrentUser(userData);
       setIsLogin(true);
       dispatch(setCurrentUserRedux(userData));
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
     setCurrentUser(null);
     setIsLogin(false);
     dispatch(setCurrentUserRedux(null));

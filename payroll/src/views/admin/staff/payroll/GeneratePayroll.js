@@ -584,7 +584,7 @@ export default function GeneratePayroll() {
                     <Card.Body className="p-0">
                         <div className="table-responsive">
                             <Table hover className="react-table-modern mb-0">
-                                <thead className="hide-on-mobile">
+                                <thead className="d-none d-lg-table-header-group">
                                     <tr>
                                         <th>Staff Details</th>
                                         <th className="text-center">Days (P/A)</th>
@@ -605,7 +605,7 @@ export default function GeneratePayroll() {
 
                                         return (
                                             <React.Fragment key={p.staff_id}>
-                                            <tr className="hide-on-mobile">
+                                            <tr className="d-none d-lg-table-row">
                                                 <td>
                                                     <div className="d-flex align-items-center gap-3">
                                                         <div className="sw-5 sh-5 rounded-circle bg-soft-primary d-flex align-items-center justify-content-center text-primary fw-bold">
@@ -619,8 +619,8 @@ export default function GeneratePayroll() {
                                                 </td>
                                                 <td className="text-center">
                                                     <div className="d-flex align-items-center justify-content-center gap-2">
-                                                        <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill">{p.present_days}P</Badge>
-                                                        <Badge bg={p.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${p.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill`}>{p.absent_days}A</Badge>
+                                                        <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill fs-6 fw-bold">{p.present_days}P</Badge>
+                                                        <Badge bg={p.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${p.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill fs-6 fw-bold`}>{p.absent_days}A</Badge>
                                                     </div>
                                                 </td>
                                                 <td className="text-end text-muted fw-medium">₹{(p.staff?.salary || p.base_salary || 0).toLocaleString('en-IN')}</td>
@@ -653,7 +653,7 @@ export default function GeneratePayroll() {
                                                 </td>
                                             </tr>
                                             {/* Mobile View */}
-                                            <tr className="hide-on-desktop">
+                                            <tr className="d-lg-none">
                                                 <td colSpan="10" className="p-0 border-0">
                                                     <div className="p-3 border-bottom">
                                                         <div className="d-flex justify-content-between align-items-start mb-3">
@@ -681,8 +681,8 @@ export default function GeneratePayroll() {
                                                             <Col xs={6}>
                                                                 <div className="text-muted small fw-bold text-uppercase mb-1">Days (P/A)</div>
                                                                 <div className="d-flex align-items-center gap-2">
-                                                                    <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill fw-bold" style={{ fontSize: '0.8rem' }}>{p.present_days}P</Badge>
-                                                                    <Badge bg={p.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${p.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill fw-bold`} style={{ fontSize: '0.8rem' }}>{p.absent_days}A</Badge>
+                                                                    <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill fw-bold" style={{ fontSize: '0.95rem' }}>{p.present_days}P</Badge>
+                                                                    <Badge bg={p.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${p.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill fw-bold`} style={{ fontSize: '0.95rem' }}>{p.absent_days}A</Badge>
                                                                 </div>
                                                             </Col>
                                                             <Col xs={6} className="text-end">

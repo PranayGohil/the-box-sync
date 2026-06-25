@@ -5,6 +5,9 @@ import { Row, Col, Card, Alert, Spinner, Table, Badge, Button, Modal } from 'rea
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { format } from 'date-fns';
 
 const MONTH_NAMES = [
   '', 'January', 'February', 'March', 'April', 'May', 'June',
@@ -105,6 +108,7 @@ const ViewStaffPayroll = () => {
   const [careerStats, setCareerStats] = useState(null);
   const [selectedPayroll, setSelectedPayroll] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [staffProfile, setStaffProfile] = useState(null);
 
   const title = 'My Payroll & Payslips';
   const description = 'View your monthly payslips and career statistics.';
@@ -118,10 +122,11 @@ const ViewStaffPayroll = () => {
       if (!currentUser?._id) return;
       setLoading(true);
       setError('');
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${sessionStorage.getItem('token')}` };
       const res = await axios.get(`${process.env.REACT_APP_API}/payroll/get/${currentUser._id}`, { headers });
       setPayrollHistory(res.data.data.payroll || []);
       setCareerStats(res.data.data.career_stats);
+      setStaffProfile(res.data.data.staff);
     } catch (err) {
       console.error('Error fetching payroll history:', err);
       setError('Failed to fetch payroll history. Please try again.');
@@ -148,7 +153,101 @@ const ViewStaffPayroll = () => {
   };
 
   const handlePrintPayslip = () => {
-    window.print();
+    if (!selectedPayroll || !staffProfile) return;
+    try {
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('SALARY SLIP', 105, 20, { align: 'center' });
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      doc.text(`For the month of ${MONTH_NAMES[selectedPayroll.month]} ${selectedPayroll.year}`, 105, 26, { align: 'center' });
+      
+      doc.rect(14, 32, 182, 30);
+      doc.setFont(undefined, 'bold');
+      doc.text('Employee Name:', 18, 40);
+      doc.setFont(undefined, 'normal');
+      doc.text(`${staffProfile.f_name} ${staffProfile.l_name}`, 55, 40);
+      doc.setFont(undefined, 'bold');
+      doc.text('Employee ID:', 110, 40);
+      doc.setFont(undefined, 'normal');
+      doc.text(`${staffProfile.staff_id || '-'}`, 145, 40);
+      
+      doc.setFont(undefined, 'bold');
+      doc.text('Designation:', 18, 48);
+      doc.setFont(undefined, 'normal');
+      doc.text(`${staffProfile.position || 'Employee'}`, 55, 48);
+      doc.setFont(undefined, 'bold');
+      doc.text('Date of Joining:', 110, 48);
+      doc.setFont(undefined, 'normal');
+      doc.text(`${staffProfile.joining_date ? format(new Date(staffProfile.joining_date), 'dd-MMM-yyyy') : '-'}`, 145, 48);
+      
+      doc.setFont(undefined, 'bold');
+      doc.text('UAN Number:', 18, 56);
+      doc.setFont(undefined, 'normal');
+      doc.text(`${staffProfile.uan_number || '-'}`, 55, 56);
+      doc.setFont(undefined, 'bold');
+      doc.text('Bank A/C No:', 110, 56);
+      doc.setFont(undefined, 'normal');
+      doc.text(`${staffProfile.bank_account?.account_number || '-'}`, 145, 56);
+      
+      doc.rect(14, 66, 182, 12);
+      doc.setFontSize(9);
+      doc.text(`Total Days: ${selectedPayroll.working_days_in_month}   |   Paid Days: ${selectedPayroll.leave_summary?.total_paid_days || selectedPayroll.present_days}   |   LWP: ${selectedPayroll.leave_summary?.lwp_days || selectedPayroll.absent_days}`, 105, 74, { align: 'center' });
+
+      const totalEarnings = (selectedPayroll.earned_breakdown?.total_gross || selectedPayroll.earned_salary || 0) + (selectedPayroll.overtime_pay || 0) + (selectedPayroll.bonus || 0) + (selectedPayroll.expense_claims || 0);
+      const statDed = selectedPayroll.deduction_breakdown?.total_statutory || 0;
+      const manDed = selectedPayroll.deductions || 0;
+      const advDed = selectedPayroll.advance_deduction || 0;
+      const lwpDed = selectedPayroll.lwp_deduction || 0;
+      const totalDeductions = statDed + manDed + advDed + lwpDed + (selectedPayroll.tds || 0);
+
+      autoTable(doc, {
+          startY: 85,
+          head: [['Earnings', 'Amount (Rs.)', 'Deductions', 'Amount (Rs.)']],
+          body: [
+              ['Basic', (selectedPayroll.earned_breakdown?.basic || 0).toFixed(2), 'Provident Fund (PF)', (selectedPayroll.deduction_breakdown?.pf || 0).toFixed(2)],
+              ['HRA', (selectedPayroll.earned_breakdown?.hra || 0).toFixed(2), 'ESI', (selectedPayroll.deduction_breakdown?.esi || 0).toFixed(2)],
+              ['Conveyance', (selectedPayroll.earned_breakdown?.conveyance || 0).toFixed(2), 'Professional Tax (PT)', (selectedPayroll.deduction_breakdown?.pt || 0).toFixed(2)],
+              ['Medical Allowance', (selectedPayroll.earned_breakdown?.medical || 0).toFixed(2), 'LWP Deduction', lwpDed.toFixed(2)],
+              ['Special Allowance', (selectedPayroll.earned_breakdown?.special || 0).toFixed(2), 'Advance / Loan EMI', advDed.toFixed(2)],
+              ['Overtime Pay', (selectedPayroll.overtime_pay || 0).toFixed(2), 'TDS', (selectedPayroll.tds || 0).toFixed(2)],
+              ['Bonus', (selectedPayroll.bonus || 0).toFixed(2), 'Other Deductions', manDed.toFixed(2)],
+              ['Expenses', (selectedPayroll.expense_claims || 0).toFixed(2), '', ''],
+              ['Other Earnings', (selectedPayroll.earned_breakdown?.other || 0).toFixed(2), '', '']
+          ],
+          theme: 'grid',
+          headStyles: { fillColor: [30, 168, 231], textColor: 255 },
+          columnStyles: {
+              0: { cellWidth: 50 },
+              1: { cellWidth: 41, halign: 'right' },
+              2: { cellWidth: 50 },
+              3: { cellWidth: 41, halign: 'right' }
+          }
+      });
+
+      const { finalY } = doc.lastAutoTable;
+      doc.setFillColor(240, 240, 240);
+      doc.rect(14, finalY, 182, 10, 'F');
+      doc.rect(14, finalY, 182, 10, 'S');
+      doc.setFont(undefined, 'bold');
+      doc.text('Gross Earnings', 18, finalY + 6.5);
+      doc.text(`${totalEarnings.toFixed(2)}`, 95, finalY + 6.5, { align: 'right' });
+      doc.text('Total Deductions', 109, finalY + 6.5);
+      doc.text(`${totalDeductions.toFixed(2)}`, 186, finalY + 6.5, { align: 'right' });
+      doc.rect(14, finalY + 14, 182, 12, 'S');
+      doc.setFontSize(12);
+      doc.text('Net Payable:', 18, finalY + 22);
+      doc.text(`Rs. ${(selectedPayroll.net_salary || 0).toFixed(2)}`, 186, finalY + 22, { align: 'right' });
+      doc.setFontSize(9);
+      doc.setFont(undefined, 'normal');
+      doc.text('** This is a computer-generated document and does not require a signature.', 105, finalY + 40, { align: 'center' });
+      
+      const fileName = `${staffProfile.staff_id || 'Staff'}_SalarySlip_${MONTH_NAMES[selectedPayroll.month]}_${selectedPayroll.year}.pdf`;
+      doc.save(fileName);
+    } catch (e) {
+      console.error('Error generating PDF:', e);
+    }
   };
 
   if (loading) {
@@ -258,9 +357,9 @@ const ViewStaffPayroll = () => {
                   payrollHistory.map((item) => (
                     <tr key={item._id}>
                       <td className="fw-bold text-dark">{MONTH_NAMES[item.month]} {item.year}</td>
-                      <td>₹{item.basic_salary?.toLocaleString('en-IN')}</td>
-                      <td>₹{(item.allowance || 0).toLocaleString('en-IN')}</td>
-                      <td>₹{(item.deductions || 0).toLocaleString('en-IN')}</td>
+                      <td>₹{(item.earned_breakdown?.basic || 0).toLocaleString('en-IN')}</td>
+                      <td>₹{((item.earned_breakdown?.total_gross || 0) - (item.earned_breakdown?.basic || 0) + (item.bonus || 0) + (item.overtime_pay || 0) + (item.expense_claims || 0)).toLocaleString('en-IN')}</td>
+                      <td>₹{((item.deduction_breakdown?.total_statutory || 0) + (item.deductions || 0) + (item.advance_deduction || 0) + (item.tds || 0) + (item.lwp_deduction || 0)).toLocaleString('en-IN')}</td>
                       <td className="fw-bold text-primary">₹{item.net_salary?.toLocaleString('en-IN')}</td>
                       <td>{getStatusBadge(item.status)}</td>
                       <td className="text-end">
@@ -349,36 +448,44 @@ const ViewStaffPayroll = () => {
                 <tbody>
                   <tr>
                     <td>Basic Salary</td>
-                    <td className="text-end">₹{selectedPayroll.basic_salary?.toLocaleString('en-IN')}</td>
+                    <td className="text-end">₹{(selectedPayroll.earned_breakdown?.basic || 0).toLocaleString('en-IN')}</td>
                     <td>Professional Tax (PT)</td>
-                    <td className="text-end">₹{(selectedPayroll.pt || 0).toLocaleString('en-IN')}</td>
+                    <td className="text-end">₹{(selectedPayroll.deduction_breakdown?.pt || 0).toLocaleString('en-IN')}</td>
                   </tr>
                   <tr>
                     <td>Allowances</td>
-                    <td className="text-end">₹{(selectedPayroll.allowance || 0).toLocaleString('en-IN')}</td>
+                    <td className="text-end">
+                      ₹{((selectedPayroll.earned_breakdown?.hra || 0) + (selectedPayroll.earned_breakdown?.conveyance || 0) + (selectedPayroll.earned_breakdown?.medical || 0) + (selectedPayroll.earned_breakdown?.special || 0) + (selectedPayroll.earned_breakdown?.other || 0)).toLocaleString('en-IN')}
+                    </td>
                     <td>Provident Fund (PF)</td>
-                    <td className="text-end">₹{(selectedPayroll.pf || 0).toLocaleString('en-IN')}</td>
+                    <td className="text-end">₹{(selectedPayroll.deduction_breakdown?.pf || 0).toLocaleString('en-IN')}</td>
                   </tr>
                   <tr>
                     <td>Overtime Pay</td>
                     <td className="text-end">₹{(selectedPayroll.overtime_pay || 0).toLocaleString('en-IN')}</td>
                     <td>ESI Contribution</td>
-                    <td className="text-end">₹{(selectedPayroll.esi || 0).toLocaleString('en-IN')}</td>
+                    <td className="text-end">₹{(selectedPayroll.deduction_breakdown?.esi || 0).toLocaleString('en-IN')}</td>
                   </tr>
                   <tr>
-                    <td>Bonus / Incentives</td>
-                    <td className="text-end">₹{(selectedPayroll.bonus || 0).toLocaleString('en-IN')}</td>
-                    <td>Unpaid Leave Deductions</td>
-                    <td className="text-end">₹{(selectedPayroll.unpaid_leaves_amount || 0).toLocaleString('en-IN')}</td>
+                    <td>Bonus & Expenses</td>
+                    <td className="text-end">₹{((selectedPayroll.bonus || 0) + (selectedPayroll.expense_claims || 0)).toLocaleString('en-IN')}</td>
+                    <td>LWP / Leave Deductions</td>
+                    <td className="text-end">₹{(selectedPayroll.lwp_deduction || 0).toLocaleString('en-IN')}</td>
+                  </tr>
+                  <tr>
+                    <td />
+                    <td />
+                    <td>Other Deductions (Advance/TDS)</td>
+                    <td className="text-end">₹{((selectedPayroll.advance_deduction || 0) + (selectedPayroll.tds || 0) + (selectedPayroll.deductions || 0)).toLocaleString('en-IN')}</td>
                   </tr>
                   <tr className="fw-bold bg-light">
                     <td>Total Earnings</td>
                     <td className="text-end text-success">
-                      ₹{(selectedPayroll.basic_salary + (selectedPayroll.allowance || 0) + (selectedPayroll.overtime_pay || 0) + (selectedPayroll.bonus || 0)).toLocaleString('en-IN')}
+                      ₹{((selectedPayroll.earned_breakdown?.total_gross || 0) + (selectedPayroll.overtime_pay || 0) + (selectedPayroll.bonus || 0) + (selectedPayroll.expense_claims || 0)).toLocaleString('en-IN')}
                     </td>
                     <td>Total Deductions</td>
                     <td className="text-end text-danger">
-                      ₹{(selectedPayroll.deductions || 0).toLocaleString('en-IN')}
+                      ₹{((selectedPayroll.deduction_breakdown?.total_statutory || 0) + (selectedPayroll.lwp_deduction || 0) + (selectedPayroll.advance_deduction || 0) + (selectedPayroll.tds || 0) + (selectedPayroll.deductions || 0)).toLocaleString('en-IN')}
                     </td>
                   </tr>
                 </tbody>
@@ -397,8 +504,8 @@ const ViewStaffPayroll = () => {
                 Close
               </Button>
               <Button variant="primary" className="rounded-pill px-4 d-inline-flex align-items-center gap-1" onClick={handlePrintPayslip}>
-                <CsLineIcons icon="print" size="14" />
-                <span>Print Payslip</span>
+                <CsLineIcons icon="download" size="14" />
+                <span>Download PDF</span>
               </Button>
             </div>
           </Modal.Body>

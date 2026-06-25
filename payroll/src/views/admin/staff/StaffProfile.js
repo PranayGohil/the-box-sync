@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, NavLink, useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Button, Row, Col, Card, Nav, Tab, Spinner, Alert } from 'react-bootstrap';
+import { Button, Row, Col, Card, Nav, Tab, Spinner, Alert, Form, Table, Badge } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -119,6 +119,9 @@ const StaffProfile = () => {
 
   const [loading, setLoading] = useState(true);
   const [staff, setStaff] = useState(null);
+  const [leaveBalances, setLeaveBalances] = useState([]);
+  const [globalLeavePolicies, setGlobalLeavePolicies] = useState([]);
+  const [expenses, setExpenses] = useState([]);
   const [error, setError] = useState('');
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -151,6 +154,36 @@ const StaffProfile = () => {
         },
       });
       setStaff(res.data.data);
+
+      try {
+        const [balRes, leavePolicyRes, expenseRes] = await Promise.all([
+          axios.get(`${process.env.REACT_APP_API}/leave/balances?staff_id=${id}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          }),
+          axios.get(`${process.env.REACT_APP_API}/leave-policy`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          }),
+          axios.get(`${process.env.REACT_APP_API}/expenses/staff/${id}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          })
+        ]);
+        
+        if (balRes.data.success && balRes.data.data.length > 0) {
+          setLeaveBalances(balRes.data.data[0].balances || []);
+        } else {
+          setLeaveBalances([]);
+        }
+
+        if (leavePolicyRes?.data?.success && leavePolicyRes?.data?.data?.leave_types) {
+          setGlobalLeavePolicies(leavePolicyRes.data.data.leave_types);
+        }
+
+        if (expenseRes?.data?.success) {
+          setExpenses(expenseRes.data.data);
+        }
+      } catch (err) {
+        console.error('Error fetching leave balances/policies:', err);
+      }
     } catch (err) {
       console.error('Error fetching staff:', err);
       setError('Failed to fetch staff details. Please try again.');
@@ -166,6 +199,48 @@ const StaffProfile = () => {
 
   const handleDeleteSuccess = () => {
     history.push('/staff/view');
+  };
+
+  const [sendingLetter, setSendingLetter] = useState(false);
+
+  const handleSendJoiningLetter = async () => {
+    try {
+      setSendingLetter(true);
+      const res = await axios.post(`${process.env.REACT_APP_API}/staff/send-joining-letter/${id}`, {}, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (res.data.success) {
+        toast.success(res.data.message || 'Joining letter sent successfully!');
+      } else {
+        toast.error(res.data.message || 'Failed to send joining letter.');
+      }
+    } catch (err) {
+      console.error('Error sending joining letter:', err);
+      toast.error(err.response?.data?.message || 'Error sending joining letter. Please check if the template is set in Payroll Settings.');
+    } finally {
+      setSendingLetter(false);
+    }
+  };
+
+  const handleToggleSpecificLeave = async (leave_type_id, currentStatus) => {
+    const newStatus = !currentStatus;
+    try {
+      const res = await axios.put(`${process.env.REACT_APP_API}/staff/toggle-specific-leave/${id}`, {
+        leave_type_id,
+        is_active: newStatus
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.data.success) {
+        setStaff(res.data.data);
+        toast.success(res.data.message);
+      }
+    } catch (err) {
+      console.error('Error toggling specific leave:', err);
+      toast.error('Failed to update leave status');
+    }
   };
 
   if (loading) {
@@ -197,13 +272,28 @@ const StaffProfile = () => {
 
       <div className="page-title-container mb-5">
         <Row className="g-3 align-items-center">
-          <Col md={7}>
+          <Col md={6}>
             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
               {staff.f_name} {staff.l_name}
             </h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
-          <Col md={5} className="d-flex justify-content-md-end gap-2">
+          <Col md={6} className="d-flex flex-wrap justify-content-md-end align-items-center gap-2">
+            <Button
+              className="custom-btn-outline px-4 py-2 d-flex align-items-center gap-2"
+              onClick={() => history.goBack()}
+            >
+              <CsLineIcons icon="arrow-left" size="18" /> <span>Back</span>
+            </Button>
+            <Button
+              className="custom-btn-outline px-4 py-2 d-flex align-items-center gap-2"
+              onClick={handleSendJoiningLetter}
+              disabled={sendingLetter || !staff.email}
+              title={!staff.email ? "Staff member does not have an email address" : "Send Joining Letter PDF via Email"}
+            >
+              {sendingLetter ? <Spinner size="sm" animation="border" /> : <CsLineIcons icon="email" size="18" />}
+              <span>Send Joining Letter</span>
+            </Button>
             <Button className="custom-btn-outline px-4 py-2 d-flex align-items-center gap-2" as={NavLink} to={`/staff/edit/${id}`}>
               <CsLineIcons icon="edit-square" size="18" /> <span>Edit Profile</span>
             </Button>
@@ -266,6 +356,16 @@ const StaffProfile = () => {
                       <CsLineIcons icon="file-text" size="18" /> Documents & ID
                     </Nav.Link>
                   </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="leave" className="d-flex align-items-center gap-2">
+                      <CsLineIcons icon="calendar" size="18" /> Leave Information
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="expenses" className="d-flex align-items-center gap-2">
+                      <CsLineIcons icon="wallet" size="18" /> Expenses
+                    </Nav.Link>
+                  </Nav.Item>
                 </Nav>
               </Card.Body>
             </Card>
@@ -325,6 +425,72 @@ const StaffProfile = () => {
                         <div className="info-value">{staff.address}, {staff.city}, {staff.state}, {staff.country}</div>
                       </Col>
                     </Row>
+                  </Card.Body>
+                </Card>
+
+              </Tab.Pane>
+
+              {/* Leave Information Tab */}
+              <Tab.Pane eventKey="leave">
+                <Card className="glass-card border-0 shadow-sm">
+                  <Card.Body className="p-4">
+                    <div className="d-flex justify-content-between align-items-center mb-4">
+                      <div className="d-flex align-items-center gap-2">
+                        <div className="bg-soft-success p-2 rounded-3">
+                          <CsLineIcons icon="calendar" className="text-success" size="20" />
+                        </div>
+                        <h5 className="fw-bold mb-0">Leave Information</h5>
+                      </div>
+                    </div>
+                    
+                    {globalLeavePolicies.length > 0 ? (
+                      <Row className="g-3">
+                        {globalLeavePolicies.map((policy) => {
+                          const currentConfig = staff.leave_policy_configuration?.find(c => c.leave_type_id === policy.leave_type_id);
+                          const isActive = currentConfig ? currentConfig.is_active : true;
+                          const bal = leaveBalances.find(b => b.leave_type_id === policy.leave_type_id) || {};
+                          
+                          return (
+                          <Col md={6} key={policy.leave_type_id}>
+                            <div className={`border rounded-3 p-3 bg-light h-100 ${!isActive ? 'opacity-50' : ''}`}>
+                              <div className="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                  <h6 className="fw-bold mb-1 text-primary">{policy.name}</h6>
+                                  <div className="text-muted small">{policy.days_per_year} Days / Year</div>
+                                </div>
+                                <Button 
+                                  variant={isActive ? "outline-danger" : "outline-success"} 
+                                  size="sm"
+                                  className="rounded-pill fw-bold"
+                                  onClick={() => handleToggleSpecificLeave(policy.leave_type_id, isActive)}
+                                >
+                                  {isActive ? 'Disable' : 'Enable'}
+                                </Button>
+                              </div>
+                              
+                              <div className="d-flex justify-content-between mt-3 px-2 bg-white rounded p-2 border">
+                                <div className="text-center">
+                                  <div className="info-label mb-0" style={{ fontSize: '0.65rem' }}>Used</div>
+                                  <div className="fw-bold text-dark">{bal.taken || 0}</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="info-label mb-0" style={{ fontSize: '0.65rem' }}>Pending</div>
+                                  <div className="fw-bold text-warning">{bal.pending || 0}</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="info-label mb-0" style={{ fontSize: '0.65rem' }}>Balance</div>
+                                  <div className="fw-bold text-success">{bal.entitled !== undefined ? ((bal.entitled || 0) + (bal.carried_forward || 0) - (bal.taken || 0) - (bal.pending || 0)) : policy.days_per_year}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </Col>
+                        )})}
+                      </Row>
+                    ) : (
+                      <div className="text-muted text-center py-4 bg-light rounded border">
+                        No leave policies found in the system.
+                      </div>
+                    )}
                   </Card.Body>
                 </Card>
               </Tab.Pane>
@@ -392,6 +558,103 @@ const StaffProfile = () => {
                         </Col>
                       )}
                     </Row>
+                  </Card.Body>
+                </Card>
+              </Tab.Pane>
+
+              {/* Expenses Tab */}
+              <Tab.Pane eventKey="expenses">
+                <Card className="glass-card border-0 shadow-sm">
+                  <Card.Body className="p-4">
+                    <div className="d-flex justify-content-between align-items-center mb-4">
+                      <div className="d-flex align-items-center gap-2">
+                        <div className="bg-soft-primary p-2 rounded-3">
+                          <CsLineIcons icon="wallet" className="text-primary" size="20" />
+                        </div>
+                        <h5 className="fw-bold mb-0">Expense Claims</h5>
+                      </div>
+                    </div>
+                    
+                    {/* Desktop Table View */}
+                    <div className="table-responsive d-none d-lg-block">
+                      <Table hover className="react-table-modern mb-0">
+                        <thead>
+                          <tr>
+                            <th>Category</th>
+                            <th>Date</th>
+                            <th className="text-end">Amount</th>
+                            <th className="text-center">Receipt</th>
+                            <th className="text-center">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {expenses.length === 0 ? (
+                            <tr>
+                              <td colSpan="5" className="text-center py-4 text-muted border-bottom-0">
+                                No expenses found for this staff member.
+                              </td>
+                            </tr>
+                          ) : (
+                            expenses.map(exp => (
+                              <tr key={exp._id}>
+                                <td className="fw-bold">{exp.category}</td>
+                                <td>{exp.date}</td>
+                                <td className="text-end fw-bold text-dark">₹{exp.amount}</td>
+                                <td className="text-center">
+                                  {exp.receipt ? (
+                                    <a href={`${process.env.REACT_APP_UPLOAD_DIR}${exp.receipt}`} target="_blank" rel="noreferrer">
+                                      <Button variant="link" size="sm" className="p-0"><CsLineIcons icon="image" size="18" /></Button>
+                                    </a>
+                                  ) : '-'}
+                                </td>
+                                <td className="text-center">
+                                  <Badge bg={exp.status === 'approved' ? 'success' : exp.status === 'rejected' ? 'danger' : 'warning'} className="px-3 py-2 rounded-pill text-uppercase" style={{ fontSize: '0.7rem' }}>
+                                    {exp.status}
+                                  </Badge>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </Table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="d-lg-none">
+                      {expenses.length === 0 ? (
+                        <div className="text-center py-4 text-muted bg-light rounded border border-light">
+                          No expenses found for this staff member.
+                        </div>
+                      ) : (
+                        expenses.map(exp => (
+                          <div key={exp._id} className="mb-3 p-3 border rounded-3 bg-white shadow-sm">
+                            <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                              <div className="fw-bold text-dark">{exp.category}</div>
+                              <Badge bg={exp.status === 'approved' ? 'success' : exp.status === 'rejected' ? 'danger' : 'warning'} className="px-2 py-1 rounded-pill text-uppercase" style={{ fontSize: '0.65rem' }}>
+                                {exp.status}
+                              </Badge>
+                            </div>
+                            <div className="mb-2 d-flex justify-content-between">
+                              <span className="text-muted small">Date:</span>
+                              <span className="fw-medium small">{exp.date}</span>
+                            </div>
+                            <div className="mb-2 d-flex justify-content-between align-items-center">
+                              <span className="text-muted small">Amount:</span>
+                              <span className="fw-bold text-dark">₹{exp.amount}</span>
+                            </div>
+                            {exp.receipt && (
+                              <div className="text-end pt-2 border-top">
+                                <a href={`${process.env.REACT_APP_UPLOAD_DIR}${exp.receipt}`} target="_blank" rel="noreferrer">
+                                  <Button variant="link" size="sm" className="p-0 text-primary">
+                                    <CsLineIcons icon="image" size="18" className="me-1" /> View Receipt
+                                  </Button>
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </Card.Body>
                 </Card>
               </Tab.Pane>

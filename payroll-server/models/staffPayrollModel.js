@@ -105,6 +105,10 @@ const staffPayrollSchema = new Schema(
       type: String,
       default: "",
     },
+    expense_claims: {
+      type: Number,
+      default: 0,
+    },
 
     // ── Calculated ────────────────────────────────────────────────────────────
     // net_salary = earned_breakdown.total_gross + overtime_pay + bonus - total_statutory - manual_deductions

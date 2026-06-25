@@ -8,21 +8,21 @@ const userHasRole = (routeRoles, userRole) => {
 const clearRoute = (route) => {
   const item = {};
   ['path', 'to', 'exact', 'component', 'redirect'].forEach((key) => {
-    if (route[key]) item[key] = route[key];
+    if (route[key] !== undefined) item[key] = route[key];
   });
   return item;
 };
 const clearMenuItem = (menuItem) => {
   const item = {};
   ['path', 'label', 'icon', 'isExternal', 'subs', 'mega', 'megaParent'].forEach((key) => {
-    if (menuItem[key]) item[key] = menuItem[key];
+    if (menuItem[key] !== undefined) item[key] = menuItem[key];
   });
   return item;
 };
 const clearFlattedMenuItem = (menuItem) => {
   const item = {};
   ['path', 'label', 'isExternal'].forEach((key) => {
-    if (menuItem[key]) item[key] = menuItem[key];
+    if (menuItem[key] !== undefined) item[key] = menuItem[key];
   });
   return item;
 };

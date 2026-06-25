@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 import { Row, Col, Card, Form, Button, Spinner, Badge, Table } from 'react-bootstrap';
 import { toast } from 'react-toastify';
@@ -7,6 +7,10 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import Select from 'react-select';
 import { getPayrollConfig, updatePayrollConfig } from 'api/payrollConfig';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import ReactQuill from 'react-quill';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import 'react-quill/dist/quill.snow.css';
 
 const WEEK_DAYS = [
     { value: 0, label: 'Sunday' },
@@ -197,9 +201,46 @@ const PayrollSettings = () => {
             half_day_hours: 4,
             full_day_hours: 8,
             lunch_start_time: '01:00 PM',
-            lunch_end_time: '02:00 PM'
+            lunch_end_time: '02:00 PM',
+            notice_period_days: 30
+        },
+        document_templates: {
+            joining_letter_template: ""
         }
     });
+
+    const defaultJoiningLetter = `<p><strong>Subject: Offer of Employment</strong></p><p><br></p><p>Dear [First Name],</p><p><br></p><p>We are thrilled to offer you the position of <strong>[Job Title]</strong> with our company. Your expected joining date is <strong>[Date of Joining]</strong>. Your starting basic salary will be <strong>[Basic Salary]</strong>.</p><p><br></p><p>Your Staff ID is: <strong>[Staff ID]</strong></p><p><br></p><p>Welcome to the team!</p><p><br></p><p>Sincerely,</p><p>Management</p>`;
+
+    const quillRef = useRef(null);
+
+    const modules = {
+        toolbar: [
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ header: [1, 2, 3, 4, 5, 6, false] }],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            [{ align: [] }],
+            ['clean']
+        ],
+    };
+
+    const handleTemplateChange = (content) => {
+        setConfig(prev => ({
+            ...prev,
+            document_templates: {
+                ...prev.document_templates,
+                joining_letter_template: content
+            }
+        }));
+    };
+
+    const insertVariable = (variableName) => {
+        if (quillRef.current) {
+            const editor = quillRef.current.getEditor();
+            const cursorPosition = editor.getSelection()?.index || editor.getLength();
+            editor.insertText(cursorPosition, `[${variableName}]`);
+            editor.setSelection(cursorPosition + variableName.length + 2);
+        }
+    };
 
     const fetchConfig = async () => {
         try {
@@ -221,7 +262,8 @@ const PayrollSettings = () => {
                         esi: { ...config.statutory_config.esi, ...(res.data.statutory_config?.esi || {}) },
                         pt: { ...config.statutory_config.pt, ...(res.data.statutory_config?.pt || {}) },
                     },
-                    org_rules: { ...config.org_rules, ...(res.data.org_rules || {}) }
+                    org_rules: { ...config.org_rules, ...(res.data.org_rules || {}) },
+                    document_templates: { joining_letter_template: res.data.document_templates?.joining_letter_template || defaultJoiningLetter }
                 });
             }
         } catch (err) {
@@ -666,6 +708,12 @@ const PayrollSettings = () => {
                                         <Form.Control type="text" value={config.org_rules.lunch_end_time || ''} onChange={e => updateOrg('lunch_end_time', e.target.value)} placeholder="e.g. 02:00 PM" className="form-control-premium shadow-sm" />
                                     </Form.Group>
                                 </Col>
+                                <Col md="6">
+                                    <Form.Group>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Notice Period (Days)</Form.Label>
+                                        <Form.Control type="number" value={config.org_rules.notice_period_days || 30} onChange={e => updateOrg('notice_period_days', Number(e.target.value))} className="form-control-premium shadow-sm" />
+                                    </Form.Group>
+                                </Col>
                             </Row>
                         </Card.Body>
                     </Card>
@@ -968,6 +1016,53 @@ const PayrollSettings = () => {
                                         </Button>
                                     </div>
                                 ))}
+                            </div>
+                        </Card.Body>
+                    </Card>
+                </Col>
+
+                {/* ── Document Templates ── */}
+                <Col xl="12">
+                    <Card className="glass-card">
+                        <Card.Body className="p-4">
+                            <div className="d-flex justify-content-between align-items-center mb-4">
+                                <h5 className="fw-bold mb-0 text-primary">Joining Letter Template</h5>
+                            </div>
+                            <p className="text-muted mb-3 small fw-medium">
+                                Design the joining letter that will be sent to staff members as a PDF attachment. 
+                                Click any of the buttons below to insert the placeholder into your letter. These placeholders will be automatically replaced with the staff's actual data when sent:
+                            </p>
+                            <div className="mb-4 p-3 bg-light rounded border d-flex flex-wrap gap-2">
+                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('First Name')} className="rounded-pill fw-bold">
+                                    + [First Name]
+                                </Button>
+                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('Last Name')} className="rounded-pill fw-bold">
+                                    + [Last Name]
+                                </Button>
+                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('Job Title')} className="rounded-pill fw-bold">
+                                    + [Job Title]
+                                </Button>
+                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('Date of Joining')} className="rounded-pill fw-bold">
+                                    + [Date of Joining]
+                                </Button>
+                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('Basic Salary')} className="rounded-pill fw-bold">
+                                    + [Basic Salary]
+                                </Button>
+                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('Staff ID')} className="rounded-pill fw-bold">
+                                    + [Staff ID]
+                                </Button>
+                            </div>
+                            
+                            <div className="bg-white rounded border">
+                                <ReactQuill 
+                                    ref={quillRef}
+                                    theme="snow"
+                                    value={config.document_templates?.joining_letter_template || ''}
+                                    onChange={handleTemplateChange}
+                                    modules={modules}
+                                    placeholder="Draft your joining letter template here..."
+                                    style={{ minHeight: '300px', fontSize: '15px' }}
+                                />
                             </div>
                         </Card.Body>
                     </Card>
