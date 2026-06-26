@@ -33,7 +33,14 @@ const MainMenuItem = memo(({ item, id, isSubItem = false, menuPlacement = DEFAUL
   const { collapseAll } = useSelector((state) => state.menu);
   const { showingNavMenu } = useSelector((state) => state.layout);
   const { pathname } = useLocation();
-  let isActive = item.path.startsWith('#') ? false : pathname === item.path || pathname.indexOf(`${item.path}/`) > -1;
+  let isActive = false;
+  if (item.path && item.path.startsWith('#')) {
+    isActive = false;
+  } else if (item.path) {
+    isActive = pathname === item.path || pathname.indexOf(`${item.path}/`) > -1;
+  } else if (item.subs) {
+    isActive = item.subs.some(sub => pathname === sub.path || pathname.indexOf(`${sub.path}/`) > -1);
+  }
 
   if (pathname.includes('/staff/attendance')) {
     if (item.path === '/staff') {

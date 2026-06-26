@@ -3,6 +3,22 @@ const Staff = require("../models/staffModel");
 const StaffAttendance = require("../models/staffAttendanceModel");
 const PayrollConfig = require("../models/PayrollConfig");
 const SalaryAdvance = require("../models/salaryAdvanceModel");
+const Expense = require("../models/expenseModel");
+
+// ── Helper: Get Approved Expenses for Staff in a Month ────────────────────────
+const getApprovedExpenses = async (staff_id, month, year) => {
+    const monthStr = String(month).padStart(2, "0");
+    const yearStr = String(year);
+    const regexDate = new RegExp(`^${yearStr}-${monthStr}`);
+    const expenses = await Expense.find({
+        staff_id,
+        status: "approved",
+        date: { $regex: regexDate }
+    }).lean();
+    let total = 0;
+    expenses.forEach(e => { total += (e.amount || 0); });
+    return total;
+};
 
 // ── Helper: Calculate PT based on slabs ───────────────────────────────────────
 const calculatePT = (earnedSalary, ptConfig) => {
@@ -28,6 +44,7 @@ const calculateSalary = ({
     overtime_hours,
     overtime_rate,
     bonus,
+    expense_claims = 0,
     manual_deductions,
     advance_deduction
 }) => {
@@ -91,7 +108,7 @@ const calculateSalary = ({
     const overtime_pay = parseFloat((overtime_hours * overtime_rate).toFixed(2));
     
     const net_salary = parseFloat(
-        (earned_breakdown.total_gross + overtime_pay + (bonus || 0) - deduction_breakdown.total_statutory - (manual_deductions || 0) - (advance_deduction || 0)).toFixed(2)
+        (earned_breakdown.total_gross + overtime_pay + (bonus || 0) + (expense_claims || 0) - deduction_breakdown.total_statutory - (manual_deductions || 0) - (advance_deduction || 0)).toFixed(2)
     );
 
     return { earned_breakdown, deduction_breakdown, overtime_pay, lwp_deduction, net_salary };
@@ -160,7 +177,7 @@ const getAttendanceCounts = async (staff_id, month, year) => {
 const previewPayroll = async (req, res) => {
     try {
         const user_id = req.user;
-        const { month, year, working_days_in_month, staff_id } = req.query;
+        const { month, year, working_days_in_month, staff_id, branch_id } = req.query;
 
         if (!month || !year || !working_days_in_month) {
             return res.status(400).json({ success: false, message: "month, year and working_days_in_month are required" });
@@ -172,8 +189,12 @@ const previewPayroll = async (req, res) => {
             if (!staff) return res.status(404).json({ success: false, message: "Staff not found" });
             staffList = [staff];
         } else {
-            staffList = await Staff.find({ user_id })
-                .select("_id staff_id f_name l_name salary salary_structure overtime_rate position photo")
+            const filter = { user_id };
+            if (branch_id && branch_id !== 'all') {
+                filter.branch_id = branch_id;
+            }
+            staffList = await Staff.find(filter)
+                .select("_id staff_id f_name l_name salary salary_structure overtime_rate position photo branch_id")
                 .lean();
         }
 
@@ -190,7 +211,10 @@ const previewPayroll = async (req, res) => {
                     advance_deduction += adv.installment_amount;
                 });
 
-                const overtime_rate = staff.overtime_rate || 0;
+                const expense_claims = await getApprovedExpenses(staff._id, parseInt(month), parseInt(year));
+
+                const defaultOtRate = Math.round(((staff.salary || 0) / parseInt(working_days_in_month)) / 8 * 2) || 0;
+                const overtime_rate = staff.overtime_rate || defaultOtRate;
                 const { earned_breakdown, deduction_breakdown, overtime_pay, lwp_deduction, net_salary } = calculateSalary({
                     salary_structure: staff.salary_structure,
                     globalConfig,
@@ -200,6 +224,7 @@ const previewPayroll = async (req, res) => {
                     overtime_hours: total_ot,
                     overtime_rate,
                     bonus: 0,
+                    expense_claims,
                     manual_deductions: 0,
                     advance_deduction
                 });
@@ -226,6 +251,7 @@ const previewPayroll = async (req, res) => {
                     overtime_hours: total_ot,
                     overtime_pay,
                     bonus: 0,
+                    expense_claims,
                     deductions: 0,
                     deduction_reason: "",
                     net_salary,
@@ -287,7 +313,10 @@ const generatePayroll = async (req, res) => {
                 const deductions = staff_id ? parseFloat(req.body.deductions || 0) : parseFloat(deductions_map[sid] || 0);
                 const deduction_reason = staff_id ? req.body.deduction_reason || "" : deduction_reason_map[sid] || "";
                 const notes = staff_id ? req.body.notes || "" : notes_map[sid] || "";
-                const overtime_rate = staff.overtime_rate || 0;
+                const defaultOtRate = Math.round(((staff.salary || 0) / working_days_in_month) / 8 * 2) || 0;
+                const overtime_rate = staff.overtime_rate || defaultOtRate;
+
+                const expense_claims = await getApprovedExpenses(staff._id, month, year);
 
                 const { earned_breakdown, deduction_breakdown, overtime_pay, lwp_deduction, net_salary } = calculateSalary({
                     salary_structure: staff.salary_structure,
@@ -298,6 +327,7 @@ const generatePayroll = async (req, res) => {
                     overtime_hours,
                     overtime_rate,
                     bonus,
+                    expense_claims,
                     manual_deductions: deductions,
                     advance_deduction
                 });
@@ -306,7 +336,7 @@ const generatePayroll = async (req, res) => {
                     staff_id: staff._id, user_id, month, year, working_days_in_month,
                     present_days, absent_days, leave_summary,
                     overtime_hours, overtime_rate, overtime_pay,
-                    bonus, deductions, deduction_reason,
+                    bonus, expense_claims, deductions, deduction_reason,
                     earned_breakdown, deduction_breakdown, advance_deduction, lwp_deduction,
                     net_salary, notes, status: "unpaid", paid_date: null,
                 };
@@ -354,11 +384,25 @@ const getMonthlyPayrollSummary = async (req, res) => {
     try {
         const user_id = req.user;
         const { month, year } = req.params;
-        const payrollRecords = await StaffPayroll.find({ user_id, month: parseInt(month), year: parseInt(year) }).populate("staff_id", "staff_id f_name l_name position photo overtime_rate salary").lean();
+        const payrollRecords = await StaffPayroll.find({ user_id, month: parseInt(month), year: parseInt(year) }).populate("staff_id", "staff_id f_name l_name position photo overtime_rate salary");
         const allStaff = await Staff.find({ user_id }).select("_id staff_id f_name l_name position photo salary salary_structure overtime_rate").lean();
 
+        // Auto-sync expenses for unpaid records
+        for (let p of payrollRecords) {
+            if (p.status === "unpaid" && p.staff_id) {
+                const latestExp = await getApprovedExpenses(p.staff_id._id, parseInt(month), parseInt(year));
+                if (latestExp !== (p.expense_claims || 0)) {
+                    p.expense_claims = latestExp;
+                    const totalGross = p.earned_breakdown?.total_gross || p.earned_salary || 0;
+                    const totalStatutory = p.deduction_breakdown?.total_statutory || 0;
+                    p.net_salary = parseFloat((totalGross + (p.overtime_pay || 0) + (p.bonus || 0) + latestExp - totalStatutory - (p.deductions || 0) - (p.advance_deduction || 0) - (p.tds || 0) - (p.lwp_deduction || 0)).toFixed(2));
+                    await p.save();
+                }
+            }
+        }
+
         const payrollMap = {};
-        payrollRecords.forEach(p => { if (p.staff_id) payrollMap[p.staff_id._id.toString()] = p; });
+        payrollRecords.forEach(p => { if (p.staff_id) payrollMap[p.staff_id._id.toString()] = p.toObject(); });
 
         const summary = allStaff.map(staff => ({ staff, payroll: payrollMap[staff._id.toString()] || null }));
 
@@ -432,7 +476,8 @@ const updatePayroll = async (req, res) => {
             earned_breakdown,
             deduction_breakdown,
             advance_deduction,
-            tds
+            tds,
+            overtime_rate
         } = req.body;
 
         const payroll = await StaffPayroll.findOne({ _id: id, user_id });
@@ -443,6 +488,7 @@ const updatePayroll = async (req, res) => {
         // Update fields if passed
         if (working_days_in_month !== undefined) payroll.working_days_in_month = Number(working_days_in_month) || 0;
         if (overtime_hours !== undefined) payroll.overtime_hours = Number(overtime_hours) || 0;
+        if (overtime_rate !== undefined) payroll.overtime_rate = Number(overtime_rate) || 0;
         if (bonus !== undefined) payroll.bonus = Number(bonus) || 0;
         if (deductions !== undefined) payroll.deductions = Number(deductions) || 0;
         if (deduction_reason !== undefined) payroll.deduction_reason = deduction_reason;
@@ -496,7 +542,8 @@ const updatePayroll = async (req, res) => {
         payroll.net_salary = parseFloat((
             totalGross +
             payroll.overtime_pay +
-            payroll.bonus -
+            payroll.bonus +
+            (payroll.expense_claims || 0) -
             totalStatutory -
             payroll.deductions -
             payroll.advance_deduction -

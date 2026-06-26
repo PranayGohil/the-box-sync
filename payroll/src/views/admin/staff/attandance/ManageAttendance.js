@@ -520,7 +520,8 @@ export default function ManageAttendance() {
     shift_start_time: '09:00 AM', 
     late_threshold_minutes: 0, 
     shift_end_time: '06:00 PM',
-    network_restrictions: { is_enabled: false, allowed_ips: '' }
+    network_restrictions: { is_enabled: false, allowed_ips: '' },
+    wfh_config: { min_interval: 3, max_interval: 15, idle_threshold: 5 }
   });
   const [savingAttSettings, setSavingAttSettings] = useState(false);
   const [attSettingsMsg, setAttSettingsMsg] = useState('');
@@ -680,12 +681,17 @@ export default function ManageAttendance() {
             shift_end_time: r.shift_end_time || '06:00 PM',
           }));
         }
-        if (configRes.data.network_restrictions) {
+        if (configRes.data.network_restrictions || configRes.data.wfh_config) {
           setAttSettings(prev => ({
             ...prev,
             network_restrictions: {
-              is_enabled: configRes.data.network_restrictions.is_enabled || false,
-              allowed_ips: (configRes.data.network_restrictions.allowed_ips || []).join(', ')
+              is_enabled: configRes.data.network_restrictions?.is_enabled || false,
+              allowed_ips: (configRes.data.network_restrictions?.allowed_ips || []).join(', ')
+            },
+            wfh_config: {
+              min_interval: configRes.data.wfh_config?.min_interval || 3,
+              max_interval: configRes.data.wfh_config?.max_interval || 15,
+              idle_threshold: configRes.data.wfh_config?.idle_threshold || 5,
             }
           }));
         }
@@ -745,6 +751,11 @@ export default function ManageAttendance() {
         network_restrictions: {
           is_enabled: attSettings.network_restrictions.is_enabled,
           allowed_ips: allowed_ips_array
+        },
+        wfh_config: {
+          min_interval: Number(attSettings.wfh_config.min_interval),
+          max_interval: Number(attSettings.wfh_config.max_interval),
+          idle_threshold: Number(attSettings.wfh_config.idle_threshold)
         }
       };
 
@@ -1306,7 +1317,7 @@ export default function ManageAttendance() {
       </div>
 
         {showAttSettings && (
-          <Card className="glass-card border-0 shadow-sm mt-3">
+          <Card className="glass-card border-0 shadow-sm mt-3 mb-4">
             <Card.Body className="p-4">
               <h6 className="fw-bold mb-1 text-dark">Shift & Timing Rules</h6>
               <p className="text-muted small mb-4">
@@ -1421,6 +1432,57 @@ export default function ManageAttendance() {
                         </Button>
                       </div>
                     )}
+                  </Col>
+                </Row>
+              </div>
+
+              <div className="mt-4 pt-4 border-top">
+                <h6 className="fw-bold mb-1 text-dark">Work From Home (WFH) Tracking Settings</h6>
+                <p className="text-muted small mb-3">
+                  Configure the random snapshot intervals and idle time threshold for employees working from home.
+                </p>
+                <Row className="g-3 align-items-start">
+                  <Col xs={12} sm={4}>
+                    <Form.Label className="fw-semibold text-dark small mb-1">Min Interval (Minutes)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="1"
+                      value={attSettings.wfh_config?.min_interval}
+                      onChange={e => setAttSettings(s => ({
+                        ...s,
+                        wfh_config: { ...s.wfh_config, min_interval: e.target.value }
+                      }))}
+                      style={{ borderRadius: '10px', height: '42px', border: '1px solid #e2e8f0', fontSize: '14px' }}
+                    />
+                    <Form.Text className="text-muted" style={{ fontSize: '0.75rem' }}>Minimum time between random snapshots.</Form.Text>
+                  </Col>
+                  <Col xs={12} sm={4}>
+                    <Form.Label className="fw-semibold text-dark small mb-1">Max Interval (Minutes)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="1"
+                      value={attSettings.wfh_config?.max_interval}
+                      onChange={e => setAttSettings(s => ({
+                        ...s,
+                        wfh_config: { ...s.wfh_config, max_interval: e.target.value }
+                      }))}
+                      style={{ borderRadius: '10px', height: '42px', border: '1px solid #e2e8f0', fontSize: '14px' }}
+                    />
+                    <Form.Text className="text-muted" style={{ fontSize: '0.75rem' }}>Maximum time between random snapshots.</Form.Text>
+                  </Col>
+                  <Col xs={12} sm={4}>
+                    <Form.Label className="fw-semibold text-dark small mb-1">Idle Threshold (Minutes)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="1"
+                      value={attSettings.wfh_config?.idle_threshold}
+                      onChange={e => setAttSettings(s => ({
+                        ...s,
+                        wfh_config: { ...s.wfh_config, idle_threshold: e.target.value }
+                      }))}
+                      style={{ borderRadius: '10px', height: '42px', border: '1px solid #e2e8f0', fontSize: '14px' }}
+                    />
+                    <Form.Text className="text-muted" style={{ fontSize: '0.75rem' }}>Time before system marks employee as idle.</Form.Text>
                   </Col>
                 </Row>
               </div>

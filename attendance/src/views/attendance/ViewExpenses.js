@@ -4,6 +4,7 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
 import CreatableSelect from 'react-select/creatable';
+import axios from 'axios';
 
 const customStyles = `
   .glass-card {
@@ -53,39 +54,76 @@ export default function ViewExpenses() {
   
   // Expense Claim state
   const [showExpenseModal, setShowExpenseModal] = useState(false);
-  const [expenseForm, setExpenseForm] = useState({ category: '', amount: '', description: '' });
+  const [expenseForm, setExpenseForm] = useState({ category: '', amount: '', description: '', receipt: null });
   const [expenseLoading, setExpenseLoading] = useState(false);
   const [expenseCategories, setExpenseCategories] = useState(['Travel', 'Food & Dining', 'Office Supplies', 'Other']);
 
   // Expenses History
   const [history, setHistory] = useState([]);
 
-  const handleExpenseSubmit = async (e) => {
-    e.preventDefault();
-    setExpenseLoading(true);
-    // Mocking API call
-    setTimeout(() => {
-      setExpenseLoading(false);
-      setShowExpenseModal(false);
-      toast.success('Expense claim submitted successfully!');
-      
-      // Prepend to mock history
-      const newClaim = {
-        id: Date.now(),
-        date: new Date().toISOString().split('T')[0],
-        category: expenseForm.category,
-        amount: expenseForm.amount,
-        status: 'Pending'
-      };
-      setHistory([newClaim, ...history]);
-      
-      setExpenseForm({ category: '', amount: '', description: '' });
-    }, 1000);
+  const fetchExpenses = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${process.env.REACT_APP_API}/expenses/staff`, {
+        headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
+      });
+      if (res.data.success) {
+        setHistory(res.data.data);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to fetch expenses');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const pendingAmount = history.filter(h => h.status === 'Pending').reduce((acc, curr) => acc + Number(curr.amount), 0);
-  const approvedAmount = history.filter(h => h.status === 'Approved').reduce((acc, curr) => acc + Number(curr.amount), 0);
-  const rejectedAmount = history.filter(h => h.status === 'Rejected').reduce((acc, curr) => acc + Number(curr.amount), 0);
+  React.useEffect(() => {
+    fetchExpenses();
+  }, []);
+
+  const handleExpenseSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!expenseForm.category || !expenseForm.amount) {
+      toast.error("Please fill in category and amount.");
+      return;
+    }
+
+    setExpenseLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('category', expenseForm.category);
+      formData.append('amount', expenseForm.amount);
+      formData.append('description', expenseForm.description);
+      // Auto-set current date since the UI doesn't have a date field here
+      formData.append('date', new Date().toISOString().split('T')[0]);
+      
+      if (expenseForm.receipt) {
+        formData.append('receipt', expenseForm.receipt);
+      }
+
+      const res = await axios.post(`${process.env.REACT_APP_API}/expenses/requests`, formData, {
+        headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
+      });
+      
+      if (res.data.success) {
+        toast.success('Expense claim submitted successfully!');
+        setExpenseForm({ category: '', amount: '', description: '', receipt: null });
+        setShowExpenseModal(false);
+        fetchExpenses(); // Refresh the list
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.error || 'Failed to submit expense claim');
+    } finally {
+      setExpenseLoading(false);
+    }
+  };
+
+  const pendingAmount = history.filter(h => h.status === 'pending').reduce((acc, curr) => acc + Number(curr.amount), 0);
+  const approvedAmount = history.filter(h => h.status === 'approved').reduce((acc, curr) => acc + Number(curr.amount), 0);
+  const rejectedAmount = history.filter(h => h.status === 'rejected').reduce((acc, curr) => acc + Number(curr.amount), 0);
 
   return (
     <div className="container-fluid px-lg-4 px-xl-5 pb-5 pt-4">
@@ -139,15 +177,15 @@ export default function ViewExpenses() {
               </thead>
               <tbody>
                 {history.map(record => (
-                  <tr key={record.id}>
+                  <tr key={record._id}>
                     <td className="fw-medium text-muted">{record.date}</td>
                     <td className="fw-bold">{record.category}</td>
                     <td className="text-end fw-bold text-dark">₹{record.amount}</td>
                     <td className="text-center">
                       <Badge bg={
-                        record.status === 'Approved' ? 'success' : 
-                        record.status === 'Pending' ? 'warning' : 'danger'
-                      } className="px-3 py-2 rounded-pill text-white">
+                        record.status === 'approved' ? 'success' : 
+                        record.status === 'pending' ? 'warning' : 'danger'
+                      } className="px-3 py-2 rounded-pill text-white text-uppercase" style={{ fontSize: '0.7rem' }}>
                         {record.status}
                       </Badge>
                     </td>
@@ -168,14 +206,14 @@ export default function ViewExpenses() {
               <div className="text-center py-4 text-muted rounded bg-light border-0">No expenses found.</div>
             ) : (
               history.map(record => (
-                <Card key={record.id} className="border-0 shadow-sm mb-3 bg-light" style={{ borderRadius: '1rem' }}>
+                <Card key={record._id} className="border-0 shadow-sm mb-3 bg-light" style={{ borderRadius: '1rem' }}>
                   <Card.Body className="p-3">
                     <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-white">
                       <div className="fw-bold">{record.category}</div>
                       <Badge bg={
-                        record.status === 'Approved' ? 'success' : 
-                        record.status === 'Pending' ? 'warning' : 'danger'
-                      } className="px-3 py-1 rounded-pill text-white shadow-sm">
+                        record.status === 'approved' ? 'success' : 
+                        record.status === 'pending' ? 'warning' : 'danger'
+                      } className="px-3 py-1 rounded-pill text-white shadow-sm text-uppercase" style={{ fontSize: '0.65rem' }}>
                         {record.status}
                       </Badge>
                     </div>
@@ -234,7 +272,7 @@ export default function ViewExpenses() {
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Upload Receipt (Optional)</Form.Label>
-              <Form.Control type="file" />
+              <Form.Control type="file" accept="image/*" onChange={(e) => setExpenseForm({...expenseForm, receipt: e.target.files[0]})} />
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>

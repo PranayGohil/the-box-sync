@@ -585,7 +585,7 @@ const ViewAttendance = () => {
   ];
 
   const authHeader = () => ({
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
   });
 
   const calculateWorkingHours = (inTime, outTime) => {

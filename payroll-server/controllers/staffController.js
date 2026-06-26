@@ -1,5 +1,8 @@
 const Staff = require("../models/staffModel");
 const StaffAttendance = require("../models/staffAttendanceModel");
+const PayrollConfig = require("../models/PayrollConfig");
+const { sendEmail } = require("../utils/emailService");
+const html_to_pdf = require('html-pdf-node');
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
@@ -77,10 +80,13 @@ const getStaffData = async (req, res) => {
       email: 1,
       phone_no: 1,
       position: 1,
+      role: 1,
       salary: 1,
       photo: 1,
       joining_date: 1,
-      // attandance removed — now in Attendance collection
+      department: 1,
+      department_node_id: 1,
+      branch_id: 1,
     };
 
     const [data, total] = await Promise.all([
@@ -459,6 +465,242 @@ const getNextStaffIdController = async (req, res) => {
   }
 };
 
+// ── POST /staff/send-joining-letter/:id ──────────────────────────────────────
+const sendJoiningLetter = async (req, res) => {
+  try {
+    const userId = req.user?._id || req.user;
+    const staffId = req.params.id;
+
+    // 1. Fetch Staff Details
+    const staff = await Staff.findOne({ _id: staffId, user_id: userId });
+    if (!staff) {
+      return res.status(404).json({ success: false, message: "Staff not found" });
+    }
+
+    if (!staff.email) {
+      return res.status(400).json({ success: false, message: "Staff does not have a registered email address." });
+    }
+
+    const defaultJoiningLetter = `<p><strong>Subject: Offer of Employment</strong></p><p><br></p><p>Dear [First Name],</p><p><br></p><p>We are thrilled to offer you the position of <strong>[Job Title]</strong> with our company. Your expected joining date is <strong>[Date of Joining]</strong>. Your starting basic salary will be <strong>[Basic Salary]</strong>.</p><p><br></p><p>Your Staff ID is: <strong>[Staff ID]</strong></p><p><br></p><p>Welcome to the team!</p><p><br></p><p>Sincerely,</p><p>Management</p>`;
+
+    // 2. Fetch Payroll Config for template
+    const config = await PayrollConfig.findOne({ user_id: userId });
+    
+    let template = config?.document_templates?.joining_letter_template;
+
+    if (!template) {
+      template = defaultJoiningLetter;
+    }
+
+    // 3. Replace Placeholders
+    const placeholders = {
+      "\\[First Name\\]": staff.f_name || "",
+      "\\[Last Name\\]": staff.l_name || "",
+      "\\[Job Title\\]": staff.position || "",
+      "\\[Date of Joining\\]": staff.joining_date ? new Date(staff.joining_date).toLocaleDateString('en-IN') : "",
+      "\\[Basic Salary\\]": staff.salary ? staff.salary.toString() : "",
+      "\\[Staff ID\\]": staff.staff_id || "",
+    };
+
+    for (const [key, value] of Object.entries(placeholders)) {
+      const regex = new RegExp(key, 'g');
+      template = template.replace(regex, value);
+    }
+
+    // Wrap the html in a basic document structure if it's just raw paragraphs
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+          .ql-align-center { text-align: center; }
+          .ql-align-right { text-align: right; }
+          .ql-align-justify { text-align: justify; }
+          h1, h2, h3 { color: #222; }
+        </style>
+      </head>
+      <body>
+        ${template}
+      </body>
+      </html>
+    `;
+
+    // 4. Generate PDF using html-pdf-node
+    const options = { format: 'A4', margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' } };
+    const file = { content: fullHtml };
+
+    const pdfBuffer = await html_to_pdf.generatePdf(file, options);
+
+    // 5. Send Email
+    const subject = `Joining Letter - ${staff.f_name} ${staff.l_name}`;
+    const textBody = `Dear ${staff.f_name},\n\nPlease find attached your joining letter.\n\nWelcome to the team!\n\nBest regards,\nManagement`;
+
+    await sendEmail({
+      to: staff.email,
+      subject: subject,
+      text: textBody,
+      html: `<p>Dear ${staff.f_name},</p><p>Please find attached your joining letter.</p><p>Welcome to the team!</p><p>Best regards,<br>Management</p>`,
+      attachments: [
+        {
+          filename: `Joining_Letter_${staff.f_name}_${staff.l_name}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        }
+      ]
+    });
+
+    return res.status(200).json({ success: true, message: "Joining letter sent successfully" });
+  } catch (error) {
+    console.error("Error in sendJoiningLetter:", error);
+    return res.status(500).json({ success: false, message: "Failed to send joining letter." });
+  }
+};
+
+// ── Resignation Controllers ──────────────────────────────────────────────
+
+const submitResignation = async (req, res) => {
+  try {
+    const userId = req.user._id; // Using authMiddleware
+    const staffId = req.params.id; // Or we can derive from auth if staff is logged in, but let's assume staffId is passed
+    const { reason } = req.body;
+
+    const staff = await Staff.findOne({ _id: staffId, user_id: userId });
+    if (!staff) {
+      return res.status(404).json({ success: false, message: "Staff not found" });
+    }
+
+    if (staff.resignation?.status === 'pending') {
+      return res.status(400).json({ success: false, message: "A resignation request is already pending." });
+    }
+
+    // Fetch Notice Period from PayrollConfig
+    const config = await PayrollConfig.findOne({ user_id: userId });
+    const noticePeriodDays = config?.org_rules?.notice_period_days || 30;
+
+    staff.resignation = {
+      status: 'pending',
+      reason: reason || "",
+      submitted_on: new Date(),
+      notice_period_days: noticePeriodDays,
+      last_working_day: null,
+      admin_remarks: ""
+    };
+
+    await staff.save();
+    return res.status(200).json({ success: true, message: "Resignation submitted successfully", staff });
+  } catch (error) {
+    console.error("Error in submitResignation:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+const processResignation = async (req, res) => {
+  try {
+    const userId = req.user._id; // Admin user ID
+    const staffId = req.params.id;
+    const { status, admin_remarks, custom_last_working_day } = req.body;
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid status. Must be approved or rejected." });
+    }
+
+    const staff = await Staff.findOne({ _id: staffId, user_id: userId });
+    if (!staff || !staff.resignation || staff.resignation.status !== 'pending') {
+      return res.status(400).json({ success: false, message: "No pending resignation found for this staff." });
+    }
+
+    staff.resignation.status = status;
+    staff.resignation.admin_remarks = admin_remarks || "";
+
+    if (status === 'approved') {
+      // Calculate last working day based on notice period, unless overridden
+      if (custom_last_working_day) {
+        staff.resignation.last_working_day = new Date(custom_last_working_day);
+      } else {
+        const submittedDate = staff.resignation.submitted_on || new Date();
+        const noticeDays = staff.resignation.notice_period_days || 30;
+        const lastDay = new Date(submittedDate);
+        lastDay.setDate(lastDay.getDate() + noticeDays);
+        staff.resignation.last_working_day = lastDay;
+      }
+    } else {
+      staff.resignation.last_working_day = null;
+    }
+
+    await staff.save();
+    return res.status(200).json({ success: true, message: `Resignation ${status} successfully`, staff });
+  } catch (error) {
+    console.error("Error in processResignation:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+const getPendingResignations = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const staff = await Staff.find({ user_id: userId, "resignation.status": "pending" }).populate("department");
+    return res.status(200).json({ success: true, data: staff });
+  } catch (error) {
+    console.error("Error in getPendingResignations:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// ── PUT /staff/toggle-leave/:id ──────────────────────────────────────────────
+const toggleLeaveStatus = async (req, res) => {
+    try {
+        const staffId = req.params.id;
+        const { is_leave_enabled } = req.body;
+
+        const staff = await Staff.findByIdAndUpdate(
+            staffId,
+            { is_leave_enabled },
+            { new: true }
+        );
+
+        if (!staff) {
+            return res.status(404).json({ success: false, message: "Staff not found" });
+        }
+
+        res.json({ success: true, data: staff, message: `Leave access ${is_leave_enabled ? 'enabled' : 'disabled'} successfully.` });
+    } catch (error) {
+        console.error("Error toggling leave status:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+// ── PUT /staff/toggle-specific-leave/:id ─────────────────────────────────────
+const toggleSpecificLeave = async (req, res) => {
+    try {
+        const staffId = req.params.id;
+        const { leave_type_id, is_active } = req.body;
+
+        const staff = await Staff.findById(staffId);
+        if (!staff) {
+            return res.status(404).json({ success: false, message: "Staff not found" });
+        }
+
+        let config = staff.leave_policy_configuration || [];
+        const index = config.findIndex(c => c.leave_type_id === leave_type_id);
+        if (index >= 0) {
+            config[index].is_active = is_active;
+        } else {
+            config.push({ leave_type_id, is_active });
+        }
+
+        staff.leave_policy_configuration = config;
+        staff.markModified('leave_policy_configuration');
+        await staff.save();
+
+        res.json({ success: true, data: staff, message: `Leave type ${is_active ? 'enabled' : 'disabled'} successfully.` });
+    } catch (error) {
+        console.error("Error toggling specific leave:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
 module.exports = {
   getStaffPositions,
   getStaffData,
@@ -468,4 +710,10 @@ module.exports = {
   deleteStaff,
   getAllFaceEncodings,
   getNextStaffIdController,
+  sendJoiningLetter,
+  submitResignation,
+  processResignation,
+  getPendingResignations,
+  toggleLeaveStatus,
+  toggleSpecificLeave
 };

@@ -103,11 +103,12 @@ export default function ESSAttendancePanel() {
   const [location, setLocation] = useState(null);
   const [locationError, setLocationError] = useState('');
   const [isCheckedIn, setIsCheckedIn] = useState(false); // Mock state
+  const [workLocation, setWorkLocation] = useState('office');
   const [currentTime, setCurrentTime] = useState(new Date());
   
   // Expense Claim state
   const [showExpenseModal, setShowExpenseModal] = useState(false);
-  const [expenseForm, setExpenseForm] = useState({ category: '', amount: '', description: '' });
+  const [expenseForm, setExpenseForm] = useState({ category: '', amount: '', description: '', receipt: null });
   const [expenseLoading, setExpenseLoading] = useState(false);
   const [expenseCategories, setExpenseCategories] = useState(['Travel', 'Food & Dining', 'Office Supplies', 'Other']);
 
@@ -141,14 +142,40 @@ export default function ESSAttendancePanel() {
 
   const handleExpenseSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!expenseForm.category || !expenseForm.amount) {
+      toast.error("Please fill in category and amount.");
+      return;
+    }
+
     setExpenseLoading(true);
-    // Mocking API call
-    setTimeout(() => {
+    try {
+      const formData = new FormData();
+      formData.append('category', expenseForm.category);
+      formData.append('amount', expenseForm.amount);
+      formData.append('description', expenseForm.description);
+      // Auto-set current date since the UI doesn't have a date field here
+      formData.append('date', new Date().toISOString().split('T')[0]);
+      
+      if (expenseForm.receipt) {
+        formData.append('receipt', expenseForm.receipt);
+      }
+
+      const res = await axios.post(`${process.env.REACT_APP_API}/expenses/requests`, formData, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      if (res.data.success) {
+        toast.success('Expense claim submitted successfully!');
+        setExpenseForm({ category: '', amount: '', description: '', receipt: null });
+        setShowExpenseModal(false);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.error || 'Failed to submit expense claim');
+    } finally {
       setExpenseLoading(false);
-      setShowExpenseModal(false);
-      toast.success('Expense claim submitted successfully!');
-      setExpenseForm({ category: '', amount: '', description: '' });
-    }, 1000);
+    }
   };
 
   useEffect(() => {
@@ -202,6 +229,7 @@ export default function ESSAttendancePanel() {
       // 2. Prepare payload
       const payload = {
         action: isCheckedIn ? 'checkout' : 'checkin',
+        location: workLocation,
         latitude: coords.lat,
         longitude: coords.lng,
         accuracy: coords.accuracy
@@ -252,6 +280,20 @@ export default function ESSAttendancePanel() {
               <p className="text-muted mb-5">
                 {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
+
+              <div className="d-flex justify-content-center mb-4">
+                <div className="btn-group shadow-sm" role="group">
+                  <input type="radio" className="btn-check" name="workLocation" id="locOffice" autoComplete="off" checked={workLocation === 'office'} onChange={() => setWorkLocation('office')} disabled={isCheckedIn} />
+                  <label className="btn btn-outline-primary fw-bold px-4" htmlFor="locOffice">
+                    <CsLineIcons icon="building" size="18" className="me-2" /> Office
+                  </label>
+
+                  <input type="radio" className="btn-check" name="workLocation" id="locHome" autoComplete="off" checked={workLocation === 'wfh'} onChange={() => setWorkLocation('wfh')} disabled={isCheckedIn} />
+                  <label className="btn btn-outline-primary fw-bold px-4" htmlFor="locHome">
+                    <CsLineIcons icon="home" size="18" className="me-2" /> Work From Home
+                  </label>
+                </div>
+              </div>
 
               <div className="d-flex justify-content-center mb-5">
                 <button type="button"
@@ -405,7 +447,7 @@ export default function ESSAttendancePanel() {
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Upload Receipt (Optional)</Form.Label>
-              <Form.Control type="file" />
+              <Form.Control type="file" accept="image/*" onChange={(e) => setExpenseForm({...expenseForm, receipt: e.target.files[0]})} />
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>

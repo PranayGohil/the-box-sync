@@ -48,14 +48,40 @@ export default function ManageExpenses() {
   const [loading, setLoading] = useState(false);
   const [expenses, setExpenses] = useState([]);
 
+  const fetchExpenses = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${process.env.REACT_APP_API}/expenses/requests`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.data.success) {
+        setExpenses(res.data.data);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to fetch expenses');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Fetch expenses from API here
-    // setExpenses(data);
+    fetchExpenses();
   }, []);
 
-  const handleStatusChange = (id, newStatus) => {
-    setExpenses(prev => prev.map(exp => exp.id === id ? { ...exp, status: newStatus } : exp));
-    toast.success(`Expense ${newStatus} successfully!`);
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      const res = await axios.put(`${process.env.REACT_APP_API}/expenses/${id}/status`, { status: newStatus }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.data.success) {
+        setExpenses(prev => prev.map(exp => exp._id === id ? res.data.data : exp));
+        toast.success(`Expense ${newStatus} successfully!`);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update status');
+    }
   };
 
   return (
@@ -90,14 +116,16 @@ export default function ManageExpenses() {
               </thead>
               <tbody>
                 {expenses.map(exp => (
-                  <tr key={exp.id}>
-                    <td className="fw-bold">{exp.staffName}</td>
+                  <tr key={exp._id}>
+                    <td className="fw-bold">{exp.staff_id ? `${exp.staff_id.f_name} ${exp.staff_id.l_name}` : 'Unknown'}</td>
                     <td>{exp.category}</td>
                     <td>{exp.date}</td>
                     <td className="text-end fw-bold text-dark">₹{exp.amount}</td>
                     <td className="text-center">
                       {exp.receipt ? (
-                        <Button variant="link" size="sm" className="p-0"><CsLineIcons icon="image" size="18" /></Button>
+                        <a href={`${process.env.REACT_APP_UPLOAD_DIR}${exp.receipt}`} target="_blank" rel="noreferrer">
+                          <Button variant="link" size="sm" className="p-0"><CsLineIcons icon="image" size="18" /></Button>
+                        </a>
                       ) : '-'}
                     </td>
                     <td className="text-center">
@@ -108,10 +136,10 @@ export default function ManageExpenses() {
                     <td className="text-center">
                       {exp.status === 'pending' && (
                         <div className="d-flex justify-content-center gap-2">
-                          <Button variant="outline-success" size="sm" onClick={() => handleStatusChange(exp.id, 'approved')}>
+                          <Button variant="outline-success" size="sm" onClick={() => handleStatusChange(exp._id, 'approved')}>
                             <CsLineIcons icon="check" size="14" />
                           </Button>
-                          <Button variant="outline-danger" size="sm" onClick={() => handleStatusChange(exp.id, 'rejected')}>
+                          <Button variant="outline-danger" size="sm" onClick={() => handleStatusChange(exp._id, 'rejected')}>
                             <CsLineIcons icon="close" size="14" />
                           </Button>
                         </div>
@@ -129,10 +157,10 @@ export default function ManageExpenses() {
               <div className="text-center py-4 text-muted">No expenses found.</div>
             ) : (
               expenses.map(exp => (
-                <Card key={exp.id} className="border-0 shadow-sm mb-3" style={{ borderRadius: '1rem' }}>
+                <Card key={exp._id} className="border-0 shadow-sm mb-3" style={{ borderRadius: '1rem' }}>
                   <Card.Body className="p-3">
                     <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-light">
-                      <div className="fw-bold text-dark">{exp.staffName}</div>
+                      <div className="fw-bold text-dark">{exp.staff_id ? `${exp.staff_id.f_name} ${exp.staff_id.l_name}` : 'Unknown'}</div>
                       <Badge bg={exp.status === 'approved' ? 'success' : exp.status === 'rejected' ? 'danger' : 'warning'} className="status-badge">
                         {exp.status}
                       </Badge>
@@ -151,17 +179,19 @@ export default function ManageExpenses() {
                         <span className="fw-bold text-dark">₹{exp.amount}</span>
                       </div>
                       {exp.receipt && (
-                        <Button variant="link" size="sm" className="p-0 text-primary">
-                          <CsLineIcons icon="image" size="18" className="me-1" /> Receipt
-                        </Button>
+                        <a href={`${process.env.REACT_APP_UPLOAD_DIR}${exp.receipt}`} target="_blank" rel="noreferrer">
+                          <Button variant="link" size="sm" className="p-0 text-primary">
+                            <CsLineIcons icon="image" size="18" className="me-1" /> Receipt
+                          </Button>
+                        </a>
                       )}
                     </div>
                     {exp.status === 'pending' && (
                       <div className="d-flex gap-2 pt-2 border-top border-light">
-                        <Button variant="outline-success" className="w-100 rounded-pill" size="sm" onClick={() => handleStatusChange(exp.id, 'approved')}>
+                        <Button variant="outline-success" className="w-100 rounded-pill" size="sm" onClick={() => handleStatusChange(exp._id, 'approved')}>
                           <CsLineIcons icon="check" size="14" className="me-1" /> Approve
                         </Button>
-                        <Button variant="outline-danger" className="w-100 rounded-pill" size="sm" onClick={() => handleStatusChange(exp.id, 'rejected')}>
+                        <Button variant="outline-danger" className="w-100 rounded-pill" size="sm" onClick={() => handleStatusChange(exp._id, 'rejected')}>
                           <CsLineIcons icon="close" size="14" className="me-1" /> Reject
                         </Button>
                       </div>

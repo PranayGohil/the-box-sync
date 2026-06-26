@@ -110,7 +110,15 @@ const NavIconMenu = () => {
             <CsLineIcons icon="logout" size="30" />
           </div>
           <h4 className="fw-bold text-dark mb-2">Confirm Logout</h4>
-          <p className="text-muted smaller fw-bold mb-0">Are you sure you want to end your session? You will need to login again to access the dashboard.</p>
+          {sessionStorage.getItem('wfh_active') === 'true' ? (
+            <p className="text-danger smaller fw-bold mb-0">
+              WFH Tracking is currently active. You should Clock-Out first. Logging out will immediately stop your background tracking. Proceed?
+            </p>
+          ) : (
+            <p className="text-muted smaller fw-bold mb-0">
+              Are you sure you want to end your session? You will need to login again to access the dashboard.
+            </p>
+          )}
         </Modal.Body>
         <Modal.Footer className="border-0 p-4 pt-0 d-flex justify-content-center gap-3">
           <Button 

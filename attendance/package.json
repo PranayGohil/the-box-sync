@@ -133,5 +133,11 @@
     "lint-staged": "^11.0.0",
     "prettier": "2.3.1",
     "sass": "^1.42.1"
+  },
+  "browser": {
+    "fs": false,
+    "path": false,
+    "os": false,
+    "crypto": false
   }
 }

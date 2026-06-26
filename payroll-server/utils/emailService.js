@@ -35,14 +35,15 @@ const transporterSupport = nodemailer.createTransport({
   },
 });
 
-async function sendEmail({ to, subject, html, text, replyTo }) {
+async function sendEmail({ to, subject, html, text, replyTo, attachments }) {
   const mailOptions = {
     from: EMAIL_FROM || SMTP_USER, // must be your Hostinger mailbox/domain
     to,
     subject,
     text: text || undefined,       // include text for better deliverability
     html,
-    replyTo
+    replyTo,
+    attachments
   };
   
   return transporter.sendMail(mailOptions);

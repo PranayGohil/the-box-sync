@@ -428,7 +428,7 @@ export default function ViewStaffPayroll() {
             doc.setFontSize(9);
             doc.text(`Total Days: ${p.working_days_in_month}   |   Paid Days: ${p.leave_summary?.total_paid_days || p.present_days}   |   LWP: ${p.leave_summary?.lwp_days || p.absent_days}`, 105, 74, { align: 'center' });
 
-            const totalEarnings = (p.earned_breakdown?.total_gross || p.earned_salary || 0) + (p.overtime_pay || 0) + (p.bonus || 0);
+            const totalEarnings = (p.earned_breakdown?.total_gross || p.earned_salary || 0) + (p.overtime_pay || 0) + (p.bonus || 0) + (p.expense_claims || 0);
             const statDed = p.deduction_breakdown?.total_statutory || 0;
             const manDed = p.deductions || 0;
             const advDed = p.advance_deduction || 0;
@@ -446,6 +446,7 @@ export default function ViewStaffPayroll() {
                     ['Special Allowance', (p.earned_breakdown?.special || 0).toFixed(2), 'Advance / Loan EMI', advDed.toFixed(2)],
                     ['Overtime Pay', (p.overtime_pay || 0).toFixed(2), 'Other Deductions', manDed.toFixed(2)],
                     ['Bonus', (p.bonus || 0).toFixed(2), '', ''],
+                    ['Expenses', (p.expense_claims || 0).toFixed(2), '', ''],
                     ['Other Earnings', (p.earned_breakdown?.other || 0).toFixed(2), '', '']
                 ],
                 theme: 'grid',
@@ -723,7 +724,7 @@ export default function ViewStaffPayroll() {
                     ) : (
                         <div className="table-responsive">
                             <Table hover className="react-table-modern mb-0">
-                                <thead className="hide-on-mobile">
+                                <thead className="d-none d-lg-table-header-group">
                                     <tr>
                                         <th>Payroll Period</th>
                                         <th className="text-center">Work Days</th>
@@ -739,7 +740,7 @@ export default function ViewStaffPayroll() {
                                 <tbody>
                                     {filteredPayroll.map((p) => (
                                         <React.Fragment key={p._id}>
-                                        <tr className="hide-on-mobile">
+                                        <tr className="d-none d-lg-table-row">
                                             <td>
                                                 <div className="fw-bold text-dark">{MONTH_NAMES[p.month]} {p.year}</div>
                                                 {p.paid_date && <small className="text-success fw-bold">Paid: {format(new Date(p.paid_date), 'dd MMM yy')}</small>}
@@ -747,15 +748,19 @@ export default function ViewStaffPayroll() {
                                             <td className="text-center fw-medium">{p.working_days_in_month} Days</td>
                                             <td className="text-center">
                                                 <div className="d-flex align-items-center justify-content-center gap-2">
-                                                    <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill">{p.present_days}P</Badge>
-                                                    <Badge bg={p.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${p.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill`}>{p.absent_days}A</Badge>
+                                                    <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill fs-6 fw-bold">{p.present_days}P</Badge>
+                                                    <Badge bg={p.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${p.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill fs-6 fw-bold`}>{p.absent_days}A</Badge>
                                                 </div>
                                             </td>
                                             <td className="text-end text-muted fw-medium">₹{(staffData?.salary || p.base_salary || 0).toLocaleString('en-IN')}</td>
                                             <td className="text-end text-success fw-bold">₹{(p.earned_breakdown?.total_gross || p.earned_salary || 0).toLocaleString('en-IN')}</td>
                                             <td className="text-end">
-                                                <div className="small fw-bold text-primary">OT: +₹{(p.overtime_pay || 0).toLocaleString('en-IN')}</div>
-                                                <div className="small fw-bold text-danger">Ded: -₹{((p.deduction_breakdown?.total_statutory || 0) + (p.deductions || 0)).toLocaleString('en-IN')}</div>
+                                                <div className="d-flex flex-column align-items-end" style={{ whiteSpace: 'nowrap' }}>
+                                                    <div className="small fw-bold">
+                                                        <span className="text-primary me-2">OT: +₹{(p.overtime_pay || 0).toLocaleString('en-IN')}</span>
+                                                        <span className="text-danger">Ded: -₹{((p.deduction_breakdown?.total_statutory || 0) + (p.deductions || 0)).toLocaleString('en-IN')}</span>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td className="text-end">
                                                 <div className="h5 mb-0 fw-bold text-primary">₹{p.net_salary.toLocaleString('en-IN')}</div>
@@ -778,7 +783,7 @@ export default function ViewStaffPayroll() {
                                                 </div>
                                             </td>
                                         </tr>
-                                        <tr className="hide-on-desktop">
+                                        <tr className="d-lg-none">
                                             <td colSpan="10" className="p-0 border-0">
                                                 <div className="p-3 border-bottom">
                                                     <div className="d-flex justify-content-between align-items-start mb-3">
@@ -795,8 +800,8 @@ export default function ViewStaffPayroll() {
                                                         <Col xs={6}>
                                                             <div className="text-muted small fw-bold text-uppercase mb-1">Attendance</div>
                                                             <div className="d-flex align-items-center gap-2">
-                                                                <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill fw-bold">{p.present_days}P</Badge>
-                                                                <Badge bg={p.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${p.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill fw-bold`}>{p.absent_days}A</Badge>
+                                                                <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill fw-bold" style={{ fontSize: '0.95rem' }}>{p.present_days}P</Badge>
+                                                                <Badge bg={p.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${p.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill fw-bold`} style={{ fontSize: '0.95rem' }}>{p.absent_days}A</Badge>
                                                             </div>
                                                         </Col>
                                                         <Col xs={6} className="text-end">
@@ -952,13 +957,20 @@ export default function ViewStaffPayroll() {
                                                 <span className="fw-bold text-success">₹{selectedPayroll.bonus.toLocaleString('en-IN')}</span>
                                             </div>
                                         )}
+                                        {selectedPayroll.expense_claims > 0 && (
+                                            <div className="d-flex justify-content-between small">
+                                                <span>Expense Claims</span>
+                                                <span className="fw-bold text-success">₹{selectedPayroll.expense_claims.toLocaleString('en-IN')}</span>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
                                         <span className="h6 mb-0 fw-bold text-success">Total Gross</span>
                                         <span className="h5 mb-0 fw-bold text-success">₹{(
                                             (selectedPayroll.earned_breakdown?.total_gross || selectedPayroll.earned_salary || 0) +
                                             (selectedPayroll.overtime_pay || 0) +
-                                            (selectedPayroll.bonus || 0)
+                                            (selectedPayroll.bonus || 0) +
+                                            (selectedPayroll.expense_claims || 0)
                                         ).toLocaleString('en-IN')}</span>
                                     </div>
                                 </div>

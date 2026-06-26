@@ -17,9 +17,11 @@ router.get('/balances', authMiddleware, async (req, res) => {
     let query = { user_id: userId, year };
     if (req.user && req.user.Role === 'Staff') {
       query.staff_id = req.user.staff_id;
+    } else if (req.query.staff_id) {
+      query.staff_id = req.query.staff_id;
     }
 
-    let balances = await LeaveBalance.find(query).populate('staff_id', 'f_name l_name staff_id position');
+    let balances = await LeaveBalance.find(query).populate('staff_id', 'f_name l_name staff_id position leave_policy_configuration');
 
     // Auto-initialize if no balances found for staff member accessing their own account
     if (balances.length === 0 && req.user && req.user.Role === 'Staff' && req.user.staff_id) {
@@ -38,7 +40,7 @@ router.get('/balances', authMiddleware, async (req, res) => {
           { staff_id, user_id: userId, year },
           { balances: initialBalances },
           { new: true, upsert: true }
-        ).populate('staff_id', 'f_name l_name staff_id position');
+        ).populate('staff_id', 'f_name l_name staff_id position leave_policy_configuration');
 
         balances = [newBalance];
       }
@@ -48,27 +50,24 @@ router.get('/balances', authMiddleware, async (req, res) => {
       if (policy) {
         let anyUpdated = false;
         for (const record of balances) {
-          const updatedBalancesList = [];
-          const balMap = {};
+          let recordUpdated = false;
+          
+          // 1. Update existing leave types
           record.balances.forEach(b => {
-            balMap[b.leave_type_id] = b;
+            const policyType = policy.leave_types.find(lt => lt.leave_type_id === b.leave_type_id);
+            if (policyType && b.entitled !== policyType.days_per_year) {
+              b.entitled = policyType.days_per_year;
+              recordUpdated = true;
+            }
           });
 
-          let recordUpdated = false;
-          policy.leave_types.forEach(lt => {
-            const existing = balMap[lt.leave_type_id];
-            const targetEntitled = lt.days_per_year;
-            
-            if (existing) {
-              if (existing.entitled !== targetEntitled) {
-                existing.entitled = targetEntitled;
-                recordUpdated = true;
-              }
-              updatedBalancesList.push(existing);
-            } else {
-              updatedBalancesList.push({
-                leave_type_id: lt.leave_type_id,
-                entitled: targetEntitled,
+          // 2. Add any missing leave types from global policy
+          policy.leave_types.forEach(pt => {
+            const exists = record.balances.find(b => b.leave_type_id === pt.leave_type_id);
+            if (!exists) {
+              record.balances.push({
+                leave_type_id: pt.leave_type_id,
+                entitled: pt.days_per_year,
                 taken: 0,
                 pending: 0,
                 carried_forward: 0
@@ -78,15 +77,30 @@ router.get('/balances', authMiddleware, async (req, res) => {
           });
 
           if (recordUpdated) {
-            record.balances = updatedBalancesList;
+            record.markModified('balances');
             await record.save();
             anyUpdated = true;
           }
         }
         if (anyUpdated) {
-          balances = await LeaveBalance.find(query).populate('staff_id', 'f_name l_name staff_id position');
+          balances = await LeaveBalance.find(query).populate('staff_id', 'f_name l_name staff_id position leave_policy_configuration');
         }
       }
+    }
+    // If accessed by staff, filter out disabled leaves from the response
+    if (req.user && req.user.Role === 'Staff') {
+      balances = balances.map(record => {
+        const staff = record.staff_id;
+        const config = staff?.leave_policy_configuration || [];
+        
+        // Return a plain object so we don't modify the mongoose document
+        const plainRecord = record.toObject();
+        plainRecord.balances = plainRecord.balances.filter(b => {
+          const cfg = config.find(c => c.leave_type_id === b.leave_type_id);
+          return !(cfg && cfg.is_active === false);
+        });
+        return plainRecord;
+      });
     }
 
     res.json({ success: true, data: balances });
@@ -165,6 +179,19 @@ router.post('/requests', authMiddleware, async (req, res) => {
 
     if (!staff_id) {
       return res.status(400).json({ success: false, message: "Staff ID is required" });
+    }
+
+    const staff = await Staff.findById(staff_id);
+    if (!staff) {
+      return res.status(404).json({ success: false, message: "Staff not found" });
+    }
+    
+    // Check if the specific leave type is disabled for this staff
+    if (staff.leave_policy_configuration && staff.leave_policy_configuration.length > 0) {
+      const config = staff.leave_policy_configuration.find(c => c.leave_type_id === leave_type_id);
+      if (config && config.is_active === false) {
+        return res.status(403).json({ success: false, message: "This specific leave type is currently disabled for your profile." });
+      }
     }
 
     if (!is_half_day) {

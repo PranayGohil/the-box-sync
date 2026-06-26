@@ -19,6 +19,7 @@ import { Document, Packer, Paragraph, Table as DocTable, TableCell, TableRow, Te
 import { format } from 'date-fns';
 import { getLeavePolicy, getPayrollConfig } from 'api/payrollConfig';
 import Select from 'react-select';
+import WfhLogsModal from './WfhLogsModal';
 
 const customStyles = `
   .glass-card {
@@ -544,6 +545,9 @@ const ViewAttendance = () => {
   const [editLeaveType, setEditLeaveType] = useState('');
   const [editReason, setEditReason] = useState('');
   const [submittingEdit, setSubmittingEdit] = useState(false);
+  
+  const [showWfhModal, setShowWfhModal] = useState(false);
+  const [wfhModalData, setWfhModalData] = useState(null);
 
 
   const [exporting, setExporting] = useState(false);
@@ -1485,16 +1489,30 @@ const ViewAttendance = () => {
                             ) : '—'}
                           </td>
                           <td className="text-center">
-                            <Button
-                              variant="none"
-                              size="sm"
-                              className="btn-icon btn-icon-only rounded-circle custom-btn-primary-outline mx-auto"
-                              onClick={() => handleOpenDetailModal(att)}
-                              title="View Detail"
-                              style={{ width: '36px', height: '36px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                            >
-                              <CsLineIcons icon="eye" size="14" />
-                            </Button>
+                            <div className="d-flex justify-content-center gap-2">
+                              <Button
+                                variant="none"
+                                size="sm"
+                                className="btn-icon btn-icon-only rounded-circle custom-btn-primary-outline"
+                                onClick={() => handleOpenDetailModal(att)}
+                                title="View Detail"
+                                style={{ width: '36px', height: '36px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                              >
+                                <CsLineIcons icon="eye" size="14" />
+                              </Button>
+                              {att.wfh_tracking?.is_wfh && (
+                                <Button
+                                  variant="none"
+                                  size="sm"
+                                  className="btn-icon btn-icon-only rounded-circle custom-btn-info-outline"
+                                  onClick={() => { setWfhModalData(att); setShowWfhModal(true); }}
+                                  title="View WFH Logs"
+                                  style={{ width: '36px', height: '36px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                                >
+                                  <CsLineIcons icon="laptop" size="14" />
+                                </Button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1619,15 +1637,26 @@ const ViewAttendance = () => {
                           </Col>
                         </Row>
 
-                        {/* Bottom Action */}
-                        <div className="d-grid mt-2">
+                        <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                          {att.wfh_tracking?.is_wfh && (
+                            <Button
+                              variant="none"
+                              size="sm"
+                              className="d-flex align-items-center gap-2 custom-btn-info-outline"
+                              onClick={() => { setWfhModalData(att); setShowWfhModal(true); }}
+                              style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}
+                            >
+                              <CsLineIcons icon="laptop" size="14" /> View WFH Logs
+                            </Button>
+                          )}
                           <Button
                             variant="none"
-                            className="custom-btn-primary-outline w-100 py-2 d-flex align-items-center justify-content-center gap-2"
+                            size="sm"
+                            className={`d-flex align-items-center gap-2 custom-btn-primary-outline ${!att.wfh_tracking?.is_wfh ? 'ms-auto' : ''}`}
                             onClick={() => handleOpenDetailModal(att)}
-                            style={{ fontSize: '12px' }}
+                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}
                           >
-                            <CsLineIcons icon="eye" size="14" /> View Details
+                            <CsLineIcons icon="edit" size="14" /> Edit / View
                           </Button>
                         </div>
                       </Card.Body>
@@ -1845,6 +1874,13 @@ const ViewAttendance = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* WFH Logs Modal */}
+      <WfhLogsModal 
+        show={showWfhModal} 
+        onHide={() => setShowWfhModal(false)} 
+        attendance={wfhModalData} 
+      />
 
       {/* Toast */}
       <ToastContainer position="top-end" className="p-3">

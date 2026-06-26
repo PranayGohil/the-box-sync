@@ -61,7 +61,7 @@ const DineInOrder = () => {
   const fetchTableInfo = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API}/table/get/${tableId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
       });
       setTableInfo(response.data);
     } catch (error) {
@@ -72,7 +72,7 @@ const DineInOrder = () => {
   const fetchOrderDetails = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API}/order/get/${orderId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
       });
       console.log(response.data.data);
       const order = response.data.data;
@@ -93,7 +93,7 @@ const DineInOrder = () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API}/menu/get`, {
         params: { searchText, category: selectedCategory },
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
       });
       setMenuData(response.data.data);
     } catch (error) {
@@ -104,7 +104,7 @@ const DineInOrder = () => {
   const fetchCategories = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API}/menu/get-categories`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
       });
       setCategories(response.data);
     } catch (error) {
@@ -114,7 +114,7 @@ const DineInOrder = () => {
 
   const fetchTaxRates = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API}/user/get`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const response = await axios.get(`${process.env.REACT_APP_API}/user/get`, { headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` } });
       const taxInfo = response.data.taxInfo || {};
       setTaxRates({
         cgst: taxInfo.cgst || 0,
@@ -232,7 +232,7 @@ const DineInOrder = () => {
       };
 
       const response = await axios.post(`${process.env.REACT_APP_API}/order/dine-in`, payload, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
       });
 
       console.log('Order saved:', response.data);

@@ -61,7 +61,7 @@ const getConfig = async (req, res) => {
 const updateConfig = async (req, res) => {
   try {
     const user_id = req.user;
-    const { custom_earnings, custom_deductions, statutory_config, org_rules, network_restrictions } = req.body;
+    const { custom_earnings, custom_deductions, statutory_config, org_rules, network_restrictions, wfh_config } = req.body;
 
     let config = await PayrollConfig.findOne({ user_id });
 
@@ -97,6 +97,22 @@ const updateConfig = async (req, res) => {
     if (network_restrictions !== undefined) {
       config.network_restrictions = network_restrictions;
       config.markModified('network_restrictions');
+    }
+
+    if (wfh_config) {
+      config.wfh_config = {
+          ...config.wfh_config,
+          ...wfh_config
+      };
+      config.markModified('wfh_config');
+    }
+
+    if (req.body.document_templates) {
+      config.document_templates = {
+        ...config.document_templates,
+        ...req.body.document_templates
+      };
+      config.markModified('document_templates');
     }
 
     await config.save();

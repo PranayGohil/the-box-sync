@@ -42,6 +42,7 @@ const AddStaff = () => {
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [positions, setPositions] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [payrollConfig, setPayrollConfig] = useState(null);
   const [globalLeavePolicies, setGlobalLeavePolicies] = useState([]);
   const [uploadingFiles, setUploadingFiles] = useState({
@@ -243,6 +244,7 @@ const AddStaff = () => {
       custom_weekly_offs: [{ day: 'Sunday', type: 'all_weeks', weeks: [] }],
       leave_policy_configuration: [],
       position: '',
+      branch_id: '',
       photo: '',
       document_type: '',
       id_number: '',
@@ -432,7 +434,7 @@ const AddStaff = () => {
         setLoading((prev) => ({ ...prev, initial: true }));
         setCountries(Country.getAllCountries());
 
-        const [positionsRes, configRes, leavePolicyRes, nextIdRes] = await Promise.all([
+        const [positionsRes, configRes, leavePolicyRes, nextIdRes, branchesRes] = await Promise.all([
           axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
@@ -444,10 +446,16 @@ const AddStaff = () => {
           }),
           axios.get(`${process.env.REACT_APP_API}/staff/get-next-id`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          }),
+          axios.get(`${process.env.REACT_APP_API}/branch/all`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           })
         ]);
         
         setPositions(positionsRes.data.data);
+        if (branchesRes.data?.success) {
+          setBranches(branchesRes.data.data);
+        }
         if (nextIdRes.data?.success) {
           formik.setFieldValue('staff_id', nextIdRes.data.data);
         }
@@ -1332,7 +1340,43 @@ const AddStaff = () => {
 
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Attendance Method</Form.Label>
+                      <Form.Label>Branch</Form.Label>
+                      <Form.Select
+                        name="branch_id"
+                        value={values.branch_id}
+                        onChange={handleChange}
+                        isInvalid={touched.branch_id && errors.branch_id}
+                        disabled={loading.submitting}
+                      >
+                        <option value="">Select Branch</option>
+                        {branches.map(branch => (
+                          <option key={branch._id} value={branch._id}>{branch.name}</option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Position *</Form.Label>
+                        <CreatableSelect
+                          classNamePrefix="react-select"
+                          options={positionOptions}
+                          value={
+                            values.position
+                              ? { label: values.position, value: values.position }
+                              : null
+                          }
+                          onChange={(selected) => setFieldValue('position', selected ? selected.value : '')}
+                          placeholder="Select or type to create new..."
+                          isDisabled={loading.submitting}
+                        />
+                        {touched.position && errors.position && <div className="text-danger small mt-1">{errors.position}</div>}
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Attendance Method</Form.Label>
                       <Select
                         classNamePrefix="react-select"
                         options={[

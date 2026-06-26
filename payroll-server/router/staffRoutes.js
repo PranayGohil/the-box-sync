@@ -9,7 +9,12 @@ const {
   deleteStaff,
   getAllFaceEncodings,
   getNextStaffIdController,
-  // checkIn, checkOut, markAbsent removed — now in attendanceRouter
+  sendJoiningLetter,
+  submitResignation,
+  processResignation,
+  getPendingResignations,
+  toggleLeaveStatus,
+  toggleSpecificLeave
 } = require("../controllers/staffController");
 const adminAuth = require("../middlewares/adminAuth");
 const upload = require("../middlewares/upload");
@@ -20,6 +25,14 @@ staffRouter.route("/get-next-id").get(authMiddleware, getNextStaffIdController);
 staffRouter.route("/get-all").get(authMiddleware, getStaffData);
 staffRouter.route("/get/:id").get(authMiddleware, getStaffDataById);
 staffRouter.route("/get-positions").get(authMiddleware, getStaffPositions);
+staffRouter.route("/send-joining-letter/:id").post(authMiddleware, adminAuth, sendJoiningLetter);
+staffRouter.route("/toggle-leave/:id").put(authMiddleware, adminAuth, toggleLeaveStatus);
+staffRouter.route("/toggle-specific-leave/:id").put(authMiddleware, adminAuth, toggleSpecificLeave);
+
+// Resignation routes
+staffRouter.route("/resign/:id").post(authMiddleware, submitResignation);
+staffRouter.route("/process-resignation/:id").post(authMiddleware, adminAuth, processResignation);
+staffRouter.route("/resignations").get(authMiddleware, adminAuth, getPendingResignations);
 
 staffRouter.route("/add").post(
   authMiddleware,

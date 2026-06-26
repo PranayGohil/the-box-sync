@@ -108,7 +108,8 @@ exports.kioskMe = async (req, res) => {
     return res.json({
       ...user,
       client_ip: clientIp,
-      is_restricted
+      is_restricted,
+      wfh_config: config?.wfh_config || { min_interval: 3, max_interval: 15, idle_threshold: 5 }
     });
   } catch (err) {
     console.error("Kiosk me error:", err);

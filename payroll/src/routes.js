@@ -9,6 +9,7 @@ const payroll = {
   viewStaff: lazy(() => import('views/admin/staff/ViewStaff')),
   addStaff: lazy(() => import('views/admin/staff/AddStaff')),
   editStaff: lazy(() => import('views/admin/staff/EditStaff')),
+  organization: lazy(() => import('views/admin/staff/branch/BranchBoard')),
   attendance: lazy(() => import('views/admin/staff/attandance/ViewAttendance')),
   manageAttendance: lazy(() => import('views/admin/staff/attandance/ManageAttendance')),
   roster: lazy(() => import('views/admin/staff/attandance/RosterManagement')),
@@ -38,44 +39,94 @@ const allRoutes = {
       icon: 'home',
       component: payroll.dashboard,
     },
+
+    // --- REAL ROUTES (HIDDEN FROM MENU) ---
     {
       path: `${appRoot}/payroll-management`,
       exact: true,
       redirect: true,
       to: `${appRoot}/payroll-management/generate`,
+      hideInMenu: true,
     },
     {
       path: `${appRoot}/payroll-management`,
-      label: 'Payroll',
-      icon: 'credit-card',
+      hideInMenu: true,
       subs: [
-        { path: '/generate', label: 'Generate Payroll', component: payroll.generatePayroll, hideInMenu: true },
-        { path: '/manage', label: 'Manage Payroll', component: payroll.managePayroll, hideInMenu: true },
+        { path: '/generate', component: payroll.generatePayroll },
+        { path: '/manage', component: payroll.managePayroll },
       ],
     },
     {
       path: `${appRoot}/staff`,
-      label: 'Staff',
-      icon: 'user',
       component: payroll.staff,
+      hideInMenu: true,
+    },
+    {
+      path: `${appRoot}/organization`,
+      component: payroll.organization,
+      hideInMenu: true,
     },
     {
       path: `${appRoot}/attendance`,
       exact: true,
       redirect: true,
       to: `${appRoot}/attendance/manage`,
+      hideInMenu: true,
     },
     {
       path: `${appRoot}/attendance`,
-      label: 'Attendance',
-      icon: 'check-square',
+      hideInMenu: true,
       subs: [
-        { path: '/view', label: 'View Attendance', component: payroll.attendance, hideInMenu: true },
-        { path: '/manage', label: 'Mark Attendance', component: payroll.manageAttendance, hideInMenu: true },
-        { path: '/roster', label: 'Roster Management', component: payroll.roster, hideInMenu: true },
-        { path: '/ess', label: 'ESS My Attendance', component: payroll.essAttendance, hideInMenu: true },
+        { path: '/view', component: payroll.attendance },
+        { path: '/manage', component: payroll.manageAttendance },
+        { path: '/roster', component: payroll.roster },
+        { path: '/ess', component: payroll.essAttendance },
       ],
     },
+
+    {
+      path: `${appRoot}/expenses`,
+      exact: true,
+      redirect: true,
+      to: `${appRoot}/expenses/manage`,
+      hideInMenu: true,
+    },
+    {
+      path: `${appRoot}/expenses`,
+      hideInMenu: true,
+      subs: [
+        { path: '/manage', component: payroll.expenses },
+        { path: '/ess', component: payroll.essExpense },
+        { path: '/reports', component: payroll.reports },
+      ],
+    },
+
+
+    // --- VISUAL MENU FOLDERS ---
+    {
+      path: appRoot,
+      label: 'HR & Staff',
+      icon: 'user',
+      hideInRoute: true,
+      subs: [
+        { path: `/staff`, label: 'Staff Directory', icon: 'user' },
+        { path: `/attendance`, label: 'Attendance', icon: 'check-square' },
+        { path: `/organization`, label: 'Org Structure', icon: 'diagram-1' },
+      ]
+    },
+    {
+      path: appRoot,
+      label: 'Finance',
+      icon: 'money',
+      hideInRoute: true,
+      subs: [
+        { path: `/payroll-management`, label: 'Payroll', icon: 'credit-card' },
+        { path: `/expenses/manage`, label: 'Manage Expenses', icon: 'wallet' },
+        { path: `/expenses/ess`, label: 'Add Expense', icon: 'plus' },
+        { path: `/expenses/reports`, label: 'Audit & Reports', icon: 'file-text' },
+      ]
+    },
+    // --- MOVED TOP-LEVEL MENU ITEMS ---
     {
       path: `${appRoot}/assets`,
       label: 'Assets',
@@ -83,27 +134,11 @@ const allRoutes = {
       component: payroll.assets,
     },
     {
-      path: `${appRoot}/expenses`,
-      exact: true,
-      redirect: true,
-      to: `${appRoot}/expenses/manage`,
-    },
-    {
-      path: `${appRoot}/expenses`,
-      label: 'Expenses',
-      icon: 'money',
-      subs: [
-        { path: '/manage', label: 'Manage Expenses', component: payroll.expenses },
-        { path: '/ess', label: 'ESS Expenses', component: payroll.essExpense },
-        { path: '/reports', label: 'Statutory Reports', component: payroll.reports },
-      ],
-    },
-    {
       path: `${appRoot}/payroll`,
       label: 'Setting',
       icon: 'gear',
       component: payroll.payrollSystem,
-    },
+    }
   ],
 
   sidebarItems: [

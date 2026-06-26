@@ -19,6 +19,9 @@ const superAdminRouter = require("./router/superAdminRoutes");
 const PanelRouter = require("./router/panelUserRoutes");
 const kioskRouter = require("./router/kioskRoutes");
 
+// Initialize Cron Jobs
+require("./cron/wfhCleanup");
+
 const PORT = process.env.PORT;
 
 const app = express();
@@ -61,8 +64,8 @@ io.on("connection", (socket) => {
 
 app.set("io", io);
 app.set("connectedUsers", connectedUsers);
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(cors());
 
@@ -85,6 +88,9 @@ app.use("/api/leave-policy", require("./router/leavePolicyRouter"));
 app.use("/api/leave", require("./router/leaveRouter"));
 app.use("/api/salary-advance", require("./router/salaryAdvanceRouter"));
 app.use("/api/assets", require("./router/assetRouter"));
+app.use("/api/department", require("./router/departmentRouter"));
+app.use("/api/branch", require("./router/branchRoutes"));
+app.use("/api/expenses", require("./router/expenseRouter"));
 
 const errorHandler = require("./middlewares/errorHandler");
 app.use(errorHandler);

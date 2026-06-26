@@ -10,6 +10,7 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { format } from 'date-fns';
 import { enIN } from 'date-fns/locale';
+import WfhTracker from './WfhTracker';
 
 const customStyles = `
   .kiosk-wrapper {
@@ -487,6 +488,7 @@ export default function Dashboard() {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [detectedStaff, setDetectedStaff] = useState(null);
   const [showCameraModal, setShowCameraModal] = useState(false);
+  const [showWfhNavModal, setShowWfhNavModal] = useState(false);
   const [detecting, setDetecting] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -503,17 +505,18 @@ export default function Dashboard() {
   // Modals state
   const [showAssetRequestModal, setShowAssetRequestModal] = useState(false);
   const [showLeaveRequestModal, setShowLeaveRequestModal] = useState(false);
+  const [showResignationModal, setShowResignationModal] = useState(false);
 
-  // Form states
   const [assetReqForm, setAssetReqForm] = useState({ asset_name: '', asset_type: 'Laptop / PC', reason: '' });
   const [leaveReqForm, setLeaveReqForm] = useState({ leave_type_id: '', from_date: '', to_date: '', days: 1, is_half_day: false, half_day_session: 'first_half', reason: '' });
+  const [resignationReason, setResignationReason] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
   const [livenessStatus, setLivenessStatus] = useState('');
   const [livenessProgress, setLivenessProgress] = useState(0);
   const [lateMinutes, setLateMinutes] = useState(0);
   const [overtimeHours, setOvertimeHours] = useState(0);
   const [isRestrictedNetwork, setIsRestrictedNetwork] = useState(false);
-
+  const [isWfh, setIsWfh] = useState(false);
   const [regularizationRequests, setRegularizationRequests] = useState([]);
 
   useEffect(() => {
@@ -573,11 +576,14 @@ export default function Dashboard() {
   const fetchUserData = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API}/kiosk/me`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
       });
       if (response.data) {
         setUserData(response.data);
         setIsRestrictedNetwork(response.data.is_restricted || false);
+        if (response.data.is_restricted) {
+          setIsWfh(true);
+        }
       } else {
         history.push('/login');
       }
@@ -599,11 +605,12 @@ export default function Dashboard() {
     }
   };
 
+
   // Fetch all staff face encodings
   const fetchStaffEncodings = async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API}/staff/face-data`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
       });
       setStaffList(res.data.data);
     } catch (err) {
@@ -617,7 +624,7 @@ export default function Dashboard() {
     if (!currentUser || currentUser.role !== 'staff') return;
     try {
       setLoadingPortal(true);
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
 
       // Profile details
@@ -654,9 +661,17 @@ export default function Dashboard() {
       // Leave Policy
       const leavePolicyRes = await axios.get(`${process.env.REACT_APP_API}/leave-policy`, { headers });
       if (leavePolicyRes.data && leavePolicyRes.data.success) {
-        setLeavePolicy(leavePolicyRes.data.data);
-        if (leavePolicyRes.data.data.leave_types?.length > 0) {
-          setLeaveReqForm(f => ({ ...f, leave_type_id: leavePolicyRes.data.data.leave_types[0].leave_type_id }));
+        let policyData = leavePolicyRes.data.data;
+        if (profileRes.data && profileRes.data.data && profileRes.data.data.leave_policy_configuration) {
+          const config = profileRes.data.data.leave_policy_configuration;
+          policyData.leave_types = policyData.leave_types.filter(lt => {
+            const cfg = config.find(c => c.leave_type_id === lt.leave_type_id);
+            return !(cfg && cfg.is_active === false);
+          });
+        }
+        setLeavePolicy(policyData);
+        if (policyData.leave_types?.length > 0) {
+          setLeaveReqForm(f => ({ ...f, leave_type_id: policyData.leave_types[0].leave_type_id }));
         }
       }
     } catch (err) {
@@ -844,9 +859,10 @@ export default function Dashboard() {
           staff_id: staffId,
           date: getTodayDate(),
           in_time: getCurrentTime(),
+          is_wfh: isWfh,
         },
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
         }
       );
       const lateMin = res.data?.data?.late_by_minutes || 0;
@@ -876,7 +892,7 @@ export default function Dashboard() {
           out_time: getCurrentTime(),
         },
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
         }
       );
       const otHours = res.data?.data?.overtime_hours || 0;
@@ -905,7 +921,7 @@ export default function Dashboard() {
     try {
       setSubmitLoading(true);
       setError('');
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       const res = await axios.post(`${process.env.REACT_APP_API}/assets/requests`, assetReqForm, { headers });
       if (res.data && res.data.success) {
@@ -937,7 +953,7 @@ export default function Dashboard() {
     try {
       setSubmitLoading(true);
       setError('');
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       const computedDays = calculateLeaveDays(leaveReqForm.from_date, leaveReqForm.to_date, leaveReqForm.is_half_day);
       const payload = {
@@ -964,6 +980,29 @@ export default function Dashboard() {
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || 'Error applying leave.');
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  const handleResignationSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setSubmitLoading(true);
+      setError('');
+      const token = sessionStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      const res = await axios.post(`${process.env.REACT_APP_API}/staff/resign/${currentUser._id}`, { reason: resignationReason }, { headers });
+      if (res.data && res.data.success) {
+        setSuccessMsg('✅ Resignation submitted successfully!');
+        setShowResignationModal(false);
+        fetchPortalData(); // Refresh profileData
+      } else {
+        setError(res.data.message || 'Failed to submit resignation');
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || 'Error submitting resignation.');
     } finally {
       setSubmitLoading(false);
     }
@@ -1014,6 +1053,22 @@ export default function Dashboard() {
   // Staff record in face list containing check-in status
   const myStaffRecord = staffList.find(s => s._id === currentUser?._id) || staffList[0];
 
+  const isWfhActive = isCheckedInToday(myStaffRecord) && myStaffRecord?.todayAttendance?.wfh_tracking?.is_wfh;
+
+  // Intercept React Router navigation when WFH is active
+  useEffect(() => {
+    if (isWfhActive) {
+      const unblock = history.block((location) => {
+        setShowWfhNavModal(true);
+        return false; // Prevent internal navigation
+      });
+      return () => {
+        unblock();
+      };
+    }
+    return undefined;
+  }, [history, isWfhActive]);
+
   const renderStaffPortal = () => {
     if (loadingPortal || !profileData) {
       return (
@@ -1036,28 +1091,61 @@ export default function Dashboard() {
             <Col md={4} className="text-md-end mt-3 mt-md-0">
               <div className="d-inline-flex flex-column align-items-md-end gap-2">
                 <Badge 
-                  bg={isCheckedInToday(myStaffRecord) ? 'warning' : 'light'} 
-                  className={isCheckedInToday(myStaffRecord) ? 'text-dark px-3 py-2 rounded-pill shadow-sm mb-2' : 'text-muted px-3 py-2 rounded-pill border mb-2'}
+                  bg={isCheckedInToday(myStaffRecord) ? (myStaffRecord?.todayAttendance?.wfh_tracking?.is_wfh ? 'info' : 'warning') : 'light'} 
+                  className={isCheckedInToday(myStaffRecord) 
+                    ? (myStaffRecord?.todayAttendance?.wfh_tracking?.is_wfh ? 'text-white px-3 py-2 rounded-pill shadow-sm mb-2' : 'text-dark px-3 py-2 rounded-pill shadow-sm mb-2') 
+                    : 'text-muted px-3 py-2 rounded-pill border mb-2'}
                   style={{ fontSize: '0.85rem', fontWeight: 'bold' }}
                 >
-                  <CsLineIcons icon={isCheckedInToday(myStaffRecord) ? 'clock' : 'close'} size={14} className="me-2" />
-                  {isCheckedInToday(myStaffRecord) ? 'Checked In' : 'Not Checked In Today'}
+                  <CsLineIcons icon={isCheckedInToday(myStaffRecord) ? (myStaffRecord?.todayAttendance?.wfh_tracking?.is_wfh ? 'home' : 'clock') : 'close'} size={14} className="me-2" />
+                  {isCheckedInToday(myStaffRecord) 
+                    ? (myStaffRecord?.todayAttendance?.wfh_tracking?.is_wfh ? 'WFH Active' : 'Checked In') 
+                    : 'Not Checked In Today'}
                 </Badge>
-                {!isRestrictedNetwork && (
-                  <Button 
-                    className="btn-portal-primary bg-white text-primary border-0"
-                    onClick={() => setShowCameraModal(true)}
-                    disabled={!modelsLoaded}
-                    style={{ borderRadius: '50px', fontWeight: 'bold', padding: '0.75rem 1.75rem' }}
-                  >
-                    <CsLineIcons icon="camera" size={18} />
-                    <span>Clock In/Out</span>
-                  </Button>
-                )}
+                
+                <div className="d-flex justify-content-end mb-3">
+                  <div className="d-inline-flex rounded-pill p-1 shadow-sm" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                    <div 
+                      className={`px-3 py-1 rounded-pill fw-bold ${!isWfh ? 'bg-white text-primary shadow-sm' : 'text-white'}`}
+                      style={{ cursor: isRestrictedNetwork || isCheckedInToday(myStaffRecord) ? 'not-allowed' : 'pointer', opacity: isRestrictedNetwork ? 0.5 : 1, transition: 'all 0.2s' }}
+                      onClick={() => { if (!isRestrictedNetwork && !isCheckedInToday(myStaffRecord)) setIsWfh(false); }}
+                      title={isRestrictedNetwork ? "Not connected to Office Wi-Fi" : ""}
+                    >
+                      <CsLineIcons icon="building" size="14" className="me-1" /> Office
+                    </div>
+                    
+                    <div 
+                      className={`px-3 py-1 rounded-pill fw-bold ${isWfh ? 'bg-white text-primary shadow-sm' : 'text-white'}`}
+                      style={{ cursor: isCheckedInToday(myStaffRecord) ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
+                      onClick={() => { if (!isCheckedInToday(myStaffRecord)) setIsWfh(true); }}
+                    >
+                      <CsLineIcons icon="home" size="14" className="me-1" /> Home
+                    </div>
+                  </div>
+                </div>
+
+                <Button 
+                  className="btn-portal-primary bg-white text-primary border-0"
+                  onClick={() => setShowCameraModal(true)}
+                  disabled={!modelsLoaded}
+                  style={{ borderRadius: '50px', fontWeight: 'bold', padding: '0.75rem 1.75rem' }}
+                >
+                  <CsLineIcons icon="camera" size={18} />
+                  <span>
+                    {!isCheckedInToday(myStaffRecord) && isWfh 
+                      ? " Clock In (WFH)" 
+                      : " Clock In/Out"}
+                  </span>
+                </Button>
               </div>
             </Col>
           </Row>
         </div>
+        
+        {/* Render WFH Tracker conditionally */}
+        {isCheckedInToday(myStaffRecord) && myStaffRecord?.todayAttendance?.wfh_tracking?.is_wfh && (
+          <WfhTracker staffId={myStaffRecord._id} date={getTodayDate()} wfhConfig={userData?.wfh_config} />
+        )}
 
         {successMsg && (
           <Alert variant={lateMinutes > 0 ? 'warning' : overtimeHours > 0 ? 'info' : 'success'} className="mb-4 rounded-3 border-0 shadow-sm" style={{ background: lateMinutes > 0 ? '#fff7ed' : overtimeHours > 0 ? '#f5f3ff' : '#f0fdf4', color: lateMinutes > 0 ? '#92400e' : overtimeHours > 0 ? '#4c1d95' : '#15803d' }} onClose={() => { setSuccessMsg(''); setLateMinutes(0); setOvertimeHours(0); }} dismissible>
@@ -1192,6 +1280,46 @@ export default function Dashboard() {
                           <div className="text-value">{profileData.id_number || '—'}</div>
                         </Col>
                       </Row>
+
+                      {/* Resignation Block */}
+                      <div className="mt-5 pt-4 border-top">
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <h6 className="fw-bold mb-0 text-danger d-flex align-items-center">
+                            <CsLineIcons icon="warning-hexagon" size="18" className="me-2" /> Resignation
+                          </h6>
+                        </div>
+                        {profileData.resignation?.status && profileData.resignation.status !== 'none' ? (
+                          <div className="bg-light p-4 rounded-3 border">
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                              <span className="fw-semibold">Resignation Status:</span>
+                              {getPortalStatusBadge(profileData.resignation.status)}
+                            </div>
+                            <Row className="g-3 small">
+                              <Col md={6}>
+                                <div className="text-muted mb-1">Submitted On</div>
+                                <div className="fw-bold">{formatDate(profileData.resignation.submitted_on)}</div>
+                              </Col>
+                              <Col md={6}>
+                                <div className="text-muted mb-1">Notice Period</div>
+                                <div className="fw-bold">{profileData.resignation.notice_period_days} Days</div>
+                              </Col>
+                              {profileData.resignation.status === 'approved' && profileData.resignation.last_working_day && (
+                                <Col md={12}>
+                                  <div className="text-muted mb-1">Last Working Day</div>
+                                  <div className="fw-bold text-danger">{formatDate(profileData.resignation.last_working_day)}</div>
+                                </Col>
+                              )}
+                            </Row>
+                          </div>
+                        ) : (
+                          <div className="bg-soft-danger p-4 rounded-3 text-center border" style={{ borderColor: 'rgba(239, 68, 68, 0.2)' }}>
+                            <p className="text-muted small mb-3">If you wish to resign from your position, you can submit a formal resignation request here. It will be sent to HR for approval.</p>
+                            <Button variant="danger" className="rounded-pill px-4 shadow-sm" onClick={() => setShowResignationModal(true)}>
+                              Submit Resignation
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </Card.Body>
                   </Card>
                 </Tab.Pane>
@@ -1590,6 +1718,39 @@ export default function Dashboard() {
           </Form>
         </Modal>
 
+        {/* Modal: Resignation */}
+        <Modal show={showResignationModal} onHide={() => setShowResignationModal(false)} centered backdrop="static">
+          <Modal.Header closeButton>
+            <Modal.Title className="fw-bold text-danger">Submit Resignation</Modal.Title>
+          </Modal.Header>
+          <Form onSubmit={handleResignationSubmit}>
+            <Modal.Body>
+              <Alert variant="warning" className="mb-4 text-center border-0 shadow-sm">
+                <CsLineIcons icon="warning-hexagon" size="24" className="text-warning mb-2" />
+                <p className="mb-0 small fw-bold">Are you sure you want to resign?</p>
+                <p className="mb-0 small text-muted">This action will notify HR and initiate your notice period once approved.</p>
+              </Alert>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold">Reason for Resignation</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={4}
+                  required
+                  placeholder="Please state your reason for resigning..."
+                  value={resignationReason}
+                  onChange={(e) => setResignationReason(e.target.value)}
+                />
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer className="justify-content-center border-top-0 pt-0 pb-4">
+              <Button variant="light" className="rounded-pill px-4" onClick={() => setShowResignationModal(false)}>Cancel</Button>
+              <Button variant="danger" type="submit" className="rounded-pill px-4 shadow-sm" disabled={submitLoading}>
+                {submitLoading ? 'Submitting...' : 'Confirm Resignation'}
+              </Button>
+            </Modal.Footer>
+          </Form>
+        </Modal>
+
         {/* Modal: Apply for Leave */}
         <Modal show={showLeaveRequestModal} onHide={() => setShowLeaveRequestModal(false)} centered>
           <Modal.Header closeButton>
@@ -1957,6 +2118,28 @@ export default function Dashboard() {
             )}
           </Button>
         </Modal.Body>
+      </Modal>
+      <Modal show={showWfhNavModal} onHide={() => setShowWfhNavModal(false)} centered backdrop="static" contentClassName="interactive-card border-0 shadow-lg">
+        <Modal.Header className="border-0 p-4 pb-0" closeButton>
+          <Modal.Title className="fw-bold text-danger">Navigation Blocked</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4 text-center">
+          <div className="mb-4 text-danger">
+            <CsLineIcons icon="shield-warning" size="40" />
+          </div>
+          <h5 className="fw-bold text-dark mb-3">WFH Tracking is Active!</h5>
+          <p className="text-muted small fw-bold">
+            You cannot navigate to other pages while clocked in from home. Doing so will stop your background screen sharing and tracking.
+          </p>
+          <p className="text-muted small">
+            Please <strong>minimize this window</strong> and continue with your office work. If you must browse this site, please <strong>Clock-Out</strong> first.
+          </p>
+        </Modal.Body>
+        <Modal.Footer className="border-0 p-4 pt-0 d-flex justify-content-center">
+          <Button variant="primary" className="custom-btn-outline border-primary text-primary px-5" onClick={() => setShowWfhNavModal(false)}>
+            I Understand, Stay Here
+          </Button>
+        </Modal.Footer>
       </Modal>
     </>
   );

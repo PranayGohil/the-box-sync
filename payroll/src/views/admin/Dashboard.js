@@ -110,6 +110,7 @@ const Dashboard = () => {
   
   const [todayPresentCount, setTodayPresentCount] = useState(0);
   const [totalLeavesPending, setTotalLeavesPending] = useState(0);
+  const [pendingResignationsCount, setPendingResignationsCount] = useState(0);
   const [estimatedPayroll, setEstimatedPayroll] = useState(0);
 
   const API_BASE = process.env.REACT_APP_API;
@@ -123,6 +124,9 @@ const Dashboard = () => {
       const staffList = response.data.data || [];
       setStaffCount(staffList.length);
       setRecentStaff(staffList.slice(0, 5));
+
+      const pendingResignations = staffList.filter(s => s.resignation?.status === 'pending').length;
+      setPendingResignationsCount(pendingResignations);
 
       // Calculate position breakdown and estimated payroll
       const posMap = {};
@@ -207,6 +211,27 @@ const Dashboard = () => {
           </Col>
         </Row>
       </div>
+
+      {pendingResignationsCount > 0 && (
+        <Row className="mb-4">
+          <Col xs={12}>
+            <div className="alert alert-warning border-warning shadow-sm d-flex align-items-center justify-content-between p-4" style={{ borderRadius: '1.5rem', background: '#fffbeb' }}>
+              <div className="d-flex align-items-center">
+                <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center me-3" style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)' }}>
+                  <CsLineIcons icon="warning-hexagon" size="24" style={{ color: '#f59e0b' }} />
+                </div>
+                <div>
+                  <h5 className="fw-bold mb-1" style={{ color: '#b45309' }}>Pending Resignations</h5>
+                  <p className="mb-0 text-muted">You have <strong>{pendingResignationsCount}</strong> {pendingResignationsCount === 1 ? 'resignation request' : 'resignation requests'} pending review.</p>
+                </div>
+              </div>
+              <Button variant="warning" className="rounded-pill px-4 fw-bold text-dark shadow-sm" onClick={() => history.push('/staff/view')}>
+                Review Now
+              </Button>
+            </div>
+          </Col>
+        </Row>
+      )}
 
       {/* Analytics KPI Stat Row */}
       <Row className="g-4 mb-4">
