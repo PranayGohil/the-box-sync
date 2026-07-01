@@ -37,6 +37,7 @@ const waiterRouter = require("./router/waiterRoutes.js");
 const reservationRouter = require("./router/reservationRoutes.js");
 const dailyStockRouter = require("./router/dailyStockRoutes.js");
 const loyaltyRouter = require("./router/loyaltyRoutes.js");
+const notificationRouter = require("./router/notificationRoutes");
 
 const PORT = process.env.PORT;
 // const ORIGINS = process.env.ORIGINS ? process.env.ORIGINS.split(",") : [];
@@ -124,6 +125,7 @@ app.use("/api/waiter", waiterRouter);
 app.use("/api/reservation", reservationRouter);
 app.use("/api/daily-stock", dailyStockRouter);
 app.use("/api/loyalty", loyaltyRouter);
+app.use("/api/notifications", notificationRouter);
 
 
 const errorHandler = require("./middlewares/errorHandler");
