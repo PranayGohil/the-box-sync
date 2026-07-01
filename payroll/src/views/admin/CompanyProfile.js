@@ -345,7 +345,7 @@ const CompanyProfile = () => {
                 {formData._id ? (
                   <>
                     <a
-                      href={`http://localhost:3002/${formData._id}`}
+                      href={`${process.env.REACT_APP_ATTENDANCE_URL}/${formData._id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="d-block mb-3 p-2 bg-light text-primary fw-bold rounded border text-center text-decoration-none"
@@ -357,7 +357,7 @@ const CompanyProfile = () => {
                       size="sm"
                       className="w-100"
                       onClick={() => {
-                        navigator.clipboard.writeText(`http://localhost:3002/${formData._id}`);
+                        navigator.clipboard.writeText(`${process.env.REACT_APP_ATTENDANCE_URL}/${formData._id}`);
                         toast.success('Kiosk link copied to clipboard!');
                       }}
                     >
