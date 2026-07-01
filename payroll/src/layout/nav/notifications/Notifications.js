@@ -1,16 +1,16 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { NavLink } from 'react-router-dom';
-import { Dropdown } from 'react-bootstrap';
+import { NavLink, useLocation } from 'react-router-dom';
+import { Dropdown, Button } from 'react-bootstrap';
 import classNames from 'classnames';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import { MENU_PLACEMENT } from 'constants.js';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { layoutShowingNavMenu } from 'layout/layoutSlice';
-import { fetchNotifications } from './notificationSlice';
+import { fetchNotifications, dismissNotification } from './notificationSlice';
 
 const NotificationsDropdownToggle = React.memo(
-  React.forwardRef(({ onClick, expanded = false }, ref) => (
+  React.forwardRef(({ onClick, expanded = false, hasUnread = false }, ref) => (
     <a
       ref={ref}
       href="#/"
@@ -25,24 +25,41 @@ const NotificationsDropdownToggle = React.memo(
     >
       <div className="position-relative d-inline-flex">
         <CsLineIcons icon="bell" size="18" />
-        <span className="position-absolute notification-dot rounded-xl" />
+        {hasUnread && <span className="position-absolute notification-dot rounded-xl" />}
       </div>
     </a>
   ))
 );
-const NotificationItem = ({ img = '', link = '', detail = '' }) => (
-  <li className="mb-3 pb-3 border-bottom border-separator-light d-flex">
-    <img src={img} className="me-3 sw-4 sh-4 rounded-xl align-self-center" alt="notification" />
-    <div className="align-self-center">
-      <NavLink to={link} activeClassName="">
-        {detail}
-      </NavLink>
+NotificationsDropdownToggle.displayName = 'NotificationsDropdownToggle';
+
+const NotificationItem = ({ img = '', link = '', detail = '', date = '', onDismiss }) => (
+  <li className="mb-3 pb-3 border-bottom border-separator-light d-flex justify-content-between align-items-center">
+    <div className="d-flex align-items-center me-2">
+      <img src={img} className="me-3 sw-4 sh-4 rounded-xl align-self-center" alt="notification" style={{ objectFit: 'cover' }} />
+      <div className="align-self-center">
+        <NavLink to={link} activeClassName="" className="text-dark small fw-semibold d-block">
+          {detail}
+        </NavLink>
+        {date && <span className="text-muted d-block mt-1 font-monospace" style={{ fontSize: '0.72rem' }}>{date}</span>}
+      </div>
     </div>
+    <Button
+      variant="link"
+      className="p-1 text-muted text-decoration-none"
+      style={{ minWidth: 'auto', border: 0 }}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onDismiss();
+      }}
+    >
+      <CsLineIcons icon="close" size="14" />
+    </Button>
   </li>
 );
 
 const NotificationsDropdownMenu = React.memo(
-  React.forwardRef(({ style, className, labeledBy, items }, ref) => {
+  React.forwardRef(({ style, className, labeledBy, items, onDismissItem }, ref) => {
     return (
       <div ref={ref} style={style} className={classNames('wide notification-dropdown scroll-out', className)} aria-labelledby={labeledBy}>
         <OverlayScrollbarsComponent
@@ -52,10 +69,23 @@ const NotificationsDropdownMenu = React.memo(
           }}
           className="scroll"
         >
-          <ul className="list-unstyled border-last-none">
-            {items.map((item, itemIndex) => (
-              <NotificationItem key={`notificationItem.${itemIndex}`} detail={item.detail} link={item.link} img={item.img} />
-            ))}
+          <ul className="list-unstyled border-last-none mb-0">
+            {items.length === 0 ? (
+              <li className="py-4 text-center text-muted small">
+                No new notifications
+              </li>
+            ) : (
+              items.map((item, itemIndex) => (
+                <NotificationItem 
+                  key={`notificationItem.${itemIndex}`} 
+                  detail={item.detail} 
+                  link={item.link} 
+                  img={item.img} 
+                  date={item.date}
+                  onDismiss={() => onDismissItem(item.id)}
+                />
+              ))
+            )}
           </ul>
         </OverlayScrollbarsComponent>
       </div>
@@ -67,6 +97,7 @@ NotificationsDropdownMenu.displayName = 'NotificationsDropdownMenu';
 const MENU_NAME = 'Notifications';
 const Notifications = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
 
   const {
     placementStatus: { view: placement },
@@ -84,6 +115,35 @@ const Notifications = () => {
     // eslint-disable-next-line
   }, []);
 
+  // Auto Dismiss / Auto mark as read on route matches
+  useEffect(() => {
+    if (items && items.length > 0) {
+      const { pathname } = location;
+      const toDismiss = [];
+      if (pathname.includes('/assets')) {
+        items.forEach(item => {
+          if (item.id.startsWith('asset-')) toDismiss.push(item.id);
+        });
+      } else if (pathname.includes('/staff/view') || pathname.includes('/staff/profile')) {
+        items.forEach(item => {
+          if (item.id.startsWith('resignation-')) toDismiss.push(item.id);
+        });
+      } else if (pathname.includes('/staff/leave-requests')) {
+        items.forEach(item => {
+          if (item.id.startsWith('leave-')) toDismiss.push(item.id);
+        });
+      } else if (pathname.includes('/attendance')) {
+        items.forEach(item => {
+          if (item.id.startsWith('reg-')) toDismiss.push(item.id);
+        });
+      }
+
+      toDismiss.forEach(id => {
+        dispatch(dismissNotification(id));
+      });
+    }
+  }, [location.pathname, items, dispatch]);
+
   const onToggle = (status, event) => {
     if (event && event.stopPropagation) event.stopPropagation();
     else if (event && event.originalEvent && event.originalEvent.stopPropagation) event.originalEvent.stopPropagation();
@@ -95,41 +155,45 @@ const Notifications = () => {
     // eslint-disable-next-line
   }, [attrMenuAnimate, behaviourHtmlData, attrMobile, color]);
 
-  if (items && items.length > 0) {
-    return (
-      <Dropdown
-        as="li"
-        bsPrefix="list-inline-item"
-        onToggle={onToggle}
-        show={showingNavMenu === MENU_NAME}
-        align={placement === MENU_PLACEMENT.Horizontal ? 'end' : 'start'}
-      >
-        <Dropdown.Toggle as={NotificationsDropdownToggle} />
-        <Dropdown.Menu
-          as={NotificationsDropdownMenu}
-          items={items}
-          popperConfig={{
-            modifiers: [
-              {
-                name: 'offset',
-                options: {
-                  offset: () => {
-                    if (placement === MENU_PLACEMENT.Horizontal) {
-                      return [0, 7];
-                    }
-                    if (window.innerWidth < 768) {
-                      return [-168, 7];
-                    }
-                    return [-162, 7];
-                  },
+  const onDismissItem = (id) => {
+    dispatch(dismissNotification(id));
+  };
+
+  const hasUnread = items && items.length > 0;
+
+  return (
+    <Dropdown
+      as="li"
+      bsPrefix="list-inline-item"
+      onToggle={onToggle}
+      show={showingNavMenu === MENU_NAME}
+      align={placement === MENU_PLACEMENT.Horizontal ? 'end' : 'start'}
+    >
+      <Dropdown.Toggle as={NotificationsDropdownToggle} hasUnread={hasUnread} />
+      <Dropdown.Menu
+        as={NotificationsDropdownMenu}
+        items={items || []}
+        onDismissItem={onDismissItem}
+        popperConfig={{
+          modifiers: [
+            {
+              name: 'offset',
+              options: {
+                offset: () => {
+                  if (placement === MENU_PLACEMENT.Horizontal) {
+                    return [0, 7];
+                  }
+                  if (window.innerWidth < 768) {
+                    return [-168, 7];
+                  }
+                  return [-162, 7];
                 },
               },
-            ],
-          }}
-        />
-      </Dropdown>
-    );
-  }
-  return <></>;
+            },
+          ],
+        }}
+      />
+    </Dropdown>
+  );
 };
 export default React.memo(Notifications);

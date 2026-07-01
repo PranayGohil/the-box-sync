@@ -641,6 +641,65 @@ export default function ManageAttendance() {
     return `${h}h ${m}m`;
   };
 
+  const getStandardWorkingMinutes = (config) => {
+    if (!config || !config.org_rules) return 480;
+    const shiftStart = parseTimeToMinutes(config.org_rules.shift_start_time || "09:00 AM");
+    const shiftEnd = parseTimeToMinutes(config.org_rules.shift_end_time || "06:00 PM");
+    const lunchStart = parseTimeToMinutes(config.org_rules.lunch_start_time || "01:00 PM");
+    const lunchEnd = parseTimeToMinutes(config.org_rules.lunch_end_time || "02:00 PM");
+    
+    let shiftDuration = shiftEnd - shiftStart;
+    if (shiftDuration < 0) shiftDuration += 24 * 60;
+    
+    let lunchDuration = lunchEnd - lunchStart;
+    if (lunchDuration < 0) lunchDuration += 24 * 60;
+    
+    return shiftDuration - lunchDuration;
+  };
+
+  const getCompletedWorkingMinutes = (attendance, config) => {
+    if (!attendance) return 0;
+    const lunchStartStr = (config && config.org_rules && config.org_rules.lunch_start_time) || "01:00 PM";
+    const lunchEndStr = (config && config.org_rules && config.org_rules.lunch_end_time) || "02:00 PM";
+    
+    const lunchStart = parseTimeToMinutes(lunchStartStr);
+    const lunchEnd = parseTimeToMinutes(lunchEndStr);
+    
+    let totalMins = 0;
+    
+    if (attendance.sessions && attendance.sessions.length > 0) {
+      attendance.sessions.forEach(session => {
+        if (session.in_time && session.out_time) {
+          let diff = parseTimeToMinutes(session.out_time) - parseTimeToMinutes(session.in_time);
+          if (diff < 0) diff += 24 * 60;
+          totalMins += diff;
+        }
+      });
+      
+      for (let i = 0; i < attendance.sessions.length - 1; i++) {
+        const currentOut = attendance.sessions[i].out_time;
+        const nextIn = attendance.sessions[i+1].in_time;
+        
+        if (currentOut && nextIn) {
+          let gapStart = parseTimeToMinutes(currentOut);
+          let gapEnd = parseTimeToMinutes(nextIn);
+          if (gapEnd < gapStart) gapEnd += 24 * 60;
+          
+          const overlapStart = Math.max(gapStart, lunchStart);
+          const overlapEnd = Math.min(gapEnd, lunchEnd);
+          const overlap = Math.max(0, overlapEnd - overlapStart);
+          totalMins += overlap;
+        }
+      }
+    } else if (attendance.in_time && attendance.out_time) {
+      let diff = parseTimeToMinutes(attendance.out_time) - parseTimeToMinutes(attendance.in_time);
+      if (diff < 0) diff += 24 * 60;
+      totalMins = diff;
+    }
+    
+    return totalMins;
+  };
+
   const authHeader = () => ({
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
   });
@@ -1089,10 +1148,21 @@ export default function ManageAttendance() {
         Cell: ({ row }) => {
           const { todayAttendance } = row.original;
           if (!todayAttendance) return <span className="text-muted fw-medium">—</span>;
+          const isLate = todayAttendance.late_by_minutes > 0;
+          const completedMins = getCompletedWorkingMinutes(todayAttendance, payrollConfig);
+          const standardMins = getStandardWorkingMinutes(payrollConfig);
+          const isCompleted = completedMins >= standardMins;
           return (
-            <span className="fw-bold text-primary">
-              {calculateTotalWorkingHours(todayAttendance, payrollConfig)}
-            </span>
+            <div className="d-flex align-items-center gap-1">
+              <span className="fw-bold text-primary">
+                {calculateTotalWorkingHours(todayAttendance, payrollConfig)}
+              </span>
+              {isLate && isCompleted && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0.15rem 0.5rem', borderRadius: '50px', fontSize: '0.65rem', fontWeight: 700, background: 'rgba(16,185,129,0.1)', color: '#059669', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  ✓ Completed
+                </span>
+              )}
+            </div>
           );
         },
       },

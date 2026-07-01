@@ -376,6 +376,52 @@ const StaffProfile = () => {
             <Tab.Content>
               {/* Personal Details Tab */}
               <Tab.Pane eventKey="personal">
+                {staff.resignation && staff.resignation.status && staff.resignation.status !== 'none' && (
+                  <Card className="border-0 shadow-sm mb-4" style={{ borderRadius: '1.5rem', borderLeft: `5px solid ${staff.resignation.status === 'approved' ? '#10b981' : staff.resignation.status === 'rejected' ? '#ef4444' : '#f59e0b'}`, background: staff.resignation.status === 'approved' ? '#f0fdf4' : staff.resignation.status === 'rejected' ? '#fef2f2' : '#fffbeb' }}>
+                    <Card.Body className="p-4">
+                      <div className="d-flex align-items-center gap-2 mb-3">
+                        <div className={`p-2 rounded-3 bg-white text-${staff.resignation.status === 'approved' ? 'success' : staff.resignation.status === 'rejected' ? 'danger' : 'warning'} shadow-sm`}>
+                          <CsLineIcons icon="warning-hexagon" size="20" />
+                        </div>
+                        <h5 className="fw-bold mb-0 text-dark">Resignation / Exit Details</h5>
+                      </div>
+                      
+                      <div className="mb-3">
+                        <span className="fw-bold text-uppercase small text-muted d-block mb-1" style={{ fontSize: '0.65rem' }}>Approval Status</span>
+                        <Badge bg={staff.resignation.status === 'approved' ? 'success' : staff.resignation.status === 'rejected' ? 'danger' : 'warning'} className="px-3 py-2 rounded-pill text-uppercase">
+                          {staff.resignation.status}
+                        </Badge>
+                      </div>
+
+                      <Row className="g-3">
+                        <Col md={12}>
+                          <div className="info-label text-muted" style={{ fontSize: '0.65rem' }}>Reason for Exit</div>
+                          <div className="text-dark fw-bold">{staff.resignation.reason || 'No reason provided'}</div>
+                        </Col>
+                        <Col md={4}>
+                          <div className="info-label text-muted" style={{ fontSize: '0.65rem' }}>Submitted On</div>
+                          <div className="text-dark fw-bold">{formatDate(staff.resignation.submitted_on)}</div>
+                        </Col>
+                        <Col md={4}>
+                          <div className="info-label text-muted" style={{ fontSize: '0.65rem' }}>Notice Period</div>
+                          <div className="text-dark fw-bold">{staff.resignation.notice_period_days} Days</div>
+                        </Col>
+                        {staff.resignation.last_working_day && (
+                          <Col md={4}>
+                            <div className="info-label text-muted" style={{ fontSize: '0.65rem' }}>Last Working Day</div>
+                            <div className="text-danger fw-bold">{formatDate(staff.resignation.last_working_day)}</div>
+                          </Col>
+                        )}
+                        {staff.resignation.admin_remarks && (
+                          <Col md={12} className="mt-2">
+                            <div className="info-label text-muted" style={{ fontSize: '0.65rem' }}>Admin remarks / reason</div>
+                            <div className="text-dark fw-semibold" style={{ fontSize: '0.9rem' }}>{staff.resignation.admin_remarks}</div>
+                          </Col>
+                        )}
+                      </Row>
+                    </Card.Body>
+                  </Card>
+                )}
                 <Card className="glass-card border-0 shadow-sm">
                   <Card.Body className="p-4">
                     <div className="d-flex align-items-center gap-2 mb-4">

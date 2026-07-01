@@ -34,9 +34,19 @@ const Assets = () => {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
 
-  // Selected Asset for actions
+  // Selected Asset / Request for actions
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [approveData, setApproveData] = useState({
+    mode: 'new',
+    selectedAssetId: '',
+    name: '',
+    asset_type: 'Laptop / PC',
+    serial_number: '',
+    notes: '',
+  });
 
   // Form states
   const [formData, setFormData] = useState({
@@ -285,6 +295,69 @@ const Assets = () => {
     } catch (err) {
       console.error(err);
       toast.error('Error updating request status');
+    }
+  };
+
+  const handleOpenApprove = (req) => {
+    setSelectedRequest(req);
+    setApproveData({
+      mode: 'new',
+      selectedAssetId: '',
+      name: req.asset_name || '',
+      asset_type: req.asset_type || 'Laptop / PC',
+      serial_number: '',
+      notes: '',
+    });
+    setShowApproveModal(true);
+  };
+
+  const handleSubmitApprove = async (e) => {
+    e.preventDefault();
+    if (!selectedRequest) return;
+
+    try {
+      if (approveData.mode === 'new') {
+        if (!approveData.name) {
+          toast.error('Asset Name is required');
+          return;
+        }
+
+        await addAsset({
+          name: approveData.name,
+          asset_type: approveData.asset_type,
+          serial_number: approveData.serial_number,
+          notes: approveData.notes,
+          assigned_to: selectedRequest.staff_id?._id,
+          assigned_date: new Date().toISOString().split('T')[0],
+          status: 'assigned'
+        });
+      } else {
+        if (!approveData.selectedAssetId) {
+          toast.error('Please select an existing asset to assign');
+          return;
+        }
+
+        await updateAsset(approveData.selectedAssetId, {
+          assigned_to: selectedRequest.staff_id?._id,
+          assigned_date: new Date().toISOString().split('T')[0],
+          status: 'assigned',
+          notes: approveData.notes || 'Assigned via approved request.'
+        });
+      }
+
+      const res = await updateAssetRequestStatus(selectedRequest._id, { 
+        status: 'approved', 
+        notes: approveData.notes 
+      });
+
+      if (res.success) {
+        toast.success('Asset request approved and asset allocated successfully');
+        setShowApproveModal(false);
+        fetchData();
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error approving request and allocating asset');
     }
   };
 
@@ -593,7 +666,7 @@ const Assets = () => {
                                 size="sm" 
                                 className="me-2"
                                 style={{ borderRadius: '30px' }}
-                                onClick={() => handleRequestStatusChange(req._id, 'approved')}
+                                onClick={() => handleOpenApprove(req)}
                               >
                                 Approve
                               </Button>
@@ -797,6 +870,127 @@ const Assets = () => {
           <Button variant="light" onClick={() => setShowDeleteModal(false)} style={{ borderRadius: '30px' }}>Cancel</Button>
           <Button variant="danger" onClick={handleDeleteAsset} style={{ borderRadius: '30px' }}>Delete</Button>
         </Modal.Footer>
+      </Modal>
+
+      {/* Approve Request Modal */}
+      <Modal show={showApproveModal} onHide={() => setShowApproveModal(false)} centered size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title className="text-success fw-bold">Approve Asset Request</Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleSubmitApprove}>
+          <Modal.Body className="p-4">
+            <p className="text-muted">
+              You are approving the request for <strong>{selectedRequest?.asset_name}</strong> ({selectedRequest?.asset_type}) from <strong>{selectedRequest?.staff_id?.f_name} {selectedRequest?.staff_id?.l_name}</strong>.
+            </p>
+            
+            <Form.Group className="mb-4">
+              <Form.Label className="fw-semibold">Allocation Method *</Form.Label>
+              <div className="d-flex gap-3">
+                <Form.Check
+                  type="radio"
+                  label="Register & Assign a New Asset"
+                  name="allocationMode"
+                  id="modeNew"
+                  checked={approveData.mode === 'new'}
+                  onChange={() => setApproveData({ ...approveData, mode: 'new' })}
+                />
+                <Form.Check
+                  type="radio"
+                  label="Assign an Existing Available Asset"
+                  name="allocationMode"
+                  id="modeExisting"
+                  checked={approveData.mode === 'existing'}
+                  onChange={() => setApproveData({ ...approveData, mode: 'existing' })}
+                />
+              </div>
+            </Form.Group>
+
+            {approveData.mode === 'new' ? (
+              <>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">Asset Name *</Form.Label>
+                  <Form.Control
+                    type="text"
+                    required
+                    value={approveData.name}
+                    onChange={(e) => setApproveData({ ...approveData, name: e.target.value })}
+                    placeholder="e.g. MacBook Pro M3"
+                  />
+                </Form.Group>
+                <div className="row">
+                  <div className="col-md-6">
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">Asset Type *</Form.Label>
+                      <Select
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                        options={ASSET_TYPES.map(type => ({ value: type, label: type }))}
+                        value={{ value: approveData.asset_type, label: approveData.asset_type }}
+                        onChange={(selected) => setApproveData({ ...approveData, asset_type: selected ? selected.value : 'other' })}
+                      />
+                    </Form.Group>
+                  </div>
+                  <div className="col-md-6">
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">Serial / Tag Number</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={approveData.serial_number}
+                        onChange={(e) => setApproveData({ ...approveData, serial_number: e.target.value })}
+                        placeholder="e.g. SN-98234-X"
+                      />
+                    </Form.Group>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold">Select Available Asset *</Form.Label>
+                <Select
+                  classNamePrefix="react-select"
+                  menuPortalTarget={document.body}
+                  styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                  options={assets
+                    .filter(a => a.status === 'available')
+                    .map(a => ({
+                      value: a._id,
+                      label: `${a.name} ${a.serial_number ? `(SN: ${a.serial_number})` : ''} - [${getAssetTypeLabel(a.asset_type)}]`
+                    }))
+                  }
+                  value={
+                    approveData.selectedAssetId
+                      ? {
+                          value: approveData.selectedAssetId,
+                          label: (() => {
+                            const a = assets.find(item => item._id === approveData.selectedAssetId);
+                            return a ? `${a.name} ${a.serial_number ? `(SN: ${a.serial_number})` : ''} - [${getAssetTypeLabel(a.asset_type)}]` : '';
+                          })()
+                        }
+                      : null
+                  }
+                  onChange={(selected) => setApproveData({ ...approveData, selectedAssetId: selected ? selected.value : '' })}
+                  placeholder="-- Select Available Asset --"
+                />
+              </Form.Group>
+            )}
+
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-semibold">Approval / Allocation Notes</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={approveData.notes}
+                onChange={(e) => setApproveData({ ...approveData, notes: e.target.value })}
+                placeholder="Details of approval, physical condition notes, etc..."
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="light" onClick={() => setShowApproveModal(false)} style={{ borderRadius: '30px' }}>Cancel</Button>
+            <Button variant="success" type="submit" style={{ borderRadius: '30px' }}>Confirm Approval</Button>
+          </Modal.Footer>
+        </Form>
       </Modal>
     </div>
   );

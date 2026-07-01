@@ -53,8 +53,8 @@ const WfhLogsModal = ({ show, onHide, attendance }) => {
               <Col xs={12} md={6} lg={4} key={index}>
                 <Card className="border-0 shadow-sm h-100" style={{ borderRadius: '1rem', overflow: 'hidden' }}>
                   <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', backgroundColor: '#f8fafc' }}>
-                    <img 
-                      src={`${process.env.REACT_APP_API_URL || 'http://localhost:4005'}${log.url}`} 
+                    <img
+                      src={`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}${log.url}`}
                       alt={log.type}
                       style={{
                         position: 'absolute',
@@ -67,8 +67,8 @@ const WfhLogsModal = ({ show, onHide, attendance }) => {
                       }}
                       onError={(e) => { e.target.src = '/img/placeholder.png'; }}
                     />
-                    <Badge 
-                      bg={log.type === 'Screen' ? 'primary' : 'info'} 
+                    <Badge
+                      bg={log.type === 'Screen' ? 'primary' : 'info'}
                       className="position-absolute"
                       style={{ top: '10px', right: '10px', padding: '0.4rem 0.6rem', fontWeight: 'bold' }}
                     >

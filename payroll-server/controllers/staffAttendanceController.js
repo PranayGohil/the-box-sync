@@ -1,6 +1,7 @@
 const StaffAttendance = require("../models/staffAttendanceModel");
 const Staff = require("../models/staffModel");
 const PayrollConfig = require("../models/PayrollConfig");
+const User = require("../models/userModel");
 const fs = require("fs");
 const path = require("path");
 
@@ -693,14 +694,41 @@ const getKioskFaces = async (req, res) => {
     }
     
     try {
+        const company = await User.findById(company_id).select("name logo").lean();
+        const config = await PayrollConfig.findOne({ user_id: company_id }).lean();
+        
         const staffWithFaces = await Staff.find({
             user_id: company_id,
             face_encoding: { $exists: true, $ne: null, $not: { $size: 0 } },
         })
-        .select("_id staff_id f_name l_name face_encoding")
+        .select("_id staff_id f_name l_name face_encoding photo")
         .lean();
         
-        res.status(200).json({ success: true, data: staffWithFaces });
+        // Get today's date in IST
+        const options = { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" };
+        const today = new Intl.DateTimeFormat("en-CA", options).format(new Date());
+        
+        const todayRecords = await StaffAttendance.find({
+            user_id: company_id,
+            date: today
+        }).lean();
+        
+        const attendanceMap = {};
+        todayRecords.forEach(r => {
+            attendanceMap[r.staff_id.toString()] = r;
+        });
+        
+        const data = staffWithFaces.map(staff => ({
+            ...staff,
+            todayAttendance: attendanceMap[staff._id.toString()] || null
+        }));
+        
+        res.status(200).json({ 
+            success: true, 
+            data,
+            company: company ? { name: company.name, logo: company.logo } : null,
+            config: config ? { org_rules: config.org_rules } : null
+        });
     } catch (error) {
         console.error("Error fetching kiosk faces:", error);
         res.status(500).json({ success: false, message: "Server error" });

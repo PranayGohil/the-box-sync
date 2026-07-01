@@ -86,13 +86,12 @@ const NavIconMenu = () => {
             <CsLineIcons icon="search" size="18" />
           </a>
         </li> */}
+        <IconMenuNotifications />
         <li className="list-inline-item" title="Logout">
           <a onClick={() => setShowLogoutModal(true)}>
             <CsLineIcons icon="logout" size="18" />
           </a>
         </li>
-
-        {/* <IconMenuNotifications /> */}
       </ul>
       <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 

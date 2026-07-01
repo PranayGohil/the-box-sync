@@ -36,6 +36,15 @@ import 'react-toastify/dist/ReactToastify.css';
 // mock server register for demo
 import '@mock-api';
 
+// Suppress ResizeObserver loop error overlay in development
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (e) => {
+    if (e.message && e.message.includes('ResizeObserver')) {
+      e.stopImmediatePropagation();
+    }
+  });
+}
+
 const Main = () => {
   const layoutlessRoutes = useMemo(() => getLayoutlessRoutes({ data: allRoutes }), []);
   return (

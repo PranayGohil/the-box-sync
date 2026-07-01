@@ -112,7 +112,7 @@ router.put('/requests/:id/status', authMiddleware, async (req, res) => {
 router.post('/', authMiddleware, async (req, res) => {
   try {
     const userId = String(req.user._id || req.user);
-    const { name, asset_type, serial_number, notes } = req.body;
+    const { name, asset_type, serial_number, notes, assigned_to, assigned_date, status } = req.body;
 
     if (!name) {
       return res.status(400).json({ success: false, message: "Asset name is required" });
@@ -124,7 +124,9 @@ router.post('/', authMiddleware, async (req, res) => {
       asset_type: asset_type || 'other',
       serial_number: serial_number || '',
       notes: notes || '',
-      status: 'available'
+      status: status || 'available',
+      assigned_to: assigned_to || null,
+      assigned_date: assigned_date || null
     });
 
     res.json({ success: true, data: newAsset, message: "Asset added successfully" });
