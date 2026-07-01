@@ -194,7 +194,7 @@ const previewPayroll = async (req, res) => {
                 filter.branch_id = branch_id;
             }
             staffList = await Staff.find(filter)
-                .select("_id staff_id f_name l_name salary salary_structure overtime_rate position photo branch_id")
+                .select("_id staff_id f_name l_name salary salary_structure overtime_rate position photo branch_id bank_account uan_number pan_number")
                 .lean();
         }
 
@@ -289,7 +289,7 @@ const generatePayroll = async (req, res) => {
             if (!staff) return res.status(404).json({ success: false, message: "Staff not found" });
             staffList = [staff];
         } else {
-            staffList = await Staff.find({ user_id }).select("_id staff_id f_name l_name salary salary_structure overtime_rate position").lean();
+            staffList = await Staff.find({ user_id }).select("_id staff_id f_name l_name salary salary_structure overtime_rate position bank_account uan_number pan_number").lean();
         }
 
         if (staffList.length === 0) return res.status(404).json({ success: false, message: "No staff found" });
@@ -384,8 +384,8 @@ const getMonthlyPayrollSummary = async (req, res) => {
     try {
         const user_id = req.user;
         const { month, year } = req.params;
-        const payrollRecords = await StaffPayroll.find({ user_id, month: parseInt(month), year: parseInt(year) }).populate("staff_id", "staff_id f_name l_name position photo overtime_rate salary");
-        const allStaff = await Staff.find({ user_id }).select("_id staff_id f_name l_name position photo salary salary_structure overtime_rate").lean();
+        const payrollRecords = await StaffPayroll.find({ user_id, month: parseInt(month), year: parseInt(year) }).populate("staff_id", "staff_id f_name l_name position photo overtime_rate salary bank_account uan_number pan_number");
+        const allStaff = await Staff.find({ user_id }).select("_id staff_id f_name l_name position photo salary salary_structure overtime_rate bank_account uan_number pan_number").lean();
 
         // Auto-sync expenses for unpaid records
         for (let p of payrollRecords) {
@@ -443,7 +443,7 @@ const getPayrollByStaff = async (req, res) => {
             return res.status(403).json({ success: false, message: "Forbidden: You can only access your own records." });
         }
 
-        const staff = await Staff.findOne({ _id: staffId, user_id: adminUserId }).select("staff_id f_name l_name position photo salary salary_structure overtime_rate joining_date").lean();
+        const staff = await Staff.findOne({ _id: staffId, user_id: adminUserId }).select("staff_id f_name l_name position photo salary salary_structure overtime_rate joining_date bank_account uan_number pan_number").lean();
         if (!staff) return res.status(404).json({ success: false, message: "Staff not found" });
 
         const payrollHistory = await StaffPayroll.find({ staff_id: staffId }).sort({ year: -1, month: -1 }).lean();

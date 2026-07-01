@@ -1,6 +1,6 @@
 {
-  "name": "acorn-react",
-  "version": "1.0.1",
+  "name": "attendance",
+  "version": "1.0.0",
   "private": true,
   "proxy": "http://localhost:3000",
   "dependencies": {

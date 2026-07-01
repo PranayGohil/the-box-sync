@@ -21,6 +21,7 @@ const payroll = {
   essExpense: lazy(() => import('views/ess/ESSExpensePanel')),
   reports: lazy(() => import('views/admin/staff/payroll/StatutoryReports')),
   assets: lazy(() => import('views/admin/staff/assets/Assets')),
+  companyProfile: lazy(() => import('views/admin/CompanyProfile')),
 };
 
 const appRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
@@ -138,6 +139,12 @@ const allRoutes = {
       label: 'Setting',
       icon: 'gear',
       component: payroll.payrollSystem,
+    },
+    {
+      path: `${appRoot}/settings`,
+      label: 'Company Profile',
+      icon: 'user',
+      component: payroll.companyProfile,
     }
   ],
 

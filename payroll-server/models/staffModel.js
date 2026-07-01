@@ -136,6 +136,14 @@ const addStaff = new Schema({
   back_image: {
     type: String,
   },
+  pan_number: {
+    type: String,
+    default: "",
+  },
+  pan_image: {
+    type: String,
+    default: "",
+  },
   face_encoding: {
     type: [Number],
     default: [],

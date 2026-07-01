@@ -41,6 +41,7 @@ staffRouter.route("/add").post(
     { name: "photo", maxCount: 1 },
     { name: "front_image", maxCount: 1 },
     { name: "back_image", maxCount: 1 },
+    { name: "pan_image", maxCount: 1 },
   ]),
   addStaff
 );
@@ -52,6 +53,7 @@ staffRouter.route("/edit/:id").put(
     { name: "photo", maxCount: 1 },
     { name: "front_image", maxCount: 1 },
     { name: "back_image", maxCount: 1 },
+    { name: "pan_image", maxCount: 1 },
   ]),
   updateStaff
 );

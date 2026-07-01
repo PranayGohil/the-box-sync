@@ -363,7 +363,7 @@ const StaffProfile = () => {
                   </Nav.Item>
                   <Nav.Item>
                     <Nav.Link eventKey="expenses" className="d-flex align-items-center gap-2">
-                      <CsLineIcons icon="wallet" size="18" /> Expenses
+                      <CsLineIcons icon="coin" size="18" /> Expenses
                     </Nav.Link>
                   </Nav.Item>
                 </Nav>
@@ -423,6 +423,44 @@ const StaffProfile = () => {
                       <Col md={8}>
                         <div className="info-label">Residential Address</div>
                         <div className="info-value">{staff.address}, {staff.city}, {staff.state}, {staff.country}</div>
+                      </Col>
+                    </Row>
+                  </Card.Body>
+                </Card>
+
+                {/* Bank & Statutory Information Card */}
+                <Card className="glass-card border-0 shadow-sm mt-4">
+                  <Card.Body className="p-4">
+                    <div className="d-flex align-items-center gap-2 mb-4">
+                      <div className="bg-soft-primary p-2 rounded-3">
+                        <CsLineIcons icon="wallet" className="text-primary" size="20" />
+                      </div>
+                      <h5 className="fw-bold mb-0">Bank & Compliance Details</h5>
+                    </div>
+                    
+                    <Row className="g-4 mb-4">
+                      <Col md={4}>
+                        <div className="info-label">Account Number</div>
+                        <div className="info-value fw-bold">{staff.bank_account?.account_number || '-'}</div>
+                      </Col>
+                      <Col md={4}>
+                        <div className="info-label">Bank Name</div>
+                        <div className="info-value">{staff.bank_account?.bank_name || '-'}</div>
+                      </Col>
+                      <Col md={4}>
+                        <div className="info-label">Branch & IFSC</div>
+                        <div className="info-value">{staff.bank_account?.ifsc_code ? `${staff.bank_account.branch} (${staff.bank_account.ifsc_code})` : '-'}</div>
+                      </Col>
+                    </Row>
+
+                    <Row className="g-4">
+                      <Col md={4}>
+                        <div className="info-label">PAN Number</div>
+                        <div className="info-value fw-bold">{staff.pan_number || '-'}</div>
+                      </Col>
+                      <Col md={4}>
+                        <div className="info-label">PF / UAN Number</div>
+                        <div className="info-value fw-bold">{staff.uan_number || '-'}</div>
                       </Col>
                     </Row>
                   </Card.Body>
