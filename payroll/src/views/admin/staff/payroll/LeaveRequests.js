@@ -38,6 +38,9 @@ const LeaveRequests = () => {
     const [rejectingId, setRejectingId] = useState(null);
     const [rejectReason, setRejectReason] = useState('');
 
+    const [showApproveModal, setShowApproveModal] = useState(false);
+    const [approvingId, setApprovingId] = useState(null);
+
     // History Modal
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [historyStaff, setHistoryStaff] = useState(null);
@@ -73,12 +76,17 @@ const LeaveRequests = () => {
         // eslint-disable-next-line
     }, []);
 
-    const handleApprove = async (id) => {
-        if (!window.confirm("Approve this leave request? Leave balance will be deducted automatically.")) return;
+    const handleShowApprove = (id) => {
+        setApprovingId(id);
+        setShowApproveModal(true);
+    };
+
+    const submitApprove = async () => {
         try {
-            const res = await updateLeaveStatus(id, 'approved');
+            const res = await updateLeaveStatus(approvingId, 'approved');
             if (res.success) {
                 toast.success('Leave approved successfully and balance deducted.');
+                setShowApproveModal(false);
                 fetchData();
             }
         } catch (err) {
@@ -625,7 +633,7 @@ const LeaveRequests = () => {
                                                 <Button 
                                                     variant="none" 
                                                     className="leave-btn-outline btn-approve flex-grow-1"
-                                                    onClick={() => handleApprove(req._id)}
+                                                    onClick={() => handleShowApprove(req._id)}
                                                 >
                                                     <CsLineIcons icon="check" size="14" /> Approve
                                                 </Button>
@@ -766,10 +774,21 @@ const LeaveRequests = () => {
             {/* Rejection Reason Modal */}
             <Modal show={showRejectModal} onHide={() => setShowRejectModal(false)} centered className="leave-modal">
                 <Modal.Header closeButton>
-                    <Modal.Title className="text-danger fw-bold">Reject Leave Request</Modal.Title>
+                    <Modal.Title className="text-danger fw-bold d-flex align-items-center gap-2">
+                        <CsLineIcons icon="close" size="20" className="text-danger" /> Reject Leave Request
+                    </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form.Group>
+                    <div className="text-center mb-3">
+                        <div className="d-inline-flex align-items-center justify-content-center bg-light-danger rounded-circle mb-3" style={{ width: '60px', height: '60px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
+                            <CsLineIcons icon="close" size="26" />
+                        </div>
+                        <h5 className="fw-bold text-dark">Confirm Leave Rejection</h5>
+                        <p className="text-muted small mb-0 px-2 mt-2">
+                            Please provide a valid reason for rejecting this leave request. The staff member will be notified of the decision.
+                        </p>
+                    </div>
+                    <Form.Group className="mt-3">
                         <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Reason for Rejection <span className="text-danger">*</span></Form.Label>
                         <Form.Control 
                             as="textarea" 
@@ -781,9 +800,33 @@ const LeaveRequests = () => {
                         />
                     </Form.Group>
                 </Modal.Body>
-                <Modal.Footer>
+                <Modal.Footer className="justify-content-center gap-2 border-top-0 pt-0">
                     <Button variant="none" className="leave-btn-outline" onClick={() => setShowRejectModal(false)}>Cancel</Button>
-                    <Button variant="none" className="leave-btn-outline btn-reject" onClick={submitReject}>Reject Leave</Button>
+                    <Button variant="none" className="leave-btn-outline btn-reject px-4" onClick={submitReject}>Reject Leave</Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Approval Confirmation Modal */}
+            <Modal show={showApproveModal} onHide={() => setShowApproveModal(false)} centered className="leave-modal">
+                <Modal.Header closeButton>
+                    <Modal.Title className="text-success fw-bold d-flex align-items-center gap-2">
+                        <CsLineIcons icon="check" size="20" className="text-success" /> Approve Leave Request
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div className="text-center py-2 mb-3">
+                        <div className="d-inline-flex align-items-center justify-content-center bg-light-success rounded-circle mb-3" style={{ width: '60px', height: '60px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+                            <CsLineIcons icon="check" size="30" />
+                        </div>
+                        <h5 className="fw-bold text-dark">Confirm Leave Approval</h5>
+                        <p className="text-muted small mb-0 px-2 mt-2">
+                            Are you sure you want to approve this leave request? The employee's leave balance will be automatically deducted based on the requested duration.
+                        </p>
+                    </div>
+                </Modal.Body>
+                <Modal.Footer className="justify-content-center gap-2 border-top-0 pt-0">
+                    <Button variant="none" className="leave-btn-outline" onClick={() => setShowApproveModal(false)}>Cancel</Button>
+                    <Button variant="none" className="leave-btn-outline btn-approve px-4" onClick={submitApprove}>Approve Leave</Button>
                 </Modal.Footer>
             </Modal>
 

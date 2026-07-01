@@ -106,7 +106,7 @@ const Login = () => {
         {/* Right Panel — Login Form */}
         <div className="login-login-right-panel">
           <div className="login-login-form-header">
-            <div className="login-login-form-eyebrow">Staff Portal</div>
+            <div className="login-login-form-eyebrow">HR Portal</div>
             <h2 className="login-login-form-title">Welcome back</h2>
             <p className="login-login-form-subtitle">Sign in to your control panel</p>
           </div>

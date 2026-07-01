@@ -145,6 +145,7 @@ const allRoutes = {
       label: 'Company Profile',
       icon: 'user',
       component: payroll.companyProfile,
+      hideInMenu: true,
     }
   ],
 

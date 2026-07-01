@@ -164,10 +164,10 @@ const CompanyProfile = () => {
                     <Form.Control type="file" accept="image/*" onChange={handleFileChange} />
                     {(logoFile || formData.logo) && (
                       <div className="mt-3">
-                        <img 
-                          src={logoFile ? URL.createObjectURL(logoFile) : `${process.env.REACT_APP_UPLOAD_DIR}${formData.logo}`} 
-                          alt="Logo Preview" 
-                          style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} 
+                        <img
+                          src={logoFile ? URL.createObjectURL(logoFile) : `${process.env.REACT_APP_UPLOAD_DIR}${formData.logo}`}
+                          alt="Logo Preview"
+                          style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }}
                           className="border p-2 rounded bg-white shadow-sm"
                         />
                       </div>
@@ -201,7 +201,7 @@ const CompanyProfile = () => {
                     <Form.Label className="col-form-label">Country</Form.Label>
                   </Col>
                   <Col sm="10" md="9" lg="4" className="mb-3 mb-lg-0">
-                    <Select 
+                    <Select
                       classNamePrefix="react-select"
                       options={Country.getAllCountries().map(c => ({ value: c.name, label: c.name, isoCode: c.isoCode }))}
                       value={{ value: formData.country, label: formData.country || 'Select Country' }}
@@ -221,7 +221,7 @@ const CompanyProfile = () => {
                     <Form.Label className="col-form-label">State</Form.Label>
                   </Col>
                   <Col sm="10" md="9" lg="4">
-                    <Select 
+                    <Select
                       classNamePrefix="react-select"
                       options={State.getStatesOfCountry(formData.country_code).map(s => ({ value: s.name, label: s.name, isoCode: s.isoCode }))}
                       value={{ value: formData.state, label: formData.state || 'Select State' }}
@@ -241,7 +241,7 @@ const CompanyProfile = () => {
                     <Form.Label className="col-form-label">City</Form.Label>
                   </Col>
                   <Col sm="10" md="9" lg="4" className="mb-3 mb-lg-0">
-                    <Select 
+                    <Select
                       classNamePrefix="react-select"
                       options={City.getCitiesOfState(formData.country_code, formData.state_code).map(c => ({ value: c.name, label: c.name }))}
                       value={{ value: formData.city, label: formData.city || 'Select City' }}
@@ -283,21 +283,21 @@ const CompanyProfile = () => {
                   </Col>
                 </Row>
 
-                  <div className="bg-light p-3 rounded mb-3 border">
-                    <p className="text-warning mb-2 fw-bold">
-                      <CsLineIcons icon="warning-hexagon" size="15" className="me-2" />
-                      Security Verification
-                    </p>
-                    <p className="text-muted small">Please provide your current password to authorize any changes to your profile.</p>
-                    <Row>
-                      <Col lg="2" md="3" sm="4">
-                        <Form.Label className="col-form-label">Password</Form.Label>
-                      </Col>
-                      <Col sm="8" md="9" lg="10">
-                        <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Current Password" required />
-                      </Col>
-                    </Row>
-                  </div>
+                <div className="bg-light p-3 rounded mb-3 border">
+                  <p className="text-warning mb-2 fw-bold">
+                    <CsLineIcons icon="warning-hexagon" size="15" className="me-2" />
+                    Security Verification
+                  </p>
+                  <p className="text-muted small">Please provide your current password to authorize any changes to your profile.</p>
+                  <Row>
+                    <Col lg="2" md="3" sm="4">
+                      <Form.Label className="col-form-label">Password</Form.Label>
+                    </Col>
+                    <Col sm="8" md="9" lg="10">
+                      <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Current Password" required />
+                    </Col>
+                  </Row>
+                </div>
 
               </Card.Body>
             </Card>
@@ -341,23 +341,23 @@ const CompanyProfile = () => {
                     <div className="text-muted small">Use this link for the standalone attendance scanner.</div>
                   </div>
                 </div>
-                
+
                 {formData._id ? (
                   <>
-                    <a 
-                      href={`http://localhost:4005/${formData._id}`} 
-                      target="_blank" 
+                    <a
+                      href={`http://localhost:3002/${formData._id}`}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="d-block mb-3 p-2 bg-light text-primary fw-bold rounded border text-center text-decoration-none"
                     >
                       Open Attendance Panel <CsLineIcons icon="external-link" size="15" className="ms-1" />
                     </a>
-                    <Button 
-                      variant="outline-primary" 
-                      size="sm" 
-                      className="w-100" 
+                    <Button
+                      variant="outline-primary"
+                      size="sm"
+                      className="w-100"
                       onClick={() => {
-                        navigator.clipboard.writeText(`http://localhost:4005/${formData._id}`);
+                        navigator.clipboard.writeText(`http://localhost:3002/${formData._id}`);
                         toast.success('Kiosk link copied to clipboard!');
                       }}
                     >
