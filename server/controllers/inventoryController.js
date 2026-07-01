@@ -303,21 +303,27 @@ const addInventoryRequest = async (req, res) => {
 
     const io = req.app.get("io");
     const connectedUsers = req.app.get("connectedUsers");
+    const adminKey = `${userId}_Admin`;
 
-    const adminKey = `${userId}_Admin`; // or however you store admin socket
+    const itemsSummary = items && Array.isArray(items)
+      ? items.map(i => `${i.item_name} (${i.item_quantity} ${i.unit})`).join(", ")
+      : "";
+
+    const notification = await Notification.create({
+      restaurant_id: userId,
+      sender: "Manager",
+      receiver: "Admin",
+      type: "new_inventory_request",
+      data: {
+        _id: data._id,
+        category: data.category,
+        total_amount: data.total_amount,
+        request_date: data.request_date,
+        items: itemsSummary,
+      },
+    });
+
     if (io && connectedUsers && connectedUsers[adminKey]) {
-      const notification = await Notification.create({
-        restaurant_id: userId,
-        sender: "Manager",
-        receiver: "Admin",
-        type: "new_inventory_request",
-        data: {
-          _id: data._id,
-          category: data.category,
-          total_amount: data.total_amount,
-          request_date: data.request_date,
-        },
-      });
       io.to(connectedUsers[adminKey]).emit(
         "new_inventory_request",
         notification
@@ -515,6 +521,17 @@ const completeInventoryRequest = async (req, res) => {
 
     await Inventory.create(completedItems);
 
+    // Mark the corresponding new_inventory_request notification as read
+    const Notification = require("../models/notificationModel");
+    await Notification.updateMany(
+      {
+        restaurant_id: inventory.user_id,
+        type: "new_inventory_request",
+        "data._id": _id,
+      },
+      { $set: { read: true } }
+    );
+
     res.status(200).json({
       success: true,
       message: "Inventory updated successfully",
@@ -542,6 +559,17 @@ const rejectInventoryRequest = async (req, res) => {
     if (!inventory) {
       return res.status(404).json({ message: "Inventory not found" });
     }
+
+    // Mark the corresponding new_inventory_request notification as read
+    const Notification = require("../models/notificationModel");
+    await Notification.updateMany(
+      {
+        restaurant_id: userId,
+        type: "new_inventory_request",
+        "data._id": id,
+      },
+      { $set: { read: true } }
+    );
 
     res
       .status(200)

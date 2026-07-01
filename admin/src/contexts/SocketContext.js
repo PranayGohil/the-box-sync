@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState, useRef } from "r
 import { io } from "socket.io-client";
 import { toast } from "react-toastify";
 import { Modal, Button, Table, Badge, Alert } from "react-bootstrap";
+import { useDispatch } from "react-redux";
+import { addNotification } from "layout/nav/notifications/notificationSlice";
 import { AuthContext } from "./AuthContext";
 
 const SocketContext = createContext();
@@ -17,7 +19,7 @@ const AudioManager = {
   init() {
     if (!this.audio) {
       this.audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
-      this.audio.loop = true;
+      this.audio.loop = false;
       this.audio.preload = "auto";
     }
   },
@@ -58,6 +60,7 @@ const AudioManager = {
 
 // Audio Enabler Component
 const AudioEnabler = () => {
+  const { currentUser } = useContext(AuthContext);
   const [show, setShow] = useState(false);
   const [testing, setTesting] = useState(false);
 
@@ -73,7 +76,7 @@ const AudioEnabler = () => {
     const success = await AudioManager.play();
 
     if (success) {
-      toast.success('🔊 Audio enabled! You will hear alerts for new orders.');
+      toast.success('🔊 Audio enabled! You will hear alerts for notifications.');
       setTimeout(() => {
         AudioManager.stop();
         setShow(false);
@@ -84,15 +87,15 @@ const AudioEnabler = () => {
     setTesting(false);
   };
 
-  if (!show) return null;
+  if (!show || !currentUser) return null;
 
   return (
     <Alert variant="danger" className="position-absolute bg-white m-3 shadow-sm" style={{ zIndex: "10000", top: "10px", right: "10px" }}>
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
-          <strong>🔔 Enable Audio Alerts for New Orders</strong>
+          <strong>🔔 Enable Audio Alerts for Notifications</strong>
           {/* <p className="mb-0 small mt-1">
-            Click the button to enable sound notifications. You'll hear a test sound, then audio will work automatically for all new orders.
+            Click the button to enable sound notifications. You'll hear a test sound, then audio will work automatically for all new notifications.
           </p> */}
         </div>
         <div className="d-flex gap-2">
@@ -123,6 +126,7 @@ const OrderModal = ({ order, onClose, onApprove, onReject }) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
   const playAudio = async () => {
+    if (!AudioManager.isEnabled()) return;
     const success = await AudioManager.play();
     if (success) {
       setIsPlaying(true);
@@ -373,6 +377,7 @@ export const SocketProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [currentOrder, setCurrentOrder] = useState(null);
   const { currentUser } = useContext(AuthContext);
+  const dispatch = useDispatch();
 
   const handleApprove = async () => {
     if (currentOrder && socket) {
@@ -398,6 +403,10 @@ export const SocketProvider = ({ children }) => {
     }
   };
 
+  const stopAudio = () => {
+    AudioManager.stop();
+  };
+
   useEffect(() => {
     const s = io(process.env.REACT_APP_API_URL);
 
@@ -411,22 +420,42 @@ export const SocketProvider = ({ children }) => {
     });
 
     s.on("new_inventory_request", (notification) => {
+      console.log("SocketContext: Received new_inventory_request socket event:", notification);
       setNotifications((prev) => [...prev, notification]);
+      dispatch(addNotification(notification));
+      if (AudioManager.isEnabled()) {
+        AudioManager.play();
+      }
+      toast.info("New inventory request received!");
+
+      // Native browser notification
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("New Inventory Request!", {
+          body: `Request from Manager - Total: ₹${notification.data?.total_amount || 0}`,
+          icon: "/logo192.png",
+          requireInteraction: true
+        });
+      }
     });
 
     s.on("web_order_recieved", (notification) => {
+      console.log("SocketContext: Received web_order_recieved socket event:", notification);
       setNotifications((prev) => [...prev, notification]);
-      setCurrentOrder(notification);
+      dispatch(addNotification(notification));
+      setCurrentOrder(notification.data);
+      if (AudioManager.isEnabled()) {
+        AudioManager.play();
+      }
       toast.info("New web order received!");
     });
 
     setSocket(s);
 
     return () => s.disconnect();
-  }, [currentUser]);
+  }, [currentUser, dispatch]);
 
   return (
-    <SocketContext.Provider value={{ socket, notifications, setNotifications }}>
+    <SocketContext.Provider value={{ socket, notifications, setNotifications, stopAudio }}>
       <AudioEnabler />
       {children}
       <OrderModal

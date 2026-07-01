@@ -11,6 +11,7 @@ const admin = {
   settings: lazy(() => import('views/admin/settings/Settings')),
   statistics: lazy(() => import('views/admin/statistics/Statistics')),
   orderhistory: lazy(() => import('views/admin/operation/order/OrderHistory')),
+  notifications: lazy(() => import('views/admin/notifications/NotificationsList')),
 };
 
 const report = {
@@ -87,6 +88,10 @@ const allRoutes = {
     {
       path: `${appRoot}/select-plan`,
       component: selectPlan,
+    },
+    {
+      path: `${appRoot}/notifications`,
+      component: admin.notifications,
     },
   ],
 

@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import axios from 'axios';
-import { Card, Col, Row, Button, Form, Alert, Spinner } from 'react-bootstrap';
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
-import LayoutFullpage from 'layout/LayoutFullpage';
+import { Spinner } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import { toast } from 'react-toastify';
 
 const ForgotPassword = () => {
-  const title = 'Forgot Password';
-  const description = 'Reset your admin password';
+  const title = 'Forgot Password — The Box';
+  const description = 'Reset your admin password to The Box management panel.';
 
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState(1); // Step 1: OTP, Step 2: Change Password
+  const [step, setStep] = useState(1); // Step 1: Request OTP, Step 2: Verify OTP, Step 3: Reset Password
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -25,64 +22,68 @@ const ForgotPassword = () => {
   const [success, setSuccess] = useState('');
 
   const handleSendOtp = async (e) => {
-    setIsLoading(true);
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
     try {
       const response = await axios.post(`${process.env.REACT_APP_API}/user/send-otp`, { email });
-      setSuccess(response.data.message);
-      setError('');
-      setStep(2); // Move to the next step
+      setSuccess(response.data.message || 'OTP sent successfully to your email!');
+      setStep(2); // Move to the OTP verification step
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred.');
-      setSuccess('');
-      toast.error(err.response?.data?.message || 'An error occurred.');
+      const errMsg = err.response?.data?.message || 'An error occurred while sending OTP.';
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleVerifyOtp = async (e) => {
-    setIsLoading(true);
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
     try {
       const response = await axios.post(`${process.env.REACT_APP_API}/user/verify-otp`, { email, otp });
       if (!response.data.verified) {
         throw new Error('OTP verification failed.');
       } else {
-        setSuccess(response.data.message);
-        setError('');
-        setStep(3);
+        setSuccess(response.data.message || 'OTP verified successfully!');
+        setStep(3); // Move to the Password reset step
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid OTP.');
-      setSuccess('');
-      toast.error(err.response?.data?.message || 'Invalid OTP.');
+      const errMsg = err.response?.data?.message || 'Invalid OTP.';
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleResetPassword = async (e) => {
-    setIsLoading(true);
-
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+
     if (newPassword !== confirmPassword) {
-      setError('Password do not match.');
-      setSuccess('');
+      setError('Passwords do not match.');
       setIsLoading(false);
       return;
     }
+
     try {
       const response = await axios.post(`${process.env.REACT_APP_API}/user/reset-password`, { email, newPassword });
-      setSuccess(response.data.message);
-      setError('');
+      setSuccess(response.data.message || 'Password reset successfully!');
+      toast.success(response.data.message || 'Password reset successfully!');
       setTimeout(() => {
         window.location.href = '/login';
-      }, 1000);
+      }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred.');
-      setSuccess('');
-      toast.error(err.response?.data?.message || 'An error occurred.');
+      const errMsg = err.response?.data?.message || 'An error occurred while resetting your password.';
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setIsLoading(false);
     }
@@ -90,191 +91,231 @@ const ForgotPassword = () => {
 
   const stepHeader = {
     1: {
-      title: 'Forgot your password?',
-      subtitle: 'No worries — we’ll help you reset it.',
+      title: 'Forgot password?',
+      subtitle: 'No worries — we’ll help you reset it',
     },
     2: {
       title: 'Verify your OTP',
-      subtitle: 'Almost there — let’s confirm it’s you.',
+      subtitle: 'Almost there — let’s confirm it’s you',
     },
     3: {
-      title: 'Reset your Password',
-      subtitle: 'Create a new password to secure your account.',
+      title: 'Reset your password',
+      subtitle: 'Create a new password to secure your account',
     },
   };
-
-  const leftSide = (
-    <div className="min-h-100 d-flex align-items-center">
-      <div className="w-100 w-lg-75 w-xxl-50" />
-    </div>
-  );
-
-  const rightSide = (
-    <div className="sw-lg-70 min-h-100 bg-foreground d-flex justify-content-center align-items-center shadow-deep py-5 full-page-content-right-border">
-      <div className="sw-lg-50 px-5 d-flex flex-column min-h-100 mx-auto">
-
-        {/* CENTER CONTENT */}
-        <div className="my-auto">
-
-          {/* HEADER — CHANGES BASED ON STEP */}
-          <div className="mb-4">
-            <h2 className="cta-1 mb-0 text-primary">
-              {stepHeader[step].title}
-            </h2>
-            <p className="h6 mt-2">
-              {stepHeader[step].subtitle}
-            </p>
-          </div>
-
-
-          {/* STEP 1 */}
-          {step === 1 && (
-            <form onSubmit={handleSendOtp}>
-              <div className="mb-3 filled form-group tooltip-end-top">
-                <CsLineIcons icon="email" />
-                <Form.Control
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  disabled={isLoading}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-
-              {error && <div className="text-danger mb-2">{error}</div>}
-              {success && <div className="text-success mb-2">{success}</div>}
-
-              <div className="d-flex justify-content-between align-items-center">
-                <Button size="lg" type="submit" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Spinner size="sm" className="me-2" />
-                      Sending...
-                    </>
-                  ) : (
-                    'Send OTP'
-                  )}
-                </Button>
-                <NavLink to="/login" className="justify-content-left" >
-                  <Button size="lg" type="submit" className="btn btn-primary">
-                    Login
-                  </Button>
-                </NavLink>
-              </div>
-            </form>
-          )}
-
-          {/* STEP 2 */}
-
-          {step === 2 && (
-            <form onSubmit={handleVerifyOtp}>
-              <div className="mb-3 filled form-group tooltip-end-top">
-                <CsLineIcons icon="key" />
-                <Form.Control
-                  type="text"
-                  placeholder="Enter OTP"
-                  value={otp}
-                  disabled={isLoading}
-                  onChange={(e) => setOtp(e.target.value)}
-                />
-              </div>
-
-              {error && <div className="text-danger mb-2">{error}</div>}
-
-              <div className="d-flex justify-content-between align-items-center">
-                <Button size="lg" type="submit" disabled={isLoading}>
-                  {isLoading ? 'Verifying...' : 'Verify OTP'}
-                </Button>
-
-                <Button className="btn btn-primary" onClick={() => setStep(1)}>
-                  Back
-                </Button>
-              </div>
-            </form>
-          )}
-
-          {/* STEP 3 */}
-          {step === 3 && (
-            <form onSubmit={handleResetPassword}>
-              <div className="mb-3 filled form-group tooltip-end-top" style={{ position: 'relative' }}>
-                <CsLineIcons icon="lock-off" />
-                <Form.Control
-                  type={showNewPassword ? 'text' : 'password'}
-                  placeholder="New Password"
-                  value={newPassword}
-                  disabled={isLoading}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  style={{ paddingRight: '45px' }}
-                />
-                <span
-                  style={{
-                    position: 'absolute',
-                    right: '15px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    cursor: 'pointer',
-                    zIndex: 10,
-                  }}
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                >
-                  <CsLineIcons icon={showNewPassword ? 'eye-off' : 'eye'} size="18" />
-                </span>
-              </div>
-
-              <div className="mb-3 filled form-group tooltip-end-top" style={{ position: 'relative' }}>
-                <CsLineIcons icon="lock-off" />
-                <Form.Control
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  disabled={isLoading}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  style={{ paddingRight: '45px' }}
-                />
-                <span
-                  style={{
-                    position: 'absolute',
-                    right: '15px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    cursor: 'pointer',
-                    zIndex: 10,
-                  }}
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  <CsLineIcons icon={showConfirmPassword ? 'eye-off' : 'eye'} size="18" />
-                </span>
-              </div>
-
-              {error && <div className="text-danger mb-2">{error}</div>}
-
-              <div className="d-flex justify-content-between align-items-center">
-                <Button size="lg" type="submit" disabled={isLoading}>
-                  {isLoading ? 'Resetting...' : 'Reset Password'}
-                </Button>
-
-                <Button className="btn btn-primary" onClick={() => setStep(2)}>
-                  Back
-                </Button>
-              </div>
-            </form>
-          )}
-        </div>
-
-        {/* FOOTER */}
-        <div className="mt-auto text-center pt-4">
-          <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
-            Powered by <strong>TheBoxSync</strong>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <>
       <HtmlHead title={title} description={description} />
-      <LayoutFullpage left={leftSide} right={rightSide} />
+
+      <div className="login-login-page-wrapper">
+        {/* Left Panel */}
+        <div className="login-login-left-panel">
+          <div className="login-login-brand-logo">THE <span>BOX</span></div>
+          <h1 className="login-login-hero-title">
+            Your Restaurant,<br />
+            <span>Perfectly Managed.</span>
+          </h1>
+          <p className="login-login-hero-sub">
+            A powerful admin platform to manage orders, inventory, staff, and operations — all in one place.
+          </p>
+          <div className="login-login-feature-pills">
+            {['Real-time Order Tracking', 'Inventory Intelligence', 'Staff & Payroll Management', 'Financial Reporting'].map((f) => (
+              <div key={f} className="login-login-feature-pill">
+                <div className="login-login-feature-pill-dot" />
+                {f}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Panel — Forgot Password form */}
+        <div className="login-login-right-panel">
+          <div className="login-login-form-header">
+            <div className="login-login-form-eyebrow">Admin Portal</div>
+            <h2 className="login-login-form-title">{stepHeader[step].title}</h2>
+            <p className="login-login-form-subtitle">{stepHeader[step].subtitle}</p>
+          </div>
+
+          {error && (
+            <div className="login-auth-alert-error">
+              <CsLineIcons icon="warning-hexagon" size="18" />
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div 
+              className="login-auth-alert-success" 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '12px 16px',
+                backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                border: '1px solid rgba(25, 135, 84, 0.2)',
+                borderRadius: '12px',
+                color: '#198754',
+                fontSize: '0.875rem',
+                marginBottom: '20px',
+                fontWeight: '500',
+              }}
+            >
+              <CsLineIcons icon="check-circle" size="18" />
+              {success}
+            </div>
+          )}
+
+          {/* STEP 1: Enter Email & Send OTP */}
+          {step === 1 && (
+            <form onSubmit={handleSendOtp}>
+              <div className="login-auth-input-group">
+                <label className="login-auth-input-label">Email Address</label>
+                <div style={{ position: 'relative' }}>
+                  <span className="login-auth-input-icon">
+                    <CsLineIcons icon="email" size="18" />
+                  </span>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="you@restaurant.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading}
+                    className="login-auth-input form-control"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button type="submit" className="login-btn-auth-primary" disabled={isLoading}>
+                {isLoading ? (
+                  <><Spinner as="span" animation="border" size="sm" className="me-2" />Sending...</>
+                ) : (
+                  <><CsLineIcons icon="email" size="17" className="me-2" />Send OTP</>
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* STEP 2: Verify OTP */}
+          {step === 2 && (
+            <form onSubmit={handleVerifyOtp}>
+              <div className="login-auth-input-group">
+                <label className="login-auth-input-label">OTP Code</label>
+                <div style={{ position: 'relative' }}>
+                  <span className="login-auth-input-icon">
+                    <CsLineIcons icon="key" size="18" />
+                  </span>
+                  <input
+                    type="text"
+                    name="otp"
+                    placeholder="Enter verification OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    disabled={isLoading}
+                    className="login-auth-input form-control"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="d-flex gap-2">
+                <button 
+                  type="button" 
+                  className="login-btn-auth-primary bg-secondary border-secondary px-4 w-auto text-nowrap" 
+                  onClick={() => setStep(1)} 
+                  disabled={isLoading}
+                >
+                  Back
+                </button>
+                <button type="submit" className="login-btn-auth-primary flex-grow-1 px-4 w-auto text-nowrap" disabled={isLoading}>
+                  {isLoading ? (
+                    <><Spinner as="span" animation="border" size="sm" className="me-2" />Verifying...</>
+                  ) : (
+                    <><CsLineIcons icon="check" size="17" className="me-2" />Verify OTP</>
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* STEP 3: Reset Password */}
+          {step === 3 && (
+            <form onSubmit={handleResetPassword}>
+              <div className="login-auth-input-group">
+                <label className="login-auth-input-label">New Password</label>
+                <div style={{ position: 'relative' }}>
+                  <span className="login-auth-input-icon">
+                    <CsLineIcons icon="lock-off" size="18" />
+                  </span>
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    name="newPassword"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    disabled={isLoading}
+                    className="login-auth-input form-control"
+                    required
+                  />
+                  <span className="login-auth-input-icon-right" onClick={() => setShowNewPassword(!showNewPassword)}>
+                    <CsLineIcons icon={showNewPassword ? 'eye-off' : 'eye'} size="18" />
+                  </span>
+                </div>
+              </div>
+
+              <div className="login-auth-input-group">
+                <label className="login-auth-input-label">Confirm Password</label>
+                <div style={{ position: 'relative' }}>
+                  <span className="login-auth-input-icon">
+                    <CsLineIcons icon="lock-off" size="18" />
+                  </span>
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    name="confirmPassword"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={isLoading}
+                    className="login-auth-input form-control"
+                    required
+                  />
+                  <span className="login-auth-input-icon-right" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                    <CsLineIcons icon={showConfirmPassword ? 'eye-off' : 'eye'} size="18" />
+                  </span>
+                </div>
+              </div>
+
+              <div className="d-flex gap-2">
+                <button 
+                  type="button" 
+                  className="login-btn-auth-primary bg-secondary border-secondary px-4 w-auto text-nowrap" 
+                  onClick={() => setStep(2)} 
+                  disabled={isLoading}
+                >
+                  Back
+                </button>
+                <button type="submit" className="login-btn-auth-primary flex-grow-1 px-4 w-auto text-nowrap" disabled={isLoading}>
+                  {isLoading ? (
+                    <><Spinner as="span" animation="border" size="sm" className="me-2" />Resetting...</>
+                  ) : (
+                    <><CsLineIcons icon="check" size="17" className="me-2" />Reset Password</>
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div className="login-auth-footer-link">
+            Remembered your password? <NavLink to="/login">Sign In →</NavLink>
+          </div>
+
+          <div className="login-auth-powered">
+            Powered by <strong>TheBoxSync</strong>
+          </div>
+        </div>
+      </div>
     </>
   );
 };
