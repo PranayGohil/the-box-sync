@@ -38,6 +38,7 @@ const AddStaff = () => {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [frontImagePreview, setFrontImagePreview] = useState(null);
   const [backImagePreview, setBackImagePreview] = useState(null);
+  const [panImagePreview, setPanImagePreview] = useState(null);
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
@@ -49,6 +50,7 @@ const AddStaff = () => {
     photo: false,
     front_image: false,
     back_image: false,
+    pan_image: false,
   });
 
   const [cropperState, setCropperState] = useState({
@@ -124,9 +126,41 @@ const AddStaff = () => {
     country: Yup.string().required('Country is required'),
     state: Yup.string().required('State is required'),
     city: Yup.string().required('City is required'),
+    pan_number: Yup.string().required('PAN Number is required'),
     pincode: Yup.string()
       .required('Pincode is required')
-      .matches(/^[0-9]{6}$/, 'Pincode must be exactly 6 digits'),
+      .matches(/^[0-9]{6}$/, 'Pincode must be exactly 6 digits')
+      .test('match-city', 'Pincode does not match the selected city', async function (value) {
+        // eslint-disable-next-line react/no-this-in-sfc
+        const { city, country } = this.parent;
+        if (!value || value.length !== 6 || country !== 'India' || !city) return true;
+        
+        try {
+          const response = await fetch(`https://api.postalpincode.in/pincode/${value}`);
+          const data = await response.json();
+          if (data && data[0].Status === 'Success') {
+            const postOffices = data[0].PostOffice;
+            const cityLower = city.toLowerCase().replace(/[^a-z0-9]/g, '');
+            return postOffices.some(po => {
+              const district = (po.District || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+              const block = (po.Block || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+              const division = (po.Division || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+              const name = (po.Name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+              return (
+                (district && district.includes(cityLower)) ||
+                (block && block.includes(cityLower)) ||
+                (division && division.includes(cityLower)) ||
+                (name && name.includes(cityLower)) ||
+                (district && cityLower.includes(district)) ||
+                (name && cityLower.includes(name))
+              );
+            });
+          }
+          return false;
+        } catch (e) {
+          return true;
+        }
+      }),
     gender: Yup.string().required('Gender is required'),
 
     phone_no: Yup.string()
@@ -139,7 +173,11 @@ const AddStaff = () => {
       .min(6, 'Password must be at least 6 characters')
       .required('Password is required'),
 
-    salary: Yup.number().required('Salary is required').positive('Salary must be a positive number'),
+    department: Yup.string().required('Department is required'),
+    salary: Yup.number()
+      .typeError('Salary must be a number')
+      .required('Salary is required')
+      .positive('Must be positive'),
     salary_calculation_base: Yup.string().required('Salary calculation base is required').oneOf(['working_days', 'working_hours']),
     attendance_method: Yup.string().required('Attendance method is required').oneOf(['any', 'wifi', 'ess']),
 
@@ -250,6 +288,15 @@ const AddStaff = () => {
       id_number: '',
       front_image: '',
       back_image: '',
+      pan_number: '',
+      pan_image: '',
+      uan_number: '',
+      bank_account: {
+        account_number: '',
+        bank_name: '',
+        ifsc_code: '',
+        branch: '',
+      },
       salary_structure: {
         custom_earnings: {},
         custom_deductions: {},
@@ -273,8 +320,8 @@ const AddStaff = () => {
         const formData = new FormData();
 
         Object.keys(values).forEach((key) => {
-          if (key !== 'photo' && key !== 'front_image' && key !== 'back_image') {
-          if (key === 'salary_structure' || key === 'increment_plan' || key === 'custom_weekly_offs' || key === 'leave_policy_configuration') {
+          if (key !== 'photo' && key !== 'front_image' && key !== 'back_image' && key !== 'pan_image') {
+            if (['salary_structure', 'increment_plan', 'custom_weekly_offs', 'leave_policy_configuration', 'bank_account'].includes(key)) {
               formData.append(key, JSON.stringify(values[key]));
             } else {
               formData.append(key, values[key]);
@@ -285,6 +332,7 @@ const AddStaff = () => {
         if (values.photo) formData.append('photo', values.photo);
         if (values.front_image) formData.append('front_image', values.front_image);
         if (values.back_image) formData.append('back_image', values.back_image);
+        if (values.pan_image) formData.append('pan_image', values.pan_image);
         const currentFaceDescriptor = faceDescriptorRef.current;
         if (currentFaceDescriptor) {
           formData.append('face_descriptor', JSON.stringify(currentFaceDescriptor));
@@ -782,10 +830,12 @@ const AddStaff = () => {
             <Card className="glass-card border-0 mb-4">
               <Card.Body className="p-4">
                 <div className="section-header">
-                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <CsLineIcons icon="user" size="20" className="text-primary" />
-                    Personal Information
-                  </h5>
+                  <div className="d-flex align-items-center gap-2 mb-0">
+                    <div className="bg-soft-primary p-2 rounded-3">
+                      <CsLineIcons icon="user" size="20" className="text-primary" />
+                    </div>
+                    <h5 className="fw-bold mb-0">Personal Details</h5>
+                  </div>
                 </div>
 
                 <Row className="g-3">
@@ -1075,10 +1125,12 @@ const AddStaff = () => {
             <Card className="glass-card border-0 mb-4">
               <Card.Body className="p-4">
                 <div className="section-header">
-                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <CsLineIcons icon="briefcase" size="20" className="text-primary" />
-                    Employment & Payroll
-                  </h5>
+                  <div className="d-flex align-items-center gap-2 mb-0">
+                    <div className="bg-soft-primary p-2 rounded-3">
+                      <CsLineIcons icon="suitcase" size="20" className="text-primary" />
+                    </div>
+                    <h5 className="fw-bold mb-0">Employment & Payroll</h5>
+                  </div>
                 </div>
 
                 <Row className="g-3">
@@ -1145,7 +1197,10 @@ const AddStaff = () => {
 
                 <hr className="my-4 opacity-50" />
 
-                <h6 className="fw-bold mb-3 text-primary">Salary Structure Breakdown</h6>
+                <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                  <CsLineIcons icon="money" size="18" />
+                  Salary Structure Breakdown
+                </h6>
                 <Row className="g-3">
                   <Col md={6}>
                     <div className="bg-light rounded-3 p-3 shadow-sm border border-faint h-100">
@@ -1356,24 +1411,7 @@ const AddStaff = () => {
                     </Form.Group>
                   </Col>
 
-                    <Col md={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Position *</Form.Label>
-                        <CreatableSelect
-                          classNamePrefix="react-select"
-                          options={positionOptions}
-                          value={
-                            values.position
-                              ? { label: values.position, value: values.position }
-                              : null
-                          }
-                          onChange={(selected) => setFieldValue('position', selected ? selected.value : '')}
-                          placeholder="Select or type to create new..."
-                          isDisabled={loading.submitting}
-                        />
-                        {touched.position && errors.position && <div className="text-danger small mt-1">{errors.position}</div>}
-                      </Form.Group>
-                    </Col>
+
                     <Col md={6}>
                       <Form.Group className="mb-3">
                         <Form.Label>Attendance Method</Form.Label>
@@ -1407,7 +1445,7 @@ const AddStaff = () => {
               </div>
                 <hr className="my-4 opacity-50" />
                 <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
-                  <CsLineIcons icon="airplane" size="18" />
+                  <CsLineIcons icon="calendar" size="18" />
                   Leave Policy Configuration
                 </h6>
                 <div className="bg-light rounded-3 p-3 shadow-sm border border-faint mb-4">
@@ -1569,46 +1607,187 @@ const AddStaff = () => {
               </Card.Body>
             </Card>
 
-            {/* Documents Section */}
+            {/* Account & Compliance Section */}
             <Card className="glass-card border-0 mb-4">
               <Card.Body className="p-4">
                 <div className="section-header">
-                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <CsLineIcons icon="notepads" size="20" className="text-primary" />
-                    Identification
-                  </h5>
+                  <div className="d-flex align-items-center gap-2 mb-0">
+                    <div className="bg-soft-primary p-2 rounded-3">
+                      <CsLineIcons icon="wallet" size="20" className="text-primary" />
+                    </div>
+                    <h5 className="fw-bold mb-0">Bank & Compliance Details</h5>
+                  </div>
                 </div>
 
-                <Form.Group className="mb-3">
-                  <Form.Label>Document Type</Form.Label>
-                  <Select
-                        classNamePrefix="react-select"
-                        menuPortalTarget={document.body}
-                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                        name="document_type"
-                        options={[
-                          { value: 'Aadhar Card', label: 'Aadhar Card' },
-                          { value: 'Pan Card', label: 'Pan Card' },
-                          { value: 'National Identity Card', label: 'National Identity Card' },
-                          { value: 'Driving License', label: 'Driving License' },
-                          { value: 'Voter ID Card', label: 'Voter ID Card' },
-                          { value: 'Passport', label: 'Passport' }
-                        ]}
-                        value={values.document_type ? { label: values.document_type, value: values.document_type } : null}
-                        onChange={(selected) => {
-                          setFieldValue('document_type', selected ? selected.value : '');
-                          if (selected && selected.value !== 'National Identity Card' && selected.value !== 'Aadhar Card') {
-                            setFieldValue('back_image', '');
-                          }
-                        }}
-                        onBlur={() => formik.setFieldTouched('document_type', true)}
-                        isDisabled={loading.submitting}
-                        placeholder="Select Document"
+                <Row className="g-4 mb-4">
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label>Account Number</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="bank_account.account_number"
+                        placeholder="Enter Account Number"
+                        value={values.bank_account.account_number}
+                        onChange={handleChange}
+                        disabled={loading.submitting}
                       />
-                  {touched.document_type && errors.document_type && (
-                    <div className="text-danger mt-1 small fw-bold">{errors.document_type}</div>
-                  )}
-                </Form.Group>
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label>IFSC Code</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="bank_account.ifsc_code"
+                        placeholder="Enter IFSC Code"
+                        value={values.bank_account.ifsc_code}
+                        onChange={handleChange}
+                        disabled={loading.submitting}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label>Bank Name</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="bank_account.bank_name"
+                        placeholder="Enter Bank Name"
+                        value={values.bank_account.bank_name}
+                        onChange={handleChange}
+                        disabled={loading.submitting}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label>Branch</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="bank_account.branch"
+                        placeholder="Enter Branch Name"
+                        value={values.bank_account.branch}
+                        onChange={handleChange}
+                        disabled={loading.submitting}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={12}>
+                    <Form.Group>
+                      <Form.Label>PF / UAN Number</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="uan_number"
+                        placeholder="Enter PF or UAN Number"
+                        value={values.uan_number}
+                        onChange={handleChange}
+                        disabled={loading.submitting}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+
+            {/* Documents Section */}
+            <Card className="glass-card border-0 mb-4">
+              <Card.Body className="p-4">
+                <div className="section-header mb-4">
+                  <div className="d-flex align-items-center gap-2 mb-0">
+                    <div className="bg-soft-primary p-2 rounded-3">
+                      <CsLineIcons icon="shield" size="20" className="text-primary" />
+                    </div>
+                    <h5 className="fw-bold mb-0">Identification</h5>
+                  </div>
+                </div>
+
+                <div className="bg-light rounded p-3 mb-4 border border-faint">
+                  <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                    <CsLineIcons icon="credit-card" size="18" />
+                    PAN Card Details (Required)
+                  </h6>
+                  <Form.Group className="mb-4">
+                    <Form.Label>PAN Number</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="pan_number"
+                      placeholder="Enter PAN Number"
+                      value={values.pan_number}
+                      onChange={handleChange}
+                      isInvalid={touched.pan_number && errors.pan_number}
+                      disabled={loading.submitting}
+                    />
+                    <Form.Control.Feedback type="invalid">{errors.pan_number}</Form.Control.Feedback>
+                  </Form.Group>
+
+                  <Form.Group className="mb-0">
+                    <Form.Label>PAN Card Image</Form.Label>
+                    <div className="id-preview-container mb-2">
+                      {panImagePreview ? (
+                        <img src={panImagePreview} alt="PAN Card" className="preview-image" />
+                      ) : (
+                        <div className="text-center p-4">
+                          <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
+                          <div className="small text-muted">No Image Selected</div>
+                        </div>
+                      )}
+                    </div>
+                    <Form.Control
+                      type="file"
+                      id="pan-image-upload"
+                      className="d-none"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange('pan_image', e.target.files[0], setPanImagePreview, 1.58)}
+                    />
+                    <div className="d-flex flex-column gap-3 align-items-start w-100">
+                      <Button
+                        as="label"
+                        htmlFor="pan-image-upload"
+                        className="custom-btn-outline px-4"
+                        style={{ maxWidth: 'fit-content' }}
+                        disabled={loading.submitting || uploadingFiles.pan_image}
+                      >
+                        {uploadingFiles.pan_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                        {panImagePreview ? 'Change PAN Image' : 'Upload PAN Image'}
+                      </Button>
+                    </div>
+                  </Form.Group>
+                </div>
+
+                <div className="bg-light rounded p-3 mb-4 border border-faint">
+                  <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                    <CsLineIcons icon="file-text" size="18" />
+                    Additional Identification (Required)
+                  </h6>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Document Type</Form.Label>
+                    <Select
+                          classNamePrefix="react-select"
+                          menuPortalTarget={document.body}
+                          styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                          name="document_type"
+                          options={[
+                            { value: 'Aadhar Card', label: 'Aadhar Card' },
+                            { value: 'National Identity Card', label: 'National Identity Card' },
+                            { value: 'Driving License', label: 'Driving License' },
+                            { value: 'Voter ID Card', label: 'Voter ID Card' },
+                            { value: 'Passport', label: 'Passport' }
+                          ]}
+                          value={values.document_type ? { label: values.document_type, value: values.document_type } : null}
+                          onChange={(selected) => {
+                            setFieldValue('document_type', selected ? selected.value : '');
+                            if (selected && selected.value !== 'National Identity Card' && selected.value !== 'Aadhar Card') {
+                              setFieldValue('back_image', '');
+                            }
+                          }}
+                          onBlur={() => formik.setFieldTouched('document_type', true)}
+                          isDisabled={loading.submitting}
+                          placeholder="Select Document"
+                        />
+                    {touched.document_type && errors.document_type && (
+                      <div className="text-danger mt-1 small fw-bold">{errors.document_type}</div>
+                    )}
+                  </Form.Group>
 
                 <Form.Group className="mb-4">
                   <Form.Label>Document Number</Form.Label>
@@ -1656,26 +1835,6 @@ const AddStaff = () => {
                     </Button>
                     {touched.front_image && errors.front_image && <div className="text-danger mt-1 small fw-bold">{errors.front_image}</div>}
                     
-                    {values.document_type !== 'National Identity Card' && values.document_type !== 'Aadhar Card' && (
-                      <Button
-                        variant="primary"
-                        type="submit"
-                        className="custom-btn-outline w-100 py-3 mt-2"
-                        disabled={loading.submitting || uploadingFiles.photo || uploadingFiles.front_image}
-                      >
-                        {loading.submitting ? (
-                          <>
-                            <Spinner animation="border" size="sm" className="me-2" />
-                            Processing...
-                          </>
-                        ) : (
-                          <>
-                            <CsLineIcons icon="save" size="20" className="me-2" />
-                            Register Staff Member
-                          </>
-                        )}
-                      </Button>
-                    )}
                   </div>
                 </Form.Group>
 
@@ -1711,28 +1870,31 @@ const AddStaff = () => {
                         {backImagePreview ? 'Change Back Image' : 'Upload Back Image'}
                       </Button>
                       {touched.back_image && errors.back_image && <div className="text-danger mt-1 small fw-bold">{errors.back_image}</div>}
-                      
-                      <Button
-                        variant="primary"
-                        type="submit"
-                        className="custom-btn-outline w-100 py-3 mt-2"
-                        disabled={loading.submitting || uploadingFiles.photo || uploadingFiles.front_image || uploadingFiles.back_image}
-                      >
-                        {loading.submitting ? (
-                          <>
-                            <Spinner animation="border" size="sm" className="me-2" />
-                            Processing...
-                          </>
-                        ) : (
-                          <>
-                            <CsLineIcons icon="save" size="20" className="me-2" />
-                            Register Staff Member
-                          </>
-                        )}
-                      </Button>
                     </div>
                   </Form.Group>
                 )}
+                
+                <div className="d-flex justify-content-center mt-4 pt-3 border-top" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    className="custom-btn-outline px-5 py-3 w-100"
+                    disabled={loading.submitting || uploadingFiles.photo || uploadingFiles.front_image || uploadingFiles.back_image || uploadingFiles.pan_image}
+                  >
+                    {loading.submitting ? (
+                      <>
+                        <Spinner animation="border" size="sm" className="me-2" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <CsLineIcons icon="save" size="20" className="me-2" />
+                        Register Staff Member
+                      </>
+                    )}
+                  </Button>
+                </div>
+                </div>
               </Card.Body>
             </Card>
           </Col>

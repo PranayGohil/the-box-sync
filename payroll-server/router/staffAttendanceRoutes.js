@@ -10,7 +10,9 @@ const {
     markLeave,
     updateAttendance,
     uploadWfhCapture,
-    logWfhIdle
+    logWfhIdle,
+    kioskScan,
+    getKioskFaces
 } = require("../controllers/staffAttendanceController");
 
 const staffAttendanceRouter = express.Router();
@@ -34,5 +36,8 @@ staffAttendanceRouter.post("/update", authMiddleware, updateAttendance);
 // WFH Tracking
 staffAttendanceRouter.post("/wfh-upload", uploadWfhCapture);
 staffAttendanceRouter.post("/wfh-idle", logWfhIdle);
+// Kiosk scanning (public, auth via URL parameters / backend verification)
+staffAttendanceRouter.post("/kiosk-scan", kioskScan);
+staffAttendanceRouter.get("/kiosk-faces/:company_id", getKioskFaces);
 
 module.exports = staffAttendanceRouter;

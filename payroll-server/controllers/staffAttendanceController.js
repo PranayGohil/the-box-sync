@@ -624,6 +624,49 @@ const uploadWfhCapture = async (req, res) => {
 };
 
 // ── POST /attendance/wfh-idle ─────────────────────────────────────────────────
+// ── POST /attendance/kiosk-scan (No Auth Required) ───────────────────────────
+const kioskScan = async (req, res) => {
+    const { company_id, scanned_id, date, time } = req.body;
+
+    if (!company_id || !scanned_id) {
+        return res.status(400).json({ success: false, message: "Missing company_id or scanned_id." });
+    }
+
+    try {
+        const staff = await Staff.findOne({ user_id: company_id, staff_id: scanned_id }).lean();
+        if (!staff) {
+            return res.status(404).json({ success: false, message: "Employee not found." });
+        }
+
+        let record = await StaffAttendance.findOne({ staff_id: staff._id, date });
+        let action = "check-in";
+
+        if (record && record.sessions && record.sessions.length > 0) {
+            const lastSession = record.sessions[record.sessions.length - 1];
+            if (lastSession.out_time === null) {
+                action = "check-out";
+            }
+        } else if (record && record.in_time && !record.out_time) {
+             action = "check-out";
+        }
+
+        // Mock req so we can reuse checkIn / checkOut logic
+        req.user = { _id: company_id, Role: "Admin" };
+        
+        if (action === "check-in") {
+            req.body = { staff_id: staff._id.toString(), date, in_time: time, is_wfh: false };
+            return checkIn(req, res);
+        } else {
+            req.body = { staff_id: staff._id.toString(), date, out_time: time };
+            return checkOut(req, res);
+        }
+
+    } catch (error) {
+        console.error("Error in kioskScan:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
 const logWfhIdle = async (req, res) => {
     const { staff_id, date, idle_minutes } = req.body;
 
@@ -642,6 +685,28 @@ const logWfhIdle = async (req, res) => {
     }
 };
 
+// ── GET /attendance/kiosk-faces/:company_id (No Auth Required) ───────────────────────────
+const getKioskFaces = async (req, res) => {
+    const { company_id } = req.params;
+    if (!company_id) {
+        return res.status(400).json({ success: false, message: "Missing company_id" });
+    }
+    
+    try {
+        const staffWithFaces = await Staff.find({
+            user_id: company_id,
+            face_encoding: { $exists: true, $ne: null, $not: { $size: 0 } },
+        })
+        .select("_id staff_id f_name l_name face_encoding")
+        .lean();
+        
+        res.status(200).json({ success: true, data: staffWithFaces });
+    } catch (error) {
+        console.error("Error fetching kiosk faces:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
 module.exports = {
     getTodayAttendance,
     getAttendanceByStaff,
@@ -652,5 +717,7 @@ module.exports = {
     markLeave,
     updateAttendance,
     uploadWfhCapture,
-    logWfhIdle
+    logWfhIdle,
+    kioskScan,
+    getKioskFaces
 };

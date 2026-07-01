@@ -217,6 +217,14 @@ const addStaff = async (req, res) => {
       }
     }
 
+    if (staffData.bank_account && typeof staffData.bank_account === "string") {
+      try {
+        staffData.bank_account = JSON.parse(staffData.bank_account);
+      } catch (e) {
+        console.error("Invalid bank_account JSON");
+      }
+    }
+
     if (req.files?.photo?.[0]) {
       const webpFilename = await convertToWebp(req.files.photo[0]);
       staffData.photo = `/staff/profile/${webpFilename}`;
@@ -228,6 +236,10 @@ const addStaff = async (req, res) => {
     if (req.files?.back_image?.[0]) {
       const webpFilename = await convertToWebp(req.files.back_image[0]);
       staffData.back_image = `/staff/id_cards/${webpFilename}`;
+    }
+    if (req.files?.pan_image?.[0]) {
+      const webpFilename = await convertToWebp(req.files.pan_image[0]);
+      staffData.pan_image = `/staff/id_cards/${webpFilename}`;
     }
 
     const staff = await Staff.create(staffData);
@@ -320,6 +332,14 @@ const updateStaff = async (req, res) => {
         staffData.leave_policy_configuration = JSON.parse(staffData.leave_policy_configuration);
       } catch (e) {
         console.error("Invalid leave_policy_configuration JSON");
+      }
+    }
+
+    if (staffData.bank_account && typeof staffData.bank_account === "string") {
+      try {
+        staffData.bank_account = JSON.parse(staffData.bank_account);
+      } catch (e) {
+        console.error("Invalid bank_account JSON");
       }
     }
 

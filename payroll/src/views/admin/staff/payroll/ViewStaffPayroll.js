@@ -593,7 +593,7 @@ export default function ViewStaffPayroll() {
                             </Col>
                             <Col className="ms-md-4">
                                 <h3 className="fw-bold text-dark mb-1">{staffData.f_name} {staffData.l_name}</h3>
-                                <div className="d-flex align-items-center gap-3 flex-wrap">
+                                <div className="d-flex align-items-center gap-3 flex-wrap mb-2">
                                     <span className="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fw-bold">#{staffData.staff_id}</span>
                                     <span className="text-muted fw-medium fs-6 d-flex align-items-center gap-1">
                                         <CsLineIcons icon="diploma" size="16" /> {staffData.position}
@@ -601,6 +601,23 @@ export default function ViewStaffPayroll() {
                                     <span className="text-muted fw-medium fs-6 d-flex align-items-center gap-1">
                                         <CsLineIcons icon="calendar" size="16" /> Joined: {staffData.joining_date ? format(new Date(staffData.joining_date), 'dd MMM yyyy') : '-'}
                                     </span>
+                                </div>
+                                <div className="d-flex align-items-center gap-3 flex-wrap small">
+                                    {staffData.bank_account?.account_number && (
+                                        <span className="text-muted fw-medium d-flex align-items-center gap-1">
+                                            <CsLineIcons icon="wallet" size="14" className="text-primary" /> A/C: <span className="fw-bold text-dark">{staffData.bank_account.account_number}</span> ({staffData.bank_account.bank_name})
+                                        </span>
+                                    )}
+                                    {staffData.pan_number && (
+                                        <span className="text-muted fw-medium d-flex align-items-center gap-1">
+                                            <CsLineIcons icon="badge" size="14" /> PAN: <span className="fw-bold text-dark">{staffData.pan_number}</span>
+                                        </span>
+                                    )}
+                                    {staffData.uan_number && (
+                                        <span className="text-muted fw-medium d-flex align-items-center gap-1">
+                                            <CsLineIcons icon="shield" size="14" /> UAN: <span className="fw-bold text-dark">{staffData.uan_number}</span>
+                                        </span>
+                                    )}
                                 </div>
                             </Col>
                             <Col md="auto" className="mt-3 mt-md-0 border-start ps-md-5">

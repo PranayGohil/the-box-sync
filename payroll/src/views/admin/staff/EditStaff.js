@@ -31,6 +31,7 @@ const EditStaff = () => {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [frontImagePreview, setFrontImagePreview] = useState(null);
   const [backImagePreview, setBackImagePreview] = useState(null);
+  const [panImagePreview, setPanImagePreview] = useState(null);
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
@@ -41,6 +42,7 @@ const EditStaff = () => {
     photo: false,
     front_image: false,
     back_image: false,
+    pan_image: false,
   });
   // Face capture states
   const [showFaceModal, setShowFaceModal] = useState(false);
@@ -108,7 +110,38 @@ const EditStaff = () => {
     city: Yup.string().required('City is required'),
     pincode: Yup.string()
       .required('Pincode is required')
-      .matches(/^[0-9]{6}$/, 'Pincode must be exactly 6 digits'),
+      .matches(/^[0-9]{6}$/, 'Pincode must be exactly 6 digits')
+      .test('match-city', 'Pincode does not match the selected city', async function (value) {
+        // eslint-disable-next-line react/no-this-in-sfc
+        const { city, country } = this.parent;
+        if (!value || value.length !== 6 || country !== 'India' || !city) return true;
+        
+        try {
+          const response = await fetch(`https://api.postalpincode.in/pincode/${value}`);
+          const data = await response.json();
+          if (data && data[0].Status === 'Success') {
+            const postOffices = data[0].PostOffice;
+            const cityLower = city.toLowerCase().replace(/[^a-z0-9]/g, '');
+            return postOffices.some(po => {
+              const district = (po.District || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+              const block = (po.Block || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+              const division = (po.Division || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+              const name = (po.Name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+              return (
+                (district && district.includes(cityLower)) ||
+                (block && block.includes(cityLower)) ||
+                (division && division.includes(cityLower)) ||
+                (name && name.includes(cityLower)) ||
+                (district && cityLower.includes(district)) ||
+                (name && cityLower.includes(name))
+              );
+            });
+          }
+          return false;
+        } catch (e) {
+          return true;
+        }
+      }),
     gender: Yup.string().required('Gender is required'),
     phone_no: Yup.string()
       .required('Phone number is required')
@@ -139,20 +172,17 @@ const EditStaff = () => {
         return isFileObject(value) ? allowedTypes.includes(value.type) : true;
       }),
 
-    document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Aadhar Card', 'Pan Card', 'Voter Card', 'Voter ID Card', 'Driving License', 'Passport'], 'Invalid document type'),
+    document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Aadhar Card', 'Voter Card', 'Voter ID Card', 'Driving License', 'Passport'], 'Invalid document type'),
+    pan_number: Yup.string().required('PAN Number is required'),
 
     id_number: Yup.string()
       .required('ID number is required')
       .when('document_type', (docType, schema) => {
         const aadharRegex = /^[0-9]{4}\s?[0-9]{4}\s?[0-9]{4}$/;
-        const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
         const voterRegex = /^[A-Z]{3}[0-9]{7}$/;
 
         if (docType === 'National Identity Card' || docType === 'Aadhar Card') {
           return schema.matches(aadharRegex, 'Aadhar number must be 12 digits (format: XXXX XXXX XXXX)');
-        }
-        if (docType === 'Pan Card') {
-          return schema.matches(panRegex, 'PAN card format must be ABCDE1234F (5 letters, 4 digits, 1 letter)');
         }
         if (docType === 'Voter Card' || docType === 'Voter ID Card') {
           return schema.matches(voterRegex, 'Voter ID format must be ABC1234567 (3 letters, 7 digits)');
@@ -324,6 +354,15 @@ const EditStaff = () => {
       id_number: '',
       front_image: '',
       back_image: '',
+      pan_number: '',
+      pan_image: '',
+      uan_number: '',
+      bank_account: {
+        account_number: '',
+        bank_name: '',
+        ifsc_code: '',
+        branch: '',
+      },
       salary_structure: {
         custom_earnings: {},
         custom_deductions: {},
@@ -347,8 +386,8 @@ const EditStaff = () => {
       try {
         const formData = new FormData();
         Object.keys(values).forEach((key) => {
-          if (!['photo', 'front_image', 'back_image'].includes(key)) {
-            if (['salary_structure', 'increment_plan', 'custom_weekly_offs', 'leave_policy_configuration'].includes(key)) {
+          if (!['photo', 'front_image', 'back_image', 'pan_image'].includes(key)) {
+            if (['salary_structure', 'increment_plan', 'custom_weekly_offs', 'leave_policy_configuration', 'bank_account'].includes(key)) {
               formData.append(key, JSON.stringify(values[key]));
             } else {
               formData.append(key, values[key]);
@@ -359,6 +398,7 @@ const EditStaff = () => {
         if (values.photo instanceof File) formData.append('photo', values.photo);
         if (values.front_image instanceof File) formData.append('front_image', values.front_image);
         if (values.back_image instanceof File) formData.append('back_image', values.back_image);
+        if (values.pan_image instanceof File) formData.append('pan_image', values.pan_image);
         const currentFaceDescriptor = faceDescriptorRef.current;
         if (currentFaceDescriptor) {
           formData.append('face_descriptor', JSON.stringify(currentFaceDescriptor));
@@ -539,6 +579,15 @@ const EditStaff = () => {
         setFieldValue('photo', staff.photo || '');
         setFieldValue('front_image', staff.front_image || '');
         setFieldValue('back_image', staff.back_image || '');
+        setFieldValue('pan_number', staff.pan_number || '');
+        setFieldValue('pan_image', staff.pan_image || '');
+        setFieldValue('uan_number', staff.uan_number || '');
+        setFieldValue('bank_account', staff.bank_account || {
+          account_number: '',
+          bank_name: '',
+          ifsc_code: '',
+          branch: '',
+        });
 
         // Load existing face encoding if present
         if (staff.face_encoding && staff.face_encoding.length > 0) {
@@ -550,6 +599,9 @@ const EditStaff = () => {
         setFrontImagePreview(staff.front_image ? `${process.env.REACT_APP_UPLOAD_DIR}/${staff.front_image}` : null);
         if (staff.back_image) {
           setBackImagePreview(`${process.env.REACT_APP_UPLOAD_DIR}/${staff.back_image}`);
+        }
+        if (staff.pan_image) {
+          setPanImagePreview(`${process.env.REACT_APP_UPLOAD_DIR}/${staff.pan_image}`);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -827,10 +879,12 @@ const EditStaff = () => {
             <Card className="glass-card border-0 mb-4">
               <Card.Body className="p-4">
                 <div className="section-header mb-4">
-                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <CsLineIcons icon="user" size="20" className="text-primary" />
-                    Personal Details
-                  </h5>
+                  <div className="d-flex align-items-center gap-2 mb-0">
+                    <div className="bg-soft-primary p-2 rounded-3">
+                      <CsLineIcons icon="user" size="20" className="text-primary" />
+                    </div>
+                    <h5 className="fw-bold mb-0">Personal Details</h5>
+                  </div>
                 </div>
 
                 <Row className="g-3">
@@ -1115,10 +1169,12 @@ const EditStaff = () => {
             <Card className="glass-card border-0 mb-4">
               <Card.Body className="p-4">
                 <div className="section-header mb-4">
-                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <CsLineIcons icon="briefcase" size="20" className="text-primary" />
-                    Employment & Payroll
-                  </h5>
+                  <div className="d-flex align-items-center gap-2 mb-0">
+                    <div className="bg-soft-primary p-2 rounded-3">
+                      <CsLineIcons icon="suitcase" size="20" className="text-primary" />
+                    </div>
+                    <h5 className="fw-bold mb-0">Employment & Payroll</h5>
+                  </div>
                 </div>
 
                 <Row className="g-3">
@@ -1213,7 +1269,10 @@ const EditStaff = () => {
 
                 <hr className="my-4 opacity-50" />
 
-                <h6 className="fw-bold mb-3 text-primary">Salary Structure Breakdown</h6>
+                <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                  <CsLineIcons icon="money" size="18" />
+                  Salary Structure Breakdown
+                </h6>
                 <Row className="g-3">
                   <Col md={6}>
                     <div className="bg-light rounded-3 p-3 shadow-sm border border-faint h-100">
@@ -1409,7 +1468,7 @@ const EditStaff = () => {
 
                 <hr className="my-4 opacity-50" />
                 <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
-                  <CsLineIcons icon="airplane" size="18" />
+                  <CsLineIcons icon="calendar" size="18" />
                   Leave Policy Configuration
                 </h6>
                 <div className="bg-light rounded-3 p-3 shadow-sm border border-faint mb-4">
@@ -1578,18 +1637,163 @@ const EditStaff = () => {
               </Card.Body>
             </Card>
 
+            {/* Account & Compliance Section */}
+            <Card className="glass-card border-0 mb-4">
+              <Card.Body className="p-4">
+                <div className="section-header mb-4">
+                  <div className="d-flex align-items-center gap-2 mb-0">
+                    <div className="bg-soft-primary p-2 rounded-3">
+                      <CsLineIcons icon="wallet" size="20" className="text-primary" />
+                    </div>
+                    <h5 className="fw-bold mb-0">Bank & Compliance Details</h5>
+                  </div>
+                </div>
+
+                <Row className="g-4 mb-4">
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label>Account Number</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="bank_account.account_number"
+                        placeholder="Enter Account Number"
+                        value={values.bank_account.account_number}
+                        onChange={handleChange}
+                        disabled={loading.submitting}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label>IFSC Code</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="bank_account.ifsc_code"
+                        placeholder="Enter IFSC Code"
+                        value={values.bank_account.ifsc_code}
+                        onChange={handleChange}
+                        disabled={loading.submitting}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label>Bank Name</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="bank_account.bank_name"
+                        placeholder="Enter Bank Name"
+                        value={values.bank_account.bank_name}
+                        onChange={handleChange}
+                        disabled={loading.submitting}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label>Branch</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="bank_account.branch"
+                        placeholder="Enter Branch Name"
+                        value={values.bank_account.branch}
+                        onChange={handleChange}
+                        disabled={loading.submitting}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={12}>
+                    <Form.Group>
+                      <Form.Label>PF / UAN Number</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="uan_number"
+                        placeholder="Enter PF or UAN Number"
+                        value={values.uan_number}
+                        onChange={handleChange}
+                        disabled={loading.submitting}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+
             {/* Identification Card */}
             <Card className="glass-card border-0 mb-4">
               <Card.Body className="p-4">
                 <div className="section-header mb-4">
-                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <CsLineIcons icon="badge" size="20" className="text-primary" />
-                    Identification
-                  </h5>
+                  <div className="d-flex align-items-center gap-2 mb-0">
+                    <div className="bg-soft-primary p-2 rounded-3">
+                      <CsLineIcons icon="shield" size="20" className="text-primary" />
+                    </div>
+                    <h5 className="fw-bold mb-0">Identification</h5>
+                  </div>
                 </div>
 
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-bold">Document Type</Form.Label>
+                <div className="bg-light rounded p-3 mb-4 border border-faint">
+                  <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                    <CsLineIcons icon="credit-card" size="18" />
+                    PAN Card Details (Required)
+                  </h6>
+                  <Form.Group className="mb-4">
+                    <Form.Label>PAN Number</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="pan_number"
+                      placeholder="Enter PAN Number"
+                      value={values.pan_number}
+                      onChange={handleChange}
+                      isInvalid={touched.pan_number && errors.pan_number}
+                      disabled={loading.submitting}
+                    />
+                    <Form.Control.Feedback type="invalid">{errors.pan_number}</Form.Control.Feedback>
+                  </Form.Group>
+
+                  <Form.Group className="mb-0">
+                    <Form.Label>PAN Card Image</Form.Label>
+                    <div className="id-preview-container mb-2">
+                      {panImagePreview ? (
+                        <img src={panImagePreview} alt="PAN Card" className="preview-image" style={{ maxHeight: '100px' }} />
+                      ) : (
+                        <div className="text-center p-4">
+                          <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
+                          <div className="small text-muted">No Image Selected</div>
+                        </div>
+                      )}
+                    </div>
+                    <Form.Control
+                      type="file"
+                      id="pan-image-upload"
+                      className="d-none"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) handleFileChange('pan_image', file, setPanImagePreview);
+                      }}
+                    />
+                    <div className="d-flex flex-column gap-3 align-items-start w-100">
+                      <Button
+                        as="label"
+                        htmlFor="pan-image-upload"
+                        className="custom-btn-outline px-4"
+                        style={{ maxWidth: 'fit-content' }}
+                        disabled={loading.submitting || uploadingFiles.pan_image}
+                      >
+                        {uploadingFiles.pan_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                        {panImagePreview ? 'Change PAN Image' : 'Upload PAN Image'}
+                      </Button>
+                    </div>
+                  </Form.Group>
+                </div>
+
+                <div className="bg-light rounded p-3 mb-4 border border-faint">
+                  <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                    <CsLineIcons icon="file-text" size="18" />
+                    Additional Identification (Required)
+                  </h6>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="small fw-bold">Document Type</Form.Label>
                   <Select
                         classNamePrefix="react-select"
                         menuPortalTarget={document.body}
@@ -1696,12 +1900,14 @@ const EditStaff = () => {
                     </div>
                   )}
 
+                    </div>
+                  </div>
                   {/* Submit Button inside Identification Card */}
                   <div className="d-flex justify-content-center mt-4 pt-3 border-top" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
                     <Button
                       className="custom-btn-outline px-5 py-3 w-100"
                       type="submit"
-                      disabled={loading.submitting}
+                      disabled={loading.submitting || uploadingFiles.photo || uploadingFiles.front_image || uploadingFiles.back_image || uploadingFiles.pan_image}
                     >
                       {loading.submitting ? (
                         <>
@@ -1716,7 +1922,6 @@ const EditStaff = () => {
                       )}
                     </Button>
                   </div>
-                </div>
               </Card.Body>
             </Card>
 

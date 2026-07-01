@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Button, Table, Form, Modal, Badge, Spinner, Alert } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
-import { getAssets, addAsset, updateAsset, deleteAsset } from 'api/assets';
+import { getAssets, addAsset, updateAsset, deleteAsset, getAssetRequests, updateAssetRequestStatus } from 'api/assets';
 import { getStaffList } from 'api/staff';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
@@ -25,6 +25,9 @@ const Assets = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  const [assetRequests, setAssetRequests] = useState([]);
+  const [activeTab, setActiveTab] = useState('assets');
 
   // Modals state
   const [showAddEditModal, setShowAddEditModal] = useState(false);
@@ -64,6 +67,10 @@ const Assets = () => {
       const staffRes = await getStaffList();
       if (staffRes.success) {
         setStaffList(staffRes.data);
+      }
+      const requestRes = await getAssetRequests();
+      if (requestRes.success) {
+        setAssetRequests(requestRes.data);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -241,6 +248,12 @@ const Assets = () => {
         return <Badge bg="outline-warning">Damaged</Badge>;
       case 'lost':
         return <Badge bg="outline-danger">Lost</Badge>;
+      case 'pending':
+        return <Badge bg="outline-warning">Pending</Badge>;
+      case 'approved':
+        return <Badge bg="outline-success">Approved</Badge>;
+      case 'rejected':
+        return <Badge bg="outline-danger">Rejected</Badge>;
       default:
         return <Badge bg="outline-secondary">{status}</Badge>;
     }
@@ -260,6 +273,19 @@ const Assets = () => {
       other: 'Other'
     };
     return legacyMap[type] || type;
+  };
+
+  const handleRequestStatusChange = async (reqId, newStatus) => {
+    try {
+      const res = await updateAssetRequestStatus(reqId, { status: newStatus, notes: '' });
+      if (res.success) {
+        toast.success(`Request ${newStatus} successfully`);
+        fetchData();
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error updating request status');
+    }
   };
 
   return (
@@ -298,7 +324,29 @@ const Assets = () => {
         </Button>
       </div>
 
-      {/* Metrics Row */}
+      {/* Tabs */}
+      <div className="d-flex border-bottom mb-4">
+        <button 
+          type="button"
+          className={`btn btn-link text-decoration-none fw-bold px-4 py-2 border-bottom ${activeTab === 'assets' ? 'text-primary' : 'text-muted'}`}
+          style={{ borderBottomWidth: activeTab === 'assets' ? '3px !important' : '0', borderBottomColor: activeTab === 'assets' ? '#23b3f4' : 'transparent', borderBottomStyle: 'solid', borderRadius: 0 }}
+          onClick={() => setActiveTab('assets')}
+        >
+          Company Assets
+        </button>
+        <button 
+          type="button"
+          className={`btn btn-link text-decoration-none fw-bold px-4 py-2 border-bottom ${activeTab === 'requests' ? 'text-primary' : 'text-muted'}`}
+          style={{ borderBottomWidth: activeTab === 'requests' ? '3px !important' : '0', borderBottomColor: activeTab === 'requests' ? '#23b3f4' : 'transparent', borderBottomStyle: 'solid', borderRadius: 0 }}
+          onClick={() => setActiveTab('requests')}
+        >
+          Asset Requests
+        </button>
+      </div>
+
+      {activeTab === 'assets' && (
+        <>
+          {/* Metrics Row */}
       <Row className="mb-4">
         <Col xs={12} sm={6} md={3} className="mb-3 mb-md-0">
           <Card className="border-0 shadow-sm h-100 py-2" style={{ borderRadius: '15px' }}>
@@ -496,6 +544,79 @@ const Assets = () => {
           )}
         </Card.Body>
       </Card>
+        </>
+      )}
+
+      {activeTab === 'requests' && (
+        <Card className="border-0 shadow-sm mb-4" style={{ borderRadius: '15px' }}>
+          <Card.Body className="p-4">
+            <h5 className="fw-bold mb-4">Asset Requests</h5>
+            {loading ? (
+              <div className="text-center py-5">
+                <Spinner animation="border" variant="primary" />
+              </div>
+            ) : assetRequests.length === 0 ? (
+              <Alert variant="info" className="text-center py-4 border-0" style={{ borderRadius: '12px', background: 'rgba(35, 179, 244, 0.08)', color: '#23b3f4' }}>
+                No asset requests found.
+              </Alert>
+            ) : (
+              <div className="table-responsive">
+                <Table hover className="align-middle">
+                  <thead>
+                    <tr className="text-muted border-bottom" style={{ fontSize: '0.85rem' }}>
+                      <th>Staff Member</th>
+                      <th>Asset Name</th>
+                      <th>Type</th>
+                      <th>Reason</th>
+                      <th>Requested On</th>
+                      <th>Status</th>
+                      <th className="text-end">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {assetRequests.map((req) => (
+                      <tr key={req._id} className="border-bottom" style={{ fontSize: '0.9rem' }}>
+                        <td className="fw-semibold text-dark">
+                          {req.staff_id?.f_name} {req.staff_id?.l_name} 
+                          <span className="d-block text-muted small">{req.staff_id?.staff_id}</span>
+                        </td>
+                        <td className="fw-bold">{req.asset_name}</td>
+                        <td>{req.asset_type}</td>
+                        <td>{req.reason || '—'}</td>
+                        <td>{new Date(req.createdAt).toLocaleDateString()}</td>
+                        <td>{getStatusBadge(req.status)}</td>
+                        <td className="text-end">
+                          {req.status === 'pending' && (
+                            <>
+                              <Button 
+                                variant="outline-success" 
+                                size="sm" 
+                                className="me-2"
+                                style={{ borderRadius: '30px' }}
+                                onClick={() => handleRequestStatusChange(req._id, 'approved')}
+                              >
+                                Approve
+                              </Button>
+                              <Button 
+                                variant="outline-danger" 
+                                size="sm" 
+                                style={{ borderRadius: '30px' }}
+                                onClick={() => handleRequestStatusChange(req._id, 'rejected')}
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            )}
+          </Card.Body>
+        </Card>
+      )}
 
       {/* Add / Edit Asset Modal */}
       <Modal show={showAddEditModal} onHide={() => setShowAddEditModal(false)} centered>
