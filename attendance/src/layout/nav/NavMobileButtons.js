@@ -76,10 +76,6 @@ const NavMobileButtons = () => {
     // eslint-disable-next-line
   }, [navClasses]);
 
-  return (
-    <div className="mobile-buttons-container">
-      {scrollspyItems && scrollspyItems.length > 0 && <ScrollspyMobile items={scrollspyItems} />}
-    </div>
-  );
+  return <div className="mobile-buttons-container">{scrollspyItems && scrollspyItems.length > 0 && <ScrollspyMobile items={scrollspyItems} />}</div>;
 };
 export default React.memo(NavMobileButtons);

@@ -55,20 +55,19 @@ const NavIconMenu = () => {
   const { logout } = useContext(AuthContext);
   const dispatch = useDispatch();
   const brandColor = '#23b3f4';
-  
-  
+
   const onLightDarkModeClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
     dispatch(settingsChangeColor(color.includes('light') ? color.replace('light', 'dark') : color.replace('dark', 'light')));
   };
   const [showSearchModal, setShowSearchModal] = useState(false);
-  
+
   const onSearchIconClick = (e) => {
     e.preventDefault();
     setShowSearchModal(true);
   };
-  
+
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = () => {
@@ -76,7 +75,7 @@ const NavIconMenu = () => {
     console.log('User logged out');
     setShowLogoutModal(false);
     history.push('/login');
-  }
+  };
   return (
     <>
       <style>{customStyles}</style>
@@ -96,14 +95,11 @@ const NavIconMenu = () => {
       </ul>
       <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 
-      <Modal 
-        show={showLogoutModal} 
-        onHide={() => setShowLogoutModal(false)} 
-        centered 
-        contentClassName="interactive-card border-0 shadow-lg"
-      >
+      <Modal show={showLogoutModal} onHide={() => setShowLogoutModal(false)} centered contentClassName="interactive-card border-0 shadow-lg">
         <Modal.Header className="border-0 p-4 pb-0" closeButton>
-          <Modal.Title className="fw-bold" style={{ color: brandColor }}>Session Management</Modal.Title>
+          <Modal.Title className="fw-bold" style={{ color: brandColor }}>
+            Session Management
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4 text-center">
           <div className="logout-icon-container">
@@ -115,24 +111,14 @@ const NavIconMenu = () => {
               WFH Tracking is currently active. You should Clock-Out first. Logging out will immediately stop your background tracking. Proceed?
             </p>
           ) : (
-            <p className="text-muted smaller fw-bold mb-0">
-              Are you sure you want to end your session? You will need to login again to access the dashboard.
-            </p>
+            <p className="text-muted smaller fw-bold mb-0">Are you sure you want to end your session? You will need to login again to access the dashboard.</p>
           )}
         </Modal.Body>
         <Modal.Footer className="border-0 p-4 pt-0 d-flex justify-content-center gap-3">
-          <Button 
-            variant="light" 
-            className="custom-btn-outline border-0 text-muted" 
-            onClick={() => setShowLogoutModal(false)}
-          >
+          <Button variant="light" className="custom-btn-outline border-0 text-muted" onClick={() => setShowLogoutModal(false)}>
             Stay Signed In
           </Button>
-          <Button 
-            variant="danger" 
-            className="custom-btn-outline border-danger text-danger px-5" 
-            onClick={handleLogout}
-          >
+          <Button variant="danger" className="custom-btn-outline border-danger text-danger px-5" onClick={handleLogout}>
             Yes, Logout
           </Button>
         </Modal.Footer>
