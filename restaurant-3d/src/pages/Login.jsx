@@ -1,37 +1,43 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AppContext';
 import { useRestaurant } from '../context/RestaurantContext';
-import { User, Mail, Lock, ArrowLeft } from 'lucide-react';
+import { User, Mail, Lock, ArrowLeft, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, signup } = useAuth();
   const { restaurantCode } = useRestaurant();
   const navigate = useNavigate();
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast.error('Please fill in all fields', {
+    if (!email || !password || (isSignUp && (!name || !phone))) {
+      toast.error('Please fill in all required fields', {
         style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(242,122,26,0.3)' }
       });
       return;
     }
-    
+
+    const authPromise = isSignUp 
+      ? signup(name, email, phone, password, restaurantCode)
+      : login(email, password, restaurantCode);
+
     toast.promise(
-      new Promise(resolve => setTimeout(() => resolve(), 1000)),
+      authPromise,
       {
-        loading: 'Signing in...',
+        loading: isSignUp ? 'Creating account...' : 'Signing in...',
         success: () => {
-          login(email);
           navigate(`/${restaurantCode}/profile`.replace(/\/+/g, '/'));
-          return 'Welcome back!';
+          return isSignUp ? 'Account created! Welcome!' : 'Welcome back!';
         },
-        error: 'Login failed',
+        error: (err) => err.message || 'Authentication failed',
       },
       {
         style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(242,122,26,0.3)', borderRadius: '12px' }
@@ -60,11 +66,50 @@ export default function Login() {
           <div className="rounded-4 d-flex align-items-center justify-content-center mx-auto mb-4" style={{ width: '80px', height: '80px', background: 'rgba(242, 122, 26, 0.1)', border: '1px solid rgba(242, 122, 26, 0.2)' }}>
             <User size={40} className="text-brand-400" />
           </div>
-          <h1 className="font-display fw-bold text-white mb-2" style={{ fontSize: '2.5rem' }}>Login</h1>
-          <p className="text-white-60">Welcome back to Ember & Gold</p>
+          <h1 className="font-display fw-bold text-white mb-2" style={{ fontSize: '2.5rem' }}>
+            {isSignUp ? 'Sign Up' : 'Login'}
+          </h1>
+          <p className="text-white-60">
+            {isSignUp ? 'Create your new customer account' : 'Welcome back to Ember & Gold'}
+          </p>
         </div>
 
-        <form onSubmit={handleLogin} className="d-flex flex-column gap-4">
+        <form onSubmit={handleSubmit} className="d-flex flex-column gap-4">
+          {isSignUp && (
+            <>
+              <div>
+                <label className="form-label small text-white-60 mb-2 fw-medium">Full Name</label>
+                <div className="position-relative">
+                  <User className="position-absolute text-white-60" size={18} style={{ top: '50%', left: '1.25rem', transform: 'translateY(-50%)' }} />
+                  <input 
+                    type="text" 
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="input-field w-100 py-3" 
+                    style={{ paddingLeft: '3.5rem' }}
+                    placeholder="John Doe"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="form-label small text-white-60 mb-2 fw-medium">Phone Number</label>
+                <div className="position-relative">
+                  <Phone className="position-absolute text-white-60" size={18} style={{ top: '50%', left: '1.25rem', transform: 'translateY(-50%)' }} />
+                  <input 
+                    type="tel" 
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="input-field w-100 py-3" 
+                    style={{ paddingLeft: '3.5rem' }}
+                    placeholder="9876543210"
+                    required
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
           <div>
             <label className="form-label small text-white-60 mb-2 fw-medium">Email Address</label>
             <div className="position-relative">
@@ -80,10 +125,11 @@ export default function Login() {
               />
             </div>
           </div>
+
           <div>
             <div className="d-flex justify-content-between align-items-center mb-2">
               <label className="form-label small text-white-60 mb-0 fw-medium">Password</label>
-              <a href="#" className="small text-brand-400 text-decoration-none">Forgot?</a>
+              {!isSignUp && <a href="#" className="small text-brand-400 text-decoration-none">Forgot?</a>}
             </div>
             <div className="position-relative">
               <Lock className="position-absolute text-white-60" size={18} style={{ top: '50%', left: '1.25rem', transform: 'translateY(-50%)' }} />
@@ -100,13 +146,27 @@ export default function Login() {
           </div>
           
           <button type="submit" className="btn-primary w-100 justify-content-center py-3 mt-2 fs-5 fw-bold shadow-lg">
-            Sign In
+            {isSignUp ? 'Create Account' : 'Sign In'}
           </button>
         </form>
         
         <div className="text-center mt-5">
           <p className="text-white-60 small mb-0">
-            Don't have an account? <a href="#" className="text-brand-400 fw-bold text-decoration-none">Create one</a>
+            {isSignUp ? (
+              <>
+                Already have an account?{' '}
+                <button onClick={() => setIsSignUp(false)} className="btn-link text-brand-400 fw-bold text-decoration-none bg-transparent border-0 p-0">
+                  Sign In
+                </button>
+              </>
+            ) : (
+              <>
+                Don't have an account?{' '}
+                <button onClick={() => setIsSignUp(true)} className="btn-link text-brand-400 fw-bold text-decoration-none bg-transparent border-0 p-0">
+                  Create one
+                </button>
+              </>
+            )}
           </p>
         </div>
       </motion.div>

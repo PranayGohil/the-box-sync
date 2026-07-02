@@ -38,13 +38,13 @@ const recalculateOrderTotals = (orderInfo) => {
     const finalDishPrice = basePrice + addonsSum;
     item.dish_price = finalDishPrice;
 
-    const itemSubtotal = finalDishPrice * (Number(item.quantity) || 1);
+    const itemSubtotal = Math.round(finalDishPrice * (Number(item.quantity) || 1) * 100) / 100;
     sub_total += itemSubtotal;
 
     return item;
   });
 
-  orderInfo.sub_total = sub_total;
+  orderInfo.sub_total = Math.round(sub_total * 100) / 100;
 
   const cgst_percent = Number(orderInfo.cgst_percent) || 0;
   const sgst_percent = Number(orderInfo.sgst_percent) || 0;
@@ -58,13 +58,13 @@ const recalculateOrderTotals = (orderInfo) => {
   orderInfo.sgst_amount = sgst_amount;
   orderInfo.vat_amount = vat_amount;
 
-  const bill_amount = sub_total + cgst_amount + sgst_amount + vat_amount;
+  const bill_amount = Math.round((sub_total + cgst_amount + sgst_amount + vat_amount) * 100) / 100;
   orderInfo.bill_amount = bill_amount;
 
   const discount_amount = Number(orderInfo.discount_amount) || 0;
   const waveoff_amount = Number(orderInfo.waveoff_amount) || 0;
 
-  const total_amount = Math.max(0, bill_amount - discount_amount - waveoff_amount);
+  const total_amount = Math.max(0, Math.round((bill_amount - discount_amount - waveoff_amount) * 100) / 100);
   orderInfo.total_amount = total_amount;
 
   return orderInfo;
@@ -136,10 +136,19 @@ const getOrderData = async (req, res) => {
 
     // If order has customer_id, fetch customer details
     if (orderData.customer_id) {
-      const customerData = await Customer.findById(orderData.customer_id);
+      let customerData = await Customer.findById(orderData.customer_id);
+
+      if (!customerData) {
+        customerData = await WebCustomer.findById(orderData.customer_id);
+      }
 
       if (customerData) {
-        responseData.customer_details = customerData;
+        const customerObj = customerData.toObject();
+        if (!customerObj.address && Array.isArray(customerObj.addresses) && customerObj.addresses.length > 0) {
+          const defaultAddr = customerObj.addresses.find(a => a.is_default) || customerObj.addresses[0];
+          customerObj.address = `${defaultAddr.address}, ${defaultAddr.city}, ${defaultAddr.pincode}`;
+        }
+        responseData.customer_details = customerObj;
       }
     }
 
@@ -190,13 +199,25 @@ const getActiveOrders = async (req, res) => {
     // Active Takeaways & Deliveries
     const activeTakeawaysAndDeliveries = await Order.find({
       user_id: req.user,
-      order_source: source,
+      order_source: { $in: [source, "Restaurant Website"] },
       order_type: { $in: ["Takeaway", "Delivery"] },
       $or: [
         { order_status: { $nin: ["Paid", "Cancelled"] } },
         { "order_items.status": "Preparing" },
       ],
     }).sort({ "order_date": -1 }).lean();
+
+    for (let order of activeTakeawaysAndDeliveries) {
+      if (!order.customer_name && order.customer_id) {
+        let customer = await Customer.findById(order.customer_id);
+        if (!customer) {
+          customer = await WebCustomer.findById(order.customer_id);
+        }
+        if (customer) {
+          order.customer_name = customer.name;
+        }
+      }
+    }
 
     res.json({
       activeDineInTables,
@@ -1228,6 +1249,9 @@ const deliveryFromSiteController = async (req, res) => {
     }
 
     orderInfo.user_id = restauant._id;
+    if (customerInfo && customerInfo.name) {
+      orderInfo.customer_name = customerInfo.name;
+    }
 
     orderInfo = recalculateOrderTotals(orderInfo);
 
@@ -1520,6 +1544,44 @@ const orderHistory = async (req, res) => {
   }
 };
 
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const orderId = req.params.id;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    order.order_status = status;
+    if (status === "KOT") {
+      order.order_items = order.order_items.map((item) => ({
+        ...item,
+        status: item.status === "Pending" ? "Preparing" : item.status,
+      }));
+    } else if (status === "Cancelled" || status === "Rejected") {
+      order.order_items = order.order_items.map((item) => ({
+        ...item,
+        status: "Cancelled",
+      }));
+    }
+
+    await order.save();
+
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("order_status_updated", { orderId, status });
+      io.emit("kot_update");
+    }
+
+    res.json({ success: true, order });
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 module.exports = {
   addCustomer,
   getOrderData,
@@ -1531,4 +1593,5 @@ module.exports = {
   takeawayController,
   deliveryController,
   deliveryFromSiteController,
+  updateOrderStatus,
 };

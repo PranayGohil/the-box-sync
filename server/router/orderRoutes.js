@@ -12,6 +12,7 @@ const {
   takeawayController,
   deliveryController,
   deliveryFromSiteController,
+  updateOrderStatus,
 } = require("../controllers/orderController");
 
 const orderRouter = express.Router();
@@ -31,5 +32,6 @@ orderRouter.route("/dine-in").post(authMiddleware, dineInController);
 orderRouter.route("/takeaway").post(authMiddleware, takeawayController);
 orderRouter.route("/delivery").post(authMiddleware, deliveryController);
 orderRouter.route("/delivery-from-site/:rescode").post(deliveryFromSiteController);
+orderRouter.route("/update-status/:id").put(authMiddleware, updateOrderStatus);
 
 module.exports = orderRouter;

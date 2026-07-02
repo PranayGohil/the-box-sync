@@ -252,7 +252,7 @@ const Dashboard = () => {
               <div style={{ width: '8px', height: '24px', background: '#23b3f4', borderRadius: '4px', marginRight: '12px', boxShadow: '0 2px 5px rgba(35,179,244,0.3)' }} />
               <h3 className="mb-0 fw-bold" style={{ color: '#23b3f4', letterSpacing: '0.5px' }}>Active Takeaways & Deliveries</h3>
             </div>
-            <div style={{ maxHeight: '40vh', overflowY: 'auto', paddingRight: '5px' }} className="custom-scrollbar">
+            <div style={{ maxHeight: '90vh', overflowY: 'auto', paddingRight: '5px' }} className="custom-scrollbar">
               {activeTakeawaysAndDeliveries.length === 0 ? (
                 <div style={{ ...glassCardStyle, borderStyle: 'dashed' }} className="text-center p-4">
                   <CsLineIcons icon="delivery" size="30" stroke="rgba(35,179,244,0.4)" className="mb-2" />
