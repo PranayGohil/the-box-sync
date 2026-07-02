@@ -1,0 +1,94 @@
+/*
+*
+* Nav Side
+*
+* Template styles for sidebar navigation.
+*
+*/
+
+html[data-dimension='mobile'] {
+  .side-menu-container {
+    display: none;
+  }
+}
+
+.side-menu {
+  list-style: none;
+  padding-left: initial;
+  margin-top: -0.5rem;
+
+  ul {
+    list-style: none;
+    padding-left: initial;
+    margin-bottom: 1rem;
+    margin-left: 0.5rem; 
+  }
+  a {
+    color: var(--alternate);
+    padding: 0.75rem 1.25rem !important;
+    margin-bottom: 0.35rem !important;
+    display: flex !important;
+    align-items: center !important;
+    border-radius: 50px !important;
+    transition: all 0.2s ease !important;
+    border: 1px solid transparent !important;
+    text-decoration: none !important;
+
+    &:hover,
+    &.active {
+      color: var(--primary) !important;
+      background-color: rgba(var(--primary-rgb), 0.08) !important;
+      border-color: rgba(var(--primary-rgb), 0.2) !important;
+
+      .icon,
+      .label {
+        color: var(--primary) !important;
+        font-weight: 700 !important;
+      }
+    }
+
+    .icon {
+      width: 18px !important;
+      height: 18px !important;
+      display: inline-block !important;
+      margin-right: 12px !important;
+      transition: color 0.2s ease !important;
+    }
+
+    .label {
+      font-size: 0.9rem !important;
+      transition: all 0.2s ease !important;
+    }
+  }
+
+  a[data-bs-target] {
+    color: var(--muted) !important;
+    font-size: 0.75rem !important;
+    line-height: 1.1rem !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    padding: 1.5rem 1.25rem 0.5rem 1.25rem !important;
+    cursor: default !important;
+    pointer-events: none !important;
+    letter-spacing: 0.05em !important;
+    background: transparent !important;
+    border: none !important;
+
+    .icon {
+      display: none !important;
+    }
+    .label {
+      color: var(--muted) !important;
+    }
+  }
+}
+
+.side-menu.primary {
+  a {
+    &:hover,
+    &.active {
+      background-color: rgba(var(--primary-rgb), 0.08) !important;
+      border-color: rgba(var(--primary-rgb), 0.2) !important;
+    }
+  }
+}
