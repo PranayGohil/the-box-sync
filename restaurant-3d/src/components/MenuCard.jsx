@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Star, Clock, Flame, Leaf, UtensilsCrossed } from 'lucide-react';
-import { useCart } from '../context/AppContext';
+import { ShoppingCart, Star, Clock, Flame, Leaf, UtensilsCrossed, Heart } from 'lucide-react';
+import { useCart, useAuth } from '../context/AppContext';
 import toast from 'react-hot-toast';
 
 const DietIndicator = ({ type }) => {
@@ -22,7 +22,20 @@ export default function MenuCard({ item, index = 0 }) {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [hovered, setHovered] = useState(false);
   const { addItem, items } = useCart();
+  const { user } = useAuth();
   const inCart = items.some(i => i.id === item.id);
+
+  const [isSaved, setIsSaved] = useState(() => {
+    if (!user?._id) return false;
+    const saved = localStorage.getItem(`ember-saved-${user._id}`);
+    if (!saved) return false;
+    try {
+      const ids = JSON.parse(saved);
+      return ids.includes(item.id);
+    } catch {
+      return false;
+    }
+  });
   
   const imageUrl = item.image 
     ? (item.image.startsWith('http') || item.image.includes('/uploads/') ? item.image : `/uploads/${item.image.replace(/^\/+/, '')}`) 
@@ -49,6 +62,42 @@ export default function MenuCard({ item, index = 0 }) {
       icon: '🛒',
       style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(242,122,26,0.3)', borderRadius: '12px' },
     });
+  };
+
+  const handleFavoriteClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user?._id) {
+      toast.error('Please login to save items', {
+        style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(242,122,26,0.3)', borderRadius: '12px' }
+      });
+      return;
+    }
+
+    const key = `ember-saved-${user._id}`;
+    let savedList = [];
+    try {
+      const saved = localStorage.getItem(key);
+      savedList = saved ? JSON.parse(saved) : [];
+    } catch (err) {}
+
+    let newSaved;
+    if (savedList.includes(item.id)) {
+      newSaved = savedList.filter(id => id !== item.id);
+      setIsSaved(false);
+      toast.success(`${item.name} removed from saved items`, {
+        icon: '💔',
+        style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }
+      });
+    } else {
+      newSaved = [...savedList, item.id];
+      setIsSaved(true);
+      toast.success(`${item.name} saved!`, {
+        icon: '❤️',
+        style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(242,122,26,0.3)', borderRadius: '12px' }
+      });
+    }
+    localStorage.setItem(key, JSON.stringify(newSaved));
   };
 
   return (
@@ -91,10 +140,25 @@ export default function MenuCard({ item, index = 0 }) {
            <span className="text-white fw-bold x-small text-uppercase tracking-wider" style={{ fontSize: '9px' }}>{item.dietType}</span>
         </div>
 
-        {/* Highlight Icon (Flame) */}
-        <div className="position-absolute bg-danger rounded-circle d-flex align-items-center justify-content-center shadow-lg" style={{ top: '10px', right: '10px', width: '28px', height: '28px', zIndex: 2 }}>
-          <Flame size={16} className="text-white" />
-        </div>
+        {/* Highlight Icon (Heart Toggle) */}
+        <button 
+          onClick={handleFavoriteClick}
+          className="position-absolute rounded-circle d-flex align-items-center justify-content-center shadow-lg border-0" 
+          style={{ 
+            top: '10px', 
+            right: '10px', 
+            width: '28px', 
+            height: '28px', 
+            zIndex: 2,
+            background: isSaved ? '#ef4444' : 'rgba(0,0,0,0.5)',
+            color: '#fff',
+            backdropFilter: 'blur(4px)',
+            transition: 'all 0.2s ease'
+          }}
+          title="Save Item"
+        >
+          <Heart size={14} style={{ fill: isSaved ? '#fff' : 'none' }} />
+        </button>
 
         {/* Rating Overlay */}
         <div className="position-absolute d-flex align-items-center gap-1 glass rounded-pill px-2 py-1" style={{ bottom: '10px', right: '10px', zIndex: 2 }}>

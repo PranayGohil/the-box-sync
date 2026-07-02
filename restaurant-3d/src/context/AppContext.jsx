@@ -119,19 +119,78 @@ export function AuthProvider({ children }) {
     } catch { return null; }
   });
 
-  const login = (email) => {
-    const newUser = { email, name: email.split('@')[0], since: new Date().getFullYear() };
-    setUser(newUser);
-    localStorage.setItem('ember-user', JSON.stringify(newUser));
+  const login = async (email, password, restaurantCode) => {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+    const res = await fetch(`${API_URL}/web-customer/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, restaurant_code: restaurantCode }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Login failed');
+    }
+    const userData = {
+      ...data.data,
+      since: new Date(data.data.createdAt || Date.now()).getFullYear()
+    };
+    setUser(userData);
+    localStorage.setItem('ember-user', JSON.stringify(userData));
+    localStorage.setItem('ember-token', data.token);
+    return userData;
+  };
+
+  const signup = async (name, email, phone, password, restaurantCode) => {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+    const res = await fetch(`${API_URL}/web-customer/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone, password, restaurant_code: restaurantCode }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Registration failed');
+    }
+    const userData = {
+      ...data.data,
+      since: new Date(data.data.createdAt || Date.now()).getFullYear()
+    };
+    setUser(userData);
+    localStorage.setItem('ember-user', JSON.stringify(userData));
+    localStorage.setItem('ember-token', data.token);
+    return userData;
+  };
+
+  const refreshUser = async () => {
+    if (!user?._id) return;
+    try {
+      const token = localStorage.getItem('ember-token');
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      const res = await fetch(`${API_URL}/web-customer/get/${user._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const userData = {
+          ...data.data,
+          since: user.since || new Date().getFullYear()
+        };
+        setUser(userData);
+        localStorage.setItem('ember-user', JSON.stringify(userData));
+      }
+    } catch (err) {
+      console.error('Error refreshing user details:', err);
+    }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('ember-user');
+    localStorage.removeItem('ember-token');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, signup, refreshUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

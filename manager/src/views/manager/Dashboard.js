@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory, Switch, Route } from 'react-router-dom';
-import { Button, Row, Col, Badge } from 'react-bootstrap';
+import { Button, Row, Col, Badge, Card } from 'react-bootstrap';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -56,10 +56,37 @@ const Dashboard = () => {
     }
   };
 
+  const [showOnlinePartners, setShowOnlinePartners] = useState(false);
+
   useEffect(() => {
     fetchTables();
     fetchActiveOrders();
+    const interval = setInterval(fetchActiveOrders, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  const activeTakeawaysAndDeliveriesFiltered = activeTakeawaysAndDeliveries.filter(
+    (order) => order.order_status !== 'Requested'
+  );
+
+  const websiteIncomingOrders = activeTakeawaysAndDeliveries.filter(
+    (order) => order.order_source === 'Restaurant Website' && order.order_status === 'Requested'
+  );
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      const response = await axios.put(
+        `${process.env.REACT_APP_API}/order/update-status/${orderId}`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      if (response.data.success) {
+        fetchActiveOrders();
+      }
+    } catch (error) {
+      console.error('Error updating order status:', error);
+    }
+  };
 
   const handleTableClick = async (tableId, orderId) => {
     try {
@@ -93,16 +120,6 @@ const Dashboard = () => {
     position: 'relative'
   };
 
-  const glassBtnStyle = {
-    background: 'rgba(35, 179, 244, 0.08)',
-    border: '1px solid rgba(35, 179, 244, 0.2)',
-    color: '#23b3f4',
-    borderRadius: '14px',
-    padding: '8px 16px',
-    fontWeight: 'bold',
-    transition: 'all 0.3s ease'
-  };
-
   return (
     <>
       <HtmlHead title={title} description={description} />
@@ -127,11 +144,45 @@ const Dashboard = () => {
                 <CsLineIcons icon="plus" size="15" className="me-2" />
                 Delivery
               </Button>
-              <Button
-                className="custom-btn-outline"
-                onClick={() => history.push('/order/delivery-partners')}>
-                Delivery Partners
-              </Button>
+              {showOnlinePartners ? (
+                <Button
+                  className="custom-btn-outline"
+                  style={{ borderColor: '#dc3545', color: '#dc3545', transition: 'all 0.2s ease' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#dc3545'; e.currentTarget.style.color = '#ffffff'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#dc3545'; }}
+                  onClick={() => setShowOnlinePartners(false)}>
+                  Close
+                </Button>
+              ) : (
+                <Button
+                  className="custom-btn-outline position-relative"
+                  onClick={() => setShowOnlinePartners(true)}>
+                  Delivery Partners
+                  {websiteIncomingOrders.length > 0 && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '-8px',
+                        right: '-8px',
+                        background: '#dc3545',
+                        color: '#ffffff',
+                        borderRadius: '50%',
+                        width: '18px',
+                        height: '18px',
+                        fontSize: '10px',
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 2px 5px rgba(220, 53, 69, 0.4)',
+                        zIndex: 10
+                      }}
+                    >
+                      {websiteIncomingOrders.length}
+                    </span>
+                  )}
+                </Button>
+              )}
             </Col>
           </Row>
         </div>
@@ -245,66 +296,204 @@ const Dashboard = () => {
             ))}
           </Col>
 
-          {/* Active Side Section */}
           <Col xs="12" lg="4">
-            {/* Section 2: Active Takeaways & Deliveries */}
-            <div className="d-flex align-items-center mb-4">
-              <div style={{ width: '8px', height: '24px', background: '#23b3f4', borderRadius: '4px', marginRight: '12px', boxShadow: '0 2px 5px rgba(35,179,244,0.3)' }} />
-              <h3 className="mb-0 fw-bold" style={{ color: '#23b3f4', letterSpacing: '0.5px' }}>Active Takeaways & Deliveries</h3>
-            </div>
-            <div style={{ maxHeight: '40vh', overflowY: 'auto', paddingRight: '5px' }} className="custom-scrollbar">
-              {activeTakeawaysAndDeliveries.length === 0 ? (
-                <div style={{ ...glassCardStyle, borderStyle: 'dashed' }} className="text-center p-4">
-                  <CsLineIcons icon="delivery" size="30" stroke="rgba(35,179,244,0.4)" className="mb-2" />
-                  <p className="mb-0 fw-semibold" style={{ color: '#6c757d', fontSize: '13px' }}>No active orders at the moment</p>
+            {showOnlinePartners ? (
+              <>
+                <div className="d-flex align-items-center mb-4">
+                  <div style={{ width: '8px', height: '24px', background: '#23b3f4', borderRadius: '4px', marginRight: '12px', boxShadow: '0 2px 5px rgba(35,179,244,0.3)' }} />
+                  <h3 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4', letterSpacing: '0.5px' }}>
+                    Online Partners
+                    <span className="ms-2 status-badge qsr-badge-incoming animate-pulse" style={{ fontSize: '12px', padding: '4px 10px', height: 'fit-content', background: 'rgba(35, 179, 244, 0.1)', color: '#23b3f4', borderRadius: '10px', fontWeight: 'bold' }}>
+                      {websiteIncomingOrders.length} Incoming
+                    </span>
+                  </h3>
                 </div>
-              ) : (
-                activeTakeawaysAndDeliveries.map((order) => (
-                  <div
-                    key={order._id}
-                    className="mb-3"
-                    style={glassCardStyle}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 15px 30px rgba(35,179,244,0.1)' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = glassCardStyle.boxShadow }}
-                    onClick={() => handleOrderClick(order)}
-                  >
-                    <div className="p-3">
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                          <h5 className="mb-1 fw-bold d-flex align-items-center gap-2" style={{ color: '#1a1a1a', fontSize: '14px' }}>
-                            {order.order_type === 'Takeaway' ? <CsLineIcons icon="shop" size="16" stroke="#23b3f4" /> : <CsLineIcons icon="car" size="16" stroke="#23b3f4" />}
-                            {order.order_type}
-                            {order.token && <span style={{ color: '#23b3f4' }}>#{order.token}</span>}
-                          </h5>
-                          <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
-                            {order.order_type === 'Takeaway' ? (order.token ? `Token: ${order.token}` : (order.customer_name || 'Draft Takeaway')) : `Customer: ${order.customer_name || 'N/A'}`}
-                          </p>
-                        </div>
-                        <Badge
-                          bg={order.order_status === 'Paid' || order.order_status === 'Save' ? 'success' : 'warning'}
-                          className={order.order_status === 'KOT' ? 'text-dark' : 'text-white'}
-                          style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold' }}
-                        >
-                          {order.order_status}
-                        </Badge>
-                      </div>
-                      <div className="d-flex flex-wrap gap-2">
-                        {order.order_items.slice(0, 3).map((item, i) => (
-                          <div key={i} style={{ background: 'rgba(35, 179, 244, 0.08)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#1a1a1a', border: '1px solid rgba(35,179,244,0.12)' }}>
-                            {item.dish_name} <strong className="ms-1" style={{ color: '#23b3f4' }}>x{item.quantity}</strong>
-                          </div>
-                        ))}
-                        {order.order_items.length > 3 && (
-                          <div style={{ background: '#f8f9fa', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#6c757d', border: '1px dashed #dee2e6' }}>
-                            +{order.order_items.length - 3} more
-                          </div>
-                        )}
-                      </div>
+                <div style={{ maxHeight: '90vh', overflowY: 'auto', paddingRight: '5px' }} className="custom-scrollbar">
+                  {websiteIncomingOrders.length === 0 ? (
+                    <div style={{ ...glassCardStyle, borderStyle: 'dashed' }} className="text-center p-4">
+                      <CsLineIcons icon="notification" size="30" stroke="rgba(35,179,244,0.4)" className="mb-2" />
+                      <p className="mb-0 fw-semibold" style={{ color: '#6c757d', fontSize: '13px' }}>No incoming website orders.</p>
                     </div>
-                  </div>
-                ))
-              )}
-            </div>
+                  ) : (
+                    websiteIncomingOrders.map((order) => (
+                      <Card key={order._id} className="mb-3" style={glassCardStyle}>
+                        <Card.Body className="p-3">
+                          {/* Header Info */}
+                          <div className="d-flex justify-content-between align-items-center mb-2">
+                            <span className="status-badge" style={{ fontSize: '10px', fontWeight: 'bold', color: '#23b3f4', background: 'rgba(35, 179, 244, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                              WEBSITE ORDER
+                            </span>
+                            <Badge bg="warning" className="text-dark" style={{ fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '6px' }}>
+                              {order.order_status.toUpperCase()}
+                            </Badge>
+                          </div>
+
+                          {/* Title & Token */}
+                          <div className="d-flex justify-content-between align-items-baseline mb-3">
+                            <h5 className="fw-bold mb-0" style={{ color: '#1a1a1a', fontSize: '14px' }}>
+                              {order.customer_name || 'Web Customer'}
+                            </h5>
+                            <span className="text-muted fw-bold font-monospace" style={{ fontSize: '11px' }}>
+                              #{order._id.substring(18).toUpperCase()}
+                            </span>
+                          </div>
+
+                          {/* Item List */}
+                          <div className="pt-2 border-top border-light-dashed">
+                            <div className="d-flex flex-wrap gap-2">
+                              {order.order_items.map((item, idx) => (
+                                <span key={idx} style={{ background: 'rgba(35, 179, 244, 0.08)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#1a1a1a', border: '1px solid rgba(35,179,244,0.12)' }}>
+                                  {item.dish_name} <strong className="text-primary ms-1">x{item.quantity}</strong>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Total and Action Buttons */}
+                          <div className="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-light-dashed">
+                            <span className="fw-bold" style={{ fontSize: '13px', color: '#1a1a1a' }}>
+                              Total: ₹{Number(order.total_amount || order.bill_amount || 0).toFixed(2)}
+                            </span>
+                            <div className="d-flex gap-2">
+                              <Button 
+                                variant="danger" 
+                                size="sm" 
+                                style={{ borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', padding: '4px 10px' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusChange(order._id, 'Cancelled');
+                                }}
+                              >
+                                Reject
+                              </Button>
+                              <Button 
+                                variant="success" 
+                                size="sm" 
+                                style={{ borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', padding: '4px 10px', background: '#22c55e', border: 'none' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusChange(order._id, 'KOT');
+                                }}
+                              >
+                                Approve
+                              </Button>
+                            </div>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="d-flex align-items-center mb-4">
+                  <div style={{ width: '8px', height: '24px', background: '#23b3f4', borderRadius: '4px', marginRight: '12px', boxShadow: '0 2px 5px rgba(35,179,244,0.3)' }} />
+                  <h3 className="mb-0 fw-bold" style={{ color: '#23b3f4', letterSpacing: '0.5px' }}>Active Takeaways & Deliveries</h3>
+                </div>
+                <div style={{ maxHeight: '90vh', overflowY: 'auto', paddingRight: '5px' }} className="custom-scrollbar">
+                  {activeTakeawaysAndDeliveriesFiltered.length === 0 ? (
+                    <div style={{ ...glassCardStyle, borderStyle: 'dashed' }} className="text-center p-4">
+                      <CsLineIcons icon="delivery" size="30" stroke="rgba(35,179,244,0.4)" className="mb-2" />
+                      <p className="mb-0 fw-semibold" style={{ color: '#6c757d', fontSize: '13px' }}>No active orders at the moment</p>
+                    </div>
+                  ) : (
+                    activeTakeawaysAndDeliveriesFiltered.map((order) => (
+                      <div
+                        key={order._id}
+                        className="mb-3"
+                        style={glassCardStyle}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 15px 30px rgba(35, 179, 244, 0.1)' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = glassCardStyle.boxShadow }}
+                        onClick={() => handleOrderClick(order)}
+                      >
+                        <div className="p-3">
+                          <div className="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                              <h5 className="mb-1 fw-bold d-flex align-items-center gap-2" style={{ color: '#1a1a1a', fontSize: '14px' }}>
+                                {order.order_type === 'Takeaway' ? <CsLineIcons icon="shop" size="16" stroke="#23b3f4" /> : <CsLineIcons icon="car" size="16" stroke="#23b3f4" />}
+                                {order.order_type}
+                                {order.token && <span style={{ color: '#23b3f4' }}>#{order.token}</span>}
+                              </h5>
+                              <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
+                                {order.order_type === 'Takeaway' ? (order.token ? `Token: ${order.token}` : (order.customer_name || 'Draft Takeaway')) : `Customer: ${order.customer_name || 'N/A'}`}
+                              </p>
+                            </div>
+                            <Badge
+                              bg={
+                                order.order_status === 'Paid' || order.order_status === 'Save' || order.order_status === 'Delivered' ? 'success' : 
+                                order.order_status === 'Out for Delivery' ? 'info' : 'warning'
+                              }
+                              className={order.order_status === 'KOT' ? 'text-dark' : 'text-white'}
+                              style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold' }}
+                            >
+                              {order.order_status === 'KOT' ? 'PREPARING' : order.order_status.toUpperCase()}
+                            </Badge>
+                          </div>
+                          <div className="d-flex flex-wrap gap-2">
+                            {order.order_items.slice(0, 3).map((item, i) => (
+                              <div key={i} style={{ background: 'rgba(35, 179, 244, 0.08)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#1a1a1a', border: '1px solid rgba(35,179,244,0.12)' }}>
+                                {item.dish_name} <strong className="ms-1" style={{ color: '#23b3f4' }}>x{item.quantity}</strong>
+                              </div>
+                            ))}
+                            {order.order_items.length > 3 && (
+                              <div style={{ background: '#f8f9fa', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#6c757d', border: '1px dashed #dee2e6' }}>
+                                +{order.order_items.length - 3} more
+                              </div>
+                            )}
+                          </div>
+
+                          {order.order_source === 'Restaurant Website' && (
+                            <div className="d-flex gap-2 justify-content-end mt-3 pt-2 border-top border-light-dashed">
+                              {order.order_status === 'KOT' && (
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  style={{ borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', padding: '4px 10px', background: '#23b3f4', border: 'none' }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStatusChange(order._id, 'Out for Delivery');
+                                  }}
+                                >
+                                  Dispatch Order
+                                </Button>
+                              )}
+                              {order.order_status === 'Out for Delivery' && (
+                                <Button
+                                  variant="info"
+                                  size="sm"
+                                  className="text-white"
+                                  style={{ borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', padding: '4px 10px', background: '#0ea5e9', border: 'none' }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStatusChange(order._id, 'Delivered');
+                                  }}
+                                >
+                                  Mark Delivered
+                                </Button>
+                              )}
+                              {order.order_status === 'Delivered' && (
+                                <Button
+                                  variant="success"
+                                  size="sm"
+                                  style={{ borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', padding: '4px 10px', background: '#22c55e', border: 'none' }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStatusChange(order._id, 'Paid');
+                                  }}
+                                >
+                                  Complete & Paid
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            )}
           </Col>
         </Row>
       </div>
@@ -333,10 +522,48 @@ const Dashboard = () => {
           <Button className="flex-grow-1 custom-btn-outline" onClick={() => createNewOrder('delivery')}>
             + Delivery
           </Button>
-          <Button className="d-flex flex-column align-items-center justify-content-center custom-btn-outline" style={{ width: '72px', minHeight: '48px', padding: '4px 6px', gap: '2px' }} onClick={() => history.push('/order/delivery-partners')}>
-            <CsLineIcons icon="shipping" size="28" />
-            <span style={{ fontSize: '9px', fontWeight: '600', lineHeight: 1, whiteSpace: 'nowrap' }}>Partners</span>
-          </Button>
+          {showOnlinePartners ? (
+            <Button
+              className="d-flex flex-column align-items-center justify-content-center custom-btn-outline position-relative"
+              style={{ width: '72px', minHeight: '48px', padding: '4px 6px', gap: '2px', borderColor: '#dc3545', color: '#dc3545' }}
+              onClick={() => setShowOnlinePartners(false)}
+            >
+              <CsLineIcons icon="close" size="28" stroke="#dc3545" />
+              <span style={{ fontSize: '9px', fontWeight: '600', lineHeight: 1, whiteSpace: 'nowrap' }}>Close</span>
+            </Button>
+          ) : (
+            <Button
+              className="d-flex flex-column align-items-center justify-content-center custom-btn-outline position-relative"
+              style={{ width: '72px', minHeight: '48px', padding: '4px 6px', gap: '2px' }}
+              onClick={() => setShowOnlinePartners(true)}
+            >
+              <CsLineIcons icon="shipping" size="28" />
+              <span style={{ fontSize: '9px', fontWeight: '600', lineHeight: 1, whiteSpace: 'nowrap' }}>Partners</span>
+              {websiteIncomingOrders.length > 0 && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    background: '#dc3545',
+                    color: '#ffffff',
+                    borderRadius: '50%',
+                    width: '18px',
+                    height: '18px',
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 5px rgba(220, 53, 69, 0.4)',
+                    zIndex: 10
+                  }}
+                >
+                  {websiteIncomingOrders.length}
+                </span>
+              )}
+            </Button>
+          )}
         </div>
       </div>}
 
