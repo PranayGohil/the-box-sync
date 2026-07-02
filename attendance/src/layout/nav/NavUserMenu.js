@@ -18,11 +18,11 @@ const NavUserMenu = () => {
     }
   };
 
-  const imageSrc = currentUser?.photo 
+  const imageSrc = currentUser?.photo
     ? `${process.env.REACT_APP_UPLOAD_DIR}${currentUser.photo}`
-    : currentUser?.logo 
-      ? `${process.env.REACT_APP_UPLOAD_DIR}${currentUser.logo}`
-      : '/img/profile/profile-9.webp';
+    : currentUser?.logo
+    ? `${process.env.REACT_APP_UPLOAD_DIR}${currentUser.logo}`
+    : '/img/profile/profile-9.webp';
 
   return (
     <div className="user-container d-flex" onClick={handleClick} style={{ cursor: currentUser?.role === 'staff' ? 'pointer' : 'default' }}>
