@@ -29,7 +29,7 @@ export default function Navbar({ visible: propVisible }) {
   const location = useLocation();
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
   const logoUrl = settings?.logo 
-    ? (settings.logo.startsWith('http') ? settings.logo : `${API_URL.replace('/api', '')}/uploads/${settings.logo.replace(/^\/+/, '')}`) 
+    ? (settings.logo.startsWith('http') ? settings.logo : `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/${settings.logo.replace(/^\/+/, '')}`) 
     : null;
 
   useEffect(() => {

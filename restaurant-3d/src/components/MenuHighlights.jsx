@@ -17,7 +17,7 @@ export default function MenuHighlights() {
   const handleAdd = (item) => {
     const rawImg = item.dish_img;
     const finalImg = rawImg 
-      ? (rawImg.startsWith('http') || rawImg.includes('/uploads/') ? rawImg : `${API_URL.replace('/api', '')}/uploads/${rawImg.replace(/^\/+/, '')}`) 
+      ? (rawImg.startsWith('http') || rawImg.includes('/uploads/') ? rawImg : `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/${rawImg.replace(/^\/+/, '')}`) 
       : null;
 
     const cartItem = {
@@ -56,7 +56,7 @@ export default function MenuHighlights() {
           {allFeatured.map((item, i) => {
             const rawImg = item.dish_img;
             const imageUrl = rawImg 
-              ? (rawImg.startsWith('http') || rawImg.includes('/uploads/') ? rawImg : `${API_URL.replace('/api', '')}/uploads/${rawImg.replace(/^\/+/, '')}`) 
+              ? (rawImg.startsWith('http') || rawImg.includes('/uploads/') ? rawImg : `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/${rawImg.replace(/^\/+/, '')}`) 
               : null;
             return (
               <motion.div

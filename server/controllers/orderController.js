@@ -70,6 +70,54 @@ const recalculateOrderTotals = (orderInfo) => {
   return orderInfo;
 };
 
+const broadcastOrderUpdate = (req, order) => {
+  try {
+    const io = req.app.get("io");
+    if (!io) return;
+
+    // Extract string representation of restaurant ID
+    let restaurantId = null;
+    if (order.user_id) {
+      restaurantId = typeof order.user_id === "object" && order.user_id._id
+        ? order.user_id._id.toString()
+        : order.user_id.toString();
+    }
+
+    // Extract string representation of customer ID
+    let customerId = null;
+    if (order.customer_id) {
+      customerId = typeof order.customer_id === "object" && order.customer_id._id
+        ? order.customer_id._id.toString()
+        : order.customer_id.toString();
+    }
+
+    const orderId = order._id ? order._id.toString() : null;
+
+    // 1. Broadcast to the restaurant room (POS dashboard, QSR dashboard)
+    if (restaurantId) {
+      io.to(`restaurant_${restaurantId}`).emit("kot_update", order);
+      io.to(`restaurant_${restaurantId}`).emit("order_updated", order);
+      console.log(`Socket: Broadcasted order change to restaurant_${restaurantId}`);
+    }
+
+    // 2. Broadcast to the customer room (Website order history)
+    if (customerId) {
+      io.to(`customer_${customerId}`).emit("order_updated", order);
+      console.log(`Socket: Broadcasted order change to customer_${customerId}`);
+    }
+
+    // 3. Broadcast to the specific order room
+    if (orderId) {
+      io.to(`order_${orderId}`).emit("order_updated", order);
+      console.log(`Socket: Broadcasted order change to order_${orderId}`);
+    }
+
+    console.log(`Realtime room broadcast completed for order ${orderId}`);
+  } catch (err) {
+    console.error("Error broadcasting order update:", err);
+  }
+};
+
 const cron = require("node-cron");
 
 cron.schedule("0 0 * * *", async () => {
@@ -1356,6 +1404,7 @@ const deliveryFromSiteController = async (req, res) => {
         if (!savedOrder) {
           return res.status(404).json({ message: "Order not found" });
         }
+        broadcastOrderUpdate(req, savedOrder);
       }
 
       return res.status(200).json({
@@ -1375,6 +1424,8 @@ const deliveryFromSiteController = async (req, res) => {
         return res.status(404).json({ message: "Order not found" });
       }
 
+      broadcastOrderUpdate(req, savedOrder);
+
       return res.status(200).json({
         status: "success",
         message: "Order updated successfully",
@@ -1386,6 +1437,8 @@ const deliveryFromSiteController = async (req, res) => {
     // ✅ 5. Handle new order creation
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();
+
+    broadcastOrderUpdate(req, savedOrder);
 
     const io = req.app.get("io");
     const connectedUsers = req.app.get("connectedUsers");
@@ -1569,11 +1622,7 @@ const updateOrderStatus = async (req, res) => {
 
     await order.save();
 
-    const io = req.app.get("io");
-    if (io) {
-      io.emit("order_status_updated", { orderId, status });
-      io.emit("kot_update");
-    }
+    broadcastOrderUpdate(req, order);
 
     res.json({ success: true, order });
   } catch (error) {

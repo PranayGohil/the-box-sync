@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 
 import { CartProvider, ThemeProvider, AuthProvider, useAuth } from './context/AppContext';
 import { RestaurantProvider, useRestaurant } from './context/RestaurantContext';
+import { SocketProvider } from './context/SocketContext';
 import Navbar       from './components/Navbar';
 import Footer       from './components/Footer';
 import Preloader    from './components/Preloader';
@@ -127,23 +128,25 @@ export default function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <CartProvider>
-            <Routes>
-              <Route path="/:restaurantCode/*" element={
-                <RestaurantProvider>
-                  <AppShell />
-                </RestaurantProvider>
-              } />
-              <Route path="*" element={
-                <div className="min-vh-100 d-flex align-items-center justify-content-center text-center p-4">
-                  <div>
-                    <h2 className="text-white mb-2">Welcome</h2>
-                    <p className="text-white-60">Please visit a valid restaurant link (e.g. /YOUR_RESTAURANT_CODE).</p>
+          <SocketProvider>
+            <CartProvider>
+              <Routes>
+                <Route path="/:restaurantCode/*" element={
+                  <RestaurantProvider>
+                    <AppShell />
+                  </RestaurantProvider>
+                } />
+                <Route path="*" element={
+                  <div className="min-vh-100 d-flex align-items-center justify-content-center text-center p-4">
+                    <div>
+                      <h2 className="text-white mb-2">Welcome</h2>
+                      <p className="text-white-60">Please visit a valid restaurant link (e.g. /YOUR_RESTAURANT_CODE).</p>
+                    </div>
                   </div>
-                </div>
-              } />
-            </Routes>
-          </CartProvider>
+                } />
+              </Routes>
+            </CartProvider>
+          </SocketProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
