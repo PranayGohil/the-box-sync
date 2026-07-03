@@ -348,7 +348,7 @@ const UnifiedOrder = () => {
   // ── Navigation Guard ──────────────────────────────────────────────────────
   useEffect(() => {
     const handleBeforeUnload = (e) => {
-      if (!isDirty) return;
+      if (allowNavigationRef.current || !isDirty) return;
       e.preventDefault();
       e.returnValue = '';
     };
@@ -658,11 +658,10 @@ const UnifiedOrder = () => {
         }
 
         if (status !== 'Paid' && status !== 'KOT') {
-          history.push('/dashboard');
+          window.location.href = '/order/new';
         } else {
-          fetchOrderDetails();
           toast.success('Order saved and marked as Paid!');
-          history.push('/dashboard');
+          window.location.href = '/order/new';
         }
         return true;
       }
@@ -697,7 +696,7 @@ const UnifiedOrder = () => {
         allowNavigationRef.current = true;
         setIsDirty(false);
         setShowCancelModal(false);
-        history.push('/dashboard');
+        window.location.href = '/order/new';
       }
     } catch (err) {
       console.error('Error cancelling order:', err);
@@ -752,7 +751,7 @@ const UnifiedOrder = () => {
       <div className="pos-wrapper">
         {/* Top Bar */}
         <div className="pos-topbar">
-          <Button className="custom-btn-outline" style={{ padding: '0.35rem 1rem', flexShrink: 0 }} onClick={() => handleNavigation('/dashboard')}>
+          <Button className="custom-btn-outline" style={{ padding: '0.35rem 1rem', flexShrink: 0 }} onClick={() => handleNavigation('/operations')}>
             <CsLineIcons icon="arrow-left" size="13" className="me-1" />
             Back
           </Button>

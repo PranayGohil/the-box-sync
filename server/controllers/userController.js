@@ -367,6 +367,12 @@ const login = async (req, res) => {
         .json({ success: false, message: "Only accounts registered via Street Food can log in here." });
     }
 
+    if (req.body.login_from !== 'street-food' && userExists.is_street_food) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Street Food accounts cannot log in to the Admin panel." });
+    }
+
     const matchPass = await bcrypt.compare(password, userExists.password);
     if (!matchPass) {
       return res

@@ -16,12 +16,6 @@ import ManageMenu from './menu/ManageMenu';
 import AddDishes from './menu/AddDishes';
 import QRforMenu from './menu/QRforMenu';
 
-import StockManagement from './inventory/StockManagement';
-import AddInventory from './inventory/AddInventory';
-import InventoryHistory from './inventory/InventoryHistory';
-import InventoryDetails from './inventory/InventoryDetails';
-import CompleteInventory from './inventory/CompleteInventory';
-import EditInventory from './inventory/EditInventory';
 import FinancialReport from './FinancialReport';
 
 const NavContent = () => {
@@ -111,29 +105,6 @@ const NavContent = () => {
 
         <div className="mb-1">
           <div className="section-header">
-            <CsLineIcons icon="boxes" size="17" />
-            <span className="align-middle">Inventory</span>
-          </div>
-          <div className="sub-menu-container">
-            <Nav.Link as={NavLink} to="/operations/stock-management" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Stock Management</span>
-            </Nav.Link>
-            <Nav.Link as={NavLink} to="/operations/add-inventory" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Add Inventory</span>
-            </Nav.Link>
-            <Nav.Link as={NavLink} to="/operations/inventory-history" className="px-0" isActive={(match, location) => {
-              return location.pathname.startsWith('/operations/inventory-history') || location.pathname.startsWith('/operations/inventory-details');
-            }}>
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Inventory History</span>
-            </Nav.Link>
-          </div>
-        </div>
-
-        <div className="mb-1">
-          <div className="section-header">
             <CsLineIcons icon="file-text" size="17" />
             <span className="align-middle">Report</span>
           </div>
@@ -155,7 +126,6 @@ const MobileBottomNav = () => {
   const navItems = [
     { label: 'Order', icon: 'cart', to: '/operations/order-history' },
     { label: 'Menu', icon: 'book-open', to: '/operations/manage-menu' },
-    { label: 'Inventory', icon: 'boxes', to: '/operations/stock-management' },
     { label: 'Report', icon: 'file-text', to: '/operations/financial-report' },
   ];
 
@@ -280,12 +250,6 @@ const Operations = () => {
               )}
             />
 
-            <Route exact path="/operations/stock-management" render={() => <StockManagement />} />
-            <Route exact path="/operations/add-inventory" render={() => <AddInventory />} />
-            <Route exact path="/operations/inventory-history" render={() => <InventoryHistory />} />
-            <Route exact path="/operations/inventory-details/:id" render={() => <InventoryDetails />} />
-            <Route exact path="/operations/complete-inventory/:id" render={() => <CompleteInventory />} />
-            <Route exact path="/operations/edit-inventory/:id" render={() => <EditInventory />} />
             <Route exact path="/operations/financial-report" render={() => <FinancialReport />} />
           </Switch>
         </Col>

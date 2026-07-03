@@ -1,13 +1,13 @@
-import React, { createRef, useState, useContext, useRef } from 'react';
+import React, { createRef, useState, useRef } from 'react';
 import { Wizard, Steps, Step, WithWizard } from 'react-albus';
-import { Button, Form, Spinner, Modal } from 'react-bootstrap';
+import { Form, Spinner } from 'react-bootstrap';
 import { useHistory, NavLink as RouterLink } from 'react-router-dom';
 import axios from 'axios';
 import { Formik, Field } from 'formik';
 import * as Yup from 'yup';
 import { Country, State, City } from 'country-state-city';
 import HtmlHead from 'components/html-head/HtmlHead';
-import { AuthContext } from 'contexts/AuthContext';
+
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
 
@@ -16,12 +16,12 @@ const Register = () => {
   const title = 'Register — The Box';
   const description = 'Create your restaurant account on The Box.';
 
-  const { login } = useContext(AuthContext);
+
 
   const forms = [createRef(null), createRef(null), createRef(null)];
   const [bottomNavHidden, setBottomNavHidden] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   const [previewLogo, setPreviewLogo] = useState(null);
   const [fields, setFields] = useState({
     name: '',
@@ -178,20 +178,22 @@ const Register = () => {
     try {
       const formData = new FormData();
       Object.keys(finalData).forEach((key) => {
-        formData.append(key, finalData[key]);
+        if (finalData[key] !== '' && finalData[key] !== null && finalData[key] !== undefined) {
+          formData.append(key, finalData[key]);
+        }
       });
       formData.append('is_street_food', 'true');
       const res = await axios.post(`${process.env.REACT_APP_API}/user/register`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       if (res.data) {
-        setShowSuccessModal(true);
+        history.push('/login');
       } else {
         toast.error(res.data?.message || 'Something went wrong!');
         setBottomNavHidden(false);
+        setLoading(false);
       }
     } catch (err) {
       setBottomNavHidden(false);
       toast.error(err.response?.data?.message || 'Something went wrong!');
-    } finally {
       setLoading(false);
     }
   };
@@ -218,7 +220,8 @@ const Register = () => {
       return;
     }
     const stepHasErrors = stepFields[formIndex].some((field) => errors[field]);
-    if (!stepHasErrors && form.isValid) {
+    const formHasAnyErrors = Object.keys(errors).length > 0;
+    if (!stepHasErrors && !formHasAnyErrors) {
       const newFields = { ...fields, ...form.values };
       setFields(newFields);
       if (formIndex === forms.length - 1) {
@@ -682,26 +685,24 @@ const Register = () => {
       </div>
       {rightSide}
 
-      <Modal show={showSuccessModal} onHide={() => { }} centered backdrop="static">
-        <Modal.Body className="text-center p-5">
-          <div className="mb-4 text-success d-flex justify-content-center">
-            <CsLineIcons icon="check-circle" size="50" style={{ color: '#10b981' }} />
-          </div>
-          <h3 className="fw-bold mb-2">Registration Successful</h3>
-          <p className="text-muted mb-4">
-            Your account will be activated soon. You can log in once it has been approved by the admin.
-          </p>
-          <Button
-            variant="primary"
-            className="w-100 rounded-pill py-2.5 fw-bold"
-            onClick={() => {
-              window.location.href = '/login';
-            }}
-          >
-            Go to Login
-          </Button>
-        </Modal.Body>
-      </Modal>
+      {loading && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.55)',
+            zIndex: 9999,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '16px',
+          }}
+        >
+          <Spinner animation="border" style={{ width: '3rem', height: '3rem', color: '#7444FD', borderWidth: '4px' }} />
+          <p style={{ color: '#fff', fontWeight: 600, fontSize: '16px', margin: 0 }}>Registering your account…</p>
+        </div>
+      )}
     </div>
   );
 };

@@ -109,53 +109,6 @@ const BottomCartSheet = ({
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            {/* Save Changes */}
-            {showSave && (
-              <button
-                type="button"
-                style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, border: '1.5px solid rgba(226,232,240,0.9)', background: '#f1f5f9', color: '#475569', cursor: 'pointer' }}
-                onClick={() => handleSaveOrder('Save')}
-                disabled={isLoading}
-              >
-                Save
-              </button>
-            )}
-            {/* Send to Kitchen */}
-            {showKitchen && (
-              <button
-                type="button"
-                style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: 'rgba(35,179,244,0.08)', color: '#23b3f4', border: '1.5px solid rgba(35,179,244,0.3)', cursor: 'pointer' }}
-                onClick={() => handleSaveOrder('KOT')}
-                disabled={isLoading}
-              >
-                Kitchen
-              </button>
-            )}
-            {/* KOT + Print */}
-            {showKOTPrintButton && (
-              <button
-                type="button"
-                style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: 'rgba(245,158,11,0.08)', color: '#d97706', border: '1.5px solid rgba(245,158,11,0.3)', cursor: 'pointer' }}
-                onClick={onKotAndPrint}
-                disabled={isLoading || kotPrinting}
-              >
-                {kotPrinting ? '...' : 'Order Print'}
-              </button>
-            )}
-            {/* Print Bill (even if new/unsaved/dirty) */}
-            {showPrintBill && (
-              <button
-                type="button"
-                style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: '#f1f5f9', color: '#475569', border: '1.5px solid rgba(226,232,240,0.9)', cursor: 'pointer' }}
-                onClick={() => {
-                  setShowCartSheet(false);
-                  handlePrint(orderId);
-                }}
-                disabled={printing}
-              >
-                {printing ? '...' : 'Print Bill'}
-              </button>
-            )}
             {/* Cancel Order */}
             {orderId && orderStatus !== 'Paid' && (
               <button
@@ -167,27 +120,17 @@ const BottomCartSheet = ({
                 Cancel
               </button>
             )}
-            {/* Paid state: Go to Dashboard + Print Bill */}
+            {/* Paid state: Go to New Order */}
             {isPaid && !isDirty && dueAmount <= 0.01 ? (
-              <>
-                <button
-                  type="button"
-                  style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: '#23b3f4', color: '#fff', border: 'none', cursor: 'pointer' }}
-                  onClick={() => history.push('/dashboard')}
-                >
-                  Dashboard
-                </button>
-                {orderId && (
-                  <button
-                    type="button"
-                    style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: '#f1f5f9', color: '#475569', border: '1.5px solid rgba(226,232,240,0.9)', cursor: 'pointer' }}
-                    onClick={() => handlePrint(orderId)}
-                    disabled={printing}
-                  >
-                    {printing ? '...' : 'Print Bill'}
-                  </button>
-                )}
-              </>
+              <button
+                type="button"
+                style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: '#23b3f4', color: '#fff', border: 'none', cursor: 'pointer', gridColumn: 'span 2' }}
+                onClick={() => {
+                  window.location.href = '/order/new';
+                }}
+              >
+                New Order
+              </button>
             ) : (
               showPayment && (
                 <button
@@ -196,7 +139,7 @@ const BottomCartSheet = ({
                     width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, 
                     background: '#23b3f4', color: '#fff', border: 'none', boxShadow: '0 4px 12px rgba(35,179,244,0.3)', 
                     cursor: 'pointer',
-                    gridColumn: paymentSpan
+                    gridColumn: 'span 2'
                   }}
                   onClick={() => { setShowCartSheet(false); handleOpenPaymentModal(); }}
                 >
