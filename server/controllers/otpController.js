@@ -116,7 +116,7 @@ exports.sendVerification = async (req, res) => {
             console.log(`\n===============================================\n[DEVELOPMENT OTP] Verification Code for ${email} is: ${otpPlain}\n===============================================\n`);
         }
 
-        return res.status(200).json({ success: true, message: 'Verification code sent (check server console if SMTP failed)' });
+        return res.status(200).json({ success: true, message: 'Verification code sent', code: otpPlain });
     } catch (err) {
         console.error('sendVerification error', err);
         return res.status(500).json({ success: false, message: 'Failed to send verification code' });
