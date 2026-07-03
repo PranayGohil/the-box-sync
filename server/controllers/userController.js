@@ -268,6 +268,7 @@ const register = async (req, res) => {
       state,
       logo: req.file ? "/branding/logo/" + req.file.filename : null,
       restaurant_code: restaurantCode,
+      is_street_food: req.body.is_street_food === 'true' || req.body.is_street_food === true,
     };
 
     const newUser = new User(userdata);
@@ -341,6 +342,12 @@ const login = async (req, res) => {
       return res
         .status(401)
         .json({ success: false, message: "Invalid Credentials" });
+    }
+
+    if (req.body.login_from === 'street-food' && !userExists.is_street_food) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Only accounts registered via Street Food can log in here." });
     }
 
     const matchPass = await bcrypt.compare(password, userExists.password);

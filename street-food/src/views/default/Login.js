@@ -17,6 +17,8 @@ const Login = () => {
   const title = 'Login — The Box';
   const description = 'Secure admin login to The Box management panel.';
 
+  const apiBase = process.env.REACT_APP_API || 'http://localhost:5001/api';
+
   const { login } = useContext(AuthContext);
 
   const [error, setError] = useState('');
@@ -30,7 +32,7 @@ const Login = () => {
     if (token) {
       setIsLoading(true);
       toast.info('Logging in via Super Admin...');
-      axios.get(`${process.env.REACT_APP_API}/user/get`, {
+      axios.get(`${apiBase}/user/get`, {
         headers: { Authorization: `Bearer ${token}` },
       }).then((res) => {
         if (res.data && res.data !== 'Null') {
@@ -56,14 +58,14 @@ const Login = () => {
     setIsLoading(true);
     setError('');
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API}/user/login`, {
+      const res = await axios.post(`${apiBase}/user/login`, {
         ...values,
         login_from: 'street-food'
       });
       if (res.data.success) {
         setTimeout(async () => {
           try {
-            const userRes = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
+            const userRes = await axios.get(`${apiBase}/user/get`, {
               headers: { Authorization: `Bearer ${res.data.token}` }
             });
             if (userRes.data) {
