@@ -105,13 +105,18 @@ exports.sendVerification = async (req, res) => {
           </div>
         `;
 
-        await sendEmail({
-            to: email,
-            subject: "OTP Verification from TheBox",
-            html: emailHtml,
-        });
+        try {
+            await sendEmail({
+                to: email,
+                subject: "OTP Verification from TheBox",
+                html: emailHtml,
+            });
+        } catch (mailErr) {
+            console.error('Mail send failed, falling back to console log:', mailErr);
+            console.log(`\n===============================================\n[DEVELOPMENT OTP] Verification Code for ${email} is: ${otpPlain}\n===============================================\n`);
+        }
 
-        return res.status(200).json({ success: true, message: 'Verification code sent' });
+        return res.status(200).json({ success: true, message: 'Verification code sent (check server console if SMTP failed)' });
     } catch (err) {
         console.error('sendVerification error', err);
         return res.status(500).json({ success: false, message: 'Failed to send verification code' });
