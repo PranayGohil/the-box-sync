@@ -56,22 +56,27 @@ const Login = () => {
     setIsLoading(true);
     setError('');
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API}/user/login`, values);
+      const res = await axios.post(`${process.env.REACT_APP_API}/user/login`, {
+        ...values,
+        login_from: 'street-food'
+      });
       if (res.data.success) {
         setTimeout(async () => {
           try {
             const userRes = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
               headers: { Authorization: `Bearer ${res.data.token}` }
             });
-            if (userRes.data && userRes.data.purchasedPlan) {
-              if (!userRes.data.isApproved) {
+            if (userRes.data) {
+              if (userRes.data.is_street_food && !userRes.data.isApproved) {
                 toast.info("Your account is pending activation from the Theboxsync side. We will notify you once it is activated.", { autoClose: 5000 });
                 setIsLoading(false);
                 return;
               }
-              login(res.data.token, userRes.data);
-              window.location.href = '/';
-            } else {
+              if (userRes.data.purchasedPlan && !userRes.data.isApproved) {
+                toast.info("Your account is pending activation from the Theboxsync side. We will notify you once it is activated.", { autoClose: 5000 });
+                setIsLoading(false);
+                return;
+              }
               login(res.data.token, userRes.data);
               window.location.href = '/';
             }
