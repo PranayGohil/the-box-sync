@@ -129,7 +129,7 @@ const Login = () => {
                 <input
                   type="email"
                   name="email"
-                  placeholder="you@restaurant.com"
+                  placeholder="you@company.com"
                   value={values.email}
                   onChange={handleChange}
                   disabled={isLoading}
