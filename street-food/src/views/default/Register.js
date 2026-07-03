@@ -18,6 +18,8 @@ const Register = () => {
 
   const { login } = useContext(AuthContext);
 
+  const apiBase = process.env.REACT_APP_API || 'http://localhost:5001/api';
+
   const forms = [createRef(null), createRef(null), createRef(null)];
   const [bottomNavHidden, setBottomNavHidden] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -68,7 +70,7 @@ const Register = () => {
         .test('email-exists', 'Email already exists', async (value) => {
           if (!value) return true;
           try {
-            const res = await axios.post(`${process.env.REACT_APP_API}/user/check-email`, { email: value });
+            const res = await axios.post(`${apiBase}/user/check-email`, { email: value });
             return !res.data.exists;
           } catch (err) {
             return false;
@@ -106,7 +108,7 @@ const Register = () => {
     }
     setSendingVerification(true);
     try {
-      const checkRes = await axios.post(`${process.env.REACT_APP_API}/user/check-email`, { email });
+      const checkRes = await axios.post(`${apiBase}/user/check-email`, { email });
       if (checkRes.data.exists) {
         setFieldError('email', 'Email already exists');
         setFieldTouched('email', true, false);
@@ -114,7 +116,7 @@ const Register = () => {
         return;
       }
       setVerificationSent(false);
-      const res = await axios.post(`${process.env.REACT_APP_API}/otp/send-verification`, { email });
+      const res = await axios.post(`${apiBase}/otp/send-verification`, { email });
       if (res.status === 200 && (res.data?.success ?? true)) {
         toast.success('Verification code sent to your email');
         setVerificationSent(true);
@@ -150,7 +152,7 @@ const Register = () => {
     }
     setVerifyingCode(true);
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API}/otp/verify-email`, { email, code: verificationCodeInput });
+      const res = await axios.post(`${apiBase}/otp/verify-email`, { email, code: verificationCodeInput });
       if (res.status === 200 && (res.data?.verified ?? false)) {
         setIsEmailVerified(true);
         toast.success('Email verified');
@@ -179,8 +181,7 @@ const Register = () => {
         formData.append(key, finalData[key]);
       });
       formData.append('is_street_food', 'true');
-
-      const res = await axios.post(`${process.env.REACT_APP_API}/user/register`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const res = await axios.post(`${apiBase}/user/register`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       if (res.data) {
         setShowSuccessModal(true);
       } else {
