@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Spinner, Button, Alert, Card, Modal } from 'react-bootstrap';
@@ -86,12 +86,11 @@ const KioskScan = () => {
 
   // Scan & Detection States
   const [error, setError] = useState('');
-  const [cooldownActive, setCooldownActive] = useState(false);
-  const [detectedList, setDetectedList] = useState([]);
-  const [showMatchModal, setShowMatchModal] = useState(false);
+  const [recentMatchedList, setRecentMatchedList] = useState([]);
 
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
+  const recentScansRef = useRef({});
 
   const getCurrentTime = () => {
     const now = new Date();
@@ -127,15 +126,7 @@ const KioskScan = () => {
     };
   }, []);
 
-  const triggerCooldown = (durationMs) => {
-    setCooldownActive(true);
-    setTimeout(() => {
-      setCooldownActive(false);
-      setError('');
-    }, durationMs);
-  };
-
-  const fetchFaces = async () => {
+  const fetchFaces = useCallback(async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API}/attendance/kiosk-faces/${company_id}`);
       if (res.data.success) {
@@ -153,37 +144,99 @@ const KioskScan = () => {
     } catch (err) {
       console.error('Error fetching face encodings:', err);
     }
-  };
+  }, [company_id]);
 
   // --- Core API Submit ---
-  const submitScan = async (idToScan) => {
+  const submitScan = useCallback(async (staff) => {
     setLoading(true);
+    setError('');
     setMessage(null);
 
     try {
+      const currentTime = getCurrentTime();
       const res = await axios.post(`${process.env.REACT_APP_API}/attendance/kiosk-scan`, {
         company_id,
-        scanned_id: idToScan,
+        scanned_id: staff.staff_id,
         date: getTodayDate(),
-        time: getCurrentTime(),
+        time: currentTime,
       });
 
       if (res.data && res.data.success) {
-        setMessage({ type: 'success', text: res.data.message || 'Scan successful!' });
+        const todayAtt = staff.todayAttendance;
+        let isCheckOut = false;
+        if (todayAtt) {
+          const sessions = todayAtt.sessions || [];
+          if (sessions.length > 0) {
+            isCheckOut = sessions[sessions.length - 1].out_time === null;
+          } else if (todayAtt.in_time && !todayAtt.out_time) {
+            isCheckOut = true;
+          }
+        }
+        const actionLabel = isCheckOut ? 'Checked-Out' : 'Checked-In';
+        
+        const orgRules = companyConfig?.org_rules;
+        let statusBadgeText = '';
+        let statusBadgeType = 'success';
+        
+        if (isCheckOut) {
+          const { overtimeMins } = calculateCompletedAndOvertime(todayAtt, orgRules, currentTime);
+          if (overtimeMins > 0) {
+            const otHours = Math.floor(overtimeMins / 60);
+            const otMins = overtimeMins % 60;
+            statusBadgeText = `Overtime: ${otHours > 0 ? `${otHours}h ` : ''}${otMins}m`;
+            statusBadgeType = 'warning';
+          } else {
+            statusBadgeText = 'Working Hours Completed';
+            statusBadgeType = 'success';
+          }
+        } else {
+          const lateMins = getLateMinutes(currentTime, orgRules);
+          if (lateMins > 0) {
+            statusBadgeText = `Late: ${lateMins}m`;
+            statusBadgeType = 'danger';
+          } else {
+            statusBadgeText = 'On Time';
+            statusBadgeType = 'success';
+          }
+        }
+
+        const newMatch = {
+          ...staff,
+          action: actionLabel,
+          time: currentTime,
+          statusBadgeText,
+          statusBadgeType,
+          id: Date.now(),
+        };
+
+        // Add to recentMatchedList and keep top 3
+        setRecentMatchedList((prev) => [
+          newMatch,
+          ...prev.filter((item) => item.staff_id !== staff.staff_id)
+        ].slice(0, 3));
+
+        // Auto-remove after 7 seconds
+        setTimeout(() => {
+          setRecentMatchedList((prev) => prev.filter((item) => item.id !== newMatch.id));
+        }, 7000);
+
+        setMessage({ type: 'success', text: `${staff.f_name}: ${res.data.message || `${actionLabel} successful!`}` });
         fetchFaces(); // Refresh face scan records immediately!
       } else {
-        setMessage({ type: 'error', text: res.data.message || 'Scan failed.' });
+        setMessage({ type: 'error', text: `${staff.f_name}: ${res.data.message || 'Scan failed.'}` });
       }
     } catch (err) {
-      setMessage({ type: 'error', text: err.response?.data?.message || 'Error processing scan.' });
+      const errMsg = err.response?.data?.message || 'Error processing scan.';
+      setError(errMsg);
+      setMessage({ type: 'error', text: errMsg });
     } finally {
       setLoading(false);
-      // Cooldown before next scan
+      // Clear status message after 3 seconds
       setTimeout(() => {
         setMessage(null);
-      }, 4000);
+      }, 3000);
     }
-  };
+  }, [company_id, companyConfig, fetchFaces]);
 
   // --- Face Scan Initialization ---
   useEffect(() => {
@@ -215,13 +268,13 @@ const KioskScan = () => {
       const webcam = webcamRef.current;
       const canvas = canvasRef.current;
 
-      if (modelsLoaded && faceDataLoaded && webcam && canvas && !loading && !cooldownActive && !showMatchModal) {
+      if (modelsLoaded && faceDataLoaded && webcam && canvas) {
         try {
           const screenshot = webcam.getScreenshot();
           if (screenshot && active) {
             const image = await faceapi.fetchImage(screenshot);
             const detections = await faceapi
-              .detectAllFaces(image, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.35 }))
+              .detectAllFaces(image, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.55 }))
               .withFaceLandmarks()
               .withFaceDescriptors();
 
@@ -278,20 +331,15 @@ const KioskScan = () => {
                 });
               }
 
-              // Update detectedList with 3s persistence so they don't flicker off the list
-              setDetectedList((prevList) => {
-                const updatedList = [...prevList];
+              // Check and trigger scans for all matched staff who are not in individual cooldown
+              const eligibleStaffList = currentMatchedStaff.filter((staff) => {
+                const lastScanTime = recentScansRef.current[staff.staff_id] || 0;
+                return (now - lastScanTime) > 8000; // 8 seconds per-staff cooldown
+              });
 
-                currentMatchedStaff.forEach((staff) => {
-                  const existingIdx = updatedList.findIndex((item) => item.staff_id === staff.staff_id);
-                  if (existingIdx !== -1) {
-                    updatedList[existingIdx] = { ...staff, lastSeen: now, alreadyConfirmed: updatedList[existingIdx].alreadyConfirmed };
-                  } else {
-                    updatedList.push({ ...staff, lastSeen: now, alreadyConfirmed: false });
-                  }
-                });
-
-                return updatedList.filter((item) => now - item.lastSeen < 3000 || item.alreadyConfirmed);
+              eligibleStaffList.forEach((staff) => {
+                recentScansRef.current[staff.staff_id] = now; // Mark scanned immediately!
+                submitScan(staff);
               });
             }
           }
@@ -301,7 +349,7 @@ const KioskScan = () => {
       }
 
       if (active) {
-        timeoutId = setTimeout(detectAllFacesLoop, 400);
+        timeoutId = setTimeout(detectAllFacesLoop, 150);
       }
     };
 
@@ -313,47 +361,8 @@ const KioskScan = () => {
       active = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [modelsLoaded, faceDataLoaded, staffList, loading, cooldownActive]);
+  }, [modelsLoaded, faceDataLoaded, staffList, submitScan]);
 
-  // --- Auto-trigger Confirm Modal when face is detected ---
-  useEffect(() => {
-    if (detectedList.length > 0 && !showMatchModal && !cooldownActive) {
-      setShowMatchModal(true);
-    }
-  }, [detectedList, showMatchModal, cooldownActive]);
-
-  const handleCloseModal = () => {
-    setShowMatchModal(false);
-    setDetectedList([]);
-    triggerCooldown(4000); // 4 seconds cooldown
-  };
-
-  const handleConfirm = async (staff) => {
-    // 1. Mark as confirmed locally so the UI updates instantly
-    setDetectedList((prev) =>
-      prev.map((item) => {
-        if (item.staff_id === staff.staff_id) {
-          return { ...item, alreadyConfirmed: true };
-        }
-        return item;
-      })
-    );
-
-    // 2. Submit attendance scan
-    await submitScan(staff.staff_id);
-
-    // 3. Remove them from the list after 2 seconds. If it was the last one, close the modal.
-    setTimeout(() => {
-      setDetectedList((prev) => {
-        const remaining = prev.filter((item) => item.staff_id !== staff.staff_id);
-        if (remaining.length === 0) {
-          setShowMatchModal(false);
-          triggerCooldown(4000);
-        }
-        return remaining;
-      });
-    }, 2000);
-  };
 
   const title = 'Attendance Terminal';
   const description = 'Face recognition attendance terminal - position yourself before the camera to scan.';
@@ -362,17 +371,8 @@ const KioskScan = () => {
     <>
       <HtmlHead title={title} description={description} />
 
-      <div
-        style={{
-          minHeight: '100vh',
-          background: 'radial-gradient(circle at 50% 50%, #f8fafc 0%, #e2e8f0 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '20px',
-        }}
-      >
-        <Card className="shadow-lg border-0 kiosk-card">
+      <div className="kiosk-page-wrapper">
+        <Card className="shadow-lg border-0 kiosk-card animate__animated animate__fadeIn">
           <Card.Body className="kiosk-card-body text-center d-flex flex-column align-items-center">
             {/* Company Logo / Branding at top center */}
             <div className="d-flex justify-content-center mb-4 w-100">
@@ -404,7 +404,7 @@ const KioskScan = () => {
               <Alert
                 variant="danger"
                 className="w-100 mb-3 text-center rounded-3 fw-bold border-0 small"
-                style={{ maxWidth: '440px', background: '#fff1f2', color: '#e11d48' }}
+                style={{ maxWidth: '580px', background: '#fff1f2', color: '#e11d48' }}
               >
                 <CsLineIcons icon="error-hexagon" className="me-2" size="14" />
                 {error}
@@ -420,7 +420,7 @@ const KioskScan = () => {
               ) : (
                 <div
                   className="webcam-container position-relative overflow-hidden rounded-3 shadow"
-                  style={{ width: '100%', maxWidth: '440px', border: '3px solid #e2e8f0', background: '#0f172a' }}
+                  style={{ width: '100%', maxWidth: '580px', border: '3px solid #e2e8f0', background: '#0f172a' }}
                 >
                   {cameraError ? (
                     <div className="text-danger fw-bold py-5 text-center">
@@ -460,7 +460,7 @@ const KioskScan = () => {
                         className="camera-status-text position-absolute w-100 text-center fw-bold"
                         style={{ bottom: '15px', color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.8)', zIndex: 10 }}
                       >
-                        {cooldownActive ? 'SCAN COMPLETED. PLEASE WAIT...' : 'STAND IN FRONT OF CAMERA'}
+                        STAND IN FRONT OF CAMERA
                       </div>
                     </>
                   )}
@@ -480,7 +480,7 @@ const KioskScan = () => {
                   className={`p-2.5 rounded-3 fw-bold w-100 text-center ${
                     message.type === 'success' ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger'
                   }`}
-                  style={{ maxWidth: '440px' }}
+                  style={{ maxWidth: '580px' }}
                 >
                   {message.type === 'success' ? (
                     <CsLineIcons icon="check-circle" size="18" className="me-2" />
@@ -492,159 +492,95 @@ const KioskScan = () => {
               ) : null}
             </div>
 
-            {/* Match Confirmation Modal */}
-            <Modal show={showMatchModal} onHide={handleCloseModal} centered backdrop="static">
-              <Modal.Header closeButton>
-                <Modal.Title className="fw-bold">Confirm Attendance</Modal.Title>
-              </Modal.Header>
-              <Modal.Body className="p-4">
-                <div className="detected-staff-list w-100 text-start">
-                  {detectedList.map((staff) => {
-                    const { todayAttendance: todayAtt, alreadyConfirmed } = staff;
-                    let isCheckOut = false;
-                    if (todayAtt) {
-                      const sessions = todayAtt.sessions || [];
-                      if (sessions.length > 0) {
-                        isCheckOut = sessions[sessions.length - 1].out_time === null;
-                      } else if (todayAtt.in_time && !todayAtt.out_time) {
-                        isCheckOut = true;
-                      }
-                    }
-                    const actionLabel = isCheckOut ? 'Check-Out' : 'Check-In';
-
-                    const currentTime = getCurrentTime();
-                    const orgRules = companyConfig?.org_rules;
-
-                    let statusBadge = null;
-                    if (isCheckOut) {
-                      const { overtimeMins } = calculateCompletedAndOvertime(todayAtt, orgRules, currentTime);
-                      if (overtimeMins > 0) {
-                        const otHours = Math.floor(overtimeMins / 60);
-                        const otMins = overtimeMins % 60;
-                        const otStr = otHours > 0 ? `${otHours}h ${otMins}m` : `${otMins}m`;
-                        statusBadge = (
-                          <span
-                            className="badge bg-soft-purple text-purple fw-bold px-2 py-1 rounded-pill"
-                            style={{ background: 'rgba(124, 58, 237, 0.1)', color: '#7c3aed', border: '1px solid rgba(124, 58, 237, 0.2)' }}
-                          >
-                            ⚡ Overtime: {otStr}
-                          </span>
-                        );
-                      } else {
-                        statusBadge = (
-                          <span
-                            className="badge bg-soft-primary text-primary fw-bold px-2 py-1 rounded-pill"
-                            style={{ background: 'rgba(35, 179, 244, 0.1)', color: '#23b3f4', border: '1px solid rgba(35, 179, 244, 0.2)' }}
-                          >
-                            Shift active
-                          </span>
-                        );
-                      }
-                    } else {
-                      const lateMins = getLateMinutes(currentTime, orgRules);
-                      if (lateMins > 0) {
-                        statusBadge = (
-                          <span
-                            className="badge bg-soft-danger text-danger fw-bold px-2 py-1 rounded-pill"
-                            style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#dc2626', border: '1px solid rgba(239, 68, 68, 0.2)' }}
-                          >
-                            🔴 Late: {lateMins}m
-                          </span>
-                        );
-                      } else {
-                        statusBadge = (
-                          <span
-                            className="badge bg-soft-success text-success fw-bold px-2 py-1 rounded-pill"
-                            style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)' }}
-                          >
-                            On Time
-                          </span>
-                        );
-                      }
-                    }
-
-                    return (
-                      <Card
-                        key={staff.staff_id}
-                        className="mb-3 shadow-sm border-0"
-                        style={{
-                          background: '#f8fafc',
-                          borderLeft: alreadyConfirmed ? '4px solid #10b981' : isCheckOut ? '4px solid #eab308' : '4px solid #3b82f6',
-                        }}
-                      >
-                        <Card.Body className="p-3">
-                          <div className="d-flex align-items-center justify-content-between">
-                            <div className="d-flex align-items-center">
-                              {staff.photo ? (
-                                <img
-                                  src={`${process.env.REACT_APP_UPLOAD_DIR}${staff.photo}`}
-                                  alt={staff.f_name}
-                                  style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover' }}
-                                />
-                              ) : (
-                                <div
-                                  style={{ width: '45px', height: '45px', borderRadius: '50%', background: 'rgba(35, 179, 244, 0.1)', color: '#23b3f4' }}
-                                  className="d-flex align-items-center justify-content-center"
-                                >
-                                  <CsLineIcons icon="user" size={20} />
-                                </div>
-                              )}
-                              <div className="ms-3 text-start">
-                                <div className="fw-bolder text-dark" style={{ fontSize: '0.95rem' }}>
-                                  {staff.f_name} {staff.l_name}
-                                </div>
-                                <div className="text-muted" style={{ fontSize: '0.78rem' }}>
-                                  ID: {staff.staff_id}
-                                </div>
+            {/* DIRECT SCAN RESULT DISPLAY */}
+            {recentMatchedList.length > 0 && (
+              <div className="w-100 mt-2 d-flex flex-column gap-3 animate__animated animate__fadeIn" style={{ maxWidth: '580px' }}>
+                {recentMatchedList.map((matchedStaff, index) => {
+                  const isPrimary = index === 0;
+                  return (
+                    <Card
+                      key={matchedStaff.id}
+                      className="border-0 shadow-sm transition-all"
+                      style={{
+                        background: isPrimary ? '#f8fafc' : '#ffffff',
+                        borderLeft: matchedStaff.action === 'Checked-In' ? '5px solid #3b82f6' : '5px solid #eab308',
+                        borderRadius: '16px',
+                        opacity: isPrimary ? 1 : 0.85,
+                        transform: isPrimary ? 'scale(1)' : 'scale(0.96)',
+                        border: isPrimary ? '1px solid rgba(59, 130, 246, 0.15)' : '1px solid rgba(226, 232, 240, 0.6)'
+                      }}
+                    >
+                      <Card.Body className="p-3">
+                        <div className="d-flex align-items-center justify-content-between">
+                          <div className="d-flex align-items-center">
+                            {matchedStaff.photo ? (
+                              <img
+                                src={`${process.env.REACT_APP_UPLOAD_DIR}${matchedStaff.photo}`}
+                                alt={matchedStaff.f_name}
+                                style={{ width: isPrimary ? '55px' : '45px', height: isPrimary ? '55px' : '45px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                              />
+                            ) : (
+                              <div
+                                style={{ width: isPrimary ? '55px' : '45px', height: isPrimary ? '55px' : '45px', borderRadius: '50%', background: 'rgba(35, 179, 244, 0.1)', color: '#23b3f4', border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                                className="d-flex align-items-center justify-content-center"
+                              >
+                                <CsLineIcons icon="user" size={isPrimary ? 24 : 20} />
+                              </div>
+                            )}
+                            <div className="ms-3 text-start">
+                              <div className="fw-bold text-dark" style={{ fontSize: isPrimary ? '1.05rem' : '0.95rem', lineHeight: '1.2' }}>
+                                {matchedStaff.f_name} {matchedStaff.l_name}
+                              </div>
+                              <div className="text-muted small">
+                                ID: {matchedStaff.staff_id}
                               </div>
                             </div>
-                            <Button
-                              size="sm"
-                              variant={alreadyConfirmed ? 'success' : isCheckOut ? 'warning' : 'primary'}
-                              className="rounded-pill px-4 fw-bold shadow-sm animate__animated animate__fadeIn"
-                              disabled={alreadyConfirmed || loading}
-                              onClick={() => handleConfirm(staff)}
-                              style={{ minWidth: '100px' }}
-                            >
-                              {alreadyConfirmed ? (
-                                <>
-                                  <CsLineIcons icon="check" size="14" className="me-1" />
-                                  Done
-                                </>
-                              ) : (
-                                actionLabel
-                              )}
-                            </Button>
                           </div>
-
-                          <div className="p-2 bg-white border rounded-3 d-flex align-items-center justify-content-between mt-3" style={{ fontSize: '0.8rem' }}>
-                            <span className="fw-semibold text-muted d-flex align-items-center">
-                              <CsLineIcons icon="clock" size="14" className="me-1" />
-                              Time: {currentTime}
-                            </span>
-                            <div className="d-flex gap-1.5 align-items-center">
-                              <span
-                                className={`badge ${
-                                  alreadyConfirmed
-                                    ? 'bg-soft-success text-success'
-                                    : isCheckOut
-                                    ? 'bg-soft-warning text-warning'
-                                    : 'bg-soft-primary text-primary'
-                                }`}
-                                style={{ textTransform: 'uppercase', fontWeight: 'bold' }}
-                              >
-                                {alreadyConfirmed ? 'Confirmed ✓' : actionLabel}
-                              </span>
-                              {statusBadge}
+                          <div className="text-end">
+                            <div className="fw-bold text-primary" style={{ fontSize: isPrimary ? '0.95rem' : '0.85rem' }}>
+                              {matchedStaff.time}
                             </div>
+                            <div className="text-muted small" style={{ fontSize: '0.72rem' }}>Scan Time</div>
                           </div>
-                        </Card.Body>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </Modal.Body>
-            </Modal>
+                        </div>
+
+                        <div className="p-2 bg-white border rounded-3 d-flex align-items-center justify-content-between mt-3" style={{ fontSize: '0.85rem' }}>
+                          <span className="fw-bold text-muted d-flex align-items-center" style={{ fontSize: '0.78rem' }}>
+                            <CsLineIcons icon="clock" size={14} className="me-1" />
+                            Status
+                          </span>
+                          <div className="d-flex gap-2 align-items-center">
+                            <span
+                              className={`badge ${
+                                matchedStaff.action === 'Checked-In'
+                                  ? 'bg-soft-primary text-primary'
+                                  : 'bg-soft-warning text-warning'
+                              }`}
+                              style={{ textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.05em', fontSize: '0.72rem' }}
+                            >
+                              {matchedStaff.action}
+                            </span>
+                            {matchedStaff.statusBadgeText && (
+                              <span
+                                className={`badge bg-soft-${matchedStaff.statusBadgeType} text-${matchedStaff.statusBadgeType} fw-bold px-2 py-1 rounded-pill`}
+                                style={{
+                                  background: matchedStaff.statusBadgeType === 'danger' ? 'rgba(239, 68, 68, 0.1)' : matchedStaff.statusBadgeType === 'warning' ? 'rgba(124, 58, 237, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                                  color: matchedStaff.statusBadgeType === 'danger' ? '#dc2626' : matchedStaff.statusBadgeType === 'warning' ? '#7c3aed' : '#10b981',
+                                  border: `1px solid ${matchedStaff.statusBadgeType === 'danger' ? 'rgba(239, 68, 68, 0.2)' : matchedStaff.statusBadgeType === 'warning' ? 'rgba(124, 58, 237, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`,
+                                  fontSize: '0.72rem'
+                                }}
+                              >
+                                {matchedStaff.statusBadgeText}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
 
             <div className="w-100 border-top mt-4 pt-3 text-center" style={{ borderColor: 'rgba(226, 232, 240, 0.6)' }}>
               <span className="text-muted" style={{ fontSize: '0.72rem', letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.7 }}>
@@ -656,9 +592,18 @@ const KioskScan = () => {
       </div>
 
       <style>{`
+        .kiosk-page-wrapper {
+          min-height: 100vh;
+          background: radial-gradient(circle at 50% 50%, #f8fafc 0%, #e2e8f0 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+        }
+
         .kiosk-card {
           width: 100%;
-          max-width: 500px;
+          max-width: 650px;
           border-radius: 2.25rem;
           background: #ffffff;
           box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08) !important;
@@ -667,7 +612,7 @@ const KioskScan = () => {
         }
 
         .kiosk-card-body {
-          padding: 3rem 2.5rem !important;
+          padding: 2.5rem 2rem !important;
         }
 
         .kiosk-brand-logo {
@@ -751,6 +696,34 @@ const KioskScan = () => {
         .bg-soft-purple {
           background-color: rgba(124, 58, 237, 0.1) !important;
           color: #7c3aed !important;
+        }
+
+        @media (max-width: 576px) {
+          .kiosk-page-wrapper {
+            padding: 0px !important;
+            align-items: flex-start !important;
+          }
+          .kiosk-card {
+            border-radius: 0 !important;
+            max-width: 100% !important;
+            min-height: 100vh;
+            border: none !important;
+            box-shadow: none !important;
+          }
+          .kiosk-card-body {
+            padding: 2rem 1rem !important;
+          }
+          .webcam-container {
+            border-radius: 1rem !important;
+            box-shadow: 0 0 0 3px rgba(35, 179, 244, 0.15) !important;
+          }
+          .login-login-form-title {
+            font-size: 1.6rem !important;
+          }
+          .login-login-form-subtitle {
+            font-size: 0.8rem !important;
+            padding: 0 5px !important;
+          }
         }
       `}</style>
     </>
