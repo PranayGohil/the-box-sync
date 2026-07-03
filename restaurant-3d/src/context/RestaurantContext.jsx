@@ -47,7 +47,7 @@ export function RestaurantProvider({ children }) {
             link.rel = 'icon';
             document.head.appendChild(link);
           }
-          link.href = `${API_URL.replace('/api', '')}/uploads/menu/${settingsData.logo}`;
+          link.href = `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/menu/${settingsData.logo}`;
         }
       } catch (err) {
         console.error(err);

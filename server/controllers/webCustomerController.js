@@ -481,7 +481,7 @@ exports.getCustomerOrders = async (req, res) => {
             });
         }
 
-        const orders = await Order.find({ customer_id: id });
+        const orders = await Order.find({ customer_id: id }).sort({ _id: -1 });
         if (!orders) {
             return res.status(404).json({
                 success: false,

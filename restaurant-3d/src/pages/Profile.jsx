@@ -4,6 +4,7 @@ import { useAuth } from '../context/AppContext';
 import { useRestaurant } from '../context/RestaurantContext';
 import { User, LogOut, Mail, History, Heart, MapPin, Trash, ArrowLeft, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useSocket } from '../context/SocketContext';
 import MenuCard from '../components/MenuCard';
 
 export default function Profile() {
@@ -30,18 +31,28 @@ export default function Profile() {
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
     return menu.flatMap(catDoc =>
       catDoc.dishes.map(dish => {
-        const catName = catDoc.category.toLowerCase();
-        const dishName = dish.dish_name.toLowerCase();
         let dietType = 'veg';
-        if (catName.includes('non-veg') || catName.includes('non veg') || dishName.includes('chicken') || dishName.includes('mutton') || dishName.includes('fish') || dishName.includes('prawn')) {
+        const rawMealType = dish.meal_type?.toLowerCase();
+        if (rawMealType === 'non-veg' || rawMealType === 'nonveg') {
           dietType = 'nonveg';
-        } else if (catName.includes('egg')) {
+        } else if (rawMealType === 'egg') {
           dietType = 'egg';
+        } else if (rawMealType === 'veg') {
+          dietType = 'veg';
+        } else {
+          // Safe fallback for old records
+          const catName = catDoc.category.toLowerCase();
+          const dishName = dish.dish_name.toLowerCase();
+          if (catName.includes('non-veg') || catName.includes('non veg') || dishName.includes('chicken') || dishName.includes('mutton') || dishName.includes('fish') || dishName.includes('prawn')) {
+            dietType = 'nonveg';
+          } else if (catName.includes('egg')) {
+            dietType = 'egg';
+          }
         }
 
         const rawImg = dish.dish_img;
         const imageUrl = rawImg
-          ? (rawImg.startsWith('http') || rawImg.includes('/uploads/') ? rawImg : `${API_URL.replace('/api', '')}/uploads/${rawImg.replace(/^\/+/, '')}`)
+          ? (rawImg.startsWith('http') || rawImg.includes('/uploads/') ? rawImg : `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/${rawImg.replace(/^\/+/, '')}`)
           : null;
 
         return {
@@ -89,30 +100,59 @@ export default function Profile() {
     return allDishes.filter(dish => savedItemIds.includes(dish.id));
   }, [allDishes, savedItemIds]);
 
+  // Reusable function to fetch orders
+  const fetchOrders = async () => {
+    if (!user?._id) return;
+    setLoadingOrders(true);
+    try {
+      const token = localStorage.getItem('ember-token');
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      const res = await fetch(`${API_URL}/web-customer/get-orders/${user._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const rawOrders = data.data || [];
+        const sorted = [...rawOrders].sort((a, b) => {
+          const dateA = a.order_date?.$date || a.order_date || a.createdAt || 0;
+          const dateB = b.order_date?.$date || b.order_date || b.createdAt || 0;
+          return new Date(dateB) - new Date(dateA);
+        });
+        setOrders(sorted);
+      }
+    } catch (e) {
+      console.error('Failed to load orders', e);
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
   // Fetch orders when orders tab becomes active
   useEffect(() => {
-    if (activeTab === 'orders' && user?._id) {
-      const fetchOrders = async () => {
-        setLoadingOrders(true);
-        try {
-          const token = localStorage.getItem('ember-token');
-          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-          const res = await fetch(`${API_URL}/web-customer/get-orders/${user._id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          const data = await res.json();
-          if (res.ok && data.success) {
-            setOrders(data.data || []);
-          }
-        } catch (e) {
-          console.error('Failed to load orders', e);
-        } finally {
-          setLoadingOrders(false);
-        }
-      };
+    if (activeTab === 'orders') {
       fetchOrders();
     }
   }, [activeTab, user]);
+
+  const { socket } = useSocket();
+
+  // Realtime order tracking using Socket.io room subscription
+  useEffect(() => {
+    if (!socket) return () => {};
+
+    const handleOrderUpdate = () => {
+      console.log('Realtime order update received via SocketContext: fetching orders...');
+      fetchOrders();
+    };
+
+    socket.on('order_updated', handleOrderUpdate);
+    socket.on('kot_update', handleOrderUpdate);
+
+    return () => {
+      socket.off('order_updated', handleOrderUpdate);
+      socket.off('kot_update', handleOrderUpdate);
+    };
+  }, [socket]);
 
   const handleLogout = () => {
     logout();
@@ -322,7 +362,11 @@ export default function Profile() {
                     </span>
                   </div>
                   <div className="text-white-60 small mb-3">
-                    Placed: {new Date(order.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    Placed: {(() => {
+                      const dateVal = order.order_date?.$date || order.order_date || order.createdAt || order.updated_at?.$date || order.updated_at;
+                      const parsed = new Date(dateVal);
+                      return isNaN(parsed.getTime()) ? 'N/A' : parsed.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    })()}
                   </div>
                   <div className="border-top border-white-10 pt-3">
                     {order.order_items.map((item, idx) => (

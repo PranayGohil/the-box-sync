@@ -5,6 +5,7 @@ import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { useSocket } from 'contexts/SocketContext';
 import UnifiedOrder from './order/UnifiedOrder';
 
 const CustomToggle = React.forwardRef(({ children, onClick, style }, ref) => (
@@ -25,6 +26,7 @@ const Dashboard = () => {
   const title = 'Dashboard';
   const description = 'Restaurant performance and insights';
   const history = useHistory();
+  const { socket } = useSocket();
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
@@ -58,6 +60,20 @@ const Dashboard = () => {
     const interval = setInterval(fetchActiveOrders, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!socket) return () => {};
+    const handleSocketUpdate = () => {
+      console.log('Realtime order update (QSR): fetching active orders');
+      fetchActiveOrders();
+    };
+    socket.on('kot_update', handleSocketUpdate);
+    socket.on('order_updated', handleSocketUpdate);
+    return () => {
+      socket.off('kot_update', handleSocketUpdate);
+      socket.off('order_updated', handleSocketUpdate);
+    };
+  }, [socket]);
 
   const takeawaysAndDeliveriesFiltered = activeTakeawaysAndDeliveries.filter(
     (order) => order.order_status !== 'Requested'
