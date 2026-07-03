@@ -6,15 +6,15 @@ import { useRestaurant } from '../context/RestaurantContext';
 
 export default function MobileBottomNav() {
   const { totalItems } = useCart();
-  const { restaurantCode } = useRestaurant();
+  const { restaurantCode, settings } = useRestaurant();
 
   const NAV_ITEMS = [
     { to: `/${restaurantCode || ''}/`.replace(/\/+/g, '/'), label: 'Home', icon: Home },
-    { to: `/${restaurantCode || ''}/reservation`.replace(/\/+/g, '/'), label: 'Book', icon: Calendar },
+    settings?.show_reservation !== false && { to: `/${restaurantCode || ''}/reservation`.replace(/\/+/g, '/'), label: 'Book', icon: Calendar },
     { to: `/${restaurantCode || ''}/menu`.replace(/\/+/g, '/'), label: 'Menu', icon: ShoppingBag, isCenter: true },
     { to: `/${restaurantCode || ''}/contact`.replace(/\/+/g, '/'), label: 'Contact', icon: Phone },
     { to: `/${restaurantCode || ''}/profile`.replace(/\/+/g, '/'), label: 'Profile', icon: User },
-  ];
+  ].filter(Boolean);
 
   return (
     <div className="d-md-none fixed-bottom px-3 pb-3" style={{ zIndex: 1050 }}>

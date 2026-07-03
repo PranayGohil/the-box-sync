@@ -27,6 +27,12 @@ export default function Navbar({ visible: propVisible }) {
   const { isDark, toggleTheme } = useTheme();
   const { restaurantCode, settings } = useRestaurant();
   const location = useLocation();
+  const links = NAV_LINKS.filter(link => {
+    if (link.to === '/reservation' && settings?.show_reservation === false) {
+      return false;
+    }
+    return true;
+  });
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
   const logoUrl = settings?.logo 
     ? (settings.logo.startsWith('http') ? settings.logo : `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/${settings.logo.replace(/^\/+/, '')}`) 
@@ -89,7 +95,7 @@ export default function Navbar({ visible: propVisible }) {
 
           {/* Desktop links */}
           <div className="d-none d-md-flex align-items-center gap-4">
-            {NAV_LINKS.map(({ to, label }) => {
+            {links.map(({ to, label }) => {
               const fullPath = `/${restaurantCode || ''}${to}`.replace(/\/+/g, '/');
               return (
                 <NavLink
@@ -187,7 +193,7 @@ export default function Navbar({ visible: propVisible }) {
               </div>
 
               <div className="d-flex flex-column gap-4">
-                {NAV_LINKS.map(({ to, label }) => {
+                {links.map(({ to, label }) => {
                   const fullPath = `/${restaurantCode || ''}${to}`.replace(/\/+/g, '/');
                   return (
                     <NavLink

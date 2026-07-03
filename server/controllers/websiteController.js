@@ -2,6 +2,7 @@ const Website = require("../models/WebsiteModel");
 const Menu = require("../models/menuModel");
 const User = require("../models/userModel");
 const Reservation = require("../models/reservationModel");
+const Subscription = require("../models/subscriptionModel");
 
 // GET current settings
 exports.getWebsiteSettings = async (req, res) => {
@@ -15,6 +16,23 @@ exports.getWebsiteSettings = async (req, res) => {
 
     const fullAddress = user ? [user.address, user.city, user.state, user.pincode].filter(Boolean).join(", ") : "";
 
+    // Check subscription / access tier for Reservation Management
+    let hasReservationAccess = false;
+    const activeSub = await Subscription.findOne({
+      user_id: userId,
+      plan_name: { $in: ["Reservation Management", "Reservation Manager"] },
+      status: "active",
+      end_date: { $gt: new Date() }
+    });
+    if (activeSub) {
+      hasReservationAccess = true;
+    } else {
+      const tier = user?.purchasedPlan;
+      if (tier === 'Fine Dine' || tier === 'Chain') {
+        hasReservationAccess = true;
+      }
+    }
+
     if (!settings) {
       // Return defaults from user registration data if settings document doesn't exist yet
       return res.json({
@@ -23,6 +41,8 @@ exports.getWebsiteSettings = async (req, res) => {
         contact_email: user?.email || "",
         contact_phone: user?.mobile || "",
         logo: user?.logo || "",
+        show_reservation: true,
+        has_reservation_plan: hasReservationAccess,
       });
     }
 
@@ -35,6 +55,8 @@ exports.getWebsiteSettings = async (req, res) => {
       contact_email: settings.contact_email || user?.email || "",
       contact_phone: settings.contact_phone || user?.mobile || "",
       logo: settings.logo || user?.logo || "",
+      show_reservation: settings.show_reservation !== undefined ? settings.show_reservation : true,
+      has_reservation_plan: hasReservationAccess,
     };
 
     res.json(response);
@@ -74,6 +96,7 @@ exports.updateWebsiteSettings = async (req, res) => {
       testimonials,
       social_links,
       map_location,
+      show_reservation,
     } = req.body;
 
     const userId = req.user?._id || req.user;
@@ -125,6 +148,7 @@ exports.updateWebsiteSettings = async (req, res) => {
         testimonials: (typeof testimonials === 'string' && testimonials.trim()) ? JSON.parse(testimonials) : (Array.isArray(testimonials) ? testimonials : []),
         social_links: (typeof social_links === 'string' && social_links.trim()) ? JSON.parse(social_links) : (Array.isArray(social_links) ? social_links : []),
         map_location,
+        show_reservation: show_reservation !== undefined ? show_reservation : true,
       },
       { new: true, upsert: true }
     );
@@ -196,6 +220,7 @@ exports.getWebsiteSettingsByCode = async (req, res) => {
       legacy_layout: settings?.legacy_layout || "image-right",
       legacy_bullets: settings?.legacy_bullets || [],
       map_location: settings?.map_location || "",
+      show_reservation: settings && settings.show_reservation !== undefined ? settings.show_reservation : true,
       // Pass through user address fields
       address: user.address || "",
       city: user.city || "",
