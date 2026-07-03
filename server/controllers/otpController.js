@@ -9,8 +9,8 @@ const { sendEmail } = require("../utils/emailService");
 // Config — set via env
 const OTP_LENGTH = 6;
 const OTP_TTL_MINUTES = 10; // OTP expires after N minutes
-const RESEND_COOLDOWN_SECONDS = 60; // wait between sends
-const MAX_RESENDS_PER_HOUR = 5;
+const RESEND_COOLDOWN_SECONDS = process.env.NODE_ENV === 'production' ? 60 : 2; // wait between sends
+const MAX_RESENDS_PER_HOUR = process.env.NODE_ENV === 'production' ? 5 : 999;
 const MAX_VERIFY_ATTEMPTS = 5;
 const BCRYPT_SALT_ROUNDS = 10;
 

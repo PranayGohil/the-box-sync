@@ -18,8 +18,6 @@ const Register = () => {
 
   const { login } = useContext(AuthContext);
 
-
-
   const forms = [createRef(null), createRef(null), createRef(null)];
   const [bottomNavHidden, setBottomNavHidden] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,6 +43,7 @@ const Register = () => {
   });
 
   const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState('');
   const [verificationSent, setVerificationSent] = useState(false);
   const [verificationCountdown, setVerificationCountdown] = useState(0);
   const [verificationCodeInput, setVerificationCodeInput] = useState('');
@@ -155,6 +154,7 @@ const Register = () => {
       const res = await axios.post(`${process.env.REACT_APP_API}/otp/verify-email`, { email, code: verificationCodeInput });
       if (res.status === 200 && (res.data?.verified ?? false)) {
         setIsEmailVerified(true);
+        setVerifiedEmail(email);
         toast.success('Email verified');
         setFieldError('verificationCode', undefined);
         setFieldError('email', undefined);
@@ -185,12 +185,12 @@ const Register = () => {
       if (res.data) {
         setShowSuccessModal(true);
       } else {
-        toast.error('Something went wrong!');
+        toast.error(res.data?.message || 'Something went wrong!');
         setBottomNavHidden(false);
       }
     } catch (err) {
       setBottomNavHidden(false);
-      toast.error('Something went wrong!');
+      toast.error(err.response?.data?.message || 'Something went wrong!');
     } finally {
       setLoading(false);
     }
@@ -212,7 +212,7 @@ const Register = () => {
       touchedFields[field] = true;
     });
     form.setTouched(touchedFields, false);
-    if (formIndex === 0 && !isEmailVerified) {
+    if (formIndex === 0 && (!isEmailVerified || form.values.email !== verifiedEmail)) {
       form.setFieldError('email', 'Please verify your email');
       form.setTouched({ ...touchedFields, email: true }, false);
       return;
@@ -272,7 +272,7 @@ const Register = () => {
           />
           <Steps>
             <Step id="step1" name="Restaurant" desc="Basic Info">
-              <Formik innerRef={forms[0]} initialValues={fields} validationSchema={validationSchemas[0]} validateOnMount onSubmit={() => {}}>
+              <Formik innerRef={forms[0]} initialValues={fields} validationSchema={validationSchemas[0]} validateOnMount onSubmit={() => { }}>
                 {({ errors, touched, setFieldValue, values, setFieldError, setFieldTouched }) => (
                   <Form>
                     <div className="login-auth-input-group">
@@ -290,7 +290,7 @@ const Register = () => {
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="login-auth-input-group">
                       <label className="login-auth-input-label">LOGO</label>
                       <div style={{ position: 'relative' }}>
@@ -331,7 +331,19 @@ const Register = () => {
                         <span className="login-auth-input-icon">
                           <CsLineIcons icon="email" size="18" />
                         </span>
-                        <Field className="login-auth-input form-control" name="email" type="email" placeholder="you@restaurant.com" />
+                        <Field
+                          className="login-auth-input form-control"
+                          name="email"
+                          type="email"
+                          placeholder="you@restaurant.com"
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFieldValue('email', val);
+                            if (val !== verifiedEmail) {
+                              setIsEmailVerified(false);
+                            }
+                          }}
+                        />
                       </div>
                       {errors.email && touched.email && (
                         <div className="login-auth-error-msg">
@@ -363,29 +375,29 @@ const Register = () => {
                       <>
                         <div className="login-auth-input-group">
                           <label className="login-auth-input-label">VERIFICATION CODE</label>
-                        <div style={{ position: 'relative' }}>
-                          <span className="login-auth-input-icon">
-                            <CsLineIcons icon="check" size="18" />
-                          </span>
-                          <Field
-                            className="login-auth-input form-control"
-                            name="verificationCode"
-                            maxLength="6"
-                            placeholder="123456"
-                            value={verificationCodeInput}
-                            onChange={(e) => {
-                              setVerificationCodeInput(e.target.value);
-                              setFieldValue('verificationCode', e.target.value);
-                            }}
-                          />
-                        </div>
-                        {errors.verificationCode && touched.verificationCode && (
-                          <div className="login-auth-error-msg">
-                            <CsLineIcons icon="warning" size="13" />
-                            {errors.verificationCode}
+                          <div style={{ position: 'relative' }}>
+                            <span className="login-auth-input-icon">
+                              <CsLineIcons icon="check" size="18" />
+                            </span>
+                            <Field
+                              className="login-auth-input form-control"
+                              name="verificationCode"
+                              maxLength="6"
+                              placeholder="123456"
+                              value={verificationCodeInput}
+                              onChange={(e) => {
+                                setVerificationCodeInput(e.target.value);
+                                setFieldValue('verificationCode', e.target.value);
+                              }}
+                            />
                           </div>
-                        )}
-                      </div>
+                          {errors.verificationCode && touched.verificationCode && (
+                            <div className="login-auth-error-msg">
+                              <CsLineIcons icon="warning" size="13" />
+                              {errors.verificationCode}
+                            </div>
+                          )}
+                        </div>
                         <button
                           type="button"
                           className="login-btn-auth-primary mb-4"
@@ -418,7 +430,7 @@ const Register = () => {
               </Formik>
             </Step>
             <Step id="step2" name="Address" desc="Location">
-              <Formik innerRef={forms[1]} initialValues={fields} validationSchema={validationSchemas[1]} validateOnMount onSubmit={() => {}}>
+              <Formik innerRef={forms[1]} initialValues={fields} validationSchema={validationSchemas[1]} validateOnMount onSubmit={() => { }}>
                 {({ errors, touched, values, setFieldValue }) => (
                   <Form>
                     <div className="login-auth-input-group">
@@ -527,7 +539,7 @@ const Register = () => {
               </Formik>
             </Step>
             <Step id="step3" name="Security" desc="Setup">
-              <Formik innerRef={forms[2]} initialValues={fields} validationSchema={validationSchemas[2]} validateOnMount onSubmit={() => {}}>
+              <Formik innerRef={forms[2]} initialValues={fields} validationSchema={validationSchemas[2]} validateOnMount onSubmit={() => { }}>
                 {({ errors, touched }) => (
                   <Form>
                     <div className="login-auth-input-group">
@@ -569,8 +581,8 @@ const Register = () => {
                           <CsLineIcons icon="lock-off" size="18" />
                         </span>
                         <Field type={showPassword ? 'text' : 'password'} className="login-auth-input form-control" name="password" placeholder="••••••••" />
-                        <span 
-                          className="position-absolute" 
+                        <span
+                          className="position-absolute"
                           style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer' }}
                           onClick={() => setShowPassword(!showPassword)}
                         >
@@ -592,8 +604,8 @@ const Register = () => {
                           <CsLineIcons icon="lock-off" size="18" />
                         </span>
                         <Field type={showConfirmPassword ? 'text' : 'password'} className="login-auth-input form-control" name="confirmPassword" placeholder="••••••••" />
-                        <span 
-                          className="position-absolute" 
+                        <span
+                          className="position-absolute"
                           style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer' }}
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         >
@@ -623,11 +635,11 @@ const Register = () => {
                 >
                   Back
                 </button>
-                <button 
-                  type="button" 
-                  className="login-btn-auth-primary flex-grow-1" 
+                <button
+                  type="button"
+                  className="login-btn-auth-primary flex-grow-1"
                   style={{ borderRadius: '50px' }}
-                  onClick={() => onClickNext(next, steps, step)} 
+                  onClick={() => onClickNext(next, steps, step)}
                   disabled={loading}
                 >
                   {loading ? <Spinner animation="border" size="sm" /> : steps.indexOf(step) === steps.length - 1 ? 'Submit' : 'Continue'}
@@ -670,7 +682,7 @@ const Register = () => {
       </div>
       {rightSide}
 
-      <Modal show={showSuccessModal} onHide={() => {}} centered backdrop="static">
+      <Modal show={showSuccessModal} onHide={() => { }} centered backdrop="static">
         <Modal.Body className="text-center p-5">
           <div className="mb-4 text-success d-flex justify-content-center">
             <CsLineIcons icon="check-circle" size="50" style={{ color: '#10b981' }} />

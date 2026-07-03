@@ -219,6 +219,20 @@ const register = async (req, res) => {
       });
     }
 
+    // Verify email verification status in database
+    const Otp = require("../models/otpModel");
+    const verifiedOtp = await Otp.findOne({
+      email: email,
+      purpose: 'email_verification',
+      verified: true
+    }).exec();
+
+    if (!verifiedOtp) {
+      return res.status(400).json({
+        message: "Email verification is required. Please verify your email first.",
+      });
+    }
+
     // Generate the prefix for the restaurant code
     const countryPrefix = country_code.toUpperCase(); // IN
     const statePrefix = state_code.toUpperCase();     // GJ
@@ -273,6 +287,9 @@ const register = async (req, res) => {
 
     const newUser = new User(userdata);
     await newUser.save();
+
+    // Clean up verified OTP so it cannot be reused
+    await Otp.deleteMany({ email: email, purpose: 'email_verification' });
 
     const token = await newUser.generateAuthToken("Admin");
     res.cookie("jwttoken", token, {
