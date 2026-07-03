@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { Calendar, Clock, Users, User, Mail, Phone, MessageSquare, CheckCircle } from 'lucide-react';
@@ -30,7 +31,14 @@ export default function Reservation() {
   const containerRef = useRef(null);
   useGSAPReveal(containerRef);
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
-  const { restaurantCode } = useRestaurant();
+  const { restaurantCode, settings } = useRestaurant();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (settings && settings.show_reservation === false) {
+      navigate(`/${restaurantCode || ''}`);
+    }
+  }, [settings, restaurantCode, navigate]);
 
   const onSubmit = async (data) => {
     try {

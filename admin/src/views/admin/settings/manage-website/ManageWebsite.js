@@ -65,6 +65,7 @@ const ManageWebsite = () => {
   const [heroImageFile, setHeroImageFile] = useState(null);
   const [aboutImageFile, setAboutImageFile] = useState(null);
   const [legacyImageFile, setLegacyImageFile] = useState(null);
+  const [hasReservationPlan, setHasReservationPlan] = useState(false);
 
   const { currentUser } = React.useContext(AuthContext);
   const restaurant_code = currentUser?.restaurant_code;
@@ -99,6 +100,7 @@ const ManageWebsite = () => {
       logo: '',
       testimonials: [],
       social_links: [],
+      show_reservation: true,
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -182,6 +184,7 @@ const ManageWebsite = () => {
         });
 
         if (settingsRes.data) {
+          setHasReservationPlan(!!settingsRes.data.has_reservation_plan);
           Object.keys(settingsRes.data).forEach((key) => {
             if (key in formik.initialValues) {
               const arrayFields = ['featured_dish_ids', 'opening_hours', 'testimonials', 'social_links', 'legacy_bullets'];
@@ -192,6 +195,8 @@ const ManageWebsite = () => {
                 } catch (e) {
                   setFieldValue(key, []);
                 }
+              } else if (key === 'show_reservation') {
+                setFieldValue(key, settingsRes.data[key] !== undefined ? settingsRes.data[key] : true);
               } else {
                 setFieldValue(key, settingsRes.data[key] || '');
               }
@@ -444,6 +449,28 @@ const ManageWebsite = () => {
                         <Form.Control.Feedback type="invalid">{errors.contact_phone}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
+                    {hasReservationPlan && (
+                      <Col xs={12} className="mb-4">
+                        <div className="d-flex align-items-center justify-content-between p-3 rounded-3" style={{ background: '#f8f9fa', border: '1px solid #dee2e6' }}>
+                          <div>
+                            <span className="small fw-bold text-muted d-block mb-1" style={{ letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '11px' }}>Feature Settings</span>
+                            <div className="fw-bold text-dark" style={{ fontSize: '15px' }}>Table Reservation Functionality</div>
+                            <div className="text-muted mt-1" style={{ fontSize: '12px', lineHeight: '1.4' }}>Display the table booking page and reservation widgets on your public website.</div>
+                          </div>
+                          <div style={{ paddingLeft: '15px' }}>
+                            <Form.Check
+                              type="switch"
+                              id="show_reservation"
+                              name="show_reservation"
+                              label=""
+                              checked={values.show_reservation}
+                              onChange={(e) => setFieldValue('show_reservation', e.target.checked)}
+                              style={{ transform: 'scale(1.3)', cursor: 'pointer' }}
+                            />
+                          </div>
+                        </div>
+                      </Col>
+                    )}
                     <Col xs={12}>
                       <Form.Group className="d-flex flex-column align-items-center mb-3">
                         <Form.Label className="small fw-bold text-muted text-center w-100 mb-3">Logo Image</Form.Label>

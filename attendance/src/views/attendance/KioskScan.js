@@ -91,6 +91,8 @@ const KioskScan = () => {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
   const recentScansRef = useRef({});
+  const matchCountsRef = useRef({});
+  const lastSeenRef = useRef({});
 
   const getCurrentTime = () => {
     const now = new Date();
@@ -274,7 +276,7 @@ const KioskScan = () => {
           if (screenshot && active) {
             const image = await faceapi.fetchImage(screenshot);
             const detections = await faceapi
-              .detectAllFaces(image, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.55 }))
+              .detectAllFaces(image, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.60 }))
               .withFaceLandmarks()
               .withFaceDescriptors();
 
@@ -296,9 +298,10 @@ const KioskScan = () => {
 
               const currentMatchedStaff = [];
               const now = Date.now();
+              const currentMatchedIds = [];
 
               if (labeledDescriptors.length > 0) {
-                const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.55);
+                const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.42); // Stricter match threshold to prevent false matches (0.42)
 
                 resizedDetections.forEach((det) => {
                   const { x, y, width, height } = det.detection.box;
@@ -311,6 +314,7 @@ const KioskScan = () => {
                     if (staff) {
                       labelText = `${staff.f_name} ${staff.l_name}`;
                       currentMatchedStaff.push(staff);
+                      currentMatchedIds.push(staff.staff_id);
                     }
                   }
 
@@ -331,14 +335,37 @@ const KioskScan = () => {
                 });
               }
 
-              // Check and trigger scans for all matched staff who are not in individual cooldown
-              const eligibleStaffList = currentMatchedStaff.filter((staff) => {
+              // Update match counts for matched staff
+              currentMatchedIds.forEach((id) => {
+                matchCountsRef.current[id] = (matchCountsRef.current[id] || 0) + 1;
+                lastSeenRef.current[id] = now;
+              });
+
+              // Clean up non-matched staff seen over 1.5 seconds ago
+              Object.keys(matchCountsRef.current).forEach((id) => {
+                if (!currentMatchedIds.includes(id)) {
+                  if (now - (lastSeenRef.current[id] || 0) > 1500) {
+                    delete matchCountsRef.current[id];
+                    delete lastSeenRef.current[id];
+                  }
+                }
+              });
+
+              // Check and trigger scans for matched staff who reached stability threshold (3 frames)
+              const stableStaffList = currentMatchedStaff.filter((staff) => {
+                const count = matchCountsRef.current[staff.staff_id] || 0;
+                return count >= 3;
+              });
+
+              // Filter stable staff list by their individual cooldown
+              const eligibleStaffList = stableStaffList.filter((staff) => {
                 const lastScanTime = recentScansRef.current[staff.staff_id] || 0;
                 return (now - lastScanTime) > 8000; // 8 seconds per-staff cooldown
               });
 
               eligibleStaffList.forEach((staff) => {
                 recentScansRef.current[staff.staff_id] = now; // Mark scanned immediately!
+                matchCountsRef.current[staff.staff_id] = 0; // Reset count so it won't instantly retrigger
                 submitScan(staff);
               });
             }
