@@ -1,6 +1,6 @@
 import React, { createRef, useState, useContext, useRef } from 'react';
 import { Wizard, Steps, Step, WithWizard } from 'react-albus';
-import { Button, Form, Spinner } from 'react-bootstrap';
+import { Button, Form, Spinner, Modal } from 'react-bootstrap';
 import { useHistory, NavLink as RouterLink } from 'react-router-dom';
 import axios from 'axios';
 import { Formik, Field } from 'formik';
@@ -21,6 +21,7 @@ const Register = () => {
   const forms = [createRef(null), createRef(null), createRef(null)];
   const [bottomNavHidden, setBottomNavHidden] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [previewLogo, setPreviewLogo] = useState(null);
   const [fields, setFields] = useState({
     name: '',
@@ -177,12 +178,14 @@ const Register = () => {
       Object.keys(finalData).forEach((key) => {
         formData.append(key, finalData[key]);
       });
+      formData.append('is_street_food', 'true');
+
       const res = await axios.post(`${process.env.REACT_APP_API}/user/register`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       if (res.data) {
-        login(res.data.token, res.data.user);
-        window.location.href = '/';
+        setShowSuccessModal(true);
       } else {
         toast.error('Something went wrong!');
+        setBottomNavHidden(false);
       }
     } catch (err) {
       setBottomNavHidden(false);
@@ -665,6 +668,27 @@ const Register = () => {
         </div>
       </div>
       {rightSide}
+
+      <Modal show={showSuccessModal} onHide={() => {}} centered backdrop="static">
+        <Modal.Body className="text-center p-5">
+          <div className="mb-4 text-success d-flex justify-content-center">
+            <CsLineIcons icon="check-circle" size="50" style={{ color: '#10b981' }} />
+          </div>
+          <h3 className="fw-bold mb-2">Registration Successful</h3>
+          <p className="text-muted mb-4">
+            Your account will be activated soon. You can log in once it has been approved by the admin.
+          </p>
+          <Button
+            variant="primary"
+            className="w-100 rounded-pill py-2.5 fw-bold"
+            onClick={() => {
+              window.location.href = '/login';
+            }}
+          >
+            Go to Login
+          </Button>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };
