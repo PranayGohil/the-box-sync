@@ -181,7 +181,6 @@ const Register = () => {
         formData.append(key, finalData[key]);
       });
       formData.append('is_street_food', 'true');
-
       const res = await axios.post(`${apiBase}/user/register`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       if (res.data) {
         setShowSuccessModal(true);
