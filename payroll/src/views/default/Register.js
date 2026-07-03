@@ -185,11 +185,11 @@ const Register = () => {
         login(res.data.token, res.data.user);
         window.location.href = '/';
       } else {
-        toast.error('Something went wrong!');
+        toast.error(res.data?.message || 'Something went wrong!');
       }
     } catch (err) {
       setBottomNavHidden(false);
-      toast.error('Something went wrong!');
+      toast.error(err.response?.data?.message || 'Something went wrong!');
     } finally {
       setLoading(false);
     }
