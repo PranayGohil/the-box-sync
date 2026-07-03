@@ -95,70 +95,19 @@ const PaymentSummaryBox = ({
           </div>
         </div>
 
-        {/* Action Buttons - 2 Column Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-
-          {/* Save Changes */}
-          {orderItems.length > 0 && isDirty && (
-            <button
-              type="button"
-              style={{ ...btnBase, background: '#f1f5f9', color: '#475569', border: '1.5px solid rgba(226,232,240,0.9)' }}
-              onClick={() => handleSaveOrder('Save')}
-              disabled={isLoading}
-            >
-              <CsLineIcons icon="save" size="13" />
-              Save
-            </button>
-          )}
-
-          {/* Send to Kitchen (KOT) */}
-          {canKOT && showKOTButtons && (
-            <button
-              type="button"
-              style={{ ...btnBase, background: 'rgba(35,179,244,0.08)', color: '#23b3f4', border: '1.5px solid rgba(35,179,244,0.3)' }}
-              onClick={() => handleSaveOrder('KOT')}
-              disabled={isLoading}
-            >
-              <CsLineIcons icon="send" size="13" />
-              Kitchen
-            </button>
-          )}
-
-          {/* KOT + Print */}
-          {showKOTPrintButton && (
-            <button
-              type="button"
-              style={{ ...btnBase, background: 'rgba(245,158,11,0.08)', color: '#d97706', border: '1.5px solid rgba(245,158,11,0.3)' }}
-              onClick={onKotAndPrint}
-              disabled={isLoading || kotPrinting}
-            >
-              <CsLineIcons icon="print" size="13" />
-              {kotPrinting ? '...' : 'Order Print'}
-            </button>
-          )}
-
-          {/* Print Bill (even if new/unsaved/dirty) */}
-          {/* {showPrintBill && (
-            <button
-              type="button"
-              style={{ ...btnBase, background: '#f1f5f9', color: '#475569', border: '1.5px solid rgba(226,232,240,0.9)' }}
-              onClick={() => handlePrint(orderId)}
-              disabled={printing}
-            >
-              <CsLineIcons icon="print" size="13" />
-              {printing ? 'Printing...' : 'Print Bill'}
-            </button>
-          )} */}
+        {/* Action Buttons - Full Width Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '6px' }}>
 
           {/* Process Payment — primary CTA */}
-          {showPayment && (
+          {orderItems.length > 0 && !isPaid && (
             <button
               type="button"
               style={{
                 ...btnBase,
                 background: '#23b3f4',
                 color: '#ffffff',
-                boxShadow: '0 4px 12px rgba(35, 179, 244, 0.3)'
+                boxShadow: '0 4px 12px rgba(35, 179, 244, 0.3)',
+                padding: '0.6rem',
               }}
               onClick={handleOpenPaymentModal}
             >
@@ -167,30 +116,20 @@ const PaymentSummaryBox = ({
             </button>
           )}
 
-          {/* Print Bill + Go Dashboard when Paid */}
+          {/* New Order when Paid */}
           {isPaid && !isDirty && dueAmount <= 0.01 && (
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                type="button"
-                style={{ ...btnBase, flex: 1, background: '#23b3f4', color: '#fff', boxShadow: '0 4px 14px rgba(35,179,244,0.3)' }}
-                onClick={() => history.push('/dashboard')}
-              >
-                <CsLineIcons icon="home" size="14" stroke="#fff" />
-                Dashboard
-              </button>
-              {orderId && (
-                <button
-                  type="button"
-                  style={{ ...btnBase, flex: 1, background: '#f1f5f9', color: '#475569', border: '1.5px solid rgba(226,232,240,0.9)' }}
-                  onClick={() => handlePrint(orderId)}
-                  disabled={printing}
-                >
-                  <CsLineIcons icon="print" size="14" />
-                  {printing ? 'Printing...' : 'Print Bill'}
-                </button>
-              )}
-            </div>
+            <button
+              type="button"
+              style={{ ...btnBase, background: '#23b3f4', color: '#fff', boxShadow: '0 4px 14px rgba(35,179,244,0.3)', padding: '0.6rem' }}
+              onClick={() => {
+                window.location.href = '/order/new';
+              }}
+            >
+              <CsLineIcons icon="plus" size="14" stroke="#fff" />
+              New Order
+            </button>
           )}
+
 
           {/* Secondary row: History + Cancel */}
           {(kotHistory.length > 0 || paymentHistory.length > 0 || (orderId && orderStatus !== 'Paid')) && (

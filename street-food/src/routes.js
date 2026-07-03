@@ -13,11 +13,18 @@ const order = {
   unified: lazy(() => import('views/qsr/order/UnifiedOrder')),
   deliveryPartner: lazy(() => import('views/qsr/order/DeliveryPartners')),
 }
+const inventory = {
+  main: lazy(() => import('views/qsr/inventory/Inventory')),
+}
 const dashboards = {
   index: lazy(() => import('views/dashboards/Dashboards')),
   default: lazy(() => import('views/dashboards/DashboardsDefault')),
   visual: lazy(() => import('views/dashboards/DashboardsVisual')),
   analytic: lazy(() => import('views/dashboards/DashboardsAnalytic')),
+};
+
+const settings = {
+  profile: lazy(() => import('views/qsr/settings/Profile')),
 };
 
 const appRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
@@ -31,19 +38,28 @@ const allRoutes = {
       to: `${appRoot}/order/new`,
     },
     {
-      path: `${appRoot}/order`,
-      label: 'New Order',
+      path: `${appRoot}/order/new`,
+      label: 'Order',
       icon: 'cart',
-      subs: [
-        { path: '/new', label: 'New Order', component: order.unified },
-      ]
+      component: order.unified,
+    },
+    {
+      path: `${appRoot}/inventory`,
+      label: 'Inventory',
+      icon: 'boxes',
+      component: inventory.main,
     },
     {
       path: `${appRoot}/operations`,
       label: 'Operations',
       icon: 'list',
       component: qsr.operation,
-    }, 
+    },
+    {
+      path: `/settings/profile`,
+      component: settings.profile,
+      hideInMenu: true,
+    },
   ],
   sidebarItems: [
     { path: '#connections', label: 'menu.connections', icon: 'diagram-1', hideInRoute: true },
