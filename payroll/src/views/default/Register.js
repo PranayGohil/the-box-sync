@@ -43,6 +43,7 @@ const Register = () => {
   });
 
   const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState('');
   const [verificationSent, setVerificationSent] = useState(false);
   const [verificationCountdown, setVerificationCountdown] = useState(0);
   const [verificationCodeInput, setVerificationCodeInput] = useState('');
@@ -153,6 +154,7 @@ const Register = () => {
       const res = await axios.post(`${process.env.REACT_APP_API}/otp/verify-email`, { email, code: verificationCodeInput });
       if (res.status === 200 && (res.data?.verified ?? false)) {
         setIsEmailVerified(true);
+        setVerifiedEmail(email);
         toast.success('Email verified');
         setFieldError('verificationCode', undefined);
         setFieldError('email', undefined);
@@ -209,7 +211,7 @@ const Register = () => {
       touchedFields[field] = true;
     });
     form.setTouched(touchedFields, false);
-    if (formIndex === 0 && !isEmailVerified) {
+    if (formIndex === 0 && (!isEmailVerified || form.values.email !== verifiedEmail)) {
       form.setFieldError('email', 'Please verify your email');
       form.setTouched({ ...touchedFields, email: true }, false);
       return;
@@ -328,7 +330,19 @@ const Register = () => {
                         <span className="login-auth-input-icon">
                           <CsLineIcons icon="email" size="18" />
                         </span>
-                        <Field className="login-auth-input form-control" name="email" type="email" placeholder="you@company.com" />
+                        <Field
+                          className="login-auth-input form-control"
+                          name="email"
+                          type="email"
+                          placeholder="you@company.com"
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFieldValue('email', val);
+                            if (val !== verifiedEmail) {
+                              setIsEmailVerified(false);
+                            }
+                          }}
+                        />
                       </div>
                       {errors.email && touched.email && (
                         <div className="login-auth-error-msg">
