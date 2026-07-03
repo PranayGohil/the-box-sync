@@ -31,15 +31,15 @@ export default function Home() {
 
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-  const logoUrl = settings?.logo ? `${API_URL.replace('/api', '')}/uploads/menu/${settings.logo}` : null;
+  const logoUrl = settings?.logo ? `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/menu/${settings.logo}` : null;
 
   const heroTitle = settings?.hero_title || 'A Symphony of Flavours';
   const heroWords = heroTitle.split(' ');
   const lastWord = heroWords.pop();
   const titleFirstPart = heroWords.join(' ');
   
-  const heroImageUrl = settings?.hero_image ? `${API_URL.replace('/api', '')}/uploads/menu/${settings.hero_image}` : null;
-  const legacyImageUrl = settings?.legacy_image ? `${API_URL.replace('/api', '')}/uploads/menu/${settings.legacy_image}` : (settings?.about_image ? `${API_URL.replace('/api', '')}/uploads/menu/${settings.about_image}` : "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80");
+  const heroImageUrl = settings?.hero_image ? `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/menu/${settings.hero_image}` : null;
+  const legacyImageUrl = settings?.legacy_image ? `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/menu/${settings.legacy_image}` : (settings?.about_image ? `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/menu/${settings.about_image}` : "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80");
 
   const iconMap = { Heart, Award, Leaf, Users, Star, Check };
   const bulletsToRender = settings?.legacy_bullets?.length > 0 

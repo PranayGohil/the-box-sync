@@ -6,12 +6,14 @@ import { useSelector } from 'react-redux';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import { useSocket } from 'contexts/SocketContext';
 
 const Dashboard = () => {
   const title = 'Dashboard';
   const description = 'Restaurant Management Dashboard';
   const history = useHistory();
   const { attrMobile } = useSelector((state) => state.menu);
+  const { socket } = useSocket();
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
@@ -64,6 +66,20 @@ const Dashboard = () => {
     const interval = setInterval(fetchActiveOrders, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!socket) return () => {};
+    const handleSocketUpdate = () => {
+      console.log('Realtime order update (Manager): fetching active orders');
+      fetchActiveOrders();
+    };
+    socket.on('kot_update', handleSocketUpdate);
+    socket.on('order_updated', handleSocketUpdate);
+    return () => {
+      socket.off('kot_update', handleSocketUpdate);
+      socket.off('order_updated', handleSocketUpdate);
+    };
+  }, [socket]);
 
   const activeTakeawaysAndDeliveriesFiltered = activeTakeawaysAndDeliveries.filter(
     (order) => order.order_status !== 'Requested'

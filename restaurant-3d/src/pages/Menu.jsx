@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, SlidersHorizontal, X, ChevronDown } from 'lucide-react';
@@ -25,34 +25,31 @@ export default function MenuPage() {
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
-  const dynamicCategories = useMemo(() => {
-    const cats = Array.from(new Set(menu.map(m => m.category)));
-    const icons = ['🍕', '🍔', '🍣', '🍜', '🍲', '🍱', '🥨', '🌮'];
-    return [
-      { id: 'all', label: 'All', icon: '🍽️' },
-      ...cats.map((c, i) => ({ 
-        id: c, 
-        label: c, 
-        icon: icons[i % icons.length] 
-      }))
-    ];
-  }, [menu]);
-
   const allItems = useMemo(() => {
     return menu.flatMap(catDoc =>
       catDoc.dishes.map(dish => {
-        const catName = catDoc.category.toLowerCase();
-        const dishName = dish.dish_name.toLowerCase();
         let dietType = 'veg'; // Default
-        if (catName.includes('non-veg') || catName.includes('non veg') || dishName.includes('chicken') || dishName.includes('mutton') || dishName.includes('fish') || dishName.includes('prawn')) {
+        const rawMealType = dish.meal_type?.toLowerCase();
+        if (rawMealType === 'non-veg' || rawMealType === 'nonveg') {
           dietType = 'nonveg';
-        } else if (catName.includes('egg')) {
+        } else if (rawMealType === 'egg') {
           dietType = 'egg';
+        } else if (rawMealType === 'veg') {
+          dietType = 'veg';
+        } else {
+          // Safe fallback for old records
+          const catName = catDoc.category.toLowerCase();
+          const dishName = dish.dish_name.toLowerCase();
+          if (catName.includes('non-veg') || catName.includes('non veg') || dishName.includes('chicken') || dishName.includes('mutton') || dishName.includes('fish') || dishName.includes('prawn')) {
+            dietType = 'nonveg';
+          } else if (catName.includes('egg')) {
+            dietType = 'egg';
+          }
         }
 
         const rawImg = dish.dish_img;
         const imageUrl = rawImg
-          ? (rawImg.startsWith('http') || rawImg.includes('/uploads/') ? rawImg : `${API_URL.replace('/api', '')}/uploads/${rawImg.replace(/^\/+/, '')}`)
+          ? (rawImg.startsWith('http') || rawImg.includes('/uploads/') ? rawImg : `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/${rawImg.replace(/^\/+/, '')}`)
           : null;
 
         return {
@@ -69,6 +66,44 @@ export default function MenuPage() {
       })
     );
   }, [menu, API_URL]);
+
+  const matchingCategories = useMemo(() => {
+    let items = allItems;
+    if (vegFilter === 'veg') items = items.filter(i => i.dietType === 'veg');
+    if (vegFilter === 'nonveg') items = items.filter(i => i.dietType === 'nonveg');
+    if (vegFilter === 'egg') items = items.filter(i => i.dietType === 'egg');
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      items = items.filter(i =>
+        i.name.toLowerCase().includes(q) || i.description.toLowerCase().includes(q)
+      );
+    }
+    return new Set(items.map(i => i.category));
+  }, [allItems, vegFilter, search]);
+
+  const dynamicCategories = useMemo(() => {
+    if (!menu) return [];
+    const cats = Array.from(new Set(menu.map(m => m.category)));
+    const icons = ['🍕', '🍔', '🍣', '🍜', '🍲', '🍱', '🥨', '🌮'];
+    const allCats = cats.map((c, i) => ({ 
+      id: c, 
+      label: c, 
+      icon: icons[i % icons.length] 
+    }));
+    const filteredCats = allCats.filter(cat => matchingCategories.has(cat.id));
+    return [
+      { id: 'all', label: 'All', icon: '🍽️' },
+      ...filteredCats
+    ];
+  }, [menu, matchingCategories]);
+
+  useEffect(() => {
+    if (activeTab !== 'all' && !matchingCategories.has(activeTab)) {
+      setActiveTab('all');
+      setSearchParams({});
+    }
+  }, [matchingCategories, activeTab, setSearchParams]);
 
   const handleTab = (id) => {
     setActiveTab(id);

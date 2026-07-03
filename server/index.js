@@ -74,6 +74,21 @@ io.on("connection", (socket) => {
     console.log("Connected users:", connectedUsers);
   });
 
+  socket.on("join_restaurant_room", (restaurantId) => {
+    socket.join(`restaurant_${restaurantId}`);
+    console.log(`Socket ${socket.id} joined restaurant room: restaurant_${restaurantId}`);
+  });
+
+  socket.on("join_customer_room", (customerId) => {
+    socket.join(`customer_${customerId}`);
+    console.log(`Socket ${socket.id} joined customer room: customer_${customerId}`);
+  });
+
+  socket.on("join_order_room", (orderId) => {
+    socket.join(`order_${orderId}`);
+    console.log(`Socket ${socket.id} joined order room: order_${orderId}`);
+  });
+
   socket.on("disconnect", () => {
     for (let id in connectedUsers) {
       if (connectedUsers[id] === socket.id) delete connectedUsers[id];
