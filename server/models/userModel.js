@@ -100,6 +100,10 @@ const userSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  is_street_food: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // userModel.js
