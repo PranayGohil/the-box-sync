@@ -46,6 +46,7 @@ const websiteSchema = new mongoose.Schema({
     url: String,
     logo: String
   }],
+  show_reservation: { type: Boolean, default: true },
 });
 
 const Website = mongoose.model("website", websiteSchema);

@@ -51,9 +51,9 @@ export default function Footer() {
     Explore: [
       { label: 'Home',    to: '/'       },
       { label: 'Menu',    to: '/menu'   },
-      { label: 'Book',    to: '/reservation' },
+      settings?.show_reservation !== false && { label: 'Book',    to: '/reservation' },
       { label: 'Contact', to: '/contact'},
-    ],
+    ].filter(Boolean),
     'Our Food': footerCategories.length > 0 ? footerCategories : [
       { label: 'Pizza',   to: '/menu?cat=pizza'   },
       { label: 'Burgers', to: '/menu?cat=burger'  },
