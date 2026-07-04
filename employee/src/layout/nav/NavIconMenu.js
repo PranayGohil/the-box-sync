@@ -6,7 +6,6 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { settingsChangeColor } from 'settings/settingsSlice';
 import { AuthContext } from 'contexts/AuthContext';
 import IconMenuNotifications from './notifications/Notifications';
-import SearchModal from './search/SearchModal';
 
 const customStyles = `
     .interactive-card {
@@ -62,12 +61,6 @@ const NavIconMenu = () => {
     e.stopPropagation();
     dispatch(settingsChangeColor(color.includes('light') ? color.replace('light', 'dark') : color.replace('dark', 'light')));
   };
-  const [showSearchModal, setShowSearchModal] = useState(false);
-  
-  const onSearchIconClick = (e) => {
-    e.preventDefault();
-    setShowSearchModal(true);
-  };
   
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -81,11 +74,6 @@ const NavIconMenu = () => {
     <>
       <style>{customStyles}</style>
       <ul className="list-unstyled list-inline text-center menu-icons">
-        {/* <li className="list-inline-item" title="Search">
-          <a href="#/" onClick={onSearchIconClick}>
-            <CsLineIcons icon="search" size="18" />
-          </a>
-        </li> */}
         <IconMenuNotifications />
         <li className="list-inline-item" title="Logout">
           <a onClick={() => setShowLogoutModal(true)}>
@@ -93,7 +81,6 @@ const NavIconMenu = () => {
           </a>
         </li>
       </ul>
-      <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 
       <Modal 
         show={showLogoutModal} 
@@ -111,7 +98,7 @@ const NavIconMenu = () => {
           <h4 className="fw-bold text-dark mb-2">Confirm Logout</h4>
           {sessionStorage.getItem('wfh_active') === 'true' ? (
             <p className="text-danger smaller fw-bold mb-0">
-              WFH Tracking is currently active. You should Clock-Out first. Logging out will immediately stop your background tracking. Proceed?
+              WFH Tracking is currently active. You should Check-Out first. Logging out will immediately stop your background tracking. Proceed?
             </p>
           ) : (
             <p className="text-muted smaller fw-bold mb-0">

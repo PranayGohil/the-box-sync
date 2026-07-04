@@ -6,10 +6,15 @@ import { Country, State, City } from 'country-state-city';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
 import HtmlHead from 'components/html-head/HtmlHead';
+import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 
 const CompanyProfile = () => {
   const title = 'Company Profile & Settings';
   const description = 'Manage your company details, contact information, and compliance data.';
+  const breadcrumbs = [
+    { to: '', text: 'Home' },
+    { to: 'payroll/settings', text: 'Settings' },
+  ];
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -132,11 +137,11 @@ const CompanyProfile = () => {
   return (
     <>
       <HtmlHead title={title} description={description} />
-      <div className="page-title-container">
-        <Row className="g-0">
-          <Col className="col-auto mb-3 mb-sm-0 me-auto">
-            <h1 className="mb-0 pb-0 display-4" id="title">{title}</h1>
-            <p className="text-muted mt-1">{description}</p>
+      <div className="page-title-container mb-4 mt-5 mt-lg-0">
+        <Row className="g-3 align-items-center">
+          <Col xs="12" md="6">
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
+            <BreadcrumbList items={breadcrumbs} />
           </Col>
         </Row>
       </div>
@@ -329,7 +334,7 @@ const CompanyProfile = () => {
               </Card.Body>
             </Card>
 
-            <h2 className="small-title">Attendance Kiosk</h2>
+            <h2 className="small-title">Attendance Panel</h2>
             <Card className="mb-5">
               <Card.Body>
                 <div className="d-flex align-items-center mb-3">
@@ -337,7 +342,7 @@ const CompanyProfile = () => {
                     <CsLineIcons icon="link" size="20" />
                   </div>
                   <div>
-                    <div className="text-heading fw-bold">Kiosk Link</div>
+                    <div className="text-heading fw-bold">Attendance Panel Link</div>
                     <div className="text-muted small">Use this link for the standalone attendance scanner.</div>
                   </div>
                 </div>
@@ -345,7 +350,7 @@ const CompanyProfile = () => {
                 {formData._id ? (
                   <>
                     <a
-                      href={`${process.env.REACT_APP_ATTENDANCE_URL}/${formData._id}`}
+                      href={`${process.env.REACT_APP_ATTENDANCE_URL || 'http://localhost:3002'}/${formData._id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="d-block mb-3 p-2 bg-light text-primary fw-bold rounded border text-center text-decoration-none"
@@ -357,8 +362,8 @@ const CompanyProfile = () => {
                       size="sm"
                       className="w-100"
                       onClick={() => {
-                        navigator.clipboard.writeText(`${process.env.REACT_APP_ATTENDANCE_URL}/${formData._id}`);
-                        toast.success('Kiosk link copied to clipboard!');
+                        navigator.clipboard.writeText(`${process.env.REACT_APP_ATTENDANCE_URL || 'http://localhost:3002'}/${formData._id}`);
+                        toast.success('Attendance Panel link copied to clipboard!');
                       }}
                     >
                       <CsLineIcons icon="copy" size="15" className="me-2" />
@@ -370,6 +375,42 @@ const CompanyProfile = () => {
                     Generating...
                   </div>
                 )}
+              </Card.Body>
+            </Card>
+
+            <h2 className="small-title">Employee Panel</h2>
+            <Card className="mb-5">
+              <Card.Body>
+                <div className="d-flex align-items-center mb-3">
+                  <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+                    <CsLineIcons icon="link" size="20" />
+                  </div>
+                  <div>
+                    <div className="text-heading fw-bold">Employee Panel Link</div>
+                    <div className="text-muted small">Use this link to access the employee self-service portal.</div>
+                  </div>
+                </div>
+
+                <a
+                  href={`${process.env.REACT_APP_EMPLOYEE_URL || 'http://localhost:3003'}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="d-block mb-3 p-2 bg-light text-primary fw-bold rounded border text-center text-decoration-none"
+                >
+                  Open Employee Panel <CsLineIcons icon="external-link" size="15" className="ms-1" />
+                </a>
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  className="w-100"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${process.env.REACT_APP_EMPLOYEE_URL || 'http://localhost:3003'}`);
+                    toast.success('Employee Panel link copied to clipboard!');
+                  }}
+                >
+                  <CsLineIcons icon="copy" size="15" className="me-2" />
+                  Copy Link
+                </Button>
               </Card.Body>
             </Card>
           </Col>

@@ -28,7 +28,7 @@ function Field({ label, id, error, ...props }) {
 export default function Checkout() {
   const [payment, setPayment] = useState('card');
   const [ordered, setOrdered] = useState(false);
-  const { items, subtotal, tax, delivery, total, clearCart } = useCart();
+  const { items, subtotal, tax, delivery, total, totalTaxRatePercent = 0, cgstRate = 0, sgstRate = 0, vatRate = 0, clearCart } = useCart();
   const { user, refreshUser } = useAuth();
   const { restaurantCode } = useRestaurant();
   const navigate = useNavigate();
@@ -76,10 +76,12 @@ export default function Checkout() {
             dish_price: item.price
           })),
           sub_total: subtotal,
-          cgst_percent: 5,
-          sgst_percent: 5,
-          cgst_amount: subtotal * 0.05,
-          sgst_amount: subtotal * 0.05,
+          cgst_percent: cgstRate,
+          sgst_percent: sgstRate,
+          vat_percent: vatRate,
+          cgst_amount: subtotal * (cgstRate / 100),
+          sgst_amount: subtotal * (sgstRate / 100),
+          vat_amount: subtotal * (vatRate / 100),
           bill_amount: total,
           total_amount: total,
           paid_amount: payment === 'cod' ? 0 : total,
@@ -344,7 +346,7 @@ export default function Checkout() {
                     </span>
                   </div>
                   <div className="d-flex justify-content-between text-white-60">
-                    <span>Tax</span><span className="text-white">₹{tax.toFixed(2)}</span>
+                    <span>Tax (${totalTaxRatePercent}%)</span><span className="text-white">₹{tax.toFixed(2)}</span>
                   </div>
                 </div>
 

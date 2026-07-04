@@ -111,6 +111,7 @@ app.use(cors());
 
 // Serve static files from the 'uploads' directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(express.static(path.join(__dirname, "../landing-page")));
 
 app.use("/api/upload", uploadRouter);
 app.use("/api/charge", chargeRouter);

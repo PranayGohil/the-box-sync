@@ -28,6 +28,33 @@ const expenseSchema = new mongoose.Schema(
     receipt: {
       type: String, // Path to uploaded file
     },
+    merchant: {
+      type: String,
+    },
+    invoice_no: {
+      type: String,
+    },
+    gst_no: {
+      type: String,
+    },
+    payment_mode: {
+      type: String,
+      enum: ["cash", "personal_card", "company_card", "upi", "bank_transfer"],
+      default: "cash",
+    },
+    expense_type: {
+      type: String,
+      enum: ["reimbursement", "company_purchase"],
+      default: "reimbursement",
+    },
+    items: [
+      {
+        name: { type: String },
+        qty: { type: Number },
+        price: { type: Number },
+        total: { type: Number }
+      }
+    ],
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],

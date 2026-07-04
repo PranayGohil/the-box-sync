@@ -3,7 +3,6 @@ import { useHistory } from 'react-router-dom';
 import { Modal, Button } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import IconMenuNotifications from './notifications/Notifications';
-import SearchModal from './search/SearchModal';
 
 const customStyles = `
     .interactive-card {
@@ -26,7 +25,7 @@ const customStyles = `
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
-    }
+      }
     .custom-btn-outline:hover {
       background: #23b3f4 !important;
       color: #ffffff !important;
@@ -50,13 +49,6 @@ const NavIconMenu = () => {
   const history = useHistory();
   const brandColor = '#23b3f4';
   
-  const [showSearchModal, setShowSearchModal] = useState(false);
-  
-  const onSearchIconClick = (e) => {
-    e.preventDefault();
-    setShowSearchModal(true);
-  };
-  
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = () => {
@@ -70,11 +62,6 @@ const NavIconMenu = () => {
     <>
       <style>{customStyles}</style>
       <ul className="list-unstyled list-inline text-center menu-icons">
-        <li className="list-inline-item" title="Search">
-          <a href="#/" onClick={onSearchIconClick}>
-            <CsLineIcons icon="search" size="18" />
-          </a>
-        </li>
         <li className="list-inline-item" title="Logout">
           <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
             <CsLineIcons icon="logout" size="18" />
@@ -82,7 +69,6 @@ const NavIconMenu = () => {
         </li>
         <IconMenuNotifications />
       </ul>
-      <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 
       <Modal 
         show={showLogoutModal} 

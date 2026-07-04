@@ -20,6 +20,7 @@ const payroll = {
   expenses: lazy(() => import('views/admin/staff/payroll/ManageExpenses')),
   essExpense: lazy(() => import('views/ess/ESSExpensePanel')),
   reports: lazy(() => import('views/admin/staff/payroll/StatutoryReports')),
+  feedbacks: lazy(() => import('views/admin/staff/payroll/FeedbacksAndComplaints')),
   assets: lazy(() => import('views/admin/staff/assets/Assets')),
   companyProfile: lazy(() => import('views/admin/CompanyProfile')),
 };
@@ -80,7 +81,6 @@ const allRoutes = {
       subs: [
         { path: '/view', component: payroll.attendance },
         { path: '/manage', component: payroll.manageAttendance },
-        { path: '/roster', component: payroll.roster },
         { path: '/ess', component: payroll.essAttendance },
       ],
     },
@@ -104,15 +104,16 @@ const allRoutes = {
 
 
     // --- VISUAL MENU FOLDERS ---
+    // --- VISUAL MENU ITEMS ---
     {
       path: appRoot,
-      label: 'HR & Staff',
-      icon: 'user',
+      label: 'Payroll',
+      icon: 'credit-card',
       hideInRoute: true,
       subs: [
-        { path: `/staff`, label: 'Staff Directory', icon: 'user' },
-        { path: `/attendance`, label: 'Attendance', icon: 'check-square' },
-        { path: `/organization`, label: 'Org Structure', icon: 'diagram-1' },
+        { path: `/staff`, label: 'Manage Staff', icon: 'user' },
+        { path: `/attendance`, label: 'Manage Attendance', icon: 'check-square' },
+        { path: `/payroll-management`, label: 'Manage Payroll', icon: 'credit-card' },
       ]
     },
     {
@@ -121,9 +122,7 @@ const allRoutes = {
       icon: 'money',
       hideInRoute: true,
       subs: [
-        { path: `/payroll-management`, label: 'Payroll', icon: 'credit-card' },
         { path: `/expenses/manage`, label: 'Manage Expenses', icon: 'wallet' },
-        { path: `/expenses/ess`, label: 'Add Expense', icon: 'plus' },
         { path: `/expenses/reports`, label: 'Audit & Reports', icon: 'file-text' },
       ]
     },
@@ -133,6 +132,12 @@ const allRoutes = {
       label: 'Assets',
       icon: 'boxes',
       component: payroll.assets,
+    },
+    {
+      path: `${appRoot}/feedbacks`,
+      label: 'Feedback',
+      icon: 'message',
+      component: payroll.feedbacks,
     },
     {
       path: `${appRoot}/payroll`,

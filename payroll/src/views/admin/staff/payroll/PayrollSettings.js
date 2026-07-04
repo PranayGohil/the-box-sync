@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 import { Row, Col, Card, Form, Button, Spinner, Badge, Table } from 'react-bootstrap';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -178,6 +179,13 @@ const PayrollSettings = () => {
     const history = useHistory();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [originalConfig, setOriginalConfig] = useState(null);
+    const [isDirty, setIsDirty] = useState(false);
+    const [uploadingPdf, setUploadingPdf] = useState(false);
+
+    // States for Attendance / Wi-Fi IP restrictions
+    const [adminPublicIp, setAdminPublicIp] = useState('');
+    const [localAllowedIps, setLocalAllowedIps] = useState('');
 
     const [newEarningLabel, setNewEarningLabel] = useState('');
     const [newDeductionLabel, setNewDeductionLabel] = useState('');
@@ -202,9 +210,22 @@ const PayrollSettings = () => {
             full_day_hours: 8,
             lunch_start_time: '01:00 PM',
             lunch_end_time: '02:00 PM',
-            notice_period_days: 30
+            notice_period_days: 30,
+            shift_start_time: '09:00 AM',
+            late_threshold_minutes: 0,
+            shift_end_time: '06:00 PM'
+        },
+        network_restrictions: {
+            is_enabled: false,
+            allowed_ips: []
+        },
+        wfh_config: {
+            min_interval: 3,
+            max_interval: 15,
+            idle_threshold: 5
         },
         document_templates: {
+            joining_letter_pdf: null,
             joining_letter_template: ""
         }
     });
@@ -233,6 +254,46 @@ const PayrollSettings = () => {
         }));
     };
 
+    const handlePdfUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.type !== 'application/pdf') {
+            toast.error('Only PDF files are supported.');
+            return;
+        }
+
+        try {
+            setUploadingPdf(true);
+            const formData = new FormData();
+            formData.append('pdf_template', file);
+
+            const res = await axios.post(`${process.env.REACT_APP_API}/upload/uploadtemplate`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (res.data.success) {
+                setConfig(prev => ({
+                    ...prev,
+                    document_templates: {
+                        ...prev.document_templates,
+                        joining_letter_pdf: res.data.filepath
+                    }
+                }));
+                setIsDirty(true);
+                toast.success('PDF Template uploaded successfully! Remember to save settings.');
+            }
+        } catch (err) {
+            console.error('Error uploading PDF template:', err);
+            toast.error('Failed to upload PDF template.');
+        } finally {
+            setUploadingPdf(false);
+        }
+    };
+
     const insertVariable = (variableName) => {
         if (quillRef.current) {
             const editor = quillRef.current.getEditor();
@@ -253,7 +314,7 @@ const PayrollSettings = () => {
                 if (statutory.pt?.is_applicable) setExpandPT(true);
 
                 // Merge with defaults to prevent undefined errors
-                setConfig({
+                const fetchedConfig = {
                     custom_earnings: res.data.custom_earnings || [],
                     custom_deductions: res.data.custom_deductions || [],
                     global_weekly_offs: res.data.global_weekly_offs && res.data.global_weekly_offs.length > 0 ? res.data.global_weekly_offs : [{ day: 'Sunday', type: 'all_weeks', weeks: [] }],
@@ -263,8 +324,24 @@ const PayrollSettings = () => {
                         pt: { ...config.statutory_config.pt, ...(res.data.statutory_config?.pt || {}) },
                     },
                     org_rules: { ...config.org_rules, ...(res.data.org_rules || {}) },
-                    document_templates: { joining_letter_template: res.data.document_templates?.joining_letter_template || defaultJoiningLetter }
-                });
+                    network_restrictions: {
+                        is_enabled: res.data.network_restrictions?.is_enabled || false,
+                        allowed_ips: res.data.network_restrictions?.allowed_ips || []
+                    },
+                    wfh_config: {
+                        min_interval: res.data.wfh_config?.min_interval || 3,
+                        max_interval: res.data.wfh_config?.max_interval || 15,
+                        idle_threshold: res.data.wfh_config?.idle_threshold || 5
+                    },
+                    document_templates: {
+                        joining_letter_pdf: res.data.document_templates?.joining_letter_pdf || null,
+                        joining_letter_template: res.data.document_templates?.joining_letter_template || defaultJoiningLetter
+                    }
+                };
+                setConfig(fetchedConfig);
+                setOriginalConfig(JSON.parse(JSON.stringify(fetchedConfig)));
+                setLocalAllowedIps((res.data.network_restrictions?.allowed_ips || []).join(', '));
+                setIsDirty(false);
             }
         } catch (err) {
             toast.error("Failed to load payroll configuration");
@@ -275,12 +352,97 @@ const PayrollSettings = () => {
 
     useEffect(() => { fetchConfig(); }, []);
 
+    // Fetch admin's current IP as seen by our backend
+    useEffect(() => {
+        axios.get(`${process.env.REACT_APP_API}/kiosk/me`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(res => {
+            if (res.data && res.data.client_ip) {
+                setAdminPublicIp(res.data.client_ip);
+            }
+        })
+        .catch(err => console.error('Failed to get backend IP', err));
+    }, []);
+
+    // Time conversion helpers
+    const convertTo24HourInput = (time12) => {
+        if (!time12) return '';
+        const parts = time12.split(' ');
+        if (parts.length !== 2) return '';
+        const [time, period] = parts;
+        let [hours, minutes] = time.split(':').map(Number);
+        if (period === 'PM' && hours !== 12) hours += 12;
+        else if (period === 'AM' && hours === 12) hours = 0;
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    };
+
+    const convertFromTimeInput = (time24) => {
+        if (!time24) return '';
+        const [hoursStr, minutesStr] = time24.split(':');
+        let hours = parseInt(hoursStr, 10);
+        const minutes = minutesStr;
+        const period = hours >= 12 ? 'PM' : 'AM';
+        hours %= 12;
+        hours = hours || 12;
+        return `${String(hours).padStart(2, '0')}:${minutes} ${period}`;
+    };
+
+    const updateNetwork = (field, val) => {
+        setConfig(prev => ({
+            ...prev,
+            network_restrictions: {
+                ...prev.network_restrictions,
+                [field]: val
+            }
+        }));
+    };
+
+    const updateWfh = (field, val) => {
+        setConfig(prev => ({
+            ...prev,
+            wfh_config: {
+                ...prev.wfh_config,
+                [field]: val
+            }
+        }));
+    };
+
+    const handleAllowedIpsChange = (value) => {
+        setLocalAllowedIps(value);
+        const parsedIps = value.split(',').map(ip => ip.trim()).filter(ip => ip !== '');
+        setConfig(prev => ({
+            ...prev,
+            network_restrictions: {
+                ...prev.network_restrictions,
+                allowed_ips: parsedIps
+            }
+        }));
+    };
+
+    const addCurrentIp = () => {
+        if (!adminPublicIp) return;
+        const currentIps = [...(config.network_restrictions?.allowed_ips || [])];
+        if (!currentIps.includes(adminPublicIp)) {
+            currentIps.push(adminPublicIp);
+            handleAllowedIpsChange(currentIps.join(', '));
+        }
+    };
+
+    useEffect(() => {
+        if (!originalConfig) return;
+        const hasChanges = JSON.stringify(config) !== JSON.stringify(originalConfig);
+        setIsDirty(hasChanges);
+    }, [config, originalConfig]);
+
     const handleSave = async () => {
         try {
             setSaving(true);
             const res = await updatePayrollConfig(config);
             if (res.success) {
                 toast.success('Settings updated successfully');
+                setOriginalConfig(JSON.parse(JSON.stringify(config)));
+                setIsDirty(false);
             } else {
                 toast.error(res.message || 'Failed to update settings');
             }
@@ -288,6 +450,15 @@ const PayrollSettings = () => {
             toast.error('Server error updating settings');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const discardChanges = () => {
+        if (originalConfig) {
+            setConfig(JSON.parse(JSON.stringify(originalConfig)));
+            setLocalAllowedIps((originalConfig.network_restrictions?.allowed_ips || []).join(', '));
+            setIsDirty(false);
+            toast.info('Changes discarded');
         }
     };
 
@@ -614,6 +785,69 @@ const PayrollSettings = () => {
         border-color: #1ea8e7 !important;
         box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
       }
+
+      .settings-floating-bar {
+        position: fixed !important;
+        bottom: 24px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        z-index: 1050 !important;
+        width: 90% !important;
+        max-width: 600px !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        border-radius: 50px !important;
+        border: 1px solid rgba(226, 232, 240, 0.8) !important;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+        animation: settingsSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+      }
+      @keyframes settingsSlideUp {
+        from {
+          bottom: -80px;
+          opacity: 0;
+        }
+        to {
+          bottom: 24px;
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 575.98px) {
+        .settings-floating-bar {
+          bottom: 0 !important;
+          left: 0 !important;
+          transform: none !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          border-radius: 0 !important;
+          border-left: none !important;
+          border-right: none !important;
+          border-bottom: none !important;
+          padding: 0.75rem 1rem !important;
+          flex-direction: column !important;
+          gap: 10px !important;
+          align-items: center !important;
+          text-align: center !important;
+          animation: settingsSlideUpMobile 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+        }
+        .settings-floating-bar .d-flex {
+          width: 100% !important;
+        }
+        .settings-floating-bar button {
+          flex: 1 !important;
+          text-align: center !important;
+        }
+        @keyframes settingsSlideUpMobile {
+          from {
+            bottom: -120px;
+            opacity: 0;
+          }
+          to {
+            bottom: 0;
+            opacity: 1;
+          }
+        }
+      }
     `;
 
     return (
@@ -643,7 +877,7 @@ const PayrollSettings = () => {
 
             <Row className="g-4 mb-5">
                 {/* ── Organizational Rules ── */}
-                <Col xl="6">
+                <Col xs="12">
                     <Card className="h-100 glass-card">
                         <Card.Body className="p-4">
                             <h5 className="fw-bold mb-4 text-primary">Organizational Rules</h5>
@@ -719,8 +953,166 @@ const PayrollSettings = () => {
                     </Card>
                 </Col>
 
+                {/* ── Attendance Settings & Shift Management ── */}
+                <Col xs="12">
+                    <Card className="h-100 glass-card">
+                        <Card.Body className="p-4">
+                            <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
+                                <h5 className="fw-bold mb-0 text-primary">Attendance Settings & Shifts</h5>
+                                <Button 
+                                    variant="none" 
+                                    className="btn-icon btn-icon-start custom-btn-primary-outline rounded-pill shadow-sm w-100 w-sm-auto"
+                                    onClick={() => history.push('/payroll/roster')}
+                                    style={{ height: '40px' }}
+                                >
+                                    <CsLineIcons icon="calendar" size="18" /> <span>Shift Management</span>
+                                </Button>
+                            </div>
+                            
+                            <h6 className="fw-bold mb-1 text-dark">Shift & Timing Rules</h6>
+                            <p className="text-muted small mb-3">
+                                Configure the official shift start/end times and the late arrival grace period. These values are used to automatically flag late check-ins and overtime check-outs.
+                            </p>
+                            <Row className="g-4 mb-4">
+                                <Col md="4">
+                                    <Form.Group>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Shift Start Time</Form.Label>
+                                        <Form.Control 
+                                            type="time" 
+                                            value={convertTo24HourInput(config.org_rules.shift_start_time)} 
+                                            onChange={e => updateOrg('shift_start_time', convertFromTimeInput(e.target.value))} 
+                                            className="form-control-premium shadow-sm" 
+                                        />
+                                        <Form.Text className="text-muted ms-1">Official shift start (e.g. 09:00 AM)</Form.Text>
+                                    </Form.Group>
+                                </Col>
+                                <Col md="4">
+                                    <Form.Group>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Late Grace Period (Minutes)</Form.Label>
+                                        <Form.Control 
+                                            type="number" 
+                                            min={0}
+                                            max={120}
+                                            value={config.org_rules.late_threshold_minutes} 
+                                            onChange={e => updateOrg('late_threshold_minutes', Number(e.target.value))} 
+                                            className="form-control-premium shadow-sm" 
+                                        />
+                                        <Form.Text className="text-muted ms-1">0 = no grace, 15 = 15-min allowance</Form.Text>
+                                    </Form.Group>
+                                </Col>
+                                <Col md="4">
+                                    <Form.Group>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Shift End Time</Form.Label>
+                                        <Form.Control 
+                                            type="time" 
+                                            value={convertTo24HourInput(config.org_rules.shift_end_time)} 
+                                            onChange={e => updateOrg('shift_end_time', convertFromTimeInput(e.target.value))} 
+                                            className="form-control-premium shadow-sm" 
+                                        />
+                                        <Form.Text className="text-muted ms-1">Check-out after this = overtime</Form.Text>
+                                    </Form.Group>
+                                </Col>
+                            </Row>
+
+                            <hr className="my-4 opacity-50" />
+
+                            <h6 className="fw-bold mb-1 text-dark">Network Restrictions (Office Wi-Fi)</h6>
+                            <p className="text-muted small mb-3">
+                                Restrict check-in and check-out to specific networks by entering their public IP addresses.
+                            </p>
+                            <Row className="g-4 mb-4">
+                                <Col md="4" className="d-flex align-items-center">
+                                    <Form.Check 
+                                        type="switch"
+                                        id="network-restrict-switch"
+                                        label={<span className="fw-semibold text-dark small ms-2">Enable IP Restrictions</span>}
+                                        checked={config.network_restrictions.is_enabled}
+                                        onChange={e => updateNetwork('is_enabled', e.target.checked)}
+                                        className="mt-2"
+                                    />
+                                </Col>
+                                <Col md="8">
+                                    <Form.Group>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Allowed Public IP Addresses (Comma separated)</Form.Label>
+                                        <Form.Control 
+                                            type="text" 
+                                            placeholder="e.g. 192.168.1.1, 203.0.113.5"
+                                            value={localAllowedIps} 
+                                            onChange={e => handleAllowedIpsChange(e.target.value)} 
+                                            className="form-control-premium shadow-sm" 
+                                            disabled={!config.network_restrictions.is_enabled}
+                                        />
+                                        {adminPublicIp && (
+                                            <div className="mt-2 d-flex align-items-center gap-2">
+                                                <span className="text-muted small">Your current IP is: <strong>{adminPublicIp}</strong></span>
+                                                <Button 
+                                                    variant="link" 
+                                                    className="p-0 text-decoration-none small" 
+                                                    style={{ fontSize: '0.75rem' }}
+                                                    disabled={!config.network_restrictions.is_enabled}
+                                                    onClick={addCurrentIp}
+                                                >
+                                                    + Add Current IP
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </Form.Group>
+                                </Col>
+                            </Row>
+
+                            <hr className="my-4 opacity-50" />
+
+                            <h6 className="fw-bold mb-1 text-dark">Work From Home (WFH) Tracking Settings</h6>
+                            <p className="text-muted small mb-3">
+                                Configure the random snapshot intervals and idle time threshold for employees working from home.
+                            </p>
+                            <Row className="g-4">
+                                <Col md="4">
+                                    <Form.Group>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Min Interval (Minutes)</Form.Label>
+                                        <Form.Control 
+                                            type="number" 
+                                            min="1"
+                                            value={config.wfh_config.min_interval} 
+                                            onChange={e => updateWfh('min_interval', Number(e.target.value))} 
+                                            className="form-control-premium shadow-sm" 
+                                        />
+                                        <Form.Text className="text-muted ms-1">Minimum time between random snapshots.</Form.Text>
+                                    </Form.Group>
+                                </Col>
+                                <Col md="4">
+                                    <Form.Group>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Max Interval (Minutes)</Form.Label>
+                                        <Form.Control 
+                                            type="number" 
+                                            min="1"
+                                            value={config.wfh_config.max_interval} 
+                                            onChange={e => updateWfh('max_interval', Number(e.target.value))} 
+                                            className="form-control-premium shadow-sm" 
+                                        />
+                                        <Form.Text className="text-muted ms-1">Maximum time between random snapshots.</Form.Text>
+                                    </Form.Group>
+                                </Col>
+                                <Col md="4">
+                                    <Form.Group>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Idle Threshold (Minutes)</Form.Label>
+                                        <Form.Control 
+                                            type="number" 
+                                            min="1"
+                                            value={config.wfh_config.idle_threshold} 
+                                            onChange={e => updateWfh('idle_threshold', Number(e.target.value))} 
+                                            className="form-control-premium shadow-sm" 
+                                        />
+                                        <Form.Text className="text-muted ms-1">Time before system marks employee as idle.</Form.Text>
+                                    </Form.Group>
+                                </Col>
+                            </Row>
+                        </Card.Body>
+                    </Card>
+                </Col>
+
                 {/* ── Active Earnings ── */}
-                <Col xl="6">
+                <Col xs="12" xl="6">
                     <Card className="h-100 glass-card">
                         <Card.Body className="p-4">
                             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -742,7 +1134,7 @@ const PayrollSettings = () => {
                                 </Button>
                             </Form.Group>
 
-                            <div className="d-flex flex-column gap-3" style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                            <div className="d-flex flex-column gap-3">
                                 {config.custom_earnings.map((opt, idx) => (
                                     <div key={opt.id} className="d-flex justify-content-between align-items-center p-3 border rounded bg-light">
                                         <Form.Check
@@ -767,8 +1159,8 @@ const PayrollSettings = () => {
                 </Col>
 
                 {/* ── Deductions Components ── */}
-                <Col xl="12">
-                    <Card className="glass-card">
+                <Col xs="12" xl="6">
+                    <Card className="h-100 glass-card">
                         <Card.Body className="p-4">
                             <div className="d-flex justify-content-between align-items-center mb-4">
                                 <h5 className="fw-bold mb-0 text-primary">Deductions Components</h5>
@@ -1052,7 +1444,53 @@ const PayrollSettings = () => {
                                     + [Staff ID]
                                 </Button>
                             </div>
-                            
+
+                            {/* Upload Custom Template PDF */}
+                            <div className="mb-4 p-3 bg-light rounded border">
+                                <Form.Group>
+                                    <Form.Label className="fw-bold text-dark small text-uppercase mb-2">Upload Custom Joining Letter PDF Template</Form.Label>
+                                    <div className="d-flex align-items-center gap-3">
+                                        <Form.Control
+                                            type="file"
+                                            accept="application/pdf"
+                                            onChange={handlePdfUpload}
+                                            style={{ display: 'none' }}
+                                            id="pdf-template-upload-input"
+                                        />
+                                        <label htmlFor="pdf-template-upload-input" className="btn btn-outline-primary rounded-pill px-4 mb-0 fw-bold d-inline-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
+                                            <CsLineIcons icon="upload" size="16" /> {uploadingPdf ? 'Uploading PDF...' : 'Choose PDF File'}
+                                        </label>
+                                        {config.document_templates?.joining_letter_pdf ? (
+                                            <div className="d-flex align-items-center gap-2 text-success small fw-semibold">
+                                                <CsLineIcons icon="check-circle" size="18" className="text-success" />
+                                                <span>Custom PDF: {config.document_templates.joining_letter_pdf.split('/').pop()}</span>
+                                                <Button 
+                                                    variant="link" 
+                                                    className="p-0 text-danger ms-2 small fw-bold"
+                                                    onClick={() => {
+                                                        setConfig(prev => ({
+                                                            ...prev,
+                                                            document_templates: {
+                                                                ...prev.document_templates,
+                                                                joining_letter_pdf: null
+                                                            }
+                                                        }));
+                                                        setIsDirty(true);
+                                                    }}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <span className="text-muted small">No custom PDF template uploaded (falls back to HTML template).</span>
+                                        )}
+                                    </div>
+                                    <small className="text-muted d-block mt-2" style={{ fontSize: '0.75rem' }}>
+                                        Supports fillable PDF forms (AcroForm fields: <code>first_name</code>, <code>last_name</code>, <code>position</code>, <code>joining_date</code>, <code>salary</code>, <code>staff_id</code>) or standard flat PDFs (text overlays automatically on top).
+                                    </small>
+                                </Form.Group>
+                            </div>
+
                             <div className="bg-white rounded border">
                                 <ReactQuill 
                                     ref={quillRef}
@@ -1068,6 +1506,23 @@ const PayrollSettings = () => {
                     </Card>
                 </Col>
             </Row>
+
+            {/* Premium Floating Save Settings Bar */}
+            {isDirty && (
+                <div className="settings-floating-bar py-3 px-4 shadow-lg d-flex align-items-center justify-content-between">
+                    <span className="fw-bold text-dark d-flex align-items-center">
+                        <CsLineIcons icon="info-circle" className="text-warning me-2" size="18" /> 
+                        You have unsaved changes
+                    </span>
+                    <div className="d-flex gap-2">
+                        <Button variant="light" onClick={discardChanges} className="rounded-pill px-4" style={{ fontWeight: 'bold' }}>Discard</Button>
+                        <Button variant="primary" onClick={handleSave} disabled={saving} className="rounded-pill px-4" style={{ fontWeight: 'bold' }}>
+                            {saving ? <Spinner size="sm" animation="border" className="me-1" /> : <CsLineIcons icon="save" size="14" className="me-1" />} 
+                            Save Settings
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

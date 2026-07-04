@@ -376,9 +376,17 @@ export default function Profile() {
                       </div>
                     ))}
                   </div>
-                  <div className="border-top border-white-10 pt-3 mt-3 d-flex justify-content-between align-items-center">
-                    <span className="fw-semibold text-white">Bill Total</span>
-                    <span className="text-brand-400 fw-bold fs-5">₹{(order.total_amount || order.bill_amount).toFixed(2)}</span>
+                  <div className="border-top border-white-10 pt-3 mt-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                      <span className="fw-semibold text-white me-2">Bill Total</span>
+                      <span className="text-brand-400 fw-bold fs-5">₹{(order.total_amount || order.bill_amount || 0).toFixed(2)}</span>
+                    </div>
+                    <button
+                      onClick={() => navigate(`/${restaurantCode}/order/${order._id}`)}
+                      className="btn-ghost px-3 py-1.5 small d-flex align-items-center gap-1.5"
+                    >
+                      View Details
+                    </button>
                   </div>
                 </div>
               ))

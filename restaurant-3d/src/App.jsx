@@ -21,6 +21,7 @@ import Profile     from './pages/Profile';
 import Login       from './pages/Login';
 import Rewards     from './pages/Rewards';
 import Reorder     from './pages/Reorder';
+import OrderDetail from './pages/OrderDetail';
 import MobileBottomNav from './components/MobileBottomNav';
 
 import ScrollToTopButton from './components/ScrollToTopButton';
@@ -48,6 +49,7 @@ function AnimatedRoutes() {
           <Route path="login"        element={<Login />}    />
           <Route path="rewards"      element={<Rewards />}  />
           <Route path="reorder"      element={<Reorder />}  />
+          <Route path="order/:orderId" element={<OrderDetail />} />
         </Routes>
       </motion.div>
     </AnimatePresence>
@@ -129,23 +131,23 @@ export default function App() {
       <ThemeProvider>
         <AuthProvider>
           <SocketProvider>
-            <CartProvider>
-              <Routes>
-                <Route path="/:restaurantCode/*" element={
-                  <RestaurantProvider>
+            <Routes>
+              <Route path="/:restaurantCode/*" element={
+                <RestaurantProvider>
+                  <CartProvider>
                     <AppShell />
-                  </RestaurantProvider>
-                } />
-                <Route path="*" element={
-                  <div className="min-vh-100 d-flex align-items-center justify-content-center text-center p-4">
-                    <div>
-                      <h2 className="text-white mb-2">Welcome</h2>
-                      <p className="text-white-60">Please visit a valid restaurant link (e.g. /YOUR_RESTAURANT_CODE).</p>
-                    </div>
+                  </CartProvider>
+                </RestaurantProvider>
+              } />
+              <Route path="*" element={
+                <div className="min-vh-100 d-flex align-items-center justify-content-center text-center p-4">
+                  <div>
+                    <h2 className="text-white mb-2">Welcome</h2>
+                    <p className="text-white-60">Please visit a valid restaurant link (e.g. /YOUR_RESTAURANT_CODE).</p>
                   </div>
-                } />
-              </Routes>
-            </CartProvider>
+                </div>
+              } />
+            </Routes>
           </SocketProvider>
         </AuthProvider>
       </ThemeProvider>

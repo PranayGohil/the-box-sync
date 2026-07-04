@@ -704,10 +704,13 @@
     <script src="assets/js/main.js"></script>
     <script>
         // ── CONFIG ─────────────────────────────────────────────────────────────
-        const API_BASE = 'https://api.theboxsync.com/api';
+        const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+            ? 'http://localhost:5001/api'
+            : 'https://api.theboxsync.com/api';
 
         // ── STATE ──────────────────────────────────────────────────────────────
         let feedbackToken = null;
+        let orderId = null;
         let emailVerified = false;
         let otpCooldownTimer = null;
 
@@ -766,6 +769,7 @@
         // ── INIT ───────────────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
             feedbackToken = getTokenFromURL();
+            orderId = new URLSearchParams(window.location.search).get('order_id') || null;
 
             if (!feedbackToken) {
                 showTokenError('No feedback token found in the URL.');
@@ -775,6 +779,24 @@
             // Token exists — show the form
             qs('feedbackContent').style.display = 'block';
             qs('feedbackForm').addEventListener('submit', handleSubmit);
+
+            // Prefill customer details from URL if provided (direct link from order details page)
+            const params = new URLSearchParams(window.location.search);
+            const prefilledName = params.get('name');
+            const prefilledEmail = params.get('email');
+            if (prefilledName && prefilledEmail) {
+                qs('name').value = decodeURIComponent(prefilledName);
+                qs('email').value = decodeURIComponent(prefilledEmail);
+                qs('name').disabled = true;
+                qs('email').disabled = true;
+                emailVerified = true;
+                
+                // Hide Send OTP button and make input look normal
+                const sendOtpBtn = qs('sendOtpBtn');
+                if (sendOtpBtn) sendOtpBtn.style.display = 'none';
+                qs('email').style.borderTopRightRadius = '5px';
+                qs('email').style.borderBottomRightRadius = '5px';
+            }
 
             // -- Event listener for Send OTP --
             qs('sendOtpBtn').addEventListener('click', async () => {
@@ -966,6 +988,7 @@
                         customer_phone: customer_phone || '',
                         rating: Number(ratingInput.value),
                         feedback,
+                        order_id: orderId,
                     }),
                 });
 
