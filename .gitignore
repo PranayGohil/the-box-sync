@@ -8,3 +8,5 @@ build/p a y r o l l - s e r v e r / u p l o a d s /
  
 .env
 .env*.local
+
+*/.env
