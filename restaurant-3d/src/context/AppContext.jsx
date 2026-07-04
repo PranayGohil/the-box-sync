@@ -1,4 +1,5 @@
 import { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import { useRestaurant } from './RestaurantContext';
 
 // ─── Cart Context ───────────────────────────────────────────────
 const CartContext = createContext(null);
@@ -37,6 +38,7 @@ const cartReducer = (state, action) => {
 };
 
 export function CartProvider({ children }) {
+  const { settings } = useRestaurant();
   const [state, dispatch] = useReducer(cartReducer, { items: [] }, init => {
     try {
       const saved = localStorage.getItem('ember-cart');
@@ -54,9 +56,14 @@ export function CartProvider({ children }) {
   const updateQty  = (id, qty)   => dispatch({ type: 'UPDATE_QTY',  payload: { id, qty } });
   const clearCart  = ()          => dispatch({ type: 'CLEAR_CART' });
 
+  const cgstRate = settings?.taxInfo?.cgst || 0;
+  const sgstRate = settings?.taxInfo?.sgst || 0;
+  const vatRate = settings?.taxInfo?.vat || 0;
+  const totalTaxRatePercent = cgstRate + sgstRate + vatRate;
+
   const totalItems = state.items.reduce((s, i) => s + i.qty, 0);
   const subtotal   = state.items.reduce((s, i) => s + i.price * i.qty, 0);
-  const tax        = subtotal * 0.1;
+  const tax        = subtotal * (totalTaxRatePercent / 100);
   const delivery   = subtotal > 0 ? (subtotal > 50 ? 0 : 4.99) : 0;
   const total      = subtotal + tax + delivery;
 
@@ -64,6 +71,7 @@ export function CartProvider({ children }) {
     <CartContext.Provider value={{
       items: state.items,
       totalItems, subtotal, tax, delivery, total,
+      totalTaxRatePercent, cgstRate, sgstRate, vatRate,
       addItem, removeItem, updateQty, clearCart,
     }}>
       {children}
