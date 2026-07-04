@@ -386,6 +386,19 @@ const Feedback = () => {
             <div className="text-dark italic" style={{ fontStyle: 'italic' }}>
               “{row.original.feedback}”
             </div>
+            {row.original.order_id && (
+              <div className="mt-1">
+                <Button
+                  variant="link"
+                  className="p-0 text-primary small d-inline-flex align-items-center gap-1"
+                  style={{ fontSize: '11px', textDecoration: 'none' }}
+                  onClick={() => history.push(`/operations/order-details/${row.original.order_id}`)}
+                >
+                  <CsLineIcons icon="shop" size="12" />
+                  <span>View Linked Order</span>
+                </Button>
+              </div>
+            )}
             {row.original.reply && (
               <div className="mt-2 p-2 rounded bg-light" style={{ borderLeft: '3px solid #23b3f4' }}>
                 <span className="feedback-admin-reply-tag">Your Reply:</span>

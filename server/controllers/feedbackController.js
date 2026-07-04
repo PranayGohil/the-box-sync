@@ -11,6 +11,7 @@ const addFeedback = async (req, res) => {
       customer_phone,
       rating,
       feedback,
+      order_id,
     } = req.body;
 
     if (!restaurant_token || !customer_name || !rating || !feedback) {
@@ -26,6 +27,7 @@ const addFeedback = async (req, res) => {
       rating,
       feedback,
       date: new Date(),
+      order_id: order_id || null,
     };
 
     const result = await User.updateOne(

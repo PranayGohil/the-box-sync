@@ -21,6 +21,7 @@ import Profile     from './pages/Profile';
 import Login       from './pages/Login';
 import Rewards     from './pages/Rewards';
 import Reorder     from './pages/Reorder';
+import OrderDetail from './pages/OrderDetail';
 import MobileBottomNav from './components/MobileBottomNav';
 
 import ScrollToTopButton from './components/ScrollToTopButton';
@@ -48,6 +49,7 @@ function AnimatedRoutes() {
           <Route path="login"        element={<Login />}    />
           <Route path="rewards"      element={<Rewards />}  />
           <Route path="reorder"      element={<Reorder />}  />
+          <Route path="order/:orderId" element={<OrderDetail />} />
         </Routes>
       </motion.div>
     </AnimatePresence>

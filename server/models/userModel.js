@@ -91,6 +91,7 @@ const userSchema = new Schema({
       rating: { type: Number },
       feedback: { type: String },
       date: { type: Date, default: Date.now },
+      order_id: { type: mongoose.Schema.Types.ObjectId, ref: 'order', default: null },
     },
   ],
   purchasedPlan: {
