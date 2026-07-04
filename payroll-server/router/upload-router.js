@@ -73,4 +73,27 @@ uploadRouter.post(
   }
 );
 
+uploadRouter.post(
+  "/uploadtemplate",
+  multer({
+    storage: multer.diskStorage({
+      destination: (req, file, cb) => {
+        const dir = path.join(__dirname, "../uploads/templates");
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+      },
+      filename: (req, file, cb) => {
+        const uniqueName = "joining_letter_" + Date.now() + ".pdf";
+        cb(null, uniqueName);
+      },
+    }),
+  }).single("pdf_template"),
+  (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
+    }
+    return res.json({ success: true, filepath: `/uploads/templates/${req.file.filename}` });
+  }
+);
+
 module.exports = uploadRouter;

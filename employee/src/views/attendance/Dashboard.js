@@ -10,6 +10,7 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { format } from 'date-fns';
 import { enIN } from 'date-fns/locale';
+import CreatableSelect from 'react-select/creatable';
 import WfhTracker from './WfhTracker';
 
 const customStyles = `
@@ -210,28 +211,39 @@ const customStyles = `
   }
 
   .scanner-modal .modal-content {
-    border-radius: 2rem;
+    border-radius: 1.5rem;
     border: none;
     overflow: hidden;
-    background: #0f172a;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    background: #ffffff;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   }
   
   .scanner-modal .modal-header {
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    background: rgba(15, 23, 42, 0.95);
-    color: white;
+    border-bottom: 1px solid #f1f5f9;
+    background: #ffffff;
+    color: #0f172a;
   }
   
   .scanner-modal .btn-close {
-    filter: invert(1) grayscale(100%) brightness(200%);
+    filter: none;
   }
 
   .webcam-container {
     position: relative;
-    border-radius: 1.5rem;
+    border-radius: 1rem;
     overflow: hidden;
-    box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.2);
+    border: 3px solid #e2e8f0;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  }
+
+  .bg-soft-primary {
+    background-color: rgba(35, 179, 244, 0.1) !important;
+    color: #23b3f4 !important;
+  }
+
+  .bg-soft-secondary {
+    background-color: #f1f5f9 !important;
+    color: #64748b !important;
   }
 
   .scanner-overlay {
@@ -468,12 +480,17 @@ const customStyles = `
       width: 100%;
       justify-content: center;
     }
+    .webcam-container video,
+    .webcam-container canvas {
+      aspect-ratio: 4/3 !important; /* Increase vertical height/length of camera scan on mobile only */
+    }
   }
 `;
 
 export default function Dashboard() {
   const history = useHistory();
   const webcamRef = useRef(null);
+  const canvasRef = useRef(null);
 
   const title = 'Employee Panel';
   const description = 'Manage staff details and attendance';
@@ -488,6 +505,7 @@ export default function Dashboard() {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [detectedStaff, setDetectedStaff] = useState(null);
   const [showCameraModal, setShowCameraModal] = useState(false);
+  const [kioskActionType, setKioskActionType] = useState('check-in');
   const [showWfhNavModal, setShowWfhNavModal] = useState(false);
   const [detecting, setDetecting] = useState(false);
   const [error, setError] = useState('');
@@ -510,7 +528,25 @@ export default function Dashboard() {
   const [assetReqForm, setAssetReqForm] = useState({ asset_name: '', asset_type: 'Laptop / PC', reason: '' });
   const [leaveReqForm, setLeaveReqForm] = useState({ leave_type_id: '', from_date: '', to_date: '', days: 1, is_half_day: false, half_day_session: 'first_half', reason: '' });
   const [resignationReason, setResignationReason] = useState('');
+  const [resignationCategory, setResignationCategory] = useState('Career Growth & Better Opportunity');
+  const [resignationAck1, setResignationAck1] = useState(false);
+  const [resignationAck2, setResignationAck2] = useState(false);
+  const [resignationSignature, setResignationSignature] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [feedbacksList, setFeedbacksList] = useState([]);
+  const [feedbackForm, setFeedbackForm] = useState({ type: 'feedback', title: '', description: '', is_anonymous: false });
+  const [resignationCategories, setResignationCategories] = useState([
+    { label: 'Career Growth & Better Opportunity', value: 'Career Growth & Better Opportunity' },
+    { label: 'Higher Education / Studies', value: 'Higher Education' },
+    { label: 'Personal & Family Reasons', value: 'Personal & Family Reasons' },
+    { label: 'Health & Well-being', value: 'Health & Well-being' },
+    { label: 'Career Change & Pivot', value: 'Career Change & Pivot' },
+    { label: 'Relocation & Travel', value: 'Relocation & Travel' }
+  ]);
+  const [feedbackTypes, setFeedbackTypes] = useState([
+    { label: 'General Feedback / Suggestion', value: 'feedback' },
+    { label: 'Formal Complaint', value: 'complaint' }
+  ]);
   const [livenessStatus, setLivenessStatus] = useState('');
   const [livenessProgress, setLivenessProgress] = useState(0);
   const [lateMinutes, setLateMinutes] = useState(0);
@@ -674,6 +710,12 @@ export default function Dashboard() {
           setLeaveReqForm(f => ({ ...f, leave_type_id: policyData.leave_types[0].leave_type_id }));
         }
       }
+
+      // Feedbacks & Complaints
+      const feedbacksRes = await axios.get(`${process.env.REACT_APP_API}/feedback/my`, { headers });
+      if (feedbacksRes.data && feedbacksRes.data.success) {
+        setFeedbacksList(feedbacksRes.data.data);
+      }
     } catch (err) {
       console.error('Error fetching staff portal data:', err);
     } finally {
@@ -707,144 +749,6 @@ export default function Dashboard() {
     };
 
     return (eyeEAR(leftEye) + eyeEAR(rightEye)) / 2.0;
-  };
-
-  const handleFaceDetection = async () => {
-    try {
-      setDetecting(true);
-      setError('');
-      setLivenessProgress(0);
-      setLivenessStatus('Positioning face...');
-
-      const framesToCapture = 30;
-      const intervalMs = 100;
-      const screenshots = [];
-
-      /* eslint-disable no-await-in-loop, no-continue */
-      for (let i = 0; i < framesToCapture; i++) {
-        setLivenessStatus('Please BLINK your eyes...');
-        setLivenessProgress(Math.round(((i + 1) / framesToCapture) * 50));
-
-        await new Promise((resolve) => setTimeout(resolve, intervalMs));
-
-        if (!webcamRef.current) continue;
-        const screenshot = webcamRef.current.getScreenshot();
-        if (screenshot) {
-          screenshots.push(screenshot);
-        }
-      }
-
-      if (screenshots.length === 0) {
-        setError('No frames captured. Please ensure webcam is accessible.');
-        return;
-      }
-
-      const earHistory = [];
-      let lastSuccessfulImage = null;
-
-      for (let i = 0; i < screenshots.length; i++) {
-        setLivenessStatus('Verifying liveness...');
-        setLivenessProgress(50 + Math.round(((i + 1) / screenshots.length) * 50));
-
-        const image = await faceapi.fetchImage(screenshots[i]);
-        // Optimize: Compute ONLY landmarks to calculate EAR quickly
-        const detection = await faceapi.detectSingleFace(image, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.25 }))
-          .withFaceLandmarks();
-
-        if (detection) {
-          const ear = calculateEAR(detection.landmarks);
-          earHistory.push(ear);
-          lastSuccessfulImage = image;
-        }
-      }
-      /* eslint-enable no-await-in-loop, no-continue */
-
-      if (earHistory.length < 8) {
-        setError('Face was not stable. Please hold still during scanning.');
-        return;
-      }
-
-      let minIndex = -1;
-      let minEAR = 999;
-      for (let k = 0; k < earHistory.length; k++) {
-        if (earHistory[k] < minEAR) {
-          minEAR = earHistory[k];
-          minIndex = k;
-        }
-      }
-
-      let maxBefore = 0;
-      for (let k = 0; k < minIndex; k++) {
-        if (earHistory[k] > maxBefore) {
-          maxBefore = earHistory[k];
-        }
-      }
-
-      let maxAfter = 0;
-      for (let k = minIndex + 1; k < earHistory.length; k++) {
-        if (earHistory[k] > maxAfter) {
-          maxAfter = earHistory[k];
-        }
-      }
-
-      console.log('Liveness Diagnostics - EAR History:', earHistory);
-      console.log('Liveness Diagnostics - minEAR:', minEAR, 'at index:', minIndex);
-      console.log('Liveness Diagnostics - maxBefore:', maxBefore, 'maxAfter:', maxAfter);
-
-      // Verify physical liveness by checking for a distinct eye blink valley:
-      // 1. Pre-blink drop: There is an open eye state before the blink (range >= 0.015, ratio < 0.92).
-      // 2. Post-blink recovery: There is an open eye state after the blink (range >= 0.015, ratio < 0.92).
-      const hasValleyBefore = minIndex > 0 && (maxBefore - minEAR >= 0.015) && (minEAR / maxBefore < 0.92);
-      const hasValleyAfter = minIndex < earHistory.length - 1 && (maxAfter - minEAR >= 0.015) && (minEAR / maxAfter < 0.92);
-      const isLivenessVerified = hasValleyBefore && hasValleyAfter;
-
-      if (!isLivenessVerified) {
-        setError('Liveness check failed! You must physically blink your eyes during scanning. Photo/mobile spoofing detected.');
-        return;
-      }
-
-      if (!lastSuccessfulImage) {
-        setError('Failed to capture a clear face. Please try again.');
-        return;
-      }
-
-      // Extract face descriptor ONCE on the last successful image
-      const finalDetection = await faceapi.detectSingleFace(lastSuccessfulImage, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.25 }))
-        .withFaceLandmarks()
-        .withFaceDescriptor();
-
-      if (!finalDetection) {
-        setError('Failed to capture a clear face descriptor. Please try again.');
-        return;
-      }
-      const matchedDescriptor = finalDetection.descriptor;
-
-      const labeledDescriptors = staffList.map((staff) => {
-        const floatDesc = new Float32Array(staff.face_encoding);
-        return new faceapi.LabeledFaceDescriptors(`${staff._id}|${staff.f_name} ${staff.l_name}`, [floatDesc]);
-      });
-
-      const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.5);
-      const match = faceMatcher.findBestMatch(matchedDescriptor);
-
-      if (match.label === 'unknown') {
-        setDetectedStaff(null);
-        setError('No matching staff found. Please try again.');
-      } else {
-        const [id] = match.label.split('|');
-        const matchedStaff = staffList.find((s) => s._id === id);
-        setDetectedStaff(matchedStaff);
-        setError('');
-      }
-      setShowCameraModal(false);
-    } catch (err) {
-      console.error(err);
-      setError('Face detection failed. Please try again.');
-    } finally {
-      setDetecting(false);
-      setLivenessProgress(0);
-      setLivenessStatus('');
-    }
   };
 
   const isCheckedInToday = (staff) => {
@@ -911,6 +815,146 @@ export default function Dashboard() {
       setError('Check-out failed. Please try again.');
     }
   };
+
+  const handleFaceDetection = async () => {
+    try {
+      setDetecting(true);
+      setError('');
+      setLivenessProgress(20);
+      setLivenessStatus('Aligning face...');
+
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // Try capturing/detecting for up to 5 seconds
+      const maxAttempts = 15;
+      let matchedStaff = null;
+
+      /* eslint-disable no-await-in-loop, no-continue */
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        if (!webcamRef.current) {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          continue;
+        }
+
+        const screenshot = webcamRef.current.getScreenshot();
+        if (!screenshot) {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          continue;
+        }
+
+        const image = await faceapi.fetchImage(screenshot);
+        const detection = await faceapi.detectSingleFace(image, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.3 }))
+          .withFaceLandmarks()
+          .withFaceDescriptor();
+
+        if (detection) {
+          // Draw bounding box
+          const webcam = webcamRef.current;
+          if (webcam && canvas) {
+            const { video } = webcam;
+            if (video) {
+              const displaySize = { width: video.clientWidth, height: video.clientHeight };
+              faceapi.matchDimensions(canvas, displaySize);
+              const resizedDetection = faceapi.resizeResults(detection, displaySize);
+              const ctx = canvas.getContext('2d');
+              ctx.clearRect(0, 0, displaySize.width, displaySize.height);
+
+              const { x, y, width, height } = resizedDetection.detection.box;
+              ctx.lineWidth = 3;
+              ctx.strokeStyle = '#23b3f4';
+              ctx.strokeRect(x, y, width, height);
+
+              // Draw tag background and label text (canceling mirroring for text readability)
+              ctx.font = 'bold 12px Inter, sans-serif';
+              const labelText = 'Scanning...';
+              const textWidth = ctx.measureText(labelText).width;
+
+              ctx.save();
+              // Translate to center of text tag and flip horizontally to make it readable
+              ctx.translate(x + (textWidth + 16) / 2, y - 15);
+              ctx.scale(-1, 1);
+
+              ctx.fillStyle = 'rgba(35, 179, 244, 0.85)';
+              ctx.fillRect(-(textWidth + 16) / 2, -10, textWidth + 16, 20);
+
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText(labelText, -textWidth / 2, 4);
+              ctx.restore();
+            }
+          }
+
+          // Face found! Let's match it
+          const matchedDescriptor = detection.descriptor;
+          const labeledDescriptors = staffList.map((staff) => {
+            const floatDesc = new Float32Array(staff.face_encoding);
+            return new faceapi.LabeledFaceDescriptors(`${staff._id}|${staff.f_name} ${staff.l_name}`, [floatDesc]);
+          });
+
+          const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.5);
+          const match = faceMatcher.findBestMatch(matchedDescriptor);
+
+          if (match.label !== 'unknown') {
+            const [id] = match.label.split('|');
+            matchedStaff = staffList.find((s) => s._id === id);
+            break;
+          }
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        setLivenessProgress(20 + Math.round((attempt / maxAttempts) * 60));
+      }
+      /* eslint-enable no-await-in-loop, no-continue */
+
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      if (!matchedStaff) {
+        setError('No matching staff found. Please ensure you are standing in front of the camera.');
+        return;
+      }
+
+      if (currentUser?.role === 'staff' && matchedStaff._id !== currentUser?._id) {
+        setError('Verification failed: Face does not match the logged-in employee.');
+        return;
+      }
+
+      setLivenessStatus('Verifying...');
+      setLivenessProgress(95);
+
+      if (kioskActionType === 'check-out') {
+        await handleCheckOut(matchedStaff._id);
+      } else {
+        await handleCheckIn(matchedStaff._id);
+      }
+      setShowCameraModal(false);
+
+    } catch (err) {
+      console.error(err);
+      setError('Face detection failed. Please try again.');
+    } finally {
+      setDetecting(false);
+      setLivenessProgress(0);
+      setLivenessStatus('');
+    }
+  };
+
+  useEffect(() => {
+    let timer = null;
+    if (showCameraModal && modelsLoaded && !detecting) {
+      timer = setTimeout(() => {
+        handleFaceDetection();
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [showCameraModal, modelsLoaded]);
 
   const handleAssetRequestSubmit = async (e) => {
     e.preventDefault();
@@ -987,15 +1031,40 @@ export default function Dashboard() {
 
   const handleResignationSubmit = async (e) => {
     e.preventDefault();
+    const employeeFullName = `${profileData?.f_name || ''} ${profileData?.l_name || ''}`.trim();
+    
+    if (resignationReason.trim().length < 150) {
+      setError('❌ Resignation explanation must be at least 150 characters long.');
+      return;
+    }
+    
+    if (!resignationAck1 || !resignationAck2) {
+      setError('❌ You must acknowledge both terms and notice period to proceed.');
+      return;
+    }
+
+    if (resignationSignature.trim().toLowerCase() !== employeeFullName.toLowerCase()) {
+      setError(`❌ Signature mismatch. Please type your exact name: "${employeeFullName}"`);
+      return;
+    }
+
     try {
       setSubmitLoading(true);
       setError('');
       const token = sessionStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.post(`${process.env.REACT_APP_API}/staff/resign/${currentUser._id}`, { reason: resignationReason }, { headers });
+      
+      const formattedReason = `[Category: ${resignationCategory}] ${resignationReason}`;
+      
+      const res = await axios.post(`${process.env.REACT_APP_API}/staff/resign/${currentUser._id}`, { reason: formattedReason }, { headers });
       if (res.data && res.data.success) {
         setSuccessMsg('✅ Resignation submitted successfully!');
         setShowResignationModal(false);
+        // Reset states
+        setResignationReason('');
+        setResignationSignature('');
+        setResignationAck1(false);
+        setResignationAck2(false);
         fetchPortalData(); // Refresh profileData
       } else {
         setError(res.data.message || 'Failed to submit resignation');
@@ -1003,6 +1072,35 @@ export default function Dashboard() {
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || 'Error submitting resignation.');
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  const handleFeedbackSubmit = async (e) => {
+    e.preventDefault();
+    if (!feedbackForm.title.trim() || !feedbackForm.description.trim()) {
+      setError('❌ Title and description are required.');
+      return;
+    }
+    try {
+      setSubmitLoading(true);
+      setError('');
+      const token = sessionStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      const res = await axios.post(`${process.env.REACT_APP_API}/feedback/submit`, feedbackForm, { headers });
+      if (res.data && res.data.success) {
+        setSuccessMsg('✅ Feedback/complaint submitted successfully!');
+        setFeedbackForm({ type: 'feedback', title: '', description: '', is_anonymous: false });
+        // Refresh feedback list
+        const feedbacksRes = await axios.get(`${process.env.REACT_APP_API}/feedback/my`, { headers });
+        if (feedbacksRes.data && feedbacksRes.data.success) {
+          setFeedbacksList(feedbacksRes.data.data);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || 'Error submitting feedback.');
     } finally {
       setSubmitLoading(false);
     }
@@ -1117,7 +1215,34 @@ export default function Dashboard() {
                     <div 
                       className={`px-3 py-1 rounded-pill fw-bold ${isWfh ? 'bg-white text-primary shadow-sm' : 'text-white'}`}
                       style={{ cursor: isCheckedInToday(myStaffRecord) ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
-                      onClick={() => { if (!isCheckedInToday(myStaffRecord)) setIsWfh(true); }}
+                      onClick={() => {
+                        if (isCheckedInToday(myStaffRecord)) return;
+
+                        // Check WFH Policy or permanent WFH
+                        const isPermanentWFH = profileData?.attendance_method === 'wfh';
+                        if (!isPermanentWFH) {
+                          const todayStr = getTodayDate();
+                          const todayTime = new Date(`${todayStr}T00:00:00`).getTime();
+                          
+                          const approvedRequest = leaveRequests.find(req => {
+                            const isWfhType = req.leave_type_id === 'wfh' || req.leave_type_id === 'work_from_home' || req.leave_type_id?.toLowerCase() === 'wfh';
+                            if (!isWfhType || req.status !== 'approved') return false;
+                            
+                            const fromTime = new Date(`${new Date(req.from_date).toISOString().split('T')[0]}T00:00:00`).getTime();
+                            const toTime = new Date(`${new Date(req.to_date).toISOString().split('T')[0]}T00:00:00`).getTime();
+                            
+                            return todayTime >= fromTime && todayTime <= toTime;
+                          });
+
+                          if (!approvedRequest) {
+                            setError("Access Denied: You do not have an approved Work From Home request for today. Please apply in the Leaves section first.");
+                            setTimeout(() => setError(""), 6000);
+                            return;
+                          }
+                        }
+
+                        setIsWfh(true);
+                      }}
                     >
                       <CsLineIcons icon="home" size="14" className="me-1" /> Home
                     </div>
@@ -1125,16 +1250,45 @@ export default function Dashboard() {
                 </div>
 
                 <Button 
-                  className="btn-portal-primary bg-white text-primary border-0"
-                  onClick={() => setShowCameraModal(true)}
+                  className={`btn-portal-primary border-0 text-white ${isCheckedInToday(myStaffRecord) ? 'bg-danger' : 'bg-success'}`}
+                  onClick={() => {
+                    const checkingIn = !isCheckedInToday(myStaffRecord);
+                    if (checkingIn && isWfh) {
+                      // Check WFH Policy or permanent WFH
+                      const isPermanentWFH = profileData?.attendance_method === 'wfh';
+                      if (!isPermanentWFH) {
+                        const todayStr = getTodayDate();
+                        const todayTime = new Date(`${todayStr}T00:00:00`).getTime();
+                        
+                        const approvedRequest = leaveRequests.find(req => {
+                          const isWfhType = req.leave_type_id === 'wfh' || req.leave_type_id === 'work_from_home' || req.leave_type_id?.toLowerCase() === 'wfh';
+                          if (!isWfhType || req.status !== 'approved') return false;
+                          
+                          const fromTime = new Date(`${new Date(req.from_date).toISOString().split('T')[0]}T00:00:00`).getTime();
+                          const toTime = new Date(`${new Date(req.to_date).toISOString().split('T')[0]}T00:00:00`).getTime();
+                          
+                          return todayTime >= fromTime && todayTime <= toTime;
+                        });
+
+                        if (!approvedRequest) {
+                          setError("Access Denied: You do not have an approved Work From Home request for today. Please apply in the Leaves section first.");
+                          setTimeout(() => setError(""), 6000);
+                          return;
+                        }
+                      }
+                    }
+
+                    setKioskActionType(checkingIn ? 'check-in' : 'check-out');
+                    setShowCameraModal(true);
+                  }}
                   disabled={!modelsLoaded}
-                  style={{ borderRadius: '50px', fontWeight: 'bold', padding: '0.75rem 1.75rem' }}
+                  style={{ borderRadius: '50px', fontWeight: 'bold', padding: '0.75rem 2rem' }}
                 >
-                  <CsLineIcons icon="camera" size={18} />
+                  <CsLineIcons icon={isCheckedInToday(myStaffRecord) ? 'log-out' : 'log-in'} size={18} className="me-2" />
                   <span>
-                    {!isCheckedInToday(myStaffRecord) && isWfh 
-                      ? " Clock In (WFH)" 
-                      : " Clock In/Out"}
+                    {isCheckedInToday(myStaffRecord)
+                      ? "Check Out"
+                      : (isWfh ? "Check In (WFH)" : "Check In (Office)")}
                   </span>
                 </Button>
               </div>
@@ -1209,6 +1363,11 @@ export default function Dashboard() {
                     <Nav.Item>
                       <Nav.Link eventKey="leaves">
                         <CsLineIcons icon="calendar" size="18" /> Leave Balances & Requests
+                      </Nav.Link>
+                    </Nav.Item>
+                    <Nav.Item>
+                      <Nav.Link eventKey="feedbacks">
+                        <CsLineIcons icon="message" size="18" /> Feedback & Complaints
                       </Nav.Link>
                     </Nav.Item>
                   </Nav>
@@ -1317,45 +1476,7 @@ export default function Dashboard() {
                         </Row>
                       </div>
 
-                      {/* Resignation Block */}
-                      <div className="mt-5 pt-4 border-top">
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                          <h6 className="fw-bold mb-0 text-danger d-flex align-items-center">
-                            <CsLineIcons icon="warning-hexagon" size="18" className="me-2" /> Resignation
-                          </h6>
-                        </div>
-                        {profileData.resignation?.status && profileData.resignation.status !== 'none' ? (
-                          <div className="bg-light p-4 rounded-3 border">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                              <span className="fw-semibold">Resignation Status:</span>
-                              {getPortalStatusBadge(profileData.resignation.status)}
-                            </div>
-                            <Row className="g-3 small">
-                              <Col md={6}>
-                                <div className="text-muted mb-1">Submitted On</div>
-                                <div className="fw-bold">{formatDate(profileData.resignation.submitted_on)}</div>
-                              </Col>
-                              <Col md={6}>
-                                <div className="text-muted mb-1">Notice Period</div>
-                                <div className="fw-bold">{profileData.resignation.notice_period_days} Days</div>
-                              </Col>
-                              {profileData.resignation.status === 'approved' && profileData.resignation.last_working_day && (
-                                <Col md={12}>
-                                  <div className="text-muted mb-1">Last Working Day</div>
-                                  <div className="fw-bold text-danger">{formatDate(profileData.resignation.last_working_day)}</div>
-                                </Col>
-                              )}
-                            </Row>
-                          </div>
-                        ) : (
-                          <div className="bg-soft-danger p-4 rounded-3 text-center border" style={{ borderColor: 'rgba(239, 68, 68, 0.2)' }}>
-                            <p className="text-muted small mb-3">If you wish to resign from your position, you can submit a formal resignation request here. It will be sent to HR for approval.</p>
-                            <Button variant="danger" className="rounded-pill px-4 shadow-sm" onClick={() => setShowResignationModal(true)}>
-                              Submit Resignation
-                            </Button>
-                          </div>
-                        )}
-                      </div>
+
                     </Card.Body>
                   </Card>
                 </Tab.Pane>
@@ -1701,6 +1822,208 @@ export default function Dashboard() {
                     </Card>
                   </div>
                 </Tab.Pane>
+
+                {/* Feedback & Complaints Tab */}
+                <Tab.Pane eventKey="feedbacks">
+                  <Row className="g-4">
+                    {/* Submit Section */}
+                    <Col lg={4}>
+                      <Card className="glass-card border-0 shadow-sm">
+                        <Card.Body className="p-4">
+                          <h5 className="fw-bold mb-3 text-dark d-flex align-items-center">
+                            <CsLineIcons icon="message" className="text-primary me-2" size="20" />
+                            <span>Submit Feedback / Complaint</span>
+                          </h5>
+                          <p className="text-muted small mb-4">
+                            Your voice matters. Share suggestions, report issues, or register complaints directly to the HR department.
+                          </p>
+                          <Form onSubmit={handleFeedbackSubmit}>
+                            <Form.Group className="mb-3">
+                              <Form.Label className="small text-muted fw-bold text-uppercase">Type</Form.Label>
+                              <CreatableSelect
+                                isClearable
+                                options={feedbackTypes}
+                                value={feedbackForm.type ? { label: feedbackTypes.find(t => t.value === feedbackForm.type)?.label || feedbackForm.type, value: feedbackForm.type } : null}
+                                onChange={(selected) => {
+                                  if (selected) {
+                                    setFeedbackForm({...feedbackForm, type: selected.value});
+                                    if (!feedbackTypes.some(t => t.value === selected.value)) {
+                                      setFeedbackTypes(prev => [...prev, { label: selected.label, value: selected.value }]);
+                                    }
+                                  } else {
+                                    setFeedbackForm({...feedbackForm, type: ''});
+                                  }
+                                }}
+                                placeholder="Select or type custom type..."
+                              />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                              <Form.Label className="small text-muted fw-bold text-uppercase">Subject / Title</Form.Label>
+                              <Form.Control 
+                                type="text"
+                                required
+                                placeholder="E.g. Office AC repair, Payroll queries"
+                                style={{ height: '40px', borderRadius: '8px' }}
+                                value={feedbackForm.title}
+                                onChange={(e) => setFeedbackForm({...feedbackForm, title: e.target.value})}
+                              />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                              <Form.Label className="small text-muted fw-bold text-uppercase">Details & Context</Form.Label>
+                              <Form.Control 
+                                as="textarea"
+                                rows={5}
+                                required
+                                placeholder="Provide comprehensive details here..."
+                                style={{ borderRadius: '8px', fontSize: '0.9rem' }}
+                                value={feedbackForm.description}
+                                onChange={(e) => setFeedbackForm({...feedbackForm, description: e.target.value})}
+                              />
+                            </Form.Group>
+
+                            <Form.Group className="mb-4">
+                              <Form.Check 
+                                type="checkbox"
+                                id="anonymous-submit"
+                                label="Submit Anonymously"
+                                className="small text-muted fw-bold"
+                                checked={feedbackForm.is_anonymous}
+                                onChange={(e) => setFeedbackForm({...feedbackForm, is_anonymous: e.target.checked})}
+                              />
+                              <small className="text-muted d-block mt-1" style={{ fontSize: '0.75rem' }}>
+                                If checked, HR will review the request but your identity will remain hidden.
+                              </small>
+                            </Form.Group>
+
+                            <Button 
+                              variant="primary" 
+                              type="submit" 
+                              className="w-100 rounded-pill py-2 fw-bold"
+                              disabled={submitLoading}
+                            >
+                              {submitLoading ? 'Submitting...' : 'Submit to HR'}
+                            </Button>
+                          </Form>
+                        </Card.Body>
+                      </Card>
+
+                      <Card className="glass-card border-0 shadow-sm mt-4">
+                        <Card.Body className="p-4">
+                          <div className="d-flex justify-content-between align-items-center mb-3">
+                            <h5 className="fw-bold mb-0 text-danger d-flex align-items-center">
+                              <CsLineIcons icon="warning-hexagon" size="18" className="me-2" /> Resignation
+                            </h5>
+                          </div>
+                          {profileData.resignation?.status && profileData.resignation.status !== 'none' ? (
+                            <div className="bg-light p-3 rounded-3 border">
+                              <div className="d-flex justify-content-between align-items-center mb-3">
+                                <span className="fw-semibold small text-muted">Resignation Status:</span>
+                                {getPortalStatusBadge(profileData.resignation.status)}
+                              </div>
+                              <Row className="g-3 small text-dark">
+                                <Col xs={6}>
+                                  <div className="text-muted mb-1" style={{ fontSize: '0.75rem' }}>Submitted On</div>
+                                  <div className="fw-bold">{formatDate(profileData.resignation.submitted_on)}</div>
+                                </Col>
+                                <Col xs={6}>
+                                  <div className="text-muted mb-1" style={{ fontSize: '0.75rem' }}>Notice Period</div>
+                                  <div className="fw-bold">{profileData.resignation.notice_period_days} Days</div>
+                                </Col>
+                                {profileData.resignation.status === 'approved' && profileData.resignation.last_working_day && (
+                                  <Col xs={12}>
+                                    <div className="text-muted mb-1" style={{ fontSize: '0.75rem' }}>Last Working Day</div>
+                                    <div className="fw-bold text-danger">{formatDate(profileData.resignation.last_working_day)}</div>
+                                  </Col>
+                                )}
+                              </Row>
+                            </div>
+                          ) : (
+                            <div className="bg-soft-danger p-3 rounded-3 text-center border" style={{ borderColor: 'rgba(239, 68, 68, 0.2)' }}>
+                              <p className="text-muted small mb-3">If you wish to resign from your position, you can submit a formal resignation request here. It will be sent to HR for approval.</p>
+                              <Button variant="danger" className="w-100 rounded-pill py-2 fw-bold" onClick={() => setShowResignationModal(true)}>
+                                Submit Resignation
+                              </Button>
+                            </div>
+                          )}
+                        </Card.Body>
+                      </Card>
+                    </Col>
+
+                    {/* History Section */}
+                    <Col lg={8}>
+                      <Card className="glass-card border-0 shadow-sm">
+                        <Card.Body className="p-4">
+                          <h5 className="fw-bold mb-4 text-dark d-flex align-items-center">
+                            <CsLineIcons icon="file-text" className="text-primary me-2" size="20" />
+                            <span>My Feedback & Complaint History</span>
+                          </h5>
+
+                          {feedbacksList.length === 0 ? (
+                            <div className="text-center py-5 text-muted">
+                              <CsLineIcons icon="message" size="36" className="text-muted mb-2" />
+                              <p className="mb-0 small">No feedbacks or complaints submitted yet.</p>
+                            </div>
+                          ) : (
+                            <div className="feedback-scroll-container" style={{ maxHeight: '68vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
+                              {feedbacksList.map((item) => (
+                                <div 
+                                  key={item._id} 
+                                  className="p-3 mb-3 border rounded-3 bg-white"
+                                  style={{ borderLeft: `4px solid ${item.type === 'complaint' ? '#ef4444' : '#1ea8e7'} !important` }}
+                                >
+                                  <div className="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                      <span className="badge bg-light text-dark text-capitalize me-2 mb-1" style={{ fontSize: '0.7rem' }}>
+                                        {item.type}
+                                      </span>
+                                      {item.is_anonymous && (
+                                        <span className="badge bg-soft-secondary text-secondary" style={{ fontSize: '0.7rem' }}>
+                                          Anonymous
+                                        </span>
+                                      )}
+                                      <h6 className="fw-bold text-dark mb-0 mt-1">{item.title}</h6>
+                                    </div>
+                                    <Badge 
+                                      bg={item.status === 'resolved' ? 'success' : item.status === 'reviewed' ? 'info' : 'warning'}
+                                      className="status-badge text-white"
+                                    >
+                                      {item.status}
+                                    </Badge>
+                                  </div>
+                                  <p className="text-muted small mb-2" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
+                                    {item.description}
+                                  </p>
+                                  <div className="text-muted small mb-3" style={{ fontSize: '0.75rem' }}>
+                                    Submitted on: {formatDate(item.createdAt)}
+                                  </div>
+
+                                  {/* HR Reply Box */}
+                                  {item.hr_reply ? (
+                                    <div className="bg-light p-3 rounded-3 border-start border-primary border-3 mt-2">
+                                      <div className="d-flex justify-content-between align-items-center mb-1">
+                                        <span className="fw-bold text-primary small">Response from HR ({item.replied_by || 'HR Department'})</span>
+                                        <span className="text-muted small" style={{ fontSize: '0.7rem' }}>{formatDate(item.replied_at)}</span>
+                                      </div>
+                                      <p className="mb-0 text-dark small" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
+                                        {item.hr_reply}
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <div className="text-muted small bg-light p-2 rounded-3 text-center" style={{ fontSize: '0.75rem' }}>
+                                      ⏳ Pending review and reply from HR department.
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+                </Tab.Pane>
               </Tab.Content>
             </Col>
           </Row>
@@ -1755,33 +2078,112 @@ export default function Dashboard() {
         </Modal>
 
         {/* Modal: Resignation */}
-        <Modal show={showResignationModal} onHide={() => setShowResignationModal(false)} centered backdrop="static">
-          <Modal.Header closeButton>
-            <Modal.Title className="fw-bold text-danger">Submit Resignation</Modal.Title>
+        <Modal show={showResignationModal} onHide={() => setShowResignationModal(false)} centered backdrop="static" size="md">
+          <Modal.Header closeButton className="border-0 pb-0">
+            <Modal.Title className="fw-bold text-danger d-flex align-items-center">
+              <CsLineIcons icon="warning-hexagon" className="text-danger me-2" size="24" />
+              <span>Initiate Formal Resignation</span>
+            </Modal.Title>
           </Modal.Header>
           <Form onSubmit={handleResignationSubmit}>
-            <Modal.Body>
-              <Alert variant="warning" className="mb-4 text-center border-0 shadow-sm">
-                <CsLineIcons icon="warning-hexagon" size="24" className="text-warning mb-2" />
-                <p className="mb-0 small fw-bold">Are you sure you want to resign?</p>
-                <p className="mb-0 small text-muted">This action will notify HR and initiate your notice period once approved.</p>
+            <Modal.Body className="px-4 py-3">
+              <Alert variant="danger" className="mb-4 border-0 shadow-sm rounded-3 p-3" style={{ background: '#fef2f2', color: '#991b1b' }}>
+                <div className="fw-bold mb-1">⚠️ CRITICAL WARNING: Permanent Employment Exit</div>
+                <div className="small">
+                  This action starts your formal separation from the organization. Once submitted, your notice period of <strong>{profileData?.resignation?.notice_period_days || 30} days</strong> will begin pending HR department review.
+                </div>
               </Alert>
+
+              {/* Error messages if any */}
+              {error && <Alert variant="danger" className="py-2 px-3 border-0 small rounded-3 mb-3">{error}</Alert>}
+
+              {/* Category Dropdown */}
               <Form.Group className="mb-3">
-                <Form.Label className="fw-semibold">Reason for Resignation</Form.Label>
+                <Form.Label className="fw-bold text-dark small text-uppercase">Resignation Category</Form.Label>
+                <CreatableSelect
+                  isClearable
+                  options={resignationCategories}
+                  value={resignationCategory ? { label: resignationCategory, value: resignationCategory } : null}
+                  onChange={(selected) => {
+                    if (selected) {
+                      setResignationCategory(selected.value);
+                      if (!resignationCategories.some(cat => cat.value === selected.value)) {
+                        setResignationCategories(prev => [...prev, { label: selected.label, value: selected.value }]);
+                      }
+                    } else {
+                      setResignationCategory('');
+                    }
+                  }}
+                  placeholder="Select or type custom category..."
+                />
+              </Form.Group>
+
+              {/* Detailed Reason Explanation */}
+              <Form.Group className="mb-3">
+                <div className="d-flex justify-content-between align-items-center mb-1">
+                  <Form.Label className="fw-bold text-dark small text-uppercase mb-0">Formal Separation Letter / Explanation</Form.Label>
+                  <span className={`small fw-bold ${resignationReason.length >= 150 ? 'text-success' : 'text-danger'}`}>
+                    {resignationReason.length} / 150 min chars
+                  </span>
+                </div>
                 <Form.Control
                   as="textarea"
                   rows={4}
                   required
-                  placeholder="Please state your reason for resigning..."
+                  placeholder="Please write a detailed explanation of your resignation here..."
+                  style={{ borderRadius: '8px', fontSize: '0.9rem' }}
                   value={resignationReason}
                   onChange={(e) => setResignationReason(e.target.value)}
+                />
+              </Form.Group>
+
+              {/* Explicit Checkboxes */}
+              <Form.Group className="mb-2">
+                <Form.Check 
+                  type="checkbox"
+                  id="ack-notice"
+                  className="small text-muted fw-medium"
+                  label={`I acknowledge and agree to serve my official notice period of ${profileData?.resignation?.notice_period_days || 30} days.`}
+                  checked={resignationAck1}
+                  onChange={(e) => setResignationAck1(e.target.checked)}
+                />
+              </Form.Group>
+              <Form.Group className="mb-4">
+                <Form.Check 
+                  type="checkbox"
+                  id="ack-final"
+                  className="small text-muted fw-medium"
+                  label="I understand that this resignation request cannot be canceled once approved by HR."
+                  checked={resignationAck2}
+                  onChange={(e) => setResignationAck2(e.target.checked)}
+                />
+              </Form.Group>
+
+              {/* Signature Verification */}
+              <Form.Group className="p-3 bg-light rounded-3 border">
+                <Form.Label className="fw-bold text-dark small text-uppercase mb-1">Electronic Signature Verification</Form.Label>
+                <div className="text-muted small mb-2">
+                  To confirm, type your full name exactly as registered: <strong>{profileData?.f_name} {profileData?.l_name}</strong>
+                </div>
+                <Form.Control 
+                  type="text" 
+                  required
+                  placeholder={`Type "${profileData?.f_name} ${profileData?.l_name}" to sign`}
+                  style={{ height: '40px', borderRadius: '8px' }}
+                  value={resignationSignature}
+                  onChange={(e) => setResignationSignature(e.target.value)}
                 />
               </Form.Group>
             </Modal.Body>
             <Modal.Footer className="justify-content-center border-top-0 pt-0 pb-4">
               <Button variant="light" className="rounded-pill px-4" onClick={() => setShowResignationModal(false)}>Cancel</Button>
-              <Button variant="danger" type="submit" className="rounded-pill px-4 shadow-sm" disabled={submitLoading}>
-                {submitLoading ? 'Submitting...' : 'Confirm Resignation'}
+              <Button 
+                variant="danger" 
+                type="submit" 
+                className="rounded-pill px-4 shadow-sm" 
+                disabled={submitLoading || resignationReason.length < 150 || !resignationAck1 || !resignationAck2 || resignationSignature !== `${profileData?.f_name} ${profileData?.l_name}`}
+              >
+                {submitLoading ? 'Submitting Exit Request...' : 'Submit Final Resignation'}
               </Button>
             </Modal.Footer>
           </Form>
@@ -1919,7 +2321,7 @@ export default function Dashboard() {
                 <CsLineIcons icon="scan" size={54} className="text-primary opacity-50 mb-4" />
                 <h4 className="fw-bold text-dark mb-2">Facial Recognition System</h4>
                 <p className="mb-0 mx-auto" style={{ maxWidth: '350px' }}>
-                  Please align your face in front of the camera to automatically identify and clock in/out.
+                  Please align your face in front of the camera to automatically identify and check in/out.
                 </p>
               </div>
 
@@ -1935,14 +2337,32 @@ export default function Dashboard() {
                     </div>
                   </Alert>
                 ) : (
-                  <Button 
-                    className="scan-btn" 
-                    onClick={() => setShowCameraModal(true)} 
-                    disabled={!modelsLoaded}
-                  >
-                    <CsLineIcons icon="camera" size={24} />
-                    <span>{modelsLoaded ? 'Initialize Scanner' : 'Loading AI Models...'}</span>
-                  </Button>
+                  <div className="d-flex justify-content-center gap-4">
+                    <Button 
+                      className="scan-btn bg-success text-white border-0 px-4 py-3" 
+                      style={{ borderRadius: '50px', fontWeight: 'bold', minWidth: '160px' }}
+                      onClick={() => {
+                        setKioskActionType('check-in');
+                        setShowCameraModal(true);
+                      }} 
+                      disabled={!modelsLoaded}
+                    >
+                      <CsLineIcons icon="log-in" size={20} className="me-2" />
+                      {modelsLoaded ? 'Check In' : 'Loading...'}
+                    </Button>
+                    <Button 
+                      className="scan-btn bg-danger text-white border-0 px-4 py-3" 
+                      style={{ borderRadius: '50px', fontWeight: 'bold', minWidth: '160px' }}
+                      onClick={() => {
+                        setKioskActionType('check-out');
+                        setShowCameraModal(true);
+                      }} 
+                      disabled={!modelsLoaded}
+                    >
+                      <CsLineIcons icon="log-out" size={20} className="me-2" />
+                      {modelsLoaded ? 'Check Out' : 'Loading...'}
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
@@ -2102,57 +2522,90 @@ export default function Dashboard() {
             AI Face Scanner
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="p-4 d-flex flex-column align-items-center" style={{ background: '#0f172a' }}>
+        <Modal.Body className="p-4 d-flex flex-column align-items-center bg-white">
+          <div className="mb-4 text-center">
+            <span
+              className="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fw-bold text-uppercase mb-2"
+              style={{ letterSpacing: '0.05em', fontSize: '0.75rem' }}
+            >
+              AI Face Scanner
+            </span>
+            <h4 className="fw-bold mt-1 text-dark">Scan to Check-In/Out</h4>
+            <p className="text-muted small mt-1 px-3 mb-0">Position yourself in front of the camera to verify your face</p>
+          </div>
+
           {error && (
-            <Alert variant="danger" className="w-100 mb-4 text-center rounded-3 fw-bold border-0" style={{ maxWidth: '640px', background: '#fff1f2', color: '#e11d48' }} onClose={() => setError('')} dismissible>
+            <Alert variant="danger" className="w-100 mb-4 text-center rounded-3 fw-bold border-0" style={{ maxWidth: '580px', background: '#fff1f2', color: '#e11d48' }} onClose={() => setError('')} dismissible>
               <CsLineIcons icon="error-hexagon" className="me-2" />
               {error}
             </Alert>
           )}
-          <div className="webcam-container" style={{ width: '100%', maxWidth: '640px' }}>
+          <div className="webcam-container" style={{ width: '100%', maxWidth: '580px' }}>
+            {/* Absolutely Positioned Brand Overlay inside the scanner */}
+            <div className="position-absolute" style={{ top: '15px', left: '15px', zIndex: 10 }}>
+              {userData?.logo ? (
+                <img
+                  src={process.env.REACT_APP_UPLOAD_DIR + userData.logo}
+                  alt={userData?.name || 'Company Logo'}
+                  style={{ maxHeight: '35px', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
+                />
+              ) : (
+                <div className="kiosk-brand-logo-overlay" style={{ fontSize: '1rem', fontWeight: 900, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.8)', letterSpacing: '0.05em' }}>
+                  THE <span style={{ color: '#23b3f4' }}>BOX</span>
+                </div>
+              )}
+            </div>
             <Webcam
               ref={webcamRef}
               screenshotFormat="image/jpeg"
-              videoConstraints={{ facingMode: 'user' }}
+              videoConstraints={{ facingMode: 'user', aspectRatio: 16 / 9 }}
               style={{
                 width: '100%',
                 height: 'auto',
                 objectFit: 'cover',
-                aspectRatio: '4/3',
-                display: 'block'
+                aspectRatio: '16/9',
+                display: 'block',
+                transform: 'scaleX(-1)'
+              }}
+            />
+            <canvas
+              ref={canvasRef}
+              className="position-absolute"
+              style={{
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                zIndex: 5,
+                pointerEvents: 'none',
+                transform: 'scaleX(-1)'
               }}
             />
             {showCameraModal && (
               <>
                 <div className="scanner-overlay" />
-                <div className="scanner-line" />
                 <div className="camera-status-text">
-                  {detecting ? `${livenessStatus} (${livenessProgress}%)` : 'POSITION FACE IN FRAME'}
+                  {detecting ? 'SCANNING FACE...' : 'STAND IN FRONT OF CAMERA'}
                 </div>
               </>
             )}
           </div>
 
-          <Button 
-            variant={detecting ? "secondary" : "primary"} 
-            size="lg" 
-            className="mt-5 rounded-pill fw-bold px-5 py-3 shadow" 
-            disabled={detecting} 
-            onClick={handleFaceDetection}
-            style={{ minWidth: '250px' }}
-          >
+          <div style={{ minHeight: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20px' }} className="w-100">
             {detecting ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-3" />
-                Processing...
-              </>
+              <div className="d-flex align-items-center justify-content-center gap-2 p-3 rounded-3 bg-soft-primary text-primary fw-bold w-100" style={{ maxWidth: '580px' }}>
+                <Spinner animation="border" size="sm" className="text-primary" />
+                <span className="text-uppercase" style={{ letterSpacing: '0.05em', fontSize: '0.85rem' }}>
+                  {livenessStatus} ({livenessProgress}%)
+                </span>
+              </div>
             ) : (
-              <>
-                <CsLineIcons icon="fingerprint" className="me-2" size={20} />
-                Initiate Scan
-              </>
+              <div className="p-3 rounded-3 bg-soft-secondary text-muted fw-bold w-100 text-center" style={{ maxWidth: '580px', backgroundColor: '#f1f5f9', color: '#64748b' }}>
+                <CsLineIcons icon="camera" className="me-2" size="18" />
+                <span>Camera ready. Preparing automatic face scan...</span>
+              </div>
             )}
-          </Button>
+          </div>
         </Modal.Body>
       </Modal>
       <Modal show={showWfhNavModal} onHide={() => setShowWfhNavModal(false)} centered backdrop="static" contentClassName="interactive-card border-0 shadow-lg">
@@ -2165,10 +2618,10 @@ export default function Dashboard() {
           </div>
           <h5 className="fw-bold text-dark mb-3">WFH Tracking is Active!</h5>
           <p className="text-muted small fw-bold">
-            You cannot navigate to other pages while clocked in from home. Doing so will stop your background screen sharing and tracking.
+            You cannot navigate to other pages while checked in from home. Doing so will stop your background screen sharing and tracking.
           </p>
           <p className="text-muted small">
-            Please <strong>minimize this window</strong> and continue with your office work. If you must browse this site, please <strong>Clock-Out</strong> first.
+            Please <strong>minimize this window</strong> and continue with your office work. If you must browse this site, please <strong>Check-Out</strong> first.
           </p>
         </Modal.Body>
         <Modal.Footer className="border-0 p-4 pt-0 d-flex justify-content-center">

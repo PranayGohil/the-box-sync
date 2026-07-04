@@ -506,53 +506,160 @@ const sendJoiningLetter = async (req, res) => {
 
     // 2. Fetch Payroll Config for template
     const config = await PayrollConfig.findOne({ user_id: userId });
-    
-    let template = config?.document_templates?.joining_letter_template;
+    let pdfBuffer = null;
 
-    if (!template) {
-      template = defaultJoiningLetter;
+    if (config?.document_templates?.joining_letter_pdf) {
+      const templatePath = path.join(__dirname, '..', config.document_templates.joining_letter_pdf);
+      if (fs.existsSync(templatePath)) {
+        try {
+          const { PDFDocument } = require('c:/Projects/TheBoxSync/payroll-server/node_modules/pdf-lib');
+          const tempDoc = await PDFDocument.load(fs.readFileSync(templatePath));
+          const form = tempDoc.getForm();
+          const fields = form.getFields();
+          
+          if (fields && fields.length > 0) {
+            fields.forEach(field => {
+              const name = field.getName().toLowerCase();
+              let textVal = '';
+              if (name.includes('first_name') || name.includes('f_name') || name.includes('firstname')) {
+                textVal = staff.f_name || '';
+              } else if (name.includes('last_name') || name.includes('l_name') || name.includes('lastname')) {
+                textVal = staff.l_name || '';
+              } else if (name.includes('name') || name.includes('recipient') || name.includes('employee')) {
+                textVal = `${staff.f_name} ${staff.l_name}`;
+              } else if (name.includes('title') || name.includes('position') || name.includes('role') || name.includes('designation')) {
+                textVal = staff.position || '';
+              } else if (name.includes('date') || name.includes('joining') || name.includes('doj')) {
+                textVal = staff.joining_date ? new Date(staff.joining_date).toLocaleDateString('en-IN') : '';
+              } else if (name.includes('salary') || name.includes('basic') || name.includes('gross') || name.includes('compensation') || name.includes('pay')) {
+                textVal = staff.salary ? staff.salary.toString() : '';
+              } else if (name.includes('staff_id') || name.includes('payroll_id') || name.includes('id') || name.includes('staffid')) {
+                textVal = staff.staff_id || '';
+              }
+              if (textVal && typeof field.setText === 'function') {
+                field.setText(textVal);
+              }
+            });
+            form.flatten();
+            pdfBuffer = Buffer.from(await tempDoc.save());
+          }
+        } catch (pdfFormErr) {
+          console.warn("Error filling fillable PDF form, falling back to overlay:", pdfFormErr);
+        }
+        
+        if (!pdfBuffer) {
+          try {
+            let template = config?.document_templates?.joining_letter_template || defaultJoiningLetter;
+            
+            const placeholders = {
+              "\\[First Name\\]": staff.f_name || "",
+              "\\[Last Name\\]": staff.l_name || "",
+              "\\[Job Title\\]": staff.position || "",
+              "\\[Date of Joining\\]": staff.joining_date ? new Date(staff.joining_date).toLocaleDateString('en-IN') : "",
+              "\\[Basic Salary\\]": staff.salary ? staff.salary.toString() : "",
+              "\\[Staff ID\\]": staff.staff_id || "",
+            };
+            for (const [key, value] of Object.entries(placeholders)) {
+              const regex = new RegExp(key, 'g');
+              template = template.replace(regex, value);
+            }
+            
+            const fullHtml = `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="utf-8">
+                <style>
+                  html, body { background: transparent !important; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+                  .ql-align-center { text-align: center; }
+                  .ql-align-right { text-align: right; }
+                  .ql-align-justify { text-align: justify; }
+                  h1, h2, h3 { color: #222; }
+                </style>
+              </head>
+              <body>
+                ${template}
+              </body>
+              </html>
+            `;
+            
+            const options = { format: 'A4', margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' } };
+            const file = { content: fullHtml };
+            const htmlPdfBuffer = await html_to_pdf.generatePdf(file, options);
+            
+            const { PDFDocument } = require('c:/Projects/TheBoxSync/payroll-server/node_modules/pdf-lib');
+            const templateDoc = await PDFDocument.load(fs.readFileSync(templatePath));
+            const htmlDoc = await PDFDocument.load(htmlPdfBuffer);
+            const finalDoc = await PDFDocument.create();
+            
+            const templatePages = templateDoc.getPages();
+            const htmlPages = htmlDoc.getPages();
+            const embeddedTemplatePages = await finalDoc.embedPages(templatePages);
+            const embeddedHtmlPages = await finalDoc.embedPages(htmlPages);
+            
+            for (let i = 0; i < htmlPages.length; i++) {
+              const { width, height } = htmlPages[i].getSize();
+              const newPage = finalDoc.addPage([width, height]);
+              
+              let templateIndex = i;
+              if (templateIndex >= templatePages.length) {
+                templateIndex = templatePages.length - 1;
+              }
+              if (templateIndex >= 0 && embeddedTemplatePages[templateIndex]) {
+                newPage.drawPage(embeddedTemplatePages[templateIndex], { x: 0, y: 0, width, height });
+              }
+              if (embeddedHtmlPages[i]) {
+                newPage.drawPage(embeddedHtmlPages[i], { x: 0, y: 0, width, height });
+              }
+            }
+            pdfBuffer = Buffer.from(await finalDoc.save());
+          } catch (overlayErr) {
+            console.error("Error overlaying template PDF background:", overlayErr);
+          }
+        }
+      }
     }
 
-    // 3. Replace Placeholders
-    const placeholders = {
-      "\\[First Name\\]": staff.f_name || "",
-      "\\[Last Name\\]": staff.l_name || "",
-      "\\[Job Title\\]": staff.position || "",
-      "\\[Date of Joining\\]": staff.joining_date ? new Date(staff.joining_date).toLocaleDateString('en-IN') : "",
-      "\\[Basic Salary\\]": staff.salary ? staff.salary.toString() : "",
-      "\\[Staff ID\\]": staff.staff_id || "",
-    };
+    if (!pdfBuffer) {
+      // Legacy Fallback (HTML template only)
+      let template = config?.document_templates?.joining_letter_template || defaultJoiningLetter;
+      const placeholders = {
+        "\\[First Name\\]": staff.f_name || "",
+        "\\[Last Name\\]": staff.l_name || "",
+        "\\[Job Title\\]": staff.position || "",
+        "\\[Date of Joining\\]": staff.joining_date ? new Date(staff.joining_date).toLocaleDateString('en-IN') : "",
+        "\\[Basic Salary\\]": staff.salary ? staff.salary.toString() : "",
+        "\\[Staff ID\\]": staff.staff_id || "",
+      };
 
-    for (const [key, value] of Object.entries(placeholders)) {
-      const regex = new RegExp(key, 'g');
-      template = template.replace(regex, value);
+      for (const [key, value] of Object.entries(placeholders)) {
+        const regex = new RegExp(key, 'g');
+        template = template.replace(regex, value);
+      }
+
+      const fullHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+            .ql-align-center { text-align: center; }
+            .ql-align-right { text-align: right; }
+            .ql-align-justify { text-align: justify; }
+            h1, h2, h3 { color: #222; }
+          </style>
+        </head>
+        <body>
+          ${template}
+        </body>
+        </html>
+      `;
+
+      const options = { format: 'A4', margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' } };
+      const file = { content: fullHtml };
+      pdfBuffer = await html_to_pdf.generatePdf(file, options);
     }
-
-    // Wrap the html in a basic document structure if it's just raw paragraphs
-    const fullHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <style>
-          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
-          .ql-align-center { text-align: center; }
-          .ql-align-right { text-align: right; }
-          .ql-align-justify { text-align: justify; }
-          h1, h2, h3 { color: #222; }
-        </style>
-      </head>
-      <body>
-        ${template}
-      </body>
-      </html>
-    `;
-
-    // 4. Generate PDF using html-pdf-node
-    const options = { format: 'A4', margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' } };
-    const file = { content: fullHtml };
-
-    const pdfBuffer = await html_to_pdf.generatePdf(file, options);
 
     // 5. Send Email
     const subject = `Joining Letter - ${staff.f_name} ${staff.l_name}`;

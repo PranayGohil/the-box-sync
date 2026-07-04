@@ -1,0 +1,139 @@
+const express = require("express");
+const Feedback = require("../models/feedbackModel");
+const authMiddleware = require("../middlewares/auth-middlewares");
+const adminAuth = require("../middlewares/adminAuth");
+
+const router = express.Router();
+
+// Require auth for all routes
+router.use(authMiddleware);
+
+// POST new feedback or complaint
+router.post("/submit", async (req, res) => {
+  try {
+    const { type, title, description, is_anonymous } = req.body;
+    
+    if (!type || !title || !description) {
+      return res.status(400).json({ success: false, message: "Type, title, and description are required." });
+    }
+
+    const companyId = req.user.user_id || req.user._id;
+    const staffId = req.user.staff_id;
+
+    if (!staffId) {
+      return res.status(400).json({ success: false, message: "Only registered employees can submit feedback/complaints." });
+    }
+
+    const newFeedback = new Feedback({
+      staff_id: staffId,
+      user_id: companyId,
+      type,
+      title,
+      description,
+      is_anonymous: !!is_anonymous,
+      status: "open",
+    });
+
+    await newFeedback.save();
+    return res.status(201).json({ success: true, data: newFeedback, message: "Feedback/complaint submitted successfully." });
+  } catch (error) {
+    console.error("Error in submitFeedback:", error);
+    return res.status(500).json({ success: false, message: "Server error while submitting feedback." });
+  }
+});
+
+// GET feedbacks submitted by logged-in staff member
+router.get("/my", async (req, res) => {
+  try {
+    const staffId = req.user.staff_id;
+    if (!staffId) {
+      return res.status(400).json({ success: false, message: "No registered staff associated with this account." });
+    }
+
+    const list = await Feedback.find({ staff_id: staffId }).sort({ createdAt: -1 });
+    return res.status(200).json({ success: true, data: list });
+  } catch (error) {
+    console.error("Error in getMyFeedbacks:", error);
+    return res.status(500).json({ success: false, message: "Server error while fetching feedbacks." });
+  }
+});
+
+// GET all feedbacks for company (Admin / HR)
+router.get("/all", adminAuth, async (req, res) => {
+  try {
+    const companyId = req.user._id || req.user; // Standard admin company user_id
+    
+    // Find all feedbacks and populate staff_id
+    const list = await Feedback.find({ user_id: companyId })
+      .populate("staff_id", "f_name l_name email position photo staff_id")
+      .sort({ createdAt: -1 });
+
+    // Handle anonymous submissions by cleaning up personal information
+    const cleanedList = list.map(item => {
+      const doc = item.toObject();
+      if (doc.is_anonymous) {
+        doc.staff_id = {
+          _id: doc.staff_id?._id || null,
+          f_name: "Anonymous",
+          l_name: "Employee",
+          email: "-",
+          position: doc.staff_id?.position || "Staff",
+          staff_id: "ANON",
+          photo: null
+        };
+      }
+      return doc;
+    });
+
+    return res.status(200).json({ success: true, data: cleanedList });
+  } catch (error) {
+    console.error("Error in getAllFeedbacks:", error);
+    return res.status(500).json({ success: false, message: "Server error while fetching feedbacks for admin." });
+  }
+});
+
+// POST reply to a feedback/complaint (Admin / HR)
+router.post("/:id/reply", adminAuth, async (req, res) => {
+  try {
+    const { hr_reply, status } = req.body;
+    const { id } = req.params;
+
+    if (!hr_reply) {
+      return res.status(400).json({ success: false, message: "Reply text is required." });
+    }
+
+    const feedback = await Feedback.findById(id);
+    if (!feedback) {
+      return res.status(404).json({ success: false, message: "Feedback/complaint not found." });
+    }
+
+    feedback.hr_reply = hr_reply;
+    feedback.status = status || "reviewed";
+    feedback.replied_at = new Date();
+    feedback.replied_by = req.user.username || req.user.email || "HR Manager";
+
+    await feedback.save();
+
+    // Populate staff details if not anonymous before returning
+    let populatedFeedback = await Feedback.findById(id).populate("staff_id", "f_name l_name email position photo staff_id");
+    let responseDoc = populatedFeedback.toObject();
+    if (responseDoc.is_anonymous) {
+      responseDoc.staff_id = {
+        _id: responseDoc.staff_id?._id || null,
+        f_name: "Anonymous",
+        l_name: "Employee",
+        email: "-",
+        position: responseDoc.staff_id?.position || "Staff",
+        staff_id: "ANON",
+        photo: null
+      };
+    }
+
+    return res.status(200).json({ success: true, data: responseDoc, message: "Reply submitted successfully." });
+  } catch (error) {
+    console.error("Error in replyFeedback:", error);
+    return res.status(500).json({ success: false, message: "Server error while submitting reply." });
+  }
+});
+
+module.exports = router;

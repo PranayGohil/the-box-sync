@@ -73,6 +73,11 @@ const AddStaff = () => {
   const [captureStatus, setCaptureStatus] = useState('none');
   const { activePlans } = useContext(AuthContext);
 
+  // States for adding custom components inline
+  const [showAddEarningModal, setShowAddEarningModal] = useState(false);
+  const [showAddDeductionModal, setShowAddDeductionModal] = useState(false);
+  const [newFieldName, setNewFieldName] = useState('');
+
   // Common restaurant staff positions
   const commonPositions = [
     'Manager',
@@ -176,10 +181,10 @@ const AddStaff = () => {
     department: Yup.string().required('Department is required'),
     salary: Yup.number()
       .typeError('Salary must be a number')
-      .required('Salary is required')
-      .positive('Must be positive'),
+      .positive('Must be positive')
+      .nullable()
+      .notRequired(),
     salary_calculation_base: Yup.string().required('Salary calculation base is required').oneOf(['working_days', 'working_hours']),
-    attendance_method: Yup.string().required('Attendance method is required').oneOf(['any', 'wifi', 'ess']),
 
     position: Yup.string().required('Position is required'),
 
@@ -537,6 +542,14 @@ const AddStaff = () => {
             initialCustomDeductions[d.id] = 0;
           });
           formik.setFieldValue('salary_structure.custom_deductions', initialCustomDeductions);
+
+          // Pre-fill statutory deductions values from active config
+          if (configRes.data.data.statutory_config?.pf?.is_mandatory) {
+            formik.setFieldValue('salary_structure.deductions.pf_percentage', configRes.data.data.statutory_config.pf.employee_percentage);
+          }
+          if (configRes.data.data.statutory_config?.esi?.is_mandatory) {
+            formik.setFieldValue('salary_structure.deductions.esi_percentage', configRes.data.data.statutory_config.esi.employee_percentage);
+          }
         }
       } catch (error) {
         console.error('Error fetching positions:', error);
@@ -547,6 +560,72 @@ const AddStaff = () => {
     };
     initializeData();
   }, []);
+
+  const handleAddCustomEarning = async () => {
+    if (!newFieldName.trim()) return;
+    const newId = newFieldName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    
+    if (payrollConfig?.custom_earnings?.some(e => e.id === newId)) {
+      toast.error('An earning component with this name already exists.');
+      return;
+    }
+
+    try {
+      const updatedEarnings = [...(payrollConfig?.custom_earnings || [])];
+      updatedEarnings.push({ id: newId, label: newFieldName.trim(), is_active: true });
+
+      const updatedConfig = { ...payrollConfig, custom_earnings: updatedEarnings };
+      const response = await axios.put(`${process.env.REACT_APP_API}/payroll-config`, updatedConfig, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+
+      if (response.data.success) {
+        toast.success('Earning component added successfully.');
+        setPayrollConfig(response.data.data);
+        formik.setFieldValue(`salary_structure.custom_earnings.${newId}`, 0);
+        setShowAddEarningModal(false);
+        setNewFieldName('');
+      } else {
+        toast.error(response.data.message || 'Failed to add earning component.');
+      }
+    } catch (error) {
+      console.error('Error adding earning component:', error);
+      toast.error('Server error adding earning component.');
+    }
+  };
+
+  const handleAddCustomDeduction = async () => {
+    if (!newFieldName.trim()) return;
+    const newId = newFieldName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    
+    if (payrollConfig?.custom_deductions?.some(d => d.id === newId)) {
+      toast.error('A deduction component with this name already exists.');
+      return;
+    }
+
+    try {
+      const updatedDeductions = [...(payrollConfig?.custom_deductions || [])];
+      updatedDeductions.push({ id: newId, label: newFieldName.trim(), is_active: true });
+
+      const updatedConfig = { ...payrollConfig, custom_deductions: updatedDeductions };
+      const response = await axios.put(`${process.env.REACT_APP_API}/payroll-config`, updatedConfig, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+
+      if (response.data.success) {
+        toast.success('Deduction component added successfully.');
+        setPayrollConfig(response.data.data);
+        formik.setFieldValue(`salary_structure.custom_deductions.${newId}`, 0);
+        setShowAddDeductionModal(false);
+        setNewFieldName('');
+      } else {
+        toast.error(response.data.message || 'Failed to add deduction component.');
+      }
+    } catch (error) {
+      console.error('Error adding deduction component:', error);
+      toast.error('Server error adding deduction component.');
+    }
+  };
 
   // Combine API positions with common positions and remove duplicates
   const allPositions = [...new Set([...commonPositions, ...positions])].sort();
@@ -1133,9 +1212,9 @@ const AddStaff = () => {
                   </div>
                 </div>
 
-                <Row className="g-3">
-                  <Col md={4}>
-                    <Form.Group className="mb-3">
+                <Row className="g-3 mb-3">
+                  <Col md={6}>
+                    <Form.Group>
                       <Form.Label>Job Position</Form.Label>
                       <CreatableSelect
                         isClearable
@@ -1152,7 +1231,29 @@ const AddStaff = () => {
                       {touched.position && errors.position && <div className="text-danger mt-1 small fw-bold">{errors.position}</div>}
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label>Branch</Form.Label>
+                      <Form.Select
+                        name="branch_id"
+                        value={values.branch_id}
+                        onChange={handleChange}
+                        isInvalid={touched.branch_id && errors.branch_id}
+                        disabled={loading.submitting}
+                        style={{ height: '38px', borderRadius: '8px' }}
+                      >
+                        <option value="">Select Branch</option>
+                        {branches.map(branch => (
+                          <option key={branch._id} value={branch._id}>{branch.name}</option>
+                        ))}
+                      </Form.Select>
+                      {touched.branch_id && errors.branch_id && <div className="text-danger mt-1 small fw-bold">{errors.branch_id}</div>}
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <Row className="g-3">
+                  <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Salary Calculation Base</Form.Label>
                       <Select
@@ -1175,21 +1276,29 @@ const AddStaff = () => {
                       )}
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
+                  <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Salary (Base)</Form.Label>
-                      <div className="input-group">
-                        <span className="input-group-text bg-light border-end-0">₹</span>
-                        <Form.Control
-                          type="number"
-                          name="salary"
-                          placeholder="0.00"
-                          value={values.salary}
-                          onChange={handleChange}
-                          isInvalid={touched.salary && errors.salary}
-                          disabled={loading.submitting}
-                        />
-                        <Form.Control.Feedback type="invalid">{errors.salary}</Form.Control.Feedback>
+                      <Form.Label>Work Location</Form.Label>
+                      <div className="d-flex gap-2">
+                        <div
+                          className={`flex-fill text-center py-2 px-3 rounded-3 border fw-semibold small ${values.attendance_method !== 'wfh' ? 'bg-primary text-white border-primary' : 'bg-light text-muted border-secondary'}`}
+                          style={{ cursor: loading.submitting ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
+                          onClick={() => { if (!loading.submitting) setFieldValue('attendance_method', 'any'); }}
+                        >
+                          Office
+                        </div>
+                        <div
+                          className={`flex-fill text-center py-2 px-3 rounded-3 border fw-semibold small ${values.attendance_method === 'wfh' ? 'bg-primary text-white border-primary' : 'bg-light text-muted border-secondary'}`}
+                          style={{ cursor: loading.submitting ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
+                          onClick={() => { if (!loading.submitting) setFieldValue('attendance_method', 'wfh'); }}
+                        >
+                          Work From Home
+                        </div>
+                      </div>
+                      <div className="text-muted mt-1" style={{ fontSize: '0.72rem' }}>
+                        {values.attendance_method === 'wfh'
+                          ? 'Permanently remote — no WFH leave required each day'
+                          : 'Must submit & get WFH leave approved to work remotely'}
                       </div>
                     </Form.Group>
                   </Col>
@@ -1204,7 +1313,20 @@ const AddStaff = () => {
                 <Row className="g-3">
                   <Col md={6}>
                     <div className="bg-light rounded-3 p-3 shadow-sm border border-faint h-100">
-                      <div className="small fw-bold text-muted mb-3 text-uppercase letter-spacing-1">Monthly Earnings</div>
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <div className="small fw-bold text-muted text-uppercase letter-spacing-1">Monthly Earnings</div>
+                        <Button 
+                          variant="none" 
+                          size="sm" 
+                          className="text-primary p-0 d-flex align-items-center gap-1 hover-scale"
+                          onClick={() => {
+                            setNewFieldName('');
+                            setShowAddEarningModal(true);
+                          }}
+                        >
+                          <CsLineIcons icon="plus" size="14" /> Add Field
+                        </Button>
+                      </div>
                       {payrollConfig?.custom_earnings?.filter(e => e.is_active).map((earning, idx) => (
                         <Form.Group className="mb-2" key={earning.id}>
                           <Form.Label className="small fw-bold opacity-75">{earning.label}</Form.Label>
@@ -1223,50 +1345,72 @@ const AddStaff = () => {
                     </div>
                   </Col>
                   <Col md={6}>
-                    <div className="bg-light rounded-3 p-3 shadow-sm border border-faint">
-                      <div className="small fw-bold text-muted mb-3 text-uppercase letter-spacing-1">Statutory Deductions</div>
-                      <Form.Group className="mb-2">
-                        <Form.Label className="small fw-bold opacity-75">PF (%)</Form.Label>
-                        <Form.Control
-                          type="number"
-                          name="salary_structure.deductions.pf_percentage"
-                          value={values.salary_structure?.deductions?.pf_percentage}
-                          onChange={handleChange}
-                          isInvalid={touched.salary_structure?.deductions?.pf_percentage && !!errors.salary_structure?.deductions?.pf_percentage}
-                          size="sm"
-                        />
-                        {touched.salary_structure?.deductions?.pf_percentage && errors.salary_structure?.deductions?.pf_percentage && (
-                          <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.pf_percentage}</div>
-                        )}
-                      </Form.Group>
-                      <Form.Group className="mb-2">
-                        <Form.Label className="small fw-bold opacity-75">ESI (%)</Form.Label>
-                        <Form.Control
-                          type="number"
-                          name="salary_structure.deductions.esi_percentage"
-                          value={values.salary_structure?.deductions?.esi_percentage}
-                          onChange={handleChange}
-                          isInvalid={touched.salary_structure?.deductions?.esi_percentage && !!errors.salary_structure?.deductions?.esi_percentage}
-                          size="sm"
-                        />
-                        {touched.salary_structure?.deductions?.esi_percentage && errors.salary_structure?.deductions?.esi_percentage && (
-                          <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.esi_percentage}</div>
-                        )}
-                      </Form.Group>
-                      <Form.Group className="mb-0">
-                        <Form.Label className="small fw-bold opacity-75">PT (Monthly)</Form.Label>
-                        <Form.Control
-                          type="number"
-                          name="salary_structure.deductions.pt"
-                          value={values.salary_structure?.deductions?.pt}
-                          onChange={handleChange}
-                          isInvalid={touched.salary_structure?.deductions?.pt && !!errors.salary_structure?.deductions?.pt}
-                          size="sm"
-                        />
-                        {touched.salary_structure?.deductions?.pt && errors.salary_structure?.deductions?.pt && (
-                          <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.pt}</div>
-                        )}
-                      </Form.Group>
+                    <div className="bg-light rounded-3 p-3 shadow-sm border border-faint h-100">
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <div className="small fw-bold text-muted text-uppercase letter-spacing-1">Deductions</div>
+                        <Button 
+                          variant="none" 
+                          size="sm" 
+                          className="text-primary p-0 d-flex align-items-center gap-1 hover-scale"
+                          onClick={() => {
+                            setNewFieldName('');
+                            setShowAddDeductionModal(true);
+                          }}
+                        >
+                          <CsLineIcons icon="plus" size="14" /> Add Field
+                        </Button>
+                      </div>
+
+                      {payrollConfig?.statutory_config?.pf?.is_mandatory && (
+                        <Form.Group className="mb-2">
+                          <Form.Label className="small fw-bold opacity-75">PF (%)</Form.Label>
+                          <Form.Control
+                            type="number"
+                            name="salary_structure.deductions.pf_percentage"
+                            value={values.salary_structure?.deductions?.pf_percentage}
+                            onChange={handleChange}
+                            isInvalid={touched.salary_structure?.deductions?.pf_percentage && !!errors.salary_structure?.deductions?.pf_percentage}
+                            size="sm"
+                          />
+                          {touched.salary_structure?.deductions?.pf_percentage && errors.salary_structure?.deductions?.pf_percentage && (
+                            <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.pf_percentage}</div>
+                          )}
+                        </Form.Group>
+                      )}
+
+                      {payrollConfig?.statutory_config?.esi?.is_mandatory && (
+                        <Form.Group className="mb-2">
+                          <Form.Label className="small fw-bold opacity-75">ESI (%)</Form.Label>
+                          <Form.Control
+                            type="number"
+                            name="salary_structure.deductions.esi_percentage"
+                            value={values.salary_structure?.deductions?.esi_percentage}
+                            onChange={handleChange}
+                            isInvalid={touched.salary_structure?.deductions?.esi_percentage && !!errors.salary_structure?.deductions?.esi_percentage}
+                            size="sm"
+                          />
+                          {touched.salary_structure?.deductions?.esi_percentage && errors.salary_structure?.deductions?.esi_percentage && (
+                            <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.esi_percentage}</div>
+                          )}
+                        </Form.Group>
+                      )}
+
+                      {payrollConfig?.statutory_config?.pt?.is_applicable && (
+                        <Form.Group className="mb-2">
+                          <Form.Label className="small fw-bold opacity-75">PT (Monthly)</Form.Label>
+                          <Form.Control
+                            type="number"
+                            name="salary_structure.deductions.pt"
+                            value={values.salary_structure?.deductions?.pt}
+                            onChange={handleChange}
+                            isInvalid={touched.salary_structure?.deductions?.pt && !!errors.salary_structure?.deductions?.pt}
+                            size="sm"
+                          />
+                          {touched.salary_structure?.deductions?.pt && errors.salary_structure?.deductions?.pt && (
+                            <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.pt}</div>
+                          )}
+                        </Form.Group>
+                      )}
 
                       {payrollConfig?.custom_deductions?.filter(d => d.is_active).length > 0 && (
                         <>
@@ -1285,6 +1429,13 @@ const AddStaff = () => {
                             </Form.Group>
                           ))}
                         </>
+                      )}
+
+                      {(!payrollConfig?.statutory_config?.pf?.is_mandatory &&
+                        !payrollConfig?.statutory_config?.esi?.is_mandatory &&
+                        !payrollConfig?.statutory_config?.pt?.is_applicable &&
+                        (!payrollConfig?.custom_deductions || payrollConfig.custom_deductions.filter(d => d.is_active).length === 0)) && (
+                          <div className="text-muted small">No active deduction components defined.</div>
                       )}
                     </div>
                   </Col>
@@ -1392,56 +1543,7 @@ const AddStaff = () => {
                         </div>
                       </Col>
                     )}
-
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Branch</Form.Label>
-                      <Form.Select
-                        name="branch_id"
-                        value={values.branch_id}
-                        onChange={handleChange}
-                        isInvalid={touched.branch_id && errors.branch_id}
-                        disabled={loading.submitting}
-                      >
-                        <option value="">Select Branch</option>
-                        {branches.map(branch => (
-                          <option key={branch._id} value={branch._id}>{branch.name}</option>
-                        ))}
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-
-
-                    <Col md={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Attendance Method</Form.Label>
-                      <Select
-                        classNamePrefix="react-select"
-                        options={[
-                          { value: 'any', label: 'Any Method (Default)' },
-                          { value: 'wifi', label: 'Office Wi-Fi Only' },
-                          { value: 'ess', label: 'ESS Anywhere (Field Staff)' }
-                        ]}
-                        value={
-                          values.attendance_method
-                            ? {
-                                value: values.attendance_method,
-                                label: values.attendance_method === 'any' ? 'Any Method (Default)'
-                                  : values.attendance_method === 'wifi' ? 'Office Wi-Fi Only'
-                                  : 'ESS Anywhere (Field Staff)'
-                              }
-                            : null
-                        }
-                        onChange={(selected) => setFieldValue('attendance_method', selected ? selected.value : 'any')}
-                        onBlur={() => formik.setFieldTouched('attendance_method', true)}
-                        isDisabled={loading.submitting}
-                      />
-                      {touched.attendance_method && errors.attendance_method && (
-                        <div className="d-block invalid-feedback">{errors.attendance_method}</div>
-                      )}
-                    </Form.Group>
-                  </Col>
-                </Row>
+                 </Row>
               </div>
                 <hr className="my-4 opacity-50" />
                 <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
@@ -2011,6 +2113,56 @@ const AddStaff = () => {
           onCropComplete={handleCropComplete}
           aspect={cropperState.aspect}
         />
+
+        {/* Modal for adding custom earning field inline */}
+        <Modal show={showAddEarningModal} onHide={() => setShowAddEarningModal(false)} centered>
+          <Modal.Header closeButton>
+            <Modal.Title>Add Custom Earning Field</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form.Group className="mb-3">
+              <Form.Label>Earning Name (e.g. Travel Allowance)</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter name"
+                value={newFieldName}
+                onChange={(e) => setNewFieldName(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAddCustomEarning()}
+                className="form-control-premium"
+                autoFocus
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="none" className="custom-btn-primary-outline text-nowrap rounded" size="sm" onClick={() => setShowAddEarningModal(false)}>Cancel</Button>
+            <Button variant="primary" className="rounded" size="sm" onClick={handleAddCustomEarning}>Add Earning</Button>
+          </Modal.Footer>
+        </Modal>
+
+        {/* Modal for adding custom deduction field inline */}
+        <Modal show={showAddDeductionModal} onHide={() => setShowAddDeductionModal(false)} centered>
+          <Modal.Header closeButton>
+            <Modal.Title>Add Custom Deduction Field</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form.Group className="mb-3">
+              <Form.Label>Deduction Name (e.g. Welfare Fund)</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter name"
+                value={newFieldName}
+                onChange={(e) => setNewFieldName(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAddCustomDeduction()}
+                className="form-control-premium"
+                autoFocus
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="none" className="custom-btn-primary-outline text-nowrap rounded" size="sm" onClick={() => setShowAddDeductionModal(false)}>Cancel</Button>
+            <Button variant="primary" className="rounded" size="sm" onClick={handleAddCustomDeduction}>Add Deduction</Button>
+          </Modal.Footer>
+        </Modal>
     </div>
   </div>
 );

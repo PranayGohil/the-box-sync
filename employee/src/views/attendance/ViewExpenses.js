@@ -54,9 +54,44 @@ export default function ViewExpenses() {
   
   // Expense Claim state
   const [showExpenseModal, setShowExpenseModal] = useState(false);
-  const [expenseForm, setExpenseForm] = useState({ category: '', amount: '', description: '', receipt: null });
+  const [expenseForm, setExpenseForm] = useState({
+    category: '',
+    amount: '',
+    description: '',
+    receipt: null,
+    merchant: '',
+    invoice_no: '',
+    gst_no: '',
+    payment_mode: 'cash',
+    expense_type: 'reimbursement',
+    date: new Date().toISOString().split('T')[0],
+    items: []
+  });
   const [expenseLoading, setExpenseLoading] = useState(false);
-  const [expenseCategories, setExpenseCategories] = useState(['Travel', 'Food & Dining', 'Office Supplies', 'Other']);
+  const [expenseCategories, setExpenseCategories] = useState(['Travel', 'Food & Dining', 'Office Supplies', 'Company Purchase', 'Other']);
+
+  const handleAddItem = () => {
+    const newItems = [...expenseForm.items, { name: '', qty: 1, price: 0, total: 0 }];
+    setExpenseForm({ ...expenseForm, items: newItems });
+  };
+
+  const handleRemoveItem = (index) => {
+    const newItems = expenseForm.items.filter((_, i) => i !== index);
+    const sum = newItems.reduce((acc, curr) => acc + curr.total, 0);
+    setExpenseForm({ ...expenseForm, items: newItems, amount: sum > 0 ? sum.toString() : expenseForm.amount });
+  };
+
+  const handleItemChange = (index, field, val) => {
+    const newItems = [...expenseForm.items];
+    newItems[index][field] = val;
+    if (field === 'qty' || field === 'price') {
+      const q = Number(newItems[index].qty) || 0;
+      const p = Number(newItems[index].price) || 0;
+      newItems[index].total = q * p;
+    }
+    const sum = newItems.reduce((acc, curr) => acc + curr.total, 0);
+    setExpenseForm({ ...expenseForm, items: newItems, amount: sum > 0 ? sum.toString() : expenseForm.amount });
+  };
 
   // Expenses History
   const [history, setHistory] = useState([]);
@@ -85,8 +120,8 @@ export default function ViewExpenses() {
   const handleExpenseSubmit = async (e) => {
     e.preventDefault();
     
-    if (!expenseForm.category || !expenseForm.amount) {
-      toast.error("Please fill in category and amount.");
+    if (!expenseForm.category || !expenseForm.amount || !expenseForm.date) {
+      toast.error("Please fill in category, amount, and date.");
       return;
     }
 
@@ -96,8 +131,13 @@ export default function ViewExpenses() {
       formData.append('category', expenseForm.category);
       formData.append('amount', expenseForm.amount);
       formData.append('description', expenseForm.description);
-      // Auto-set current date since the UI doesn't have a date field here
-      formData.append('date', new Date().toISOString().split('T')[0]);
+      formData.append('date', expenseForm.date);
+      formData.append('merchant', expenseForm.merchant);
+      formData.append('invoice_no', expenseForm.invoice_no);
+      formData.append('gst_no', expenseForm.gst_no);
+      formData.append('payment_mode', expenseForm.payment_mode);
+      formData.append('expense_type', expenseForm.expense_type);
+      formData.append('items', JSON.stringify(expenseForm.items));
       
       if (expenseForm.receipt) {
         formData.append('receipt', expenseForm.receipt);
@@ -109,7 +149,18 @@ export default function ViewExpenses() {
       
       if (res.data.success) {
         toast.success('Expense claim submitted successfully!');
-        setExpenseForm({ category: '', amount: '', description: '', receipt: null });
+        setExpenseForm({
+          category: '',
+          amount: '',
+          description: '',
+          receipt: null,
+          merchant: '',
+          invoice_no: '',
+          gst_no: '',
+          payment_mode: 'cash',
+          expense_type: 'reimbursement',
+          date: new Date().toISOString().split('T')[0]
+        });
         setShowExpenseModal(false);
         fetchExpenses(); // Refresh the list
       }
@@ -230,54 +281,225 @@ export default function ViewExpenses() {
       </Card>
 
       {/* Submit Expense Claim Modal */}
-      <Modal show={showExpenseModal} onHide={() => setShowExpenseModal(false)} centered>
+      <Modal show={showExpenseModal} onHide={() => setShowExpenseModal(false)} centered size="lg">
         <Form onSubmit={handleExpenseSubmit}>
           <Modal.Header closeButton>
-            <Modal.Title>Submit Expense Claim</Modal.Title>
+            <Modal.Title className="fw-bold">Submit Expense Claim</Modal.Title>
           </Modal.Header>
-          <Modal.Body>
-            <Form.Group className="mb-3">
-              <Form.Label>Category</Form.Label>
-              <CreatableSelect
-                isClearable
-                options={expenseCategories.map(cat => ({ label: cat, value: cat }))}
-                value={expenseForm.category ? { label: expenseForm.category, value: expenseForm.category } : null}
-                onChange={(selected) => setExpenseForm({...expenseForm, category: selected ? selected.value : ''})}
-                onCreateOption={(inputValue) => {
-                  setExpenseCategories((prev) => [...prev, inputValue]);
-                  setExpenseForm({...expenseForm, category: inputValue});
-                }}
-                placeholder="Select or type category..."
-              />
+          <Modal.Body className="px-4 py-3">
+            {/* Expense Type Selector */}
+            <Form.Group className="mb-4">
+              <Form.Label className="fw-bold text-muted small text-uppercase mb-2">Expense Type</Form.Label>
+              <div className="d-flex gap-2">
+                <Button 
+                  type="button"
+                  variant={expenseForm.expense_type === 'reimbursement' ? 'primary' : 'outline-secondary'}
+                  className="rounded-pill px-4 fw-bold flex-fill py-2"
+                  onClick={() => setExpenseForm({...expenseForm, expense_type: 'reimbursement'})}
+                >
+                  Employee Reimbursement
+                </Button>
+                <Button 
+                  type="button"
+                  variant={expenseForm.expense_type === 'company_purchase' ? 'primary' : 'outline-secondary'}
+                  className="rounded-pill px-4 fw-bold flex-fill py-2"
+                  onClick={() => setExpenseForm({...expenseForm, expense_type: 'company_purchase', category: 'Company Purchase'})}
+                >
+                  Company Purchase
+                </Button>
+              </div>
             </Form.Group>
+
+            <Row className="g-3 mb-3">
+              <Col xs={12} md={6}>
+                <Form.Group>
+                  <Form.Label className="fw-bold text-muted small text-uppercase">Category</Form.Label>
+                  <CreatableSelect
+                    isClearable
+                    options={expenseCategories.map(cat => ({ label: cat, value: cat }))}
+                    value={expenseForm.category ? { label: expenseForm.category, value: expenseForm.category } : null}
+                    onChange={(selected) => setExpenseForm({...expenseForm, category: selected ? selected.value : ''})}
+                    onCreateOption={(inputValue) => {
+                      setExpenseCategories((prev) => [...prev, inputValue]);
+                      setExpenseForm({...expenseForm, category: inputValue});
+                    }}
+                    placeholder="Select or type category..."
+                  />
+                </Form.Group>
+              </Col>
+              <Col xs={12} md={6}>
+                <Form.Group>
+                  <Form.Label className="fw-bold text-muted small text-uppercase">Payment Mode</Form.Label>
+                  <Form.Select value={expenseForm.payment_mode} onChange={e => setExpenseForm({...expenseForm, payment_mode: e.target.value})}>
+                    <option value="cash">Cash</option>
+                    <option value="upi">UPI / QR Code</option>
+                    <option value="personal_card">Personal Credit/Debit Card</option>
+                    <option value="company_card">Company Credit Card</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row className="g-3 mb-3">
+              <Col xs={6}>
+                <Form.Group>
+                  <Form.Label className="fw-bold text-muted small text-uppercase">Amount (₹)</Form.Label>
+                  <Form.Control 
+                    type="number" 
+                    required 
+                    placeholder="e.g. 500" 
+                    value={expenseForm.amount}
+                    onChange={(e) => setExpenseForm({...expenseForm, amount: e.target.value})}
+                  />
+                </Form.Group>
+              </Col>
+              <Col xs={6}>
+                <Form.Group>
+                  <Form.Label className="fw-bold text-muted small text-uppercase">Transaction Date</Form.Label>
+                  <Form.Control 
+                    type="date" 
+                    required 
+                    value={expenseForm.date}
+                    onChange={(e) => setExpenseForm({...expenseForm, date: e.target.value})}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <hr className="my-4" style={{ opacity: 0.1 }} />
+            <h6 className="fw-bold mb-3 text-primary">Vendor & Billing Details</h6>
+
+            <Row className="g-3 mb-3">
+              <Col xs={12} md={4}>
+                <Form.Group>
+                  <Form.Label className="fw-bold text-muted small text-uppercase">Merchant / Vendor</Form.Label>
+                  <Form.Control 
+                    type="text" 
+                    value={expenseForm.merchant} 
+                    onChange={e => setExpenseForm({...expenseForm, merchant: e.target.value})} 
+                    placeholder="e.g. Amazon, Local Store" 
+                  />
+                </Form.Group>
+              </Col>
+              <Col xs={6} md={4}>
+                <Form.Group>
+                  <Form.Label className="fw-bold text-muted small text-uppercase">Invoice / Bill No.</Form.Label>
+                  <Form.Control 
+                    type="text" 
+                    value={expenseForm.invoice_no} 
+                    onChange={e => setExpenseForm({...expenseForm, invoice_no: e.target.value})} 
+                    placeholder="e.g. INV-2026-99" 
+                  />
+                </Form.Group>
+              </Col>
+              <Col xs={6} md={4}>
+                <Form.Group>
+                  <Form.Label className="fw-bold text-muted small text-uppercase">GSTIN (Optional)</Form.Label>
+                  <Form.Control 
+                    type="text" 
+                    value={expenseForm.gst_no} 
+                    onChange={e => setExpenseForm({...expenseForm, gst_no: e.target.value})} 
+                    placeholder="e.g. 29GGGGG1314R1Z8" 
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            {/* Purchased Products / Items Section */}
+            <hr className="my-4" style={{ opacity: 0.1 }} />
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="fw-bold mb-0 text-primary">Purchased Products / Items Details</h6>
+              <Button type="button" variant="outline-primary" size="sm" className="rounded-pill px-3" onClick={handleAddItem}>
+                + Add Item
+              </Button>
+            </div>
+
+            {expenseForm.items.length > 0 ? (
+              <div className="table-responsive mb-4 bg-light p-3 rounded-3" style={{ border: '1px solid #edf2f7' }}>
+                <Table hover size="sm" className="mb-0">
+                  <thead>
+                    <tr>
+                      <th>Product / Item Name</th>
+                      <th style={{ width: '80px' }} className="text-center">Qty</th>
+                      <th style={{ width: '120px' }} className="text-end">Price / Unit (₹)</th>
+                      <th style={{ width: '110px' }} className="text-end">Total (₹)</th>
+                      <th style={{ width: '50px' }} className="text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {expenseForm.items.map((item, idx) => (
+                      <tr key={idx} className="align-middle">
+                        <td>
+                          <Form.Control 
+                            size="sm" 
+                            type="text" 
+                            placeholder="Item name..." 
+                            value={item.name} 
+                            required 
+                            onChange={e => handleItemChange(idx, 'name', e.target.value)} 
+                          />
+                        </td>
+                        <td>
+                          <Form.Control 
+                            size="sm" 
+                            type="number" 
+                            className="text-center"
+                            value={item.qty} 
+                            min="1"
+                            required 
+                            onChange={e => handleItemChange(idx, 'qty', e.target.value)} 
+                          />
+                        </td>
+                        <td>
+                          <Form.Control 
+                            size="sm" 
+                            type="number" 
+                            className="text-end"
+                            value={item.price} 
+                            min="0"
+                            required 
+                            onChange={e => handleItemChange(idx, 'price', e.target.value)} 
+                          />
+                        </td>
+                        <td className="text-end fw-bold text-dark small">
+                          ₹{(item.total || 0).toLocaleString('en-IN')}
+                        </td>
+                        <td className="text-center">
+                          <Button variant="none" className="p-0 text-danger border-0" onClick={() => handleRemoveItem(idx)}>
+                            <span style={{ fontSize: '1.1rem' }}>🗑</span>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center py-3 bg-light rounded-3 text-muted mb-4 small">
+                No products added yet. Click "+ Add Item" to specify purchased products.
+              </div>
+            )}
+
             <Form.Group className="mb-3">
-              <Form.Label>Amount (₹)</Form.Label>
-              <Form.Control 
-                type="number" 
-                required 
-                placeholder="e.g. 500" 
-                value={expenseForm.amount}
-                onChange={(e) => setExpenseForm({...expenseForm, amount: e.target.value})}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Description / Reason</Form.Label>
+              <Form.Label className="fw-bold text-muted small text-uppercase">Description / Purpose</Form.Label>
               <Form.Control 
                 as="textarea" 
-                rows={3} 
+                rows={2} 
                 placeholder="Briefly describe the expense..."
                 value={expenseForm.description}
                 onChange={(e) => setExpenseForm({...expenseForm, description: e.target.value})}
               />
             </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Upload Receipt (Optional)</Form.Label>
+
+            <Form.Group className="mb-2">
+              <Form.Label className="fw-bold text-muted small text-uppercase">Upload Receipt / Bill Image</Form.Label>
               <Form.Control type="file" accept="image/*" onChange={(e) => setExpenseForm({...expenseForm, receipt: e.target.files[0]})} />
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowExpenseModal(false)}>Cancel</Button>
-            <Button variant="primary" type="submit" disabled={expenseLoading}>
+            <Button variant="secondary" className="rounded-pill px-4" onClick={() => setShowExpenseModal(false)}>Cancel</Button>
+            <Button variant="primary" className="rounded-pill px-4 fw-bold" type="submit" disabled={expenseLoading}>
               {expenseLoading ? <Spinner animation="border" size="sm" /> : 'Submit Claim'}
             </Button>
           </Modal.Footer>

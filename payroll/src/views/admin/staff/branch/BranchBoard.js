@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
 import { Row, Col, Card, Button, Modal, Form, Spinner, Alert } from 'react-bootstrap';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -8,6 +9,7 @@ import { ReactSortable } from 'react-sortablejs';
 import DeleteConfirmModal from 'components/DeleteConfirmModal';
 
 const BranchBoard = () => {
+  const history = useHistory();
   const [branches, setBranches] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [staffList, setStaffList] = useState([]);
@@ -469,10 +471,13 @@ const BranchBoard = () => {
             <div className="text-muted mt-1 small">Manage branches, nested departments, and global oversight roles.</div>
           </Col>
           <Col xs={12} lg="auto" className="d-flex flex-column flex-sm-row justify-content-end gap-2 mt-2 mt-lg-0">
+            <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm w-100 w-sm-auto" onClick={() => history.push('/staff')}>
+              <CsLineIcons icon="arrow-left" size="18" className="me-2" /> Back
+            </Button>
             <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm w-100 w-sm-auto" onClick={() => handleOpenAddDept(null, true)}>
               <CsLineIcons icon="globe" size="18" className="me-2" /> Add Global Dept
             </Button>
-            <Button variant="primary" className="rounded-pill px-4 shadow-sm w-100 w-sm-auto" onClick={() => setShowBranchModal(true)}>
+            <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm w-100 w-sm-auto" onClick={() => setShowBranchModal(true)}>
               <CsLineIcons icon="plus" size="18" className="me-2" /> Add Branch
             </Button>
           </Col>
@@ -628,7 +633,7 @@ const BranchBoard = () => {
           </Modal.Body>
           <Modal.Footer className="border-top-0 pt-0">
             <Button variant="light" className="rounded-pill px-4" onClick={() => setShowBranchModal(false)}>Cancel</Button>
-            <Button variant="primary" type="submit" className="rounded-pill px-4 shadow-sm" disabled={isCreating}>
+            <Button variant="outline-primary" type="submit" className="rounded-pill px-4 shadow-sm" disabled={isCreating}>
               {isCreating ? <Spinner size="sm" animation="border" /> : 'Create Branch'}
             </Button>
           </Modal.Footer>
@@ -650,7 +655,7 @@ const BranchBoard = () => {
           </Modal.Body>
           <Modal.Footer className="border-top-0 pt-0">
             <Button variant="light" className="rounded-pill px-4" onClick={() => setShowDeptModal(false)}>Cancel</Button>
-            <Button variant="primary" type="submit" className="rounded-pill px-4 shadow-sm" disabled={isCreating}>
+            <Button variant="outline-primary" type="submit" className="rounded-pill px-4 shadow-sm" disabled={isCreating}>
               {isCreating ? <Spinner size="sm" animation="border" /> : 'Create Department'}
             </Button>
           </Modal.Footer>
@@ -674,7 +679,7 @@ const BranchBoard = () => {
           </Modal.Body>
           <Modal.Footer className="border-top-0 pt-0">
             <Button variant="light" className="rounded-pill px-4" onClick={() => setShowRoleModal(false)}>Cancel</Button>
-            <Button variant="primary" type="submit" className="rounded-pill px-4 shadow-sm" disabled={isCreating}>
+            <Button variant="outline-primary" type="submit" className="rounded-pill px-4 shadow-sm" disabled={isCreating}>
               {isCreating ? <Spinner size="sm" animation="border" /> : 'Add Role'}
             </Button>
           </Modal.Footer>

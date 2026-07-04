@@ -17,7 +17,7 @@ const Login = () => {
   }
 
   const title = 'Login — Attendance';
-  const description = 'Attendance kiosk login — use your Payroll account email and password.';
+  const description = 'Attendance kiosk login — use your Payroll ID/Email and password.';
 
   const { login } = useContext(AuthContext);
   const [error, setError] = useState('');
@@ -25,7 +25,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const validationSchema = Yup.object().shape({
-    email: Yup.string().email('Enter a valid email').required('Email is required'),
+    email: Yup.string().required('Payroll ID or Email is required'),
     password: Yup.string().required('Password is required'),
   });
 
@@ -86,9 +86,9 @@ const Login = () => {
         {/* Right Panel */}
         <div className="login-login-right-panel">
           <div className="login-login-form-header">
-            <div className="login-login-form-eyebrow">Attendance Kiosk</div>
+            <div className="login-login-form-eyebrow">Employee Panel</div>
             <h2 className="login-login-form-title">Welcome back</h2>
-            <p className="login-login-form-subtitle">Use your Payroll account credentials to sign in</p>
+            <p className="login-login-form-subtitle">Use your Payroll ID or Email to sign in</p>
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -99,17 +99,17 @@ const Login = () => {
               </div>
             )}
 
-            {/* Email */}
+            {/* Email / Payroll ID */}
             <div className="login-auth-input-group">
-              <label className="login-auth-input-label">Email Address</label>
+              <label className="login-auth-input-label">Email</label>
               <div style={{ position: 'relative' }}>
                 <span className="login-auth-input-icon">
                   <CsLineIcons icon="email" size="18" />
                 </span>
                 <input
-                  type="email"
+                  type="text"
                   name="email"
-                  placeholder="you@company.com"
+                  placeholder="Enter Email"
                   value={values.email}
                   onChange={handleChange}
                   disabled={isLoading}
