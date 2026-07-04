@@ -12,10 +12,10 @@ import { useCart, useTheme } from '../context/AppContext';
 import { useRestaurant } from '../context/RestaurantContext';
 
 const NAV_LINKS = [
-  { to: '/',            label: 'Home'    },
-  { to: '/menu',        label: 'Menu'    },
+  { to: '/', label: 'Home' },
+  { to: '/menu', label: 'Menu' },
   { to: '/reservation', label: 'Reservation' },
-  { to: '/contact',     label: 'Contact' },
+  { to: '/contact', label: 'Contact' },
 ];
 
 export default function Navbar({ visible: propVisible }) {
@@ -34,9 +34,30 @@ export default function Navbar({ visible: propVisible }) {
     return true;
   });
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-  const logoUrl = settings?.logo 
-    ? (settings.logo.startsWith('http') ? settings.logo : `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/${settings.logo.replace(/^\/+/, '')}`) 
+  const logoUrl = settings?.logo
+    ? (settings.logo.startsWith('http') ? settings.logo : `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/${settings.logo.replace(/^\/+/, '')}`)
     : null;
+
+  const [isWideLogo, setIsWideLogo] = useState(false);
+
+  useEffect(() => {
+    if (!logoUrl) {
+      setIsWideLogo(false);
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalWidth >= img.naturalHeight * 1.8) {
+        setIsWideLogo(true);
+      } else {
+        setIsWideLogo(false);
+      }
+    };
+    img.onerror = () => {
+      setIsWideLogo(false);
+    };
+    img.src = logoUrl;
+  }, [logoUrl]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -56,7 +77,7 @@ export default function Navbar({ visible: propVisible }) {
       <nav
         ref={navRef}
         className={`fixed-top transition-all duration-700 ${navClass}`}
-        style={{ 
+        style={{
           zIndex: 9999,
           opacity: visible ? 1 : 0,
           transform: visible ? 'translateY(0)' : 'translateY(-100%)',
@@ -73,24 +94,39 @@ export default function Navbar({ visible: propVisible }) {
           {/* Logo */}
           <Link to={`/${restaurantCode || ''}`} className="d-flex align-items-center gap-2 gap-md-3 text-decoration-none">
             {logoUrl ? (
-              <img 
-                src={logoUrl} 
-                alt={settings?.restaurant_name || "Logo"} 
-                className="rounded-3 shadow-sm object-fit-cover" 
-                style={{ width: '36px', height: '36px' }} 
+              <img
+                src={logoUrl}
+                alt={settings?.restaurant_name || "Logo"}
+                className={`rounded-3 shadow-sm ${isWideLogo ? 'object-fit-contain' : 'object-fit-cover'}`}
+                style={isWideLogo ? {
+                  height: '60px',
+                  width: 'auto',
+                  objectFit: 'contain',
+                  marginTop: '-12px',
+                  marginBottom: '-12px',
+                  maxWidth: '180px',
+                  padding: '0px 10px',
+                } : {
+                  width: '60px',
+                  height: '60px',
+                  marginTop: '-12px',
+                  marginBottom: '-12px',
+                }}
               />
             ) : (
-              <div 
+              <div
                 className="rounded-3 d-flex align-items-center justify-content-center shadow-sm"
-                style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, var(--brand), #e05c0c)' }}
+                style={{ width: '60px', height: '60px', marginTop: '-12px', marginBottom: '-12px', background: 'linear-gradient(135deg, var(--brand), #e05c0c)' }}
               >
-                <Flame className="text-white" size={20} />
+                <Flame className="text-white" size={32} />
               </div>
             )}
-            <span className="font-display fw-bold fs-5 d-none d-sm-block">
-              <span className="text-white">{settings?.restaurant_name || 'Ember'}</span>
-              {!settings?.restaurant_name && <span className="text-gradient"> &amp; Gold</span>}
-            </span>
+            {!isWideLogo && (
+              <span className="font-display fw-bold fs-5 d-none d-sm-block">
+                <span className="text-white">{settings?.restaurant_name || 'Ember'}</span>
+                {!settings?.restaurant_name && <span className="text-gradient"> &amp; Gold</span>}
+              </span>
+            )}
           </Link>
 
           {/* Desktop links */}
@@ -121,7 +157,7 @@ export default function Navbar({ visible: propVisible }) {
               aria-label="Toggle theme"
             >
               {isDark
-                ? <Sun  size={16} className="text-gold" />
+                ? <Sun size={16} className="text-gold" />
                 : <Moon size={16} className="text-brand-400" />
               }
             </button>

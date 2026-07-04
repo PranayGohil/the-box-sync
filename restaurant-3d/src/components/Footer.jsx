@@ -1,43 +1,67 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Flame, MapPin, Phone, Mail } from 'lucide-react';
 import { useRestaurant } from '../context/RestaurantContext';
+import { useTheme } from '../context/AppContext';
 
 // Inline social SVG icons (not available in this lucide version)
-const InstagramIcon = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-4 h-4"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>);
-const TwitterIcon  = () => (<svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L2.002 2.25h6.561l4.264 5.637 5.417-5.637Zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>);
-const FacebookIcon = () => (<svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M24 12.073C24 5.406 18.627 0 12 0S0 5.406 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.696 4.533-4.696 1.312 0 2.686.235 2.686.235v2.97h-1.513c-1.491 0-1.956.931-1.956 1.886v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>);
-const YoutubeIcon  = () => (<svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>);
-const WhatsappIcon = () => (<svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.393 0 12.03c0 2.12.554 4.189 1.602 6.006L0 24l6.117-1.604a11.803 11.803 0 005.925 1.585h.005c6.634 0 12.032-5.391 12.036-12.028a11.8 11.8 0 00-3.417-8.467z"/></svg>);
+const InstagramIcon = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-4 h-4"><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" /></svg>);
+const TwitterIcon = () => (<svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L2.002 2.25h6.561l4.264 5.637 5.417-5.637Zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>);
+const FacebookIcon = () => (<svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M24 12.073C24 5.406 18.627 0 12 0S0 5.406 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.696 4.533-4.696 1.312 0 2.686.235 2.686.235v2.97h-1.513c-1.491 0-1.956.931-1.956 1.886v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" /></svg>);
+const YoutubeIcon = () => (<svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>);
+const WhatsappIcon = () => (<svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.393 0 12.03c0 2.12.554 4.189 1.602 6.006L0 24l6.117-1.604a11.803 11.803 0 005.925 1.585h.005c6.634 0 12.032-5.391 12.036-12.028a11.8 11.8 0 00-3.417-8.467z" /></svg>);
 
 const FOOTER_LINKS = {
-  Explore:  [
-    { label: 'Home',    to: '/'       },
-    { label: 'Menu',    to: '/menu'   },
-    { label: 'About',   to: '/about'  },
-    { label: 'Contact', to: '/contact'},
+  Explore: [
+    { label: 'Home', to: '/' },
+    { label: 'Menu', to: '/menu' },
+    { label: 'About', to: '/about' },
+    { label: 'Contact', to: '/contact' },
   ],
   'Our Food': [
-    { label: 'Pizza',   to: '/menu?cat=pizza'   },
-    { label: 'Burgers', to: '/menu?cat=burger'  },
-    { label: 'Sushi',   to: '/menu?cat=sushi'   },
-    { label: 'Desserts',to: '/menu?cat=dessert' },
+    { label: 'Pizza', to: '/menu?cat=pizza' },
+    { label: 'Burgers', to: '/menu?cat=burger' },
+    { label: 'Sushi', to: '/menu?cat=sushi' },
+    { label: 'Desserts', to: '/menu?cat=dessert' },
   ],
 };
 
 const SOCIALS = [
   { Icon: InstagramIcon, href: '#', label: 'Instagram' },
-  { Icon: TwitterIcon,   href: '#', label: 'Twitter'   },
-  { Icon: FacebookIcon,  href: '#', label: 'Facebook'  },
-  { Icon: YoutubeIcon,   href: '#', label: 'YouTube'   },
+  { Icon: TwitterIcon, href: '#', label: 'Twitter' },
+  { Icon: FacebookIcon, href: '#', label: 'Facebook' },
+  { Icon: YoutubeIcon, href: '#', label: 'YouTube' },
 ];
 
 export default function Footer() {
   const { restaurantCode, settings, menu } = useRestaurant();
-  
+  const { isDark } = useTheme();
+
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-  const logoUrl = settings?.logo 
-    ? (settings.logo.startsWith('http') ? settings.logo : `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/${settings.logo.replace(/^\/+/, '')}`) 
+  const logoUrl = settings?.logo
+    ? (settings.logo.startsWith('http') ? settings.logo : `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/${settings.logo.replace(/^\/+/, '')}`)
     : null;
+
+  const [isWideLogo, setIsWideLogo] = useState(false);
+
+  useEffect(() => {
+    if (!logoUrl) {
+      setIsWideLogo(false);
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalWidth >= img.naturalHeight * 1.8) {
+        setIsWideLogo(true);
+      } else {
+        setIsWideLogo(false);
+      }
+    };
+    img.onerror = () => {
+      setIsWideLogo(false);
+    };
+    img.src = logoUrl;
+  }, [logoUrl]);
 
   // Dynamic categories for footer
   const footerCategories = Array.from(new Set(menu.map(item => item.category)))
@@ -49,23 +73,23 @@ export default function Footer() {
 
   const FOOTER_LINKS = {
     Explore: [
-      { label: 'Home',    to: '/'       },
-      { label: 'Menu',    to: '/menu'   },
-      settings?.show_reservation !== false && { label: 'Book',    to: '/reservation' },
-      { label: 'Contact', to: '/contact'},
+      { label: 'Home', to: '/' },
+      { label: 'Menu', to: '/menu' },
+      settings?.show_reservation !== false && { label: 'Book', to: '/reservation' },
+      { label: 'Contact', to: '/contact' },
     ].filter(Boolean),
     'Our Food': footerCategories.length > 0 ? footerCategories : [
-      { label: 'Pizza',   to: '/menu?cat=pizza'   },
-      { label: 'Burgers', to: '/menu?cat=burger'  },
-      { label: 'Sushi',   to: '/menu?cat=sushi'   },
-      { label: 'Desserts',to: '/menu?cat=dessert' },
+      { label: 'Pizza', to: '/menu?cat=pizza' },
+      { label: 'Burgers', to: '/menu?cat=burger' },
+      { label: 'Sushi', to: '/menu?cat=sushi' },
+      { label: 'Desserts', to: '/menu?cat=dessert' },
     ],
   };
 
   const socialLinks = settings?.social_links || [
     { platform: 'Instagram', url: '#', logo: null },
-    { platform: 'Twitter',   url: '#', logo: null },
-    { platform: 'Facebook',  url: '#', logo: null },
+    { platform: 'Twitter', url: '#', logo: null },
+    { platform: 'Facebook', url: '#', logo: null },
   ];
 
   const getSocialIcon = (platform) => {
@@ -89,24 +113,34 @@ export default function Footer() {
           <div className="col-12 col-lg-3">
             <Link to={`/${restaurantCode || ''}`} className="d-flex align-items-center gap-2 mb-3 text-decoration-none">
               {logoUrl ? (
-                <img 
-                  src={logoUrl} 
-                  alt={settings?.restaurant_name || "Logo"} 
-                  className="rounded-3 shadow-sm object-fit-cover" 
-                  style={{ width: '36px', height: '36px' }} 
+                <img
+                  src={logoUrl}
+                  alt={settings?.restaurant_name || "Logo"}
+                  className={`rounded-3 shadow-sm ${isWideLogo ? 'object-fit-contain' : 'object-fit-cover'}`}
+                  style={isWideLogo ? {
+                    height: '60px',
+                    width: 'auto',
+                    objectFit: 'contain',
+                    maxWidth: '220px',
+                  } : {
+                    width: '60px',
+                    height: '60px',
+                  }}
                 />
               ) : (
-                <div 
+                <div
                   className="rounded-3 d-flex align-items-center justify-content-center shadow-sm"
-                  style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, var(--brand), #e05c0c)' }}
+                  style={{ width: '60px', height: '60px', background: 'linear-gradient(135deg, var(--brand), #e05c0c)' }}
                 >
-                  <Flame className="text-white" size={20} />
+                  <Flame className="text-white" size={32} />
                 </div>
               )}
-              <span className="font-display fw-bold fs-5">
-                <span className="text-white">{settings?.restaurant_name || 'Ember'}</span>
-                {!settings?.restaurant_name && <span className="text-gradient"> &amp; Gold</span>}
-              </span>
+              {!isWideLogo && (
+                <span className="font-display fw-bold fs-5">
+                  <span className="text-white">{settings?.restaurant_name || 'Ember'}</span>
+                  {!settings?.restaurant_name && <span className="text-gradient"> &amp; Gold</span>}
+                </span>
+              )}
             </Link>
             <p className="text-white-60 small mb-4" style={{ lineHeight: 1.6 }}>
               {settings?.contact_details || 'Fine dining reimagined. Where every dish is crafted with passion and every moment is worth savouring.'}
@@ -167,14 +201,14 @@ export default function Footer() {
                   if (!settings) return '42 Gourmet Lane, South End, London EC1A 1BB';
                   const addr = settings.address || settings.restaurant_address || settings.contact_address;
                   if (!addr) return '42 Gourmet Lane, South End, London EC1A 1BB';
-                  
+
                   const parts = [
                     addr,
                     settings.city,
                     settings.state,
                     settings.country
                   ].filter(Boolean);
-                  
+
                   let result = parts.join(', ');
                   if (settings.pincode) result += ` - ${settings.pincode}`;
                   return result;

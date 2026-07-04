@@ -62,6 +62,7 @@ const ManageWebsite = () => {
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [isWideLogo, setIsWideLogo] = useState(false);
   const [heroImageFile, setHeroImageFile] = useState(null);
   const [aboutImageFile, setAboutImageFile] = useState(null);
   const [legacyImageFile, setLegacyImageFile] = useState(null);
@@ -475,11 +476,19 @@ const ManageWebsite = () => {
                       <Form.Group className="d-flex flex-column align-items-center mb-3">
                         <Form.Label className="small fw-bold text-muted text-center w-100 mb-3">Logo Image</Form.Label>
                         <div
-                          className="rounded-circle border border-3 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center mb-3"
-                          style={{ width: '120px', height: '120px' }}
+                          className={`border border-3 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center mb-3 ${isWideLogo ? 'rounded-3' : 'rounded-circle'}`}
+                          style={isWideLogo ? { width: '200px', height: '100px' } : { width: '120px', height: '120px' }}
                         >
                           {logoPreview ? (
-                            <img src={logoPreview} alt="Logo" className="w-100 h-100 object-fit-cover" />
+                            <img
+                              src={logoPreview}
+                              alt="Logo"
+                              style={isWideLogo ? { width: '100%', height: '100%', objectFit: 'contain' } : { width: '100%', height: '100%', objectFit: 'cover' }}
+                              onLoad={(e) => {
+                                const { naturalWidth, naturalHeight } = e.target;
+                                setIsWideLogo(naturalWidth >= naturalHeight * 1.8);
+                              }}
+                            />
                           ) : (
                             <CsLineIcons icon="image" size="48" className="text-muted opacity-20" />
                           )}

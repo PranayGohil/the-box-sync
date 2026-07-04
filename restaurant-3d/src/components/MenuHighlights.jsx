@@ -1,15 +1,60 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Star, ShoppingCart, UtensilsCrossed } from 'lucide-react';
-import { useCart } from '../context/AppContext';
+import { ChevronRight, Star, ShoppingCart, UtensilsCrossed, Heart } from 'lucide-react';
+import { useCart, useAuth } from '../context/AppContext';
 import { useRestaurant } from '../context/RestaurantContext';
 import toast from 'react-hot-toast';
 
 export default function MenuHighlights() {
   const containerRef = useRef(null);
   const { addItem } = useCart();
+  const { user } = useAuth();
   const { dishes, restaurantCode } = useRestaurant();
+  const [savedIds, setSavedIds] = useState([]);
+
+  useEffect(() => {
+    if (!user?._id) {
+      setSavedIds([]);
+      return;
+    }
+    try {
+      const saved = localStorage.getItem(`ember-saved-${user._id}`);
+      setSavedIds(saved ? JSON.parse(saved) : []);
+    } catch {
+      setSavedIds([]);
+    }
+  }, [user]);
+
+  const toggleFavorite = (item, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user?._id) {
+      toast.error('Please login to save items', {
+        style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(242,122,26,0.3)', borderRadius: '12px' }
+      });
+      return;
+    }
+
+    const key = `ember-saved-${user._id}`;
+    let newSaved;
+    if (savedIds.includes(item._id)) {
+      newSaved = savedIds.filter(id => id !== item._id);
+      setSavedIds(newSaved);
+      toast.success(`${item.dish_name} removed from saved items`, {
+        icon: '💔',
+        style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }
+      });
+    } else {
+      newSaved = [...savedIds, item._id];
+      setSavedIds(newSaved);
+      toast.success(`${item.dish_name} saved!`, {
+        icon: '❤️',
+        style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(242,122,26,0.3)', borderRadius: '12px' }
+      });
+    }
+    localStorage.setItem(key, JSON.stringify(newSaved));
+  };
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
   const allFeatured = dishes.flatMap(group => group.dishes);
@@ -58,6 +103,7 @@ export default function MenuHighlights() {
             const imageUrl = rawImg 
               ? (rawImg.startsWith('http') || rawImg.includes('/uploads/') ? rawImg : `${API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL}/uploads/${rawImg.replace(/^\/+/, '')}`) 
               : null;
+            const isSaved = savedIds.includes(item._id);
             return (
               <motion.div
                 key={item._id}
@@ -88,6 +134,25 @@ export default function MenuHighlights() {
                   {item.meal_type && (
                     <span className="position-absolute badge bg-brand-500 text-white" style={{ top: '8px', left: '8px' }}>{item.meal_type}</span>
                   )}
+                  {/* Highlight Icon (Heart Toggle) */}
+                  <button
+                    onClick={(e) => toggleFavorite(item, e)}
+                    className="position-absolute rounded-circle d-flex align-items-center justify-content-center shadow-lg border-0"
+                    style={{
+                      top: '8px',
+                      right: '8px',
+                      width: '28px',
+                      height: '28px',
+                      zIndex: 2,
+                      background: isSaved ? '#ef4444' : 'rgba(0,0,0,0.5)',
+                      color: '#fff',
+                      backdropFilter: 'blur(4px)',
+                      transition: 'all 0.2s ease'
+                    }}
+                    title="Save Item"
+                  >
+                    <Heart size={14} style={{ fill: isSaved ? '#fff' : 'none' }} />
+                  </button>
                 </div>
 
                 <div className="p-3">
