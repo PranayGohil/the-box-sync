@@ -192,13 +192,22 @@ export default function OrderDetail() {
       toast.error('Feedback token is not configured for this restaurant.');
       return;
     }
-    const feedbackBaseUrl = import.meta.env.VITE_FEEDBACK_URL || 'https://www.theboxsync.com/feedback.html';
+    let feedbackBaseUrl = import.meta.env.VITE_FEEDBACK_URL || 'https://www.theboxsync.com/feedback.html';
+    
+    // Normalize local filesystem paths to avoid browser "Not allowed to load local resource" errors
+    if (feedbackBaseUrl.includes(':\\') || feedbackBaseUrl.includes(':/') || feedbackBaseUrl.startsWith('file:')) {
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      const origin = apiBase.endsWith('/api') ? apiBase.slice(0, -4) : apiBase;
+      feedbackBaseUrl = `${origin}/feedback.html`;
+    }
+
     const params = new URLSearchParams({
       token: settings.restaurant_token,
       order_id: order._id,
       name: user?.name || '',
       email: user?.email || '',
     });
+    console.log(`${feedbackBaseUrl}?${params.toString()}`);
     window.open(`${feedbackBaseUrl}?${params.toString()}`, '_blank');
   };
 
@@ -244,10 +253,10 @@ export default function OrderDetail() {
   return (
     <main className="min-vh-100" style={{ paddingTop: '8rem', paddingBottom: '8rem' }}>
       <div className="container-lg" style={{ maxWidth: '900px' }}>
-        
+
         {/* Back Button */}
-        <button 
-          onClick={() => navigate(`/${restaurantCode}/profile`)} 
+        <button
+          onClick={() => navigate(`/${restaurantCode}/profile`)}
           className="btn-ghost d-flex align-items-center gap-2 mb-4 text-white-60 hover:text-white transition-colors border-0 bg-transparent"
         >
           <ArrowLeft size={18} /> Back to Orders
@@ -344,7 +353,7 @@ export default function OrderDetail() {
               <h5 className="text-white fw-bold mb-3 d-flex align-items-center gap-2">
                 <CheckCircle2 size={18} className="text-brand-400" /> Order Items
               </h5>
-              
+
               <div className="table-responsive mb-4">
                 <table className="table table-dark table-borderless align-middle mb-0" style={{ background: 'transparent' }}>
                   <thead>
