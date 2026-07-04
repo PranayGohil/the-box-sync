@@ -25,6 +25,7 @@ const Profile = () => {
   const [editMode, setEditMode] = useState(false);
   const [error, setError] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [isWideLogo, setIsWideLogo] = useState(false);
 
   const [profile, setProfile] = useState({
     restaurant_code: '',
@@ -313,9 +314,20 @@ const Profile = () => {
                     </div>
 
                     <div className="mb-4 d-flex justify-content-center">
-                      <div className="rounded-circle border border-4 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center" style={{ width: '180px', height: '180px' }}>
+                      <div
+                        className={`border border-4 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center ${isWideLogo ? 'rounded-3' : 'rounded-circle'}`}
+                        style={isWideLogo ? { width: '220px', height: '110px' } : { width: '180px', height: '180px' }}
+                      >
                         {getLogoSrc() ? (
-                          <img src={getLogoSrc()} alt="Logo" className="w-100 h-100 object-fit-cover" />
+                          <img
+                            src={getLogoSrc()}
+                            alt="Logo"
+                            style={isWideLogo ? { width: '100%', height: '100%', objectFit: 'contain' } : { width: '100%', height: '100%', objectFit: 'cover' }}
+                            onLoad={(e) => {
+                              const { naturalWidth, naturalHeight } = e.target;
+                              setIsWideLogo(naturalWidth >= naturalHeight * 1.8);
+                            }}
+                          />
                         ) : (
                           <CsLineIcons icon="image" size="64" className="text-muted opacity-20" />
                         )}
