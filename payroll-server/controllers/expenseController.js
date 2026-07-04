@@ -44,7 +44,7 @@ const convertToWebp = async (file) => {
 // @access  Private (Staff)
 exports.createExpense = async (req, res) => {
   try {
-    const { category, amount, date, description } = req.body;
+    const { category, amount, date, description, merchant, invoice_no, gst_no, payment_mode, expense_type, items } = req.body;
     let receiptPath = null;
 
     if (req.files && req.files.receipt && req.files.receipt[0]) {
@@ -54,6 +54,15 @@ exports.createExpense = async (req, res) => {
 
     const userId = req.user.user_id || req.user._id;
 
+    let parsedItems = [];
+    if (items) {
+      try {
+        parsedItems = typeof items === "string" ? JSON.parse(items) : items;
+      } catch (e) {
+        console.error("Error parsing expense items:", e);
+      }
+    }
+
     const newExpense = new Expense({
       staff_id: req.user.staff_id,
       user_id: userId,
@@ -62,6 +71,12 @@ exports.createExpense = async (req, res) => {
       date,
       description,
       receipt: receiptPath,
+      merchant,
+      invoice_no,
+      gst_no,
+      payment_mode,
+      expense_type,
+      items: parsedItems,
       status: "pending",
     });
 

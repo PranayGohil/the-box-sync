@@ -72,7 +72,7 @@ const addStaff = new Schema({
   },
   attendance_method: {
     type: String,
-    enum: ['any', 'wifi', 'ess'],
+    enum: ['any', 'wifi', 'ess', 'wfh'],  // 'any'=office, 'wfh'=permanent WFH
     default: 'any'
   },
   custom_weekly_offs: {

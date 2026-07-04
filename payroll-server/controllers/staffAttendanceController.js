@@ -2,6 +2,8 @@ const StaffAttendance = require("../models/staffAttendanceModel");
 const Staff = require("../models/staffModel");
 const PayrollConfig = require("../models/PayrollConfig");
 const User = require("../models/userModel");
+const LeaveBalance = require("../models/leaveBalanceModel");
+const LeaveRequest = require("../models/leaveRequestModel");
 const fs = require("fs");
 const path = require("path");
 
@@ -222,11 +224,17 @@ const getAttendanceByStaff = async (req, res) => {
             .sort({ date: -1 })
             .lean();
 
+        const payrollConfig = await PayrollConfig.findOne({ user_id: adminUserId }).lean();
+        const globalOffs = payrollConfig?.global_weekly_offs || [];
+        
+        const weekOffs = generateWeekOffs(staff, globalOffs, attendance);
+        const mergedAttendance = [...attendance, ...weekOffs].sort((a, b) => b.date.localeCompare(a.date));
+
         res.json({
             success: true,
             data: {
                 ...staff,
-                attendance,
+                attendance: mergedAttendance,
             },
         });
     } catch (error) {
@@ -323,6 +331,29 @@ const checkIn = async (req, res) => {
 
         // Find existing attendance
         let record = await StaffAttendance.findOne({ staff_id, date });
+
+        // Work From Home policy verification
+        if (is_wfh) {
+            const isPermanentWFH = staff.attendance_method === 'wfh';
+            if (!isPermanentWFH) {
+                const checkInDate = new Date(date + "T00:00:00.000Z");
+                
+                const approvedWfhRequest = await LeaveRequest.findOne({
+                    staff_id,
+                    status: "approved",
+                    leave_type_id: { $in: ["wfh", "work_from_home"] },
+                    from_date: { $lte: checkInDate },
+                    to_date: { $gte: checkInDate }
+                });
+
+                if (!approvedWfhRequest) {
+                    return res.status(403).json({
+                        success: false,
+                        message: "Access Denied: You do not have an approved Work From Home request for today's date. Please apply in the Leave section first."
+                    });
+                }
+            }
+        }
 
         if (!record) {
             // Create a new record

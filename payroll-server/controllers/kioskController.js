@@ -15,51 +15,37 @@ exports.kioskLogin = async (req, res) => {
       return res.status(400).json({ message: "Email and password are required." });
     }
 
-    // Find by email (case-insensitive) — first check user (admin)
     const emailRegex = new RegExp("^" + email.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i");
-    const user = await User.findOne({ email: emailRegex }).select("+password");
     let token;
     let userData;
 
-    if (user) {
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(401).json({ message: "Invalid email or password." });
-      }
-
-      // Issue token — same format as payroll
-      token = await user.generateAuthToken("Admin");
-      userData = {
-        _id: user._id,
-        name: user.name,
-        logo: user.logo,
-        email: user.email,
-        role: "admin",
-      };
-    } else {
-      // Check Staff collection (case-insensitive)
-      const staff = await Staff.findOne({ email: emailRegex }).select("+password");
-      if (!staff) {
-        return res.status(401).json({ message: "Invalid email or password." });
-      }
-
-      const isMatch = await staff.comparePassword(password);
-      if (!isMatch) {
-        return res.status(401).json({ message: "Invalid email or password." });
-      }
-
-      token = jwt.sign(
-        { _id: staff.user_id, staff_id: staff._id.toString(), Role: "Staff" },
-        process.env.JWT_SECRETKEY,
-        { expiresIn: "30d" }
-      );
-      userData = {
-        _id: staff._id,
-        name: `${staff.f_name} ${staff.l_name}`,
-        email: staff.email,
-        role: "staff",
-      };
+    // Check Staff collection (case-insensitive) by email or staff_id (Payroll ID)
+    const staff = await Staff.findOne({
+      $or: [
+        { email: emailRegex },
+        { staff_id: emailRegex }
+      ]
+    }).select("+password");
+    if (!staff) {
+      return res.status(401).json({ message: "Invalid email/Payroll ID or password." });
     }
+
+    const isMatch = await staff.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid email/Payroll ID or password." });
+    }
+
+    token = jwt.sign(
+      { _id: staff.user_id, staff_id: staff._id.toString(), Role: "Staff" },
+      process.env.JWT_SECRETKEY,
+      { expiresIn: "30d" }
+    );
+    userData = {
+      _id: staff._id,
+      name: `${staff.f_name} ${staff.l_name}`,
+      email: staff.email,
+      role: "staff",
+    };
 
     return res.status(200).json({
       message: "Logged In",

@@ -502,3 +502,43 @@ exports.getCustomerOrders = async (req, res) => {
         });
     }
 };
+
+exports.getCustomerOrder = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+
+        const orderData = await Order.findById(orderId);
+        if (!orderData) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found',
+            });
+        }
+
+        let responseData = orderData.toObject();
+
+        if (orderData.customer_id) {
+            let customerData = await WebCustomer.findById(orderData.customer_id);
+            if (customerData) {
+                const customerObj = customerData.toObject();
+                if (!customerObj.address && Array.isArray(customerObj.addresses) && customerObj.addresses.length > 0) {
+                    const defaultAddr = customerObj.addresses.find(a => a.is_default) || customerObj.addresses[0];
+                    customerObj.address = `${defaultAddr.address}, ${defaultAddr.city}, ${defaultAddr.pincode}`;
+                }
+                responseData.customer_details = customerObj;
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            data: responseData,
+        });
+    } catch (error) {
+        console.error('Error fetching customer order details:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching customer order details',
+            error: error.message,
+        });
+    }
+};

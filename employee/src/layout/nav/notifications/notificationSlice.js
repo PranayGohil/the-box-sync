@@ -74,15 +74,17 @@ export const fetchNotifications = () => async (dispatch, getState) => {
     const headers = { Authorization: `Bearer ${token}` };
     const api = process.env.REACT_APP_API;
 
-    const [profileRes, leaveRes, assetRes] = await Promise.all([
+    const [profileRes, leaveRes, assetRes, feedbackRes] = await Promise.all([
       axios.get(`${api}/staff/get/${currentUser._id}`, { headers }).catch(() => null),
       axios.get(`${api}/leave/requests`, { headers }).catch(() => null),
       axios.get(`${api}/assets/requests`, { headers }).catch(() => null),
+      axios.get(`${api}/feedback/my`, { headers }).catch(() => null),
     ]);
 
     const profile = profileRes?.data?.success ? profileRes.data.data : null;
     const leaveRequests = leaveRes?.data?.success ? leaveRes.data.data : [];
     const assetRequests = assetRes?.data?.success ? assetRes.data.data : [];
+    const feedbacks = feedbackRes?.data?.success ? feedbackRes.data.data : [];
 
     const storedRegs = JSON.parse(localStorage.getItem('regularization_requests') || '[]');
     const myRegs = storedRegs; 
@@ -131,6 +133,18 @@ export const fetchNotifications = () => async (dispatch, getState) => {
           detail: `Your attendance regularization request for ${formatDateSafely(req.date)} has been ${req.status.toUpperCase()}.`,
           link: '#/',
           date: formatDateSafely(req.date),
+        });
+      }
+    });
+
+    feedbacks.forEach(req => {
+      if (req.hr_reply) {
+        notifications.push({
+          id: `feedback-reply-${req._id}-${req.replied_at || 'reply'}`,
+          img: '/img/profile/profile-5.webp',
+          detail: `HR replied to your ${req.type} "${req.title}": "${req.hr_reply.substring(0, 40)}${req.hr_reply.length > 40 ? '...' : ''}"`,
+          link: '#/',
+          date: formatDateSafely(req.replied_at || req.updatedAt),
         });
       }
     });

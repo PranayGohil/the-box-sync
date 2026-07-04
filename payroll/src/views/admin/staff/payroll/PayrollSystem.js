@@ -12,6 +12,7 @@ import LeavePolicy from './LeavePolicy';
 import LeaveRequests from './LeaveRequests';
 import SalaryAdvances from './SalaryAdvances';
 import PayrollSettings from './PayrollSettings';
+import RosterManagement from '../attandance/RosterManagement';
 
 const NavContent = () => {
   return (
@@ -202,6 +203,7 @@ const PayrollSystem = () => {
             <Route exact path="/payroll/leave-requests" render={() => <LeaveRequests />} />
             <Route exact path="/payroll/advances" render={() => <SalaryAdvances />} />
             <Route exact path="/payroll/settings" render={() => <PayrollSettings />} />
+            <Route exact path="/payroll/roster" render={() => <RosterManagement />} />
           </Switch>
         </Col>
       </Row>

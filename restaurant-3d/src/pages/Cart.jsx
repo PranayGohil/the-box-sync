@@ -94,7 +94,7 @@ function CartItem({ item }) {
 }
 
 export default function Cart() {
-  const { items, subtotal, tax, delivery, total, clearCart } = useCart();
+  const { items, subtotal, tax, delivery, total, totalTaxRatePercent = 0, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { restaurantCode } = useRestaurant();
@@ -160,7 +160,7 @@ export default function Cart() {
                   <span className="text-white">{delivery === 0 ? 'Free' : `₹${delivery.toFixed(2)}`}</span>
                 </div>
                 <div className="d-flex justify-content-between small">
-                  <span className="text-white-60">Tax (10%)</span>
+                  <span className="text-white-60">Tax (${totalTaxRatePercent}%)</span>
                   <span className="text-white">₹{tax.toFixed(2)}</span>
                 </div>
               </div>

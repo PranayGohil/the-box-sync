@@ -85,13 +85,29 @@ export const fetchNotifications = () => async (dispatch) => {
     const leaveRes = await axios.get(`${api}/leave/requests?status=pending`, { headers }).catch(() => null);
     const pendingLeaves = leaveRes?.data?.success ? leaveRes.data.data : [];
 
+    // Fetch feedback & complaints
+    const feedbacksRes = await axios.get(`${api}/feedback/all`, { headers }).catch(() => null);
+    const feedbacks = feedbacksRes?.data?.success ? feedbacksRes.data.data : [];
+    const openFeedbacks = feedbacks.filter(f => f.status === 'open');
+
     // Fetch regularization requests from localStorage
     const storedRegs = JSON.parse(localStorage.getItem('regularization_requests') || '[]');
     const pendingRegs = storedRegs.filter(r => r.status === 'pending');
 
     const notifications = [];
 
-    // 1. Resignations
+    // 1. Feedbacks & Complaints
+    openFeedbacks.forEach(f => {
+      notifications.push({
+        id: `feedback-${f._id}`,
+        img: f.staff_id?.photo && !f.is_anonymous ? `${process.env.REACT_APP_UPLOAD_DIR}${f.staff_id.photo}` : '/img/profile/profile-5.webp',
+        detail: `New ${f.type} submitted: "${f.title}" by ${f.is_anonymous ? 'Anonymous Employee' : `${f.staff_id?.f_name || ''} ${f.staff_id?.l_name || ''}`}.`,
+        link: '/feedbacks',
+        date: formatDateSafely(f.createdAt),
+      });
+    });
+
+    // 2. Resignations
     pendingResignations.forEach(r => {
       notifications.push({
         id: `resignation-${r._id}`,

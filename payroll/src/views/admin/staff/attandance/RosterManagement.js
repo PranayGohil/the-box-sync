@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
 import { Row, Col, Card, Button, Form, Spinner, Dropdown, Badge, InputGroup, Modal, Table } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -85,12 +86,13 @@ const customStyles = `
 `;
 
 export default function RosterManagement() {
-  const title = 'Roster Management';
+  const history = useHistory();
+  const title = 'Shift Management';
   const description = 'Assign shifts and weekly offs to staff members';
   const breadcrumbs = [
     { to: '', text: 'Home' },
-    { to: 'attendance', text: 'Attendance' },
-    { to: 'attendance/roster', text: 'Roster' },
+    { to: 'payroll/settings', text: 'Settings' },
+    { to: 'payroll/roster', text: 'Shifts' },
   ];
 
   // Helper to get Monday of the current week
@@ -280,7 +282,7 @@ export default function RosterManagement() {
   const handleSaveRoster = async () => {
     // Save to localStorage to persist across week navigation
     localStorage.setItem('roster_data', JSON.stringify(rosterData));
-    toast.success('Roster saved successfully!');
+    toast.success('Shifts saved successfully!');
   };
 
   const handleAddShift = () => {
@@ -336,6 +338,11 @@ export default function RosterManagement() {
             <BreadcrumbList items={breadcrumbs} />
           </Col>
           <Col xs="12" md="8" className="d-flex flex-wrap justify-content-md-end align-items-center gap-3">
+            <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm d-flex align-items-center" onClick={() => history.push('/payroll/settings')}>
+              <CsLineIcons icon="arrow-left" className="me-2" size="18" />
+              <span>Back</span>
+            </Button>
+
             <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm d-flex align-items-center" onClick={() => setShowShiftModal(true)}>
               <CsLineIcons icon="gear" className="me-2" size="18" />
               <span>Manage Shifts</span>
@@ -357,7 +364,7 @@ export default function RosterManagement() {
               </Button>
             </div>
 
-            <Button className="custom-btn-solid px-4 rounded-pill shadow-sm d-flex align-items-center" onClick={handleSaveRoster}>
+            <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm d-flex align-items-center" onClick={handleSaveRoster}>
               <CsLineIcons icon="save" className="me-2" size="18" />
               <span>Save Changes</span>
             </Button>
@@ -403,7 +410,7 @@ export default function RosterManagement() {
               </Dropdown>
             </Col>
             <Col xs={12} md={4}>
-              <Button className="custom-btn-solid rounded-pill px-4 shadow-sm w-100 py-2 h-100" onClick={handleBulkApply}>
+              <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm w-100 py-2 h-100" onClick={handleBulkApply}>
                 Apply to {selectedStaff.length} Selected
               </Button>
             </Col>
@@ -608,7 +615,7 @@ export default function RosterManagement() {
                 </Form.Group>
               </Col>
               <Col xs={12} md={3}>
-                <Button type="button" className="custom-btn-solid w-100" onClick={handleAddShift}>
+                <Button type="button" variant="outline-primary" className="rounded-pill shadow-sm w-100" onClick={handleAddShift}>
                   + Add Shift
                 </Button>
               </Col>

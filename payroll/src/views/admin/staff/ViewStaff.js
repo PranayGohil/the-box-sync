@@ -138,6 +138,9 @@ const ViewStaff = () => {
                     <option key={b._id} value={b._id}>{b.name}</option>
                   ))}
                 </select>
+                <Button className="view-staff-custom-btn-outline d-flex align-items-center gap-2" onClick={() => history.push('/organization')}>
+                  <CsLineIcons icon="diagram-1" size="18" /> Org Structure
+                </Button>
                 <Button className="view-staff-custom-btn-outline d-flex align-items-center gap-2" onClick={() => history.push('/staff/add')}>
                   <CsLineIcons icon="plus" size="18" /> Add Staff
                 </Button>

@@ -495,6 +495,10 @@ export default function ManagePayroll() {
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
                     <Col xs="12" md="6" className="d-flex flex-wrap justify-content-md-end align-items-center gap-3">
+                        <Button className="custom-btn-primary-outline px-4 rounded-pill shadow-sm d-flex align-items-center" style={{ height: '40px' }} onClick={() => history.push('/dashboard')}>
+                            <CsLineIcons icon="arrow-left" className="me-2" size="18" />
+                            <span>Back</span>
+                        </Button>
                         <Button className="custom-btn-primary-outline px-4 rounded-pill shadow-sm d-flex align-items-center" style={{ height: '40px' }} as={Link} to="/staff/payroll/generate">
                             <CsLineIcons icon="plus" className="me-2" size="18" />
                             <span>Generate New</span>

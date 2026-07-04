@@ -228,7 +228,9 @@ exports.getWebsiteSettingsByCode = async (req, res) => {
       country: user.country || "",
       pincode: user.pincode || "",
       // Include real feedbacks from user model
-      restaurant_feedbacks: user.feedbacks || []
+      restaurant_feedbacks: user.feedbacks || [],
+      restaurant_token: user.restaurant_token || "",
+      taxInfo: user.taxInfo || { cgst: 0, sgst: 0, vat: 0 }
     };
 
     res.json(response);
