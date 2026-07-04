@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 const DietIndicator = ({ type }) => {
   const color = type === 'veg' ? '#22c55e' : type === 'egg' ? '#eab308' : '#ef4444';
   return (
-    <div 
+    <div
       className="d-flex align-items-center justify-content-center border border-2 rounded-1"
       style={{ width: '18px', height: '18px', borderColor: color, padding: '2px' }}
     >
@@ -18,7 +18,7 @@ const DietIndicator = ({ type }) => {
 };
 
 export default function MenuCard({ item, index = 0 }) {
-  const cardRef   = useRef(null);
+  const cardRef = useRef(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [hovered, setHovered] = useState(false);
   const { addItem, items } = useCart();
@@ -36,17 +36,17 @@ export default function MenuCard({ item, index = 0 }) {
       return false;
     }
   });
-  
-  const imageUrl = item.image 
-    ? (item.image.startsWith('http') || item.image.includes('/uploads/') ? item.image : `/uploads/${item.image.replace(/^\/+/, '')}`) 
+
+  const imageUrl = item.image
+    ? (item.image.startsWith('http') || item.image.includes('/uploads/') ? item.image : `/uploads/${item.image.replace(/^\/+/, '')}`)
     : null;
 
   const handleMouseMove = (e) => {
     const card = cardRef.current;
     if (!card) return;
     const { left, top, width, height } = card.getBoundingClientRect();
-    const x = ((e.clientX - left) / width  - 0.5) * 15;
-    const y = ((e.clientY - top)  / height - 0.5) * -15;
+    const x = ((e.clientX - left) / width - 0.5) * 15;
+    const y = ((e.clientY - top) / height - 0.5) * -15;
     setTilt({ x, y });
   };
 
@@ -79,7 +79,7 @@ export default function MenuCard({ item, index = 0 }) {
     try {
       const saved = localStorage.getItem(key);
       savedList = saved ? JSON.parse(saved) : [];
-    } catch (err) {}
+    } catch (err) { }
 
     let newSaved;
     if (savedList.includes(item.id)) {
@@ -136,19 +136,19 @@ export default function MenuCard({ item, index = 0 }) {
         )}
         {/* Diet Indicator */}
         <div className="position-absolute glass rounded-2 p-1 px-2 d-flex align-items-center gap-2" style={{ top: '10px', left: '10px', zIndex: 2 }}>
-           <DietIndicator type={item.dietType} />
-           <span className="text-white fw-bold x-small text-uppercase tracking-wider" style={{ fontSize: '9px' }}>{item.dietType}</span>
+          <DietIndicator type={item.dietType} />
+          <span className="text-white fw-bold x-small text-uppercase tracking-wider" style={{ fontSize: '9px' }}>{item.dietType}</span>
         </div>
 
         {/* Highlight Icon (Heart Toggle) */}
-        <button 
+        <button
           onClick={handleFavoriteClick}
-          className="position-absolute rounded-circle d-flex align-items-center justify-content-center shadow-lg border-0" 
-          style={{ 
-            top: '10px', 
-            right: '10px', 
-            width: '28px', 
-            height: '28px', 
+          className="position-absolute rounded-circle d-flex align-items-center justify-content-center shadow-lg border-0"
+          style={{
+            top: '10px',
+            right: '10px',
+            width: '28px',
+            height: '28px',
             zIndex: 2,
             background: isSaved ? '#ef4444' : 'rgba(0,0,0,0.5)',
             color: '#fff',
@@ -169,10 +169,10 @@ export default function MenuCard({ item, index = 0 }) {
 
       {/* Body */}
       <div className="p-3 d-flex flex-column flex-grow-1">
-        <h6 className="font-display fw-bold text-white mb-2 text-truncate" title={item.name}>
+        <h6 className="fw-bold text-white mb-2 text-truncate" title={item.name}>
           {item.name}
         </h6>
-        
+
         <p className="text-white-60 x-small mb-3" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: '30px' }}>
           {item.description}
         </p>
@@ -182,9 +182,8 @@ export default function MenuCard({ item, index = 0 }) {
           <span className="text-brand-400 fw-bold fs-5">₹{item.price.toFixed(0)}</span>
           <button
             onClick={handleAdd}
-            className={`btn d-flex align-items-center gap-2 px-3 py-1 fw-bold rounded-pill transition-all ${
-              inCart ? 'bg-brand-500 bg-opacity-20 text-brand-400 border border-brand-500' : 'bg-brand-500 text-white shadow-brand hover:scale-105'
-            }`}
+            className={`btn d-flex align-items-center gap-2 px-3 py-1 fw-bold rounded-pill transition-all ${inCart ? 'bg-brand-500 bg-opacity-20 text-brand-400 border border-brand-500' : 'bg-brand-500 text-white shadow-brand hover:scale-105'
+              }`}
             style={{ fontSize: '13px' }}
           >
             <ShoppingCart size={14} />

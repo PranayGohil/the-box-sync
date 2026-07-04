@@ -58,7 +58,7 @@ const Player = () => {
               <iframe
                 title="Google Maps"
                 className="h-100 w-100"
-                src="https://www.google.com/maps/embed/v1/place?q=place_id:ChIJMYU_e2_CzRIR_JzEOkx493Q&key=AIzaSyCO8MfadmlotuuHC8wmjwL_46I5QAMIiRU"
+                src={`https://www.google.com/maps/embed/v1/place?q=place_id:ChIJMYU_e2_CzRIR_JzEOkx493Q&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`}
                 allowFullScreen
               />
             </Card>
