@@ -150,7 +150,7 @@ export default function Cart() {
             <div data-reveal="right" data-delay="0.2" className="glass rounded-4 p-4 position-sticky" style={{ top: '8rem' }}>
               <h5 className="fw-semibold text-white mb-4">Summary</h5>
 
-              <div className="d-flex flex-column gap-3 pb-3 mb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              <div className="d-flex flex-column gap-3 pb-3 mb-3">
                 <div className="d-flex justify-content-between small">
                   <span className="text-white-60">Subtotal</span>
                   <span className="text-white">₹{subtotal.toFixed(2)}</span>
@@ -160,7 +160,7 @@ export default function Cart() {
                   <span className="text-white">{delivery === 0 ? 'Free' : `₹${delivery.toFixed(2)}`}</span>
                 </div>
                 <div className="d-flex justify-content-between small">
-                  <span className="text-white-60">Tax (${totalTaxRatePercent}%)</span>
+                  <span className="text-white-60">Tax ({totalTaxRatePercent}%)</span>
                   <span className="text-white">₹{tax.toFixed(2)}</span>
                 </div>
               </div>
