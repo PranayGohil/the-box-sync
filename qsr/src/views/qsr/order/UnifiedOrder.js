@@ -72,6 +72,11 @@ const DEFAULT_PAYMENT_DATA = {
   paymentType: 'Cash',
 };
 
+const getLocalDateTimeString = (date = new Date()) => {
+  const tzoffset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - tzoffset).toISOString().slice(0, 16);
+};
+
 // ── Component ──────────────────────────────────────────────────────────────────
 const UnifiedOrder = () => {
   const history = useHistory();
@@ -91,6 +96,7 @@ const UnifiedOrder = () => {
 
   // ── Order Type ────────────────────────────────────────────────────────────
   const [orderType, setOrderType] = useState(defaultType);
+  const [orderDate, setOrderDate] = useState(getLocalDateTimeString());
   const isEditMode = mode === 'edit';
 
   const title = `${isEditMode ? 'Edit' : 'New'} ${orderType} Order`;
@@ -227,6 +233,9 @@ const UnifiedOrder = () => {
       setTokenNumber(order.token || null);
       setCustomerInfo(custInfo);
       setOrderNo(order.order_no || '');
+      if (order.order_date) {
+        setOrderDate(getLocalDateTimeString(new Date(order.order_date)));
+      }
       initialStateRef.current = {
         orderItems: JSON.parse(JSON.stringify(items)),
         customerInfo: JSON.parse(JSON.stringify(custInfo)),
@@ -430,6 +439,7 @@ const UnifiedOrder = () => {
   const buildPayload = (status, completeAll = false) => {
     const orderData = {
       order_type: orderType,
+      order_date: orderDate ? new Date(orderDate) : new Date(),
       order_items: orderItems.map((item) => {
         let itemStatus = item.status || 'Pending';
         if (completeAll) {
@@ -815,8 +825,23 @@ const UnifiedOrder = () => {
               </option>
             ))}
           </Form.Select>
-          <div className="text-muted small fw-semibold" style={{ flexShrink: 0 }}>
-            {new Date().toLocaleDateString('en-IN')}
+          <div className="d-flex align-items-center gap-1" style={{ flexShrink: 0 }}>
+            <span className="text-muted small fw-semibold">Date:</span>
+            <Form.Control
+              type="datetime-local"
+              size="sm"
+              value={orderDate}
+              onChange={(e) => setOrderDate(e.target.value)}
+              style={{
+                borderRadius: '50px',
+                borderColor: 'rgba(35,179,244,0.35)',
+                color: '#23b3f4',
+                fontWeight: 700,
+                fontSize: '12px',
+                padding: '0.15rem 0.5rem',
+                maxWidth: '185px',
+              }}
+            />
           </div>
         </div>
 
