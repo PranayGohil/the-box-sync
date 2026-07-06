@@ -21,6 +21,132 @@ export default function Profile() {
   const [cityVal, setCityVal] = useState('');
   const [stateVal, setStateVal] = useState('');
   const [pincodeVal, setPincodeVal] = useState('');
+  const [tagVal, setTagVal] = useState('Home');
+  const [latVal, setLatVal] = useState('');
+  const [lngVal, setLngVal] = useState('');
+  const [tempLat, setTempLat] = useState('');
+  const [tempLng, setTempLng] = useState('');
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const mapInstance = useRef(null);
+
+  // Dynamic Map Picker Script & Leaflet initialization loader
+  useEffect(() => {
+    if (!showMapModal) return;
+
+    // Load Leaflet css
+    let leafletCss = document.getElementById('leaflet-css');
+    if (!leafletCss) {
+      leafletCss = document.createElement('link');
+      leafletCss.id = 'leaflet-css';
+      leafletCss.rel = 'stylesheet';
+      leafletCss.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(leafletCss);
+    }
+
+    // Load Leaflet js
+    let leafletJs = document.getElementById('leaflet-js');
+    if (!leafletJs) {
+      leafletJs = document.createElement('script');
+      leafletJs.id = 'leaflet-js';
+      leafletJs.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      document.head.appendChild(leafletJs);
+    }
+
+    let activeMarker = null;
+
+    const initMap = () => {
+      if (!window.L || !document.getElementById('map-container')) return;
+      
+      const defaultLat = latVal || 23.0225;
+      const defaultLng = lngVal || 72.5714;
+      
+      const map = window.L.map('map-container').setView([defaultLat, defaultLng], 14);
+      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Create or position marker
+      if (latVal && lngVal) {
+        activeMarker = window.L.marker([latVal, lngVal]).addTo(map);
+      }
+
+      map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        if (activeMarker) {
+          activeMarker.setLatLng(e.latlng);
+        } else {
+          activeMarker = window.L.marker(e.latlng).addTo(map);
+        }
+        setTempLat(lat);
+        setTempLng(lng);
+      });
+
+      mapInstance.current = map;
+    };
+
+    if (window.L) {
+      setTimeout(initMap, 150);
+    } else {
+      leafletJs.onload = () => setTimeout(initMap, 150);
+    }
+
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
+  }, [showMapModal]);
+
+  const handleSearchLocation = async (e) => {
+    if (e) e.preventDefault();
+    if (!searchQuery.trim() || !mapInstance.current) return;
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        const numLat = Number(lat);
+        const numLon = Number(lon);
+        mapInstance.current.setView([numLat, numLon], 15);
+        setTempLat(numLat);
+        setTempLng(numLon);
+        
+        // Add marker if not already present
+        if (window.L) {
+          const map = mapInstance.current;
+          // Clear previous layers that are markers if needed or let Leaflet handle
+          const latlng = [numLat, numLon];
+          // We can trigger click/marker logic
+          map.fireEvent('click', { latlng: window.L.latLng(numLat, numLon) });
+        }
+        toast.success('Location found on map!');
+      } else {
+        toast.error('Location not found. Please try a different query.');
+      }
+    } catch (err) {
+      toast.error('Search failed.');
+    }
+  };
+
+  const reverseGeocode = async (lat, lng) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      const data = await res.json();
+      if (data && data.address) {
+        const road = data.address.road || data.address.suburb || data.address.neighbourhood || '';
+        const house = data.address.house_number || '';
+        setAddressVal([house, road, data.address.amenity || ''].filter(Boolean).join(' ') || data.display_name);
+        setCityVal(data.address.city || data.address.town || data.address.village || '');
+        setStateVal(data.address.state || '');
+        setPincodeVal(data.address.postcode || '');
+        toast.success('Address details auto-filled!');
+      }
+    } catch (err) {
+      console.error('Error reverse geocoding', err);
+    }
+  };
 
   // Local storage saved item ids
   const [savedItemIds, setSavedItemIds] = useState([]);
@@ -183,7 +309,10 @@ export default function Profile() {
           city: cityVal, 
           state: stateVal || 'State', 
           country: 'India', 
-          pincode: pincodeVal 
+          pincode: pincodeVal,
+          tag: tagVal,
+          latitude: latVal || undefined,
+          longitude: lngVal || undefined
         })
       });
       const data = await res.json();
@@ -193,6 +322,9 @@ export default function Profile() {
         setCityVal('');
         setStateVal('');
         setPincodeVal('');
+        setTagVal('Home');
+        setLatVal('');
+        setLngVal('');
         refreshUser();
       } else {
         toast.error(data.message || 'Failed to add address');
@@ -444,8 +576,20 @@ export default function Profile() {
                 user.addresses.map((addr) => (
                   <div key={addr._id} className="d-flex justify-content-between align-items-center glass p-3 rounded-4 mb-2 border border-white-10">
                     <div>
-                      <p className="text-white mb-0 fw-medium">{addr.address}</p>
+                      <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                        <p className="text-white mb-0 fw-medium">{addr.address}</p>
+                        {addr.tag && (
+                          <span className="badge bg-brand-400 px-2 py-0.5 text-white rounded text-uppercase" style={{ fontSize: '9px', fontWeight: 'bold' }}>
+                            {addr.tag}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-white-60 small mb-0">{addr.city}, {addr.state}, {addr.pincode}</p>
+                      {addr.latitude && addr.longitude && (
+                        <p className="text-white-40 small mb-0 font-monospace" style={{ fontSize: '10px' }}>
+                          Location: {Number(addr.latitude).toFixed(5)}, {Number(addr.longitude).toFixed(5)}
+                        </p>
+                      )}
                     </div>
                     <button 
                       onClick={() => handleDeleteAddress(addr._id)}
@@ -508,13 +652,169 @@ export default function Profile() {
                     required 
                   />
                 </div>
-                <div className="col-12 mt-3">
+
+                {/* Zomato/Swiggy-style Tag Selector */}
+                <div className="col-12 col-md-6 mt-3">
+                  <label className="form-label small text-white-60 mb-2 d-block">Save Address As</label>
+                  <div className="d-flex gap-2">
+                    {['Home', 'Work', 'Other'].map(tag => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => setTagVal(tag)}
+                        className={`px-4 py-2 rounded-pill small fw-semibold transition-all ${
+                          tagVal === tag 
+                            ? 'bg-brand-400 text-white border-0' 
+                            : 'glass border border-white-10 text-white-60 hover:text-white'
+                        }`}
+                        style={{ minWidth: '80px' }}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Map coordinates picker trigger */}
+                <div className="col-12 col-md-6 mt-3 d-flex flex-column justify-content-end">
+                  <label className="form-label small text-white-60 mb-2">Location Pin (Optional)</label>
+                  <div className="d-flex align-items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTempLat(latVal || 23.0225);
+                        setTempLng(lngVal || 72.5714);
+                        setShowMapModal(true);
+                      }}
+                      className="btn-ghost px-4 py-2.5 small d-flex align-items-center gap-1.5 border border-white-10 rounded-pill"
+                    >
+                      <MapPin size={14} className="text-brand-400" /> Choose on Map
+                    </button>
+                    {latVal && lngVal ? (
+                      <span className="small text-brand-400 font-monospace">
+                        Pin Selected ({Number(latVal).toFixed(4)}, {Number(lngVal).toFixed(4)})
+                      </span>
+                    ) : (
+                      <span className="small text-white-40 italic">No pin placed</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="col-12 mt-4">
                   <button type="submit" className="btn-primary py-2.5 px-4 font-semibold shadow">
                     Save Address
                   </button>
                 </div>
               </form>
             </div>
+
+            {/* Map Picker Modal */}
+            {showMapModal && (
+              <div 
+                className="position-fixed d-flex align-items-center justify-content-center" 
+                style={{ 
+                  zIndex: 9999, 
+                  background: 'rgba(0, 0, 0, 0.75)',
+                  backdropFilter: 'blur(5px)',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0
+                }}
+              >
+                <div className="glass rounded-4 p-4 w-100 max-w-lg mx-3 border border-white-15 shadow-2xl position-relative" style={{ maxWidth: '600px' }}>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h5 className="text-white fw-bold mb-0">Select Delivery Pin Location</h5>
+                    <button 
+                      onClick={() => setShowMapModal(false)}
+                      className="btn bg-transparent text-white-60 hover:text-white border-0 p-1"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* Geocoding Search Input */}
+                  <form onSubmit={handleSearchLocation} className="d-flex gap-2 mb-3">
+                    <input 
+                      type="text" 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="input-field flex-grow-1 py-2 px-3 small"
+                      placeholder="Search locality, street name..."
+                    />
+                    <button type="submit" className="btn-primary py-2 px-3 small">
+                      Search
+                    </button>
+                  </form>
+
+                  {/* Map Container */}
+                  <div 
+                    id="map-container" 
+                    className="rounded-3 mb-3 border border-white-10" 
+                    style={{ height: '320px', background: '#1A1A1A' }}
+                  />
+
+                  {/* Info & Geolocation detector */}
+                  <div className="d-flex flex-column sm:flex-row justify-content-between align-items-start sm:align-items-center gap-3">
+                    <div>
+                      {tempLat && tempLng ? (
+                        <div className="small font-monospace text-brand-400">
+                          Selected: {Number(tempLat).toFixed(5)}, {Number(tempLng).toFixed(5)}
+                        </div>
+                      ) : (
+                        <div className="small text-white-40 italic">Click on map to place pin</div>
+                      )}
+                    </div>
+                    <div className="d-flex gap-2 w-100 sm:w-auto justify-content-end">
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(
+                              (pos) => {
+                                const { latitude, longitude } = pos.coords;
+                                setTempLat(latitude);
+                                setTempLng(longitude);
+                                if (mapInstance.current) {
+                                  mapInstance.current.setView([latitude, longitude], 15);
+                                  if (window.L) {
+                                    mapInstance.current.fireEvent('click', { latlng: window.L.latLng(latitude, longitude) });
+                                  }
+                                }
+                              },
+                              (err) => toast.error('Error fetching geolocation permissions')
+                            );
+                          } else {
+                            toast.error('Geolocation is not supported by your browser.');
+                          }
+                        }}
+                        className="btn-ghost py-2 px-3 small border-white-10 rounded"
+                        style={{ fontSize: '12px' }}
+                      >
+                        Locate Me
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          if (tempLat && tempLng) {
+                            setLatVal(tempLat);
+                            setLngVal(tempLng);
+                            setShowMapModal(false);
+                            reverseGeocode(tempLat, tempLng);
+                          } else {
+                            toast.error('Please select a pin location on the map');
+                          }
+                        }}
+                        className="btn-primary py-2 px-4 small rounded"
+                        style={{ fontSize: '12px' }}
+                      >
+                        Confirm Location
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

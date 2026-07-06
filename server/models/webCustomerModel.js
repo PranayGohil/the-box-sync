@@ -33,6 +33,16 @@ const webCustomerSchema = new Schema({
             pincode: {
                 type: String,
             },
+            tag: {
+                type: String,
+                default: "Home",
+            },
+            latitude: {
+                type: Number,
+            },
+            longitude: {
+                type: Number,
+            },
             is_default: {
                 type: Boolean,
                 default: false,

@@ -44,6 +44,8 @@ const validationSchema = Yup.object().shape({
         }),
     })
   ),
+  latitude: Yup.number().typeError('Latitude must be a number').nullable(),
+  longitude: Yup.number().typeError('Longitude must be a number').nullable(),
 });
 
 const ManageWebsite = () => {
@@ -98,6 +100,8 @@ const ManageWebsite = () => {
       legacy_bullets: [],
       contact_details: '',
       map_location: '',
+      latitude: '',
+      longitude: '',
       logo: '',
       testimonials: [],
       social_links: [],
@@ -676,7 +680,34 @@ const ManageWebsite = () => {
               {/* Map Location */}
               <Card className="manage-website-glass-card mb-4 border-0">
                 <Card.Body className="p-4">
-                  <h5 className="manage-website-section-title">Map Location</h5>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h5 className="manage-website-section-title mb-0">Map Location</h5>
+                    <Button 
+                      variant="outline-primary" 
+                      size="sm" 
+                      className="manage-menu-custom-btn-outline px-3 py-1.5"
+                      style={{ fontSize: '11px', borderRadius: '50px' }}
+                      onClick={() => {
+                        if (navigator.geolocation) {
+                          navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                              setFieldValue('latitude', position.coords.latitude);
+                              setFieldValue('longitude', position.coords.longitude);
+                              toast.success('Coordinates detected successfully!');
+                            },
+                            (error) => {
+                              toast.error('Permission denied or location unavailable.');
+                            }
+                          );
+                        } else {
+                          toast.error('Geolocation is not supported by your browser.');
+                        }
+                      }}
+                    >
+                      <CsLineIcons icon="pin" size="12" className="me-1" /> Detect Location
+                    </Button>
+                  </div>
+                  
                   <Form.Group className="mb-3">
                     <Form.Label className="small fw-bold text-muted">Google Maps Embed Link / URL</Form.Label>
                     <Form.Control
@@ -689,6 +720,39 @@ const ManageWebsite = () => {
                       placeholder="Paste the <iframe src='...'> or just the map link here"
                     />
                   </Form.Group>
+
+                  <Row className="g-3">
+                    <Col xs="6">
+                      <Form.Group>
+                        <Form.Label className="small fw-bold text-muted">Latitude</Form.Label>
+                        <Form.Control
+                          type="text"
+                          className="manage-website-pill-input"
+                          name="latitude"
+                          value={values.latitude}
+                          onChange={handleChange}
+                          isInvalid={touched.latitude && !!errors.latitude}
+                          placeholder="e.g. 23.0225"
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.latitude}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                    <Col xs="6">
+                      <Form.Group>
+                        <Form.Label className="small fw-bold text-muted">Longitude</Form.Label>
+                        <Form.Control
+                          type="text"
+                          className="manage-website-pill-input"
+                          name="longitude"
+                          value={values.longitude}
+                          onChange={handleChange}
+                          isInvalid={touched.longitude && !!errors.longitude}
+                          placeholder="e.g. 72.5714"
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.longitude}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  </Row>
                 </Card.Body>
               </Card>
 

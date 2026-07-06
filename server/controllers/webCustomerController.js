@@ -174,7 +174,7 @@ exports.updateCustomer = async (req, res) => {
 exports.addAddress = async (req, res) => {
     try {
         const { id } = req.params;
-        const { address, city, state, country, pincode } = req.body;
+        const { address, city, state, country, pincode, tag, latitude, longitude } = req.body;
 
         const customer = await WebCustomer.findById(id);
         if (!customer) {
@@ -190,6 +190,9 @@ exports.addAddress = async (req, res) => {
             state,
             country,
             pincode,
+            tag: tag || "Home",
+            latitude: latitude !== undefined ? Number(latitude) : undefined,
+            longitude: longitude !== undefined ? Number(longitude) : undefined,
         });
 
         await customer.save();
@@ -212,7 +215,7 @@ exports.addAddress = async (req, res) => {
 exports.editAddress = async (req, res) => {
     try {
         const { id } = req.params;
-        const { addressId, address, city, state, country, pincode } = req.body;
+        const { addressId, address, city, state, country, pincode, tag, latitude, longitude } = req.body;
 
         const customer = await WebCustomer.findById(id);
         if (!customer) {
@@ -231,12 +234,15 @@ exports.editAddress = async (req, res) => {
         }
 
         customer.addresses[addressIndex] = {
-            ...customer.addresses[addressIndex],
+            ...customer.addresses[addressIndex].toObject ? customer.addresses[addressIndex].toObject() : customer.addresses[addressIndex],
             address,
             city,
             state,
             country,
             pincode,
+            tag: tag || customer.addresses[addressIndex].tag || "Home",
+            latitude: latitude !== undefined ? Number(latitude) : customer.addresses[addressIndex].latitude,
+            longitude: longitude !== undefined ? Number(longitude) : customer.addresses[addressIndex].longitude,
         };
 
         await customer.save();

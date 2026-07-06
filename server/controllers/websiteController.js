@@ -96,6 +96,8 @@ exports.updateWebsiteSettings = async (req, res) => {
       testimonials,
       social_links,
       map_location,
+      latitude,
+      longitude,
       show_reservation,
     } = req.body;
 
@@ -148,6 +150,8 @@ exports.updateWebsiteSettings = async (req, res) => {
         testimonials: (typeof testimonials === 'string' && testimonials.trim()) ? JSON.parse(testimonials) : (Array.isArray(testimonials) ? testimonials : []),
         social_links: (typeof social_links === 'string' && social_links.trim()) ? JSON.parse(social_links) : (Array.isArray(social_links) ? social_links : []),
         map_location,
+        latitude: latitude !== undefined && latitude !== '' ? Number(latitude) : undefined,
+        longitude: longitude !== undefined && longitude !== '' ? Number(longitude) : undefined,
         show_reservation: show_reservation !== undefined ? show_reservation : true,
       },
       { new: true, upsert: true }
