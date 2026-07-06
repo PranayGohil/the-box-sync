@@ -124,7 +124,19 @@ const payrollConfigSchema = new Schema(
 <p>Please sign and return this letter to indicate your acceptance of this offer.</p>
 <p><br></p>
 <p>Sincerely,</p>
-<p>HR Department</p>` }
+<p>HR Department</p>` },
+      joining_letter_pdf_fields: {
+        type: [
+          {
+            field_key: { type: String, required: true },
+            page: { type: Number, default: 1 },
+            x: { type: Number, default: 100 },
+            y: { type: Number, default: 500 },
+            font_size: { type: Number, default: 11 }
+          }
+        ],
+        default: []
+      }
     }
   },
   {

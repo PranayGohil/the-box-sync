@@ -53,6 +53,89 @@ const getTodayIST = () => {
   }).format(new Date());
 };
 
+// Helper: Compile all text and salary bifurcation placeholders for staff member
+const getStaffFieldMap = (staff, config) => {
+  const fields = {
+    first_name: staff.f_name || '',
+    last_name: staff.l_name || '',
+    full_name: `${staff.f_name || ''} ${staff.l_name || ''}`.trim(),
+    job_title: staff.position || '',
+    joining_date: staff.joining_date ? new Date(staff.joining_date).toLocaleDateString('en-IN') : '',
+    staff_id: staff.staff_id || '',
+    email: staff.email || '',
+    phone: staff.phone_no ? String(staff.phone_no) : '',
+    gross_salary: staff.salary ? String(staff.salary) : '0',
+    
+    // Default earnings
+    basic_salary: '0',
+    hra: '0',
+    conveyance: '0',
+    medical_allowance: '0',
+    special_allowance: '0',
+    other_allowance: '0',
+    
+    // Default deductions
+    pf_deduction: '0',
+    esi_deduction: '0',
+    pt_deduction: '0'
+  };
+
+  if (staff.salary_structure) {
+    const earnings = staff.salary_structure.custom_earnings || {};
+    const getVal = (obj, key) => {
+      if (!obj) return 0;
+      if (typeof obj.get === 'function') return obj.get(key) || 0;
+      return obj[key] || 0;
+    };
+
+    fields.basic_salary = String(getVal(earnings, 'basic'));
+    fields.hra = String(getVal(earnings, 'hra'));
+    fields.conveyance = String(getVal(earnings, 'conveyance'));
+    fields.medical_allowance = String(getVal(earnings, 'medical'));
+    fields.special_allowance = String(getVal(earnings, 'special'));
+    fields.other_allowance = String(getVal(earnings, 'other'));
+
+    if (config?.custom_earnings) {
+      config.custom_earnings.forEach(earning => {
+        if (!['basic', 'hra', 'conveyance', 'medical', 'special', 'other'].includes(earning.id)) {
+          fields[earning.id] = String(getVal(earnings, earning.id));
+        }
+      });
+    }
+
+    const statConfig = config?.statutory_config || {};
+    const baseVal = getVal(earnings, 'basic') || staff.salary || 0;
+    const grossVal = staff.salary || 0;
+
+    if (statConfig.pf && statConfig.pf.is_mandatory) {
+      const limit = statConfig.pf.salary_limit || 0;
+      let pfBase = baseVal;
+      if (limit > 0 && pfBase > limit) pfBase = limit;
+      fields.pf_deduction = String(parseFloat((pfBase * (statConfig.pf.employee_percentage / 100)).toFixed(2)));
+    }
+
+    if (statConfig.esi && statConfig.esi.is_mandatory) {
+      const limit = statConfig.esi.gross_limit || 21000;
+      if (grossVal <= limit) {
+        fields.esi_deduction = String(parseFloat((grossVal * (statConfig.esi.employee_percentage / 100)).toFixed(2)));
+      }
+    }
+
+    if (statConfig.pt && statConfig.pt.is_applicable) {
+      let ptAmount = 0;
+      for (const slab of (statConfig.pt.slabs || [])) {
+        if (grossVal >= (slab.min_salary || 0) && (!slab.max_salary || grossVal <= slab.max_salary)) {
+          ptAmount = slab.amount;
+          break;
+        }
+      }
+      fields.pt_deduction = String(ptAmount);
+    }
+  }
+  
+  return fields;
+};
+
 // ── GET /staff/get-positions ──────────────────────────────────────────────────
 const getStaffPositions = async (req, res) => {
   try {
@@ -512,36 +595,73 @@ const sendJoiningLetter = async (req, res) => {
       const templatePath = path.join(__dirname, '..', config.document_templates.joining_letter_pdf);
       if (fs.existsSync(templatePath)) {
         try {
-          const { PDFDocument } = require('pdf-lib');
+          const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
           const tempDoc = await PDFDocument.load(fs.readFileSync(templatePath));
-          const form = tempDoc.getForm();
-          const fields = form.getFields();
           
-          if (fields && fields.length > 0) {
-            fields.forEach(field => {
-              const name = field.getName().toLowerCase();
-              let textVal = '';
-              if (name.includes('first_name') || name.includes('f_name') || name.includes('firstname')) {
-                textVal = staff.f_name || '';
-              } else if (name.includes('last_name') || name.includes('l_name') || name.includes('lastname')) {
-                textVal = staff.l_name || '';
-              } else if (name.includes('name') || name.includes('recipient') || name.includes('employee')) {
-                textVal = `${staff.f_name} ${staff.l_name}`;
-              } else if (name.includes('title') || name.includes('position') || name.includes('role') || name.includes('designation')) {
-                textVal = staff.position || '';
-              } else if (name.includes('date') || name.includes('joining') || name.includes('doj')) {
-                textVal = staff.joining_date ? new Date(staff.joining_date).toLocaleDateString('en-IN') : '';
-              } else if (name.includes('salary') || name.includes('basic') || name.includes('gross') || name.includes('compensation') || name.includes('pay')) {
-                textVal = staff.salary ? staff.salary.toString() : '';
-              } else if (name.includes('staff_id') || name.includes('payroll_id') || name.includes('id') || name.includes('staffid')) {
-                textVal = staff.staff_id || '';
-              }
-              if (textVal && typeof field.setText === 'function') {
-                field.setText(textVal);
+          const pdfFields = config.document_templates.joining_letter_pdf_fields || [];
+          if (pdfFields && pdfFields.length > 0) {
+            console.log(`Rendering PDF fields: ${pdfFields.length} fields found.`);
+            const pages = tempDoc.getPages();
+            
+            const fieldsMap = getStaffFieldMap(staff, config);
+            const font = await tempDoc.embedFont(StandardFonts.Helvetica);
+            
+            pdfFields.forEach(field => {
+              const pageIndex = (field.page || 1) - 1;
+              if (pageIndex >= 0 && pageIndex < pages.length) {
+                const targetPage = pages[pageIndex];
+                const textVal = fieldsMap[field.field_key] || '';
+                const fontSize = Number(field.font_size) || 11;
+                
+                // Calculate width to cover text and draw white background rectangle
+                const textWidth = font.widthOfTextAtSize(textVal, fontSize);
+                targetPage.drawRectangle({
+                  x: Number(field.x) || 100,
+                  y: (Number(field.y) || 500) - 2,
+                  width: textWidth + 4,
+                  height: fontSize + 4,
+                  color: rgb(1, 1, 1),
+                });
+                
+                targetPage.drawText(textVal, {
+                  x: Number(field.x) || 100,
+                  y: Number(field.y) || 500,
+                  size: fontSize,
+                  font: font
+                });
               }
             });
-            form.flatten();
             pdfBuffer = Buffer.from(await tempDoc.save());
+          } else {
+            const form = tempDoc.getForm();
+            const fields = form.getFields();
+            
+            if (fields && fields.length > 0) {
+              fields.forEach(field => {
+                const name = field.getName().toLowerCase();
+                let textVal = '';
+                if (name.includes('first_name') || name.includes('f_name') || name.includes('firstname')) {
+                  textVal = staff.f_name || '';
+                } else if (name.includes('last_name') || name.includes('l_name') || name.includes('lastname')) {
+                  textVal = staff.l_name || '';
+                } else if (name.includes('name') || name.includes('recipient') || name.includes('employee')) {
+                  textVal = `${staff.f_name} ${staff.l_name}`;
+                } else if (name.includes('title') || name.includes('position') || name.includes('role') || name.includes('designation')) {
+                  textVal = staff.position || '';
+                } else if (name.includes('date') || name.includes('joining') || name.includes('doj')) {
+                  textVal = staff.joining_date ? new Date(staff.joining_date).toLocaleDateString('en-IN') : '';
+                } else if (name.includes('salary') || name.includes('basic') || name.includes('gross') || name.includes('compensation') || name.includes('pay')) {
+                  textVal = staff.salary ? staff.salary.toString() : '';
+                } else if (name.includes('staff_id') || name.includes('payroll_id') || name.includes('id') || name.includes('staffid')) {
+                  textVal = staff.staff_id || '';
+                }
+                if (textVal && typeof field.setText === 'function') {
+                  field.setText(textVal);
+                }
+              });
+              form.flatten();
+              pdfBuffer = Buffer.from(await tempDoc.save());
+            }
           }
         } catch (pdfFormErr) {
           console.warn("Error filling fillable PDF form, falling back to overlay:", pdfFormErr);

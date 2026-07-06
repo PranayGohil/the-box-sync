@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
-import { Row, Col, Card, Form, Button, Spinner, Badge, Table } from 'react-bootstrap';
+import { Row, Col, Card, Form, Button, Spinner, Badge, Table, Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -182,6 +182,14 @@ const PayrollSettings = () => {
     const [originalConfig, setOriginalConfig] = useState(null);
     const [isDirty, setIsDirty] = useState(false);
     const [uploadingPdf, setUploadingPdf] = useState(false);
+    const [showPdfEditor, setShowPdfEditor] = useState(false);
+    const [pdfFields, setPdfFields] = useState([]);
+    const [pdfNumPages, setPdfNumPages] = useState(0);
+    const [pdfCurrentPage, setPdfCurrentPage] = useState(1);
+    const [pdfLoading, setPdfLoading] = useState(false);
+    const [pdfPageSize, setPdfPageSize] = useState({ width: 595, height: 842 });
+    const canvasRef = useRef(null);
+    const pdfDocumentRef = useRef(null);
 
     // States for Attendance / Wi-Fi IP restrictions
     const [adminPublicIp, setAdminPublicIp] = useState('');
@@ -226,7 +234,8 @@ const PayrollSettings = () => {
         },
         document_templates: {
             joining_letter_pdf: null,
-            joining_letter_template: ""
+            joining_letter_template: "",
+            joining_letter_pdf_fields: []
         }
     });
 
@@ -294,6 +303,189 @@ const PayrollSettings = () => {
         }
     };
 
+    const renderPdfPage = async (pdfDoc, pageNum) => {
+        try {
+            const page = await pdfDoc.getPage(pageNum);
+            const viewport = page.getViewport({ scale: 1.25 });
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            setPdfPageSize({
+                width: viewport.width,
+                height: viewport.height,
+                pdfWidth: page.getViewport({ scale: 1.0 }).width,
+                pdfHeight: page.getViewport({ scale: 1.0 }).height
+            });
+            
+            await page.render({
+                canvasContext: context,
+                viewport
+            }).promise;
+        } catch (err) {
+            console.error('Error rendering PDF page:', err);
+        }
+    };
+
+    const loadPdfDocument = async () => {
+        if (!config.document_templates?.joining_letter_pdf) return;
+        setPdfLoading(true);
+        try {
+            const pdfjs = window.pdfjsLib;
+            if (!pdfjs) {
+                throw new Error('PDF.js library is not available.');
+            }
+            const pdfUrl = `${process.env.REACT_APP_API_URL}${config.document_templates.joining_letter_pdf}`;
+            const loadingTask = pdfjs.getDocument({
+                url: pdfUrl
+            });
+            const pdf = await loadingTask.promise;
+            pdfDocumentRef.current = pdf;
+            setPdfNumPages(pdf.numPages);
+            setPdfCurrentPage(1);
+            await renderPdfPage(pdf, 1);
+        } catch (err) {
+            console.error('Error loading PDF document:', err);
+            toast.error('Failed to load PDF document template.');
+        } finally {
+            setPdfLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (showPdfEditor) {
+            setPdfFields(config.document_templates?.joining_letter_pdf_fields || []);
+            const pdfjs = window.pdfjsLib;
+            if (pdfjs) {
+                loadPdfDocument();
+            } else {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+                script.onload = () => {
+                    const loadedPdfjs = window.pdfjsLib;
+                    if (loadedPdfjs) {
+                        loadedPdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+                        loadPdfDocument();
+                    } else {
+                        console.error('Failed to load PDF.js from CDN.');
+                        toast.error('Failed to load PDF viewer library.');
+                    }
+                };
+                script.onerror = () => {
+                    console.error('Error loading PDF.js script.');
+                    toast.error('Failed to load PDF viewer library script.');
+                };
+                document.body.appendChild(script);
+            }
+        }
+    }, [showPdfEditor]);
+
+    const handlePageChange = async (newPage) => {
+        if (newPage < 1 || newPage > pdfNumPages) return;
+        setPdfCurrentPage(newPage);
+        if (pdfDocumentRef.current) {
+            await renderPdfPage(pdfDocumentRef.current, newPage);
+        }
+    };
+
+    const handleSavePdfFields = () => {
+        setConfig(prev => ({
+            ...prev,
+            document_templates: {
+                ...prev.document_templates,
+                joining_letter_pdf_fields: pdfFields
+            }
+        }));
+        setIsDirty(true);
+        setShowPdfEditor(false);
+        toast.success('PDF placeholders layout updated! Remember to click Save on the floating settings bar.');
+    };
+
+    const handleAddPlaceholder = (placeholderKey) => {
+        const defaultPdfWidth = pdfPageSize.pdfWidth || 595.27;
+        const defaultPdfHeight = pdfPageSize.pdfHeight || 841.89;
+        
+        const newField = {
+            field_key: placeholderKey,
+            page: pdfCurrentPage,
+            x: Math.round(defaultPdfWidth / 2 - 50),
+            y: Math.round(defaultPdfHeight / 2),
+            font_size: 11
+        };
+        
+        setPdfFields(prev => [...prev, newField]);
+    };
+
+    const handleRemoveField = (fieldIndex) => {
+        setPdfFields(prev => prev.filter((_, idx) => idx !== fieldIndex));
+    };
+
+    const handleFieldPropChange = (fieldIndex, prop, val) => {
+        setPdfFields(prev => prev.map((f, idx) => idx === fieldIndex ? { ...f, [prop]: val } : f));
+    };
+
+    const handleMouseDown = (e, fieldIndex) => {
+        e.preventDefault();
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        
+        const handleMouseMove = (moveEvent) => {
+            const currentRect = canvas.getBoundingClientRect();
+            
+            let mouseX = moveEvent.clientX - currentRect.left;
+            let mouseY = moveEvent.clientY - currentRect.top;
+            
+            mouseX = Math.max(0, Math.min(mouseX, currentRect.width));
+            mouseY = Math.max(0, Math.min(mouseY, currentRect.height));
+            
+            const pdfX = (mouseX / currentRect.width) * (pdfPageSize.pdfWidth || 595.27);
+            const pdfY = (1 - (mouseY / currentRect.height)) * (pdfPageSize.pdfHeight || 841.89);
+            
+            setPdfFields(prev => prev.map((f, idx) => idx === fieldIndex ? { ...f, x: Math.round(pdfX), y: Math.round(pdfY) } : f));
+        };
+        
+        const handleMouseUp = () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+        
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    };
+
+    const handleTouchStart = (e, fieldIndex) => {
+        e.preventDefault();
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        
+        const handleTouchMove = (moveEvent) => {
+            const currentRect = canvas.getBoundingClientRect();
+            const touch = moveEvent.touches[0];
+            
+            let mouseX = touch.clientX - currentRect.left;
+            let mouseY = touch.clientY - currentRect.top;
+            
+            mouseX = Math.max(0, Math.min(mouseX, currentRect.width));
+            mouseY = Math.max(0, Math.min(mouseY, currentRect.height));
+            
+            const pdfX = (mouseX / currentRect.width) * (pdfPageSize.pdfWidth || 595.27);
+            const pdfY = (1 - (mouseY / currentRect.height)) * (pdfPageSize.pdfHeight || 841.89);
+            
+            setPdfFields(prev => prev.map((f, idx) => idx === fieldIndex ? { ...f, x: Math.round(pdfX), y: Math.round(pdfY) } : f));
+        };
+        
+        const handleTouchEnd = () => {
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
+        };
+        
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        document.addEventListener('touchend', handleTouchEnd);
+    };
+
     const insertVariable = (variableName) => {
         if (quillRef.current) {
             const editor = quillRef.current.getEditor();
@@ -335,7 +527,8 @@ const PayrollSettings = () => {
                     },
                     document_templates: {
                         joining_letter_pdf: res.data.document_templates?.joining_letter_pdf || null,
-                        joining_letter_template: res.data.document_templates?.joining_letter_template || defaultJoiningLetter
+                        joining_letter_template: res.data.document_templates?.joining_letter_template || defaultJoiningLetter,
+                        joining_letter_pdf_fields: res.data.document_templates?.joining_letter_pdf_fields || []
                     }
                 };
                 setConfig(fetchedConfig);
@@ -1480,6 +1673,14 @@ const PayrollSettings = () => {
                                                 >
                                                     Remove
                                                 </Button>
+                                                <Button 
+                                                    variant="outline-primary" 
+                                                    size="sm"
+                                                    className="rounded-pill ms-3 fw-bold px-3 py-1 d-flex align-items-center gap-1"
+                                                    onClick={() => setShowPdfEditor(true)}
+                                                >
+                                                    <CsLineIcons icon="edit" size="13" /> Edit PDF Layout
+                                                </Button>
                                             </div>
                                         ) : (
                                             <span className="text-muted small">No custom PDF template uploaded (falls back to HTML template).</span>
@@ -1523,6 +1724,216 @@ const PayrollSettings = () => {
                     </div>
                 </div>
             )}
+            {/* Visual PDF Editor Modal */}
+            <Modal 
+                show={showPdfEditor} 
+                onHide={() => setShowPdfEditor(false)} 
+                size="xl" 
+                dialogClassName="modal-90w"
+                centered
+            >
+                <Modal.Header closeButton className="border-bottom-0 pb-0">
+                    <Modal.Title className="fw-bold text-primary d-flex align-items-center gap-2">
+                        <CsLineIcons icon="edit" size="20" /> Visual PDF Layout Editor
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="px-4 py-3">
+                    <Row>
+                        {/* Left Column: PDF rendering viewport */}
+                        <Col lg={8} className="d-flex flex-column align-items-center border-end pe-lg-4" style={{ minHeight: '550px' }}>
+                            <div className="d-flex justify-content-between align-items-center w-100 mb-3 bg-light p-2 rounded">
+                                <span className="small text-muted fw-semibold">Drag placed placeholders to reposition them on the page. Coordinates (x, y) are in points from bottom-left.</span>
+                                <div className="d-flex align-items-center gap-2">
+                                    <Button 
+                                        variant="outline-secondary" 
+                                        size="sm" 
+                                        onClick={() => handlePageChange(pdfCurrentPage - 1)}
+                                        disabled={pdfCurrentPage <= 1}
+                                        className="rounded-pill px-3 fw-bold"
+                                    >
+                                        Prev
+                                    </Button>
+                                    <span className="small fw-bold text-dark px-2">Page {pdfCurrentPage} of {pdfNumPages}</span>
+                                    <Button 
+                                        variant="outline-secondary" 
+                                        size="sm" 
+                                        onClick={() => handlePageChange(pdfCurrentPage + 1)}
+                                        disabled={pdfCurrentPage >= pdfNumPages}
+                                        className="rounded-pill px-3 fw-bold"
+                                    >
+                                        Next
+                                    </Button>
+                                </div>
+                            </div>
+                            
+                            {pdfLoading ? (
+                                <div className="d-flex flex-column align-items-center justify-content-center flex-grow-1 w-100" style={{ height: '500px' }}>
+                                    <Spinner animation="border" variant="primary" className="mb-2" />
+                                    <span className="text-muted small">Loading PDF document template...</span>
+                                </div>
+                            ) : (
+                                <div 
+                                    className="pdf-viewport-wrapper border rounded shadow-sm bg-dark p-2 d-inline-block position-relative" 
+                                    style={{ 
+                                        maxHeight: '600px', 
+                                        overflow: 'auto',
+                                        maxWidth: '100%'
+                                    }}
+                                >
+                                    <div className="position-relative" style={{ width: pdfPageSize.width, height: pdfPageSize.height }}>
+                                        <canvas ref={canvasRef} style={{ display: 'block' }} />
+                                        
+                                        {/* Placed overlays for the current page */}
+                                        {pdfFields.map((field, idx) => {
+                                            if (field.page !== pdfCurrentPage) return null;
+                                            
+                                            const left = (field.x / (pdfPageSize.pdfWidth || 595.27)) * pdfPageSize.width;
+                                            const top = (1 - (field.y / (pdfPageSize.pdfHeight || 841.89))) * pdfPageSize.height;
+                                            
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    onMouseDown={(e) => handleMouseDown(e, idx)}
+                                                    onTouchStart={(e) => handleTouchStart(e, idx)}
+                                                    className="position-absolute px-2 py-1 rounded bg-primary text-white border border-light shadow-sm d-flex align-items-center gap-1 user-select-none"
+                                                    style={{
+                                                        left: `${left}px`,
+                                                        top: `${top}px`,
+                                                        transform: 'translate(-50%, -50%)',
+                                                        cursor: 'move',
+                                                        fontSize: '11px',
+                                                        fontWeight: 'bold',
+                                                        zIndex: 10
+                                                    }}
+                                                >
+                                                    <span>{field.field_key.replace(/_/g, ' ').toUpperCase()}</span>
+                                                    <Button 
+                                                        variant="none" 
+                                                        className="p-0 text-white leading-none hover-scale" 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleRemoveField(idx);
+                                                        }}
+                                                        style={{ fontSize: '10px' }}
+                                                    >
+                                                        ✕
+                                                    </Button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </Col>
+                        
+                        {/* Right Column: Placeholders panel & Numeric coordinate fine-tuner */}
+                        <Col lg={4} className="ps-lg-4 d-flex flex-column" style={{ maxHeight: '630px', overflowY: 'auto' }}>
+                            <h6 className="fw-bold text-dark small text-uppercase mb-3 mt-2">Available Placeholders</h6>
+                            <p className="text-muted small mb-2">Click to add field tag onto Page {pdfCurrentPage}:</p>
+                            <div className="d-flex flex-wrap gap-2 mb-4 p-2 bg-light rounded border">
+                                {[
+                                    { key: 'first_name', label: 'First Name' },
+                                    { key: 'last_name', label: 'Last Name' },
+                                    { key: 'full_name', label: 'Full Name' },
+                                    { key: 'job_title', label: 'Job Title' },
+                                    { key: 'joining_date', label: 'Joining Date' },
+                                    { key: 'staff_id', label: 'Staff ID' },
+                                    { key: 'email', label: 'Email' },
+                                    { key: 'phone', label: 'Phone' },
+                                    { key: 'gross_salary', label: 'Gross Salary' },
+                                    { key: 'basic_salary', label: 'Basic Salary' },
+                                    { key: 'hra', label: 'HRA' },
+                                    { key: 'conveyance', label: 'Conveyance' },
+                                    { key: 'medical_allowance', label: 'Medical' },
+                                    { key: 'special_allowance', label: 'Special' },
+                                    { key: 'other_allowance', label: 'Other' },
+                                    { key: 'pf_deduction', label: 'EPF' },
+                                    { key: 'esi_deduction', label: 'ESI' },
+                                    { key: 'pt_deduction', label: 'PT' }
+                                ].map(p => (
+                                    <Button 
+                                        key={p.key} 
+                                        variant="outline-info" 
+                                        size="sm" 
+                                        onClick={() => handleAddPlaceholder(p.key)}
+                                        className="rounded-pill fw-bold"
+                                    >
+                                        + {p.label}
+                                    </Button>
+                                ))}
+                            </div>
+                            
+                            <h6 className="fw-bold text-dark small text-uppercase mb-3">Placed Fields (Page {pdfCurrentPage})</h6>
+                            {pdfFields.filter(f => f.page === pdfCurrentPage).length === 0 ? (
+                                <div className="text-center py-4 bg-light rounded text-muted small border border-dashed">No fields placed on this page yet.</div>
+                            ) : (
+                                <div className="d-flex flex-column gap-3">
+                                    {pdfFields.map((field, idx) => {
+                                        if (field.page !== pdfCurrentPage) return null;
+                                        return (
+                                            <div key={idx} className="p-2 border rounded bg-light d-flex flex-column gap-2">
+                                                <div className="d-flex justify-content-between align-items-center">
+                                                    <span className="small fw-bold text-primary">{field.field_key.replace(/_/g, ' ').toUpperCase()}</span>
+                                                    <Button 
+                                                        variant="none" 
+                                                        className="p-0 text-danger small hover-scale" 
+                                                        onClick={() => handleRemoveField(idx)}
+                                                    >
+                                                        Delete
+                                                    </Button>
+                                                </div>
+                                                <Row className="g-2">
+                                                    <Col xs={4}>
+                                                        <Form.Group>
+                                                            <Form.Label className="small text-muted mb-1" style={{ fontSize: '10px' }}>X (Pt)</Form.Label>
+                                                            <Form.Control 
+                                                                type="number" 
+                                                                size="sm" 
+                                                                value={field.x} 
+                                                                onChange={(e) => handleFieldPropChange(idx, 'x', Number(e.target.value))}
+                                                            />
+                                                        </Form.Group>
+                                                    </Col>
+                                                    <Col xs={4}>
+                                                        <Form.Group>
+                                                            <Form.Label className="small text-muted mb-1" style={{ fontSize: '10px' }}>Y (Pt)</Form.Label>
+                                                            <Form.Control 
+                                                                type="number" 
+                                                                size="sm" 
+                                                                value={field.y} 
+                                                                onChange={(e) => handleFieldPropChange(idx, 'y', Number(e.target.value))}
+                                                            />
+                                                        </Form.Group>
+                                                    </Col>
+                                                    <Col xs={4}>
+                                                        <Form.Group>
+                                                            <Form.Label className="small text-muted mb-1" style={{ fontSize: '10px' }}>Size</Form.Label>
+                                                            <Form.Control 
+                                                                type="number" 
+                                                                size="sm" 
+                                                                value={field.font_size} 
+                                                                onChange={(e) => handleFieldPropChange(idx, 'font_size', Number(e.target.value))}
+                                                            />
+                                                        </Form.Group>
+                                                    </Col>
+                                                </Row>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </Col>
+                    </Row>
+                </Modal.Body>
+                <Modal.Footer className="border-top-0 pt-0">
+                    <Button variant="light" onClick={() => setShowPdfEditor(false)} className="rounded-pill px-4" style={{ fontWeight: 'bold' }}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={handleSavePdfFields} className="rounded-pill px-4" style={{ fontWeight: 'bold' }}>
+                        Save PDF Fields
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 };
