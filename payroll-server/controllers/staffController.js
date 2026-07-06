@@ -771,9 +771,9 @@ const sendJoiningLetter = async (req, res) => {
             </html>
           `;
 
-          const options = { format: 'A4', margin: { top: '40px', bottom: '40px', left: '40px', right: '40px' } };
+          const pdfOptions = { format: 'A4', margin: { top: '40px', bottom: '40px', left: '40px', right: '40px' } };
           const file = { content: fullHtml };
-          pdfBuffer = await html_to_pdf.generatePdf(file, options);
+          pdfBuffer = await html_to_pdf.generatePdf(file, pdfOptions);
           console.log("Word document compiled to PDF successfully.");
         } catch (wordErr) {
           console.error("Error parsing Word template docx, falling back to HTML template:", wordErr);
