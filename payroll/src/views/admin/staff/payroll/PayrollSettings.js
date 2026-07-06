@@ -209,14 +209,19 @@ const PayrollSettings = () => {
                     <meta charset="utf-8">
                     <style>
                         body {
+                            box-sizing: border-box;
                             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-                            padding: 30px; color: #333; line-height: 1.6;
+                            padding: 20mm; color: #333; line-height: 1.6;
                             background-color: #fff; margin: 0; outline: none;
                         }
                         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
                         th { background-color: #f2f2f2; }
                         img { max-width: 100%; }
+                        .ql-align-center { text-align: center; }
+                        .ql-align-right { text-align: right; }
+                        .ql-align-left { text-align: left; }
+                        .ql-align-justify { text-align: justify; }
                     </style>
                 </head><body contenteditable="true">${wordEditorHtmlRef.current}</body></html>`);
                 doc.close();

@@ -699,6 +699,7 @@ const sendJoiningLetter = async (req, res) => {
           th { background-color: #f2f2f2; }
           .ql-align-center { text-align: center; }
           .ql-align-right { text-align: right; }
+          .ql-align-left { text-align: left; }
           .ql-align-justify { text-align: justify; }
         </style></head><body>${htmlContent}</body></html>`;
         const file = { content: fullHtml };
@@ -718,7 +719,29 @@ const sendJoiningLetter = async (req, res) => {
       if (wordPath && fs.existsSync(wordPath)) {
         try {
           console.log("Found Word template .docx file, converting to HTML...");
-          const result = await mammoth.convertToHtml({ path: wordPath });
+          function transformParagraph(element) {
+            if (element.alignment) {
+              return { 
+                ...element, 
+                styleId: `${element.alignment}-aligned`,
+                styleName: `${element.alignment}-aligned`
+              };
+            }
+            return element;
+          }
+
+          const options = {
+            transformDocument: mammoth.transforms.paragraph(transformParagraph),
+            styleMap: [
+              "p[style-name='center-aligned'] => p.ql-align-center:fresh",
+              "p[style-name='right-aligned'] => p.ql-align-right:fresh",
+              "p[style-name='left-aligned'] => p.ql-align-left:fresh",
+              "p[style-name='both-aligned'] => p.ql-align-justify:fresh",
+              "p[style-name='justify-aligned'] => p.ql-align-justify:fresh"
+            ]
+          };
+
+          const result = await mammoth.convertToHtml({ path: wordPath }, options);
           let htmlContent = result.value;
 
           for (const [key, value] of Object.entries(placeholders)) {
@@ -736,6 +759,10 @@ const sendJoiningLetter = async (req, res) => {
                 table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                 th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
                 th { background-color: #f2f2f2; }
+                .ql-align-center { text-align: center; }
+                .ql-align-right { text-align: right; }
+                .ql-align-left { text-align: left; }
+                .ql-align-justify { text-align: justify; }
               </style>
             </head>
             <body>

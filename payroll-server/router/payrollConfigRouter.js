@@ -33,7 +33,29 @@ router.get("/word-preview", authMiddleware, async (req, res) => {
       return res.json({ success: true, html: '', source: 'empty' });
     }
 
-    const result = await mammoth.convertToHtml({ path: wordPath });
+    function transformParagraph(element) {
+      if (element.alignment) {
+        return { 
+          ...element, 
+          styleId: `${element.alignment}-aligned`,
+          styleName: `${element.alignment}-aligned`
+        };
+      }
+      return element;
+    }
+
+    const options = {
+      transformDocument: mammoth.transforms.paragraph(transformParagraph),
+      styleMap: [
+        "p[style-name='center-aligned'] => p.ql-align-center:fresh",
+        "p[style-name='right-aligned'] => p.ql-align-right:fresh",
+        "p[style-name='left-aligned'] => p.ql-align-left:fresh",
+        "p[style-name='both-aligned'] => p.ql-align-justify:fresh",
+        "p[style-name='justify-aligned'] => p.ql-align-justify:fresh"
+      ]
+    };
+
+    const result = await mammoth.convertToHtml({ path: wordPath }, options);
     return res.json({ success: true, html: result.value, source: 'docx' });
   } catch (err) {
     console.error('Error converting word to html:', err);
