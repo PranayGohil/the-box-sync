@@ -3,46 +3,77 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AppContext';
 import { useRestaurant } from '../context/RestaurantContext';
-import { User, Mail, Lock, ArrowLeft, Phone } from 'lucide-react';
+import { Mail, ArrowLeft, Lock, KeyRound } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Login() {
-  const { login, signup } = useAuth();
+  const { requestOtp, verifyOtp } = useAuth();
   const { restaurantCode } = useRestaurant();
   const navigate = useNavigate();
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password || (isSignUp && (!name || !phone))) {
-      toast.error('Please fill in all required fields', {
-        style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(242,122,26,0.3)' }
-      });
+    setError('');
+
+    if (!email) {
+      setError('Please enter your email address');
       return;
     }
 
-    const authPromise = isSignUp 
-      ? signup(name, email, phone, password, restaurantCode)
-      : login(email, password, restaurantCode);
+    if (!otpSent) {
+      // Step 1: Send OTP code
+      const requestPromise = requestOtp(email, restaurantCode);
 
-    toast.promise(
-      authPromise,
-      {
-        loading: isSignUp ? 'Creating account...' : 'Signing in...',
-        success: () => {
-          navigate(`/${restaurantCode}/profile`.replace(/\/+/g, '/'));
-          return isSignUp ? 'Account created! Welcome!' : 'Welcome back!';
+      toast.promise(
+        requestPromise,
+        {
+          loading: 'Sending verification code...',
+          success: () => {
+            setOtpSent(true);
+            return 'Code sent successfully!';
+          },
+          error: (err) => {
+            const msg = err.message || 'Failed to send verification code';
+            setError(msg);
+            return msg;
+          },
         },
-        error: (err) => err.message || 'Authentication failed',
-      },
-      {
-        style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(242,122,26,0.3)', borderRadius: '12px' }
+        {
+          style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(242,122,26,0.3)', borderRadius: '12px' }
+        }
+      );
+    } else {
+      // Step 2: Verify OTP code
+      if (!otp || otp.length !== 6) {
+        setError('Please enter a valid 6-digit code');
+        return;
       }
-    );
+
+      const verifyPromise = verifyOtp(email, otp, restaurantCode);
+
+      toast.promise(
+        verifyPromise,
+        {
+          loading: 'Verifying code...',
+          success: () => {
+            navigate(`/${restaurantCode}/profile`.replace(/\/+/g, '/'));
+            return 'Welcome back!';
+          },
+          error: (err) => {
+            const msg = err.message || 'Verification failed';
+            setError(msg);
+            return msg;
+          },
+        },
+        {
+          style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(242,122,26,0.3)', borderRadius: '12px' }
+        }
+      );
+    }
   };
 
   return (
@@ -50,7 +81,7 @@ export default function Login() {
       <div className="position-absolute top-0 start-0 p-4">
         <button 
           onClick={() => navigate(-1)} 
-          className="btn-ghost d-flex align-items-center gap-2 text-white-60 hover:text-white transition-colors"
+          className="btn-ghost d-flex align-items-center gap-2 text-white-60 hover:text-white transition-colors border-0 bg-transparent"
         >
           <ArrowLeft size={20} /> Back
         </button>
@@ -64,52 +95,17 @@ export default function Login() {
       >
         <div className="text-center mb-5">
           <div className="rounded-4 d-flex align-items-center justify-content-center mx-auto mb-4" style={{ width: '80px', height: '80px', background: 'rgba(242, 122, 26, 0.1)', border: '1px solid rgba(242, 122, 26, 0.2)' }}>
-            <User size={40} className="text-brand-400" />
+            <KeyRound size={40} className="text-brand-400" />
           </div>
           <h1 className="font-display fw-bold text-white mb-2" style={{ fontSize: '2.5rem' }}>
-            {isSignUp ? 'Sign Up' : 'Login'}
+            {otpSent ? 'Verify OTP' : 'Sign In'}
           </h1>
           <p className="text-white-60">
-            {isSignUp ? 'Create your new customer account' : 'Welcome back to Ember & Gold'}
+            {otpSent ? 'Enter the 6-digit code sent to your email' : 'Sign in securely using email & One-Time Password'}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="d-flex flex-column gap-4">
-          {isSignUp && (
-            <>
-              <div>
-                <label className="form-label small text-white-60 mb-2 fw-medium">Full Name</label>
-                <div className="position-relative">
-                  <User className="position-absolute text-white-60" size={18} style={{ top: '50%', left: '1.25rem', transform: 'translateY(-50%)' }} />
-                  <input 
-                    type="text" 
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="input-field w-100 py-3" 
-                    style={{ paddingLeft: '3.5rem' }}
-                    placeholder="John Doe"
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="form-label small text-white-60 mb-2 fw-medium">Phone Number</label>
-                <div className="position-relative">
-                  <Phone className="position-absolute text-white-60" size={18} style={{ top: '50%', left: '1.25rem', transform: 'translateY(-50%)' }} />
-                  <input 
-                    type="tel" 
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="input-field w-100 py-3" 
-                    style={{ paddingLeft: '3.5rem' }}
-                    placeholder="9876543210"
-                    required
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
           <div>
             <label className="form-label small text-white-60 mb-2 fw-medium">Email Address</label>
             <div className="position-relative">
@@ -117,56 +113,73 @@ export default function Login() {
               <input 
                 type="email" 
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setError(''); }}
                 className="input-field w-100 py-3" 
                 style={{ paddingLeft: '3.5rem' }}
                 placeholder="name@example.com"
                 required
+                disabled={otpSent}
               />
             </div>
           </div>
 
-          <div>
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <label className="form-label small text-white-60 mb-0 fw-medium">Password</label>
-              {!isSignUp && <a href="#" className="small text-brand-400 text-decoration-none">Forgot?</a>}
-            </div>
-            <div className="position-relative">
-              <Lock className="position-absolute text-white-60" size={18} style={{ top: '50%', left: '1.25rem', transform: 'translateY(-50%)' }} />
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-field w-100 py-3" 
-                style={{ paddingLeft: '3.5rem' }}
-                placeholder="••••••••"
-                required
-              />
-            </div>
-          </div>
-          
+          {otpSent && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="d-flex flex-column gap-2"
+            >
+              <label className="form-label small text-white-60 mb-1 fw-medium">Verification Code</label>
+              <div className="position-relative">
+                <Lock className="position-absolute text-white-60" size={18} style={{ top: '50%', left: '1.25rem', transform: 'translateY(-50%)' }} />
+                <input 
+                  type="text" 
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => { setOtp(e.target.value.replace(/\D/g, '')); setError(''); }}
+                  className="input-field w-100 py-3 text-center font-monospace tracking-widest fs-4" 
+                  style={{ paddingLeft: '3.5rem' }}
+                  placeholder="000000"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className="text-end">
+                <button 
+                  type="button" 
+                  onClick={() => { setOtpSent(false); setOtp(''); setError(''); }}
+                  className="btn-link text-brand-400 small text-decoration-none bg-transparent border-0 p-0"
+                >
+                  Change Email
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-3 rounded-3 text-start"
+              style={{ 
+                background: 'rgba(239, 68, 68, 0.1)', 
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+                color: '#ef4444',
+                fontSize: '0.875rem'
+              }}
+            >
+              {error}
+            </motion.div>
+          )}
+
           <button type="submit" className="btn-primary w-100 justify-content-center py-3 mt-2 fs-5 fw-bold shadow-lg">
-            {isSignUp ? 'Create Account' : 'Sign In'}
+            {otpSent ? 'Verify & Login' : 'Get Verification Code'}
           </button>
         </form>
-        
+
         <div className="text-center mt-5">
           <p className="text-white-60 small mb-0">
-            {isSignUp ? (
-              <>
-                Already have an account?{' '}
-                <button onClick={() => setIsSignUp(false)} className="btn-link text-brand-400 fw-bold text-decoration-none bg-transparent border-0 p-0">
-                  Sign In
-                </button>
-              </>
-            ) : (
-              <>
-                Don't have an account?{' '}
-                <button onClick={() => setIsSignUp(true)} className="btn-link text-brand-400 fw-bold text-decoration-none bg-transparent border-0 p-0">
-                  Create one
-                </button>
-              </>
-            )}
+            No password required. New users will be automatically registered.
           </p>
         </div>
       </motion.div>

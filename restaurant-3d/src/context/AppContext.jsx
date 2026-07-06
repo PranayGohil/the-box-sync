@@ -191,6 +191,41 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const requestOtp = async (email, restaurantCode) => {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+    const res = await fetch(`${API_URL}/web-customer/request-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, restaurant_code: restaurantCode }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Failed to send OTP');
+    }
+    return data;
+  };
+
+  const verifyOtp = async (email, code, restaurantCode) => {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+    const res = await fetch(`${API_URL}/web-customer/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code, restaurant_code: restaurantCode }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Verification failed');
+    }
+    const userData = {
+      ...data.data,
+      since: new Date(data.data.createdAt || Date.now()).getFullYear()
+    };
+    setUser(userData);
+    localStorage.setItem('ember-user', JSON.stringify(userData));
+    localStorage.setItem('ember-token', data.token);
+    return userData;
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('ember-user');
@@ -198,7 +233,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, refreshUser, logout }}>
+    <AuthContext.Provider value={{ user, login, signup, requestOtp, verifyOtp, refreshUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

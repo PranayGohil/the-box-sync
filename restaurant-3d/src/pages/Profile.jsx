@@ -2,10 +2,11 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AppContext';
 import { useRestaurant } from '../context/RestaurantContext';
-import { User, LogOut, Mail, History, Heart, MapPin, Trash, ArrowLeft, Plus } from 'lucide-react';
+import { User, LogOut, Mail, History, Heart, MapPin, Trash, ArrowLeft, Plus, Edit2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSocket } from '../context/SocketContext';
 import MenuCard from '../components/MenuCard';
+import { motion } from 'framer-motion';
 
 export default function Profile() {
   const { user, refreshUser, logout } = useAuth();
@@ -18,6 +19,7 @@ export default function Profile() {
 
   // Address form states
   const [addressVal, setAddressVal] = useState('');
+  const [exactLocationVal, setExactLocationVal] = useState('');
   const [cityVal, setCityVal] = useState('');
   const [stateVal, setStateVal] = useState('');
   const [pincodeVal, setPincodeVal] = useState('');
@@ -29,122 +31,204 @@ export default function Profile() {
   const [showMapModal, setShowMapModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const mapInstance = useRef(null);
+  const markerInstance = useRef(null);
 
-  // Dynamic Map Picker Script & Leaflet initialization loader
-  useEffect(() => {
-    if (!showMapModal) return;
+  const [placeIdVal, setPlaceIdVal] = useState('');
+  const [formattedAddressVal, setFormattedAddressVal] = useState('');
+  const [postalCodeVal, setPostalCodeVal] = useState('');
+  const [localityVal, setLocalityVal] = useState('');
+  const [sublocalityVal, setSublocalityVal] = useState('');
 
-    // Load Leaflet css
-    let leafletCss = document.getElementById('leaflet-css');
-    if (!leafletCss) {
-      leafletCss = document.createElement('link');
-      leafletCss.id = 'leaflet-css';
-      leafletCss.rel = 'stylesheet';
-      leafletCss.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-      document.head.appendChild(leafletCss);
-    }
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [updatingProfile, setUpdatingProfile] = useState(false);
+  const [locatingUser, setLocatingUser] = useState(false);
+  const [detectingLocation, setDetectingLocation] = useState(false);
+  const [showAddAddressForm, setShowAddAddressForm] = useState(false);
+  const [customTagVal, setCustomTagVal] = useState('');
 
-    // Load Leaflet js
-    let leafletJs = document.getElementById('leaflet-js');
-    if (!leafletJs) {
-      leafletJs = document.createElement('script');
-      leafletJs.id = 'leaflet-js';
-      leafletJs.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-      document.head.appendChild(leafletJs);
-    }
-
-    let activeMarker = null;
-
-    const initMap = () => {
-      if (!window.L || !document.getElementById('map-container')) return;
-
-      const defaultLat = latVal || 23.0225;
-      const defaultLng = lngVal || 72.5714;
-
-      const map = window.L.map('map-container').setView([defaultLat, defaultLng], 14);
-      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
-
-      // Create or position marker
-      if (latVal && lngVal) {
-        activeMarker = window.L.marker([latVal, lngVal]).addTo(map);
-      }
-
-      map.on('click', (e) => {
-        const { lat, lng } = e.latlng;
-        if (activeMarker) {
-          activeMarker.setLatLng(e.latlng);
-        } else {
-          activeMarker = window.L.marker(e.latlng).addTo(map);
-        }
-        setTempLat(lat);
-        setTempLng(lng);
-      });
-
-      mapInstance.current = map;
-    };
-
-    if (window.L) {
-      setTimeout(initMap, 150);
-    } else {
-      leafletJs.onload = () => setTimeout(initMap, 150);
-    }
-
-    return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
-    };
-  }, [showMapModal]);
-
-  const handleSearchLocation = async (e) => {
-    if (e) e.preventDefault();
-    if (!searchQuery.trim() || !mapInstance.current) return;
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
-      const data = await res.json();
-      if (data && data.length > 0) {
-        const { lat, lon } = data[0];
-        const numLat = Number(lat);
-        const numLon = Number(lon);
-        mapInstance.current.setView([numLat, numLon], 15);
-        setTempLat(numLat);
-        setTempLng(numLon);
-
-        // Add marker if not already present
-        if (window.L) {
-          const map = mapInstance.current;
-          // Clear previous layers that are markers if needed or let Leaflet handle
-          const latlng = [numLat, numLon];
-          // We can trigger click/marker logic
-          map.fireEvent('click', { latlng: window.L.latLng(numLat, numLon) });
-        }
-        toast.success('Location found on map!');
-      } else {
-        toast.error('Location not found. Please try a different query.');
-      }
-    } catch (err) {
-      toast.error('Search failed.');
-    }
+  const handleOpenEditModal = () => {
+    setEditName(user?.name || '');
+    setEditPhone(user?.phone || '');
+    setShowEditModal(true);
   };
 
-  const reverseGeocode = async (lat, lng) => {
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-      const data = await res.json();
-      if (data && data.address) {
-        const road = data.address.road || data.address.suburb || data.address.neighbourhood || '';
-        const house = data.address.house_number || '';
-        setAddressVal([house, road, data.address.amenity || ''].filter(Boolean).join(' ') || data.display_name);
-        setCityVal(data.address.city || data.address.town || data.address.village || '');
-        setStateVal(data.address.state || '');
-        setPincodeVal(data.address.postcode || '');
-        toast.success('Address details auto-filled!');
+  // Load Google Maps API Script
+  useEffect(() => {
+    const scriptId = 'google-maps-script-customer';
+    let script = document.getElementById(scriptId);
+    if (!script) {
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY'}&libraries=places,geometry&loading=async`;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  // Google Maps picker inline initialization
+  useEffect(() => {
+    if (!showAddAddressForm || !window.google) return () => { };
+
+    const defaultLat = Number(tempLat) || 23.0225;
+    const defaultLng = Number(tempLng) || 72.5714;
+    const mapDiv = document.getElementById('map-container');
+    if (!mapDiv) return () => { };
+
+    const map = new window.google.maps.Map(mapDiv, {
+      center: { lat: defaultLat, lng: defaultLng },
+      zoom: 18,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+    });
+
+    const marker = new window.google.maps.Marker({
+      position: { lat: defaultLat, lng: defaultLng },
+      map: map,
+      draggable: true,
+    });
+
+    marker.addListener('dragend', () => {
+      const position = marker.getPosition();
+      if (position) {
+        setTempLat(position.lat());
+        setTempLng(position.lng());
       }
-    } catch (err) {
-      console.error('Error reverse geocoding', err);
+    });
+
+    map.addListener('click', (e) => {
+      if (e.latLng) {
+        marker.setPosition(e.latLng);
+        setTempLat(e.latLng.lat());
+        setTempLng(e.latLng.lng());
+      }
+    });
+
+    const input = document.getElementById('map-search-input');
+    if (input) {
+      const autocomplete = new window.google.maps.places.Autocomplete(input, {
+        types: ['geocode', 'establishment'],
+      });
+      autocomplete.bindTo('bounds', map);
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) {
+          toast.error("No details available for input location.");
+          return;
+        }
+
+        map.setCenter(place.geometry.location);
+        map.setZoom(18);
+        marker.setPosition(place.geometry.location);
+        setTempLat(place.geometry.location.lat());
+        setTempLng(place.geometry.location.lng());
+
+        if (place.formatted_address) {
+          setSearchQuery(place.formatted_address);
+        }
+      });
+    }
+
+    mapInstance.current = map;
+    markerInstance.current = marker;
+
+    return () => {
+      mapInstance.current = null;
+      markerInstance.current = null;
+    };
+  }, [showAddAddressForm]);
+
+  const reverseGeocode = async (lat, lng) => {
+    if (!window.google) return;
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ location: { lat: Number(lat), lng: Number(lng) } }, (results, status) => {
+      if (status === 'OK' && results[0]) {
+        const result = results[0];
+        const components = result.address_components;
+
+        const extract = (types) => {
+          const found = components.find(c => types.some(t => c.types.includes(t)));
+          return found ? found.long_name : "";
+        };
+
+        const resolvedPlaceId = result.place_id;
+        const resolvedFormattedAddress = result.formatted_address;
+        const city = extract(["locality", "administrative_area_level_2"]);
+        const state = extract(["administrative_area_level_1"]);
+        const postal_code = extract(["postal_code"]);
+        const locality = extract(["sublocality_level_1", "neighborhood"]);
+        const sublocality = extract(["sublocality_level_2", "sublocality"]);
+
+        setPlaceIdVal(resolvedPlaceId);
+        setFormattedAddressVal(resolvedFormattedAddress);
+        setAddressVal(resolvedFormattedAddress);
+        setCityVal(city);
+        setStateVal(state);
+        setPincodeVal(postal_code);
+        setPostalCodeVal(postal_code);
+        setLocalityVal(locality);
+        setSublocalityVal(sublocality);
+
+        toast.success('Address auto-resolved successfully!');
+      } else {
+        toast.error('Reverse geocoding failed: ' + status);
+      }
+    });
+  };
+
+  const handleOpenAddAddressForm = () => {
+    if (navigator.geolocation) {
+      setDetectingLocation(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          setTempLat(latitude);
+          setTempLng(longitude);
+          setLatVal(latitude);
+          setLngVal(longitude);
+          setDetectingLocation(false);
+          // Run geocoding instantly
+          reverseGeocode(latitude, longitude);
+          setShowAddAddressForm(true);
+        },
+        (err) => {
+          setDetectingLocation(false);
+          if (err.code === 1) { // PERMISSION_DENIED
+            const manual = window.confirm(
+              "Location access is blocked or disabled in your browser settings.\n\n" +
+              "To auto-detect:\n" +
+              "1. Click the settings/lock icon next to the URL in your address bar.\n" +
+              "2. Set Location permissions to 'Allow'.\n" +
+              "3. Reload the page.\n\n" +
+              "Would you like to manually choose your address on the map instead?"
+            );
+            if (manual) {
+              setTempLat(23.0225);
+              setTempLng(72.5714);
+              setLatVal(23.0225);
+              setLngVal(72.5714);
+              setShowAddAddressForm(true);
+            }
+          } else {
+            toast.error('Unable to fetch location automatically.');
+            setTempLat(23.0225);
+            setTempLng(72.5714);
+            setLatVal(23.0225);
+            setLngVal(72.5714);
+            setShowAddAddressForm(true);
+          }
+        },
+        { enableHighAccuracy: true, timeout: 6000 }
+      );
+    } else {
+      setTempLat(23.0225);
+      setTempLng(72.5714);
+      setLatVal(23.0225);
+      setLngVal(72.5714);
+      setShowAddAddressForm(true);
     }
   };
 
@@ -203,7 +287,9 @@ export default function Profile() {
         try {
           const saved = localStorage.getItem(`ember-saved-${user._id}`);
           setSavedItemIds(saved ? JSON.parse(saved) : []);
-        } catch (err) { }
+        } catch (err) {
+          console.error('Error loading saved items:', err);
+        }
       };
       loadSaved();
       window.addEventListener('storage', loadSaved);
@@ -218,7 +304,9 @@ export default function Profile() {
       try {
         const saved = localStorage.getItem(`ember-saved-${user._id}`);
         setSavedItemIds(saved ? JSON.parse(saved) : []);
-      } catch (err) { }
+      } catch (err) {
+        console.error('Error syncing saved items:', err);
+      }
     }
   }, [activeTab, user]);
 
@@ -289,10 +377,51 @@ export default function Profile() {
     });
   };
 
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    if (!editName || !editPhone) {
+      toast.error('Name and Phone Number are required');
+      return;
+    }
+    setUpdatingProfile(true);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      const token = localStorage.getItem('ember-token');
+      const res = await fetch(`${API_URL}/web-customer/update/${user._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: editName,
+          phone: editPhone
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success('Profile updated successfully');
+        setShowEditModal(false);
+        refreshUser();
+      } else {
+        toast.error(data.message || 'Failed to update profile');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error updating profile');
+    } finally {
+      setUpdatingProfile(false);
+    }
+  };
+
   const handleAddAddress = async (e) => {
     e.preventDefault();
+    if (!latVal || !lngVal || !placeIdVal) {
+      toast.error('Please confirm your location on the map first!');
+      return;
+    }
     if (!addressVal || !cityVal || !pincodeVal) {
-      toast.error('Address line, City, and Pincode are required');
+      toast.error('Street Address, City, and Pincode are required');
       return;
     }
     try {
@@ -306,30 +435,45 @@ export default function Profile() {
         },
         body: JSON.stringify({
           address: addressVal,
+          exact_location: exactLocationVal,
           city: cityVal,
           state: stateVal || 'State',
           country: 'India',
           pincode: pincodeVal,
-          tag: tagVal,
-          latitude: latVal || undefined,
-          longitude: lngVal || undefined
+          tag: tagVal === 'Other' ? (customTagVal.trim() || 'Other') : tagVal,
+          place_id: placeIdVal,
+          formatted_address: formattedAddressVal,
+          latitude: latVal ? Number(latVal) : undefined,
+          longitude: lngVal ? Number(lngVal) : undefined,
+          postal_code: postalCodeVal,
+          locality: localityVal,
+          sublocality: sublocalityVal
         })
       });
       const data = await res.json();
       if (res.ok && data.success) {
         toast.success('Address added successfully');
+        setShowAddAddressForm(false);
         setAddressVal('');
+        setExactLocationVal('');
         setCityVal('');
         setStateVal('');
         setPincodeVal('');
         setTagVal('Home');
+        setCustomTagVal('');
         setLatVal('');
         setLngVal('');
+        setPlaceIdVal('');
+        setFormattedAddressVal('');
+        setPostalCodeVal('');
+        setLocalityVal('');
+        setSublocalityVal('');
         refreshUser();
       } else {
         toast.error(data.message || 'Failed to add address');
       }
     } catch (err) {
+      console.error('Error adding address:', err);
       toast.error('Error adding address');
     }
   };
@@ -354,6 +498,7 @@ export default function Profile() {
         toast.error(data.message || 'Failed to delete address');
       }
     } catch (err) {
+      console.error('Error deleting address:', err);
       toast.error('Error deleting address');
     }
   };
@@ -382,17 +527,28 @@ export default function Profile() {
     <main className="min-vh-100" style={{ paddingTop: '8rem', paddingBottom: '8rem' }}>
       <div className="container-lg" style={{ maxWidth: '900px' }}>
         {/* Profile Header */}
-        <div className="glass rounded-4 p-4 p-md-5 d-flex flex-column flex-md-row align-items-center align-items-md-start gap-4 mb-5 position-relative overflow-hidden">
+        <div className="glass rounded-4 p-4 p-md-5 d-flex flex-column flex-md-row align-items-center align-items-md-start gap-4 mb-4 position-relative overflow-hidden">
           <div className="position-absolute rounded-circle pointer-events-none" style={{ top: 0, right: 0, width: '250px', height: '250px', background: 'rgba(242, 122, 26, 0.1)', filter: 'blur(100px)' }} />
 
           <div className="rounded-circle d-flex align-items-center justify-content-center shadow text-white font-display fw-bold text-uppercase flex-shrink-0" style={{ width: '96px', height: '96px', fontSize: '2rem', background: 'linear-gradient(135deg, var(--brand), #e05c0c)' }}>
-            {user.name?.charAt(0) || 'U'}
+            {user.name?.charAt(0) || 'G'}
           </div>
 
           <div className="flex-grow-1 text-center text-md-start">
-            <h2 className="font-display fw-bold text-white mb-1 text-capitalize">{user.name}</h2>
-            <p className="text-white-60 d-flex align-items-center justify-content-center justify-content-md-start gap-2 small mb-3">
-              <Mail size={14} /> {user.email}
+            <h2 className="font-display fw-bold text-white mb-1 text-capitalize d-flex align-items-center justify-content-center justify-content-md-start gap-2">
+              {user.name || 'Guest User'}
+              <button
+                onClick={handleOpenEditModal}
+                className="btn-ghost p-1 rounded hover:text-brand-400 transition-colors border-0 bg-transparent text-white-60"
+                style={{ cursor: 'pointer' }}
+                title="Edit Details"
+              >
+                <Edit2 size={16} />
+              </button>
+            </h2>
+            <p className="text-white-60 d-flex flex-column flex-md-row align-items-center justify-content-center justify-content-md-start gap-2 gap-md-4 small mb-3">
+              <span className="d-flex align-items-center gap-2"><Mail size={14} /> {user.email}</span>
+              {user.phone && <span className="d-flex align-items-center gap-2">📞 {user.phone}</span>}
             </p>
             <div className="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill small fw-semibold" style={{ background: 'rgba(242, 122, 26, 0.2)', color: 'var(--brand)', border: '1px solid rgba(242, 122, 26, 0.3)' }}>
               Member since {user.since}
@@ -403,6 +559,19 @@ export default function Profile() {
             <LogOut size={16} className="me-2" /> Logout
           </button>
         </div>
+
+        {/* Complete Profile warning banner */}
+        {(!user.name || !user.phone) && (
+          <div className="alert bg-warning bg-opacity-10 border border-warning border-opacity-20 text-white rounded-4 p-4 mb-5 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+              <h5 className="fw-bold text-warning mb-1">Complete your profile</h5>
+              <p className="small text-white-60 mb-0">Please add your name and phone number to make ordering faster at checkout.</p>
+            </div>
+            <button onClick={handleOpenEditModal} className="btn-primary py-2 px-4 rounded border-0">
+              Complete Profile
+            </button>
+          </div>
+        )}
 
         {/* Dynamic Panels */}
         {activeTab === 'dashboard' && (
@@ -579,11 +748,14 @@ export default function Profile() {
                       <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
                         <p className="text-white mb-0 fw-medium">{addr.address}</p>
                         {addr.tag && (
-                          <span className="badge bg-brand-400 px-2 py-0.5 text-white rounded text-uppercase" style={{ fontSize: '9px', fontWeight: 'bold' }}>
+                          <span className="badge bg-brand-500 px-2 py-0.5 text-white rounded text-uppercase" style={{ fontSize: '9px', fontWeight: 'bold' }}>
                             {addr.tag}
                           </span>
                         )}
                       </div>
+                      {addr.exact_location && (
+                        <p className="text-brand-400 small mb-1 fw-semibold">{addr.exact_location}</p>
+                      )}
                       <p className="text-white-60 small mb-0">{addr.city}, {addr.state}, {addr.pincode}</p>
                       {addr.latitude && addr.longitude && (
                         <p className="text-white-40 small mb-0 font-monospace" style={{ fontSize: '10px' }}>
@@ -604,219 +776,347 @@ export default function Profile() {
             </div>
 
             {/* Add new address Form */}
-            <div className="glass rounded-4 p-4">
-              <h5 className="text-white mb-4 d-flex align-items-center gap-2">
-                <Plus size={18} className="text-brand-400" /> Add New Address
-              </h5>
-              <form onSubmit={handleAddAddress} className="row g-3">
-                <div className="col-12">
-                  <label className="form-label small text-white-60 mb-1">Street Address</label>
-                  <input
-                    type="text"
-                    value={addressVal}
-                    onChange={(e) => setAddressVal(e.target.value)}
-                    className="input-field w-100"
-                    placeholder="123 Street Name, Apartment..."
-                    required
-                  />
-                </div>
-                <div className="col-12 col-sm-4">
-                  <label className="form-label small text-white-60 mb-1">City</label>
-                  <input
-                    type="text"
-                    value={cityVal}
-                    onChange={(e) => setCityVal(e.target.value)}
-                    className="input-field w-100"
-                    placeholder="City"
-                    required
-                  />
-                </div>
-                <div className="col-12 col-sm-4">
-                  <label className="form-label small text-white-60 mb-1">State</label>
-                  <input
-                    type="text"
-                    value={stateVal}
-                    onChange={(e) => setStateVal(e.target.value)}
-                    className="input-field w-100"
-                    placeholder="State"
-                  />
-                </div>
-                <div className="col-12 col-sm-4">
-                  <label className="form-label small text-white-60 mb-1">Pincode</label>
-                  <input
-                    type="text"
-                    value={pincodeVal}
-                    onChange={(e) => setPincodeVal(e.target.value)}
-                    className="input-field w-100"
-                    placeholder="Pincode"
-                    required
-                  />
+            {showAddAddressForm ? (
+              <div className="glass rounded-4 p-4">
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                  <h5 className="text-white mb-0 d-flex align-items-center gap-2">
+                    <Plus size={18} className="text-brand-400" /> Add New Address
+                  </h5>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setShowAddAddressForm(false);
+                      setAddressVal('');
+                      setExactLocationVal('');
+                      setCityVal('');
+                      setStateVal('');
+                      setPincodeVal('');
+                      setLatVal('');
+                      setLngVal('');
+                      setTempLat('');
+                      setTempLng('');
+                    }}
+                    className="btn bg-transparent border-0 text-white-60 hover:text-white fw-bold py-1 px-2"
+                  >
+                    Cancel
+                  </button>
                 </div>
 
-                {/* Zomato/Swiggy-style Tag Selector */}
-                <div className="col-12 col-md-6 mt-3">
-                  <label className="form-label small text-white-60 mb-2 d-block">Save Address As</label>
-                  <div className="d-flex gap-2">
-                    {['Home', 'Work', 'Other'].map(tag => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => setTagVal(tag)}
-                        className={`px-4 py-2 rounded-pill small fw-semibold transition-all ${tagVal === tag
-                            ? 'bg-brand-400 text-white border-0'
-                            : 'glass border border-white-10 text-white-60 hover:text-white'
-                          }`}
-                        style={{ minWidth: '80px' }}
-                      >
-                        {tag}
-                      </button>
-                    ))}
+                {/* Geocoding Search Input Inline at Top */}
+                <div className="mb-3">
+                  <label className="form-label small text-white-60 mb-2">Search Location on Map (Mandatory)</label>
+                  <form onSubmit={(e) => e.preventDefault()} className="d-flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      id="map-search-input"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="input-field flex-grow-1 py-2.5 px-3 small text-white"
+                      placeholder="Type area, street name to search on map..."
+                    />
+                  </form>
+                </div>
+
+                {/* Map Container Inline */}
+                <div
+                  id="map-container"
+                  className="rounded-3 mb-3 border border-white-10"
+                  style={{ height: '350px', background: '#1A1A1A' }}
+                />
+
+                {/* Locate Me & Confirm buttons inside form */}
+                <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                  <div className="small font-monospace text-brand-400">
+                    {latVal && lngVal ? (
+                      <span>Confirmed Pin: {Number(latVal).toFixed(5)}, {Number(lngVal).toFixed(5)}</span>
+                    ) : tempLat && tempLng ? (
+                      <span className="text-warning">Temp Pin placed (Click Confirm Location)</span>
+                    ) : (
+                      <span className="text-white-40 italic">Move pin or search address</span>
+                    )}
                   </div>
-                </div>
-
-                {/* Map coordinates picker trigger */}
-                <div className="col-12 col-md-6 mt-3 d-flex flex-column justify-content-end">
-                  <label className="form-label small text-white-60 mb-2">Location Pin (Optional)</label>
-                  <div className="d-flex align-items-center gap-3">
+                  <div className="d-flex gap-2">
+                    <button
+                      type="button"
+                      disabled={locatingUser}
+                      onClick={() => {
+                        if (navigator.geolocation) {
+                          setLocatingUser(true);
+                          navigator.geolocation.getCurrentPosition(
+                            (pos) => {
+                              const { latitude, longitude } = pos.coords;
+                              setTempLat(latitude);
+                              setTempLng(longitude);
+                              if (mapInstance.current && window.google) {
+                                const latlng = new window.google.maps.LatLng(latitude, longitude);
+                                mapInstance.current.setCenter(latlng);
+                                mapInstance.current.setZoom(18);
+                                if (markerInstance.current) {
+                                  markerInstance.current.setPosition(latlng);
+                                }
+                              }
+                              setLocatingUser(false);
+                            },
+                            (err) => {
+                              setLocatingUser(false);
+                              if (err.code === 1) {
+                                alert(
+                                  "Location access is blocked or disabled in your browser settings.\n\n" +
+                                  "To enable:\n" +
+                                  "1. Click the settings/lock icon next to the URL in your address bar.\n" +
+                                  "2. Set Location permissions to 'Allow'.\n" +
+                                  "3. Refresh the page.\n\n" +
+                                  "Alternatively, you can manually drag the pin marker on the map to select your address."
+                                );
+                              } else {
+                                toast.error('Unable to fetch your location automatically.');
+                              }
+                            }
+                          );
+                        } else {
+                          toast.error('Geolocation is not supported by your browser.');
+                        }
+                      }}
+                      className="btn-ghost py-2 px-3 small border-white-10 rounded d-flex align-items-center gap-2"
+                      style={{ fontSize: '12px' }}
+                    >
+                      {locatingUser ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm text-brand-400" role="status" style={{ width: '12px', height: '12px' }} />
+                          Locating...
+                        </>
+                      ) : (
+                        'Locate Me'
+                      )}
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
-                        setTempLat(latVal || 23.0225);
-                        setTempLng(lngVal || 72.5714);
-                        setShowMapModal(true);
+                        if (tempLat && tempLng) {
+                          setLatVal(tempLat);
+                          setLngVal(tempLng);
+                          reverseGeocode(tempLat, tempLng);
+                        } else {
+                          toast.error('Please select a pin location on the map');
+                        }
                       }}
-                      className="btn-ghost px-4 py-2.5 small d-flex align-items-center gap-1.5 border border-white-10 rounded-pill"
+                      className="btn-primary py-2 px-4 small rounded"
+                      style={{ fontSize: '12px' }}
                     >
-                      <MapPin size={14} className="text-brand-400" /> Choose on Map
+                      Confirm Location
                     </button>
-                    {latVal && lngVal ? (
-                      <span className="small text-brand-400 font-monospace">
-                        Pin Selected ({Number(latVal).toFixed(4)}, {Number(lngVal).toFixed(4)})
-                      </span>
-                    ) : (
-                      <span className="small text-white-40 italic">No pin placed</span>
-                    )}
                   </div>
                 </div>
 
-                <div className="col-12 mt-4">
-                  <button type="submit" className="btn-primary py-2.5 px-4 font-semibold shadow">
-                    Save Address
-                  </button>
-                </div>
-              </form>
-            </div>
+                <hr style={{ borderTop: '1px solid rgba(255,255,255,0.1)', margin: '1.5rem 0' }} />
 
-            {/* Map Picker Modal */}
-            {showMapModal && (
-              <div
-                className="position-fixed d-flex align-items-center justify-content-center"
-                style={{
-                  zIndex: 9999,
-                  background: 'rgba(0, 0, 0, 0.75)',
-                  backdropFilter: 'blur(5px)',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0
-                }}
-              >
-                <div className="glass rounded-4 p-4 w-100 max-w-lg mx-3 border border-white-15 shadow-2xl position-relative" style={{ maxWidth: '600px' }}>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="text-white fw-bold mb-0">Select Delivery Pin Location</h5>
-                    <button
-                      onClick={() => setShowMapModal(false)}
-                      className="btn bg-transparent text-white-60 hover:text-white border-0 p-1"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  {/* Geocoding Search Input */}
-                  <form onSubmit={handleSearchLocation} className="d-flex gap-2 mb-3">
+                {/* Sub-inputs form block */}
+                <form onSubmit={handleAddAddress} className="row g-3">
+                  <div className="col-12">
+                    <label className="form-label small text-white-60 mb-1">Street Address (Mandatory)</label>
                     <input
                       type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="input-field flex-grow-1 py-2 px-3 small"
-                      placeholder="Search locality, street name..."
+                      value={addressVal}
+                      onChange={(e) => setAddressVal(e.target.value)}
+                      className="input-field w-100"
+                      placeholder="Select and Confirm location on map to populate automatically"
+                      required
                     />
-                    <button type="submit" className="btn-primary py-2 px-3 small">
-                      Search
-                    </button>
-                  </form>
-
-                  {/* Map Container */}
-                  <div
-                    id="map-container"
-                    className="rounded-3 mb-3 border border-white-10"
-                    style={{ height: '320px', background: '#1A1A1A' }}
-                  />
-
-                  {/* Info & Geolocation detector */}
-                  <div className="d-flex flex-column sm:flex-row justify-content-between align-items-start sm:align-items-center gap-3">
-                    <div>
-                      {tempLat && tempLng ? (
-                        <div className="small font-monospace text-brand-400">
-                          Selected: {Number(tempLat).toFixed(5)}, {Number(tempLng).toFixed(5)}
-                        </div>
-                      ) : (
-                        <div className="small text-white-40 italic">Click on map to place pin</div>
-                      )}
-                    </div>
-                    <div className="d-flex gap-2 w-100 sm:w-auto justify-content-end">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (navigator.geolocation) {
-                            navigator.geolocation.getCurrentPosition(
-                              (pos) => {
-                                const { latitude, longitude } = pos.coords;
-                                setTempLat(latitude);
-                                setTempLng(longitude);
-                                if (mapInstance.current) {
-                                  mapInstance.current.setView([latitude, longitude], 15);
-                                  if (window.L) {
-                                    mapInstance.current.fireEvent('click', { latlng: window.L.latLng(latitude, longitude) });
-                                  }
-                                }
-                              },
-                              (err) => toast.error('Error fetching geolocation permissions')
-                            );
-                          } else {
-                            toast.error('Geolocation is not supported by your browser.');
-                          }
-                        }}
-                        className="btn-ghost py-2 px-3 small border-white-10 rounded"
-                        style={{ fontSize: '12px' }}
-                      >
-                        Locate Me
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (tempLat && tempLng) {
-                            setLatVal(tempLat);
-                            setLngVal(tempLng);
-                            setShowMapModal(false);
-                            reverseGeocode(tempLat, tempLng);
-                          } else {
-                            toast.error('Please select a pin location on the map');
-                          }
-                        }}
-                        className="btn-primary py-2 px-4 small rounded"
-                        style={{ fontSize: '12px' }}
-                      >
-                        Confirm Location
-                      </button>
-                    </div>
                   </div>
-                </div>
+                  <div className="col-12">
+                    <label className="form-label small text-white-60 mb-1">Exact Location (Flat/House/Floor No., Landmark, etc.) (Mandatory)</label>
+                    <input
+                      type="text"
+                      value={exactLocationVal}
+                      onChange={(e) => setExactLocationVal(e.target.value)}
+                      className="input-field w-100"
+                      placeholder="e.g. Flat 4B, 3rd Floor, Near Central Mall"
+                      required
+                    />
+                  </div>
+                  <div className="col-12 col-sm-4">
+                    <label className="form-label small text-white-60 mb-1">City (Mandatory)</label>
+                    <input
+                      type="text"
+                      value={cityVal}
+                      onChange={(e) => setCityVal(e.target.value)}
+                      className="input-field w-100"
+                      placeholder="City"
+                      required
+                    />
+                  </div>
+                  <div className="col-12 col-sm-4">
+                    <label className="form-label small text-white-60 mb-1">State (Mandatory)</label>
+                    <input
+                      type="text"
+                      value={stateVal}
+                      onChange={(e) => setStateVal(e.target.value)}
+                      className="input-field w-100"
+                      placeholder="State"
+                      required
+                    />
+                  </div>
+                  <div className="col-12 col-sm-4">
+                    <label className="form-label small text-white-60 mb-1">Pincode (Mandatory)</label>
+                    <input
+                      type="text"
+                      value={pincodeVal}
+                      onChange={(e) => setPincodeVal(e.target.value)}
+                      className="input-field w-100"
+                      placeholder="Pincode"
+                      required
+                    />
+                  </div>
+
+                  {/* Tag Selector */}
+                  <div className="col-12 mt-3">
+                    <label className="form-label small text-white-60 mb-2 d-block">Save Address As</label>
+                    <div className="d-flex gap-2 mb-3">
+                      {['Home', 'Work', 'Other'].map(tag => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => setTagVal(tag)}
+                          className={`px-4 py-2 rounded-pill small fw-semibold transition-all ${tagVal === tag
+                            ? 'bg-brand-500 text-white border-0'
+                            : 'glass border border-white-10 text-white-60 hover:text-white'
+                            }`}
+                          style={{ minWidth: '80px' }}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+
+                    {tagVal === 'Other' && (
+                      <div className="animate-fade-in">
+                        <label className="form-label small text-white-60 mb-1">Custom Tag Name (e.g. Friend's House, Gym) (Mandatory)</label>
+                        <input
+                          type="text"
+                          value={customTagVal}
+                          onChange={(e) => setCustomTagVal(e.target.value)}
+                          className="input-field w-100"
+                          placeholder="Enter custom tag..."
+                          required
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="col-12 mt-4">
+                    <button type="submit" className="btn-primary py-2.5 px-4 font-semibold shadow w-100 justify-content-center">
+                      Save Address
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <div className="d-flex justify-content-center mt-3">
+                <button
+                  type="button"
+                  onClick={handleOpenAddAddressForm}
+                  className="btn-primary d-flex align-items-center gap-2 py-3 px-5 fw-bold"
+                >
+                  <Plus size={20} /> Add Address
+                </button>
               </div>
             )}
           </div>
         )}
       </div>
+
+      {/* Edit Profile Modal */}
+      {detectingLocation && (
+        <div 
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center px-3"
+          style={{ 
+            zIndex: 3000, 
+            background: 'rgba(6,6,6,0.85)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)'
+          }}
+        >
+          <div className="spinner-border text-brand-400 mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <h5 className="text-white font-display fw-bold mb-1">Detecting Your Location</h5>
+          <p className="small text-white-60">Please allow location permissions if prompted by your browser.</p>
+        </div>
+      )}
+
+      {showEditModal && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center px-3"
+          style={{
+            zIndex: 2000,
+            background: 'rgba(0,0,0,0.85)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)'
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass rounded-4 p-4 p-md-5 w-100 position-relative animate-fade-in"
+            style={{ maxWidth: '500px', border: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h4 className="font-display fw-bold text-white mb-0">Edit Personal Details</h4>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="btn bg-transparent text-white-60 hover:text-white border-0 p-1 font-bold"
+                style={{ fontSize: '1.25rem' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateProfile} className="d-flex flex-column gap-4">
+              <div>
+                <label className="form-label small text-white-60 mb-2 fw-medium">Full Name</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="input-field w-100 py-3 px-3 text-white"
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="form-label small text-white-60 mb-2 fw-medium">Phone Number</label>
+                <input
+                  type="tel"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  className="input-field w-100 py-3 px-3 text-white"
+                  placeholder="9876543210"
+                  required
+                />
+              </div>
+
+              <div className="d-flex gap-2 justify-content-end mt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="btn bg-transparent border-0 text-white-60 hover:text-white py-2 px-4 rounded"
+                  disabled={updatingProfile}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary py-2 px-4 rounded"
+                  disabled={updatingProfile}
+                >
+                  {updatingProfile ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </main>
   );
 }

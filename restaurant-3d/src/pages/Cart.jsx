@@ -157,7 +157,7 @@ export default function Cart() {
                 </div>
                 <div className="d-flex justify-content-between small">
                   <span className="text-white-60">Delivery</span>
-                  <span className="text-white">{delivery === 0 ? 'Free' : `₹${delivery.toFixed(2)}`}</span>
+                  <span className="text-white text-brand-400">Calculated at checkout</span>
                 </div>
                 <div className="d-flex justify-content-between small">
                   <span className="text-white-60">Tax ({totalTaxRatePercent}%)</span>
@@ -167,8 +167,8 @@ export default function Cart() {
 
               <div className="border-top pt-3 mb-4" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
                 <div className="d-flex justify-content-between align-items-center">
-                  <span className="fw-semibold text-white">Total</span>
-                  <span className="price-tag fs-3">₹{total.toFixed(2)}</span>
+                  <span className="fw-semibold text-white">Total (excl. delivery)</span>
+                  <span className="price-tag fs-3">₹{(subtotal + tax).toFixed(2)}</span>
                 </div>
               </div>
 

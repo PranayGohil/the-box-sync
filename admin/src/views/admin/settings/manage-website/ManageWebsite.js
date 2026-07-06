@@ -76,13 +76,19 @@ const ManageWebsite = () => {
   const [tempLat, setTempLat] = useState('');
   const [tempLng, setTempLng] = useState('');
   const mapInstance = React.useRef(null);
+  const markerInstance = React.useRef(null);
+  const [locatingUser, setLocatingUser] = useState(false);
+  const [detectingLocation, setDetectingLocation] = useState(false);
 
   const { currentUser } = React.useContext(AuthContext);
   const restaurant_code = currentUser?.restaurant_code;
   const publicLink = restaurant_code ? `${process.env.REACT_APP_WEBSITE_URL}/${restaurant_code}` : '';
 
+  const [settingsData, setSettingsData] = useState(null);
+
   const formik = useFormik({
-    initialValues: {
+    enableReinitialize: true,
+    initialValues: settingsData || {
       restaurant_name: '',
       restaurant_address: '',
       contact_email: '',
@@ -107,8 +113,25 @@ const ManageWebsite = () => {
       legacy_bullets: [],
       contact_details: '',
       map_location: '',
+      place_id: '',
+      formatted_address: '',
       latitude: '',
       longitude: '',
+      city: '',
+      state: '',
+      country: '',
+      postal_code: '',
+      locality: '',
+      sublocality: '',
+      delivery: {
+        enabled: false,
+        max_distance: '',
+        minimum_order: '',
+        free_radius: '',
+        charge_type: 'free',
+        fixed_charge: '',
+        slabs: []
+      },
       logo: '',
       testimonials: [],
       social_links: [],
@@ -174,6 +197,7 @@ const ManageWebsite = () => {
         await axios.post(`${process.env.REACT_APP_API}/website/settings`, payload, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
+        setSettingsData(values);
         toast.success('Website settings updated successfully.');
       } catch (err) {
         console.error('Failed to update:', err);
@@ -197,23 +221,87 @@ const ManageWebsite = () => {
 
         if (settingsRes.data) {
           setHasReservationPlan(!!settingsRes.data.has_reservation_plan);
-          Object.keys(settingsRes.data).forEach((key) => {
-            if (key in formik.initialValues) {
+          const defaultInitial = {
+            restaurant_name: '',
+            restaurant_address: '',
+            contact_email: '',
+            contact_phone: '',
+            open_days: 'Monday-Saturday',
+            open_time_from: '11:00',
+            open_time_to: '23:00',
+            opening_hours: [],
+            featured_dish_ids: [],
+            hero_title: '',
+            hero_subtitle: '',
+            hero_details: '',
+            hero_image: '',
+            about_title: '',
+            about_details: '',
+            about_image: '',
+            legacy_title: '',
+            legacy_details: '',
+            legacy_image: '',
+            legacy_years: '',
+            legacy_layout: 'image-right',
+            legacy_bullets: [],
+            contact_details: '',
+            map_location: '',
+            place_id: '',
+            formatted_address: '',
+            latitude: '',
+            longitude: '',
+            city: '',
+            state: '',
+            country: '',
+            postal_code: '',
+            locality: '',
+            sublocality: '',
+            delivery: {
+              enabled: false,
+              max_distance: '',
+              minimum_order: '',
+              free_radius: '',
+              charge_type: 'free',
+              fixed_charge: '',
+              slabs: []
+            },
+            logo: '',
+            testimonials: [],
+            social_links: [],
+            show_reservation: true,
+          };
+
+          const parsedData = { ...defaultInitial };
+          Object.keys(defaultInitial).forEach((key) => {
+            if (key in settingsRes.data) {
               const arrayFields = ['featured_dish_ids', 'opening_hours', 'testimonials', 'social_links', 'legacy_bullets'];
               if (arrayFields.includes(key)) {
                 try {
                   const val = typeof settingsRes.data[key] === 'string' ? JSON.parse(settingsRes.data[key]) : settingsRes.data[key];
-                  setFieldValue(key, Array.isArray(val) ? val : []);
+                  parsedData[key] = Array.isArray(val) ? val : [];
                 } catch (e) {
-                  setFieldValue(key, []);
+                  parsedData[key] = [];
                 }
               } else if (key === 'show_reservation') {
-                setFieldValue(key, settingsRes.data[key] !== undefined ? settingsRes.data[key] : true);
+                parsedData[key] = settingsRes.data[key] !== undefined ? settingsRes.data[key] : true;
+              } else if (key === 'delivery') {
+                const deliveryObj = settingsRes.data[key] || {};
+                parsedData[key] = {
+                  enabled: !!deliveryObj.enabled,
+                  max_distance: deliveryObj.max_distance !== undefined && deliveryObj.max_distance !== null ? deliveryObj.max_distance : '',
+                  minimum_order: deliveryObj.minimum_order !== undefined && deliveryObj.minimum_order !== null ? deliveryObj.minimum_order : '',
+                  free_radius: deliveryObj.free_radius !== undefined && deliveryObj.free_radius !== null ? deliveryObj.free_radius : '',
+                  charge_type: deliveryObj.charge_type || 'free',
+                  fixed_charge: deliveryObj.fixed_charge !== undefined && deliveryObj.fixed_charge !== null ? deliveryObj.fixed_charge : '',
+                  slabs: Array.isArray(deliveryObj.slabs) ? deliveryObj.slabs : []
+                };
               } else {
-                setFieldValue(key, settingsRes.data[key] || '');
+                parsedData[key] = settingsRes.data[key] || '';
               }
             }
           });
+          setSettingsData(parsedData);
+
           if (settingsRes.data.logo) {
             setLogoPreview(`${process.env.REACT_APP_UPLOAD_DIR}/${settingsRes.data.logo}`);
           }
@@ -233,100 +321,92 @@ const ManageWebsite = () => {
     fetchData();
   }, []);
 
-  // Leaflet map loader for Admin
+  // Load Google Maps API Script
   useEffect(() => {
-    if (!showMapModal) return;
-
-    // Load Leaflet css
-    let leafletCss = document.getElementById('leaflet-css-admin');
-    if (!leafletCss) {
-      leafletCss = document.createElement('link');
-      leafletCss.id = 'leaflet-css-admin';
-      leafletCss.rel = 'stylesheet';
-      leafletCss.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-      document.head.appendChild(leafletCss);
+    const scriptId = 'google-maps-script-admin';
+    let script = document.getElementById(scriptId);
+    if (!script) {
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY'}&libraries=places,geometry&loading=async`;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
     }
+  }, []);
 
-    // Load Leaflet js
-    let leafletJs = document.getElementById('leaflet-js-admin');
-    if (!leafletJs) {
-      leafletJs = document.createElement('script');
-      leafletJs.id = 'leaflet-js-admin';
-      leafletJs.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-      document.head.appendChild(leafletJs);
-    }
+  // Google Maps picker modal initialization
+  useEffect(() => {
+    if (!showMapModal || !window.google) return () => { };
 
-    let activeMarker = null;
+    const defaultLat = Number(tempLat) || 23.0225;
+    const defaultLng = Number(tempLng) || 72.5714;
+    const mapDiv = document.getElementById('admin-map-container');
+    if (!mapDiv) return () => { };
 
-    const initMap = () => {
-      if (!window.L || !document.getElementById('admin-map-container')) return;
-      
-      const defaultLat = tempLat || 23.0225;
-      const defaultLng = tempLng || 72.5714;
-      
-      const map = window.L.map('admin-map-container').setView([defaultLat, defaultLng], 14);
-      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
+    const map = new window.google.maps.Map(mapDiv, {
+      center: { lat: defaultLat, lng: defaultLng },
+      zoom: 14,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+    });
 
-      // Create marker
-      if (tempLat && tempLng) {
-        activeMarker = window.L.marker([tempLat, tempLng]).addTo(map);
+    const marker = new window.google.maps.Marker({
+      position: { lat: defaultLat, lng: defaultLng },
+      map,
+      draggable: true,
+    });
+
+    marker.addListener('dragend', () => {
+      const position = marker.getPosition();
+      if (position) {
+        setTempLat(position.lat());
+        setTempLng(position.lng());
       }
+    });
 
-      map.on('click', (e) => {
-        const { lat, lng } = e.latlng;
-        if (activeMarker) {
-          activeMarker.setLatLng(e.latlng);
-        } else {
-          activeMarker = window.L.marker(e.latlng).addTo(map);
-        }
-        setTempLat(lat);
-        setTempLng(lng);
+    map.addListener('click', (e) => {
+      if (e.latLng) {
+        marker.setPosition(e.latLng);
+        setTempLat(e.latLng.lat());
+        setTempLng(e.latLng.lng());
+      }
+    });
+
+    const input = document.getElementById('admin-map-search-input');
+    if (input) {
+      const autocomplete = new window.google.maps.places.Autocomplete(input, {
+        types: ['geocode', 'establishment'],
       });
+      autocomplete.bindTo('bounds', map);
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) {
+          toast.error("No details available for input location.");
+          return;
+        }
 
-      mapInstance.current = map;
-    };
+        map.setCenter(place.geometry.location);
+        map.setZoom(16);
+        marker.setPosition(place.geometry.location);
+        setTempLat(place.geometry.location.lat());
+        setTempLng(place.geometry.location.lng());
 
-    if (window.L) {
-      setTimeout(initMap, 150);
-    } else {
-      leafletJs.onload = () => setTimeout(initMap, 150);
+        if (place.formatted_address) {
+          setMapSearchQuery(place.formatted_address);
+        }
+      });
     }
+
+    mapInstance.current = map;
+    markerInstance.current = marker;
 
     return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
+      mapInstance.current = null;
+      markerInstance.current = null;
     };
   }, [showMapModal]);
-
-  const handleSearchAdminLocation = async (e) => {
-    if (e) e.preventDefault();
-    if (!mapSearchQuery.trim() || !mapInstance.current) return;
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(mapSearchQuery)}`);
-      const data = await res.json();
-      if (data && data.length > 0) {
-        const { lat, lon } = data[0];
-        const numLat = Number(lat);
-        const numLon = Number(lon);
-        mapInstance.current.setView([numLat, numLon], 15);
-        setTempLat(numLat);
-        setTempLng(numLon);
-        
-        if (window.L) {
-          mapInstance.current.fireEvent('click', { latlng: window.L.latLng(numLat, numLon) });
-        }
-        toast.success('Location found on map!');
-      } else {
-        toast.error('Location not found.');
-      }
-    } catch (err) {
-      toast.error('Search failed.');
-    }
-  };
 
   const handleDishSelect = (id) => {
     const ids = values.featured_dish_ids.includes(id) ? values.featured_dish_ids.filter((d) => d !== id) : [...values.featured_dish_ids, id];
@@ -496,12 +576,52 @@ const ManageWebsite = () => {
 
         <Form onSubmit={handleSubmit}>
           <Row className="g-4">
-            <Col lg={8}>
+            <Col lg={6}>
               {/* General Settings */}
               <Card className="manage-website-glass-card mb-4 border-0">
                 <Card.Body className="p-4">
                   <h5 className="manage-website-section-title">General Information</h5>
                   <Row className="g-3">
+                    <Col xs={12}>
+                      <Form.Group className="d-flex flex-column align-items-center mb-3">
+                        <Form.Label className="small fw-bold text-muted text-center w-100 mb-3">Logo Image</Form.Label>
+                        <div
+                          className={`border border-3 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center mb-3 ${isWideLogo ? 'rounded-3' : 'rounded-circle'}`}
+                          style={isWideLogo ? { width: '200px', height: '100px' } : { width: '120px', height: '120px' }}
+                        >
+                          {logoPreview ? (
+                            <img
+                              src={logoPreview}
+                              alt="Logo"
+                              style={isWideLogo ? { width: '100%', height: '100%', objectFit: 'contain' } : { width: '100%', height: '100%', objectFit: 'cover' }}
+                              onLoad={(e) => {
+                                const { naturalWidth, naturalHeight } = e.target;
+                                setIsWideLogo(naturalWidth >= naturalHeight * 1.8);
+                              }}
+                            />
+                          ) : (
+                            <CsLineIcons icon="image" size="48" className="text-muted opacity-20" />
+                          )}
+                        </div>
+                        <Form.Control
+                          type="file"
+                          id="logo-upload"
+                          className="d-none"
+                          accept="image/*"
+                          onChange={(e) => handleLogoChange(e.target.files[0])}
+                        />
+                        <Button
+                          as="label"
+                          htmlFor="logo-upload"
+                          className="manage-website-custom-btn-outline px-4 py-2 border-2 d-inline-flex align-items-center"
+                          style={{ borderRadius: '50px', borderColor: '#1ea8e7', color: '#1ea8e7', fontWeight: '700', cursor: 'pointer', maxWidth: 'fit-content' }}
+                          disabled={saving || uploadingLogo}
+                        >
+                          {uploadingLogo ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" className="me-2" />}
+                          {logoPreview ? 'Change Logo' : 'Upload Logo'}
+                        </Button>
+                      </Form.Group>
+                    </Col>
                     <Col xs={12} md={6}>
                       <Form.Group>
                         <Form.Label className="small fw-bold text-muted">Restaurant Name</Form.Label>
@@ -515,21 +635,7 @@ const ManageWebsite = () => {
                         <Form.Control.Feedback type="invalid">{errors.restaurant_name}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
-                    <Col xs={12} md={6}>
-                      <Form.Group>
-                        <Form.Label className="small fw-bold text-muted">Address</Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          rows={2}
-                          className="manage-website-pill-input"
-                          name="restaurant_address"
-                          value={values.restaurant_address}
-                          onChange={handleChange}
-                          isInvalid={touched.restaurant_address && errors.restaurant_address}
-                        />
-                        <Form.Control.Feedback type="invalid">{errors.restaurant_address}</Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
+
                     <Col xs={12} md={6}>
                       <Form.Group>
                         <Form.Label className="small fw-bold text-muted">Email</Form.Label>
@@ -578,47 +684,501 @@ const ManageWebsite = () => {
                         </div>
                       </Col>
                     )}
-                    <Col xs={12}>
-                      <Form.Group className="d-flex flex-column align-items-center mb-3">
-                        <Form.Label className="small fw-bold text-muted text-center w-100 mb-3">Logo Image</Form.Label>
-                        <div
-                          className={`border border-3 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center mb-3 ${isWideLogo ? 'rounded-3' : 'rounded-circle'}`}
-                          style={isWideLogo ? { width: '200px', height: '100px' } : { width: '120px', height: '120px' }}
-                        >
-                          {logoPreview ? (
-                            <img
-                              src={logoPreview}
-                              alt="Logo"
-                              style={isWideLogo ? { width: '100%', height: '100%', objectFit: 'contain' } : { width: '100%', height: '100%', objectFit: 'cover' }}
-                              onLoad={(e) => {
-                                const { naturalWidth, naturalHeight } = e.target;
-                                setIsWideLogo(naturalWidth >= naturalHeight * 1.8);
-                              }}
-                            />
-                          ) : (
-                            <CsLineIcons icon="image" size="48" className="text-muted opacity-20" />
-                          )}
-                        </div>
+                  </Row>
+                </Card.Body>
+              </Card>
+
+
+
+              {/* Address & Map Location */}
+              <Card className="manage-website-glass-card mb-4 border-0">
+                <Card.Body className="p-4">
+                  <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <h5 className="manage-website-section-title mb-0">Address & Map Location</h5>
+                    <div className="d-flex gap-2">
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        className="manage-menu-custom-btn-outline px-3 py-1.5"
+                        style={{ fontSize: '11px', borderRadius: '50px' }}
+                        onClick={() => {
+                          if (values.latitude && values.longitude) {
+                            setTempLat(values.latitude);
+                            setTempLng(values.longitude);
+                            setShowMapModal(true);
+                          } else if (navigator.geolocation) {
+                            setDetectingLocation(true);
+                            navigator.geolocation.getCurrentPosition(
+                              (pos) => {
+                                setTempLat(pos.coords.latitude);
+                                setTempLng(pos.coords.longitude);
+                                setDetectingLocation(false);
+                                setShowMapModal(true);
+                              },
+                              (err) => {
+                                setDetectingLocation(false);
+                                if (err.code === 1) { // PERMISSION_DENIED
+                                  const manual = window.confirm(
+                                    "Location access is blocked or disabled in your browser settings.\n\n" +
+                                    "To auto-detect:\n" +
+                                    "1. Click the settings/lock icon in your address bar.\n" +
+                                    "2. Set Location permissions to 'Allow'.\n" +
+                                    "3. Reload the page.\n\n" +
+                                    "Would you like to manually choose your address on the map instead?"
+                                  );
+                                  if (manual) {
+                                    setTempLat(23.0225);
+                                    setTempLng(72.5714);
+                                    setShowMapModal(true);
+                                  }
+                                } else {
+                                  toast.error('Unable to fetch location automatically.');
+                                  setTempLat(23.0225);
+                                  setTempLng(72.5714);
+                                  setShowMapModal(true);
+                                }
+                              },
+                              { enableHighAccuracy: true, timeout: 6000 }
+                            );
+                          } else {
+                            setTempLat(23.0225);
+                            setTempLng(72.5714);
+                            setShowMapModal(true);
+                          }
+                        }}
+                      >
+                        <CsLineIcons icon="pin" size="12" className="me-1" /> Choose on Map
+                      </Button>
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        className="manage-menu-custom-btn-outline px-3 py-1.5"
+                        style={{ fontSize: '11px', borderRadius: '50px' }}
+                        onClick={() => {
+                          if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(
+                              (position) => {
+                                setFieldValue('latitude', position.coords.latitude);
+                                setFieldValue('longitude', position.coords.longitude);
+                                toast.success('Coordinates detected successfully!');
+                              },
+                              (error) => {
+                                toast.error('Permission denied or location unavailable.');
+                              }
+                            );
+                          } else {
+                            toast.error('Geolocation is not supported by your browser.');
+                          }
+                        }}
+                      >
+                        <CsLineIcons icon="location" size="12" className="me-1" /> Detect Location
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Form.Group className="mb-4">
+                    <Form.Label className="small fw-bold text-muted">Restaurant Address (Show on Website / Custom Text)</Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={2}
+                      className="manage-website-pill-input"
+                      name="restaurant_address"
+                      value={values.restaurant_address}
+                      onChange={handleChange}
+                      isInvalid={touched.restaurant_address && errors.restaurant_address}
+                      placeholder="e.g. 123 Main St, London (Type custom friendly text, or pick on map to resolve automatically)"
+                    />
+                    <Form.Control.Feedback type="invalid">{errors.restaurant_address}</Form.Control.Feedback>
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label className="small fw-bold text-muted">Google Maps Embed Link / URL</Form.Label>
+                    <Form.Control
+                      className="manage-website-pill-input"
+                      name="map_location"
+                      as="textarea"
+                      rows={2}
+                      value={values.map_location}
+                      onChange={handleChange}
+                      placeholder="Paste the <iframe src='...'> or just the map link here"
+                    />
+                  </Form.Group>
+
+                  <Row className="g-3">
+                    <Col xs="6">
+                      <Form.Group>
+                        <Form.Label className="small fw-bold text-muted">Latitude</Form.Label>
                         <Form.Control
-                          type="file"
-                          id="logo-upload"
-                          className="d-none"
-                          accept="image/*"
-                          onChange={(e) => handleLogoChange(e.target.files[0])}
+                          type="text"
+                          className="manage-website-pill-input"
+                          name="latitude"
+                          value={values.latitude}
+                          onChange={handleChange}
+                          isInvalid={touched.latitude && !!errors.latitude}
+                          placeholder="e.g. 23.0225"
                         />
-                        <Button
-                          as="label"
-                          htmlFor="logo-upload"
-                          className="manage-website-custom-btn-outline px-4 py-2 border-2 d-inline-flex align-items-center"
-                          style={{ borderRadius: '50px', borderColor: '#1ea8e7', color: '#1ea8e7', fontWeight: '700', cursor: 'pointer', maxWidth: 'fit-content' }}
-                          disabled={saving || uploadingLogo}
-                        >
-                          {uploadingLogo ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" className="me-2" />}
-                          {logoPreview ? 'Change Logo' : 'Upload Logo'}
-                        </Button>
+                        <Form.Control.Feedback type="invalid">{errors.latitude}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                    <Col xs="6">
+                      <Form.Group>
+                        <Form.Label className="small fw-bold text-muted">Longitude</Form.Label>
+                        <Form.Control
+                          type="text"
+                          className="manage-website-pill-input"
+                          name="longitude"
+                          value={values.longitude}
+                          onChange={handleChange}
+                          isInvalid={touched.longitude && !!errors.longitude}
+                          placeholder="e.g. 72.5714"
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.longitude}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                   </Row>
+                </Card.Body>
+              </Card>
+
+              {/* Delivery Settings */}
+              <Card className="manage-website-glass-card mb-4 border-0">
+                <Card.Body className="p-4">
+                  <h5 className="manage-website-section-title mb-4">Delivery Configurations</h5>
+
+                  <Form.Group className="mb-3 d-flex align-items-center justify-content-between">
+                    <div>
+                      <Form.Label className="small fw-bold text-muted mb-0">Enable Delivery Services</Form.Label>
+                      <div className="text-muted small">Allow customers to place delivery orders from the website</div>
+                    </div>
+                    <Form.Check
+                      type="switch"
+                      id="delivery-enabled-switch"
+                      name="delivery.enabled"
+                      checked={values.delivery?.enabled}
+                      onChange={(e) => setFieldValue('delivery.enabled', e.target.checked)}
+                    />
+                  </Form.Group>
+
+                  {values.delivery?.enabled && (
+                    <>
+                      <Row className="g-3 mb-3">
+                        <Col xs="6">
+                          <Form.Group>
+                            <Form.Label className="small fw-bold text-muted">Max Delivery Distance (km)</Form.Label>
+                            <Form.Control
+                              type="number"
+                              className="manage-website-pill-input"
+                              name="delivery.max_distance"
+                              value={values.delivery?.max_distance}
+                              onChange={handleChange}
+                              placeholder="e.g. 10"
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col xs="6">
+                          <Form.Group>
+                            <Form.Label className="small fw-bold text-muted">Min Order for Delivery (₹)</Form.Label>
+                            <Form.Control
+                              type="number"
+                              className="manage-website-pill-input"
+                              name="delivery.minimum_order"
+                              value={values.delivery?.minimum_order}
+                              onChange={handleChange}
+                              placeholder="e.g. 200"
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
+
+                      <Row className="g-3 mb-3">
+                        <Col xs="6">
+                          <Form.Group>
+                            <Form.Label className="small fw-bold text-muted">Free Delivery Radius (km)</Form.Label>
+                            <Form.Control
+                              type="number"
+                              className="manage-website-pill-input"
+                              name="delivery.free_radius"
+                              value={values.delivery?.free_radius}
+                              onChange={handleChange}
+                              placeholder="e.g. 3"
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col xs="6">
+                          <Form.Group>
+                            <Form.Label className="small fw-bold text-muted">Delivery Charge Type</Form.Label>
+                            <Form.Select
+                              className="manage-website-pill-input"
+                              name="delivery.charge_type"
+                              value={values.delivery?.charge_type}
+                              onChange={handleChange}
+                            >
+                              <option value="free">Free Delivery</option>
+                              <option value="fixed">Fixed Delivery Charge</option>
+                              <option value="distance_based">Distance Based Slabs</option>
+                            </Form.Select>
+                          </Form.Group>
+                        </Col>
+                      </Row>
+
+                      {values.delivery?.charge_type === 'fixed' && (
+                        <Form.Group className="mb-3">
+                          <Form.Label className="small fw-bold text-muted">Fixed Delivery Charge (₹)</Form.Label>
+                          <Form.Control
+                            type="number"
+                            className="manage-website-pill-input"
+                            name="delivery.fixed_charge"
+                            value={values.delivery?.fixed_charge}
+                            onChange={handleChange}
+                            placeholder="e.g. 40"
+                          />
+                        </Form.Group>
+                      )}
+
+                      {values.delivery?.charge_type === 'distance_based' && (
+                        <div className="mt-4 border-top pt-3" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+                          <div className="d-flex justify-content-between align-items-center mb-3">
+                            <h6 className="small fw-bold text-primary mb-0">Distance Slabs Config</h6>
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
+                              style={{ borderRadius: '50px', fontSize: '11px' }}
+                              onClick={() => {
+                                const currentSlabs = values.delivery?.slabs || [];
+                                const lastSlab = currentSlabs[currentSlabs.length - 1];
+                                const nextFrom = lastSlab ? lastSlab.to_km : 0;
+                                setFieldValue('delivery.slabs', [
+                                  ...currentSlabs,
+                                  { from_km: nextFrom, to_km: nextFrom + 3, charge: 30 }
+                                ]);
+                              }}
+                            >
+                              + Add Slab
+                            </Button>
+                          </div>
+
+                          {(!values.delivery?.slabs || values.delivery.slabs.length === 0) ? (
+                            <div className="text-muted small text-center py-2">No slabs configured. Order road distance checks will fail. Add at least one slab.</div>
+                          ) : (
+                            <div className="table-responsive text-dark">
+                              <table className="table table-borderless table-sm text-dark align-middle">
+                                <thead>
+                                  <tr className="small text-muted">
+                                    <th>From (km)</th>
+                                    <th>To (km)</th>
+                                    <th>Charge (₹)</th>
+                                    <th className="text-end">Action</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {values.delivery.slabs.map((slab, idx) => (
+                                    <tr key={idx}>
+                                      <td>
+                                        <Form.Control
+                                          type="number"
+                                          className="form-control-sm text-dark"
+                                          value={slab.from_km}
+                                          onChange={(e) => {
+                                            const newSlabs = [...values.delivery.slabs];
+                                            newSlabs[idx].from_km = Number(e.target.value);
+                                            setFieldValue('delivery.slabs', newSlabs);
+                                          }}
+                                          disabled={idx > 0}
+                                        />
+                                      </td>
+                                      <td>
+                                        <Form.Control
+                                          type="number"
+                                          className="form-control-sm text-dark"
+                                          value={slab.to_km}
+                                          onChange={(e) => {
+                                            const newSlabs = [...values.delivery.slabs];
+                                            newSlabs[idx].to_km = Number(e.target.value);
+                                            if (newSlabs[idx + 1]) {
+                                              newSlabs[idx + 1].from_km = Number(e.target.value);
+                                            }
+                                            setFieldValue('delivery.slabs', newSlabs);
+                                          }}
+                                        />
+                                      </td>
+                                      <td>
+                                        <Form.Control
+                                          type="number"
+                                          className="form-control-sm text-dark"
+                                          value={slab.charge}
+                                          onChange={(e) => {
+                                            const newSlabs = [...values.delivery.slabs];
+                                            newSlabs[idx].charge = Number(e.target.value);
+                                            setFieldValue('delivery.slabs', newSlabs);
+                                          }}
+                                        />
+                                      </td>
+                                      <td className="text-end">
+                                        <Button
+                                          variant="link"
+                                          className="text-danger p-0 border-0"
+                                          onClick={() => {
+                                            const newSlabs = values.delivery.slabs.filter((_, sIdx) => sIdx !== idx);
+                                            newSlabs.forEach((s, sIdx) => {
+                                              s.from_km = sIdx === 0 ? 0 : newSlabs[sIdx - 1].to_km;
+                                            });
+                                            setFieldValue('delivery.slabs', newSlabs);
+                                          }}
+                                        >
+                                          <CsLineIcons icon="bin" size="14" />
+                                        </Button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </Card.Body>
+              </Card>
+
+              {/* Social Links */}
+              <Card className="manage-website-glass-card mb-4 border-0">
+                <Card.Body className="p-4">
+                  <div className="d-flex manage-website-button-group-responsive justify-content-between align-items-md-center mb-4">
+                    <h5 className="manage-website-section-title mb-0">Social Media Accounts</h5>
+                    <Button className="manage-website-custom-btn-outline" onClick={addSocial}>
+                      <CsLineIcons icon="plus" size="15" className="me-2" /> Add Account
+                    </Button>
+                  </div>
+                  {values.social_links.map((s, index) => {
+                    const platformError = errors.social_links?.[index]?.platform;
+                    const platformTouched = touched.social_links?.[index]?.platform;
+                    const urlError = errors.social_links?.[index]?.url;
+                    const urlTouched = touched.social_links?.[index]?.url;
+
+                    return (
+                      <div key={index} className="p-3 mb-3 rounded-xl border bg-light position-relative">
+                        <Row className="g-3 align-items-center">
+                          <Col xs={12} md={4}>
+                            <Form.Select
+                              className="manage-website-pill-input"
+                              value={s.platform}
+                              onChange={(e) => {
+                                const newSocials = [...values.social_links];
+                                newSocials[index].platform = e.target.value;
+                                setFieldValue('social_links', newSocials);
+                              }}
+                              isInvalid={platformTouched && platformError}
+                            >
+                              <option value="">Select Platform</option>
+                              <option value="WhatsApp">WhatsApp</option>
+                              <option value="Facebook">Facebook</option>
+                              <option value="Instagram">Instagram</option>
+                              <option value="Twitter">Twitter (X)</option>
+                              <option value="Youtube">Youtube</option>
+                            </Form.Select>
+                            {platformTouched && platformError && (
+                              <div className="text-danger mt-1 small ms-2">{platformError}</div>
+                            )}
+                          </Col>
+                          <Col xs={12} md={6}>
+                            <Form.Control
+                              className="manage-website-pill-input"
+                              placeholder="Profile URL / Phone Number"
+                              value={s.url}
+                              onChange={(e) => {
+                                const newSocials = [...values.social_links];
+                                newSocials[index].url = e.target.value;
+                                setFieldValue('social_links', newSocials);
+                              }}
+                              isInvalid={urlTouched && urlError}
+                            />
+                            {urlTouched && urlError && (
+                              <div className="text-danger mt-1 small ms-2">{urlError}</div>
+                            )}
+                          </Col>
+                          <Col xs={12} md={2} className="text-md-end">
+                            <Button
+                              variant="none"
+                              className="manage-website-custom-btn-danger manage-website-custom-btn-circle ms-md-auto w-100 w-md-auto"
+                              onClick={() => removeSocial(index)}
+                            >
+                              <CsLineIcons icon="bin" size="15" />
+                            </Button>
+                          </Col>
+                        </Row>
+                      </div>
+                    );
+                  })}
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col lg={6}>
+              {/* Opening Hours */}
+              <Card className="manage-website-glass-card mb-4 border-0">
+                <Card.Body className="p-4">
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h5 className="manage-website-section-title mb-0">Opening Times</h5>
+                    <Button variant="link" className="text-primary p-0 text-decoration-none fw-bold small" onClick={addOpeningSlot}>
+                      Add Slot
+                    </Button>
+                  </div>
+                  {values.opening_hours.map((h, index) => (
+                    <div key={index} className="mb-4 pb-4 border-bottom position-relative">
+                      <Button
+                        variant="none"
+                        className="manage-website-custom-btn-danger manage-website-custom-btn-circle position-absolute"
+                        style={{ top: '-10px', right: '-10px' }}
+                        onClick={() => removeOpeningSlot(index)}
+                      >
+                        <CsLineIcons icon="bin" size="12" />
+                      </Button>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="small fw-bold text-muted">Select Day(s)</Form.Label>
+                        <Form.Select
+                          className="manage-website-pill-input"
+                          value={h.dayRange}
+                          onChange={(e) => {
+                            const newHours = [...values.opening_hours];
+                            newHours[index].dayRange = e.target.value;
+                            setFieldValue('opening_hours', newHours);
+                          }}
+                        >
+                          <option value="Monday - Friday">Monday - Friday</option>
+                          <option value="Monday - Saturday">Monday - Saturday</option>
+                          <option value="Monday - Sunday">Monday - Sunday</option>
+                          <option value="Saturday - Sunday">Saturday - Sunday</option>
+                          <option value="Sunday">Sunday</option>
+                          <option value="Everyday">Everyday</option>
+                        </Form.Select>
+                      </Form.Group>
+                      <Row className="g-2">
+                        <Col xs={6}>
+                          <Form.Control
+                            type="time"
+                            className="manage-website-pill-input"
+                            value={h.from}
+                            onChange={(e) => {
+                              const newHours = [...values.opening_hours];
+                              newHours[index].from = e.target.value;
+                              setFieldValue('opening_hours', newHours);
+                            }}
+                          />
+                        </Col>
+                        <Col xs={6}>
+                          <Form.Control
+                            type="time"
+                            className="manage-website-pill-input"
+                            value={h.to}
+                            onChange={(e) => {
+                              const newHours = [...values.opening_hours];
+                              newHours[index].to = e.target.value;
+                              setFieldValue('opening_hours', newHours);
+                            }}
+                          />
+                        </Col>
+                      </Row>
+                    </div>
+                  ))}
                 </Card.Body>
               </Card>
 
@@ -724,7 +1284,7 @@ const ManageWebsite = () => {
                     <Form.Control className="manage-website-pill-input" type="file" onChange={(e) => setLegacyImageFile(e.target.files[0])} />
                     {values.legacy_image && <div className="mt-1 small text-muted">Current: {values.legacy_image}</div>}
                   </Form.Group>
-                  
+
                   <div className="d-flex justify-content-between align-items-center mb-2 mt-4">
                     <Form.Label className="small fw-bold text-muted mb-0">Feature Bullets</Form.Label>
                     <Button variant="link" className="text-primary p-0 text-decoration-none fw-bold small" onClick={addLegacyBullet}>
@@ -779,246 +1339,6 @@ const ManageWebsite = () => {
                 </Card.Body>
               </Card>
 
-              {/* Map Location */}
-              <Card className="manage-website-glass-card mb-4 border-0">
-                <Card.Body className="p-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                    <h5 className="manage-website-section-title mb-0">Map Location</h5>
-                    <div className="d-flex gap-2">
-                      <Button 
-                        variant="outline-primary" 
-                        size="sm" 
-                        className="manage-menu-custom-btn-outline px-3 py-1.5"
-                        style={{ fontSize: '11px', borderRadius: '50px' }}
-                        onClick={() => {
-                          setTempLat(values.latitude || 23.0225);
-                          setTempLng(values.longitude || 72.5714);
-                          setShowMapModal(true);
-                        }}
-                      >
-                        <CsLineIcons icon="pin" size="12" className="me-1" /> Choose on Map
-                      </Button>
-                      <Button 
-                        variant="outline-primary" 
-                        size="sm" 
-                        className="manage-menu-custom-btn-outline px-3 py-1.5"
-                        style={{ fontSize: '11px', borderRadius: '50px' }}
-                        onClick={() => {
-                          if (navigator.geolocation) {
-                            navigator.geolocation.getCurrentPosition(
-                              (position) => {
-                                setFieldValue('latitude', position.coords.latitude);
-                                setFieldValue('longitude', position.coords.longitude);
-                                toast.success('Coordinates detected successfully!');
-                              },
-                              (error) => {
-                                toast.error('Permission denied or location unavailable.');
-                              }
-                            );
-                          } else {
-                            toast.error('Geolocation is not supported by your browser.');
-                          }
-                        }}
-                      >
-                        <CsLineIcons icon="location" size="12" className="me-1" /> Detect Location
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <Form.Group className="mb-3">
-                    <Form.Label className="small fw-bold text-muted">Google Maps Embed Link / URL</Form.Label>
-                    <Form.Control
-                      className="manage-website-pill-input"
-                      name="map_location"
-                      as="textarea"
-                      rows={2}
-                      value={values.map_location}
-                      onChange={handleChange}
-                      placeholder="Paste the <iframe src='...'> or just the map link here"
-                    />
-                  </Form.Group>
-
-                  <Row className="g-3">
-                    <Col xs="6">
-                      <Form.Group>
-                        <Form.Label className="small fw-bold text-muted">Latitude</Form.Label>
-                        <Form.Control
-                          type="text"
-                          className="manage-website-pill-input"
-                          name="latitude"
-                          value={values.latitude}
-                          onChange={handleChange}
-                          isInvalid={touched.latitude && !!errors.latitude}
-                          placeholder="e.g. 23.0225"
-                        />
-                        <Form.Control.Feedback type="invalid">{errors.latitude}</Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                    <Col xs="6">
-                      <Form.Group>
-                        <Form.Label className="small fw-bold text-muted">Longitude</Form.Label>
-                        <Form.Control
-                          type="text"
-                          className="manage-website-pill-input"
-                          name="longitude"
-                          value={values.longitude}
-                          onChange={handleChange}
-                          isInvalid={touched.longitude && !!errors.longitude}
-                          placeholder="e.g. 72.5714"
-                        />
-                        <Form.Control.Feedback type="invalid">{errors.longitude}</Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                </Card.Body>
-              </Card>
-
-              {/* Social Links */}
-              <Card className="manage-website-glass-card mb-4 border-0">
-                <Card.Body className="p-4">
-                  <div className="d-flex manage-website-button-group-responsive justify-content-between align-items-md-center mb-4">
-                    <h5 className="manage-website-section-title mb-0">Social Media Accounts</h5>
-                    <Button className="manage-website-custom-btn-outline" onClick={addSocial}>
-                      <CsLineIcons icon="plus" size="15" className="me-2" /> Add Account
-                    </Button>
-                  </div>
-                  {values.social_links.map((s, index) => {
-                    const platformError = errors.social_links?.[index]?.platform;
-                    const platformTouched = touched.social_links?.[index]?.platform;
-                    const urlError = errors.social_links?.[index]?.url;
-                    const urlTouched = touched.social_links?.[index]?.url;
-
-                    return (
-                      <div key={index} className="p-3 mb-3 rounded-xl border bg-light position-relative">
-                        <Row className="g-3 align-items-center">
-                          <Col xs={12} md={4}>
-                            <Form.Select
-                              className="manage-website-pill-input"
-                              value={s.platform}
-                              onChange={(e) => {
-                                const newSocials = [...values.social_links];
-                                newSocials[index].platform = e.target.value;
-                                setFieldValue('social_links', newSocials);
-                              }}
-                              isInvalid={platformTouched && platformError}
-                            >
-                              <option value="">Select Platform</option>
-                              <option value="WhatsApp">WhatsApp</option>
-                              <option value="Facebook">Facebook</option>
-                              <option value="Instagram">Instagram</option>
-                              <option value="Twitter">Twitter (X)</option>
-                              <option value="Youtube">Youtube</option>
-                            </Form.Select>
-                            {platformTouched && platformError && (
-                              <div className="text-danger mt-1 small ms-2">{platformError}</div>
-                            )}
-                          </Col>
-                          <Col xs={12} md={6}>
-                            <Form.Control
-                              className="manage-website-pill-input"
-                              placeholder="Profile URL / Phone Number"
-                              value={s.url}
-                              onChange={(e) => {
-                                const newSocials = [...values.social_links];
-                                newSocials[index].url = e.target.value;
-                                setFieldValue('social_links', newSocials);
-                              }}
-                              isInvalid={urlTouched && urlError}
-                            />
-                            {urlTouched && urlError && (
-                              <div className="text-danger mt-1 small ms-2">{urlError}</div>
-                            )}
-                          </Col>
-                          <Col xs={12} md={2} className="text-md-end">
-                            <Button
-                              variant="none"
-                              className="manage-website-custom-btn-danger manage-website-custom-btn-circle ms-md-auto w-100 w-md-auto"
-                              onClick={() => removeSocial(index)}
-                            >
-                              <CsLineIcons icon="bin" size="15" />
-                            </Button>
-                          </Col>
-                        </Row>
-                      </div>
-                    );
-                  })}
-                </Card.Body>
-              </Card>
-            </Col>
-
-            <Col lg={4}>
-              {/* Opening Hours */}
-              <Card className="manage-website-glass-card mb-4 border-0">
-                <Card.Body className="p-4">
-                  <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h5 className="manage-website-section-title mb-0">Opening Times</h5>
-                    <Button variant="link" className="text-primary p-0 text-decoration-none fw-bold small" onClick={addOpeningSlot}>
-                      Add Slot
-                    </Button>
-                  </div>
-                  {values.opening_hours.map((h, index) => (
-                    <div key={index} className="mb-4 pb-4 border-bottom position-relative">
-                      <Button
-                        variant="none"
-                        className="manage-website-custom-btn-danger manage-website-custom-btn-circle position-absolute"
-                        style={{ top: '-10px', right: '-10px' }}
-                        onClick={() => removeOpeningSlot(index)}
-                      >
-                        <CsLineIcons icon="close" size="10" />
-                      </Button>
-                      <Form.Select
-                        className="manage-website-pill-input mb-3"
-                        value={h.day}
-                        onChange={(e) => {
-                          const newHours = [...values.opening_hours];
-                          newHours[index].day = e.target.value;
-                          setFieldValue('opening_hours', newHours);
-                        }}
-                      >
-                        <option value="">Select Day(s)</option>
-                        <option value="Monday - Friday">Monday - Friday</option>
-                        <option value="Monday - Saturday">Monday - Saturday</option>
-                        <option value="Everyday">Everyday</option>
-                        <option value="Weekend">Weekend</option>
-                        <option value="Monday">Monday</option>
-                        <option value="Tuesday">Tuesday</option>
-                        <option value="Wednesday">Wednesday</option>
-                        <option value="Thursday">Thursday</option>
-                        <option value="Friday">Friday</option>
-                        <option value="Saturday">Saturday</option>
-                        <option value="Sunday">Sunday</option>
-                      </Form.Select>
-                      <Row className="g-2">
-                        <Col xs={6}>
-                          <Form.Control
-                            className="manage-website-pill-input"
-                            type="time"
-                            value={h.from}
-                            onChange={(e) => {
-                              const newHours = [...values.opening_hours];
-                              newHours[index].from = e.target.value;
-                              setFieldValue('opening_hours', newHours);
-                            }}
-                          />
-                        </Col>
-                        <Col xs={6}>
-                          <Form.Control
-                            className="manage-website-pill-input"
-                            type="time"
-                            value={h.to}
-                            onChange={(e) => {
-                              const newHours = [...values.opening_hours];
-                              newHours[index].to = e.target.value;
-                              setFieldValue('opening_hours', newHours);
-                            }}
-                          />
-                        </Col>
-                      </Row>
-                    </div>
-                  ))}
-                </Card.Body>
-              </Card>
-
               {/* Featured Menu Items */}
               <Card className="manage-website-glass-card mb-4 border-0">
                 <Card.Body className="p-4">
@@ -1043,24 +1363,16 @@ const ManageWebsite = () => {
                       </div>
                     ))}
                   </div>
-                  <Button
-                    className="manage-website-custom-btn-outline border-2 w-100 mt-3 d-flex d-md-none align-items-center justify-content-center py-2"
-                    type="submit"
-                    disabled={saving}
-                    style={{ borderRadius: '50px', borderColor: '#1ea8e7', color: '#1ea8e7' }}
-                  >
-                    {saving ? <Spinner size="sm" className="me-2" /> : <CsLineIcons icon="save" size="15" className="me-2" />}
-                    Save All Changes
-                  </Button>
+
                 </Card.Body>
               </Card>
             </Col>
           </Row>
         </Form>
 
-        {/* Leaflet Map Picker Modal for Admin */}
-        <Modal 
-          show={showMapModal} 
+        {/* Google Map Picker Modal for Admin */}
+        <Modal
+          show={showMapModal}
           onHide={() => setShowMapModal(false)}
           size="lg"
           centered
@@ -1071,23 +1383,21 @@ const ManageWebsite = () => {
           </Modal.Header>
           <Modal.Body>
             {/* Search Address Bar */}
-            <Form onSubmit={handleSearchAdminLocation} className="d-flex gap-2 mb-3">
-              <Form.Control 
-                type="text" 
+            <Form onSubmit={(e) => e.preventDefault()} className="d-flex gap-2 mb-3">
+              <Form.Control
+                type="text"
+                id="admin-map-search-input"
                 value={mapSearchQuery}
                 onChange={(e) => setMapSearchQuery(e.target.value)}
                 placeholder="Search area, landmark, street, city..."
                 style={{ borderRadius: '50px' }}
               />
-              <Button type="submit" variant="primary" style={{ borderRadius: '50px', whiteSpace: 'nowrap' }}>
-                Search
-              </Button>
             </Form>
 
             {/* Map Container */}
-            <div 
-              id="admin-map-container" 
-              className="rounded border" 
+            <div
+              id="admin-map-container"
+              className="rounded border"
               style={{ height: '350px', background: '#f5f5f5' }}
             />
           </Modal.Body>
@@ -1102,50 +1412,103 @@ const ManageWebsite = () => {
               )}
             </div>
             <div className="d-flex gap-2">
-              <Button 
-                variant="outline-secondary" 
+              <Button
+                variant="outline-secondary"
                 style={{ borderRadius: '50px' }}
+                disabled={locatingUser}
                 onClick={() => {
                   if (navigator.geolocation) {
+                    setLocatingUser(true);
                     navigator.geolocation.getCurrentPosition(
                       (pos) => {
                         const { latitude, longitude } = pos.coords;
                         setTempLat(latitude);
                         setTempLng(longitude);
-                        if (mapInstance.current) {
-                          mapInstance.current.setView([latitude, longitude], 15);
-                          if (window.L) {
-                            mapInstance.current.fireEvent('click', { latlng: window.L.latLng(latitude, longitude) });
+                        if (mapInstance.current && window.google) {
+                          const latlng = new window.google.maps.LatLng(latitude, longitude);
+                          mapInstance.current.setCenter(latlng);
+                          mapInstance.current.setZoom(16);
+                          if (markerInstance.current) {
+                            markerInstance.current.setPosition(latlng);
                           }
                         }
+                        setLocatingUser(false);
                       },
-                      (err) => toast.error('Error fetching current location')
+                      (err) => {
+                        setLocatingUser(false);
+                        if (err.code === 1) { // PERMISSION_DENIED
+                          alert(
+                            "Location access is blocked or disabled in your browser settings.\n\n" +
+                            "To enable:\n" +
+                            "1. Click the settings/lock icon next to the URL in your address bar.\n" +
+                            "2. Set Location permissions to 'Allow'.\n" +
+                            "3. Refresh the page.\n\n" +
+                            "Alternatively, you can manually drag the pin marker on the map to select your restaurant's location."
+                          );
+                        } else {
+                          toast.error('Unable to fetch your location automatically.');
+                        }
+                      }
                     );
                   } else {
                     toast.error('Geolocation is not supported by your browser.');
                   }
                 }}
               >
-                Locate Me
+                {locatingUser ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm text-primary me-2" role="status" style={{ width: '12px', height: '12px' }} />
+                    Locating...
+                  </>
+                ) : (
+                  'Locate Me'
+                )}
               </Button>
-              <Button 
-                variant="primary" 
+              <Button
+                variant="primary"
                 style={{ borderRadius: '50px' }}
                 onClick={() => {
-                  if (tempLat && tempLng) {
-                    setFieldValue('latitude', tempLat);
-                    setFieldValue('longitude', tempLng);
-                    setShowMapModal(false);
-                    // Autofill address via reverse geocode if desired
-                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${tempLat}&lon=${tempLng}`)
-                      .then(res => res.json())
-                      .then(data => {
-                        if (data && data.display_name) {
-                          setFieldValue('restaurant_address', data.display_name);
-                          toast.success('Address auto-filled from map pin!');
-                        }
-                      })
-                      .catch(e => console.error(e));
+                  if (tempLat && tempLng && window.google) {
+                    const geocoder = new window.google.maps.Geocoder();
+                    geocoder.geocode({ location: { lat: Number(tempLat), lng: Number(tempLng) } }, (results, status) => {
+                      if (status === 'OK' && results[0]) {
+                        const result = results[0];
+                        const components = result.address_components;
+
+                        const extract = (types) => {
+                          const found = components.find(c => types.some(t => c.types.includes(t)));
+                          return found ? found.long_name : "";
+                        };
+
+                        const { place_id, formatted_address } = result;
+                        const city = extract(["locality", "administrative_area_level_2"]);
+                        const state = extract(["administrative_area_level_1"]);
+                        const country = extract(["country"]);
+                        const postal_code = extract(["postal_code"]);
+                        const locality = extract(["sublocality_level_1", "neighborhood"]);
+                        const sublocality = extract(["sublocality_level_2", "sublocality"]);
+
+                        // Update Formik fields
+                        const generatedEmbed = `https://maps.google.com/maps?q=${Number(tempLat)},${Number(tempLng)}&z=15&output=embed`;
+                        setFieldValue('map_location', generatedEmbed);
+                        setFieldValue('place_id', place_id);
+                        setFieldValue('formatted_address', formatted_address);
+                        setFieldValue('restaurant_address', formatted_address);
+                        setFieldValue('latitude', Number(tempLat));
+                        setFieldValue('longitude', Number(tempLng));
+                        setFieldValue('city', city);
+                        setFieldValue('state', state);
+                        setFieldValue('country', country);
+                        setFieldValue('postal_code', postal_code);
+                        setFieldValue('locality', locality);
+                        setFieldValue('sublocality', sublocality);
+
+                        toast.success('Restaurant location details resolved!');
+                        setShowMapModal(false);
+                      } else {
+                        toast.error(`Failed to geocode coordinates: ${status}`);
+                      }
+                    });
                   } else {
                     toast.error('Please click on map to place a pin marker.');
                   }
@@ -1156,6 +1519,133 @@ const ManageWebsite = () => {
             </div>
           </Modal.Footer>
         </Modal>
+
+        {detectingLocation && (
+          <div
+            className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center px-3"
+            style={{
+              zIndex: 3000,
+              background: 'rgba(0,0,0,0.85)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)'
+            }}
+          >
+            <div className="spinner-border text-primary mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <h5 className="text-white fw-bold mb-1">Detecting Location</h5>
+            <p className="small text-muted">Please allow location permissions if prompted by your browser.</p>
+          </div>
+        )}
+        <style>{`
+          .pac-container {
+            z-index: 10000 !important;
+          }
+          .floating-save-bar {
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            background: #ffffff;
+            color: #495057;
+          }
+          .html-dark .floating-save-bar {
+            background: #232323 !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            color: #f8f9fa;
+          }
+          .floating-save-text {
+            font-size: 14px;
+            font-weight: 500;
+          }
+          .btn-discard-pill {
+            background-color: #e9ecef;
+            color: #495057;
+            border: none;
+            border-radius: 50px;
+            padding: 8px 24px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+          }
+          .btn-discard-pill:hover {
+            background-color: #dee2e6;
+            color: #212529;
+          }
+          .html-dark .btn-discard-pill {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #f8f9fa;
+          }
+          .html-dark .btn-discard-pill:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+          }
+          .btn-save-pill {
+            background-color: #1ea8e7;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            padding: 8px 24px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+          }
+          .btn-save-pill:hover {
+            background-color: #158fc7;
+            transform: translateY(-1px);
+          }
+        `}</style>
+
+        {formik.dirty && (
+          <div
+            className="position-fixed start-50 translate-middle-x floating-save-bar d-flex align-items-center justify-content-between px-4 py-2.5 animate-fade-in"
+            style={{
+              zIndex: 1050,
+              bottom: '2rem',
+              width: '90%',
+              maxWidth: '600px',
+              borderRadius: '50px',
+              padding: '15px'
+            }}
+          >
+            <div className="floating-save-text ps-1">
+              You have unsaved changes
+            </div>
+            <div className="d-flex gap-2">
+              <button
+                type="button"
+                className="btn-discard-pill"
+                onClick={() => {
+                  formik.resetForm();
+                  setLogoFile(null);
+                  setHeroImageFile(null);
+                  setAboutImageFile(null);
+                  setLegacyImageFile(null);
+                }}
+                disabled={saving}
+              >
+                Discard
+              </button>
+              <button
+                type="button"
+                className="btn-save-pill d-inline-flex align-items-center"
+                onClick={() => formik.handleSubmit()}
+                disabled={saving}
+              >
+                {saving ? (
+                  <>
+                    <Spinner animation="border" size="sm" className="me-2" style={{ width: '12px', height: '12px' }} />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <CsLineIcons icon="save" size="14" className="me-2" />
+                    Save Settings
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

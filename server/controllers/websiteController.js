@@ -96,8 +96,17 @@ exports.updateWebsiteSettings = async (req, res) => {
       testimonials,
       social_links,
       map_location,
+      place_id,
+      formatted_address,
       latitude,
       longitude,
+      city,
+      state,
+      country,
+      postal_code,
+      locality,
+      sublocality,
+      delivery,
       show_reservation,
     } = req.body;
 
@@ -116,6 +125,15 @@ exports.updateWebsiteSettings = async (req, res) => {
         return res
           .status(400)
           .json({ error: "Invalid featured_dish_ids format" });
+      }
+    }
+
+    let parsedDelivery = {};
+    if (delivery) {
+      try {
+        parsedDelivery = typeof delivery === 'string' ? JSON.parse(delivery) : delivery;
+      } catch (e) {
+        console.error("Error parsing delivery config", e);
       }
     }
 
@@ -150,8 +168,21 @@ exports.updateWebsiteSettings = async (req, res) => {
         testimonials: (typeof testimonials === 'string' && testimonials.trim()) ? JSON.parse(testimonials) : (Array.isArray(testimonials) ? testimonials : []),
         social_links: (typeof social_links === 'string' && social_links.trim()) ? JSON.parse(social_links) : (Array.isArray(social_links) ? social_links : []),
         map_location,
+        place_id,
+        formatted_address,
         latitude: latitude !== undefined && latitude !== '' ? Number(latitude) : undefined,
         longitude: longitude !== undefined && longitude !== '' ? Number(longitude) : undefined,
+        city,
+        state,
+        country,
+        postal_code,
+        locality,
+        sublocality,
+        location: (latitude && longitude) ? {
+          type: "Point",
+          coordinates: [Number(longitude), Number(latitude)]
+        } : undefined,
+        delivery: parsedDelivery,
         show_reservation: show_reservation !== undefined ? show_reservation : true,
       },
       { new: true, upsert: true }

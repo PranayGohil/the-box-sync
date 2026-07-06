@@ -100,6 +100,10 @@ const orderSchema = new Schema({
   vat_amount: {
     type: Number,
   },
+  delivery_charge: {
+    type: Number,
+    default: 0
+  },
   discount_amount: {
     type: Number,
   },

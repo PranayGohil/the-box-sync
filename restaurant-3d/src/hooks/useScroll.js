@@ -44,6 +44,10 @@ export function useLenis() {
  * Elements inside with data-reveal="true" animate in on scroll.
  */
 export function useGSAPReveal(containerRef, options = {}) {
+  const duration = options.duration;
+  const ease = options.ease;
+  const start = options.start;
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -57,8 +61,8 @@ export function useGSAPReveal(containerRef, options = {}) {
 
         const fromVars = {
           opacity: 0,
-          duration: options.duration || 1,
-          ease: options.ease || 'power3.out',
+          duration: duration || 1,
+          ease: ease || 'power3.out',
           delay,
           ...(from === 'bottom' && { y: 80 }),
           ...(from === 'left'   && { x: -80 }),
@@ -71,7 +75,7 @@ export function useGSAPReveal(containerRef, options = {}) {
           ...fromVars,
           scrollTrigger: {
             trigger: el,
-            start: options.start || 'top 88%',
+            start: start || 'top 88%',
             toggleActions: 'play none none none',
           },
         });
@@ -79,5 +83,5 @@ export function useGSAPReveal(containerRef, options = {}) {
     }, containerRef);
 
     return () => ctx.revert();
-  }, [containerRef, options]);
+  }, [containerRef, duration, ease, start]);
 }
