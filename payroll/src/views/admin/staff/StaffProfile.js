@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, NavLink, useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Button, Row, Col, Card, Nav, Tab, Spinner, Alert, Form, Table, Badge } from 'react-bootstrap';
+import { Button, Row, Col, Card, Nav, Tab, Spinner, Alert, Form, Table, Badge, Modal } from 'react-bootstrap';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -758,6 +760,7 @@ const StaffProfile = () => {
           onDeleteSuccess={handleDeleteSuccess}
         />
       )}
+
     </div>
   );
 };

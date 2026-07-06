@@ -1,13 +1,13 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useHistory } from 'react-router-dom';
-import { Row, Col, Card, Form, Button, Spinner, Badge, Table } from 'react-bootstrap';
+import { Row, Col, Card, Form, Button, Spinner, Badge, Table, Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import Select from 'react-select';
-import { getPayrollConfig, updatePayrollConfig } from 'api/payrollConfig';
+import { getPayrollConfig, updatePayrollConfig, getWordTemplateHtml } from 'api/payrollConfig';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import ReactQuill from 'react-quill';
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -181,7 +181,97 @@ const PayrollSettings = () => {
     const [saving, setSaving] = useState(false);
     const [originalConfig, setOriginalConfig] = useState(null);
     const [isDirty, setIsDirty] = useState(false);
-    const [uploadingPdf, setUploadingPdf] = useState(false);
+    const [uploadingWord, setUploadingWord] = useState(false);
+    const [showWordEditor, setShowWordEditor] = useState(false);
+    const [wordEditorHtml, setWordEditorHtml] = useState('');
+    const [loadingWordEditor, setLoadingWordEditor] = useState(false);
+    const [savingWordHtml, setSavingWordHtml] = useState(false);
+    const [isSourceView, setIsSourceView] = useState(false);
+    const wordEditorRef = useRef(null);
+    const iframeRef = useRef(null);
+    const wordEditorHtmlRef = useRef(''); // ref to avoid stale closure in iframe writer
+
+    // Keep ref in sync with state
+    useEffect(() => {
+        wordEditorHtmlRef.current = wordEditorHtml;
+    }, [wordEditorHtml]);
+
+    // Write content into iframe after editor opens or after switching from source view back to visual
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (!showWordEditor || loadingWordEditor || isSourceView) return;
+            const iframe = iframeRef.current;
+            if (!iframe) return;
+            try {
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                doc.open();
+                doc.write(`<!DOCTYPE html><html><head>
+                    <meta charset="utf-8">
+                    <style>
+                        body {
+                            box-sizing: border-box;
+                            font-family: "Times New Roman", Times, Georgia, serif;
+                            font-size: 11pt;
+                            line-height: 1.5;
+                            color: #000000;
+                            padding: 20mm;
+                            margin: 0;
+                            outline: none;
+                        }
+                        p {
+                            margin-top: 0;
+                            margin-bottom: 8pt;
+                        }
+                        h1, h2, h3, h4, h5, h6 {
+                            font-family: "Times New Roman", Times, Georgia, serif;
+                            font-weight: bold;
+                            color: #000000;
+                            margin-top: 12pt;
+                            margin-bottom: 6pt;
+                        }
+                        h1 {
+                            font-size: 14pt;
+                            text-align: center;
+                        }
+                        h2 {
+                            font-size: 12pt;
+                        }
+                        h3 {
+                            font-size: 11pt;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 10pt;
+                            margin-bottom: 15pt;
+                        }
+                        th, td {
+                            border: 1px solid #000000;
+                            padding: 6px 8px;
+                            text-align: left;
+                            font-size: 11pt;
+                        }
+                        th {
+                            background-color: #f2f2f2;
+                            font-weight: bold;
+                        }
+                        img {
+                            max-width: 100%;
+                            height: auto;
+                        }
+                        .ql-align-center { text-align: center; }
+                        .ql-align-right { text-align: right; }
+                        .ql-align-left { text-align: left; }
+                        .ql-align-justify { text-align: justify; }
+                    </style>
+                </head><body contenteditable="true">${wordEditorHtmlRef.current}</body></html>`);
+                doc.close();
+            } catch (err) {
+                console.error('Error writing to iframe:', err);
+            }
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [showWordEditor, loadingWordEditor, isSourceView]);
 
     // States for Attendance / Wi-Fi IP restrictions
     const [adminPublicIp, setAdminPublicIp] = useState('');
@@ -225,8 +315,8 @@ const PayrollSettings = () => {
             idle_threshold: 5
         },
         document_templates: {
-            joining_letter_pdf: null,
-            joining_letter_template: ""
+            joining_letter_template: "",
+            joining_letter_word: null
         }
     });
 
@@ -254,21 +344,25 @@ const PayrollSettings = () => {
         }));
     };
 
-    const handlePdfUpload = async (e) => {
+    const handleWordUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        
-        if (file.type !== 'application/pdf') {
-            toast.error('Only PDF files are supported.');
+
+        const validTypes = [
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword'
+        ];
+        if (!validTypes.includes(file.type) && !file.name.endsWith('.docx') && !file.name.endsWith('.doc')) {
+            toast.error('Only Word document files (.docx) are supported.');
             return;
         }
 
         try {
-            setUploadingPdf(true);
+            setUploadingWord(true);
             const formData = new FormData();
-            formData.append('pdf_template', file);
+            formData.append('word_template', file);
 
-            const res = await axios.post(`${process.env.REACT_APP_API}/upload/uploadtemplate`, formData, {
+            const res = await axios.post(`${process.env.REACT_APP_API}/upload/uploadword`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -280,19 +374,173 @@ const PayrollSettings = () => {
                     ...prev,
                     document_templates: {
                         ...prev.document_templates,
-                        joining_letter_pdf: res.data.filepath
+                        joining_letter_word: res.data.filepath,
+                        joining_letter_word_html: null
                     }
                 }));
                 setIsDirty(true);
-                toast.success('PDF Template uploaded successfully! Remember to save settings.');
+                toast.success('Word template uploaded successfully! Remember to save settings.');
             }
         } catch (err) {
-            console.error('Error uploading PDF template:', err);
-            toast.error('Failed to upload PDF template.');
+            console.error('Error uploading Word template:', err);
+            toast.error('Failed to upload Word template.');
         } finally {
-            setUploadingPdf(false);
+            setUploadingWord(false);
         }
     };
+
+    const handleOpenWordEditor = async () => {
+        setShowWordEditor(true);
+        setLoadingWordEditor(true);
+        try {
+            const filepath = config.document_templates?.joining_letter_word || '';
+            const res = await getWordTemplateHtml(filepath);
+            if (res.success) {
+                setWordEditorHtml(res.html || '');
+            } else {
+                toast.error('Failed to load Word template for editing.');
+            }
+        } catch (err) {
+            console.error('Error loading word template HTML:', err);
+            toast.error('Failed to load Word template for editing.');
+        } finally {
+            setLoadingWordEditor(false);
+        }
+    };
+
+    const handleSaveWordHtml = async () => {
+        setSavingWordHtml(true);
+        let finalHtml = wordEditorHtml;
+        
+        // Ensure we capture latest iframe body content if in rich text mode
+        if (!isSourceView && iframeRef.current) {
+            try {
+                const iframeDoc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
+                if (iframeDoc && iframeDoc.body) {
+                    finalHtml = iframeDoc.body.innerHTML;
+                }
+            } catch (err) {
+                console.error('Error reading iframe body content:', err);
+            }
+        }
+
+        try {
+            const res = await updatePayrollConfig({
+                document_templates: {
+                    joining_letter_word_html: finalHtml
+                }
+            });
+            if (res.success) {
+                setConfig(prev => ({
+                    ...prev,
+                    document_templates: {
+                        ...prev.document_templates,
+                        joining_letter_word_html: finalHtml
+                    }
+                }));
+                setShowWordEditor(false);
+                toast.success('Letter template saved successfully!');
+            } else {
+                toast.error('Failed to save template.');
+            }
+        } catch (err) {
+            console.error('Error saving word html:', err);
+            toast.error('Failed to save template.');
+        } finally {
+            setSavingWordHtml(false);
+        }
+    };
+
+
+    const runEditorCommand = (command, value = null) => {
+        const iframe = iframeRef.current;
+        if (!iframe) return;
+        try {
+            const win = iframe.contentWindow;
+            win.focus();
+            win.document.execCommand(command, false, value);
+            setWordEditorHtml(win.document.body.innerHTML);
+        } catch (err) {
+            console.error('Failed to execute command:', err);
+        }
+    };
+
+    const insertHtmlAtCursor = (html) => {
+        const iframe = iframeRef.current;
+        if (!iframe) return;
+        try {
+            const win = iframe.contentWindow;
+            const doc = win.document;
+            win.focus();
+            
+            if (win.getSelection) {
+                const sel = win.getSelection();
+                if (sel.getRangeAt && sel.rangeCount) {
+                    let range = sel.getRangeAt(0);
+                    range.deleteContents();
+                    
+                    const el = doc.createElement("div");
+                    el.innerHTML = html;
+                    
+                    const frag = doc.createDocumentFragment();
+                    let lastNode;
+                    while (el.firstChild) {
+                        const node = el.firstChild;
+                        lastNode = frag.appendChild(node);
+                    }
+                    range.insertNode(frag);
+                    
+                    if (lastNode) {
+                        range = range.cloneRange();
+                        range.setStartAfter(lastNode);
+                        range.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    }
+                }
+            }
+            setWordEditorHtml(doc.body.innerHTML);
+        } catch (err) {
+            console.error('Failed to insert HTML at cursor:', err);
+        }
+    };
+
+    const insertTable = () => {
+        const rows = prompt("Enter number of rows:", "3");
+        const cols = prompt("Enter number of columns:", "3");
+        if (!rows || !cols) return;
+        
+        let tableHtml = "<table style='width: 100%; border-collapse: collapse; margin-bottom: 20px;'>";
+        const parsedRows = parseInt(rows, 10);
+        const parsedCols = parseInt(cols, 10);
+        for (let i = 0; i < parsedRows; i++) {
+            tableHtml += "<tr>";
+            for (let j = 0; j < parsedCols; j++) {
+                tableHtml += i === 0 
+                    ? "<th style='border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;'>Header</th>" 
+                    : "<td style='border: 1px solid #ddd; padding: 8px;'>Cell</td>";
+            }
+            tableHtml += "</tr>";
+        }
+        tableHtml += "</table><p><br></p>";
+        insertHtmlAtCursor(tableHtml);
+    };
+
+    const changeTextColor = () => {
+        const color = prompt("Enter text color name or hex code (e.g. red, #007bff):", "#000000");
+        if (color) runEditorCommand('foreColor', color);
+    };
+
+    const changeBackColor = () => {
+        const color = prompt("Enter highlight/background color (e.g. yellow, #ffcccc):", "#ffff00");
+        if (color) runEditorCommand('hiliteColor', color);
+    };
+
+    const changeFontSize = () => {
+        const size = prompt("Enter size (1 to 7, where 3 is normal, 4-5 are larger, 6-7 are headings):", "3");
+        if (size) runEditorCommand('fontSize', size);
+    };
+
 
     const insertVariable = (variableName) => {
         if (quillRef.current) {
@@ -334,8 +582,9 @@ const PayrollSettings = () => {
                         idle_threshold: res.data.wfh_config?.idle_threshold || 5
                     },
                     document_templates: {
-                        joining_letter_pdf: res.data.document_templates?.joining_letter_pdf || null,
-                        joining_letter_template: res.data.document_templates?.joining_letter_template || defaultJoiningLetter
+                        joining_letter_template: res.data.document_templates?.joining_letter_template || defaultJoiningLetter,
+                        joining_letter_word: res.data.document_templates?.joining_letter_word || null,
+                        joining_letter_word_html: res.data.document_templates?.joining_letter_word_html || null
                     }
                 };
                 setConfig(fetchedConfig);
@@ -621,6 +870,43 @@ const PayrollSettings = () => {
         updatePT('slabs', slabs);
     };
 
+    const availablePlaceholders = useMemo(() => {
+        const base = [
+            '[First Name]', '[Last Name]', '[Full Name]',
+            '[Job Title]', '[Date of Joining]', '[Basic Salary]',
+            '[Staff ID]', '[Email]', '[Phone]', '[Department]', '[Company Name]'
+        ];
+        
+        const extra = [];
+        // Custom Earnings
+        if (config?.custom_earnings) {
+            config.custom_earnings.forEach(earning => {
+                if (earning.is_active && earning.label) {
+                    extra.push(`[${earning.label.trim()}]`);
+                }
+            });
+        }
+        // Statutory Deductions
+        if (config?.statutory_config?.pf?.is_mandatory) {
+            extra.push('[EPF Deduction]');
+        }
+        if (config?.statutory_config?.esi?.is_mandatory) {
+            extra.push('[ESI Deduction]');
+        }
+        if (config?.statutory_config?.pt?.is_applicable) {
+            extra.push('[PT Deduction]');
+        }
+        // Custom Deductions
+        if (config?.custom_deductions) {
+            config.custom_deductions.forEach(deduction => {
+                if (deduction.is_active && deduction.label) {
+                    extra.push(`[${deduction.label.trim()}]`);
+                }
+            });
+        }
+        // Avoid duplicates and return
+        return Array.from(new Set([...base, ...extra]));
+    }, [config]);
 
     if (loading) return <div className="text-center my-5"><Spinner animation="border" /></div>;
 
@@ -1421,87 +1707,142 @@ const PayrollSettings = () => {
                                 <h5 className="fw-bold mb-0 text-primary">Joining Letter Template</h5>
                             </div>
                             <p className="text-muted mb-3 small fw-medium">
-                                Design the joining letter that will be sent to staff members as a PDF attachment. 
-                                Click any of the buttons below to insert the placeholder into your letter. These placeholders will be automatically replaced with the staff's actual data when sent:
+                                Upload a Word document (<code>.docx</code>) as your joining letter template. All branding, logo, and formatting is managed directly in Word — no technical setup needed!
+                                <br />
+                                The server will automatically replace the placeholders below with each staff member's real data before sending as a PDF attachment.
                             </p>
-                            <div className="mb-4 p-3 bg-light rounded border d-flex flex-wrap gap-2">
-                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('First Name')} className="rounded-pill fw-bold">
-                                    + [First Name]
-                                </Button>
-                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('Last Name')} className="rounded-pill fw-bold">
-                                    + [Last Name]
-                                </Button>
-                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('Job Title')} className="rounded-pill fw-bold">
-                                    + [Job Title]
-                                </Button>
-                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('Date of Joining')} className="rounded-pill fw-bold">
-                                    + [Date of Joining]
-                                </Button>
-                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('Basic Salary')} className="rounded-pill fw-bold">
-                                    + [Basic Salary]
-                                </Button>
-                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('Staff ID')} className="rounded-pill fw-bold">
-                                    + [Staff ID]
-                                </Button>
-                            </div>
 
-                            {/* Upload Custom Template PDF */}
-                            <div className="mb-4 p-3 bg-light rounded border">
-                                <Form.Group>
-                                    <Form.Label className="fw-bold text-dark small text-uppercase mb-2">Upload Custom Joining Letter PDF Template</Form.Label>
-                                    <div className="d-flex align-items-center gap-3">
-                                        <Form.Control
-                                            type="file"
-                                            accept="application/pdf"
-                                            onChange={handlePdfUpload}
-                                            style={{ display: 'none' }}
-                                            id="pdf-template-upload-input"
-                                        />
-                                        <label htmlFor="pdf-template-upload-input" className="btn btn-outline-primary rounded-pill px-4 mb-0 fw-bold d-inline-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
-                                            <CsLineIcons icon="upload" size="16" /> {uploadingPdf ? 'Uploading PDF...' : 'Choose PDF File'}
-                                        </label>
-                                        {config.document_templates?.joining_letter_pdf ? (
-                                            <div className="d-flex align-items-center gap-2 text-success small fw-semibold">
+                            {/* Word Template Upload */}
+                            <div className="mb-4 p-3 rounded border" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #e8f5e9 100%)' }}>
+                                <h6 className="fw-bold text-dark small text-uppercase mb-3 d-flex align-items-center gap-2">
+                                    <CsLineIcons icon="file-text" size="16" className="text-primary" />
+                                    Word Document Template (.docx)
+                                </h6>
+                                <div className="d-flex align-items-center gap-3 flex-wrap">
+                                    <Form.Control
+                                        type="file"
+                                        accept=".docx,.doc"
+                                        onChange={handleWordUpload}
+                                        style={{ display: 'none' }}
+                                        id="word-template-upload-input"
+                                    />
+                                    <label
+                                        htmlFor="word-template-upload-input"
+                                        className="btn custom-btn-primary-outline text-nowrap rounded mb-0 d-inline-flex align-items-center gap-1"
+                                        style={{ cursor: uploadingWord ? 'not-allowed' : 'pointer', opacity: uploadingWord ? 0.7 : 1 }}
+                                    >
+                                        <CsLineIcons icon="upload" size="18" className="me-1" />
+                                        {uploadingWord ? 'Uploading...' : 'Choose Word File (.docx)'}
+                                    </label>
+                                    {config.document_templates?.joining_letter_word ? (
+                                        <div className="d-flex flex-column gap-2 w-100 mt-2">
+                                            {/* Uploaded file info row */}
+                                            <div className="d-flex align-items-center gap-2 flex-wrap">
                                                 <CsLineIcons icon="check-circle" size="18" className="text-success" />
-                                                <span>Custom PDF: {config.document_templates.joining_letter_pdf.split('/').pop()}</span>
-                                                <Button 
-                                                    variant="link" 
-                                                    className="p-0 text-danger ms-2 small fw-bold"
+                                                <span className="fw-semibold text-success small">
+                                                    {config.document_templates.joining_letter_word.split('/').pop()}
+                                                </span>
+                                            </div>
+                                            {/* Action buttons row */}
+                                            <div className="d-flex align-items-center gap-2 flex-wrap mt-1">
+                                                {/* Edit in browser */}
+                                                <Button
+                                                    variant="none"
+                                                    className="custom-btn-primary-outline text-nowrap rounded d-inline-flex align-items-center gap-1"
+                                                    style={{ fontSize: '0.85rem' }}
+                                                    onClick={handleOpenWordEditor}
+                                                >
+                                                    <CsLineIcons icon="edit" size="16" className="me-1" />
+                                                    Edit Letter
+                                                </Button>
+                                                {config.document_templates?.joining_letter_word_html && (
+                                                    <span
+                                                        className="d-inline-flex align-items-center gap-1 rounded px-2 py-1 small fw-semibold"
+                                                        style={{ background: '#d1fae5', color: '#065f46', border: '1px solid #6ee7b7', fontSize: '0.78rem' }}
+                                                    >
+                                                        <CsLineIcons icon="check-circle" size="12" />
+                                                        Custom edited version active
+                                                    </span>
+                                                )}
+                                                {/* Remove */}
+                                                <Button
+                                                    variant="none"
+                                                    className="text-danger p-0 small fw-bold hover-scale ms-auto"
                                                     onClick={() => {
                                                         setConfig(prev => ({
                                                             ...prev,
                                                             document_templates: {
                                                                 ...prev.document_templates,
-                                                                joining_letter_pdf: null
+                                                                joining_letter_word: null,
+                                                                joining_letter_word_html: null
                                                             }
                                                         }));
                                                         setIsDirty(true);
                                                     }}
                                                 >
+                                                    <CsLineIcons icon="bin" size="16" className="me-1" />
                                                     Remove
                                                 </Button>
                                             </div>
-                                        ) : (
-                                            <span className="text-muted small">No custom PDF template uploaded (falls back to HTML template).</span>
-                                        )}
-                                    </div>
-                                    <small className="text-muted d-block mt-2" style={{ fontSize: '0.75rem' }}>
-                                        Supports fillable PDF forms (AcroForm fields: <code>first_name</code>, <code>last_name</code>, <code>position</code>, <code>joining_date</code>, <code>salary</code>, <code>staff_id</code>) or standard flat PDFs (text overlays automatically on top).
-                                    </small>
-                                </Form.Group>
+                                        </div>
+                                    ) : (
+                                        <span className="text-muted small">No Word template uploaded yet.</span>
+                                    )}
+                                </div>
+                                <Form.Text className="text-muted d-block mt-3" style={{ fontSize: '0.75rem' }}>
+                                    Click <strong>Edit Letter</strong> to open the in-browser editor. Your changes are saved directly — no need to download or re-upload.
+                                </Form.Text>
+
                             </div>
 
+
+                            {/* Placeholder Reference Table */}
+                            <div className="mb-4 p-3 bg-light rounded border">
+                                <h6 className="fw-bold text-dark small text-uppercase mb-3 d-flex align-items-center gap-2">
+                                    <CsLineIcons icon="info-circle" size="16" className="text-info" />
+                                    Available Placeholders (use these in your Word document)
+                                </h6>
+                                <div className="d-flex flex-wrap gap-2">
+                                    {availablePlaceholders.map(ph => (
+                                        <Button
+                                            key={ph}
+                                            variant="none"
+                                            className="custom-btn-primary-outline text-nowrap rounded"
+                                            style={{ fontSize: '0.8rem', padding: '4px 12px' }}
+                                            onClick={() => navigator.clipboard?.writeText(ph)}
+                                            title={`Click to copy ${ph}`}
+                                        >
+                                            {ph}
+                                        </Button>
+                                    ))}
+                                </div>
+                                <Form.Text className="text-muted d-block mt-2" style={{ fontSize: '0.75rem' }}>
+                                    Type these placeholders exactly as shown (with square brackets) anywhere in your Word document. They will be swapped with each employee's real data automatically. <strong>Click any placeholder to copy it.</strong>
+                                </Form.Text>
+                            </div>
+
+                            {/* Email Body Editor */}
+                            <div className="mb-2">
+                                <h6 className="fw-bold text-dark small text-uppercase mb-2 d-flex align-items-center gap-2">
+                                    <CsLineIcons icon="email" size="16" className="text-secondary" />
+                                    Email Body Text (sent along with the PDF attachment)
+                                </h6>
+                                <p className="text-muted small mb-2">
+                                    This text appears in the body of the email. The PDF letter is attached separately.
+                                </p>
+                            </div>
                             <div className="bg-white rounded border">
-                                <ReactQuill 
+                                <ReactQuill
                                     ref={quillRef}
                                     theme="snow"
                                     value={config.document_templates?.joining_letter_template || ''}
                                     onChange={handleTemplateChange}
                                     modules={modules}
-                                    placeholder="Draft your joining letter template here..."
+                                    placeholder="Draft your joining letter email body here..."
                                     style={{ minHeight: '300px', fontSize: '15px' }}
                                 />
                             </div>
+
                         </Card.Body>
                     </Card>
                 </Col>
@@ -1523,7 +1864,206 @@ const PayrollSettings = () => {
                     </div>
                 </div>
             )}
+
+            {/* Word Template Editor Modal */}
+            <Modal
+                show={showWordEditor}
+                onHide={() => setShowWordEditor(false)}
+                size="xl"
+                centered
+            >
+                <Modal.Header closeButton className="border-bottom-0 pb-0">
+                    <Modal.Title className="fw-bold text-primary d-flex align-items-center gap-2">
+                        <CsLineIcons icon="edit" size="20" /> Edit Joining Letter Template
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="px-4 py-3">
+                    {loadingWordEditor ? (
+                        <div className="d-flex flex-column align-items-center justify-content-center py-5">
+                            <Spinner animation="border" variant="primary" className="mb-2" />
+                            <span className="text-muted small">Loading template...</span>
+                        </div>
+                    ) : (
+                        <div>
+                            <p className="text-muted small mb-3">
+                                Edit the formatting and content of your uploaded Word template directly here. Placeholders like <code>[First Name]</code> or <code>[Job Title]</code> will be dynamically replaced when generating the PDF.
+                            </p>
+                            {/* Editor Toolbar */}
+                            <div className="d-flex flex-wrap gap-2 align-items-center mb-3 bg-light p-2 rounded border">
+                                <Button variant="none" size="sm" className="btn-icon hover-scale" onClick={() => runEditorCommand('undo')} title="Undo">
+                                    <CsLineIcons icon="arrow-left" size="16" />
+                                </Button>
+                                <Button variant="none" size="sm" className="btn-icon hover-scale" onClick={() => runEditorCommand('redo')} title="Redo">
+                                    <CsLineIcons icon="arrow-right" size="16" />
+                                </Button>
+                                <div className="vr mx-1" />
+                                
+                                <Button variant="none" size="sm" className="hover-scale fw-bold px-2 py-1 bg-white border rounded text-dark" onClick={() => runEditorCommand('bold')} title="Bold">
+                                    B
+                                </Button>
+                                <Button variant="none" size="sm" className="hover-scale fst-italic px-2 py-1 bg-white border rounded text-dark" onClick={() => runEditorCommand('italic')} title="Italic">
+                                    I
+                                </Button>
+                                <Button variant="none" size="sm" className="hover-scale text-decoration-underline px-2 py-1 bg-white border rounded text-dark" onClick={() => runEditorCommand('underline')} title="Underline">
+                                    U
+                                </Button>
+                                <Button variant="none" size="sm" className="hover-scale text-decoration-line-through px-2 py-1 bg-white border rounded text-dark" onClick={() => runEditorCommand('strikeThrough')} title="Strikethrough">
+                                    S
+                                </Button>
+                                <div className="vr mx-1" />
+
+                                <Button variant="none" size="sm" className="hover-scale px-2 py-1 bg-white border rounded text-dark" onClick={changeFontSize} title="Font Size">
+                                    Size
+                                </Button>
+                                <Button variant="none" size="sm" className="hover-scale px-2 py-1 bg-white border rounded text-primary fw-bold" onClick={changeTextColor} title="Text Color">
+                                    Color
+                                </Button>
+                                <Button variant="none" size="sm" className="hover-scale px-2 py-1 bg-warning border rounded text-dark" onClick={changeBackColor} title="Highlight Color">
+                                    Highlight
+                                </Button>
+                                <div className="vr mx-1" />
+
+                                <Button variant="none" size="sm" className="hover-scale px-2 py-1 bg-white border rounded text-dark" onClick={() => runEditorCommand('justifyLeft')} title="Align Left">
+                                    Left
+                                </Button>
+                                <Button variant="none" size="sm" className="hover-scale px-2 py-1 bg-white border rounded text-dark" onClick={() => runEditorCommand('justifyCenter')} title="Align Center">
+                                    Center
+                                </Button>
+                                <Button variant="none" size="sm" className="hover-scale px-2 py-1 bg-white border rounded text-dark" onClick={() => runEditorCommand('justifyRight')} title="Align Right">
+                                    Right
+                                </Button>
+                                <Button variant="none" size="sm" className="hover-scale px-2 py-1 bg-white border rounded text-dark" onClick={() => runEditorCommand('justifyFull')} title="Justify">
+                                    Justify
+                                </Button>
+                                <div className="vr mx-1" />
+
+                                <Button variant="none" size="sm" className="hover-scale px-2 py-1 bg-white border rounded text-dark" onClick={() => runEditorCommand('insertUnorderedList')} title="Bullet List">
+                                    • Bullet
+                                </Button>
+                                <Button variant="none" size="sm" className="hover-scale px-2 py-1 bg-white border rounded text-dark" onClick={() => runEditorCommand('insertOrderedList')} title="Numbered List">
+                                    1. Number
+                                </Button>
+                                <Button variant="none" size="sm" className="hover-scale px-2 py-1 bg-white border rounded text-success" onClick={insertTable} title="Insert Table">
+                                    + Insert Table
+                                </Button>
+                                
+                                <div className="ms-auto d-flex align-items-center gap-2">
+                                    <Form.Check 
+                                        type="switch"
+                                        id="source-view-switch"
+                                        label="HTML Code View"
+                                        checked={isSourceView}
+                                        onChange={(e) => {
+                                            const nextVal = e.target.checked;
+                                            if (!nextVal && iframeRef.current) {
+                                                // Switching back to visual editor - state is already synced
+                                            } else if (nextVal && iframeRef.current) {
+                                                // Switching to code editor - sync iframe content to state
+                                                try {
+                                                    const iframeDoc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
+                                                    if (iframeDoc && iframeDoc.body) {
+                                                        setWordEditorHtml(iframeDoc.body.innerHTML);
+                                                    }
+                                                } catch (err) {
+                                                    console.error('Sync error:', err);
+                                                }
+                                            }
+                                            setIsSourceView(nextVal);
+                                        }}
+                                        className="mb-0 small fw-bold text-muted"
+                                    />
+                                </div>
+                            </div>
+
+                            {isSourceView ? (
+                                <div className="border rounded bg-dark p-2">
+                                    <Form.Control 
+                                        as="textarea"
+                                        rows={18}
+                                        value={wordEditorHtml}
+                                        onChange={(e) => setWordEditorHtml(e.target.value)}
+                                        className="font-monospace bg-dark text-light border-0"
+                                        style={{ fontSize: '13px', lineHeight: '1.5', outline: 'none' }}
+                                    />
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Available Placeholders */}
+                                    <div className="mb-3 p-2 bg-light rounded border">
+                                        <div className="d-flex align-items-center gap-2 mb-2">
+                                            <CsLineIcons icon="info-circle" size="14" className="text-info flex-shrink-0" />
+                                            <span className="fw-bold text-dark small text-uppercase">Available Placeholders — click to insert at cursor</span>
+                                        </div>
+                                        <div className="d-flex flex-wrap gap-1">
+                                            {availablePlaceholders.map(ph => (
+                                                <Button
+                                                    key={ph}
+                                                    variant="none"
+                                                    className="custom-btn-primary-outline text-nowrap rounded"
+                                                    style={{ fontSize: '0.75rem', padding: '2px 10px' }}
+                                                    title={`Insert ${ph}`}
+                                                    onClick={() => insertHtmlAtCursor(ph)}
+                                                >
+                                                    {ph}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div 
+                                        className="d-flex justify-content-center bg-light border rounded overflow-auto p-4" 
+                                        style={{ maxHeight: '550px', minHeight: '400px' }}
+                                    >
+                                        <iframe 
+                                            ref={iframeRef}
+                                            style={{ 
+                                                width: '210mm', 
+                                                height: '297mm', 
+                                                border: 'none', 
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                                backgroundColor: '#ffffff'
+                                            }}
+                                            title="Word template editor content viewport"
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer className="border-top-0 pt-0">
+                    <Button 
+                        variant="light" 
+                        onClick={() => setShowWordEditor(false)} 
+                        className="rounded-pill px-4" 
+                        style={{ fontWeight: 'bold' }}
+                        disabled={savingWordHtml}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        variant="none" 
+                        className="custom-btn-primary-outline rounded px-4 d-inline-flex align-items-center gap-1" 
+                        onClick={handleSaveWordHtml} 
+                        style={{ fontWeight: 'bold' }}
+                        disabled={savingWordHtml}
+                    >
+                        {savingWordHtml ? (
+                            <>
+                                <Spinner animation="border" size="sm" className="me-1" />
+                                Saving...
+                            </>
+                        ) : (
+                            <>
+                                <CsLineIcons icon="check" size="16" className="me-1" />
+                                Save Changes
+                            </>
+                        )}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
+
     );
 };
 

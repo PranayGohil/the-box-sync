@@ -6,6 +6,7 @@ const html_to_pdf = require('html-pdf-node');
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
+const mammoth = require("mammoth");
 
 // Helper to convert and compress image to webp
 const convertToWebp = async (file) => {
@@ -51,6 +52,98 @@ const getTodayIST = () => {
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
+};
+
+// Helper: Compile all text and salary bifurcation placeholders for staff member
+const getStaffFieldMap = (staff, config) => {
+  const fields = {
+    first_name: staff.f_name || '',
+    last_name: staff.l_name || '',
+    full_name: `${staff.f_name || ''} ${staff.l_name || ''}`.trim(),
+    job_title: staff.position || '',
+    joining_date: staff.joining_date ? new Date(staff.joining_date).toLocaleDateString('en-IN') : '',
+    staff_id: staff.staff_id || '',
+    email: staff.email || '',
+    phone: staff.phone_no ? String(staff.phone_no) : '',
+    gross_salary: staff.salary ? String(staff.salary) : '0',
+    department: staff.department || '',
+    company_name: '',  // filled from config below
+    
+    // Default earnings
+    basic_salary: '0',
+    hra: '0',
+    conveyance: '0',
+    medical_allowance: '0',
+    special_allowance: '0',
+    other_allowance: '0',
+    
+    // Default deductions
+    pf_deduction: '0',
+    esi_deduction: '0',
+    pt_deduction: '0'
+  };
+
+  if (staff.salary_structure) {
+    const earnings = staff.salary_structure.custom_earnings || {};
+    const getVal = (obj, key) => {
+      if (!obj) return 0;
+      if (typeof obj.get === 'function') return obj.get(key) || 0;
+      return obj[key] || 0;
+    };
+
+    fields.basic_salary = String(getVal(earnings, 'basic'));
+    fields.hra = String(getVal(earnings, 'hra'));
+    fields.conveyance = String(getVal(earnings, 'conveyance'));
+    fields.medical_allowance = String(getVal(earnings, 'medical'));
+    fields.special_allowance = String(getVal(earnings, 'special'));
+    fields.other_allowance = String(getVal(earnings, 'other'));
+
+    if (config?.custom_earnings) {
+      config.custom_earnings.forEach(earning => {
+        if (!['basic', 'hra', 'conveyance', 'medical', 'special', 'other'].includes(earning.id)) {
+          fields[earning.id] = String(getVal(earnings, earning.id));
+        }
+      });
+    }
+
+    if (config?.custom_deductions) {
+      const deductions = staff.salary_structure.custom_deductions || {};
+      config.custom_deductions.forEach(deduction => {
+        fields[deduction.id] = String(getVal(deductions, deduction.id));
+      });
+    }
+
+    const statConfig = config?.statutory_config || {};
+    const baseVal = getVal(earnings, 'basic') || staff.salary || 0;
+    const grossVal = staff.salary || 0;
+
+    if (statConfig.pf && statConfig.pf.is_mandatory) {
+      const limit = statConfig.pf.salary_limit || 0;
+      let pfBase = baseVal;
+      if (limit > 0 && pfBase > limit) pfBase = limit;
+      fields.pf_deduction = String(parseFloat((pfBase * (statConfig.pf.employee_percentage / 100)).toFixed(2)));
+    }
+
+    if (statConfig.esi && statConfig.esi.is_mandatory) {
+      const limit = statConfig.esi.gross_limit || 21000;
+      if (grossVal <= limit) {
+        fields.esi_deduction = String(parseFloat((grossVal * (statConfig.esi.employee_percentage / 100)).toFixed(2)));
+      }
+    }
+
+    if (statConfig.pt && statConfig.pt.is_applicable) {
+      let ptAmount = 0;
+      for (const slab of (statConfig.pt.slabs || [])) {
+        if (grossVal >= (slab.min_salary || 0) && (!slab.max_salary || grossVal <= slab.max_salary)) {
+          ptAmount = slab.amount;
+          break;
+        }
+      }
+      fields.pt_deduction = String(ptAmount);
+    }
+  }
+  
+  return fields;
 };
 
 // ── GET /staff/get-positions ──────────────────────────────────────────────────
@@ -506,135 +599,203 @@ const sendJoiningLetter = async (req, res) => {
 
     // 2. Fetch Payroll Config for template
     const config = await PayrollConfig.findOne({ user_id: userId });
+    const fieldsMap = getStaffFieldMap(staff, config);
+
+    // Common placeholders map
+    const placeholders = {
+      // Bracketed Capitalized
+      "\\[First Name\\]": fieldsMap.first_name,
+      "\\[Last Name\\]": fieldsMap.last_name,
+      "\\[Full Name\\]": fieldsMap.full_name,
+      "\\[Job Title\\]": fieldsMap.job_title,
+      "\\[Date of Joining\\]": fieldsMap.joining_date,
+      "\\[Basic Salary\\]": fieldsMap.basic_salary,
+      "\\[Staff ID\\]": fieldsMap.staff_id,
+      "\\[Email\\]": fieldsMap.email,
+      "\\[Phone\\]": fieldsMap.phone,
+      "\\[Gross Salary\\]": fieldsMap.gross_salary,
+      "\\[HRA\\]": fieldsMap.hra,
+      "\\[Conveyance\\]": fieldsMap.conveyance,
+      "\\[Medical Allowance\\]": fieldsMap.medical_allowance,
+      "\\[Special Allowance\\]": fieldsMap.special_allowance,
+      "\\[Other Allowance\\]": fieldsMap.other_allowance,
+      "\\[EPF Deduction\\]": fieldsMap.pf_deduction,
+      "\\[ESI Deduction\\]": fieldsMap.esi_deduction,
+      "\\[PT Deduction\\]": fieldsMap.pt_deduction,
+      "\\[Department\\]": fieldsMap.department,
+      "\\[Company Name\\]": config?.company_name || '',
+
+
+      // Bracketed Underscores
+      "\\[first_name\\]": fieldsMap.first_name,
+      "\\[last_name\\]": fieldsMap.last_name,
+      "\\[full_name\\]": fieldsMap.full_name,
+      "\\[job_title\\]": fieldsMap.job_title,
+      "\\[joining_date\\]": fieldsMap.joining_date,
+      "\\[basic_salary\\]": fieldsMap.basic_salary,
+      "\\[staff_id\\]": fieldsMap.staff_id,
+      "\\[email\\]": fieldsMap.email,
+      "\\[phone\\]": fieldsMap.phone,
+      "\\[gross_salary\\]": fieldsMap.gross_salary,
+      "\\[hra\\]": fieldsMap.hra,
+      "\\[conveyance\\]": fieldsMap.conveyance,
+      "\\[medical_allowance\\]": fieldsMap.medical_allowance,
+      "\\[special_allowance\\]": fieldsMap.special_allowance,
+      "\\[other_allowance\\]": fieldsMap.other_allowance,
+      "\\[pf_deduction\\]": fieldsMap.pf_deduction,
+      "\\[esi_deduction\\]": fieldsMap.esi_deduction,
+      "\\[pt_deduction\\]": fieldsMap.pt_deduction,
+
+      // Curly Capitalized
+      "\\{First Name\\}": fieldsMap.first_name,
+      "\\{Last Name\\}": fieldsMap.last_name,
+      "\\{Full Name\\}": fieldsMap.full_name,
+      "\\{Job Title\\}": fieldsMap.job_title,
+      "\\{Date of Joining\\}": fieldsMap.joining_date,
+      "\\{Basic Salary\\}": fieldsMap.basic_salary,
+      "\\{Staff ID\\}": fieldsMap.staff_id,
+      "\\{Email\\}": fieldsMap.email,
+      "\\{Phone\\}": fieldsMap.phone,
+      "\\{Gross Salary\\}": fieldsMap.gross_salary,
+      "\\{HRA\\}": fieldsMap.hra,
+      "\\{Conveyance\\}": fieldsMap.conveyance,
+      "\\{Medical Allowance\\}": fieldsMap.medical_allowance,
+      "\\{Special Allowance\\}": fieldsMap.special_allowance,
+      "\\{Other Allowance\\}": fieldsMap.other_allowance,
+      "\\{EPF Deduction\\}": fieldsMap.pf_deduction,
+      "\\{ESI Deduction\\}": fieldsMap.esi_deduction,
+      "\\{PT Deduction\\}": fieldsMap.pt_deduction,
+
+      // Curly Underscores
+      "\\{first_name\\}": fieldsMap.first_name,
+      "\\{last_name\\}": fieldsMap.last_name,
+      "\\{full_name\\}": fieldsMap.full_name,
+      "\\{job_title\\}": fieldsMap.job_title,
+      "\\{joining_date\\}": fieldsMap.joining_date,
+      "\\{basic_salary\\}": fieldsMap.basic_salary,
+      "\\{staff_id\\}": fieldsMap.staff_id,
+      "\\{email\\}": fieldsMap.email,
+      "\\{phone\\}": fieldsMap.phone,
+      "\\{gross_salary\\}": fieldsMap.gross_salary,
+      "\\{hra\\}": fieldsMap.hra,
+      "\\{conveyance\\}": fieldsMap.conveyance,
+      "\\{medical_allowance\\}": fieldsMap.medical_allowance,
+      "\\{special_allowance\\}": fieldsMap.special_allowance,
+      "\\{other_allowance\\}": fieldsMap.other_allowance,
+      "\\{pf_deduction\\}": fieldsMap.pf_deduction,
+      "\\{esi_deduction\\}": fieldsMap.esi_deduction,
+      "\\{pt_deduction\\}": fieldsMap.pt_deduction
+    };
+
     let pdfBuffer = null;
 
-    if (config?.document_templates?.joining_letter_pdf) {
-      const templatePath = path.join(__dirname, '..', config.document_templates.joining_letter_pdf);
-      if (fs.existsSync(templatePath)) {
-        try {
-          const { PDFDocument } = require('c:/Projects/TheBoxSync/payroll-server/node_modules/pdf-lib');
-          const tempDoc = await PDFDocument.load(fs.readFileSync(templatePath));
-          const form = tempDoc.getForm();
-          const fields = form.getFields();
-          
-          if (fields && fields.length > 0) {
-            fields.forEach(field => {
-              const name = field.getName().toLowerCase();
-              let textVal = '';
-              if (name.includes('first_name') || name.includes('f_name') || name.includes('firstname')) {
-                textVal = staff.f_name || '';
-              } else if (name.includes('last_name') || name.includes('l_name') || name.includes('lastname')) {
-                textVal = staff.l_name || '';
-              } else if (name.includes('name') || name.includes('recipient') || name.includes('employee')) {
-                textVal = `${staff.f_name} ${staff.l_name}`;
-              } else if (name.includes('title') || name.includes('position') || name.includes('role') || name.includes('designation')) {
-                textVal = staff.position || '';
-              } else if (name.includes('date') || name.includes('joining') || name.includes('doj')) {
-                textVal = staff.joining_date ? new Date(staff.joining_date).toLocaleDateString('en-IN') : '';
-              } else if (name.includes('salary') || name.includes('basic') || name.includes('gross') || name.includes('compensation') || name.includes('pay')) {
-                textVal = staff.salary ? staff.salary.toString() : '';
-              } else if (name.includes('staff_id') || name.includes('payroll_id') || name.includes('id') || name.includes('staffid')) {
-                textVal = staff.staff_id || '';
-              }
-              if (textVal && typeof field.setText === 'function') {
-                field.setText(textVal);
-              }
-            });
-            form.flatten();
-            pdfBuffer = Buffer.from(await tempDoc.save());
-          }
-        } catch (pdfFormErr) {
-          console.warn("Error filling fillable PDF form, falling back to overlay:", pdfFormErr);
+    // Priority 1: Use browser-edited HTML version if available
+    const editedHtml = config?.document_templates?.joining_letter_word_html;
+    if (editedHtml) {
+      try {
+        console.log("Using browser-edited Word HTML template for PDF generation...");
+        let htmlContent = editedHtml;
+        for (const [key, value] of Object.entries(placeholders)) {
+          const regex = new RegExp(key, 'g');
+          htmlContent = htmlContent.replace(regex, value || '');
         }
-        
-        if (!pdfBuffer) {
-          try {
-            let template = config?.document_templates?.joining_letter_template || defaultJoiningLetter;
-            
-            const placeholders = {
-              "\\[First Name\\]": staff.f_name || "",
-              "\\[Last Name\\]": staff.l_name || "",
-              "\\[Job Title\\]": staff.position || "",
-              "\\[Date of Joining\\]": staff.joining_date ? new Date(staff.joining_date).toLocaleDateString('en-IN') : "",
-              "\\[Basic Salary\\]": staff.salary ? staff.salary.toString() : "",
-              "\\[Staff ID\\]": staff.staff_id || "",
-            };
-            for (const [key, value] of Object.entries(placeholders)) {
-              const regex = new RegExp(key, 'g');
-              template = template.replace(regex, value);
+        const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #f2f2f2; }
+          .ql-align-center { text-align: center; }
+          .ql-align-right { text-align: right; }
+          .ql-align-left { text-align: left; }
+          .ql-align-justify { text-align: justify; }
+        </style></head><body>${htmlContent}</body></html>`;
+        const file = { content: fullHtml };
+        pdfBuffer = await html_to_pdf.generatePdf(file, { format: 'A4', margin: { top: '40px', bottom: '40px', left: '40px', right: '40px' } });
+        console.log("Browser-edited HTML compiled to PDF successfully.");
+      } catch (htmlErr) {
+        console.error("Error generating PDF from edited HTML, falling back to .docx:", htmlErr);
+      }
+    }
+
+    // Priority 2: Convert the uploaded .docx to HTML
+    if (!pdfBuffer) {
+      const wordPath = config?.document_templates?.joining_letter_word
+        ? path.join(__dirname, '..', config.document_templates.joining_letter_word)
+        : null;
+
+      if (wordPath && fs.existsSync(wordPath)) {
+        try {
+          console.log("Found Word template .docx file, converting to HTML...");
+          function transformParagraph(element) {
+            if (element.alignment) {
+              return { 
+                ...element, 
+                styleId: `${element.alignment}-aligned`,
+                styleName: `${element.alignment}-aligned`
+              };
             }
-            
-            const fullHtml = `
-              <!DOCTYPE html>
-              <html>
-              <head>
-                <meta charset="utf-8">
-                <style>
-                  html, body { background: transparent !important; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
-                  .ql-align-center { text-align: center; }
-                  .ql-align-right { text-align: right; }
-                  .ql-align-justify { text-align: justify; }
-                  h1, h2, h3 { color: #222; }
-                </style>
-              </head>
-              <body>
-                ${template}
-              </body>
-              </html>
-            `;
-            
-            const options = { format: 'A4', margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' } };
-            const file = { content: fullHtml };
-            const htmlPdfBuffer = await html_to_pdf.generatePdf(file, options);
-            
-            const { PDFDocument } = require('c:/Projects/TheBoxSync/payroll-server/node_modules/pdf-lib');
-            const templateDoc = await PDFDocument.load(fs.readFileSync(templatePath));
-            const htmlDoc = await PDFDocument.load(htmlPdfBuffer);
-            const finalDoc = await PDFDocument.create();
-            
-            const templatePages = templateDoc.getPages();
-            const htmlPages = htmlDoc.getPages();
-            const embeddedTemplatePages = await finalDoc.embedPages(templatePages);
-            const embeddedHtmlPages = await finalDoc.embedPages(htmlPages);
-            
-            for (let i = 0; i < htmlPages.length; i++) {
-              const { width, height } = htmlPages[i].getSize();
-              const newPage = finalDoc.addPage([width, height]);
-              
-              let templateIndex = i;
-              if (templateIndex >= templatePages.length) {
-                templateIndex = templatePages.length - 1;
-              }
-              if (templateIndex >= 0 && embeddedTemplatePages[templateIndex]) {
-                newPage.drawPage(embeddedTemplatePages[templateIndex], { x: 0, y: 0, width, height });
-              }
-              if (embeddedHtmlPages[i]) {
-                newPage.drawPage(embeddedHtmlPages[i], { x: 0, y: 0, width, height });
-              }
-            }
-            pdfBuffer = Buffer.from(await finalDoc.save());
-          } catch (overlayErr) {
-            console.error("Error overlaying template PDF background:", overlayErr);
+            return element;
           }
+
+          const options = {
+            transformDocument: mammoth.transforms.paragraph(transformParagraph),
+            styleMap: [
+              "p[style-name='center-aligned'] => p.ql-align-center:fresh",
+              "p[style-name='right-aligned'] => p.ql-align-right:fresh",
+              "p[style-name='left-aligned'] => p.ql-align-left:fresh",
+              "p[style-name='both-aligned'] => p.ql-align-justify:fresh",
+              "p[style-name='justify-aligned'] => p.ql-align-justify:fresh"
+            ]
+          };
+
+          const result = await mammoth.convertToHtml({ path: wordPath }, options);
+          let htmlContent = result.value;
+
+          for (const [key, value] of Object.entries(placeholders)) {
+            const regex = new RegExp(key, 'g');
+            htmlContent = htmlContent.replace(regex, value || '');
+          }
+
+          const fullHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <style>
+                body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+                .ql-align-center { text-align: center; }
+                .ql-align-right { text-align: right; }
+                .ql-align-left { text-align: left; }
+                .ql-align-justify { text-align: justify; }
+              </style>
+            </head>
+            <body>
+              ${htmlContent}
+            </body>
+            </html>
+          `;
+
+          const pdfOptions = { format: 'A4', margin: { top: '40px', bottom: '40px', left: '40px', right: '40px' } };
+          const file = { content: fullHtml };
+          pdfBuffer = await html_to_pdf.generatePdf(file, pdfOptions);
+          console.log("Word document compiled to PDF successfully.");
+        } catch (wordErr) {
+          console.error("Error parsing Word template docx, falling back to HTML template:", wordErr);
         }
       }
     }
 
+
     if (!pdfBuffer) {
+      console.log("Using default HTML letterhead template as fallback...");
       // Legacy Fallback (HTML template only)
       let template = config?.document_templates?.joining_letter_template || defaultJoiningLetter;
-      const placeholders = {
-        "\\[First Name\\]": staff.f_name || "",
-        "\\[Last Name\\]": staff.l_name || "",
-        "\\[Job Title\\]": staff.position || "",
-        "\\[Date of Joining\\]": staff.joining_date ? new Date(staff.joining_date).toLocaleDateString('en-IN') : "",
-        "\\[Basic Salary\\]": staff.salary ? staff.salary.toString() : "",
-        "\\[Staff ID\\]": staff.staff_id || "",
-      };
-
       for (const [key, value] of Object.entries(placeholders)) {
         const regex = new RegExp(key, 'g');
-        template = template.replace(regex, value);
+        template = template.replace(regex, value || '');
       }
 
       const fullHtml = `
@@ -643,7 +804,7 @@ const sendJoiningLetter = async (req, res) => {
         <head>
           <meta charset="utf-8">
           <style>
-            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 45px; color: #333; line-height: 1.6; }
             .ql-align-center { text-align: center; }
             .ql-align-right { text-align: right; }
             .ql-align-justify { text-align: justify; }
@@ -656,20 +817,62 @@ const sendJoiningLetter = async (req, res) => {
         </html>
       `;
 
-      const options = { format: 'A4', margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' } };
+      const options = { format: 'A4', margin: { top: '30px', bottom: '30px', left: '30px', right: '30px' } };
       const file = { content: fullHtml };
       pdfBuffer = await html_to_pdf.generatePdf(file, options);
     }
 
-    // 5. Send Email
-    const subject = `Joining Letter - ${staff.f_name} ${staff.l_name}`;
-    const textBody = `Dear ${staff.f_name},\n\nPlease find attached your joining letter.\n\nWelcome to the team!\n\nBest regards,\nManagement`;
+    // 4. Generate email message body from settings editor
+    let emailBody = config?.document_templates?.joining_letter_template || defaultJoiningLetter;
+    // Replace placeholders in email body text too
+    for (const [key, value] of Object.entries(placeholders)) {
+      const regex = new RegExp(key, 'g');
+      emailBody = emailBody.replace(regex, value || '');
+    }
 
+    const fullEmailHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f6f8;
+          }
+          .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 6px;
+            border: 1px solid #e1e4e8;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+          }
+          p {
+            margin-top: 0;
+            margin-bottom: 15px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="email-container">
+          ${emailBody}
+        </div>
+      </body>
+      </html>
+    `;
+
+    const subject = `Joining Letter - ${staff.f_name} ${staff.l_name}`;
     await sendEmail({
       to: staff.email,
       subject: subject,
-      text: textBody,
-      html: `<p>Dear ${staff.f_name},</p><p>Please find attached your joining letter.</p><p>Welcome to the team!</p><p>Best regards,<br>Management</p>`,
+      text: `Dear ${staff.f_name},\n\nPlease find attached your joining letter.\n\nWelcome to the team!\n\nBest regards,\nManagement`,
+      html: fullEmailHtml,
       attachments: [
         {
           filename: `Joining_Letter_${staff.f_name}_${staff.l_name}.pdf`,
@@ -829,6 +1032,84 @@ const toggleSpecificLeave = async (req, res) => {
     }
 };
 
+const previewJoiningLetter = async (req, res) => {
+  try {
+    const adminUserId = req.user?._id || req.user;
+    const { id } = req.params;
+
+    const staff = await Staff.findOne({ _id: id, user_id: adminUserId }).lean();
+    if (!staff) {
+      return res.status(404).json({ success: false, message: "Staff member not found" });
+    }
+
+    const config = await PayrollConfig.findOne({ user_id: adminUserId }).lean();
+    
+    let template = config?.document_templates?.joining_letter_template || `
+      <p>Dear [First Name] [Last Name],</p>
+      <p>We are delighted to offer you the position of <strong>[Job Title]</strong> at our company.</p>
+      <p>Your starting date will be <strong>[Date of Joining]</strong>.</p>
+      <p>Your basic salary will be <strong>[Basic Salary]</strong> per month.</p>
+      <p>Your Staff ID is <strong>[Staff ID]</strong>.</p>
+      <p><br></p>
+      <p>Sincerely,</p>
+      <p>HR Department</p>
+    `;
+
+    const fieldsMap = getStaffFieldMap(staff, config);
+    
+    const placeholders = {
+      // Capitalized variations
+      "\\[First Name\\]": fieldsMap.first_name,
+      "\\[Last Name\\]": fieldsMap.last_name,
+      "\\[Full Name\\]": fieldsMap.full_name,
+      "\\[Job Title\\]": fieldsMap.job_title,
+      "\\[Date of Joining\\]": fieldsMap.joining_date,
+      "\\[Basic Salary\\]": fieldsMap.basic_salary,
+      "\\[Staff ID\\]": fieldsMap.staff_id,
+      "\\[Email\\]": fieldsMap.email,
+      "\\[Phone\\]": fieldsMap.phone,
+      "\\[Gross Salary\\]": fieldsMap.gross_salary,
+      "\\[HRA\\]": fieldsMap.hra,
+      "\\[Conveyance\\]": fieldsMap.conveyance,
+      "\\[Medical Allowance\\]": fieldsMap.medical_allowance,
+      "\\[Special Allowance\\]": fieldsMap.special_allowance,
+      "\\[Other Allowance\\]": fieldsMap.other_allowance,
+      "\\[EPF Deduction\\]": fieldsMap.pf_deduction,
+      "\\[ESI Deduction\\]": fieldsMap.esi_deduction,
+      "\\[PT Deduction\\]": fieldsMap.pt_deduction,
+      // Underscore/lowercase variations
+      "\\[first_name\\]": fieldsMap.first_name,
+      "\\[last_name\\]": fieldsMap.last_name,
+      "\\[full_name\\]": fieldsMap.full_name,
+      "\\[job_title\\]": fieldsMap.job_title,
+      "\\[joining_date\\]": fieldsMap.joining_date,
+      "\\[basic_salary\\]": fieldsMap.basic_salary,
+      "\\[staff_id\\]": fieldsMap.staff_id,
+      "\\[email\\]": fieldsMap.email,
+      "\\[phone\\]": fieldsMap.phone,
+      "\\[gross_salary\\]": fieldsMap.gross_salary,
+      "\\[hra\\]": fieldsMap.hra,
+      "\\[conveyance\\]": fieldsMap.conveyance,
+      "\\[medical_allowance\\]": fieldsMap.medical_allowance,
+      "\\[special_allowance\\]": fieldsMap.special_allowance,
+      "\\[other_allowance\\]": fieldsMap.other_allowance,
+      "\\[pf_deduction\\]": fieldsMap.pf_deduction,
+      "\\[esi_deduction\\]": fieldsMap.esi_deduction,
+      "\\[pt_deduction\\]": fieldsMap.pt_deduction,
+    };
+
+    for (const [key, value] of Object.entries(placeholders)) {
+      const regex = new RegExp(key, 'g');
+      template = template.replace(regex, value);
+    }
+
+    res.json({ success: true, html: template });
+  } catch (error) {
+    console.error("Error generating preview:", error);
+    res.status(500).json({ success: false, message: "Server error generating preview" });
+  }
+};
+
 module.exports = {
   getStaffPositions,
   getStaffData,
@@ -839,6 +1120,7 @@ module.exports = {
   getAllFaceEncodings,
   getNextStaffIdController,
   sendJoiningLetter,
+  previewJoiningLetter,
   submitResignation,
   processResignation,
   getPendingResignations,

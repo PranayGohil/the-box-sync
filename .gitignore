@@ -4,30 +4,9 @@ server/uploads/*
 
 node_modules/
 dist/
-build/
-payroll-server/uploads/
-
-# Environment files - never commit these!
+build/p a y r o l l - s e r v e r / u p l o a d s /  
+ 
 .env
-.env.local
-.env.development
-.env.development.local
-.env.test
-.env.test.local
-.env.production
-.env.production.local
 .env*.local
 
-# Nested env files (covers all subprojects)
-**/.env
-**/.env.local
-**/.env.development
-**/.env.development.local
-**/.env.test
-**/.env.test.local
-**/.env.production
-**/.env.production.local
-**/.env*.local
-
-# Allow .env.example files (safe templates)
-!**/.env.example
+*/.env

@@ -18,6 +18,11 @@ export const updatePayrollConfig = async (configData) => {
     return response.data;
 };
 
+export const getWordTemplateHtml = async (filepath = '') => {
+    const response = await axios.get(`${API_URL}/payroll-config/word-preview?filepath=${encodeURIComponent(filepath)}`, authHeader());
+    return response.data;
+};
+
 // ── Holidays ────────────────────────────────────────────────────────────────
 export const getHolidays = async (year) => {
     const response = await axios.get(`${API_URL}/holidays?year=${year}`, authHeader());

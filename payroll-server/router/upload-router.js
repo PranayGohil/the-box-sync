@@ -74,7 +74,7 @@ uploadRouter.post(
 );
 
 uploadRouter.post(
-  "/uploadtemplate",
+  "/uploadword",
   multer({
     storage: multer.diskStorage({
       destination: (req, file, cb) => {
@@ -83,11 +83,12 @@ uploadRouter.post(
         cb(null, dir);
       },
       filename: (req, file, cb) => {
-        const uniqueName = "joining_letter_" + Date.now() + ".pdf";
+        const ext = path.extname(file.originalname);
+        const uniqueName = "joining_letter_" + Date.now() + ext;
         cb(null, uniqueName);
       },
     }),
-  }).single("pdf_template"),
+  }).single("word_template"),
   (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: "No file uploaded" });

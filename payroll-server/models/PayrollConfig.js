@@ -114,7 +114,6 @@ const payrollConfigSchema = new Schema(
 
     // ── Document Templates ──────────────────────────────────────────────
     document_templates: {
-      joining_letter_pdf: { type: String, default: null },
       joining_letter_template: { type: String, default: `<p>Dear [First Name] [Last Name],</p>
 <p>We are delighted to offer you the position of <strong>[Job Title]</strong> at our company.</p>
 <p>Your starting date will be <strong>[Date of Joining]</strong>.</p>
@@ -124,7 +123,9 @@ const payrollConfigSchema = new Schema(
 <p>Please sign and return this letter to indicate your acceptance of this offer.</p>
 <p><br></p>
 <p>Sincerely,</p>
-<p>HR Department</p>` }
+<p>HR Department</p>` },
+      joining_letter_word: { type: String, default: null },
+      joining_letter_word_html: { type: String, default: null }  // browser-edited override of the .docx
     }
   },
   {
