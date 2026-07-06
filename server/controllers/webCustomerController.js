@@ -2,6 +2,9 @@ const WebCustomer = require('../models/webCustomerModel');
 const Menu = require('../models/menuModel');
 const Order = require('../models/orderModel');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const Otp = require('../models/otpModel');
+const { sendEmail } = require('../utils/emailService');
 
 exports.registerCustomer = async (req, res) => {
     try {
@@ -174,7 +177,11 @@ exports.updateCustomer = async (req, res) => {
 exports.addAddress = async (req, res) => {
     try {
         const { id } = req.params;
-        const { address, city, state, country, pincode } = req.body;
+        const { 
+            address, exact_location, city, state, country, pincode, tag, 
+            place_id, formatted_address, latitude, longitude, 
+            postal_code, locality, sublocality 
+        } = req.body;
 
         const customer = await WebCustomer.findById(id);
         if (!customer) {
@@ -184,12 +191,28 @@ exports.addAddress = async (req, res) => {
             });
         }
 
+        const latVal = latitude !== undefined && latitude !== '' ? Number(latitude) : undefined;
+        const lngVal = longitude !== undefined && longitude !== '' ? Number(longitude) : undefined;
+
         customer.addresses.push({
             address,
+            exact_location,
             city,
             state,
             country,
             pincode,
+            tag: tag || "Home",
+            place_id,
+            formatted_address,
+            latitude: latVal,
+            longitude: lngVal,
+            postal_code,
+            locality,
+            sublocality,
+            location: (latVal && lngVal) ? {
+                type: "Point",
+                coordinates: [lngVal, latVal]
+            } : undefined
         });
 
         await customer.save();
@@ -212,7 +235,11 @@ exports.addAddress = async (req, res) => {
 exports.editAddress = async (req, res) => {
     try {
         const { id } = req.params;
-        const { addressId, address, city, state, country, pincode } = req.body;
+        const { 
+            addressId, address, city, state, country, pincode, tag, 
+            place_id, formatted_address, latitude, longitude, 
+            postal_code, locality, sublocality 
+        } = req.body;
 
         const customer = await WebCustomer.findById(id);
         if (!customer) {
@@ -230,13 +257,29 @@ exports.editAddress = async (req, res) => {
             });
         }
 
+        const oldAddr = customer.addresses[addressIndex].toObject ? customer.addresses[addressIndex].toObject() : customer.addresses[addressIndex];
+        const latVal = latitude !== undefined && latitude !== '' ? Number(latitude) : oldAddr.latitude;
+        const lngVal = longitude !== undefined && longitude !== '' ? Number(longitude) : oldAddr.longitude;
+
         customer.addresses[addressIndex] = {
-            ...customer.addresses[addressIndex],
+            ...oldAddr,
             address,
             city,
             state,
             country,
             pincode,
+            tag: tag || oldAddr.tag || "Home",
+            place_id: place_id || oldAddr.place_id,
+            formatted_address: formatted_address || oldAddr.formatted_address,
+            latitude: latVal,
+            longitude: lngVal,
+            postal_code: postal_code || oldAddr.postal_code,
+            locality: locality || oldAddr.locality,
+            sublocality: sublocality || oldAddr.sublocality,
+            location: (latVal && lngVal) ? {
+                type: "Point",
+                coordinates: [lngVal, latVal]
+            } : oldAddr.location
         };
 
         await customer.save();
@@ -540,5 +583,133 @@ exports.getCustomerOrder = async (req, res) => {
             message: 'Error fetching customer order details',
             error: error.message,
         });
+    }
+};
+
+function generateOtp(length = 6) {
+    let otp = '';
+    while (otp.length < length) {
+        const byte = crypto.randomBytes(1)[0] % 10;
+        otp += byte.toString();
+    }
+    return otp.slice(0, length);
+}
+
+exports.requestOtp = async (req, res) => {
+    try {
+        const { email, restaurant_code } = req.body;
+        if (!email || !restaurant_code) {
+            return res.status(400).json({ success: false, message: 'Email and restaurant code are required' });
+        }
+
+        let customer = await WebCustomer.findOne({ email, restaurant_code });
+        if (!customer) {
+            // Auto-register a new web customer record with placeholder values
+            customer = new WebCustomer({
+                restaurant_code,
+                email,
+                name: '',
+                phone: '',
+                password: crypto.randomBytes(16).toString('hex'), // satisfies save hook
+            });
+            await customer.save();
+        }
+
+        const otpPlain = generateOtp(6);
+        const codeHash = await bcrypt.hash(otpPlain, 10);
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes TTL
+
+        const otpDoc = new Otp({
+            email,
+            codeHash,
+            purpose: 'web_customer_login',
+            expiresAt,
+        });
+        await otpDoc.save();
+
+        const emailHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+            <div style="background: #f27a1a; padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+              <h2 style="color: #fff; margin: 0;">Verify Your Email</h2>
+            </div>
+            <div style="padding: 24px; background: #fafafa;">
+              <p style="color: #333; font-size: 16px;">Hi there,</p>
+              <p style="color: #555;">Please use the following One Time Password (OTP) to log in to your account:</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <span style="background: #f27a1a; color: #fff; padding: 12px 24px; font-size: 28px; font-weight: bold; border-radius: 6px; letter-spacing: 4px;">${otpPlain}</span>
+              </div>
+              <p style="color: #555; text-align: center;">This code will expire in <strong>10 minutes</strong>.</p>
+              <p style="color: #555; margin-top: 30px;">If you did not request this code, please ignore this email.</p>
+              <p style="color: #555; margin-top: 24px;">Best regards,<br><strong>The TheBox Team</strong></p>
+            </div>
+          </div>
+        `;
+
+        try {
+            await sendEmail({
+                to: email,
+                subject: "Login Verification Code",
+                html: emailHtml,
+            });
+        } catch (mailErr) {
+            console.error('Mail send failed, logging to console:', mailErr);
+            console.log(`\n===============================================\n[DEVELOPMENT OTP] Verification Code for ${email} is: ${otpPlain}\n===============================================\n`);
+        }
+
+        res.status(200).json({ success: true, message: 'Verification code sent successfully' });
+    } catch (error) {
+        console.error('Error in requestOtp:', error);
+        res.status(500).json({ success: false, message: 'Failed to request verification code', error: error.message });
+    }
+};
+
+exports.verifyOtp = async (req, res) => {
+    try {
+        const { email, code, restaurant_code } = req.body;
+        if (!email || !code || !restaurant_code) {
+            return res.status(400).json({ success: false, message: 'Email, verification code, and restaurant code are required' });
+        }
+
+        const customer = await WebCustomer.findOne({ email, restaurant_code });
+        if (!customer) {
+            return res.status(404).json({ success: false, message: 'Customer not found' });
+        }
+
+        // Find latest valid OTP for this email
+        const now = new Date();
+        const otpDoc = await Otp.findOne({
+            email,
+            purpose: 'web_customer_login',
+            expiresAt: { $gt: now },
+        }).sort({ createdAt: -1 }).exec();
+
+        if (!otpDoc) {
+            return res.status(400).json({ success: false, message: 'No active verification code found or it has expired' });
+        }
+
+        if (otpDoc.attempts >= 5) {
+            return res.status(429).json({ success: false, message: 'Too many failed verification attempts. Please request a new code.' });
+        }
+
+        const match = await bcrypt.compare(String(code), otpDoc.codeHash);
+        if (!match) {
+            otpDoc.attempts = (otpDoc.attempts || 0) + 1;
+            await otpDoc.save();
+            return res.status(400).json({ success: false, message: 'Invalid verification code' });
+        }
+
+        otpDoc.verified = true;
+        await otpDoc.save();
+
+        const token = await customer.generateAuthToken();
+        res.status(200).json({
+            success: true,
+            message: 'Logged in successfully',
+            token,
+            data: customer,
+        });
+    } catch (error) {
+        console.error('Error in verifyOtp:', error);
+        res.status(500).json({ success: false, message: 'Verification failed', error: error.message });
     }
 };

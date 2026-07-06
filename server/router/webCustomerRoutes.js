@@ -13,12 +13,16 @@ const {
     updateCart,
     getCustomerOrders,
     getCustomerOrder,
+    requestOtp,
+    verifyOtp,
 } = require("../controllers/webCustomerController");
 
 const webCustomerRouter = express.Router();
 
 webCustomerRouter.post("/register", registerCustomer);
 webCustomerRouter.post("/login", loginCustomer);
+webCustomerRouter.post("/request-otp", requestOtp);
+webCustomerRouter.post("/verify-otp", verifyOtp);
 
 webCustomerRouter.get("/get/:id", getCustomer);
 webCustomerRouter.put("/update/:id", updateCustomer);

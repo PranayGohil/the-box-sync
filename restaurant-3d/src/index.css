@@ -240,3 +240,43 @@ body {
   mask-image: linear-gradient(to right, black 85%, transparent 100%);
   -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
 }
+
+/* Google Maps Autocomplete Dropdown Dark Theme Styling */
+.pac-container {
+  background-color: #1a1a1a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-top: none !important;
+  border-radius: 0 0 16px 16px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+  font-family: 'Inter', sans-serif !important;
+  z-index: 99999 !important;
+}
+
+.pac-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+  padding: 12px 16px !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease-in-out !important;
+  background-color: transparent !important;
+}
+
+.pac-item:hover {
+  background-color: rgba(242, 122, 26, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.pac-item-query {
+  color: #ffffff !important;
+  font-size: 14px !important;
+}
+
+.pac-matched {
+  color: var(--brand) !important;
+  font-weight: bold !important;
+}
+
+.pac-icon {
+  filter: invert(1) brightness(2) !important;
+}

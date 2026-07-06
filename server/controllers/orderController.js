@@ -1,5 +1,8 @@
 const User = require("../models/userModel");
 const Order = require("../models/orderModel");
+const Website = require("../models/WebsiteModel");
+const DistanceCache = require("../models/DistanceCacheModel");
+const googleMapsService = require("../utils/googleMapsService");
 const Customer = require("../models/customerModel");
 const WebCustomer = require("../models/webCustomerModel");
 const TokenCounter = require("../models/TokenCounter");
@@ -1631,6 +1634,136 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+const calculateDeliveryController = async (req, res) => {
+  try {
+    const { customer_place_id, customer_lat, customer_lng, subtotal = 0 } = req.body;
+    const restaurant_code = req.params.rescode;
+
+    if (!customer_place_id) {
+      return res.status(400).json({ success: false, message: "Customer Place ID is required." });
+    }
+
+    const restaurant = await User.findOne({ restaurant_code });
+    if (!restaurant) {
+      return res.status(404).json({ success: false, message: "Restaurant not found." });
+    }
+
+    const settings = await Website.findOne({ user_id: restaurant._id });
+    if (!settings || !settings.delivery?.enabled) {
+      return res.status(400).json({ success: false, message: "Delivery is not enabled for this restaurant." });
+    }
+
+    const deliveryConfig = settings.delivery;
+
+    // 1. Try to find distance in persistent MongoDB DistanceCache
+    let cachedDistance = await DistanceCache.findOne({
+      restaurant_id: restaurant._id.toString(),
+      customer_place_id: customer_place_id
+    });
+
+    let roadDistance = 0;
+    let duration = "15 min"; // default fallback
+
+    if (cachedDistance) {
+      roadDistance = cachedDistance.road_distance;
+      duration = cachedDistance.duration || duration;
+    } else {
+      // 2. Fetch fresh road distance from Google Routes API
+      const origin = {
+        placeId: settings.place_id,
+        latitude: settings.latitude,
+        longitude: settings.longitude
+      };
+      const destination = {
+        placeId: customer_place_id,
+        latitude: customer_lat,
+        longitude: customer_lng
+      };
+
+      try {
+        const routeData = await googleMapsService.computeRoadDistance(origin, destination);
+        roadDistance = routeData.road_distance;
+        duration = routeData.duration;
+
+        // Save to cache
+        await DistanceCache.create({
+          restaurant_id: restaurant._id.toString(),
+          customer_place_id: customer_place_id,
+          road_distance: roadDistance,
+          duration: duration
+        });
+      } catch (err) {
+        console.error("Routes API Error:", err);
+        return res.status(400).json({
+          success: false,
+          message: "Unable to calculate a valid road delivery route to this location."
+        });
+      }
+    }
+
+    // 3. Validate against maximum distance
+    if (deliveryConfig.max_distance && roadDistance > deliveryConfig.max_distance) {
+      return res.status(400).json({
+        success: false,
+        message: `Delivery unavailable. Maximum delivery limit is ${deliveryConfig.max_distance} km (road distance is ${roadDistance} km).`,
+        distance: roadDistance
+      });
+    }
+
+    // 4. Validate against minimum order
+    if (deliveryConfig.minimum_order && subtotal < deliveryConfig.minimum_order) {
+      return res.status(400).json({
+        success: false,
+        message: `Minimum order amount of ₹${deliveryConfig.minimum_order} is required for delivery.`,
+        distance: roadDistance
+      });
+    }
+
+    // 5. Calculate delivery charge
+    let deliveryCharge = 0;
+
+    // Check free radius rule first
+    if (deliveryConfig.free_radius && roadDistance <= deliveryConfig.free_radius) {
+      deliveryCharge = 0;
+    } else if (deliveryConfig.charge_type === "fixed") {
+      deliveryCharge = deliveryConfig.fixed_charge || 0;
+    } else if (deliveryConfig.charge_type === "distance_based" && deliveryConfig.slabs?.length > 0) {
+      const sortedSlabs = [...deliveryConfig.slabs].sort((a, b) => a.to_km - b.to_km);
+      let matchedCharge = null;
+
+      for (let i = 0; i < sortedSlabs.length; i++) {
+        const slab = sortedSlabs[i];
+        const prevLimit = i === 0 ? 0 : sortedSlabs[i - 1].to_km;
+        if (roadDistance > prevLimit && roadDistance <= slab.to_km) {
+          matchedCharge = slab.charge;
+          break;
+        }
+      }
+
+      if (matchedCharge === null) {
+        return res.status(400).json({
+          success: false,
+          message: `Delivery unavailable. No charge slab matches the road distance of ${roadDistance} km.`,
+          distance: roadDistance
+        });
+      }
+
+      deliveryCharge = matchedCharge;
+    }
+
+    return res.json({
+      success: true,
+      distance: roadDistance,
+      duration,
+      delivery_charge: deliveryCharge
+    });
+
+  } catch (error) {
+    console.error("Error in calculateDeliveryController:", error);
+    return res.status(500).json({ success: false, message: "Error calculating delivery details." });
+  }
+};
+
 module.exports = {
   addCustomer,
   getOrderData,
@@ -1642,5 +1775,6 @@ module.exports = {
   takeawayController,
   deliveryController,
   deliveryFromSiteController,
+  calculateDeliveryController,
   updateOrderStatus,
 };

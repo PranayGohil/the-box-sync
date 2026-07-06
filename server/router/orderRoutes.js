@@ -12,6 +12,7 @@ const {
   takeawayController,
   deliveryController,
   deliveryFromSiteController,
+  calculateDeliveryController,
   updateOrderStatus,
 } = require("../controllers/orderController");
 
@@ -32,6 +33,7 @@ orderRouter.route("/dine-in").post(authMiddleware, dineInController);
 orderRouter.route("/takeaway").post(authMiddleware, takeawayController);
 orderRouter.route("/delivery").post(authMiddleware, deliveryController);
 orderRouter.route("/delivery-from-site/:rescode").post(deliveryFromSiteController);
+orderRouter.route("/calculate-delivery/:rescode").post(calculateDeliveryController);
 orderRouter.route("/update-status/:id").put(authMiddleware, updateOrderStatus);
 
 module.exports = orderRouter;

@@ -35,6 +35,33 @@ const websiteSchema = new mongoose.Schema({
   }],
   contact_details: String,
   map_location: String,
+  place_id: String,
+  formatted_address: String,
+  latitude: Number,
+  longitude: Number,
+  city: String,
+  state: String,
+  country: String,
+  postal_code: String,
+  locality: String,
+  sublocality: String,
+  location: {
+    type: { type: String, default: "Point" },
+    coordinates: { type: [Number], default: [0, 0] } // [longitude, latitude]
+  },
+  delivery: {
+    enabled: { type: Boolean, default: false },
+    max_distance: { type: Number, default: 0 },
+    minimum_order: { type: Number, default: 0 },
+    free_radius: { type: Number, default: 0 },
+    charge_type: { type: String, enum: ['free', 'fixed', 'distance_based'], default: 'free' },
+    fixed_charge: { type: Number, default: 0 },
+    slabs: [{
+      from_km: Number,
+      to_km: Number,
+      charge: Number
+    }]
+  },
   testimonials: [{
     name: String,
     text: String,
@@ -48,6 +75,8 @@ const websiteSchema = new mongoose.Schema({
   }],
   show_reservation: { type: Boolean, default: true },
 });
+
+websiteSchema.index({ location: "2dsphere" });
 
 const Website = mongoose.model("website", websiteSchema);
 module.exports = Website;

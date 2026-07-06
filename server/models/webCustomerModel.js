@@ -21,6 +21,9 @@ const webCustomerSchema = new Schema({
             address: {
                 type: String,
             },
+            exact_location: {
+                type: String,
+            },
             city: {
                 type: String,
             },
@@ -32,6 +35,44 @@ const webCustomerSchema = new Schema({
             },
             pincode: {
                 type: String,
+            },
+            tag: {
+                type: String,
+                default: "Home",
+            },
+            place_id: {
+                type: String,
+            },
+            formatted_address: {
+                type: String,
+            },
+            latitude: {
+                type: Number,
+            },
+            longitude: {
+                type: Number,
+            },
+            city: {
+                type: String,
+            },
+            state: {
+                type: String,
+            },
+            country: {
+                type: String,
+            },
+            postal_code: {
+                type: String,
+            },
+            locality: {
+                type: String,
+            },
+            sublocality: {
+                type: String,
+            },
+            location: {
+                type: { type: String, default: "Point" },
+                coordinates: { type: [Number], default: [0, 0] } // [longitude, latitude]
             },
             is_default: {
                 type: Boolean,
