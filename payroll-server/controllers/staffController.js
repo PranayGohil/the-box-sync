@@ -681,46 +681,79 @@ const sendJoiningLetter = async (req, res) => {
     };
 
     let pdfBuffer = null;
-    let wordPath = config?.document_templates?.joining_letter_word ? path.join(__dirname, '..', config.document_templates.joining_letter_word) : null;
 
-    if (wordPath && fs.existsSync(wordPath)) {
+    // Priority 1: Use browser-edited HTML version if available
+    const editedHtml = config?.document_templates?.joining_letter_word_html;
+    if (editedHtml) {
       try {
-        console.log("Found Word template .docx file, converting to HTML...");
-        const result = await mammoth.convertToHtml({ path: wordPath });
-        let htmlContent = result.value;
-
-        // Perform placeholder replacements inside the converted HTML
+        console.log("Using browser-edited Word HTML template for PDF generation...");
+        let htmlContent = editedHtml;
         for (const [key, value] of Object.entries(placeholders)) {
           const regex = new RegExp(key, 'g');
           htmlContent = htmlContent.replace(regex, value || '');
         }
-
-        const fullHtml = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <style>
-              body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
-              table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-              th { background-color: #f2f2f2; }
-            </style>
-          </head>
-          <body>
-            ${htmlContent}
-          </body>
-          </html>
-        `;
-
-        const options = { format: 'A4', margin: { top: '40px', bottom: '40px', left: '40px', right: '40px' } };
+        const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #f2f2f2; }
+          .ql-align-center { text-align: center; }
+          .ql-align-right { text-align: right; }
+          .ql-align-justify { text-align: justify; }
+        </style></head><body>${htmlContent}</body></html>`;
         const file = { content: fullHtml };
-        pdfBuffer = await html_to_pdf.generatePdf(file, options);
-        console.log("Word document compiled to PDF successfully.");
-      } catch (wordErr) {
-        console.error("Error parsing Word template docx, falling back to HTML template:", wordErr);
+        pdfBuffer = await html_to_pdf.generatePdf(file, { format: 'A4', margin: { top: '40px', bottom: '40px', left: '40px', right: '40px' } });
+        console.log("Browser-edited HTML compiled to PDF successfully.");
+      } catch (htmlErr) {
+        console.error("Error generating PDF from edited HTML, falling back to .docx:", htmlErr);
       }
     }
+
+    // Priority 2: Convert the uploaded .docx to HTML
+    if (!pdfBuffer) {
+      const wordPath = config?.document_templates?.joining_letter_word
+        ? path.join(__dirname, '..', config.document_templates.joining_letter_word)
+        : null;
+
+      if (wordPath && fs.existsSync(wordPath)) {
+        try {
+          console.log("Found Word template .docx file, converting to HTML...");
+          const result = await mammoth.convertToHtml({ path: wordPath });
+          let htmlContent = result.value;
+
+          for (const [key, value] of Object.entries(placeholders)) {
+            const regex = new RegExp(key, 'g');
+            htmlContent = htmlContent.replace(regex, value || '');
+          }
+
+          const fullHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <style>
+                body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+              </style>
+            </head>
+            <body>
+              ${htmlContent}
+            </body>
+            </html>
+          `;
+
+          const options = { format: 'A4', margin: { top: '40px', bottom: '40px', left: '40px', right: '40px' } };
+          const file = { content: fullHtml };
+          pdfBuffer = await html_to_pdf.generatePdf(file, options);
+          console.log("Word document compiled to PDF successfully.");
+        } catch (wordErr) {
+          console.error("Error parsing Word template docx, falling back to HTML template:", wordErr);
+        }
+      }
+    }
+
 
     if (!pdfBuffer) {
       console.log("Using default HTML letterhead template as fallback...");

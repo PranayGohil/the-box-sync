@@ -124,7 +124,8 @@ const payrollConfigSchema = new Schema(
 <p><br></p>
 <p>Sincerely,</p>
 <p>HR Department</p>` },
-      joining_letter_word: { type: String, default: null }
+      joining_letter_word: { type: String, default: null },
+      joining_letter_word_html: { type: String, default: null }  // browser-edited override of the .docx
     }
   },
   {
