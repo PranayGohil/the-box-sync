@@ -512,7 +512,7 @@ const sendJoiningLetter = async (req, res) => {
       const templatePath = path.join(__dirname, '..', config.document_templates.joining_letter_pdf);
       if (fs.existsSync(templatePath)) {
         try {
-          const { PDFDocument } = require('c:/Projects/TheBoxSync/payroll-server/node_modules/pdf-lib');
+          const { PDFDocument } = require('pdf-lib');
           const tempDoc = await PDFDocument.load(fs.readFileSync(templatePath));
           const form = tempDoc.getForm();
           const fields = form.getFields();
@@ -583,11 +583,15 @@ const sendJoiningLetter = async (req, res) => {
               </html>
             `;
             
-            const options = { format: 'A4', margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' } };
+            const options = { 
+              format: 'A4', 
+              margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' },
+              omitBackground: true
+            };
             const file = { content: fullHtml };
             const htmlPdfBuffer = await html_to_pdf.generatePdf(file, options);
             
-            const { PDFDocument } = require('c:/Projects/TheBoxSync/payroll-server/node_modules/pdf-lib');
+            const { PDFDocument } = require('pdf-lib');
             const templateDoc = await PDFDocument.load(fs.readFileSync(templatePath));
             const htmlDoc = await PDFDocument.load(htmlPdfBuffer);
             const finalDoc = await PDFDocument.create();
@@ -597,8 +601,21 @@ const sendJoiningLetter = async (req, res) => {
             const embeddedTemplatePages = await finalDoc.embedPages(templatePages);
             const embeddedHtmlPages = await finalDoc.embedPages(htmlPages);
             
-            for (let i = 0; i < htmlPages.length; i++) {
-              const { width, height } = htmlPages[i].getSize();
+            const maxPages = Math.max(htmlPages.length, templatePages.length);
+            for (let i = 0; i < maxPages; i++) {
+              let width = 595.276;
+              let height = 841.89;
+              
+              if (htmlPages[i]) {
+                const size = htmlPages[i].getSize();
+                width = size.width;
+                height = size.height;
+              } else if (templatePages[i]) {
+                const size = templatePages[i].getSize();
+                width = size.width;
+                height = size.height;
+              }
+              
               const newPage = finalDoc.addPage([width, height]);
               
               let templateIndex = i;
