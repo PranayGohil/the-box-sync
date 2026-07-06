@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useHistory } from 'react-router-dom';
 import { Row, Col, Card, Form, Button, Spinner, Badge, Table, Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
@@ -210,14 +210,55 @@ const PayrollSettings = () => {
                     <style>
                         body {
                             box-sizing: border-box;
-                            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-                            padding: 20mm; color: #333; line-height: 1.6;
-                            background-color: #fff; margin: 0; outline: none;
+                            font-family: "Times New Roman", Times, Georgia, serif;
+                            font-size: 11pt;
+                            line-height: 1.5;
+                            color: #000000;
+                            padding: 20mm;
+                            margin: 0;
+                            outline: none;
                         }
-                        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        th { background-color: #f2f2f2; }
-                        img { max-width: 100%; }
+                        p {
+                            margin-top: 0;
+                            margin-bottom: 8pt;
+                        }
+                        h1, h2, h3, h4, h5, h6 {
+                            font-family: "Times New Roman", Times, Georgia, serif;
+                            font-weight: bold;
+                            color: #000000;
+                            margin-top: 12pt;
+                            margin-bottom: 6pt;
+                        }
+                        h1 {
+                            font-size: 14pt;
+                            text-align: center;
+                        }
+                        h2 {
+                            font-size: 12pt;
+                        }
+                        h3 {
+                            font-size: 11pt;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 10pt;
+                            margin-bottom: 15pt;
+                        }
+                        th, td {
+                            border: 1px solid #000000;
+                            padding: 6px 8px;
+                            text-align: left;
+                            font-size: 11pt;
+                        }
+                        th {
+                            background-color: #f2f2f2;
+                            font-weight: bold;
+                        }
+                        img {
+                            max-width: 100%;
+                            height: auto;
+                        }
                         .ql-align-center { text-align: center; }
                         .ql-align-right { text-align: right; }
                         .ql-align-left { text-align: left; }
@@ -829,6 +870,43 @@ const PayrollSettings = () => {
         updatePT('slabs', slabs);
     };
 
+    const availablePlaceholders = useMemo(() => {
+        const base = [
+            '[First Name]', '[Last Name]', '[Full Name]',
+            '[Job Title]', '[Date of Joining]', '[Basic Salary]',
+            '[Staff ID]', '[Email]', '[Phone]', '[Department]', '[Company Name]'
+        ];
+        
+        const extra = [];
+        // Custom Earnings
+        if (config?.custom_earnings) {
+            config.custom_earnings.forEach(earning => {
+                if (earning.is_active && earning.label) {
+                    extra.push(`[${earning.label.trim()}]`);
+                }
+            });
+        }
+        // Statutory Deductions
+        if (config?.statutory_config?.pf?.is_mandatory) {
+            extra.push('[EPF Deduction]');
+        }
+        if (config?.statutory_config?.esi?.is_mandatory) {
+            extra.push('[ESI Deduction]');
+        }
+        if (config?.statutory_config?.pt?.is_applicable) {
+            extra.push('[PT Deduction]');
+        }
+        // Custom Deductions
+        if (config?.custom_deductions) {
+            config.custom_deductions.forEach(deduction => {
+                if (deduction.is_active && deduction.label) {
+                    extra.push(`[${deduction.label.trim()}]`);
+                }
+            });
+        }
+        // Avoid duplicates and return
+        return Array.from(new Set([...base, ...extra]));
+    }, [config]);
 
     if (loading) return <div className="text-center my-5"><Spinner animation="border" /></div>;
 
@@ -1725,11 +1803,7 @@ const PayrollSettings = () => {
                                     Available Placeholders (use these in your Word document)
                                 </h6>
                                 <div className="d-flex flex-wrap gap-2">
-                                    {[
-                                        '[First Name]', '[Last Name]', '[Full Name]',
-                                        '[Job Title]', '[Date of Joining]', '[Basic Salary]',
-                                        '[Staff ID]', '[Department]', '[Company Name]'
-                                    ].map(ph => (
+                                    {availablePlaceholders.map(ph => (
                                         <Button
                                             key={ph}
                                             variant="none"
@@ -1921,11 +1995,7 @@ const PayrollSettings = () => {
                                             <span className="fw-bold text-dark small text-uppercase">Available Placeholders — click to insert at cursor</span>
                                         </div>
                                         <div className="d-flex flex-wrap gap-1">
-                                            {[
-                                                '[First Name]', '[Last Name]', '[Full Name]',
-                                                '[Job Title]', '[Date of Joining]', '[Basic Salary]',
-                                                '[Staff ID]', '[Department]', '[Company Name]'
-                                            ].map(ph => (
+                                            {availablePlaceholders.map(ph => (
                                                 <Button
                                                     key={ph}
                                                     variant="none"

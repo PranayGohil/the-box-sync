@@ -106,6 +106,13 @@ const getStaffFieldMap = (staff, config) => {
       });
     }
 
+    if (config?.custom_deductions) {
+      const deductions = staff.salary_structure.custom_deductions || {};
+      config.custom_deductions.forEach(deduction => {
+        fields[deduction.id] = String(getVal(deductions, deduction.id));
+      });
+    }
+
     const statConfig = config?.statutory_config || {};
     const baseVal = getVal(earnings, 'basic') || staff.salary || 0;
     const grossVal = staff.salary || 0;
@@ -823,12 +830,49 @@ const sendJoiningLetter = async (req, res) => {
       emailBody = emailBody.replace(regex, value || '');
     }
 
+    const fullEmailHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f6f8;
+          }
+          .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 6px;
+            border: 1px solid #e1e4e8;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+          }
+          p {
+            margin-top: 0;
+            margin-bottom: 15px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="email-container">
+          ${emailBody}
+        </div>
+      </body>
+      </html>
+    `;
+
     const subject = `Joining Letter - ${staff.f_name} ${staff.l_name}`;
     await sendEmail({
       to: staff.email,
       subject: subject,
       text: `Dear ${staff.f_name},\n\nPlease find attached your joining letter.\n\nWelcome to the team!\n\nBest regards,\nManagement`,
-      html: emailBody,
+      html: fullEmailHtml,
       attachments: [
         {
           filename: `Joining_Letter_${staff.f_name}_${staff.l_name}.pdf`,
