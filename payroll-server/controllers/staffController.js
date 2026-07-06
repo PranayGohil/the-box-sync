@@ -7,6 +7,44 @@ const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
 const mammoth = require("mammoth");
+const JSZip = require("jszip");
+
+async function convertDocxToHtmlWithPageBreaks(wordPath, mammothOptions) {
+  const fileBuffer = fs.readFileSync(wordPath);
+  const zip = await JSZip.loadAsync(fileBuffer);
+  const docXmlFile = zip.file("word/document.xml");
+  if (!docXmlFile) {
+    const result = await mammoth.convertToHtml({ path: wordPath }, mammothOptions);
+    return result.value;
+  }
+
+  let docXml = await docXmlFile.async("string");
+
+  // 1. Convert manual page breaks: <w:br w:type="page"/> -> :::PAGE_BREAK::: text run
+  docXml = docXml.replace(/<w:br\s+[^>]*w:type=["']page["'][^>]*\/>/g, '<w:t>:::PAGE_BREAK:::</w:t>');
+
+  // 2. Convert next-page section breaks: <w:pPr> ... <w:sectPr> (without continuous) ... </w:sectPr> </w:pPr> </w:p> -> append a page break paragraph
+  const pRegex = /<w:p(?:\s[^>]*)?>[\s\S]*?<w:pPr>[\s\S]*?<w:sectPr([\s\S]*?)<\/w:sectPr>[\s\S]*?<\/w:pPr>[\s\S]*?<\/w:p>/gi;
+  docXml = docXml.replace(pRegex, (fullMatch, sectPrBody) => {
+    if (sectPrBody.includes('w:val="continuous"')) {
+      return fullMatch;
+    }
+    const pageBreakParagraph = '<w:p><w:pPr><w:pStyle w:val="Normal"/></w:pPr><w:r><w:t>:::PAGE_BREAK:::</w:t></w:r></w:p>';
+    return fullMatch + pageBreakParagraph;
+  });
+
+  zip.file("word/document.xml", docXml);
+  const updatedBuffer = await zip.generateAsync({ type: "nodebuffer" });
+  
+  const result = await mammoth.convertToHtml({ buffer: updatedBuffer }, mammothOptions);
+  let html = result.value;
+
+  // Post-process HTML to turn markers into clean page breaks
+  html = html.replace(/<p>[^<]*:::PAGE_BREAK:::[^<]*<\/p>/g, '<div class="page-break" contenteditable="false">&nbsp;</div>');
+  html = html.replace(/:::PAGE_BREAK:::/g, '<div class="page-break" contenteditable="false">&nbsp;</div>');
+
+  return html;
+}
 
 // Helper to convert and compress image to webp
 const convertToWebp = async (file) => {
@@ -66,8 +104,24 @@ const getStaffFieldMap = (staff, config) => {
     email: staff.email || '',
     phone: staff.phone_no ? String(staff.phone_no) : '',
     gross_salary: staff.salary ? String(staff.salary) : '0',
-    department: staff.department || '',
-    company_name: '',  // filled from config below
+    department: (staff.department && typeof staff.department === 'object') ? (staff.department.name || '') : (staff.department || ''),
+    company_name: config?.company_name || '',
+    birth_date: staff.birth_date ? new Date(staff.birth_date).toLocaleDateString('en-IN') : '',
+    address: staff.address || '',
+    country: staff.country || '',
+    state: staff.state || '',
+    city: staff.city || '',
+    gender: staff.gender || '',
+    pincode: staff.pincode || '',
+    pan_number: staff.pan_number || '',
+    uan_number: staff.uan_number || '',
+    esi_ip_number: staff.esi_ip_number || '',
+    bank_name: staff.bank_account?.bank_name || '',
+    account_number: staff.bank_account?.account_number || '',
+    ifsc_code: staff.bank_account?.ifsc_code || '',
+    bank_branch: staff.bank_account?.branch || '',
+    document_type: staff.document_type || '',
+    id_number: staff.id_number || '',
     
     // Default earnings
     basic_salary: '0',
@@ -144,6 +198,86 @@ const getStaffFieldMap = (staff, config) => {
   }
   
   return fields;
+};
+
+// Helper to compile all variations of placeholders (bracketed, curly, under_score, Capitalized)
+const compilePlaceholders = (staff, config) => {
+  const fieldsMap = getStaffFieldMap(staff, config);
+  
+  const mapping = [
+    { label: "First Name", key: "first_name" },
+    { label: "Last Name", key: "last_name" },
+    { label: "Full Name", key: "full_name" },
+    { label: "Job Title", key: "job_title" },
+    { label: "Date of Joining", key: "joining_date" },
+    { label: "Basic Salary", key: "basic_salary" },
+    { label: "Staff ID", key: "staff_id" },
+    { label: "Email", key: "email" },
+    { label: "Phone", key: "phone" },
+    { label: "Gross Salary", key: "gross_salary" },
+    { label: "Department", key: "department" },
+    { label: "Company Name", key: "company_name" },
+    { label: "Birth Date", key: "birth_date" },
+    { label: "Address", key: "address" },
+    { label: "Country", key: "country" },
+    { label: "State", key: "state" },
+    { label: "City", key: "city" },
+    { label: "Gender", key: "gender" },
+    { label: "Pincode", key: "pincode" },
+    { label: "PAN Number", key: "pan_number" },
+    { label: "UAN Number", key: "uan_number" },
+    { label: "ESI IP Number", key: "esi_ip_number" },
+    { label: "Bank Name", key: "bank_name" },
+    { label: "Account Number", key: "account_number" },
+    { label: "IFSC Code", key: "ifsc_code" },
+    { label: "Bank Branch", key: "bank_branch" },
+    { label: "Document Type", key: "document_type" },
+    { label: "ID Number", key: "id_number" },
+    { label: "HRA", key: "hra" },
+    { label: "Conveyance", key: "conveyance" },
+    { label: "Medical Allowance", key: "medical_allowance" },
+    { label: "Special Allowance", key: "special_allowance" },
+    { label: "Other Allowance", key: "other_allowance" },
+    { label: "EPF Deduction", key: "pf_deduction" },
+    { label: "ESI Deduction", key: "esi_deduction" },
+    { label: "PT Deduction", key: "pt_deduction" }
+  ];
+
+  const placeholders = {};
+
+  // 1. Map standard placeholders
+  mapping.forEach(({ label, key }) => {
+    const value = fieldsMap[key] || '';
+    placeholders[`\\[${label}\\]`] = value;
+    placeholders[`\\[${key}\\]`] = value;
+    placeholders[`\\{${label}\\}`] = value;
+    placeholders[`\\{${key}\\}`] = value;
+  });
+
+  // 2. Map dynamic custom earnings/deductions
+  if (config?.custom_earnings) {
+    config.custom_earnings.forEach(earning => {
+      const val = fieldsMap[earning.id] || '0';
+      const label = earning.label.trim();
+      placeholders[`\\[${label}\\]`] = val;
+      placeholders[`\\[${earning.id}\\]`] = val;
+      placeholders[`\\{${label}\\}`] = val;
+      placeholders[`\\{${earning.id}\\}`] = val;
+    });
+  }
+
+  if (config?.custom_deductions) {
+    config.custom_deductions.forEach(deduction => {
+      const val = fieldsMap[deduction.id] || '0';
+      const label = deduction.label.trim();
+      placeholders[`\\[${label}\\]`] = val;
+      placeholders[`\\[${deduction.id}\\]`] = val;
+      placeholders[`\\{${label}\\}`] = val;
+      placeholders[`\\{${deduction.id}\\}`] = val;
+    });
+  }
+
+  return placeholders;
 };
 
 // ── GET /staff/get-positions ──────────────────────────────────────────────────
@@ -586,7 +720,7 @@ const sendJoiningLetter = async (req, res) => {
     const staffId = req.params.id;
 
     // 1. Fetch Staff Details
-    const staff = await Staff.findOne({ _id: staffId, user_id: userId });
+    const staff = await Staff.findOne({ _id: staffId, user_id: userId }).populate('department');
     if (!staff) {
       return res.status(404).json({ success: false, message: "Staff not found" });
     }
@@ -599,95 +733,102 @@ const sendJoiningLetter = async (req, res) => {
 
     // 2. Fetch Payroll Config for template
     const config = await PayrollConfig.findOne({ user_id: userId });
-    const fieldsMap = getStaffFieldMap(staff, config);
+    const placeholders = compilePlaceholders(staff, config);
 
-    // Common placeholders map
-    const placeholders = {
-      // Bracketed Capitalized
-      "\\[First Name\\]": fieldsMap.first_name,
-      "\\[Last Name\\]": fieldsMap.last_name,
-      "\\[Full Name\\]": fieldsMap.full_name,
-      "\\[Job Title\\]": fieldsMap.job_title,
-      "\\[Date of Joining\\]": fieldsMap.joining_date,
-      "\\[Basic Salary\\]": fieldsMap.basic_salary,
-      "\\[Staff ID\\]": fieldsMap.staff_id,
-      "\\[Email\\]": fieldsMap.email,
-      "\\[Phone\\]": fieldsMap.phone,
-      "\\[Gross Salary\\]": fieldsMap.gross_salary,
-      "\\[HRA\\]": fieldsMap.hra,
-      "\\[Conveyance\\]": fieldsMap.conveyance,
-      "\\[Medical Allowance\\]": fieldsMap.medical_allowance,
-      "\\[Special Allowance\\]": fieldsMap.special_allowance,
-      "\\[Other Allowance\\]": fieldsMap.other_allowance,
-      "\\[EPF Deduction\\]": fieldsMap.pf_deduction,
-      "\\[ESI Deduction\\]": fieldsMap.esi_deduction,
-      "\\[PT Deduction\\]": fieldsMap.pt_deduction,
-      "\\[Department\\]": fieldsMap.department,
-      "\\[Company Name\\]": config?.company_name || '',
+    // 3. Define PDF generation options from config
+    const pageSize = config?.document_templates?.page_size || 'A4';
+    const marginTop = config?.document_templates?.margin_top || '20mm';
+    const marginBottom = config?.document_templates?.margin_bottom || '20mm';
+    const marginLeft = config?.document_templates?.margin_left || '20mm';
+    const marginRight = config?.document_templates?.margin_right || '20mm';
 
-
-      // Bracketed Underscores
-      "\\[first_name\\]": fieldsMap.first_name,
-      "\\[last_name\\]": fieldsMap.last_name,
-      "\\[full_name\\]": fieldsMap.full_name,
-      "\\[job_title\\]": fieldsMap.job_title,
-      "\\[joining_date\\]": fieldsMap.joining_date,
-      "\\[basic_salary\\]": fieldsMap.basic_salary,
-      "\\[staff_id\\]": fieldsMap.staff_id,
-      "\\[email\\]": fieldsMap.email,
-      "\\[phone\\]": fieldsMap.phone,
-      "\\[gross_salary\\]": fieldsMap.gross_salary,
-      "\\[hra\\]": fieldsMap.hra,
-      "\\[conveyance\\]": fieldsMap.conveyance,
-      "\\[medical_allowance\\]": fieldsMap.medical_allowance,
-      "\\[special_allowance\\]": fieldsMap.special_allowance,
-      "\\[other_allowance\\]": fieldsMap.other_allowance,
-      "\\[pf_deduction\\]": fieldsMap.pf_deduction,
-      "\\[esi_deduction\\]": fieldsMap.esi_deduction,
-      "\\[pt_deduction\\]": fieldsMap.pt_deduction,
-
-      // Curly Capitalized
-      "\\{First Name\\}": fieldsMap.first_name,
-      "\\{Last Name\\}": fieldsMap.last_name,
-      "\\{Full Name\\}": fieldsMap.full_name,
-      "\\{Job Title\\}": fieldsMap.job_title,
-      "\\{Date of Joining\\}": fieldsMap.joining_date,
-      "\\{Basic Salary\\}": fieldsMap.basic_salary,
-      "\\{Staff ID\\}": fieldsMap.staff_id,
-      "\\{Email\\}": fieldsMap.email,
-      "\\{Phone\\}": fieldsMap.phone,
-      "\\{Gross Salary\\}": fieldsMap.gross_salary,
-      "\\{HRA\\}": fieldsMap.hra,
-      "\\{Conveyance\\}": fieldsMap.conveyance,
-      "\\{Medical Allowance\\}": fieldsMap.medical_allowance,
-      "\\{Special Allowance\\}": fieldsMap.special_allowance,
-      "\\{Other Allowance\\}": fieldsMap.other_allowance,
-      "\\{EPF Deduction\\}": fieldsMap.pf_deduction,
-      "\\{ESI Deduction\\}": fieldsMap.esi_deduction,
-      "\\{PT Deduction\\}": fieldsMap.pt_deduction,
-
-      // Curly Underscores
-      "\\{first_name\\}": fieldsMap.first_name,
-      "\\{last_name\\}": fieldsMap.last_name,
-      "\\{full_name\\}": fieldsMap.full_name,
-      "\\{job_title\\}": fieldsMap.job_title,
-      "\\{joining_date\\}": fieldsMap.joining_date,
-      "\\{basic_salary\\}": fieldsMap.basic_salary,
-      "\\{staff_id\\}": fieldsMap.staff_id,
-      "\\{email\\}": fieldsMap.email,
-      "\\{phone\\}": fieldsMap.phone,
-      "\\{gross_salary\\}": fieldsMap.gross_salary,
-      "\\{hra\\}": fieldsMap.hra,
-      "\\{conveyance\\}": fieldsMap.conveyance,
-      "\\{medical_allowance\\}": fieldsMap.medical_allowance,
-      "\\{special_allowance\\}": fieldsMap.special_allowance,
-      "\\{other_allowance\\}": fieldsMap.other_allowance,
-      "\\{pf_deduction\\}": fieldsMap.pf_deduction,
-      "\\{esi_deduction\\}": fieldsMap.esi_deduction,
-      "\\{pt_deduction\\}": fieldsMap.pt_deduction
+    const pdfOptions = {
+      format: pageSize,
+      margin: {
+        top: marginTop,
+        bottom: marginBottom,
+        left: marginLeft,
+        right: marginRight
+      }
     };
 
-    let pdfBuffer = null;
+    // Shared Premium Styling (Times New Roman, correct image scale, clean tables)
+    const pdfStyles = `
+      body {
+        font-family: "Calibri", "Arial", "Helvetica Neue", sans-serif;
+        color: #000;
+        line-height: 1.15;
+        font-size: 11pt;
+        margin: 0;
+        padding: 0;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        font-family: "Calibri", "Arial", sans-serif;
+        margin-top: 12pt;
+        margin-bottom: 6pt;
+        font-weight: bold;
+        line-height: 1.2;
+      }
+      h1 { font-size: 18pt; text-align: center; }
+      h2 { font-size: 14pt; }
+      h3 { font-size: 12pt; }
+      p {
+        margin-top: 0;
+        margin-bottom: 10pt;
+        text-align: justify;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10pt;
+        margin-bottom: 15pt;
+      }
+      th, td {
+        border: 1px solid #000000;
+        padding: 6px 8px;
+        text-align: left;
+        font-size: 11pt;
+      }
+      th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+      }
+      img {
+        max-width: 100% !important;
+        height: auto !important;
+        display: block;
+      }
+      .ql-align-center, .center-aligned { text-align: center !important; }
+      .ql-align-right,  .right-aligned  { text-align: right  !important; }
+      .ql-align-justify,.both-aligned,.justify-aligned { text-align: justify !important; }
+      .ql-align-left,   .left-aligned   { text-align: left   !important; }
+      /* Word heading classes — plain bold black, no browser heading colours */
+      .doc-h1 { font-size: 14pt; font-weight: bold; color: #000; margin: 12pt 0 6pt; }
+      .doc-h2 { font-size: 13pt; font-weight: bold; color: #000; margin: 10pt 0 4pt; }
+      .doc-h3 { font-size: 12pt; font-weight: bold; color: #000; margin:  8pt 0 4pt; }
+      .page-break {
+        page-break-before: always !important;
+        break-before: page !important;
+        height: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        padding: 0 !important;
+      }
+      .page-break span {
+        display: none !important;
+      }
+      .editor-placeholder {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        font-weight: inherit !important;
+        font-family: inherit !important;
+        font-size: inherit !important;
+        display: inline !important;
+        color: inherit !important;
+      }
+    `;
 
     // Priority 1: Use browser-edited HTML version if available
     const editedHtml = config?.document_templates?.joining_letter_word_html;
@@ -699,18 +840,9 @@ const sendJoiningLetter = async (req, res) => {
           const regex = new RegExp(key, 'g');
           htmlContent = htmlContent.replace(regex, value || '');
         }
-        const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
-          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #f2f2f2; }
-          .ql-align-center { text-align: center; }
-          .ql-align-right { text-align: right; }
-          .ql-align-left { text-align: left; }
-          .ql-align-justify { text-align: justify; }
-        </style></head><body>${htmlContent}</body></html>`;
+        const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${pdfStyles}</style></head><body>${htmlContent}</body></html>`;
         const file = { content: fullHtml };
-        pdfBuffer = await html_to_pdf.generatePdf(file, { format: 'A4', margin: { top: '40px', bottom: '40px', left: '40px', right: '40px' } });
+        pdfBuffer = await html_to_pdf.generatePdf(file, pdfOptions);
         console.log("Browser-edited HTML compiled to PDF successfully.");
       } catch (htmlErr) {
         console.error("Error generating PDF from edited HTML, falling back to .docx:", htmlErr);
@@ -727,14 +859,19 @@ const sendJoiningLetter = async (req, res) => {
         try {
           console.log("Found Word template .docx file, converting to HTML...");
           function transformParagraph(element) {
+            let result = { ...element };
             if (element.alignment) {
-              return { 
-                ...element, 
-                styleId: `${element.alignment}-aligned`,
-                styleName: `${element.alignment}-aligned`
+              const alignMap = {
+                center: 'center', right: 'right',
+                left: 'left', both: 'justify', justify: 'justify'
               };
+              const cssAlign = alignMap[element.alignment];
+              if (cssAlign) {
+                result.styleId = `${element.alignment}-aligned`;
+                result.styleName = `${element.alignment}-aligned`;
+              }
             }
-            return element;
+            return result;
           }
 
           const options = {
@@ -744,12 +881,15 @@ const sendJoiningLetter = async (req, res) => {
               "p[style-name='right-aligned'] => p.ql-align-right:fresh",
               "p[style-name='left-aligned'] => p.ql-align-left:fresh",
               "p[style-name='both-aligned'] => p.ql-align-justify:fresh",
-              "p[style-name='justify-aligned'] => p.ql-align-justify:fresh"
+              "p[style-name='justify-aligned'] => p.ql-align-justify:fresh",
+              "p[style-name='Heading 1'] => p.doc-h1:fresh",
+              "p[style-name='Heading 2'] => p.doc-h2:fresh",
+              "p[style-name='Heading 3'] => p.doc-h3:fresh",
+              "u => u"
             ]
           };
 
-          const result = await mammoth.convertToHtml({ path: wordPath }, options);
-          let htmlContent = result.value;
+          const htmlContent = await convertDocxToHtmlWithPageBreaks(wordPath, options);
 
           for (const [key, value] of Object.entries(placeholders)) {
             const regex = new RegExp(key, 'g');
@@ -761,16 +901,7 @@ const sendJoiningLetter = async (req, res) => {
             <html>
             <head>
               <meta charset="utf-8">
-              <style>
-                body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
-                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                th { background-color: #f2f2f2; }
-                .ql-align-center { text-align: center; }
-                .ql-align-right { text-align: right; }
-                .ql-align-left { text-align: left; }
-                .ql-align-justify { text-align: justify; }
-              </style>
+              <style>${pdfStyles}</style>
             </head>
             <body>
               ${htmlContent}
@@ -778,7 +909,6 @@ const sendJoiningLetter = async (req, res) => {
             </html>
           `;
 
-          const pdfOptions = { format: 'A4', margin: { top: '40px', bottom: '40px', left: '40px', right: '40px' } };
           const file = { content: fullHtml };
           pdfBuffer = await html_to_pdf.generatePdf(file, pdfOptions);
           console.log("Word document compiled to PDF successfully.");
@@ -787,7 +917,6 @@ const sendJoiningLetter = async (req, res) => {
         }
       }
     }
-
 
     if (!pdfBuffer) {
       console.log("Using default HTML letterhead template as fallback...");
@@ -803,13 +932,7 @@ const sendJoiningLetter = async (req, res) => {
         <html>
         <head>
           <meta charset="utf-8">
-          <style>
-            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 45px; color: #333; line-height: 1.6; }
-            .ql-align-center { text-align: center; }
-            .ql-align-right { text-align: right; }
-            .ql-align-justify { text-align: justify; }
-            h1, h2, h3 { color: #222; }
-          </style>
+          <style>${pdfStyles}</style>
         </head>
         <body>
           ${template}
@@ -817,9 +940,8 @@ const sendJoiningLetter = async (req, res) => {
         </html>
       `;
 
-      const options = { format: 'A4', margin: { top: '30px', bottom: '30px', left: '30px', right: '30px' } };
       const file = { content: fullHtml };
-      pdfBuffer = await html_to_pdf.generatePdf(file, options);
+      pdfBuffer = await html_to_pdf.generatePdf(file, pdfOptions);
     }
 
     // 4. Generate email message body from settings editor
@@ -1037,7 +1159,7 @@ const previewJoiningLetter = async (req, res) => {
     const adminUserId = req.user?._id || req.user;
     const { id } = req.params;
 
-    const staff = await Staff.findOne({ _id: id, user_id: adminUserId }).lean();
+    const staff = await Staff.findOne({ _id: id, user_id: adminUserId }).populate('department').lean();
     if (!staff) {
       return res.status(404).json({ success: false, message: "Staff member not found" });
     }
@@ -1055,48 +1177,7 @@ const previewJoiningLetter = async (req, res) => {
       <p>HR Department</p>
     `;
 
-    const fieldsMap = getStaffFieldMap(staff, config);
-    
-    const placeholders = {
-      // Capitalized variations
-      "\\[First Name\\]": fieldsMap.first_name,
-      "\\[Last Name\\]": fieldsMap.last_name,
-      "\\[Full Name\\]": fieldsMap.full_name,
-      "\\[Job Title\\]": fieldsMap.job_title,
-      "\\[Date of Joining\\]": fieldsMap.joining_date,
-      "\\[Basic Salary\\]": fieldsMap.basic_salary,
-      "\\[Staff ID\\]": fieldsMap.staff_id,
-      "\\[Email\\]": fieldsMap.email,
-      "\\[Phone\\]": fieldsMap.phone,
-      "\\[Gross Salary\\]": fieldsMap.gross_salary,
-      "\\[HRA\\]": fieldsMap.hra,
-      "\\[Conveyance\\]": fieldsMap.conveyance,
-      "\\[Medical Allowance\\]": fieldsMap.medical_allowance,
-      "\\[Special Allowance\\]": fieldsMap.special_allowance,
-      "\\[Other Allowance\\]": fieldsMap.other_allowance,
-      "\\[EPF Deduction\\]": fieldsMap.pf_deduction,
-      "\\[ESI Deduction\\]": fieldsMap.esi_deduction,
-      "\\[PT Deduction\\]": fieldsMap.pt_deduction,
-      // Underscore/lowercase variations
-      "\\[first_name\\]": fieldsMap.first_name,
-      "\\[last_name\\]": fieldsMap.last_name,
-      "\\[full_name\\]": fieldsMap.full_name,
-      "\\[job_title\\]": fieldsMap.job_title,
-      "\\[joining_date\\]": fieldsMap.joining_date,
-      "\\[basic_salary\\]": fieldsMap.basic_salary,
-      "\\[staff_id\\]": fieldsMap.staff_id,
-      "\\[email\\]": fieldsMap.email,
-      "\\[phone\\]": fieldsMap.phone,
-      "\\[gross_salary\\]": fieldsMap.gross_salary,
-      "\\[hra\\]": fieldsMap.hra,
-      "\\[conveyance\\]": fieldsMap.conveyance,
-      "\\[medical_allowance\\]": fieldsMap.medical_allowance,
-      "\\[special_allowance\\]": fieldsMap.special_allowance,
-      "\\[other_allowance\\]": fieldsMap.other_allowance,
-      "\\[pf_deduction\\]": fieldsMap.pf_deduction,
-      "\\[esi_deduction\\]": fieldsMap.esi_deduction,
-      "\\[pt_deduction\\]": fieldsMap.pt_deduction,
-    };
+    const placeholders = compilePlaceholders(staff, config);
 
     for (const [key, value] of Object.entries(placeholders)) {
       const regex = new RegExp(key, 'g');
@@ -1125,5 +1206,7 @@ module.exports = {
   processResignation,
   getPendingResignations,
   toggleLeaveStatus,
-  toggleSpecificLeave
+  toggleSpecificLeave,
+  getStaffFieldMap,
+  compilePlaceholders
 };

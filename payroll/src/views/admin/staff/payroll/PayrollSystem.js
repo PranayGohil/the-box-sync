@@ -12,6 +12,7 @@ import LeavePolicy from './LeavePolicy';
 import LeaveRequests from './LeaveRequests';
 import SalaryAdvances from './SalaryAdvances';
 import PayrollSettings from './PayrollSettings';
+import EditWordTemplate from './EditWordTemplate';
 import RosterManagement from '../attandance/RosterManagement';
 
 const NavContent = () => {
@@ -203,6 +204,7 @@ const PayrollSystem = () => {
             <Route exact path="/payroll/leave-requests" render={() => <LeaveRequests />} />
             <Route exact path="/payroll/advances" render={() => <SalaryAdvances />} />
             <Route exact path="/payroll/settings" render={() => <PayrollSettings />} />
+            <Route exact path="/payroll/settings/word-editor" render={() => <EditWordTemplate />} />
             <Route exact path="/payroll/roster" render={() => <RosterManagement />} />
           </Switch>
         </Col>

@@ -7,6 +7,7 @@ import StaffProfile from './StaffProfile';
 import ManageAttendance from './attandance/ManageAttendance';
 import ViewAttendance from './attandance/ViewAttendance';
 import PayrollSettings from './payroll/PayrollSettings';
+import EditWordTemplate from './payroll/EditWordTemplate';
 import ManagePayroll from './payroll/ManagePayroll';
 import GeneratePayroll from './payroll/GeneratePayroll';
 import ViewStaffPayroll from './payroll/ViewStaffPayroll';
@@ -34,6 +35,7 @@ const Staff = () => {
 
         {/* Payroll */}
         <Route exact path={`${path}/payroll/settings`} component={PayrollSettings} />
+        <Route exact path={`${path}/payroll/settings/word-editor`} component={EditWordTemplate} />
         <Route exact path={`${path}/payroll/generate`} component={GeneratePayroll} />
         <Route exact path={`${path}/payroll/view/:staffId`} component={ViewStaffPayroll} />
         <Route exact path={`${path}/payroll/:month?/:year?`} component={ManagePayroll} />

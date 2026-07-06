@@ -125,7 +125,12 @@ const payrollConfigSchema = new Schema(
 <p>Sincerely,</p>
 <p>HR Department</p>` },
       joining_letter_word: { type: String, default: null },
-      joining_letter_word_html: { type: String, default: null }  // browser-edited override of the .docx
+      joining_letter_word_html: { type: String, default: null },  // browser-edited override of the .docx
+      page_size: { type: String, default: 'A4' },
+      margin_top: { type: String, default: '20mm' },
+      margin_bottom: { type: String, default: '20mm' },
+      margin_left: { type: String, default: '20mm' },
+      margin_right: { type: String, default: '20mm' }
     }
   },
   {
