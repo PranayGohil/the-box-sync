@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
-import { Row, Col, Card, Button, Form, Spinner, Alert } from 'react-bootstrap';
+import { Row, Col, Card, Button, Form, Spinner, Alert, Modal } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -69,6 +69,13 @@ const ManageWebsite = () => {
   const [aboutImageFile, setAboutImageFile] = useState(null);
   const [legacyImageFile, setLegacyImageFile] = useState(null);
   const [hasReservationPlan, setHasReservationPlan] = useState(false);
+
+  // States for Map Picker
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [mapSearchQuery, setMapSearchQuery] = useState('');
+  const [tempLat, setTempLat] = useState('');
+  const [tempLng, setTempLng] = useState('');
+  const mapInstance = React.useRef(null);
 
   const { currentUser } = React.useContext(AuthContext);
   const restaurant_code = currentUser?.restaurant_code;
@@ -225,6 +232,101 @@ const ManageWebsite = () => {
     };
     fetchData();
   }, []);
+
+  // Leaflet map loader for Admin
+  useEffect(() => {
+    if (!showMapModal) return;
+
+    // Load Leaflet css
+    let leafletCss = document.getElementById('leaflet-css-admin');
+    if (!leafletCss) {
+      leafletCss = document.createElement('link');
+      leafletCss.id = 'leaflet-css-admin';
+      leafletCss.rel = 'stylesheet';
+      leafletCss.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(leafletCss);
+    }
+
+    // Load Leaflet js
+    let leafletJs = document.getElementById('leaflet-js-admin');
+    if (!leafletJs) {
+      leafletJs = document.createElement('script');
+      leafletJs.id = 'leaflet-js-admin';
+      leafletJs.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      document.head.appendChild(leafletJs);
+    }
+
+    let activeMarker = null;
+
+    const initMap = () => {
+      if (!window.L || !document.getElementById('admin-map-container')) return;
+      
+      const defaultLat = tempLat || 23.0225;
+      const defaultLng = tempLng || 72.5714;
+      
+      const map = window.L.map('admin-map-container').setView([defaultLat, defaultLng], 14);
+      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Create marker
+      if (tempLat && tempLng) {
+        activeMarker = window.L.marker([tempLat, tempLng]).addTo(map);
+      }
+
+      map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        if (activeMarker) {
+          activeMarker.setLatLng(e.latlng);
+        } else {
+          activeMarker = window.L.marker(e.latlng).addTo(map);
+        }
+        setTempLat(lat);
+        setTempLng(lng);
+      });
+
+      mapInstance.current = map;
+    };
+
+    if (window.L) {
+      setTimeout(initMap, 150);
+    } else {
+      leafletJs.onload = () => setTimeout(initMap, 150);
+    }
+
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
+  }, [showMapModal]);
+
+  const handleSearchAdminLocation = async (e) => {
+    if (e) e.preventDefault();
+    if (!mapSearchQuery.trim() || !mapInstance.current) return;
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(mapSearchQuery)}`);
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        const numLat = Number(lat);
+        const numLon = Number(lon);
+        mapInstance.current.setView([numLat, numLon], 15);
+        setTempLat(numLat);
+        setTempLng(numLon);
+        
+        if (window.L) {
+          mapInstance.current.fireEvent('click', { latlng: window.L.latLng(numLat, numLon) });
+        }
+        toast.success('Location found on map!');
+      } else {
+        toast.error('Location not found.');
+      }
+    } catch (err) {
+      toast.error('Search failed.');
+    }
+  };
 
   const handleDishSelect = (id) => {
     const ids = values.featured_dish_ids.includes(id) ? values.featured_dish_ids.filter((d) => d !== id) : [...values.featured_dish_ids, id];
@@ -680,32 +782,47 @@ const ManageWebsite = () => {
               {/* Map Location */}
               <Card className="manage-website-glass-card mb-4 border-0">
                 <Card.Body className="p-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                     <h5 className="manage-website-section-title mb-0">Map Location</h5>
-                    <Button 
-                      variant="outline-primary" 
-                      size="sm" 
-                      className="manage-menu-custom-btn-outline px-3 py-1.5"
-                      style={{ fontSize: '11px', borderRadius: '50px' }}
-                      onClick={() => {
-                        if (navigator.geolocation) {
-                          navigator.geolocation.getCurrentPosition(
-                            (position) => {
-                              setFieldValue('latitude', position.coords.latitude);
-                              setFieldValue('longitude', position.coords.longitude);
-                              toast.success('Coordinates detected successfully!');
-                            },
-                            (error) => {
-                              toast.error('Permission denied or location unavailable.');
-                            }
-                          );
-                        } else {
-                          toast.error('Geolocation is not supported by your browser.');
-                        }
-                      }}
-                    >
-                      <CsLineIcons icon="pin" size="12" className="me-1" /> Detect Location
-                    </Button>
+                    <div className="d-flex gap-2">
+                      <Button 
+                        variant="outline-primary" 
+                        size="sm" 
+                        className="manage-menu-custom-btn-outline px-3 py-1.5"
+                        style={{ fontSize: '11px', borderRadius: '50px' }}
+                        onClick={() => {
+                          setTempLat(values.latitude || 23.0225);
+                          setTempLng(values.longitude || 72.5714);
+                          setShowMapModal(true);
+                        }}
+                      >
+                        <CsLineIcons icon="pin" size="12" className="me-1" /> Choose on Map
+                      </Button>
+                      <Button 
+                        variant="outline-primary" 
+                        size="sm" 
+                        className="manage-menu-custom-btn-outline px-3 py-1.5"
+                        style={{ fontSize: '11px', borderRadius: '50px' }}
+                        onClick={() => {
+                          if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(
+                              (position) => {
+                                setFieldValue('latitude', position.coords.latitude);
+                                setFieldValue('longitude', position.coords.longitude);
+                                toast.success('Coordinates detected successfully!');
+                              },
+                              (error) => {
+                                toast.error('Permission denied or location unavailable.');
+                              }
+                            );
+                          } else {
+                            toast.error('Geolocation is not supported by your browser.');
+                          }
+                        }}
+                      >
+                        <CsLineIcons icon="location" size="12" className="me-1" /> Detect Location
+                      </Button>
+                    </div>
                   </div>
                   
                   <Form.Group className="mb-3">
@@ -940,6 +1057,105 @@ const ManageWebsite = () => {
             </Col>
           </Row>
         </Form>
+
+        {/* Leaflet Map Picker Modal for Admin */}
+        <Modal 
+          show={showMapModal} 
+          onHide={() => setShowMapModal(false)}
+          size="lg"
+          centered
+          className="admin-map-picker-modal"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title className="fw-bold">Select Restaurant Pin Location</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {/* Search Address Bar */}
+            <Form onSubmit={handleSearchAdminLocation} className="d-flex gap-2 mb-3">
+              <Form.Control 
+                type="text" 
+                value={mapSearchQuery}
+                onChange={(e) => setMapSearchQuery(e.target.value)}
+                placeholder="Search area, landmark, street, city..."
+                style={{ borderRadius: '50px' }}
+              />
+              <Button type="submit" variant="primary" style={{ borderRadius: '50px', whiteSpace: 'nowrap' }}>
+                Search
+              </Button>
+            </Form>
+
+            {/* Map Container */}
+            <div 
+              id="admin-map-container" 
+              className="rounded border" 
+              style={{ height: '350px', background: '#f5f5f5' }}
+            />
+          </Modal.Body>
+          <Modal.Footer className="d-flex justify-content-between align-items-center">
+            <div>
+              {tempLat && tempLng ? (
+                <span className="small text-muted font-monospace">
+                  Coords: {Number(tempLat).toFixed(5)}, {Number(tempLng).toFixed(5)}
+                </span>
+              ) : (
+                <span className="small text-muted italic">Click on map to place pin marker</span>
+              )}
+            </div>
+            <div className="d-flex gap-2">
+              <Button 
+                variant="outline-secondary" 
+                style={{ borderRadius: '50px' }}
+                onClick={() => {
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                      (pos) => {
+                        const { latitude, longitude } = pos.coords;
+                        setTempLat(latitude);
+                        setTempLng(longitude);
+                        if (mapInstance.current) {
+                          mapInstance.current.setView([latitude, longitude], 15);
+                          if (window.L) {
+                            mapInstance.current.fireEvent('click', { latlng: window.L.latLng(latitude, longitude) });
+                          }
+                        }
+                      },
+                      (err) => toast.error('Error fetching current location')
+                    );
+                  } else {
+                    toast.error('Geolocation is not supported by your browser.');
+                  }
+                }}
+              >
+                Locate Me
+              </Button>
+              <Button 
+                variant="primary" 
+                style={{ borderRadius: '50px' }}
+                onClick={() => {
+                  if (tempLat && tempLng) {
+                    setFieldValue('latitude', tempLat);
+                    setFieldValue('longitude', tempLng);
+                    setShowMapModal(false);
+                    // Autofill address via reverse geocode if desired
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${tempLat}&lon=${tempLng}`)
+                      .then(res => res.json())
+                      .then(data => {
+                        if (data && data.display_name) {
+                          setFieldValue('restaurant_address', data.display_name);
+                          toast.success('Address auto-filled from map pin!');
+                        }
+                      })
+                      .catch(e => console.error(e));
+                  } else {
+                    toast.error('Please click on map to place a pin marker.');
+                  }
+                }}
+              >
+                Confirm Location
+              </Button>
+            </div>
+          </Modal.Footer>
+        </Modal>
       </div>
     </>
   );

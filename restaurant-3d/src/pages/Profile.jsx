@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AppContext';
 import { useRestaurant } from '../context/RestaurantContext';
@@ -57,10 +57,10 @@ export default function Profile() {
 
     const initMap = () => {
       if (!window.L || !document.getElementById('map-container')) return;
-      
+
       const defaultLat = latVal || 23.0225;
       const defaultLng = lngVal || 72.5714;
-      
+
       const map = window.L.map('map-container').setView([defaultLat, defaultLng], 14);
       window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
@@ -112,7 +112,7 @@ export default function Profile() {
         mapInstance.current.setView([numLat, numLon], 15);
         setTempLat(numLat);
         setTempLng(numLon);
-        
+
         // Add marker if not already present
         if (window.L) {
           const map = mapInstance.current;
@@ -203,7 +203,7 @@ export default function Profile() {
         try {
           const saved = localStorage.getItem(`ember-saved-${user._id}`);
           setSavedItemIds(saved ? JSON.parse(saved) : []);
-        } catch (err) {}
+        } catch (err) { }
       };
       loadSaved();
       window.addEventListener('storage', loadSaved);
@@ -218,7 +218,7 @@ export default function Profile() {
       try {
         const saved = localStorage.getItem(`ember-saved-${user._id}`);
         setSavedItemIds(saved ? JSON.parse(saved) : []);
-      } catch (err) {}
+      } catch (err) { }
     }
   }, [activeTab, user]);
 
@@ -264,7 +264,7 @@ export default function Profile() {
 
   // Realtime order tracking using Socket.io room subscription
   useEffect(() => {
-    if (!socket) return () => {};
+    if (!socket) return () => { };
 
     const handleOrderUpdate = () => {
       console.log('Realtime order update received via SocketContext: fetching orders...');
@@ -300,15 +300,15 @@ export default function Profile() {
       const token = localStorage.getItem('ember-token');
       const res = await fetch(`${API_URL}/web-customer/add-address/${user._id}`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          address: addressVal, 
-          city: cityVal, 
-          state: stateVal || 'State', 
-          country: 'India', 
+        body: JSON.stringify({
+          address: addressVal,
+          city: cityVal,
+          state: stateVal || 'State',
+          country: 'India',
           pincode: pincodeVal,
           tag: tagVal,
           latitude: latVal || undefined,
@@ -340,7 +340,7 @@ export default function Profile() {
       const token = localStorage.getItem('ember-token');
       const res = await fetch(`${API_URL}/web-customer/delete-address/${user._id}`, {
         method: 'DELETE',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -367,8 +367,8 @@ export default function Profile() {
           </div>
           <h2 className="text-white fw-bold mb-3">Sign In Required</h2>
           <p className="text-white-60 mb-4">Please sign in to access your profile, order history, and rewards.</p>
-          <button 
-            onClick={() => navigate(`/${restaurantCode}/login`.replace(/\/+/g, '/'))} 
+          <button
+            onClick={() => navigate(`/${restaurantCode}/login`.replace(/\/+/g, '/'))}
             className="btn-primary w-100 justify-content-center py-2"
           >
             Go to Login
@@ -384,11 +384,11 @@ export default function Profile() {
         {/* Profile Header */}
         <div className="glass rounded-4 p-4 p-md-5 d-flex flex-column flex-md-row align-items-center align-items-md-start gap-4 mb-5 position-relative overflow-hidden">
           <div className="position-absolute rounded-circle pointer-events-none" style={{ top: 0, right: 0, width: '250px', height: '250px', background: 'rgba(242, 122, 26, 0.1)', filter: 'blur(100px)' }} />
-          
+
           <div className="rounded-circle d-flex align-items-center justify-content-center shadow text-white font-display fw-bold text-uppercase flex-shrink-0" style={{ width: '96px', height: '96px', fontSize: '2rem', background: 'linear-gradient(135deg, var(--brand), #e05c0c)' }}>
             {user.name?.charAt(0) || 'U'}
           </div>
-          
+
           <div className="flex-grow-1 text-center text-md-start">
             <h2 className="font-display fw-bold text-white mb-1 text-capitalize">{user.name}</h2>
             <p className="text-white-60 d-flex align-items-center justify-content-center justify-content-md-start gap-2 small mb-3">
@@ -398,7 +398,7 @@ export default function Profile() {
               Member since {user.since}
             </div>
           </div>
-          
+
           <button onClick={handleLogout} className="btn-ghost align-self-center align-self-md-start small py-2 px-3" style={{ zIndex: 10, position: 'relative', cursor: 'pointer' }}>
             <LogOut size={16} className="me-2" /> Logout
           </button>
@@ -416,7 +416,7 @@ export default function Profile() {
                 <p className="small text-white-60 mb-0">View your past orders and receipts.</p>
               </div>
             </div>
-            
+
             <div className="col-12 col-md-4" onClick={() => setActiveTab('saved')}>
               <div className="glass rounded-4 p-4 transition-colors h-100 position-relative" style={{ cursor: 'pointer' }} onMouseOver={(e) => e.currentTarget.style.borderColor = 'rgba(242, 122, 26, 0.3)'} onMouseOut={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}>
                 <div className="rounded-3 d-flex align-items-center justify-content-center mb-3" style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.05)' }}>
@@ -426,7 +426,7 @@ export default function Profile() {
                 <p className="small text-white-60 mb-0">Your favourite dishes saved for later.</p>
               </div>
             </div>
-            
+
             <div className="col-12 col-md-4" onClick={() => setActiveTab('addresses')}>
               <div className="glass rounded-4 p-4 transition-colors h-100 position-relative" style={{ cursor: 'pointer' }} onMouseOver={(e) => e.currentTarget.style.borderColor = 'rgba(242, 122, 26, 0.3)'} onMouseOut={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}>
                 <div className="rounded-3 d-flex align-items-center justify-content-center mb-3" style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.05)' }}>
@@ -442,13 +442,13 @@ export default function Profile() {
         {/* ── ORDER HISTORY SUBPANEL ── */}
         {activeTab === 'orders' && (
           <div>
-            <button 
-              onClick={() => setActiveTab('dashboard')} 
+            <button
+              onClick={() => setActiveTab('dashboard')}
               className="btn-ghost d-flex align-items-center gap-2 mb-4 text-white-60 hover:text-white transition-colors border-0 bg-transparent"
             >
               <ArrowLeft size={18} /> Back to Dashboard
             </button>
-            
+
             <h3 className="font-display fw-bold text-white mb-4">Past Orders</h3>
 
             {loadingOrders ? (
@@ -529,13 +529,13 @@ export default function Profile() {
         {/* ── SAVED ITEMS SUBPANEL ── */}
         {activeTab === 'saved' && (
           <div>
-            <button 
-              onClick={() => setActiveTab('dashboard')} 
+            <button
+              onClick={() => setActiveTab('dashboard')}
               className="btn-ghost d-flex align-items-center gap-2 mb-4 text-white-60 hover:text-white transition-colors border-0 bg-transparent"
             >
               <ArrowLeft size={18} /> Back to Dashboard
             </button>
-            
+
             <h3 className="font-display fw-bold text-white mb-4">Saved Items</h3>
 
             {savedDishes.length === 0 ? (
@@ -558,13 +558,13 @@ export default function Profile() {
         {/* ── ADDRESSES SUBPANEL ── */}
         {activeTab === 'addresses' && (
           <div>
-            <button 
-              onClick={() => setActiveTab('dashboard')} 
+            <button
+              onClick={() => setActiveTab('dashboard')}
               className="btn-ghost d-flex align-items-center gap-2 mb-4 text-white-60 hover:text-white transition-colors border-0 bg-transparent"
             >
               <ArrowLeft size={18} /> Back to Dashboard
             </button>
-            
+
             <h3 className="font-display fw-bold text-white mb-4">Manage Addresses</h3>
 
             {/* List saved addresses */}
@@ -591,7 +591,7 @@ export default function Profile() {
                         </p>
                       )}
                     </div>
-                    <button 
+                    <button
                       onClick={() => handleDeleteAddress(addr._id)}
                       className="btn bg-transparent p-2 text-danger hover:text-white border-0"
                       title="Delete Address"
@@ -611,45 +611,45 @@ export default function Profile() {
               <form onSubmit={handleAddAddress} className="row g-3">
                 <div className="col-12">
                   <label className="form-label small text-white-60 mb-1">Street Address</label>
-                  <input 
-                    type="text" 
-                    value={addressVal} 
-                    onChange={(e) => setAddressVal(e.target.value)} 
-                    className="input-field w-100" 
+                  <input
+                    type="text"
+                    value={addressVal}
+                    onChange={(e) => setAddressVal(e.target.value)}
+                    className="input-field w-100"
                     placeholder="123 Street Name, Apartment..."
-                    required 
+                    required
                   />
                 </div>
                 <div className="col-12 col-sm-4">
                   <label className="form-label small text-white-60 mb-1">City</label>
-                  <input 
-                    type="text" 
-                    value={cityVal} 
-                    onChange={(e) => setCityVal(e.target.value)} 
-                    className="input-field w-100" 
-                    placeholder="City" 
-                    required 
+                  <input
+                    type="text"
+                    value={cityVal}
+                    onChange={(e) => setCityVal(e.target.value)}
+                    className="input-field w-100"
+                    placeholder="City"
+                    required
                   />
                 </div>
                 <div className="col-12 col-sm-4">
                   <label className="form-label small text-white-60 mb-1">State</label>
-                  <input 
-                    type="text" 
-                    value={stateVal} 
-                    onChange={(e) => setStateVal(e.target.value)} 
-                    className="input-field w-100" 
-                    placeholder="State" 
+                  <input
+                    type="text"
+                    value={stateVal}
+                    onChange={(e) => setStateVal(e.target.value)}
+                    className="input-field w-100"
+                    placeholder="State"
                   />
                 </div>
                 <div className="col-12 col-sm-4">
                   <label className="form-label small text-white-60 mb-1">Pincode</label>
-                  <input 
-                    type="text" 
-                    value={pincodeVal} 
-                    onChange={(e) => setPincodeVal(e.target.value)} 
-                    className="input-field w-100" 
-                    placeholder="Pincode" 
-                    required 
+                  <input
+                    type="text"
+                    value={pincodeVal}
+                    onChange={(e) => setPincodeVal(e.target.value)}
+                    className="input-field w-100"
+                    placeholder="Pincode"
+                    required
                   />
                 </div>
 
@@ -662,11 +662,10 @@ export default function Profile() {
                         key={tag}
                         type="button"
                         onClick={() => setTagVal(tag)}
-                        className={`px-4 py-2 rounded-pill small fw-semibold transition-all ${
-                          tagVal === tag 
-                            ? 'bg-brand-400 text-white border-0' 
+                        className={`px-4 py-2 rounded-pill small fw-semibold transition-all ${tagVal === tag
+                            ? 'bg-brand-400 text-white border-0'
                             : 'glass border border-white-10 text-white-60 hover:text-white'
-                        }`}
+                          }`}
                         style={{ minWidth: '80px' }}
                       >
                         {tag}
@@ -710,10 +709,10 @@ export default function Profile() {
 
             {/* Map Picker Modal */}
             {showMapModal && (
-              <div 
-                className="position-fixed d-flex align-items-center justify-content-center" 
-                style={{ 
-                  zIndex: 9999, 
+              <div
+                className="position-fixed d-flex align-items-center justify-content-center"
+                style={{
+                  zIndex: 9999,
                   background: 'rgba(0, 0, 0, 0.75)',
                   backdropFilter: 'blur(5px)',
                   top: 0,
@@ -725,7 +724,7 @@ export default function Profile() {
                 <div className="glass rounded-4 p-4 w-100 max-w-lg mx-3 border border-white-15 shadow-2xl position-relative" style={{ maxWidth: '600px' }}>
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <h5 className="text-white fw-bold mb-0">Select Delivery Pin Location</h5>
-                    <button 
+                    <button
                       onClick={() => setShowMapModal(false)}
                       className="btn bg-transparent text-white-60 hover:text-white border-0 p-1"
                     >
@@ -735,8 +734,8 @@ export default function Profile() {
 
                   {/* Geocoding Search Input */}
                   <form onSubmit={handleSearchLocation} className="d-flex gap-2 mb-3">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="input-field flex-grow-1 py-2 px-3 small"
@@ -748,9 +747,9 @@ export default function Profile() {
                   </form>
 
                   {/* Map Container */}
-                  <div 
-                    id="map-container" 
-                    className="rounded-3 mb-3 border border-white-10" 
+                  <div
+                    id="map-container"
+                    className="rounded-3 mb-3 border border-white-10"
                     style={{ height: '320px', background: '#1A1A1A' }}
                   />
 
@@ -766,7 +765,7 @@ export default function Profile() {
                       )}
                     </div>
                     <div className="d-flex gap-2 w-100 sm:w-auto justify-content-end">
-                      <button 
+                      <button
                         type="button"
                         onClick={() => {
                           if (navigator.geolocation) {
@@ -793,7 +792,7 @@ export default function Profile() {
                       >
                         Locate Me
                       </button>
-                      <button 
+                      <button
                         type="button"
                         onClick={() => {
                           if (tempLat && tempLng) {
