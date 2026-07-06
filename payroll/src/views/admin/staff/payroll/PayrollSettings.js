@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
-import { Row, Col, Card, Form, Button, Spinner, Badge, Table, Modal } from 'react-bootstrap';
+import { Row, Col, Card, Form, Button, Spinner, Badge, Table } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -181,15 +181,7 @@ const PayrollSettings = () => {
     const [saving, setSaving] = useState(false);
     const [originalConfig, setOriginalConfig] = useState(null);
     const [isDirty, setIsDirty] = useState(false);
-    const [uploadingPdf, setUploadingPdf] = useState(false);
-    const [showPdfEditor, setShowPdfEditor] = useState(false);
-    const [pdfFields, setPdfFields] = useState([]);
-    const [pdfNumPages, setPdfNumPages] = useState(0);
-    const [pdfCurrentPage, setPdfCurrentPage] = useState(1);
-    const [pdfLoading, setPdfLoading] = useState(false);
-    const [pdfPageSize, setPdfPageSize] = useState({ width: 595, height: 842 });
-    const canvasRef = useRef(null);
-    const pdfDocumentRef = useRef(null);
+    const [uploadingWord, setUploadingWord] = useState(false);
 
     // States for Attendance / Wi-Fi IP restrictions
     const [adminPublicIp, setAdminPublicIp] = useState('');
@@ -233,13 +225,8 @@ const PayrollSettings = () => {
             idle_threshold: 5
         },
         document_templates: {
-            joining_letter_pdf: null,
             joining_letter_template: "",
-            joining_letter_pdf_fields: [],
-            pdf_margin_top: 50,
-            pdf_margin_bottom: 50,
-            pdf_margin_left: 50,
-            pdf_margin_right: 50
+            joining_letter_word: null
         }
     });
 
@@ -267,21 +254,25 @@ const PayrollSettings = () => {
         }));
     };
 
-    const handlePdfUpload = async (e) => {
+    const handleWordUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        
-        if (file.type !== 'application/pdf') {
-            toast.error('Only PDF files are supported.');
+
+        const validTypes = [
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword'
+        ];
+        if (!validTypes.includes(file.type) && !file.name.endsWith('.docx') && !file.name.endsWith('.doc')) {
+            toast.error('Only Word document files (.docx) are supported.');
             return;
         }
 
         try {
-            setUploadingPdf(true);
+            setUploadingWord(true);
             const formData = new FormData();
-            formData.append('pdf_template', file);
+            formData.append('word_template', file);
 
-            const res = await axios.post(`${process.env.REACT_APP_API}/upload/uploadtemplate`, formData, {
+            const res = await axios.post(`${process.env.REACT_APP_API}/upload/uploadword`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -293,304 +284,21 @@ const PayrollSettings = () => {
                     ...prev,
                     document_templates: {
                         ...prev.document_templates,
-                        joining_letter_pdf: res.data.filepath
+                        joining_letter_word: res.data.filepath
                     }
                 }));
                 setIsDirty(true);
-                toast.success('PDF Template uploaded successfully! Remember to save settings.');
+                toast.success('Word template uploaded successfully! Remember to save settings.');
             }
         } catch (err) {
-            console.error('Error uploading PDF template:', err);
-            toast.error('Failed to upload PDF template.');
+            console.error('Error uploading Word template:', err);
+            toast.error('Failed to upload Word template.');
         } finally {
-            setUploadingPdf(false);
+            setUploadingWord(false);
         }
     };
 
-    const [uploadingHeader, setUploadingHeader] = useState(false);
-    const [uploadingFooter, setUploadingFooter] = useState(false);
 
-    const handleLetterheadHeaderUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (!file.type.startsWith('image/')) {
-            toast.error('Only image files are supported for letterhead header.');
-            return;
-        }
-        try {
-            setUploadingHeader(true);
-            const formData = new FormData();
-            formData.append('image', file);
-            const res = await axios.post(`${process.env.REACT_APP_API}/upload/uploadletterhead`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            if (res.data.success) {
-                setConfig(prev => ({
-                    ...prev,
-                    document_templates: {
-                        ...prev.document_templates,
-                        letterhead_header: res.data.filepath
-                    }
-                }));
-                setIsDirty(true);
-                toast.success('Letterhead Header uploaded successfully! Remember to save settings.');
-            }
-        } catch (err) {
-            console.error('Error uploading letterhead header:', err);
-            toast.error('Failed to upload header image.');
-        } finally {
-            setUploadingHeader(false);
-        }
-    };
-
-    const handleLetterheadFooterUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (!file.type.startsWith('image/')) {
-            toast.error('Only image files are supported for letterhead footer.');
-            return;
-        }
-        try {
-            setUploadingFooter(true);
-            const formData = new FormData();
-            formData.append('image', file);
-            const res = await axios.post(`${process.env.REACT_APP_API}/upload/uploadletterhead`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            if (res.data.success) {
-                setConfig(prev => ({
-                    ...prev,
-                    document_templates: {
-                        ...prev.document_templates,
-                        letterhead_footer: res.data.filepath
-                    }
-                }));
-                setIsDirty(true);
-                toast.success('Letterhead Footer uploaded successfully! Remember to save settings.');
-            }
-        } catch (err) {
-            console.error('Error uploading letterhead footer:', err);
-            toast.error('Failed to upload footer image.');
-        } finally {
-            setUploadingFooter(false);
-        }
-    };
-
-    const renderPdfPage = async (pdfDoc, pageNum) => {
-        try {
-            const page = await pdfDoc.getPage(pageNum);
-            const viewport = page.getViewport({ scale: 1.25 });
-            const canvas = canvasRef.current;
-            if (!canvas) return;
-            
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            
-            setPdfPageSize({
-                width: viewport.width,
-                height: viewport.height,
-                pdfWidth: page.getViewport({ scale: 1.0 }).width,
-                pdfHeight: page.getViewport({ scale: 1.0 }).height
-            });
-            
-            await page.render({
-                canvasContext: context,
-                viewport
-            }).promise;
-        } catch (err) {
-            console.error('Error rendering PDF page:', err);
-        }
-    };
-
-    const loadPdfDocument = async () => {
-        if (!config.document_templates?.joining_letter_pdf) return;
-        setPdfLoading(true);
-        try {
-            const pdfjs = window.pdfjsLib;
-            if (!pdfjs) {
-                throw new Error('PDF.js library is not available.');
-            }
-            const pdfUrl = `${process.env.REACT_APP_API_URL}${config.document_templates.joining_letter_pdf}`;
-            const loadingTask = pdfjs.getDocument({
-                url: pdfUrl
-            });
-            const pdf = await loadingTask.promise;
-            pdfDocumentRef.current = pdf;
-            setPdfNumPages(pdf.numPages);
-            setPdfCurrentPage(1);
-        } catch (err) {
-            console.error('Error loading PDF document:', err);
-            toast.error('Failed to load PDF document template.');
-        } finally {
-            setPdfLoading(false);
-        }
-    };
-
-    const canvasCallbackRef = useCallback((node) => {
-        if (node !== null) {
-            canvasRef.current = node;
-            if (pdfDocumentRef.current) {
-                renderPdfPage(pdfDocumentRef.current, pdfCurrentPage);
-            }
-        }
-    }, [pdfCurrentPage]);
-
-    useEffect(() => {
-        if (showPdfEditor) {
-            setPdfFields(config.document_templates?.joining_letter_pdf_fields || []);
-            pdfDocumentRef.current = null;
-            const pdfjs = window.pdfjsLib;
-            if (pdfjs) {
-                loadPdfDocument();
-            } else {
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
-                script.onload = () => {
-                    const loadedPdfjs = window.pdfjsLib;
-                    if (loadedPdfjs) {
-                        loadedPdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-                        loadPdfDocument();
-                    } else {
-                        console.error('Failed to load PDF.js from CDN.');
-                        toast.error('Failed to load PDF viewer library.');
-                    }
-                };
-                script.onerror = () => {
-                    console.error('Error loading PDF.js script.');
-                    toast.error('Failed to load PDF viewer library script.');
-                };
-                document.body.appendChild(script);
-            }
-        }
-    }, [showPdfEditor]);
-
-    // Re-render PDF page when page number changes after canvas has mounted
-    useEffect(() => {
-        if (pdfDocumentRef.current && canvasRef.current) {
-            renderPdfPage(pdfDocumentRef.current, pdfCurrentPage);
-        }
-    }, [pdfCurrentPage]);
-
-    const handlePageChange = (newPage) => {
-        if (newPage < 1 || newPage > pdfNumPages) return;
-        setPdfCurrentPage(newPage);
-    };
-
-    const handleSavePdfFields = () => {
-        setConfig(prev => ({
-            ...prev,
-            document_templates: {
-                ...prev.document_templates,
-                joining_letter_pdf_fields: pdfFields
-            }
-        }));
-        setIsDirty(true);
-        setShowPdfEditor(false);
-        toast.success('PDF placeholders layout updated! Remember to click Save on the floating settings bar.');
-    };
-
-    const handleAddPlaceholder = (placeholderKey) => {
-        const defaultPdfWidth = pdfPageSize.pdfWidth || 595.27;
-        const defaultPdfHeight = pdfPageSize.pdfHeight || 841.89;
-        
-        let customVal = '';
-        let isCustom = false;
-        let pKey = placeholderKey;
-        if (placeholderKey === 'custom_text') {
-            isCustom = true;
-            const customCount = pdfFields.filter(f => f.field_key.startsWith('custom_text')).length;
-            pKey = `custom_text_${customCount + 1}`;
-            customVal = 'Custom Text';
-        }
-
-        const newField = {
-            field_key: pKey,
-            page: pdfCurrentPage,
-            x: Math.round(defaultPdfWidth / 2 - 50),
-            y: Math.round(defaultPdfHeight / 2),
-            font_size: 11,
-            custom_value: customVal,
-            white_out: isCustom, // true by default for custom text boxes
-            width: 100,
-            height: 15
-        };
-        
-        setPdfFields(prev => [...prev, newField]);
-    };
-
-    const handleRemoveField = (fieldIndex) => {
-        setPdfFields(prev => prev.filter((_, idx) => idx !== fieldIndex));
-    };
-
-    const handleFieldPropChange = (fieldIndex, prop, val) => {
-        setPdfFields(prev => prev.map((f, idx) => idx === fieldIndex ? { ...f, [prop]: val } : f));
-    };
-
-    const handleMouseDown = (e, fieldIndex) => {
-        e.preventDefault();
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        
-        const handleMouseMove = (moveEvent) => {
-            const currentRect = canvas.getBoundingClientRect();
-            
-            let mouseX = moveEvent.clientX - currentRect.left;
-            let mouseY = moveEvent.clientY - currentRect.top;
-            
-            mouseX = Math.max(0, Math.min(mouseX, currentRect.width));
-            mouseY = Math.max(0, Math.min(mouseY, currentRect.height));
-            
-            const pdfX = (mouseX / currentRect.width) * (pdfPageSize.pdfWidth || 595.27);
-            const pdfY = (1 - (mouseY / currentRect.height)) * (pdfPageSize.pdfHeight || 841.89);
-            
-            setPdfFields(prev => prev.map((f, idx) => idx === fieldIndex ? { ...f, x: Math.round(pdfX), y: Math.round(pdfY) } : f));
-        };
-        
-        const handleMouseUp = () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-        
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-    };
-
-    const handleTouchStart = (e, fieldIndex) => {
-        e.preventDefault();
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        
-        const handleTouchMove = (moveEvent) => {
-            const currentRect = canvas.getBoundingClientRect();
-            const touch = moveEvent.touches[0];
-            
-            let mouseX = touch.clientX - currentRect.left;
-            let mouseY = touch.clientY - currentRect.top;
-            
-            mouseX = Math.max(0, Math.min(mouseX, currentRect.width));
-            mouseY = Math.max(0, Math.min(mouseY, currentRect.height));
-            
-            const pdfX = (mouseX / currentRect.width) * (pdfPageSize.pdfWidth || 595.27);
-            const pdfY = (1 - (mouseY / currentRect.height)) * (pdfPageSize.pdfHeight || 841.89);
-            
-            setPdfFields(prev => prev.map((f, idx) => idx === fieldIndex ? { ...f, x: Math.round(pdfX), y: Math.round(pdfY) } : f));
-        };
-        
-        const handleTouchEnd = () => {
-            document.removeEventListener('touchmove', handleTouchMove);
-            document.removeEventListener('touchend', handleTouchEnd);
-        };
-        
-        document.addEventListener('touchmove', handleTouchMove, { passive: false });
-        document.addEventListener('touchend', handleTouchEnd);
-    };
 
     const insertVariable = (variableName) => {
         if (quillRef.current) {
@@ -632,15 +340,8 @@ const PayrollSettings = () => {
                         idle_threshold: res.data.wfh_config?.idle_threshold || 5
                     },
                     document_templates: {
-                        joining_letter_pdf: res.data.document_templates?.joining_letter_pdf || null,
                         joining_letter_template: res.data.document_templates?.joining_letter_template || defaultJoiningLetter,
-                        joining_letter_pdf_fields: res.data.document_templates?.joining_letter_pdf_fields || [],
-                        pdf_margin_top: res.data.document_templates?.pdf_margin_top ?? 50,
-                        pdf_margin_bottom: res.data.document_templates?.pdf_margin_bottom ?? 50,
-                        pdf_margin_left: res.data.document_templates?.pdf_margin_left ?? 50,
-                        pdf_margin_right: res.data.document_templates?.pdf_margin_right ?? 50,
-                        letterhead_header: res.data.document_templates?.letterhead_header || null,
-                        letterhead_footer: res.data.document_templates?.letterhead_footer || null
+                        joining_letter_word: res.data.document_templates?.joining_letter_word || null
                     }
                 };
                 setConfig(fetchedConfig);
@@ -1726,288 +1427,107 @@ const PayrollSettings = () => {
                                 <h5 className="fw-bold mb-0 text-primary">Joining Letter Template</h5>
                             </div>
                             <p className="text-muted mb-3 small fw-medium">
-                                Design the joining letter that will be sent to staff members as a PDF attachment. 
-                                Click any of the buttons below to insert the placeholder into your letter. These placeholders will be automatically replaced with the staff's actual data when sent:
+                                Upload a Word document (<code>.docx</code>) as your joining letter template. All branding, logo, and formatting is managed directly in Word — no technical setup needed!
+                                <br />
+                                The server will automatically replace the placeholders below with each staff member's real data before sending as a PDF attachment.
                             </p>
-                            <div className="mb-4 p-3 bg-light rounded border d-flex flex-wrap gap-2">
-                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('First Name')} className="rounded-pill fw-bold">
-                                    + [First Name]
-                                </Button>
-                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('Last Name')} className="rounded-pill fw-bold">
-                                    + [Last Name]
-                                </Button>
-                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('Job Title')} className="rounded-pill fw-bold">
-                                    + [Job Title]
-                                </Button>
-                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('Date of Joining')} className="rounded-pill fw-bold">
-                                    + [Date of Joining]
-                                </Button>
-                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('Basic Salary')} className="rounded-pill fw-bold">
-                                    + [Basic Salary]
-                                </Button>
-                                <Button variant="outline-info" size="sm" onClick={() => insertVariable('Staff ID')} className="rounded-pill fw-bold">
-                                    + [Staff ID]
-                                </Button>
-                            </div>
 
-                            {/* Upload Custom Template PDF */}
-                            <div className="mb-4 p-3 bg-light rounded border">
-                                <Form.Group>
-                                    <Form.Label className="fw-bold text-dark small text-uppercase mb-2">Upload Custom Joining Letter PDF Template</Form.Label>
-                                    <div className="d-flex align-items-center gap-3">
-                                        <Form.Control
-                                            type="file"
-                                            accept="application/pdf"
-                                            onChange={handlePdfUpload}
-                                            style={{ display: 'none' }}
-                                            id="pdf-template-upload-input"
-                                        />
-                                        <label htmlFor="pdf-template-upload-input" className="btn btn-outline-primary rounded-pill px-4 mb-0 fw-bold d-inline-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
-                                            <CsLineIcons icon="upload" size="16" /> {uploadingPdf ? 'Uploading PDF...' : 'Choose PDF File'}
-                                        </label>
-                                        {config.document_templates?.joining_letter_pdf ? (
-                                            <div className="d-flex align-items-center gap-2 text-success small fw-semibold">
-                                                <CsLineIcons icon="check-circle" size="18" className="text-success" />
-                                                <span>Custom PDF: {config.document_templates.joining_letter_pdf.split('/').pop()}</span>
-                                                <Button 
-                                                    variant="link" 
-                                                    className="p-0 text-danger ms-2 small fw-bold"
-                                                    onClick={() => {
-                                                        setConfig(prev => ({
-                                                            ...prev,
-                                                            document_templates: {
-                                                                ...prev.document_templates,
-                                                                joining_letter_pdf: null
-                                                            }
-                                                        }));
-                                                        setIsDirty(true);
-                                                    }}
-                                                >
-                                                    Remove
-                                                </Button>
-                                                <Button 
-                                                    variant="outline-primary" 
-                                                    size="sm"
-                                                    className="rounded-pill ms-3 fw-bold px-3 py-1 d-flex align-items-center gap-1"
-                                                    onClick={() => setShowPdfEditor(true)}
-                                                >
-                                                    <CsLineIcons icon="edit" size="13" /> Edit PDF Layout
-                                                </Button>
-                                            </div>
-                                        ) : (
-                                            <span className="text-muted small">No custom PDF template uploaded (falls back to HTML template).</span>
-                                        )}
-                                    </div>
-                                    <small className="text-muted d-block mt-2" style={{ fontSize: '0.75rem' }}>
-                                        Supports fillable PDF forms (AcroForm fields: <code>first_name</code>, <code>last_name</code>, <code>position</code>, <code>joining_date</code>, <code>salary</code>, <code>staff_id</code>) or standard flat PDFs (text overlays automatically on top).
-                                    </small>
-                                </Form.Group>
-                            </div>
-
-                            {/* PDF Margin Fine-tuner */}
-                            <div className="mb-4 p-3 bg-light rounded border">
-                                <Form.Group className="mb-0">
-                                    <Form.Label className="fw-bold text-dark small text-uppercase mb-3">Letterhead Page Margins (in pixels)</Form.Label>
-                                    <Row className="g-3">
-                                        <Col xs={6} md={3}>
-                                            <Form.Group>
-                                                <Form.Label className="small text-muted mb-1 fw-bold">Top Margin (Letterhead space)</Form.Label>
-                                                <Form.Control
-                                                    type="number"
-                                                    size="sm"
-                                                    value={config.document_templates?.pdf_margin_top ?? 50}
-                                                    onChange={e => {
-                                                        const val = Number(e.target.value);
-                                                        setConfig(prev => ({
-                                                            ...prev,
-                                                            document_templates: {
-                                                                ...prev.document_templates,
-                                                                pdf_margin_top: val
-                                                            }
-                                                        }));
-                                                        setIsDirty(true);
-                                                    }}
-                                                    className="form-control-premium shadow-sm"
-                                                />
-                                            </Form.Group>
-                                        </Col>
-                                        <Col xs={6} md={3}>
-                                            <Form.Group>
-                                                <Form.Label className="small text-muted mb-1 fw-bold">Bottom Margin</Form.Label>
-                                                <Form.Control
-                                                    type="number"
-                                                    size="sm"
-                                                    value={config.document_templates?.pdf_margin_bottom ?? 50}
-                                                    onChange={e => {
-                                                        const val = Number(e.target.value);
-                                                        setConfig(prev => ({
-                                                            ...prev,
-                                                            document_templates: {
-                                                                ...prev.document_templates,
-                                                                pdf_margin_bottom: val
-                                                            }
-                                                        }));
-                                                        setIsDirty(true);
-                                                    }}
-                                                    className="form-control-premium shadow-sm"
-                                                />
-                                            </Form.Group>
-                                        </Col>
-                                        <Col xs={6} md={3}>
-                                            <Form.Group>
-                                                <Form.Label className="small text-muted mb-1 fw-bold">Left Margin</Form.Label>
-                                                <Form.Control
-                                                    type="number"
-                                                    size="sm"
-                                                    value={config.document_templates?.pdf_margin_left ?? 50}
-                                                    onChange={e => {
-                                                        const val = Number(e.target.value);
-                                                        setConfig(prev => ({
-                                                            ...prev,
-                                                            document_templates: {
-                                                                ...prev.document_templates,
-                                                                pdf_margin_left: val
-                                                            }
-                                                        }));
-                                                        setIsDirty(true);
-                                                    }}
-                                                    className="form-control-premium shadow-sm"
-                                                />
-                                            </Form.Group>
-                                        </Col>
-                                        <Col xs={6} md={3}>
-                                            <Form.Group>
-                                                <Form.Label className="small text-muted mb-1 fw-bold">Right Margin</Form.Label>
-                                                <Form.Control
-                                                    type="number"
-                                                    size="sm"
-                                                    value={config.document_templates?.pdf_margin_right ?? 50}
-                                                    onChange={e => {
-                                                        const val = Number(e.target.value);
-                                                        setConfig(prev => ({
-                                                            ...prev,
-                                                            document_templates: {
-                                                                ...prev.document_templates,
-                                                                pdf_margin_right: val
-                                                            }
-                                                        }));
-                                                        setIsDirty(true);
-                                                    }}
-                                                    className="form-control-premium shadow-sm"
-                                                />
-                                            </Form.Group>
-                                        </Col>
-                                    </Row>
-                                    <Form.Text className="text-muted d-block mt-2" style={{ fontSize: '0.75rem' }}>
-                                        Increase the <strong>Top Margin</strong> (e.g. to <code>120</code> or <code>150</code>) to push the joining letter text down so it prints perfectly below your company letterhead logo/header.
-                                    </Form.Text>
-                                </Form.Group>
-                            </div>
-
-                            {/* Letterhead Header & Footer Image Uploaders */}
-                            <div className="mb-4 p-3 bg-light rounded border">
-                                <h6 className="fw-bold text-dark small text-uppercase mb-3">Letterhead Image Uploads (Automatic Formatting)</h6>
-                                <Row className="g-3">
-                                    <Col md={6}>
-                                        <Form.Group>
-                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Upload Header Logo Image (PNG/JPG)</Form.Label>
-                                            <div className="d-flex align-items-center gap-3">
-                                                <Form.Control
-                                                    type="file"
-                                                    accept="image/*"
-                                                    onChange={handleLetterheadHeaderUpload}
-                                                    style={{ display: 'none' }}
-                                                    id="header-logo-upload-input"
-                                                />
-                                                <label htmlFor="header-logo-upload-input" className="btn btn-outline-primary rounded-pill px-4 mb-0 fw-bold d-inline-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
-                                                    <CsLineIcons icon="upload" size="16" /> {uploadingHeader ? 'Uploading Logo...' : 'Choose Header Image'}
-                                                </label>
-                                                {config.document_templates?.letterhead_header && (
-                                                    <div className="d-flex align-items-center gap-2 text-success small fw-semibold">
-                                                        <CsLineIcons icon="check-circle" size="18" className="text-success" />
-                                                        <a href={`${process.env.REACT_APP_API_URL}${config.document_templates.letterhead_header}`} target="_blank" rel="noreferrer" className="text-decoration-none">
-                                                            View Image
-                                                        </a>
-                                                        <Button 
-                                                            variant="link" 
-                                                            className="p-0 text-danger ms-2 small fw-bold"
-                                                            onClick={() => {
-                                                                setConfig(prev => ({
-                                                                    ...prev,
-                                                                    document_templates: {
-                                                                        ...prev.document_templates,
-                                                                        letterhead_header: null
-                                                                    }
-                                                                }));
-                                                                setIsDirty(true);
-                                                            }}
-                                                        >
-                                                            Remove
-                                                        </Button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </Form.Group>
-                                    </Col>
-
-                                    <Col md={6}>
-                                        <Form.Group>
-                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Upload Footer Image (PNG/JPG)</Form.Label>
-                                            <div className="d-flex align-items-center gap-3">
-                                                <Form.Control
-                                                    type="file"
-                                                    accept="image/*"
-                                                    onChange={handleLetterheadFooterUpload}
-                                                    style={{ display: 'none' }}
-                                                    id="footer-image-upload-input"
-                                                />
-                                                <label htmlFor="footer-image-upload-input" className="btn btn-outline-primary rounded-pill px-4 mb-0 fw-bold d-inline-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
-                                                    <CsLineIcons icon="upload" size="16" /> {uploadingFooter ? 'Uploading Footer...' : 'Choose Footer Image'}
-                                                </label>
-                                                {config.document_templates?.letterhead_footer && (
-                                                    <div className="d-flex align-items-center gap-2 text-success small fw-semibold">
-                                                        <CsLineIcons icon="check-circle" size="18" className="text-success" />
-                                                        <a href={`${process.env.REACT_APP_API_URL}${config.document_templates.letterhead_footer}`} target="_blank" rel="noreferrer" className="text-decoration-none">
-                                                            View Image
-                                                        </a>
-                                                        <Button 
-                                                            variant="link" 
-                                                            className="p-0 text-danger ms-2 small fw-bold"
-                                                            onClick={() => {
-                                                                setConfig(prev => ({
-                                                                    ...prev,
-                                                                    document_templates: {
-                                                                        ...prev.document_templates,
-                                                                        letterhead_footer: null
-                                                                    }
-                                                                }));
-                                                                setIsDirty(true);
-                                                            }}
-                                                        >
-                                                            Remove
-                                                        </Button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </Form.Group>
-                                    </Col>
-                                </Row>
-                                <Form.Text className="text-muted d-block mt-3" style={{ fontSize: '0.75rem' }}>
-                                    When you send a joining letter, these images are automatically printed at the top and bottom of the letter PDF. Easy, clean, and professional letterhead alignment without technical setup!
+                            {/* Word Template Upload */}
+                            <div className="mb-4 p-3 rounded border" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #e8f5e9 100%)' }}>
+                                <h6 className="fw-bold text-dark small text-uppercase mb-3 d-flex align-items-center gap-2">
+                                    <CsLineIcons icon="file-text" size="16" className="text-primary" />
+                                    Word Document Template (.docx)
+                                </h6>
+                                <div className="d-flex align-items-center gap-3 flex-wrap">
+                                    <Form.Control
+                                        type="file"
+                                        accept=".docx,.doc"
+                                        onChange={handleWordUpload}
+                                        style={{ display: 'none' }}
+                                        id="word-template-upload-input"
+                                    />
+                                    <label
+                                        htmlFor="word-template-upload-input"
+                                        className="btn btn-primary rounded-pill px-4 mb-0 fw-bold d-inline-flex align-items-center gap-2"
+                                        style={{ cursor: uploadingWord ? 'not-allowed' : 'pointer', opacity: uploadingWord ? 0.7 : 1 }}
+                                    >
+                                        <CsLineIcons icon="upload" size="16" />
+                                        {uploadingWord ? 'Uploading...' : 'Choose Word File (.docx)'}
+                                    </label>
+                                    {config.document_templates?.joining_letter_word ? (
+                                        <div className="d-flex align-items-center gap-2 text-success small fw-semibold">
+                                            <CsLineIcons icon="check-circle" size="18" className="text-success" />
+                                            <span>Template: {config.document_templates.joining_letter_word.split('/').pop()}</span>
+                                            <Button
+                                                variant="link"
+                                                className="p-0 text-danger ms-2 small fw-bold"
+                                                onClick={() => {
+                                                    setConfig(prev => ({
+                                                        ...prev,
+                                                        document_templates: {
+                                                            ...prev.document_templates,
+                                                            joining_letter_word: null
+                                                        }
+                                                    }));
+                                                    setIsDirty(true);
+                                                }}
+                                            >
+                                                Remove
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <span className="text-muted small">No Word template uploaded yet.</span>
+                                    )}
+                                </div>
+                                <Form.Text className="text-muted d-block mt-2" style={{ fontSize: '0.75rem' }}>
+                                    Accepted format: <strong>.docx</strong>. Design the entire letter in Microsoft Word (logo, layout, fonts), then upload. When you send a joining letter, it is automatically converted to PDF and emailed to the staff member.
                                 </Form.Text>
                             </div>
 
+                            {/* Placeholder Reference Table */}
+                            <div className="mb-4 p-3 bg-light rounded border">
+                                <h6 className="fw-bold text-dark small text-uppercase mb-3 d-flex align-items-center gap-2">
+                                    <CsLineIcons icon="info-circle" size="16" className="text-info" />
+                                    Available Placeholders (use these in your Word document)
+                                </h6>
+                                <div className="d-flex flex-wrap gap-2">
+                                    {[
+                                        '[First Name]', '[Last Name]', '[Full Name]',
+                                        '[Job Title]', '[Date of Joining]', '[Basic Salary]',
+                                        '[Staff ID]', '[Department]', '[Company Name]'
+                                    ].map(ph => (
+                                        <span key={ph} className="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 fw-semibold" style={{ fontSize: '0.8rem' }}>
+                                            {ph}
+                                        </span>
+                                    ))}
+                                </div>
+                                <Form.Text className="text-muted d-block mt-2" style={{ fontSize: '0.75rem' }}>
+                                    Type these placeholders exactly as shown (with square brackets) anywhere in your Word document. They will be swapped with each employee's real data automatically.
+                                </Form.Text>
+                            </div>
+
+                            {/* Email Body Editor */}
+                            <div className="mb-2">
+                                <h6 className="fw-bold text-dark small text-uppercase mb-2 d-flex align-items-center gap-2">
+                                    <CsLineIcons icon="email" size="16" className="text-secondary" />
+                                    Email Body Text (sent along with the PDF attachment)
+                                </h6>
+                                <p className="text-muted small mb-2">
+                                    This text appears in the body of the email. The PDF letter is attached separately.
+                                </p>
+                            </div>
                             <div className="bg-white rounded border">
-                                <ReactQuill 
+                                <ReactQuill
                                     ref={quillRef}
                                     theme="snow"
                                     value={config.document_templates?.joining_letter_template || ''}
                                     onChange={handleTemplateChange}
                                     modules={modules}
-                                    placeholder="Draft your joining letter template here..."
+                                    placeholder="Draft your joining letter email body here..."
                                     style={{ minHeight: '300px', fontSize: '15px' }}
                                 />
                             </div>
+
                         </Card.Body>
                     </Card>
                 </Col>
@@ -2029,292 +1549,8 @@ const PayrollSettings = () => {
                     </div>
                 </div>
             )}
-            {/* Visual PDF Editor Modal */}
-            <Modal 
-                show={showPdfEditor} 
-                onHide={() => setShowPdfEditor(false)} 
-                size="xl" 
-                dialogClassName="modal-90w"
-                centered
-            >
-                <Modal.Header closeButton className="border-bottom-0 pb-0">
-                    <Modal.Title className="fw-bold text-primary d-flex align-items-center gap-2">
-                        <CsLineIcons icon="edit" size="20" /> Visual PDF Layout Editor
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body className="px-4 py-3">
-                    <Row>
-                        {/* Left Column: PDF rendering viewport */}
-                        <Col lg={8} className="d-flex flex-column align-items-center border-end pe-lg-4" style={{ minHeight: '550px' }}>
-                            <div className="d-flex justify-content-between align-items-center w-100 mb-3 bg-light p-2 rounded">
-                                <span className="small text-muted fw-semibold">Drag placed placeholders to reposition them on the page. Coordinates (x, y) are in points from bottom-left.</span>
-                                <div className="d-flex align-items-center gap-2">
-                                    <Button 
-                                        variant="outline-secondary" 
-                                        size="sm" 
-                                        onClick={() => handlePageChange(pdfCurrentPage - 1)}
-                                        disabled={pdfCurrentPage <= 1}
-                                        className="rounded-pill px-3 fw-bold"
-                                    >
-                                        Prev
-                                    </Button>
-                                    <span className="small fw-bold text-dark px-2">Page {pdfCurrentPage} of {pdfNumPages}</span>
-                                    <Button 
-                                        variant="outline-secondary" 
-                                        size="sm" 
-                                        onClick={() => handlePageChange(pdfCurrentPage + 1)}
-                                        disabled={pdfCurrentPage >= pdfNumPages}
-                                        className="rounded-pill px-3 fw-bold"
-                                    >
-                                        Next
-                                    </Button>
-                                </div>
-                            </div>
-                            
-                            {pdfLoading ? (
-                                <div className="d-flex flex-column align-items-center justify-content-center flex-grow-1 w-100" style={{ height: '500px' }}>
-                                    <Spinner animation="border" variant="primary" className="mb-2" />
-                                    <span className="text-muted small">Loading PDF document template...</span>
-                                </div>
-                            ) : (
-                                <div 
-                                    className="pdf-viewport-wrapper border rounded shadow-sm bg-dark p-2 d-inline-block position-relative" 
-                                    style={{ 
-                                        maxHeight: '600px', 
-                                        overflow: 'auto',
-                                        maxWidth: '100%'
-                                    }}
-                                >
-                                    <div className="position-relative" style={{ width: pdfPageSize.width, height: pdfPageSize.height }}>
-                                        <canvas ref={canvasCallbackRef} style={{ display: 'block' }} />
-                                        
-                                        {/* Placed overlays for the current page */}
-                                        {pdfFields.map((field, idx) => {
-                                            if (field.page !== pdfCurrentPage) return null;
-                                            
-                                            const scale = pdfPageSize.width / (pdfPageSize.pdfWidth || 595.27);
-                                            const left = (field.x / (pdfPageSize.pdfWidth || 595.27)) * pdfPageSize.width;
-                                            const top = (1 - (field.y / (pdfPageSize.pdfHeight || 841.89))) * pdfPageSize.height;
-                                            
-                                            const widthPx = (field.width || 100) * scale;
-                                            const heightPx = (field.height || 15) * scale;
-                                            const fontSizePx = (field.font_size || 11) * scale;
-                                            
-                                            const isCustom = field.field_key.startsWith('custom_text');
-                                            const displayName = isCustom 
-                                                ? (field.custom_value || 'CUSTOM TEXT') 
-                                                : field.field_key.replace(/_/g, ' ').toUpperCase();
-                                            
-                                            return (
-                                                <div
-                                                    key={idx}
-                                                    onMouseDown={(e) => handleMouseDown(e, idx)}
-                                                    onTouchStart={(e) => handleTouchStart(e, idx)}
-                                                    className="position-absolute d-flex align-items-center justify-content-between shadow-sm user-select-none"
-                                                    style={{
-                                                        left: `${left}px`,
-                                                        top: `${top}px`,
-                                                        transform: 'translate(0, -100%)',
-                                                        cursor: 'move',
-                                                        fontSize: `${fontSizePx}px`,
-                                                        fontWeight: 'bold',
-                                                        zIndex: 10,
-                                                        width: field.white_out ? `${widthPx}px` : 'auto',
-                                                        height: field.white_out ? `${heightPx}px` : 'auto',
-                                                        backgroundColor: field.white_out ? 'white' : 'rgba(13, 110, 253, 0.85)',
-                                                        color: field.white_out ? 'black' : 'white',
-                                                        border: field.white_out ? '1px dashed #0d6efd' : '1px solid white',
-                                                        padding: '2px 6px',
-                                                        borderRadius: field.white_out ? '0px' : '4px',
-                                                        overflow: 'hidden',
-                                                        whiteSpace: 'nowrap'
-                                                    }}
-                                                >
-                                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayName}</span>
-                                                    <Button 
-                                                        variant="none" 
-                                                        className="p-0 ms-1 leading-none hover-scale border-0" 
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleRemoveField(idx);
-                                                        }}
-                                                        style={{ 
-                                                            fontSize: '10px',
-                                                            color: field.white_out ? '#dc3545' : 'white'
-                                                        }}
-                                                    >
-                                                        ✕
-                                                    </Button>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-                        </Col>
-                        
-                        {/* Right Column: Placeholders panel & Numeric coordinate fine-tuner */}
-                        <Col lg={4} className="ps-lg-4 d-flex flex-column" style={{ maxHeight: '630px', overflowY: 'auto' }}>
-                            <h6 className="fw-bold text-dark small text-uppercase mb-3 mt-2">Available Placeholders</h6>
-                            <p className="text-muted small mb-2">Click to add field tag onto Page {pdfCurrentPage}:</p>
-                            <div className="d-flex flex-wrap gap-2 mb-4 p-2 bg-light rounded border">
-                                {[
-                                    { key: 'first_name', label: 'First Name' },
-                                    { key: 'last_name', label: 'Last Name' },
-                                    { key: 'full_name', label: 'Full Name' },
-                                    { key: 'job_title', label: 'Job Title' },
-                                    { key: 'joining_date', label: 'Joining Date' },
-                                    { key: 'staff_id', label: 'Staff ID' },
-                                    { key: 'email', label: 'Email' },
-                                    { key: 'phone', label: 'Phone' },
-                                    { key: 'gross_salary', label: 'Gross Salary' },
-                                    { key: 'basic_salary', label: 'Basic Salary' },
-                                    { key: 'hra', label: 'HRA' },
-                                    { key: 'conveyance', label: 'Conveyance' },
-                                    { key: 'medical_allowance', label: 'Medical' },
-                                    { key: 'special_allowance', label: 'Special' },
-                                    { key: 'other_allowance', label: 'Other' },
-                                    { key: 'pf_deduction', label: 'EPF' },
-                                    { key: 'esi_deduction', label: 'ESI' },
-                                    { key: 'pt_deduction', label: 'PT' },
-                                    { key: 'custom_text', label: 'Custom Text' }
-                                ].map(p => (
-                                    <Button 
-                                        key={p.key} 
-                                        variant={p.key === 'custom_text' ? 'outline-primary' : 'outline-info'}
-                                        size="sm" 
-                                        onClick={() => handleAddPlaceholder(p.key)}
-                                        className="rounded-pill fw-bold"
-                                    >
-                                        + {p.label}
-                                    </Button>
-                                ))}
-                            </div>
-                            
-                            <h6 className="fw-bold text-dark small text-uppercase mb-3">Placed Fields (Page {pdfCurrentPage})</h6>
-                            {pdfFields.filter(f => f.page === pdfCurrentPage).length === 0 ? (
-                                <div className="text-center py-4 bg-light rounded text-muted small border border-dashed">No fields placed on this page yet.</div>
-                            ) : (
-                                <div className="d-flex flex-column gap-3">
-                                    {pdfFields.map((field, idx) => {
-                                        if (field.page !== pdfCurrentPage) return null;
-                                        const isCustom = field.field_key.startsWith('custom_text');
-                                        return (
-                                            <div key={idx} className="p-3 border rounded bg-white shadow-xs d-flex flex-column gap-2">
-                                                <div className="d-flex justify-content-between align-items-center border-bottom pb-1 mb-1">
-                                                    <span className="small fw-bold text-primary">{field.field_key.replace(/_/g, ' ').toUpperCase()}</span>
-                                                    <Button 
-                                                        variant="none" 
-                                                        className="p-0 text-danger small fw-bold hover-scale" 
-                                                        onClick={() => handleRemoveField(idx)}
-                                                    >
-                                                        Delete
-                                                    </Button>
-                                                </div>
-                                                
-                                                {isCustom && (
-                                                    <Form.Group className="mb-2">
-                                                        <Form.Label className="small text-muted mb-1 fw-bold" style={{ fontSize: '10px' }}>Custom Text Content</Form.Label>
-                                                        <Form.Control 
-                                                            type="text" 
-                                                            size="sm" 
-                                                            value={field.custom_value || ''} 
-                                                            onChange={(e) => handleFieldPropChange(idx, 'custom_value', e.target.value)}
-                                                            placeholder="Type custom text here"
-                                                        />
-                                                    </Form.Group>
-                                                )}
-
-                                                <Form.Check 
-                                                    type="checkbox"
-                                                    label="Opaque White Background (Cover underlying text)"
-                                                    id={`whiteout-check-${idx}`}
-                                                    className="small text-muted mb-2"
-                                                    style={{ fontSize: '11px', fontWeight: '500' }}
-                                                    checked={field.white_out || false}
-                                                    onChange={(e) => handleFieldPropChange(idx, 'white_out', e.target.checked)}
-                                                />
-
-                                                <Row className="g-2">
-                                                    <Col xs={4}>
-                                                        <Form.Group>
-                                                            <Form.Label className="small text-muted mb-1" style={{ fontSize: '10px' }}>X (Pt)</Form.Label>
-                                                            <Form.Control 
-                                                                type="number" 
-                                                                size="sm" 
-                                                                value={field.x} 
-                                                                onChange={(e) => handleFieldPropChange(idx, 'x', Number(e.target.value))}
-                                                            />
-                                                        </Form.Group>
-                                                    </Col>
-                                                    <Col xs={4}>
-                                                        <Form.Group>
-                                                            <Form.Label className="small text-muted mb-1" style={{ fontSize: '10px' }}>Y (Pt)</Form.Label>
-                                                            <Form.Control 
-                                                                type="number" 
-                                                                size="sm" 
-                                                                value={field.y} 
-                                                                onChange={(e) => handleFieldPropChange(idx, 'y', Number(e.target.value))}
-                                                            />
-                                                        </Form.Group>
-                                                    </Col>
-                                                    <Col xs={4}>
-                                                        <Form.Group>
-                                                            <Form.Label className="small text-muted mb-1" style={{ fontSize: '10px' }}>Size</Form.Label>
-                                                            <Form.Control 
-                                                                type="number" 
-                                                                size="sm" 
-                                                                value={field.font_size} 
-                                                                onChange={(e) => handleFieldPropChange(idx, 'font_size', Number(e.target.value))}
-                                                            />
-                                                        </Form.Group>
-                                                    </Col>
-                                                </Row>
-                                                
-                                                {field.white_out && (
-                                                    <Row className="g-2">
-                                                        <Col xs={6}>
-                                                            <Form.Group>
-                                                                <Form.Label className="small text-muted mb-1" style={{ fontSize: '10px' }}>White-out Width (Pt)</Form.Label>
-                                                                <Form.Control 
-                                                                    type="number" 
-                                                                    size="sm" 
-                                                                    value={field.width || 100} 
-                                                                    onChange={(e) => handleFieldPropChange(idx, 'width', Number(e.target.value))}
-                                                                />
-                                                            </Form.Group>
-                                                        </Col>
-                                                        <Col xs={6}>
-                                                            <Form.Group>
-                                                                <Form.Label className="small text-muted mb-1" style={{ fontSize: '10px' }}>White-out Height (Pt)</Form.Label>
-                                                                <Form.Control 
-                                                                    type="number" 
-                                                                    size="sm" 
-                                                                    value={field.height || 15} 
-                                                                    onChange={(e) => handleFieldPropChange(idx, 'height', Number(e.target.value))}
-                                                                />
-                                                            </Form.Group>
-                                                        </Col>
-                                                    </Row>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </Col>
-                    </Row>
-                </Modal.Body>
-                <Modal.Footer className="border-top-0 pt-0">
-                    <Button variant="light" onClick={() => setShowPdfEditor(false)} className="rounded-pill px-4" style={{ fontWeight: 'bold' }}>
-                        Cancel
-                    </Button>
-                    <Button variant="primary" onClick={handleSavePdfFields} className="rounded-pill px-4" style={{ fontWeight: 'bold' }}>
-                        Save PDF Fields
-                    </Button>
-                </Modal.Footer>
-            </Modal>
         </div>
+
     );
 };
 

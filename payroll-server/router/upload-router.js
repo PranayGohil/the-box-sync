@@ -74,7 +74,7 @@ uploadRouter.post(
 );
 
 uploadRouter.post(
-  "/uploadtemplate",
+  "/uploadword",
   multer({
     storage: multer.diskStorage({
       destination: (req, file, cb) => {
@@ -83,40 +83,17 @@ uploadRouter.post(
         cb(null, dir);
       },
       filename: (req, file, cb) => {
-        const uniqueName = "joining_letter_" + Date.now() + ".pdf";
+        const ext = path.extname(file.originalname);
+        const uniqueName = "joining_letter_" + Date.now() + ext;
         cb(null, uniqueName);
       },
     }),
-  }).single("pdf_template"),
+  }).single("word_template"),
   (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: "No file uploaded" });
     }
     return res.json({ success: true, filepath: `/uploads/templates/${req.file.filename}` });
-  }
-);
-
-uploadRouter.post(
-  "/uploadletterhead",
-  multer({
-    storage: multer.diskStorage({
-      destination: (req, file, cb) => {
-        const dir = path.join(__dirname, "../uploads/letterheads");
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-        cb(null, dir);
-      },
-      filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname);
-        const uniqueName = "letterhead_" + Date.now() + ext;
-        cb(null, uniqueName);
-      },
-    }),
-  }).single("image"),
-  (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "No file uploaded" });
-    }
-    return res.json({ success: true, filepath: `/uploads/letterheads/${req.file.filename}` });
   }
 );
 

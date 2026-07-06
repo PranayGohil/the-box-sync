@@ -114,7 +114,6 @@ const payrollConfigSchema = new Schema(
 
     // ── Document Templates ──────────────────────────────────────────────
     document_templates: {
-      joining_letter_pdf: { type: String, default: null },
       joining_letter_template: { type: String, default: `<p>Dear [First Name] [Last Name],</p>
 <p>We are delighted to offer you the position of <strong>[Job Title]</strong> at our company.</p>
 <p>Your starting date will be <strong>[Date of Joining]</strong>.</p>
@@ -125,28 +124,7 @@ const payrollConfigSchema = new Schema(
 <p><br></p>
 <p>Sincerely,</p>
 <p>HR Department</p>` },
-      joining_letter_pdf_fields: {
-        type: [
-          {
-            field_key: { type: String, required: true },
-            page: { type: Number, default: 1 },
-            x: { type: Number, default: 100 },
-            y: { type: Number, default: 500 },
-            font_size: { type: Number, default: 11 },
-            custom_value: { type: String, default: '' },
-            white_out: { type: Boolean, default: false },
-            width: { type: Number, default: 100 },
-            height: { type: Number, default: 15 }
-          }
-        ],
-        default: []
-      },
-      pdf_margin_top: { type: Number, default: 50 },
-      pdf_margin_bottom: { type: Number, default: 50 },
-      pdf_margin_left: { type: Number, default: 50 },
-      pdf_margin_right: { type: Number, default: 50 },
-      letterhead_header: { type: String, default: null },
-      letterhead_footer: { type: String, default: null }
+      joining_letter_word: { type: String, default: null }
     }
   },
   {
