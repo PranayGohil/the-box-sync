@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useHistory } from 'react-router-dom';
 import { Row, Col, Card, Form, Button, Spinner, Badge, Table, Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
@@ -235,7 +235,11 @@ const PayrollSettings = () => {
         document_templates: {
             joining_letter_pdf: null,
             joining_letter_template: "",
-            joining_letter_pdf_fields: []
+            joining_letter_pdf_fields: [],
+            pdf_margin_top: 50,
+            pdf_margin_bottom: 50,
+            pdf_margin_left: 50,
+            pdf_margin_right: 50
         }
     });
 
@@ -303,6 +307,81 @@ const PayrollSettings = () => {
         }
     };
 
+    const [uploadingHeader, setUploadingHeader] = useState(false);
+    const [uploadingFooter, setUploadingFooter] = useState(false);
+
+    const handleLetterheadHeaderUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            toast.error('Only image files are supported for letterhead header.');
+            return;
+        }
+        try {
+            setUploadingHeader(true);
+            const formData = new FormData();
+            formData.append('image', file);
+            const res = await axios.post(`${process.env.REACT_APP_API}/upload/uploadletterhead`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            if (res.data.success) {
+                setConfig(prev => ({
+                    ...prev,
+                    document_templates: {
+                        ...prev.document_templates,
+                        letterhead_header: res.data.filepath
+                    }
+                }));
+                setIsDirty(true);
+                toast.success('Letterhead Header uploaded successfully! Remember to save settings.');
+            }
+        } catch (err) {
+            console.error('Error uploading letterhead header:', err);
+            toast.error('Failed to upload header image.');
+        } finally {
+            setUploadingHeader(false);
+        }
+    };
+
+    const handleLetterheadFooterUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            toast.error('Only image files are supported for letterhead footer.');
+            return;
+        }
+        try {
+            setUploadingFooter(true);
+            const formData = new FormData();
+            formData.append('image', file);
+            const res = await axios.post(`${process.env.REACT_APP_API}/upload/uploadletterhead`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            if (res.data.success) {
+                setConfig(prev => ({
+                    ...prev,
+                    document_templates: {
+                        ...prev.document_templates,
+                        letterhead_footer: res.data.filepath
+                    }
+                }));
+                setIsDirty(true);
+                toast.success('Letterhead Footer uploaded successfully! Remember to save settings.');
+            }
+        } catch (err) {
+            console.error('Error uploading letterhead footer:', err);
+            toast.error('Failed to upload footer image.');
+        } finally {
+            setUploadingFooter(false);
+        }
+    };
+
     const renderPdfPage = async (pdfDoc, pageNum) => {
         try {
             const page = await pdfDoc.getPage(pageNum);
@@ -346,7 +425,6 @@ const PayrollSettings = () => {
             pdfDocumentRef.current = pdf;
             setPdfNumPages(pdf.numPages);
             setPdfCurrentPage(1);
-            await renderPdfPage(pdf, 1);
         } catch (err) {
             console.error('Error loading PDF document:', err);
             toast.error('Failed to load PDF document template.');
@@ -355,9 +433,19 @@ const PayrollSettings = () => {
         }
     };
 
+    const canvasCallbackRef = useCallback((node) => {
+        if (node !== null) {
+            canvasRef.current = node;
+            if (pdfDocumentRef.current) {
+                renderPdfPage(pdfDocumentRef.current, pdfCurrentPage);
+            }
+        }
+    }, [pdfCurrentPage]);
+
     useEffect(() => {
         if (showPdfEditor) {
             setPdfFields(config.document_templates?.joining_letter_pdf_fields || []);
+            pdfDocumentRef.current = null;
             const pdfjs = window.pdfjsLib;
             if (pdfjs) {
                 loadPdfDocument();
@@ -383,12 +471,16 @@ const PayrollSettings = () => {
         }
     }, [showPdfEditor]);
 
-    const handlePageChange = async (newPage) => {
+    // Re-render PDF page when page number changes after canvas has mounted
+    useEffect(() => {
+        if (pdfDocumentRef.current && canvasRef.current) {
+            renderPdfPage(pdfDocumentRef.current, pdfCurrentPage);
+        }
+    }, [pdfCurrentPage]);
+
+    const handlePageChange = (newPage) => {
         if (newPage < 1 || newPage > pdfNumPages) return;
         setPdfCurrentPage(newPage);
-        if (pdfDocumentRef.current) {
-            await renderPdfPage(pdfDocumentRef.current, newPage);
-        }
     };
 
     const handleSavePdfFields = () => {
@@ -408,12 +500,26 @@ const PayrollSettings = () => {
         const defaultPdfWidth = pdfPageSize.pdfWidth || 595.27;
         const defaultPdfHeight = pdfPageSize.pdfHeight || 841.89;
         
+        let customVal = '';
+        let isCustom = false;
+        let pKey = placeholderKey;
+        if (placeholderKey === 'custom_text') {
+            isCustom = true;
+            const customCount = pdfFields.filter(f => f.field_key.startsWith('custom_text')).length;
+            pKey = `custom_text_${customCount + 1}`;
+            customVal = 'Custom Text';
+        }
+
         const newField = {
-            field_key: placeholderKey,
+            field_key: pKey,
             page: pdfCurrentPage,
             x: Math.round(defaultPdfWidth / 2 - 50),
             y: Math.round(defaultPdfHeight / 2),
-            font_size: 11
+            font_size: 11,
+            custom_value: customVal,
+            white_out: isCustom, // true by default for custom text boxes
+            width: 100,
+            height: 15
         };
         
         setPdfFields(prev => [...prev, newField]);
@@ -528,7 +634,13 @@ const PayrollSettings = () => {
                     document_templates: {
                         joining_letter_pdf: res.data.document_templates?.joining_letter_pdf || null,
                         joining_letter_template: res.data.document_templates?.joining_letter_template || defaultJoiningLetter,
-                        joining_letter_pdf_fields: res.data.document_templates?.joining_letter_pdf_fields || []
+                        joining_letter_pdf_fields: res.data.document_templates?.joining_letter_pdf_fields || [],
+                        pdf_margin_top: res.data.document_templates?.pdf_margin_top ?? 50,
+                        pdf_margin_bottom: res.data.document_templates?.pdf_margin_bottom ?? 50,
+                        pdf_margin_left: res.data.document_templates?.pdf_margin_left ?? 50,
+                        pdf_margin_right: res.data.document_templates?.pdf_margin_right ?? 50,
+                        letterhead_header: res.data.document_templates?.letterhead_header || null,
+                        letterhead_footer: res.data.document_templates?.letterhead_footer || null
                     }
                 };
                 setConfig(fetchedConfig);
@@ -1692,6 +1804,199 @@ const PayrollSettings = () => {
                                 </Form.Group>
                             </div>
 
+                            {/* PDF Margin Fine-tuner */}
+                            <div className="mb-4 p-3 bg-light rounded border">
+                                <Form.Group className="mb-0">
+                                    <Form.Label className="fw-bold text-dark small text-uppercase mb-3">Letterhead Page Margins (in pixels)</Form.Label>
+                                    <Row className="g-3">
+                                        <Col xs={6} md={3}>
+                                            <Form.Group>
+                                                <Form.Label className="small text-muted mb-1 fw-bold">Top Margin (Letterhead space)</Form.Label>
+                                                <Form.Control
+                                                    type="number"
+                                                    size="sm"
+                                                    value={config.document_templates?.pdf_margin_top ?? 50}
+                                                    onChange={e => {
+                                                        const val = Number(e.target.value);
+                                                        setConfig(prev => ({
+                                                            ...prev,
+                                                            document_templates: {
+                                                                ...prev.document_templates,
+                                                                pdf_margin_top: val
+                                                            }
+                                                        }));
+                                                        setIsDirty(true);
+                                                    }}
+                                                    className="form-control-premium shadow-sm"
+                                                />
+                                            </Form.Group>
+                                        </Col>
+                                        <Col xs={6} md={3}>
+                                            <Form.Group>
+                                                <Form.Label className="small text-muted mb-1 fw-bold">Bottom Margin</Form.Label>
+                                                <Form.Control
+                                                    type="number"
+                                                    size="sm"
+                                                    value={config.document_templates?.pdf_margin_bottom ?? 50}
+                                                    onChange={e => {
+                                                        const val = Number(e.target.value);
+                                                        setConfig(prev => ({
+                                                            ...prev,
+                                                            document_templates: {
+                                                                ...prev.document_templates,
+                                                                pdf_margin_bottom: val
+                                                            }
+                                                        }));
+                                                        setIsDirty(true);
+                                                    }}
+                                                    className="form-control-premium shadow-sm"
+                                                />
+                                            </Form.Group>
+                                        </Col>
+                                        <Col xs={6} md={3}>
+                                            <Form.Group>
+                                                <Form.Label className="small text-muted mb-1 fw-bold">Left Margin</Form.Label>
+                                                <Form.Control
+                                                    type="number"
+                                                    size="sm"
+                                                    value={config.document_templates?.pdf_margin_left ?? 50}
+                                                    onChange={e => {
+                                                        const val = Number(e.target.value);
+                                                        setConfig(prev => ({
+                                                            ...prev,
+                                                            document_templates: {
+                                                                ...prev.document_templates,
+                                                                pdf_margin_left: val
+                                                            }
+                                                        }));
+                                                        setIsDirty(true);
+                                                    }}
+                                                    className="form-control-premium shadow-sm"
+                                                />
+                                            </Form.Group>
+                                        </Col>
+                                        <Col xs={6} md={3}>
+                                            <Form.Group>
+                                                <Form.Label className="small text-muted mb-1 fw-bold">Right Margin</Form.Label>
+                                                <Form.Control
+                                                    type="number"
+                                                    size="sm"
+                                                    value={config.document_templates?.pdf_margin_right ?? 50}
+                                                    onChange={e => {
+                                                        const val = Number(e.target.value);
+                                                        setConfig(prev => ({
+                                                            ...prev,
+                                                            document_templates: {
+                                                                ...prev.document_templates,
+                                                                pdf_margin_right: val
+                                                            }
+                                                        }));
+                                                        setIsDirty(true);
+                                                    }}
+                                                    className="form-control-premium shadow-sm"
+                                                />
+                                            </Form.Group>
+                                        </Col>
+                                    </Row>
+                                    <Form.Text className="text-muted d-block mt-2" style={{ fontSize: '0.75rem' }}>
+                                        Increase the <strong>Top Margin</strong> (e.g. to <code>120</code> or <code>150</code>) to push the joining letter text down so it prints perfectly below your company letterhead logo/header.
+                                    </Form.Text>
+                                </Form.Group>
+                            </div>
+
+                            {/* Letterhead Header & Footer Image Uploaders */}
+                            <div className="mb-4 p-3 bg-light rounded border">
+                                <h6 className="fw-bold text-dark small text-uppercase mb-3">Letterhead Image Uploads (Automatic Formatting)</h6>
+                                <Row className="g-3">
+                                    <Col md={6}>
+                                        <Form.Group>
+                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Upload Header Logo Image (PNG/JPG)</Form.Label>
+                                            <div className="d-flex align-items-center gap-3">
+                                                <Form.Control
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleLetterheadHeaderUpload}
+                                                    style={{ display: 'none' }}
+                                                    id="header-logo-upload-input"
+                                                />
+                                                <label htmlFor="header-logo-upload-input" className="btn btn-outline-primary rounded-pill px-4 mb-0 fw-bold d-inline-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
+                                                    <CsLineIcons icon="upload" size="16" /> {uploadingHeader ? 'Uploading Logo...' : 'Choose Header Image'}
+                                                </label>
+                                                {config.document_templates?.letterhead_header && (
+                                                    <div className="d-flex align-items-center gap-2 text-success small fw-semibold">
+                                                        <CsLineIcons icon="check-circle" size="18" className="text-success" />
+                                                        <a href={`${process.env.REACT_APP_API_URL}${config.document_templates.letterhead_header}`} target="_blank" rel="noreferrer" className="text-decoration-none">
+                                                            View Image
+                                                        </a>
+                                                        <Button 
+                                                            variant="link" 
+                                                            className="p-0 text-danger ms-2 small fw-bold"
+                                                            onClick={() => {
+                                                                setConfig(prev => ({
+                                                                    ...prev,
+                                                                    document_templates: {
+                                                                        ...prev.document_templates,
+                                                                        letterhead_header: null
+                                                                    }
+                                                                }));
+                                                                setIsDirty(true);
+                                                            }}
+                                                        >
+                                                            Remove
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <Form.Group>
+                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Upload Footer Image (PNG/JPG)</Form.Label>
+                                            <div className="d-flex align-items-center gap-3">
+                                                <Form.Control
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleLetterheadFooterUpload}
+                                                    style={{ display: 'none' }}
+                                                    id="footer-image-upload-input"
+                                                />
+                                                <label htmlFor="footer-image-upload-input" className="btn btn-outline-primary rounded-pill px-4 mb-0 fw-bold d-inline-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
+                                                    <CsLineIcons icon="upload" size="16" /> {uploadingFooter ? 'Uploading Footer...' : 'Choose Footer Image'}
+                                                </label>
+                                                {config.document_templates?.letterhead_footer && (
+                                                    <div className="d-flex align-items-center gap-2 text-success small fw-semibold">
+                                                        <CsLineIcons icon="check-circle" size="18" className="text-success" />
+                                                        <a href={`${process.env.REACT_APP_API_URL}${config.document_templates.letterhead_footer}`} target="_blank" rel="noreferrer" className="text-decoration-none">
+                                                            View Image
+                                                        </a>
+                                                        <Button 
+                                                            variant="link" 
+                                                            className="p-0 text-danger ms-2 small fw-bold"
+                                                            onClick={() => {
+                                                                setConfig(prev => ({
+                                                                    ...prev,
+                                                                    document_templates: {
+                                                                        ...prev.document_templates,
+                                                                        letterhead_footer: null
+                                                                    }
+                                                                }));
+                                                                setIsDirty(true);
+                                                            }}
+                                                        >
+                                                            Remove
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
+                                <Form.Text className="text-muted d-block mt-3" style={{ fontSize: '0.75rem' }}>
+                                    When you send a joining letter, these images are automatically printed at the top and bottom of the letter PDF. Easy, clean, and professional letterhead alignment without technical setup!
+                                </Form.Text>
+                            </div>
+
                             <div className="bg-white rounded border">
                                 <ReactQuill 
                                     ref={quillRef}
@@ -1781,40 +2086,62 @@ const PayrollSettings = () => {
                                     }}
                                 >
                                     <div className="position-relative" style={{ width: pdfPageSize.width, height: pdfPageSize.height }}>
-                                        <canvas ref={canvasRef} style={{ display: 'block' }} />
+                                        <canvas ref={canvasCallbackRef} style={{ display: 'block' }} />
                                         
                                         {/* Placed overlays for the current page */}
                                         {pdfFields.map((field, idx) => {
                                             if (field.page !== pdfCurrentPage) return null;
                                             
+                                            const scale = pdfPageSize.width / (pdfPageSize.pdfWidth || 595.27);
                                             const left = (field.x / (pdfPageSize.pdfWidth || 595.27)) * pdfPageSize.width;
                                             const top = (1 - (field.y / (pdfPageSize.pdfHeight || 841.89))) * pdfPageSize.height;
+                                            
+                                            const widthPx = (field.width || 100) * scale;
+                                            const heightPx = (field.height || 15) * scale;
+                                            const fontSizePx = (field.font_size || 11) * scale;
+                                            
+                                            const isCustom = field.field_key.startsWith('custom_text');
+                                            const displayName = isCustom 
+                                                ? (field.custom_value || 'CUSTOM TEXT') 
+                                                : field.field_key.replace(/_/g, ' ').toUpperCase();
                                             
                                             return (
                                                 <div
                                                     key={idx}
                                                     onMouseDown={(e) => handleMouseDown(e, idx)}
                                                     onTouchStart={(e) => handleTouchStart(e, idx)}
-                                                    className="position-absolute px-2 py-1 rounded bg-primary text-white border border-light shadow-sm d-flex align-items-center gap-1 user-select-none"
+                                                    className="position-absolute d-flex align-items-center justify-content-between shadow-sm user-select-none"
                                                     style={{
                                                         left: `${left}px`,
                                                         top: `${top}px`,
-                                                        transform: 'translate(-50%, -50%)',
+                                                        transform: 'translate(0, -100%)',
                                                         cursor: 'move',
-                                                        fontSize: '11px',
+                                                        fontSize: `${fontSizePx}px`,
                                                         fontWeight: 'bold',
-                                                        zIndex: 10
+                                                        zIndex: 10,
+                                                        width: field.white_out ? `${widthPx}px` : 'auto',
+                                                        height: field.white_out ? `${heightPx}px` : 'auto',
+                                                        backgroundColor: field.white_out ? 'white' : 'rgba(13, 110, 253, 0.85)',
+                                                        color: field.white_out ? 'black' : 'white',
+                                                        border: field.white_out ? '1px dashed #0d6efd' : '1px solid white',
+                                                        padding: '2px 6px',
+                                                        borderRadius: field.white_out ? '0px' : '4px',
+                                                        overflow: 'hidden',
+                                                        whiteSpace: 'nowrap'
                                                     }}
                                                 >
-                                                    <span>{field.field_key.replace(/_/g, ' ').toUpperCase()}</span>
+                                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayName}</span>
                                                     <Button 
                                                         variant="none" 
-                                                        className="p-0 text-white leading-none hover-scale" 
+                                                        className="p-0 ms-1 leading-none hover-scale border-0" 
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleRemoveField(idx);
                                                         }}
-                                                        style={{ fontSize: '10px' }}
+                                                        style={{ 
+                                                            fontSize: '10px',
+                                                            color: field.white_out ? '#dc3545' : 'white'
+                                                        }}
                                                     >
                                                         ✕
                                                     </Button>
@@ -1849,11 +2176,12 @@ const PayrollSettings = () => {
                                     { key: 'other_allowance', label: 'Other' },
                                     { key: 'pf_deduction', label: 'EPF' },
                                     { key: 'esi_deduction', label: 'ESI' },
-                                    { key: 'pt_deduction', label: 'PT' }
+                                    { key: 'pt_deduction', label: 'PT' },
+                                    { key: 'custom_text', label: 'Custom Text' }
                                 ].map(p => (
                                     <Button 
                                         key={p.key} 
-                                        variant="outline-info" 
+                                        variant={p.key === 'custom_text' ? 'outline-primary' : 'outline-info'}
                                         size="sm" 
                                         onClick={() => handleAddPlaceholder(p.key)}
                                         className="rounded-pill fw-bold"
@@ -1870,18 +2198,43 @@ const PayrollSettings = () => {
                                 <div className="d-flex flex-column gap-3">
                                     {pdfFields.map((field, idx) => {
                                         if (field.page !== pdfCurrentPage) return null;
+                                        const isCustom = field.field_key.startsWith('custom_text');
                                         return (
-                                            <div key={idx} className="p-2 border rounded bg-light d-flex flex-column gap-2">
-                                                <div className="d-flex justify-content-between align-items-center">
+                                            <div key={idx} className="p-3 border rounded bg-white shadow-xs d-flex flex-column gap-2">
+                                                <div className="d-flex justify-content-between align-items-center border-bottom pb-1 mb-1">
                                                     <span className="small fw-bold text-primary">{field.field_key.replace(/_/g, ' ').toUpperCase()}</span>
                                                     <Button 
                                                         variant="none" 
-                                                        className="p-0 text-danger small hover-scale" 
+                                                        className="p-0 text-danger small fw-bold hover-scale" 
                                                         onClick={() => handleRemoveField(idx)}
                                                     >
                                                         Delete
                                                     </Button>
                                                 </div>
+                                                
+                                                {isCustom && (
+                                                    <Form.Group className="mb-2">
+                                                        <Form.Label className="small text-muted mb-1 fw-bold" style={{ fontSize: '10px' }}>Custom Text Content</Form.Label>
+                                                        <Form.Control 
+                                                            type="text" 
+                                                            size="sm" 
+                                                            value={field.custom_value || ''} 
+                                                            onChange={(e) => handleFieldPropChange(idx, 'custom_value', e.target.value)}
+                                                            placeholder="Type custom text here"
+                                                        />
+                                                    </Form.Group>
+                                                )}
+
+                                                <Form.Check 
+                                                    type="checkbox"
+                                                    label="Opaque White Background (Cover underlying text)"
+                                                    id={`whiteout-check-${idx}`}
+                                                    className="small text-muted mb-2"
+                                                    style={{ fontSize: '11px', fontWeight: '500' }}
+                                                    checked={field.white_out || false}
+                                                    onChange={(e) => handleFieldPropChange(idx, 'white_out', e.target.checked)}
+                                                />
+
                                                 <Row className="g-2">
                                                     <Col xs={4}>
                                                         <Form.Group>
@@ -1917,6 +2270,33 @@ const PayrollSettings = () => {
                                                         </Form.Group>
                                                     </Col>
                                                 </Row>
+                                                
+                                                {field.white_out && (
+                                                    <Row className="g-2">
+                                                        <Col xs={6}>
+                                                            <Form.Group>
+                                                                <Form.Label className="small text-muted mb-1" style={{ fontSize: '10px' }}>White-out Width (Pt)</Form.Label>
+                                                                <Form.Control 
+                                                                    type="number" 
+                                                                    size="sm" 
+                                                                    value={field.width || 100} 
+                                                                    onChange={(e) => handleFieldPropChange(idx, 'width', Number(e.target.value))}
+                                                                />
+                                                            </Form.Group>
+                                                        </Col>
+                                                        <Col xs={6}>
+                                                            <Form.Group>
+                                                                <Form.Label className="small text-muted mb-1" style={{ fontSize: '10px' }}>White-out Height (Pt)</Form.Label>
+                                                                <Form.Control 
+                                                                    type="number" 
+                                                                    size="sm" 
+                                                                    value={field.height || 15} 
+                                                                    onChange={(e) => handleFieldPropChange(idx, 'height', Number(e.target.value))}
+                                                                />
+                                                            </Form.Group>
+                                                        </Col>
+                                                    </Row>
+                                                )}
                                             </div>
                                         );
                                     })}

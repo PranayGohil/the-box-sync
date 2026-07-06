@@ -10,6 +10,7 @@ const {
   getAllFaceEncodings,
   getNextStaffIdController,
   sendJoiningLetter,
+  previewJoiningLetter,
   submitResignation,
   processResignation,
   getPendingResignations,
@@ -26,6 +27,7 @@ staffRouter.route("/get-all").get(authMiddleware, getStaffData);
 staffRouter.route("/get/:id").get(authMiddleware, getStaffDataById);
 staffRouter.route("/get-positions").get(authMiddleware, getStaffPositions);
 staffRouter.route("/send-joining-letter/:id").post(authMiddleware, adminAuth, sendJoiningLetter);
+staffRouter.route("/preview-joining-letter/:id").get(authMiddleware, adminAuth, previewJoiningLetter);
 staffRouter.route("/toggle-leave/:id").put(authMiddleware, adminAuth, toggleLeaveStatus);
 staffRouter.route("/toggle-specific-leave/:id").put(authMiddleware, adminAuth, toggleSpecificLeave);
 
