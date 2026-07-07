@@ -89,6 +89,66 @@ io.on("connection", (socket) => {
     console.log(`Socket ${socket.id} joined order room: order_${orderId}`);
   });
 
+  socket.on("approve_order", async ({ orderId }) => {
+    try {
+      const Order = require("./models/orderModel");
+      const order = await Order.findById(orderId);
+      if (order) {
+        order.order_status = "KOT";
+        order.order_items = order.order_items.map((item) => ({
+          ...item,
+          status: item.status === "Pending" ? "Preparing" : item.status,
+        }));
+        await order.save();
+
+        console.log(`Socket: Order ${orderId} approved and set to KOT`);
+        // Broadcast
+        let restaurantId = order.user_id ? order.user_id.toString() : null;
+        let customerId = order.customer_id ? order.customer_id.toString() : null;
+        if (restaurantId) {
+          io.to(`restaurant_${restaurantId}`).emit("kot_update", order);
+          io.to(`restaurant_${restaurantId}`).emit("order_updated", order);
+        }
+        if (customerId) {
+          io.to(`customer_${customerId}`).emit("order_updated", order);
+        }
+        io.to(`order_${orderId}`).emit("order_updated", order);
+      }
+    } catch (err) {
+      console.error("Socket approve_order error:", err);
+    }
+  });
+
+  socket.on("reject_order", async ({ orderId }) => {
+    try {
+      const Order = require("./models/orderModel");
+      const order = await Order.findById(orderId);
+      if (order) {
+        order.order_status = "Rejected";
+        order.order_items = order.order_items.map((item) => ({
+          ...item,
+          status: "Cancelled",
+        }));
+        await order.save();
+
+        console.log(`Socket: Order ${orderId} rejected`);
+        // Broadcast
+        let restaurantId = order.user_id ? order.user_id.toString() : null;
+        let customerId = order.customer_id ? order.customer_id.toString() : null;
+        if (restaurantId) {
+          io.to(`restaurant_${restaurantId}`).emit("kot_update", order);
+          io.to(`restaurant_${restaurantId}`).emit("order_updated", order);
+        }
+        if (customerId) {
+          io.to(`customer_${customerId}`).emit("order_updated", order);
+        }
+        io.to(`order_${orderId}`).emit("order_updated", order);
+      }
+    } catch (err) {
+      console.error("Socket reject_order error:", err);
+    }
+  });
+
   socket.on("disconnect", () => {
     for (let id in connectedUsers) {
       if (connectedUsers[id] === socket.id) delete connectedUsers[id];

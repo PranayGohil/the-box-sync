@@ -63,28 +63,22 @@ export default function Footer() {
     img.src = logoUrl;
   }, [logoUrl]);
 
-  // Dynamic categories for footer
-  const footerCategories = Array.from(new Set(menu.map(item => item.category)))
-    .slice(0, 4)
-    .map(cat => ({
-      label: cat,
-      to: `/menu?cat=${cat}`
-    }));
+  // Explore links
+  const exploreLinks = [
+    { label: 'Home', to: '/' },
+    { label: 'Menu', to: '/menu' },
+    settings?.show_reservation !== false && settings?.has_reservation_plan !== false && { label: 'Book', to: '/reservation' },
+    { label: 'Contact', to: '/contact' },
+  ].filter(Boolean);
 
-  const FOOTER_LINKS = {
-    Explore: [
-      { label: 'Home', to: '/' },
-      { label: 'Menu', to: '/menu' },
-      settings?.show_reservation !== false && { label: 'Book', to: '/reservation' },
-      { label: 'Contact', to: '/contact' },
-    ].filter(Boolean),
-    'Our Food': footerCategories.length > 0 ? footerCategories : [
-      { label: 'Pizza', to: '/menu?cat=pizza' },
-      { label: 'Burgers', to: '/menu?cat=burger' },
-      { label: 'Sushi', to: '/menu?cat=sushi' },
-      { label: 'Desserts', to: '/menu?cat=dessert' },
-    ],
-  };
+  const mapSrc = (() => {
+    const loc = settings?.map_location;
+    if (!loc) return "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2482.8853555553397!2d-0.09997578422955879!3d51.5203701795978!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x48761ca65b0a38bb%3A0x42f36e7d3e7b9e0!2sCity%20of%20London!5e0!3m2!1sen!2suk!4v1614000000000!5m2!1sen!2suk";
+
+    // Extract src from iframe if it's a full tag
+    const match = loc.match(/src="([^"]+)"/);
+    return match ? match[1] : loc;
+  })();
 
   const socialLinks = settings?.social_links || [
     { platform: 'Instagram', url: '#', logo: null },
@@ -109,8 +103,95 @@ export default function Footer() {
 
       <div className="container-lg py-5">
         <div className="row g-4">
-          {/* Brand */}
-          <div className="col-12 col-lg-3">
+          {/* 1st Column — Map */}
+          <div className="col-12 col-md-3">
+            <h5 className="fw-semibold text-white mb-3">Our Location</h5>
+            <div className="rounded-4 overflow-hidden border" style={{ height: '220px', borderColor: 'rgba(255,255,255,0.1)' }}>
+              <iframe
+                title="Restaurant location map"
+                src={mapSrc}
+                width="100%"
+                height="100%"
+                style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg)' }}
+                allowFullScreen
+                loading="lazy"
+              />
+            </div>
+          </div>
+
+          {/* 2nd Column — Contact */}
+          <div className="col-12 col-md-4">
+            <h5 className="fw-semibold text-white mb-3">Contact</h5>
+            <ul className="list-unstyled d-flex flex-column gap-2">
+              <li className="d-flex align-items-start gap-2 text-white-60 small">
+                <MapPin size={16} className="text-brand-400 flex-shrink-0 mt-1" />
+                {(() => {
+                  if (!settings) return '42 Gourmet Lane, South End, London EC1A 1BB';
+                  const addr = settings.address || settings.restaurant_address || settings.contact_address;
+                  if (!addr) return '42 Gourmet Lane, South End, London EC1A 1BB';
+
+                  const parts = [
+                    addr,
+                    settings.city,
+                    settings.state,
+                    settings.country
+                  ].filter(Boolean);
+
+                  let result = parts.join(', ');
+                  if (settings.pincode) result += ` - ${settings.pincode}`;
+                  return result;
+                })()}
+              </li>
+              <li className="d-flex align-items-center gap-2 text-white-60 small">
+                <Phone size={16} className="text-brand-400 flex-shrink-0" />
+                {settings?.contact_phone || '+44 20 7946 0823'}
+              </li>
+              <li className="d-flex align-items-center gap-2 text-white-60 small">
+                <Mail size={16} className="text-brand-400 flex-shrink-0" />
+                {settings?.contact_email || 'hello@emberandgold.com'}
+              </li>
+            </ul>
+            <div className="mt-3 glass rounded-3 p-2">
+              <h6 className="small text-brand-400 fw-bold mb-1.5" style={{ fontSize: '0.75rem' }}>Opening Hours</h6>
+              {settings?.opening_hours?.length > 0 ? (
+                <div className="d-flex flex-column gap-1">
+                  {settings.opening_hours.map((h, i) => (
+                    <div key={i} className="d-flex justify-content-between" style={{ fontSize: '0.75rem' }}>
+                      <span className="text-white-60">{h.day}</span>
+                      <span className="text-white fw-medium">{h.from} - {h.to}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="fw-semibold text-white mb-0 text-center" style={{ fontSize: '0.75rem' }}>
+                  {settings?.open_time_from ? `${settings.open_time_from} - ${settings.open_time_to}` : '12:00 PM – 11:00 PM'}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* 3rd Column — Explore */}
+          <div className="col-6 col-md-2">
+            <h5 className="fw-semibold text-white mb-3">Explore</h5>
+            <ul className="list-unstyled d-flex flex-column gap-2">
+              {exploreLinks.map(link => {
+                const fullPath = `/${restaurantCode || ''}${link.to}`.replace(/\/+/g, '/');
+                return (
+                  <li key={link.label}>
+                    <Link
+                      to={fullPath}
+                      className="text-white-60 text-decoration-none small transition-colors hover:text-brand-400"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* 4th Column — Brand */}
+          <div className="col-12 col-md-3">
             <Link to={`/${restaurantCode || ''}`} className="d-flex align-items-center gap-2 mb-3 text-decoration-none">
               {logoUrl ? (
                 <img
@@ -160,85 +241,12 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="rounded-circle glass d-flex align-items-center justify-content-center text-white-60 transition-colors hover:text-brand-400"
-                    style={{ width: '36px', height: '36px', textDecoration: 'none' }}
+                    style={{ width: '28px', height: '28px', textDecoration: 'none' }}
                   >
                     {getSocialIcon(social.platform)}
                   </a>
                 );
               })}
-            </div>
-          </div>
-
-          {/* Links */}
-          {Object.entries(FOOTER_LINKS).map(([title, links]) => (
-            <div key={title} className="col-6 col-md-3">
-              <h5 className="fw-semibold text-white mb-3">{title}</h5>
-              <ul className="list-unstyled d-flex flex-column gap-2">
-                {links.map(link => {
-                  const fullPath = `/${restaurantCode || ''}${link.to}`.replace(/\/+/g, '/');
-                  return (
-                    <li key={link.label}>
-                      <Link
-                        to={fullPath}
-                        className="text-white-60 text-decoration-none small transition-colors hover:text-brand-400"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
-
-          {/* Contact */}
-          <div className="col-12 col-md-3">
-            <h5 className="fw-semibold text-white mb-3">Contact</h5>
-            <ul className="list-unstyled d-flex flex-column gap-2">
-              <li className="d-flex align-items-start gap-2 text-white-60 small">
-                <MapPin size={16} className="text-brand-400 flex-shrink-0 mt-1" />
-                {(() => {
-                  if (!settings) return '42 Gourmet Lane, South End, London EC1A 1BB';
-                  const addr = settings.address || settings.restaurant_address || settings.contact_address;
-                  if (!addr) return '42 Gourmet Lane, South End, London EC1A 1BB';
-
-                  const parts = [
-                    addr,
-                    settings.city,
-                    settings.state,
-                    settings.country
-                  ].filter(Boolean);
-
-                  let result = parts.join(', ');
-                  if (settings.pincode) result += ` - ${settings.pincode}`;
-                  return result;
-                })()}
-              </li>
-              <li className="d-flex align-items-center gap-2 text-white-60 small">
-                <Phone size={16} className="text-brand-400 flex-shrink-0" />
-                {settings?.contact_phone || '+44 20 7946 0823'}
-              </li>
-              <li className="d-flex align-items-center gap-2 text-white-60 small">
-                <Mail size={16} className="text-brand-400 flex-shrink-0" />
-                {settings?.contact_email || 'hello@emberandgold.com'}
-              </li>
-            </ul>
-            <div className="mt-4 glass rounded-3 p-3">
-              <h6 className="small text-brand-400 fw-bold mb-2">Opening Hours</h6>
-              {settings?.opening_hours?.length > 0 ? (
-                <div className="d-flex flex-column gap-1">
-                  {settings.opening_hours.map((h, i) => (
-                    <div key={i} className="d-flex justify-content-between small">
-                      <span className="text-white-60">{h.day}</span>
-                      <span className="text-white fw-medium">{h.from} - {h.to}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="fw-semibold text-white mb-0 small text-center">
-                  {settings?.open_time_from ? `${settings.open_time_from} - ${settings.open_time_to}` : '12:00 PM – 11:00 PM'}
-                </p>
-              )}
             </div>
           </div>
         </div>

@@ -76,6 +76,7 @@ body {
 .btn-primary {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   padding: 1rem 2rem;
   background: linear-gradient(to right, #f27a1a, #e05c0c);
@@ -97,6 +98,7 @@ body {
 .btn-ghost {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   padding: 1rem 2rem;
   border: 1px solid rgba(255, 255, 255, 0.3);

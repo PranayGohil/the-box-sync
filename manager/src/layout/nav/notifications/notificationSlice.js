@@ -18,10 +18,13 @@ const notificationSlice = createSlice({
       state.items = action.payload;
       state.status = 'idle';
     },
+    addNotification(state, action) {
+      state.items.unshift(action.payload);
+    },
   },
 });
 
-export const { notificationsLoading, notificationsLoaded } = notificationSlice.actions;
+export const { notificationsLoading, notificationsLoaded, addNotification } = notificationSlice.actions;
 
 export const fetchNotifications = () => async (dispatch) => {
   dispatch(notificationsLoading());
