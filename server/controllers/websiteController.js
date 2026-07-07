@@ -235,11 +235,28 @@ exports.getWebsiteSettingsByCode = async (req, res) => {
     const user = await User.findOne({ restaurant_code: code });
     if (!user) return res.status(404).json({ error: "Invalid restaurant code" });
 
+    let hasReservationAccess = false;
+    const activeSub = await Subscription.findOne({
+      user_id: user._id.toString(),
+      plan_name: { $in: ["Reservation Management", "Reservation Manager"] },
+      status: "active",
+      end_date: { $gt: new Date() }
+    });
+    if (activeSub) {
+      hasReservationAccess = true;
+    } else {
+      const tier = user?.purchasedPlan;
+      if (tier === 'Fine Dine' || tier === 'Chain') {
+        hasReservationAccess = true;
+      }
+    }
+
     let settings = await Website.findOne({ user_id: user._id.toString() });
-    
+
     // Construct response with merged user data for location
     const response = {
       ...(settings ? settings.toObject() : {}),
+      has_reservation_plan: hasReservationAccess,
       restaurant_name: settings?.restaurant_name || user.name || "Our Restaurant",
       logo: settings?.logo || user.logo,
       contact_email: settings?.contact_email || user.email,
@@ -256,12 +273,12 @@ exports.getWebsiteSettingsByCode = async (req, res) => {
       legacy_bullets: settings?.legacy_bullets || [],
       map_location: settings?.map_location || "",
       show_reservation: settings && settings.show_reservation !== undefined ? settings.show_reservation : true,
-      // Pass through user address fields
-      address: user.address || "",
-      city: user.city || "",
-      state: user.state || "",
-      country: user.country || "",
-      pincode: user.pincode || "",
+      // Pass through user address fields, prioritizing settings values
+      address: settings?.restaurant_address || user.address || "",
+      city: settings?.city || user.city || "",
+      state: settings?.state || user.state || "",
+      country: settings?.country || user.country || "",
+      pincode: settings?.postal_code || user.pincode || "",
       // Include real feedbacks from user model
       restaurant_feedbacks: user.feedbacks || [],
       restaurant_token: user.restaurant_token || "",

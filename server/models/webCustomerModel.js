@@ -103,7 +103,7 @@ const webCustomerSchema = new Schema({
     restaurant_code: {
         type: String,
     },
-});
+}, { timestamps: true });
 
 webCustomerSchema.pre("save", async function (next) {
     const user = this;
@@ -131,6 +131,9 @@ webCustomerSchema.methods.generateAuthToken = async function (role) {
         return token;
     } catch (error) { }
 };
+
+// Unique index: one customer record per email per restaurant
+webCustomerSchema.index({ email: 1, restaurant_code: 1 }, { unique: true, sparse: true });
 
 const WebCustomer = mongoose.model("web-customer", webCustomerSchema);
 module.exports = WebCustomer;

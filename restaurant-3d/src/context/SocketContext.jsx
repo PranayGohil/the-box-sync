@@ -30,12 +30,12 @@ export function SocketProvider({ children }) {
       console.log('Order updated socket event received:', order);
 
       // Play alert sound for any status change other than the initial request
-      if (order && order.order_status !== 'Requested') {
-        try {
-          const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
-          audio.play().catch(() => {});
-        } catch (err) {}
-      }
+      // if (order && order.order_status !== 'Requested') {
+      //   try {
+      //     const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+      //     audio.play().catch(() => {});
+      //   } catch (err) {}
+      // }
 
       let statusLabel = order.order_status;
       if (order.order_status === 'KOT') statusLabel = 'Preparing 🍳';

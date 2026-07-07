@@ -1287,6 +1287,109 @@ const deliveryController = async (req, res) => {
   }
 };
 
+const isRestaurantOpen = (settings) => {
+  if (!settings) return true;
+
+  const now = new Date();
+  
+  // Use Indian Standard Time (IST) if needed, but standard Date local time is fine for local servers / users.
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const currentDay = dayNames[now.getDay()];
+  
+  const currentHours = String(now.getHours()).padStart(2, '0');
+  const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+  const currentTime = `${currentHours}:${currentMinutes}`;
+
+  const convertTo24h = (timeStr) => {
+    if (!timeStr) return "00:00";
+    if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
+    
+    const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return timeStr;
+    
+    let hours = parseInt(match[1], 10);
+    const minutes = match[2];
+    const ampm = match[3].toUpperCase();
+    
+    if (ampm === "PM" && hours < 12) hours += 12;
+    if (ampm === "AM" && hours === 12) hours = 0;
+    
+    return `${String(hours).padStart(2, '0')}:${minutes}`;
+  };
+
+  const dayMatches = (dayConfig, currentDayName) => {
+    const config = dayConfig.trim().toLowerCase();
+    const cur = currentDayName.trim().toLowerCase();
+    
+    if (config === "everyday" || config === "every day") return true;
+    if (config === cur) return true;
+    
+    const dayIndices = {
+      sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6
+    };
+    
+    const curIdx = dayIndices[cur];
+    
+    if (config.includes("-") || config.includes("to")) {
+      const parts = config.split(/[-–]|to/).map(s => s.trim());
+      if (parts.length === 2) {
+        const startDay = parts[0];
+        const endDay = parts[1];
+        const startIdx = dayIndices[startDay];
+        const endIdx = dayIndices[endDay];
+        
+        if (startIdx !== undefined && endIdx !== undefined) {
+          if (startIdx <= endIdx) {
+            return curIdx >= startIdx && curIdx <= endIdx;
+          } else {
+            return curIdx >= startIdx || curIdx <= endIdx;
+          }
+        }
+      }
+    }
+    
+    return false;
+  };
+
+  if (settings.opening_hours && settings.opening_hours.length > 0) {
+    let matchedDaySlot = false;
+    let isOpenInMatchedSlot = false;
+    
+    for (const slot of settings.opening_hours) {
+      if (slot.day && dayMatches(slot.day, currentDay)) {
+        matchedDaySlot = true;
+        const fromTime = convertTo24h(slot.from);
+        const toTime = convertTo24h(slot.to);
+        
+        if (fromTime <= toTime) {
+          if (currentTime >= fromTime && currentTime <= toTime) {
+            isOpenInMatchedSlot = true;
+          }
+        } else {
+          if (currentTime >= fromTime || currentTime <= toTime) {
+            isOpenInMatchedSlot = true;
+          }
+        }
+      }
+    }
+    
+    if (matchedDaySlot) return isOpenInMatchedSlot;
+  }
+
+  if (settings.open_time_from && settings.open_time_to) {
+    const fromTime = convertTo24h(settings.open_time_from);
+    const toTime = convertTo24h(settings.open_time_to);
+    
+    if (fromTime <= toTime) {
+      return currentTime >= fromTime && currentTime <= toTime;
+    } else {
+      return currentTime >= fromTime || currentTime <= toTime;
+    }
+  }
+
+  return true;
+};
+
 const deliveryFromSiteController = async (req, res) => {
   try {
     let { orderInfo, customerInfo } = req.body;
@@ -1297,6 +1400,13 @@ const deliveryFromSiteController = async (req, res) => {
 
     if (!restauant) {
       return res.status(404).json({ message: "Restaurant not found" });
+    }
+
+    const settings = await Website.findOne({ user_id: restauant._id.toString() });
+    if (settings && !isRestaurantOpen(settings)) {
+      return res.status(400).json({
+        message: "Sorry, we are currently closed. Please check our opening hours."
+      });
     }
 
     orderInfo.user_id = restauant._id;
@@ -1324,29 +1434,48 @@ const deliveryFromSiteController = async (req, res) => {
 
     // ✅ 1. Save customer (required for delivery)
     try {
-      // Check if customer already exists
-      let existingCustomer = null;
-      if (customerInfo.phone) {
-        existingCustomer = await WebCustomer.findOne({
-          phone: customerInfo.phone,
-        });
-      } else if (customerInfo.email) {
-        existingCustomer = await WebCustomer.findOne({
-          email: customerInfo.email,
-        });
+      // If the order already has a customer_id (logged-in web customer), use it directly
+      if (orderInfo.customer_id) {
+        const existingLoggedIn = await WebCustomer.findById(orderInfo.customer_id);
+        if (existingLoggedIn) {
+          savedCustomer = existingLoggedIn;
+          // Update name/phone if they were missing (new user filling first order)
+          if (customerInfo.name && !existingLoggedIn.name) {
+            existingLoggedIn.name = customerInfo.name;
+          }
+          if (customerInfo.phone && !existingLoggedIn.phone) {
+            existingLoggedIn.phone = customerInfo.phone;
+          }
+          await existingLoggedIn.save();
+        }
       }
 
-      if (existingCustomer) {
-        // Update existing customer
-        savedCustomer = await WebCustomer.findByIdAndUpdate(
-          existingCustomer._id,
-          customerInfo,
-          { new: true }
-        );
-      } else {
-        // Create new customer
-        const customer = new WebCustomer(customerInfo);
-        savedCustomer = await customer.save();
+      // Fallback: lookup by phone or email (scoped to restaurant_code)
+      if (!savedCustomer) {
+        let existingCustomer = null;
+        if (customerInfo.phone) {
+          existingCustomer = await WebCustomer.findOne({
+            phone: customerInfo.phone,
+            restaurant_code,
+          });
+        }
+        if (!existingCustomer && customerInfo.email) {
+          existingCustomer = await WebCustomer.findOne({
+            email: customerInfo.email,
+            restaurant_code,
+          });
+        }
+
+        if (existingCustomer) {
+          savedCustomer = existingCustomer;
+        } else {
+          // Create new customer with restaurant_code
+          const customer = new WebCustomer({
+            ...customerInfo,
+            restaurant_code,
+          });
+          savedCustomer = await customer.save();
+        }
       }
 
       orderInfo.customer_id = savedCustomer._id;
@@ -1438,6 +1567,7 @@ const deliveryFromSiteController = async (req, res) => {
     }
 
     // ✅ 5. Handle new order creation
+    orderInfo.order_no = await generateOrderNo(restauant._id);
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();
 
@@ -1447,13 +1577,13 @@ const deliveryFromSiteController = async (req, res) => {
     const connectedUsers = req.app.get("connectedUsers");
 
     const userId = restauant._id;
-    const role = "Admin";
+    const role = "Manager";
     const key = `${userId}_${role}`;
     if (key && connectedUsers[key]) {
       const notification = await Notification.create({
         restaurant_id: restauant._id,
         sender: "Web Customer",
-        receiver: "Admin",
+        receiver: "Manager",
         type: "web_order_recieved",
         data: savedOrder,
       });

@@ -79,17 +79,17 @@ export default function Login() {
   return (
     <main className="min-vh-100 d-flex align-items-center justify-content-center px-3 bg-dark" style={{ background: 'radial-gradient(circle at center, #111, #060606)' }}>
       <div className="position-absolute top-0 start-0 p-4">
-        <button 
-          onClick={() => navigate(-1)} 
+        <button
+          onClick={() => navigate(-1)}
           className="btn-ghost d-flex align-items-center gap-2 text-white-60 hover:text-white transition-colors border-0 bg-transparent"
         >
           <ArrowLeft size={20} /> Back
         </button>
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }} 
-        animate={{ opacity: 1, scale: 1 }} 
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
         className="w-100 glass rounded-4 p-4 p-md-5 shadow-2xl"
         style={{ maxWidth: '450px', border: '1px solid rgba(255,255,255,0.05)' }}
       >
@@ -110,11 +110,11 @@ export default function Login() {
             <label className="form-label small text-white-60 mb-2 fw-medium">Email Address</label>
             <div className="position-relative">
               <Mail className="position-absolute text-white-60" size={18} style={{ top: '50%', left: '1.25rem', transform: 'translateY(-50%)' }} />
-              <input 
-                type="email" 
+              <input
+                type="email"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                className="input-field w-100 py-3" 
+                className="input-field w-100 py-3"
                 style={{ paddingLeft: '3.5rem' }}
                 placeholder="name@example.com"
                 required
@@ -132,21 +132,21 @@ export default function Login() {
               <label className="form-label small text-white-60 mb-1 fw-medium">Verification Code</label>
               <div className="position-relative">
                 <Lock className="position-absolute text-white-60" size={18} style={{ top: '50%', left: '1.25rem', transform: 'translateY(-50%)' }} />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   maxLength={6}
                   value={otp}
                   onChange={(e) => { setOtp(e.target.value.replace(/\D/g, '')); setError(''); }}
-                  className="input-field w-100 py-3 text-center font-monospace tracking-widest fs-4" 
-                  style={{ paddingLeft: '3.5rem' }}
+                  className="input-field w-100 py-3 text-center font-monospace tracking-widest fs-4"
+                  style={{ paddingLeft: '3.5rem', paddingRight: '3.5rem', lineHeight: 'normal' }}
                   placeholder="000000"
                   required
                   autoFocus
                 />
               </div>
               <div className="text-end">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => { setOtpSent(false); setOtp(''); setError(''); }}
                   className="btn-link text-brand-400 small text-decoration-none bg-transparent border-0 p-0"
                 >
@@ -157,12 +157,12 @@ export default function Login() {
           )}
 
           {error && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="p-3 rounded-3 text-start"
-              style={{ 
-                background: 'rgba(239, 68, 68, 0.1)', 
+              style={{
+                background: 'rgba(239, 68, 68, 0.1)',
                 border: '1px solid rgba(239, 68, 68, 0.2)',
                 color: '#ef4444',
                 fontSize: '0.875rem'
@@ -176,12 +176,6 @@ export default function Login() {
             {otpSent ? 'Verify & Login' : 'Get Verification Code'}
           </button>
         </form>
-
-        <div className="text-center mt-5">
-          <p className="text-white-60 small mb-0">
-            No password required. New users will be automatically registered.
-          </p>
-        </div>
       </motion.div>
 
       {/* Decorative background elements */}

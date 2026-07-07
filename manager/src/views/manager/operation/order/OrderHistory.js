@@ -96,7 +96,7 @@ const OrderHistory = () => {
 
       // Add filters to params
       if (filters.orderSource === '') {
-        params.order_source = ['Manager', 'Captain', 'QSR'];
+        params.order_source = ['Manager', 'Captain', 'QSR', 'Restaurant Website'];
       } else {
         params.order_source = filters.orderSource;
       }

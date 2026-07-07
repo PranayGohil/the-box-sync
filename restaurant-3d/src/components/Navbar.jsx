@@ -28,8 +28,10 @@ export default function Navbar({ visible: propVisible }) {
   const { restaurantCode, settings } = useRestaurant();
   const location = useLocation();
   const links = NAV_LINKS.filter(link => {
-    if (link.to === '/reservation' && settings?.show_reservation === false) {
-      return false;
+    if (link.to === '/reservation') {
+      if (settings?.show_reservation === false || settings?.has_reservation_plan === false) {
+        return false;
+      }
     }
     return true;
   });

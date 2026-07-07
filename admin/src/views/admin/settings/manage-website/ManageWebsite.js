@@ -1136,10 +1136,14 @@ const ManageWebsite = () => {
                         <Form.Label className="small fw-bold text-muted">Select Day(s)</Form.Label>
                         <Form.Select
                           className="manage-website-pill-input"
-                          value={h.dayRange}
+                          value={h.day || h.dayRange || ''}
                           onChange={(e) => {
                             const newHours = [...values.opening_hours];
-                            newHours[index].dayRange = e.target.value;
+                            newHours[index] = {
+                              ...newHours[index],
+                              day: e.target.value,
+                              dayRange: e.target.value
+                            };
                             setFieldValue('opening_hours', newHours);
                           }}
                         >
@@ -1159,7 +1163,10 @@ const ManageWebsite = () => {
                             value={h.from}
                             onChange={(e) => {
                               const newHours = [...values.opening_hours];
-                              newHours[index].from = e.target.value;
+                              newHours[index] = {
+                                ...newHours[index],
+                                from: e.target.value
+                              };
                               setFieldValue('opening_hours', newHours);
                             }}
                           />
@@ -1171,7 +1178,10 @@ const ManageWebsite = () => {
                             value={h.to}
                             onChange={(e) => {
                               const newHours = [...values.opening_hours];
-                              newHours[index].to = e.target.value;
+                              newHours[index] = {
+                                ...newHours[index],
+                                to: e.target.value
+                              };
                               setFieldValue('opening_hours', newHours);
                             }}
                           />

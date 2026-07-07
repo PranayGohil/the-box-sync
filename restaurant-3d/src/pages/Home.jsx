@@ -111,9 +111,11 @@ export default function Home() {
               Explore Menu
             </Link>
             
-            <Link to={`/${restaurantCode || ''}/reservation`.replace(/\/+/g, '/')} className="btn-ghost" style={{ width: '100%', minWidth: '200px' }}>
-              Book Table
-            </Link>
+            {settings?.show_reservation !== false && settings?.has_reservation_plan !== false && (
+              <Link to={`/${restaurantCode || ''}/reservation`.replace(/\/+/g, '/')} className="btn-ghost" style={{ width: '100%', minWidth: '200px' }}>
+                Book Table
+              </Link>
+            )}
           </motion.div>
         </div>
 

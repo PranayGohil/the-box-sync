@@ -124,6 +124,7 @@ exports.getCustomer = async (req, res) => {
             phone: customer.phone,
             addresses: customer.addresses,
             cart: customer.cart,
+            createdAt: customer.createdAt,
         };
 
         res.status(200).json({
@@ -604,15 +605,21 @@ exports.requestOtp = async (req, res) => {
 
         let customer = await WebCustomer.findOne({ email, restaurant_code });
         if (!customer) {
-            // Auto-register a new web customer record with placeholder values
-            customer = new WebCustomer({
-                restaurant_code,
-                email,
-                name: '',
-                phone: '',
-                password: crypto.randomBytes(16).toString('hex'), // satisfies save hook
-            });
-            await customer.save();
+            // Use findOneAndUpdate with upsert to atomically create-or-find,
+            // preventing duplicate records from concurrent requests (race condition fix)
+            customer = await WebCustomer.findOneAndUpdate(
+                { email, restaurant_code },
+                {
+                    $setOnInsert: {
+                        restaurant_code,
+                        email,
+                        name: '',
+                        phone: '',
+                        password: crypto.randomBytes(16).toString('hex'),
+                    }
+                },
+                { upsert: true, new: true, setDefaultsOnInsert: true }
+            );
         }
 
         const otpPlain = generateOtp(6);
@@ -702,11 +709,12 @@ exports.verifyOtp = async (req, res) => {
         await otpDoc.save();
 
         const token = await customer.generateAuthToken();
+        const customerObj = customer.toObject();
         res.status(200).json({
             success: true,
             message: 'Logged in successfully',
             token,
-            data: customer,
+            data: customerObj,
         });
     } catch (error) {
         console.error('Error in verifyOtp:', error);

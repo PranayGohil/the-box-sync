@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
-import { CheckCircle, CreditCard, Smartphone, Banknote, ChevronRight, UtensilsCrossed } from 'lucide-react';
+import { CheckCircle, CreditCard, Smartphone, Banknote, ChevronRight, UtensilsCrossed, AlertTriangle } from 'lucide-react';
 import { useCart, useAuth } from '../context/AppContext';
 import { useRestaurant } from '../context/RestaurantContext';
 import { useGSAPReveal } from '../hooks/useScroll';
@@ -28,6 +28,107 @@ const generateRandomOrderId = () => {
   return Math.random().toString(36).slice(2, 10).toUpperCase();
 };
 
+const isRestaurantOpen = (settings) => {
+  if (!settings) return true;
+
+  const now = new Date();
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const currentDay = dayNames[now.getDay()];
+  
+  const currentHours = String(now.getHours()).padStart(2, '0');
+  const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+  const currentTime = `${currentHours}:${currentMinutes}`;
+
+  const convertTo24h = (timeStr) => {
+    if (!timeStr) return "00:00";
+    if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
+    
+    const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return timeStr;
+    
+    let hours = parseInt(match[1], 10);
+    const minutes = match[2];
+    const ampm = match[3].toUpperCase();
+    
+    if (ampm === "PM" && hours < 12) hours += 12;
+    if (ampm === "AM" && hours === 12) hours = 0;
+    
+    return `${String(hours).padStart(2, '0')}:${minutes}`;
+  };
+
+  const dayMatches = (dayConfig, currentDayName) => {
+    const config = dayConfig.trim().toLowerCase();
+    const cur = currentDayName.trim().toLowerCase();
+    
+    if (config === "everyday" || config === "every day") return true;
+    if (config === cur) return true;
+    
+    const dayIndices = {
+      sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6
+    };
+    
+    const curIdx = dayIndices[cur];
+    
+    if (config.includes("-") || config.includes("to")) {
+      const parts = config.split(/[-–]|to/).map(s => s.trim());
+      if (parts.length === 2) {
+        const startDay = parts[0];
+        const endDay = parts[1];
+        const startIdx = dayIndices[startDay];
+        const endIdx = dayIndices[endDay];
+        
+        if (startIdx !== undefined && endIdx !== undefined) {
+          if (startIdx <= endIdx) {
+            return curIdx >= startIdx && curIdx <= endIdx;
+          } else {
+            return curIdx >= startIdx || curIdx <= endIdx;
+          }
+        }
+      }
+    }
+    
+    return false;
+  };
+
+  if (settings.opening_hours && settings.opening_hours.length > 0) {
+    let matchedDaySlot = false;
+    let isOpenInMatchedSlot = false;
+    
+    for (const slot of settings.opening_hours) {
+      if (slot.day && dayMatches(slot.day, currentDay)) {
+        matchedDaySlot = true;
+        const fromTime = convertTo24h(slot.from);
+        const toTime = convertTo24h(slot.to);
+        
+        if (fromTime <= toTime) {
+          if (currentTime >= fromTime && currentTime <= toTime) {
+            isOpenInMatchedSlot = true;
+          }
+        } else {
+          if (currentTime >= fromTime || currentTime <= toTime) {
+            isOpenInMatchedSlot = true;
+          }
+        }
+      }
+    }
+    
+    if (matchedDaySlot) return isOpenInMatchedSlot;
+  }
+
+  if (settings.open_time_from && settings.open_time_to) {
+    const fromTime = convertTo24h(settings.open_time_from);
+    const toTime = convertTo24h(settings.open_time_to);
+    
+    if (fromTime <= toTime) {
+      return currentTime >= fromTime && currentTime <= toTime;
+    } else {
+      return currentTime >= fromTime || currentTime <= toTime;
+    }
+  }
+
+  return true;
+};
+
 export default function Checkout() {
   const [payment, setPayment] = useState('card');
   const [ordered, setOrdered] = useState(false);
@@ -35,6 +136,17 @@ export default function Checkout() {
   const { user, refreshUser } = useAuth();
   const { restaurantCode, settings } = useRestaurant();
   const [randomOrderId, setRandomOrderId] = useState('');
+
+  const getOpeningHoursString = () => {
+    if (!settings) return "";
+    if (settings.opening_hours && settings.opening_hours.length > 0) {
+      return settings.opening_hours.map(h => `${h.day}: ${h.from} - ${h.to}`).join(', ');
+    }
+    if (settings.open_time_from && settings.open_time_to) {
+      return `Everyday: ${settings.open_time_from} - ${settings.open_time_to}`;
+    }
+    return "12:00 PM - 11:00 PM";
+  };
 
   const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm({
     defaultValues: {
@@ -467,6 +579,13 @@ export default function Checkout() {
 
 
   const onSubmit = async (data) => {
+    if (!isRestaurantOpen(settings)) {
+      toast.error('Sorry, we are currently closed. Please check our opening hours in the footer.', {
+        style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px' }
+      });
+      return;
+    }
+
     if (!selectedAddress) {
       toast.error('Please select a saved address from the list to calculate delivery.');
       return;
@@ -590,7 +709,7 @@ export default function Checkout() {
       }
 
       clearCart();
-      setRandomOrderId(generateRandomOrderId());
+      setRandomOrderId(resData.order?.order_no || generateRandomOrderId());
       setOrdered(true);
       toast.success('Order placed successfully! 🎉', {
         duration: 4000,
@@ -624,11 +743,11 @@ export default function Checkout() {
           </motion.div>
           <h1 className="font-display fw-bold text-white mb-3 fs-2">Order Placed!</h1>
           <p className="text-white-60 mb-2">Your food is being prepared with love.</p>
-          <p className="small text-white-60 mb-4" style={{ opacity: 0.7 }}>Estimated delivery: 30–45 minutes.</p>
+          {/* <p className="small text-white-60 mb-4" style={{ opacity: 0.7 }}>Estimated delivery: 30–45 minutes.</p> */}
           <div className="glass rounded-4 p-3 mb-4 small text-white-60">
-            Order ID: <span className="text-white font-monospace">#{randomOrderId}</span>
+            Order ID: <span className="text-white font-monospace">{randomOrderId.startsWith('ORD-') ? '' : '#'}{randomOrderId}</span>
           </div>
-          <Link to="/" className="btn-primary d-inline-flex justify-content-center">Back to Home</Link>
+          <Link to={`/${restaurantCode}`} className="btn-primary d-inline-flex justify-content-center">Back to Home</Link>
         </motion.div>
       </main>
     );
@@ -1137,12 +1256,35 @@ export default function Checkout() {
           </div>
 
           {/* Place Order Button at the very bottom */}
-          <div className="mt-5 d-flex justify-content-end">
+          <div className="mt-5 d-flex flex-column align-items-end">
+            {!isRestaurantOpen(settings) && (
+              <div className="w-100 p-3 mb-3 rounded-3 border d-flex align-items-center gap-3 text-start align-self-stretch"
+                style={{
+                  background: 'rgba(239, 68, 68, 0.08)',
+                  borderColor: 'rgba(239, 68, 68, 0.25)',
+                  color: '#ef4444'
+                }}
+              >
+                <AlertTriangle size={20} className="flex-shrink-0" />
+                <div>
+                  <strong className="d-block small">We are currently closed for orders</strong>
+                  <span className="small text-white-60">Opening Hours: {getOpeningHoursString()}</span>
+                </div>
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="btn-primary pt-3 px-5 fs-5 fw-bold shadow-lg"
-              style={{ minWidth: '250px', opacity: isSubmitting ? 0.6 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+              disabled={isSubmitting || !isRestaurantOpen(settings)}
+              className="btn-primary py-3 px-5 fs-5 fw-bold shadow-lg d-inline-flex align-items-center justify-content-center"
+              style={{
+                minWidth: '250px',
+                opacity: (isSubmitting || !isRestaurantOpen(settings)) ? 0.6 : 1,
+                cursor: (isSubmitting || !isRestaurantOpen(settings)) ? 'not-allowed' : 'pointer',
+                background: !isRestaurantOpen(settings) ? 'rgba(255, 255, 255, 0.1)' : undefined,
+                borderColor: !isRestaurantOpen(settings) ? 'rgba(255, 255, 255, 0.1)' : undefined,
+                color: !isRestaurantOpen(settings) ? 'rgba(255, 255, 255, 0.4)' : undefined,
+              }}
             >
               {isSubmitting ? (
                 <>
@@ -1151,6 +1293,8 @@ export default function Checkout() {
                   </div>
                   Placing Order...
                 </>
+              ) : !isRestaurantOpen(settings) ? (
+                <>Closed Now</>
               ) : (
                 <>Place Order <ChevronRight size={20} className="ms-2" /></>
               )}

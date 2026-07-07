@@ -169,19 +169,20 @@ export function AuthProvider({ children }) {
     return userData;
   };
 
-  const refreshUser = async () => {
-    if (!user?._id) return;
+  const refreshUser = async (userId) => {
+    const id = userId || user?._id;
+    if (!id) return;
     try {
       const token = localStorage.getItem('ember-token');
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-      const res = await fetch(`${API_URL}/web-customer/get/${user._id}`, {
+      const res = await fetch(`${API_URL}/web-customer/get/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       if (res.ok && data.success) {
         const userData = {
           ...data.data,
-          since: user.since || new Date().getFullYear()
+          since: user?.since || new Date(data.data.createdAt || Date.now()).getFullYear()
         };
         setUser(userData);
         localStorage.setItem('ember-user', JSON.stringify(userData));
@@ -190,6 +191,14 @@ export function AuthProvider({ children }) {
       console.error('Error refreshing user details:', err);
     }
   };
+
+  // On app load, always refresh user data from server to get latest addresses/orders
+  useEffect(() => {
+    if (user?._id) {
+      refreshUser(user._id);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const requestOtp = async (email, restaurantCode) => {
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';

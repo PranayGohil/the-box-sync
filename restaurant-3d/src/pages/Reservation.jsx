@@ -35,7 +35,7 @@ export default function Reservation() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (settings && settings.show_reservation === false) {
+    if (settings && (settings.show_reservation === false || settings.has_reservation_plan === false)) {
       navigate(`/${restaurantCode || ''}`);
     }
   }, [settings, restaurantCode, navigate]);

@@ -651,10 +651,10 @@ export default function Profile() {
                     }[order.order_status] || 'bg-secondary text-white'}`}>
                       {{
                         'Requested': 'Pending Approval',
-                        'KOT': 'Order Approved (KOT)',
+                        'KOT': 'Preparing',
                         'Preparing': 'Preparing Food',
-                        'Out for Delivery': 'Out for Delivery 🚴',
-                        'Delivered': 'Delivered 🍔',
+                        'Out for Delivery': 'Out for Delivery',
+                        'Delivered': 'Delivered',
                         'Served': 'Ready / Served',
                         'Paid': 'Completed & Paid',
                         'Cancelled': 'Cancelled',
@@ -782,7 +782,7 @@ export default function Profile() {
                   <h5 className="text-white mb-0 d-flex align-items-center gap-2">
                     <Plus size={18} className="text-brand-400" /> Add New Address
                   </h5>
-                  <button 
+                  <button
                     type="button"
                     onClick={() => {
                       setShowAddAddressForm(false);
@@ -1027,10 +1027,10 @@ export default function Profile() {
 
       {/* Edit Profile Modal */}
       {detectingLocation && (
-        <div 
+        <div
           className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center px-3"
-          style={{ 
-            zIndex: 3000, 
+          style={{
+            zIndex: 3000,
             background: 'rgba(6,6,6,0.85)',
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)'
