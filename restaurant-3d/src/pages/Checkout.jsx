@@ -1317,7 +1317,7 @@ export default function Checkout() {
             <span className="visually-hidden">Loading...</span>
           </div>
           <h5 className="text-white font-display fw-bold mb-1">Detecting Your Location</h5>
-          <p className="small text-white-60">Please allow location permissions if prompted by your browser.</p>
+          <p className="small text-white-60">Please allow location access if prompted.</p>
         </div>
       )}
     </main>

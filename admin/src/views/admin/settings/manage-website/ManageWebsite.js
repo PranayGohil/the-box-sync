@@ -68,7 +68,9 @@ const ManageWebsite = () => {
   const [heroImageFile, setHeroImageFile] = useState(null);
   const [aboutImageFile, setAboutImageFile] = useState(null);
   const [legacyImageFile, setLegacyImageFile] = useState(null);
+  const [fileInputKey, setFileInputKey] = useState(0);
   const [hasReservationPlan, setHasReservationPlan] = useState(false);
+  const [feedbacks, setFeedbacks] = useState([]);
 
   // States for Map Picker
   const [showMapModal, setShowMapModal] = useState(false);
@@ -112,6 +114,8 @@ const ManageWebsite = () => {
       legacy_layout: 'image-right',
       legacy_bullets: [],
       contact_details: '',
+      contact_title: '',
+      contact_subtitle: '',
       map_location: '',
       place_id: '',
       formatted_address: '',
@@ -197,6 +201,26 @@ const ManageWebsite = () => {
         await axios.post(`${process.env.REACT_APP_API}/website/settings`, payload, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
+        // Reset Formik with the new saved values
+        formik.resetForm({
+          values: {
+            ...values,
+            logo: uploadedLogo,
+            hero_image: uploadedHeroImg,
+            about_image: uploadedAboutImg,
+            legacy_image: uploadedLegacyImg,
+          }
+        });
+
+        // Reset local file states
+        setLogoFile(null);
+        setHeroImageFile(null);
+        setAboutImageFile(null);
+        setLegacyImageFile(null);
+
+        // Increment key to reset file input elements
+        setFileInputKey(prev => prev + 1);
+
         setSettingsData(values);
         toast.success('Website settings updated successfully.');
       } catch (err) {
@@ -245,6 +269,8 @@ const ManageWebsite = () => {
             legacy_layout: 'image-right',
             legacy_bullets: [],
             contact_details: '',
+            contact_title: '',
+            contact_subtitle: '',
             map_location: '',
             place_id: '',
             formatted_address: '',
@@ -311,6 +337,15 @@ const ManageWebsite = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         setAllDishes(dishesRes.data);
+
+        try {
+          const feedbackRes = await axios.get(`${process.env.REACT_APP_API}/feedback/get?limit=100`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          });
+          setFeedbacks(feedbackRes.data?.feedbacks || []);
+        } catch (fErr) {
+          console.error('Failed to load feedbacks:', fErr);
+        }
       } catch (err) {
         console.log(err);
         toast.error('Failed to fetch data.');
@@ -496,7 +531,7 @@ const ManageWebsite = () => {
     setUploadingLogo(false);
   };
 
-  const addOpeningSlot = () => setFieldValue('opening_hours', [...values.opening_hours, { day: '', from: '', to: '' }]);
+  const addOpeningSlot = () => setFieldValue('opening_hours', [...values.opening_hours, { day: 'Monday - Friday', from: '', to: '' }]);
   const removeOpeningSlot = (index) =>
     setFieldValue(
       'opening_hours',
@@ -604,6 +639,7 @@ const ManageWebsite = () => {
                           )}
                         </div>
                         <Form.Control
+                          key={`${fileInputKey}-logo`}
                           type="file"
                           id="logo-upload"
                           className="d-none"
@@ -1111,6 +1147,51 @@ const ManageWebsite = () => {
                   })}
                 </Card.Body>
               </Card>
+
+              {/* Contact Page Customization */}
+              <Card className="manage-website-glass-card mb-4 border-0">
+                <Card.Body className="p-4">
+                  <h5 className="manage-website-section-title">Contact Page Customization</h5>
+                  <Row className="g-3">
+                    <Col xs={12} md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="small fw-bold text-muted">Contact Page Subtitle</Form.Label>
+                        <Form.Control
+                          className="manage-website-pill-input"
+                          name="contact_subtitle"
+                          value={values.contact_subtitle}
+                          onChange={handleChange}
+                          placeholder="Get in Touch"
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col xs={12} md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="small fw-bold text-muted">Contact Page Title</Form.Label>
+                        <Form.Control
+                          className="manage-website-pill-input"
+                          name="contact_title"
+                          value={values.contact_title}
+                          onChange={handleChange}
+                          placeholder="We'd Love to Hear From You"
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="small fw-bold text-muted">Contact Page Description</Form.Label>
+                    <Form.Control
+                      className="manage-website-pill-input"
+                      name="contact_details"
+                      as="textarea"
+                      rows={3}
+                      value={values.contact_details}
+                      onChange={handleChange}
+                      placeholder="Whether you're booking a table, asking about our menu, or just want to say hello..."
+                    />
+                  </Form.Group>
+                </Card.Body>
+              </Card>
             </Col>
             <Col lg={6}>
               {/* Opening Hours */}
@@ -1229,7 +1310,7 @@ const ManageWebsite = () => {
                   </Form.Group>
                   <Form.Group>
                     <Form.Label className="small fw-bold text-muted">Hero Background Image</Form.Label>
-                    <Form.Control className="manage-website-pill-input" type="file" onChange={(e) => setHeroImageFile(e.target.files[0])} />
+                    <Form.Control key={`${fileInputKey}-hero`} className="manage-website-pill-input" type="file" onChange={(e) => setHeroImageFile(e.target.files[0])} />
                     {values.hero_image && <div className="mt-1 small text-muted">Current: {values.hero_image}</div>}
                     <div className="text-muted small mt-1">Leave empty to use the default professional 3D restaurant scene.</div>
                   </Form.Group>
@@ -1241,9 +1322,9 @@ const ManageWebsite = () => {
                 <Card.Body className="p-4">
                   <h5 className="manage-website-section-title">Our Legacy (History Section)</h5>
                   <Row className="g-3">
-                    <Col xs={12} md={8}>
+                    <Col xs={12} md={6}>
                       <Form.Group className="mb-3">
-                        <Form.Label className="small fw-bold text-muted">Legacy Section Title</Form.Label>
+                        <Form.Label className="small fw-bold text-muted">Section Tag Label</Form.Label>
                         <Form.Control
                           className="manage-website-pill-input"
                           name="legacy_title"
@@ -1253,7 +1334,21 @@ const ManageWebsite = () => {
                         />
                       </Form.Group>
                     </Col>
-                    <Col xs={12} md={4}>
+                    <Col xs={12} md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="small fw-bold text-muted">Section Heading Title</Form.Label>
+                        <Form.Control
+                          className="manage-website-pill-input"
+                          name="about_title"
+                          value={values.about_title}
+                          onChange={handleChange}
+                          placeholder="e.g. Crafting Culinary Magic"
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <Row className="g-3">
+                    <Col xs={12} md={6}>
                       <Form.Group className="mb-3">
                         <Form.Label className="small fw-bold text-muted">Years of Legacy</Form.Label>
                         <Form.Control
@@ -1265,19 +1360,21 @@ const ManageWebsite = () => {
                         />
                       </Form.Group>
                     </Col>
+                    <Col xs={12} md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="small fw-bold text-muted">Layout Style</Form.Label>
+                        <Form.Select
+                          className="manage-website-pill-input"
+                          name="legacy_layout"
+                          value={values.legacy_layout}
+                          onChange={handleChange}
+                        >
+                          <option value="image-right">Text Left, Image Right</option>
+                          <option value="image-left">Image Left, Text Right</option>
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
                   </Row>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="small fw-bold text-muted">Layout Style</Form.Label>
-                    <Form.Select
-                      className="manage-website-pill-input"
-                      name="legacy_layout"
-                      value={values.legacy_layout}
-                      onChange={handleChange}
-                    >
-                      <option value="image-right">Text Left, Image Right</option>
-                      <option value="image-left">Image Left, Text Right</option>
-                    </Form.Select>
-                  </Form.Group>
                   <Form.Group className="mb-3">
                     <Form.Label className="small fw-bold text-muted">Legacy Description</Form.Label>
                     <Form.Control
@@ -1291,7 +1388,7 @@ const ManageWebsite = () => {
                   </Form.Group>
                   <Form.Group className="mb-3">
                     <Form.Label className="small fw-bold text-muted">Legacy Section Image</Form.Label>
-                    <Form.Control className="manage-website-pill-input" type="file" onChange={(e) => setLegacyImageFile(e.target.files[0])} />
+                    <Form.Control key={`${fileInputKey}-legacy`} className="manage-website-pill-input" type="file" onChange={(e) => setLegacyImageFile(e.target.files[0])} />
                     {values.legacy_image && <div className="mt-1 small text-muted">Current: {values.legacy_image}</div>}
                   </Form.Group>
 
@@ -1374,6 +1471,83 @@ const ManageWebsite = () => {
                     ))}
                   </div>
 
+                </Card.Body>
+              </Card>
+
+              {/* Customer Feedbacks & Testimonials Selection */}
+              <Card className="manage-website-glass-card mb-4 border-0">
+                <Card.Body className="p-4">
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h5 className="manage-website-section-title mb-0">Customer Feedbacks & Testimonials</h5>
+                  </div>
+
+                  {feedbacks.length === 0 ? (
+                    <div className="text-muted text-center py-4 small">
+                      No feedbacks received yet.
+                    </div>
+                  ) : (
+                    <div style={{ maxHeight: '450px', overflowY: 'auto', paddingRight: '10px' }}>
+                      {feedbacks.map((f) => {
+                        const isSelected = values.testimonials.some(
+                          (t) => t.name === f.customer_name && t.text === f.feedback
+                        );
+
+                        return (
+                          <div key={f._id} className="p-3 mb-3 rounded border bg-light position-relative">
+                            <div className="d-flex justify-content-between align-items-start mb-2">
+                              <div>
+                                <div className="fw-bold text-dark small">{f.customer_name}</div>
+                                {f.date && (
+                                  <div className="text-muted" style={{ fontSize: '10px' }}>
+                                    {new Date(f.date).toLocaleDateString('en-IN', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                      day: 'numeric'
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="d-flex align-items-center">
+                                {[...Array(5)].map((_, i) => (
+                                  <CsLineIcons
+                                    key={i}
+                                    icon="star"
+                                    size="13"
+                                    className={i < Number(f.rating) ? "text-warning me-0.5" : "text-muted me-0.5 opacity-30"}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            <p className="text-secondary small mb-3 fst-italic">"{f.feedback}"</p>
+
+                            <Form.Check
+                              type="checkbox"
+                              id={`feedback-select-${f._id}`}
+                              label={<span className="text-dark small fw-medium">Show on Website Homepage</span>}
+                              checked={isSelected}
+                              onChange={() => {
+                                const newTestimonials = [...values.testimonials];
+                                if (isSelected) {
+                                  const filtered = newTestimonials.filter(
+                                    (t) => !(t.name === f.customer_name && t.text === f.feedback)
+                                  );
+                                  setFieldValue('testimonials', filtered);
+                                } else {
+                                  newTestimonials.push({
+                                    name: f.customer_name,
+                                    text: f.feedback,
+                                    rating: f.rating,
+                                    role: 'Happy Customer'
+                                  });
+                                  setFieldValue('testimonials', newTestimonials);
+                                }
+                              }}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </Card.Body>
               </Card>
             </Col>
@@ -1605,7 +1779,7 @@ const ManageWebsite = () => {
           }
         `}</style>
 
-        {formik.dirty && (
+        {(formik.dirty || logoFile || heroImageFile || legacyImageFile) && (
           <div
             className="position-fixed start-50 translate-middle-x floating-save-bar d-flex align-items-center justify-content-between px-4 py-2.5 animate-fade-in"
             style={{
@@ -1630,6 +1804,16 @@ const ManageWebsite = () => {
                   setHeroImageFile(null);
                   setAboutImageFile(null);
                   setLegacyImageFile(null);
+
+                  // Reset logo preview back to initial settings value
+                  const originalLogo = formik.initialValues.logo;
+                  if (originalLogo) {
+                    setLogoPreview(`${process.env.REACT_APP_UPLOAD_DIR}/${originalLogo}`);
+                  } else {
+                    setLogoPreview(null);
+                  }
+                  // Increment key to reset file inputs
+                  setFileInputKey(prev => prev + 1);
                 }}
                 disabled={saving}
               >
