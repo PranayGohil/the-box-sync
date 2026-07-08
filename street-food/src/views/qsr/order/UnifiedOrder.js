@@ -106,10 +106,8 @@ const UnifiedOrder = () => {
   const [showCategories, setShowCategories] = useState(false);
   const [showCartSheet, setShowCartSheet] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showParcelCharge, setShowParcelCharge] = useState(false);
-  const [nextLocation, setNextLocation] = useState(null);
   const [printing, setPrinting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -354,40 +352,9 @@ const UnifiedOrder = () => {
       .catch(console.error);
   }, [orderId, tableId]);
 
-  // ── Navigation Guard ──────────────────────────────────────────────────────
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (allowNavigationRef.current || !isDirty) return;
-      e.preventDefault();
-      e.returnValue = '';
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isDirty]);
-
-  useEffect(() => {
-    const unblock = history.block((loc) => {
-      if (allowNavigationRef.current) {
-        allowNavigationRef.current = false;
-        return true;
-      }
-      if (isDirty && loc.pathname !== window.location.pathname) {
-        setNextLocation(loc.pathname);
-        setShowLeaveModal(true);
-        return false;
-      }
-      return true;
-    });
-    return unblock;
-  }, [isDirty, history]);
-
+  // ── Navigation Guard ──
   const handleNavigation = (path) => {
-    if (isDirty) {
-      setNextLocation(path);
-      setShowLeaveModal(true);
-    } else {
-      history.push(path);
-    }
+    history.push(path);
   };
 
   // ── KOT Delta ─────────────────────────────────────────────────────────────
@@ -761,18 +728,6 @@ const UnifiedOrder = () => {
       <div className="pos-wrapper">
         {/* Top Bar */}
         <div className="pos-topbar">
-          <Button className="custom-btn-outline" style={{ padding: '0.35rem 1rem', flexShrink: 0 }} onClick={() => handleNavigation('/operations')}>
-            <CsLineIcons icon="arrow-left" size="13" className="me-1" />
-            Back
-          </Button>
-          <div className="pos-title flex-grow-1">
-            {title}
-            {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no) && (
-              <span className="ms-2 fw-normal text-muted" style={{ fontSize: '14px' }}>
-                — Table {tableInfo.table_no || customerInfo.table_no}
-              </span>
-            )}
-          </div>
           {tokenNumber && (
             <div
               style={{
@@ -788,60 +743,7 @@ const UnifiedOrder = () => {
               Token #{tokenNumber}
             </div>
           )}
-          {orderStatus && (
-            <div
-              style={{
-                border: '1.5px solid #6c757d',
-                borderRadius: '50px',
-                padding: '3px 12px',
-                color: '#6c757d',
-                fontWeight: 700,
-                fontSize: '12px',
-                flexShrink: 0,
-              }}
-            >
-              {orderStatus}
-            </div>
-          )}
-          <Form.Select
-            size="sm"
-            value={orderType}
-            onChange={(e) => handleOrderTypeChange(e.target.value)}
-            disabled={isEditMode || !!tableId}
-            style={{
-              maxWidth: '130px',
-              borderRadius: '50px',
-              borderColor: 'rgba(35,179,244,0.35)',
-              color: '#23b3f4',
-              fontWeight: 700,
-              fontSize: '13px',
-              flexShrink: 0,
-            }}
-          >
-            {ORDER_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </Form.Select>
-          <div className="d-flex align-items-center gap-1" style={{ flexShrink: 0 }}>
-            <span className="text-muted small fw-semibold">Date:</span>
-            <Form.Control
-              type="datetime-local"
-              size="sm"
-              value={orderDate}
-              onChange={(e) => setOrderDate(e.target.value)}
-              style={{
-                borderRadius: '50px',
-                borderColor: 'rgba(35,179,244,0.35)',
-                color: '#23b3f4',
-                fontWeight: 700,
-                fontSize: '12px',
-                padding: '0.15rem 0.5rem',
-                maxWidth: '185px',
-              }}
-            />
-          </div>
+
         </div>
 
         {/* POS Body */}
@@ -867,12 +769,31 @@ const UnifiedOrder = () => {
           />
 
           {/* Order Panel */}
-          <div className="pos-order-panel">
+          <div className="pos-order-panel d-none d-xl-flex">
             <div className="pos-order-header">
               <div className="d-flex justify-content-between align-items-center">
-                <div className="fw-bold" style={{ color: '#23b3f4', fontSize: '13px' }}>
+                <div className="fw-bold d-none d-sm-block" style={{ color: '#23b3f4', fontSize: '13px' }}>
                   {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no) ? `T-${tableInfo.table_no || customerInfo.table_no}` : 'Order'} (
                   {orderItems.length})
+                </div>
+                {/* Right side date picker for laptop/large viewports */}
+                <div className="d-none d-lg-flex align-items-center gap-1">
+                  <span className="text-muted small fw-semibold" style={{ fontSize: '11px' }}>Date:</span>
+                  <Form.Control
+                    type="datetime-local"
+                    size="sm"
+                    value={orderDate}
+                    onChange={(e) => setOrderDate(e.target.value)}
+                    style={{
+                      borderRadius: '50px',
+                      borderColor: 'rgba(35,179,244,0.35)',
+                      color: '#23b3f4',
+                      fontWeight: 700,
+                      fontSize: '12px',
+                      padding: '0.15rem 0.5rem',
+                      maxWidth: '185px',
+                    }}
+                  />
                 </div>
                 {tokenNumber && (
                   <div
@@ -891,7 +812,7 @@ const UnifiedOrder = () => {
               </div>
             </div>
 
-            <div className="pos-customer-section">
+            <div className="pos-customer-section d-none d-xl-block">
               <CustomerInfoForm
                 customerInfo={customerInfo}
                 setCustomerInfo={setCustomerInfo}
@@ -974,19 +895,7 @@ const UnifiedOrder = () => {
         alreadyPaid={parseFloat(initialStateRef.current.paid_amount) || 0}
         handlePrint={handlePrint}
       />
-      <LeaveConfirmationModal
-        showLeaveModal={showLeaveModal}
-        setShowLeaveModal={setShowLeaveModal}
-        setNextLocation={setNextLocation}
-        orderStatus={orderStatus}
-        allowNavigationRef={allowNavigationRef}
-        setIsDirty={setIsDirty}
-        nextLocation={nextLocation}
-        history={history}
-        handleSaveOrder={handleSaveOrder}
-        isLoading={isLoading}
-        canKOT={canKOT}
-      />
+
       <CancelOrderModal showCancelModal={showCancelModal} setShowCancelModal={setShowCancelModal} handleCancelOrder={handleCancelOrder} isLoading={isLoading} />
 
       {/* Mobile Bottom Sheet */}
@@ -1016,21 +925,30 @@ const UnifiedOrder = () => {
         paymentHistory={paymentHistory}
         orderType={orderType}
       >
+        {/* Date control for mobile opened cart */}
+        <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+          <div className="d-flex align-items-center gap-2">
+            <span className="text-muted small fw-bold text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Date:</span>
+            <Form.Control
+              type="datetime-local"
+              size="sm"
+              value={orderDate}
+              onChange={(e) => setOrderDate(e.target.value)}
+              style={{
+                borderRadius: '50px',
+                borderColor: 'rgba(35,179,244,0.35)',
+                color: '#23b3f4',
+                fontWeight: 700,
+                fontSize: '12px',
+                padding: '0.15rem 0.5rem',
+                maxWidth: '185px',
+              }}
+            />
+          </div>
+        </div>
+
         <div className="d-flex align-items-center justify-content-between mb-3">
           <h6 className="mb-0 fw-bold text-muted border-bottom pb-2 flex-grow-1">Customer Details</h6>
-          <Form.Select
-            size="sm"
-            value={orderType}
-            onChange={(e) => handleOrderTypeChange(e.target.value)}
-            disabled={isEditMode || !!tableId}
-            style={{ maxWidth: '130px', borderRadius: '50px', borderColor: 'rgba(35,179,244,0.3)', color: '#23b3f4', fontWeight: 700 }}
-          >
-            {ORDER_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </Form.Select>
         </div>
         <CustomerInfoForm
           customerInfo={customerInfo}
@@ -1041,6 +959,7 @@ const UnifiedOrder = () => {
           visibleFields={visibleFields}
           requiredFields={requiredFields}
         />
+
         <Form.Group className="mb-3">
           <Form.Label className="fw-semibold small text-muted">Special Instructions</Form.Label>
           <Form.Control

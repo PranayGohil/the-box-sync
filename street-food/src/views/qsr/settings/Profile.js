@@ -57,9 +57,8 @@ const Profile = () => {
       .required('Phone number is required')
       .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits'),
     fssai_no: Yup.string()
-      .required('FSSAI number is required')
-      .matches(/^[0-9]{14}$/, 'FSSAI number must be exactly 14 digits'),
-    address: Yup.string().required('Address is required').min(10, 'Address must be at least 10 characters'),
+      .matches(/^[0-9]{14}$/, { message: 'FSSAI number must be exactly 14 digits', excludeEmptyString: true }),
+    address: Yup.string().min(10, 'Address must be at least 10 characters'),
     country: Yup.string().required('Country is required'),
     state: Yup.string().required('State is required'),
     city: Yup.string().required('City is required'),
@@ -213,7 +212,7 @@ const Profile = () => {
         formData.append('logo', logoFile);
       }
 
-      const response = await axios.put(`${process.env.REACT_APP_API}/user/update`, formData, {
+      await axios.put(`${process.env.REACT_APP_API}/user/update`, formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'multipart/form-data',
@@ -373,7 +372,7 @@ const Profile = () => {
                       </Col>
                       <Col md={12}>
                         <Form.Group>
-                          <Form.Label className="small fw-bold opacity-75">FSSAI Registration No. *</Form.Label>
+                          <Form.Label className="small fw-bold opacity-75">FSSAI Registration No.</Form.Label>
                           <Form.Control type="text" name="fssai_no" value={values.fssai_no} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.fssai_no && errors.fssai_no} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} />
                           <Form.Control.Feedback type="invalid">{errors.fssai_no}</Form.Control.Feedback>
                         </Form.Group>
@@ -408,8 +407,8 @@ const Profile = () => {
                     <Row className="g-3">
                       <Col md={12}>
                         <Form.Group>
-                          <Form.Label className="small fw-bold opacity-75">Full Address *</Form.Label>
-                          <Form.Control as="textarea" rows={3} name="address" value={values.address} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.address && errors.address} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} style={{ resize: 'none' }} />
+                          <Form.Label className="small fw-bold opacity-75">Full Address</Form.Label>
+                          <Form.Control as="textarea" rows={3} name="address" value={values.address || ''} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.address && errors.address} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} style={{ resize: 'none' }} />
                           <Form.Control.Feedback type="invalid">{errors.address}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
@@ -518,6 +517,7 @@ const Profile = () => {
                   </Card.Body>
                 </Card>
               </Col>
+
             </Row>
           </Form>
         )}

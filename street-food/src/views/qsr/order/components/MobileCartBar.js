@@ -18,7 +18,7 @@ const MobileCartBar = ({ orderItems, paymentData, setShowCartSheet }) => {
             right: 0;
             background: #ffffff; 
             padding: 12px 16px;
-            z-index: 1040; 
+            z-index: 99; 
             cursor: pointer;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
             border-top: 1px solid rgba(226,232,240,0.9);

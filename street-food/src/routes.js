@@ -24,7 +24,7 @@ const dashboards = {
 };
 
 const settings = {
-  profile: lazy(() => import('views/qsr/settings/Profile')),
+  main: lazy(() => import('views/qsr/settings/Settings')),
 };
 
 const appRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
@@ -56,8 +56,8 @@ const allRoutes = {
       component: qsr.operation,
     },
     {
-      path: `/settings/profile`,
-      component: settings.profile,
+      path: `/settings`,
+      component: settings.main,
       hideInMenu: true,
     },
   ],

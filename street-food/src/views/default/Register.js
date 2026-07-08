@@ -80,7 +80,7 @@ const Register = () => {
         .required('Phone number is required'),
     }),
     Yup.object({
-      address: Yup.string().required('Address is required'),
+      address: Yup.string(),
       country: Yup.string().required('Country is required'),
       state: Yup.string().required('State is required'),
       city: Yup.string().required('City is required'),
@@ -88,7 +88,7 @@ const Register = () => {
     }),
     Yup.object({
       fssai_no: Yup.string().matches(fssaiRegex, { message: 'Enter a valid FSSAI number (7 to 14 digits)', excludeEmptyString: true }),
-      gst_no: Yup.string().required('GST Number is required').matches(gstRegex, 'Enter a valid 15-character GSTIN (e.g. 27ABCDE1234F1Z5)'),
+      gst_no: Yup.string().matches(gstRegex, { message: 'Enter a valid 15-character GSTIN (e.g. 27ABCDE1234F1Z5)', excludeEmptyString: true }),
       password: Yup.string()
         .required('Password is required')
         .min(8, 'Password must be at least 8 characters')

@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import { Modal, Button } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
-import IconMenuNotifications from './notifications/Notifications';
-import SearchModal from './search/SearchModal';
 
 const customStyles = `
     .interactive-card {
@@ -45,18 +42,31 @@ const customStyles = `
       margin: 0 auto 1.5rem;
       color: #f43f5e;
     }
+    .nav-logout-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 0.6rem !important;
+      height: 26px;
+      background: transparent !important;
+      color: #ffffff !important;
+      border: none !important;
+      font-size: 13px !important;
+      font-family: var(--font-heading), var(--font) !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.3px;
+      transition: all 0.2s ease-in-out;
+      cursor: pointer;
+    }
+    .nav-logout-btn:hover {
+      background: rgba(255, 255, 255, 0.08) !important;
+      color: #ffffff !important;
+    }
 `;
 
 const NavIconMenu = () => {
   const history = useHistory();
   const brandColor = '#23b3f4';
-  
-  const [showSearchModal, setShowSearchModal] = useState(false);
-  
-  const onSearchIconClick = (e) => {
-    e.preventDefault();
-    setShowSearchModal(true);
-  };
   
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -69,20 +79,14 @@ const NavIconMenu = () => {
   return (
     <>
       <style>{customStyles}</style>
-      <ul className="list-unstyled list-inline text-center menu-icons">
-        <li className="list-inline-item" title="Search">
-          <a href="#/" onClick={onSearchIconClick}>
-            <CsLineIcons icon="search" size="18" />
+      <ul className="list-unstyled list-inline text-center menu-icons mb-0">
+        <li className="list-inline-item" title="Logout" style={{ margin: 0 }}>
+          <a className="nav-logout-btn" onClick={() => setShowLogoutModal(true)}>
+            <CsLineIcons icon="logout" size="15" className="me-2" />
+            <span>Logout</span>
           </a>
         </li>
-        <li className="list-inline-item" title="Logout">
-          <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
-            <CsLineIcons icon="logout" size="18" />
-          </a>
-        </li>
-        <IconMenuNotifications />
       </ul>
-      <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 
       <Modal 
         show={showLogoutModal} 

@@ -102,17 +102,50 @@ const Inventory = () => {
   return (
     <div className="container-fluid py-4">
       <HtmlHead title="Inventory Management" description="Simple inventory management" />
+      <style>{`
+        .inventory-card-low-stock {
+          background: rgba(239, 68, 68, 0.05) !important;
+          border: 1.5px solid rgba(239, 68, 68, 0.25) !important;
+          transition: all 0.2s ease-in-out;
+        }
+        .inventory-card-normal-stock {
+          background: rgba(35, 179, 244, 0.04) !important;
+          border: 1.5px solid rgba(35, 179, 244, 0.12) !important;
+          transition: all 0.2s ease-in-out;
+        }
+        .inventory-card-low-stock:hover {
+          background: rgba(239, 68, 68, 0.08) !important;
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.08);
+        }
+        .inventory-card-normal-stock:hover {
+          background: rgba(35, 179, 244, 0.08) !important;
+          box-shadow: 0 4px 12px rgba(35, 179, 244, 0.08);
+        }
+        .mobile-log-card {
+          border-radius: 12px;
+          border: 1px solid rgba(226, 232, 240, 0.9);
+          background: #ffffff;
+          margin-bottom: 12px;
+          padding: 16px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+          transition: all 0.2s;
+        }
+        .mobile-log-card:active, .mobile-log-card:hover {
+          border-color: #23b3f4;
+          box-shadow: 0 4px 12px rgba(35,179,244,0.05);
+        }
+      `}</style>
       
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex flex-column flex-md-row justify-content-md-between align-items-start align-items-md-center gap-3 mb-4">
         <div>
           <h2 className="fw-bold text-primary mb-1">Inventory Management</h2>
           <p className="text-muted mb-0">Record raw materials, update stock quantities, and log usage.</p>
         </div>
-        <div className="d-flex gap-2">
-          <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm" onClick={() => setShowUseModal(true)}>
+        <div className="d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto">
+          <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm w-100 w-sm-auto" onClick={() => setShowUseModal(true)}>
             <CsLineIcons icon="bin" className="me-2" /> Log Usage (Use Stock)
           </Button>
-          <Button variant="primary" className="rounded-pill px-4 shadow-sm" onClick={() => setShowAddModal(true)}>
+          <Button variant="primary" className="rounded-pill px-4 shadow-sm w-100 w-sm-auto" onClick={() => setShowAddModal(true)}>
             <CsLineIcons icon="plus" className="me-2" /> Add Purchase (Add Stock)
           </Button>
         </div>
@@ -134,17 +167,23 @@ const Inventory = () => {
               {stock.map((item) => {
                 const isLow = item.totalStock <= (item.low_stock_threshold || 0);
                 return (
-                  <Col key={item._id} xs={12} sm={6} md={4} lg={3}>
-                    <div className={`p-3 rounded-3 border h-100 d-flex flex-column justify-content-between ${isLow ? 'bg-light-danger border-danger' : 'bg-light border-light'}`}>
+                  <Col key={item._id} xs={6} sm={6} md={4} lg={3}>
+                    <div 
+                      className={`p-3 rounded-3 h-100 d-flex flex-column justify-content-between ${
+                        isLow ? 'inventory-card-low-stock' : 'inventory-card-normal-stock'
+                      }`}
+                    >
                       <div>
-                        <div className="fw-bold text-dark mb-1">{item._id}</div>
-                        <h3 className={`fw-extrabold mb-0 ${isLow ? 'text-danger' : 'text-primary'}`}>
+                        <div className="fw-bold text-dark mb-1" style={{ fontSize: '13.5px', wordBreak: 'break-word' }}>
+                          {item._id}
+                        </div>
+                        <h3 className={`fw-extrabold mb-0 ${isLow ? 'text-danger' : 'text-primary'}`} style={{ fontSize: '20px' }}>
                           {item.totalStock} <span className="fs-6 fw-normal text-muted">{item.unit}</span>
                         </h3>
                       </div>
                       {isLow && (
-                        <div className="text-danger small mt-2 fw-semibold">
-                          ⚠️ Low stock alert (min: {item.low_stock_threshold})
+                        <div className="text-danger small mt-2 fw-semibold" style={{ fontSize: '10.5px' }}>
+                          ⚠️ Low stock (min: {item.low_stock_threshold})
                         </div>
                       )}
                     </div>
@@ -169,46 +208,99 @@ const Inventory = () => {
               <p className="text-muted small mb-0">Record a new purchase to see it logged here.</p>
             </div>
           ) : (
-            <div className="table-responsive">
-              <Table hover align="middle" className="mb-0">
-                <thead className="bg-light text-secondary small fw-bold text-uppercase">
-                  <tr>
-                    <th className="ps-4">Date</th>
-                    <th>Bill #</th>
-                    <th>Vendor</th>
-                    <th>Category</th>
-                    <th>Items Purchased</th>
-                    <th>Total Amount</th>
-                    <th className="pe-4 text-end">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="small">
-                  {inventoryList.map((item) => (
-                    <tr key={item._id}>
-                      <td className="ps-4 fw-semibold text-dark">
-                        {item.bill_date ? new Date(item.bill_date).toLocaleDateString('en-IN') : new Date(item.request_date).toLocaleDateString('en-IN')}
-                      </td>
-                      <td className="fw-bold">{item.bill_number || '—'}</td>
-                      <td>{item.vendor_name || '—'}</td>
-                      <td><Badge bg="light" text="dark" className="border">{item.category}</Badge></td>
-                      <td>
-                        {item.items?.map((it, idx) => (
-                          <div key={idx} className="small text-muted">
-                            • {it.item_name} <span className="fw-bold text-primary">({it.item_quantity} {it.unit})</span>
-                          </div>
-                        ))}
-                      </td>
-                      <td className="fw-bold text-primary">₹{item.total_amount || 0}</td>
-                      <td className="pe-4 text-end">
-                        <Button variant="outline-danger" size="sm" className="rounded-circle p-1.5" onClick={() => handleDelete(item._id)}>
-                          <CsLineIcons icon="bin" size="15" />
-                        </Button>
-                      </td>
+            <>
+              {/* Desktop Table View */}
+              <div className="table-responsive d-none d-md-block">
+                <Table hover align="middle" className="mb-0">
+                  <thead className="bg-light text-secondary small fw-bold text-uppercase">
+                    <tr>
+                      <th className="ps-4">Date</th>
+                      <th>Bill #</th>
+                      <th>Vendor</th>
+                      <th>Category</th>
+                      <th>Items Purchased</th>
+                      <th>Total Amount</th>
+                      <th className="pe-4 text-end">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
+                  </thead>
+                  <tbody className="small">
+                    {inventoryList.map((item) => (
+                      <tr key={item._id}>
+                        <td className="ps-4 fw-semibold text-dark">
+                          {item.bill_date ? new Date(item.bill_date).toLocaleDateString('en-IN') : new Date(item.request_date).toLocaleDateString('en-IN')}
+                        </td>
+                        <td className="fw-bold">{item.bill_number || '—'}</td>
+                        <td>{item.vendor_name || '—'}</td>
+                        <td><Badge bg="light" text="dark" className="border">{item.category}</Badge></td>
+                        <td>
+                          {item.items?.map((it, idx) => (
+                            <div key={idx} className="small text-muted">
+                              • {it.item_name} <span className="fw-bold text-primary">({it.item_quantity} {it.unit})</span>
+                            </div>
+                          ))}
+                        </td>
+                        <td className="fw-bold text-primary">₹{item.total_amount || 0}</td>
+                        <td className="pe-4 text-end">
+                          <Button variant="outline-danger" size="sm" className="rounded-circle p-1.5" onClick={() => handleDelete(item._id)}>
+                            <CsLineIcons icon="bin" size="15" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+
+              {/* Mobile Card List View */}
+              <div className="d-block d-md-none">
+                {inventoryList.map((item) => (
+                  <div key={item._id} className="mobile-log-card">
+                    <div className="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                        <span className="text-muted small fw-semibold">
+                          {item.bill_date ? new Date(item.bill_date).toLocaleDateString('en-IN') : new Date(item.request_date).toLocaleDateString('en-IN')}
+                        </span>
+                        <div className="fw-bold text-dark mt-1" style={{ fontSize: '13.5px' }}>
+                          Bill: {item.bill_number || '—'}
+                        </div>
+                      </div>
+                      <Badge bg="light" text="dark" className="border">
+                        {item.category}
+                      </Badge>
+                    </div>
+
+                    <div className="text-muted small mb-2">
+                      <span className="fw-semibold text-secondary">Vendor:</span> {item.vendor_name || '—'}
+                    </div>
+
+                    <div className="py-2 px-3 bg-light rounded-3 mb-3">
+                      <div className="small fw-bold text-secondary mb-1">Purchased Items:</div>
+                      {item.items?.map((it, idx) => (
+                        <div key={idx} className="small text-muted mb-1 d-flex justify-content-between">
+                          <span>• {it.item_name}</span>
+                          <span className="fw-bold text-primary">{it.item_quantity} {it.unit}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <div className="small text-muted fw-bold">Total Amount</div>
+                        <div className="fw-extrabold text-primary h5 mb-0">₹{item.total_amount || 0}</div>
+                      </div>
+                      <Button 
+                        variant="outline-danger" 
+                        size="sm" 
+                        className="rounded-circle p-2" 
+                        onClick={() => handleDelete(item._id)}
+                      >
+                        <CsLineIcons icon="bin" size="14" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </Card.Body>
       </Card>
@@ -328,51 +420,69 @@ const Inventory = () => {
                     {({ push, remove }) => (
                       <div>
                         {values.items.map((item, index) => (
-                          <Row key={index} className="g-2 align-items-center mb-2">
-                            <Col md={4}>
-                              <Form.Control
-                                type="text"
-                                name={`items[${index}].item_name`}
-                                placeholder="Item name"
-                                value={item.item_name}
-                                onChange={handleChange}
-                                isInvalid={touched.items?.[index]?.item_name && errors.items?.[index]?.item_name}
-                              />
+                          <Row key={index} className="g-2 align-items-center mb-3 p-2 rounded border border-light" style={{ background: '#f8fafc' }}>
+                            <Col xs={12} sm={4}>
+                              <Form.Group>
+                                <Form.Label className="small fw-bold d-block d-sm-none">Item Name</Form.Label>
+                                <Form.Control
+                                  type="text"
+                                  name={`items[${index}].item_name`}
+                                  placeholder="Item name"
+                                  value={item.item_name}
+                                  onChange={handleChange}
+                                  isInvalid={touched.items?.[index]?.item_name && errors.items?.[index]?.item_name}
+                                />
+                              </Form.Group>
                             </Col>
-                            <Col md={2}>
-                              <Form.Control
-                                type="number"
-                                name={`items[${index}].item_quantity`}
-                                placeholder="Qty"
-                                value={item.item_quantity}
-                                onChange={handleChange}
-                                isInvalid={touched.items?.[index]?.item_quantity && errors.items?.[index]?.item_quantity}
-                              />
+                            <Col xs={4} sm={2}>
+                              <Form.Group>
+                                <Form.Label className="small fw-bold d-block d-sm-none">Qty</Form.Label>
+                                <Form.Control
+                                  type="number"
+                                  name={`items[${index}].item_quantity`}
+                                  placeholder="Qty"
+                                  value={item.item_quantity}
+                                  onChange={handleChange}
+                                  isInvalid={touched.items?.[index]?.item_quantity && errors.items?.[index]?.item_quantity}
+                                />
+                              </Form.Group>
                             </Col>
-                            <Col md={2}>
-                              <Form.Control
-                                type="text"
-                                name={`items[${index}].unit`}
-                                placeholder="Unit (kg/ltr/pcs)"
-                                value={item.unit}
-                                onChange={handleChange}
-                                isInvalid={touched.items?.[index]?.unit && errors.items?.[index]?.unit}
-                              />
+                            <Col xs={4} sm={2}>
+                              <Form.Group>
+                                <Form.Label className="small fw-bold d-block d-sm-none">Unit</Form.Label>
+                                <Form.Control
+                                  type="text"
+                                  name={`items[${index}].unit`}
+                                  placeholder="Unit"
+                                  value={item.unit}
+                                  onChange={handleChange}
+                                  isInvalid={touched.items?.[index]?.unit && errors.items?.[index]?.unit}
+                                />
+                              </Form.Group>
                             </Col>
-                            <Col md={3}>
-                              <Form.Control
-                                type="number"
-                                name={`items[${index}].item_price`}
-                                placeholder="Price"
-                                value={item.item_price}
-                                onChange={handleChange}
-                                isInvalid={touched.items?.[index]?.item_price && errors.items?.[index]?.item_price}
-                              />
+                            <Col xs={4} sm={3}>
+                              <Form.Group>
+                                <Form.Label className="small fw-bold d-block d-sm-none">Price</Form.Label>
+                                <Form.Control
+                                  type="number"
+                                  name={`items[${index}].item_price`}
+                                  placeholder="Price"
+                                  value={item.item_price}
+                                  onChange={handleChange}
+                                  isInvalid={touched.items?.[index]?.item_price && errors.items?.[index]?.item_price}
+                                />
+                              </Form.Group>
                             </Col>
-                            <Col md={1} className="text-end">
+                            <Col xs={12} sm={1} className="text-end text-sm-center">
                               {values.items.length > 1 && (
-                                <Button variant="outline-danger" size="sm" className="border-0" onClick={() => remove(index)}>
+                                <Button 
+                                  variant="outline-danger" 
+                                  size="sm" 
+                                  className="border-0 w-100 w-sm-auto mt-2 mt-sm-0" 
+                                  onClick={() => remove(index)}
+                                >
                                   <CsLineIcons icon="bin" size="16" />
+                                  <span className="d-inline d-sm-none ms-1">Remove Item</span>
                                 </Button>
                               )}
                             </Col>

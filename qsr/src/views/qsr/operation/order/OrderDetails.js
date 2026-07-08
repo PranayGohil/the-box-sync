@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { Row, Col, Card, Button, Spinner, Table, Alert, Badge } from 'react-bootstrap';
+import { Row, Col, Card, Button, Spinner, Table, Alert, Badge, Form, Modal } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -26,6 +26,9 @@ const OrderDetails = () => {
   const [error, setError] = useState(null);
   const [printing, setPrinting] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [inputPhoneNumber, setInputPhoneNumber] = useState('');
+  const [restaurantInfo, setRestaurantInfo] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,6 +56,17 @@ const OrderDetails = () => {
           setError(orderRes.data.message);
           toast.error(orderRes.data.message);
         }
+        // Fetch restaurant profile info
+        try {
+          const userRes = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          });
+          if (userRes.data) {
+            setRestaurantInfo(userRes.data);
+          }
+        } catch (fetchErr) {
+          console.error("Failed to fetch restaurant info:", fetchErr);
+        }
       } catch (err) {
         console.log('Error fetching order:', err);
         setError(err.response?.data?.message || 'Unable to fetch order');
@@ -70,29 +84,21 @@ const OrderDetails = () => {
     await openPrintWindow(order.id, setPrinting);
   };
 
-  const handleWhatsAppShare = async () => {
-    if (!order) return;
+  const sendWhatsAppMessage = async (phoneVal) => {
     setSharing(true);
-    
     try {
-      // Fetch restaurant profile
-      let restaurantName = 'Restaurant';
-      let restaurantMobile = '';
-      try {
-        const userRes = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-        if (userRes.data) {
-          restaurantName = userRes.data.name || 'Restaurant';
-          restaurantMobile = userRes.data.mobile || '';
-        }
-      } catch (fetchErr) {
-        console.error("Failed to fetch restaurant info:", fetchErr);
-      }
+      const restaurantName = restaurantInfo?.name || 'Restaurant';
 
-      let message = `*${restaurantName}*\n\n`;
+      let message = `*${restaurantName}*\n`;
+      message += `*Order Summary*\n`;
+      if (restaurantInfo?.gst_no) {
+        message += `GSTIN: ${restaurantInfo.gst_no}\n`;
+      }
+      if (restaurantInfo?.fssai_no) {
+        message += `FSSAI No: ${restaurantInfo.fssai_no}\n`;
+      }
       message += `*Bill No:* ${order.order_no || order.id}\n`;
-      message += `*Date:* ${new Date(order.order_date).toLocaleString()}\n`;
+      message += `*Date:* ${new Date(order.order_date).toLocaleString('en-IN')}\n`;
       if (order.customer_name) {
         message += `*Customer:* ${order.customer_name}\n`;
       }
@@ -110,32 +116,39 @@ const OrderDetails = () => {
       message += `Thank you for your visit!`;
 
       const encodedMessage = encodeURIComponent(message);
-      
-      let customerPhone = '';
-      if (order.customer_details && order.customer_details.phone) {
-        customerPhone = order.customer_details.phone;
-      } else if (order.customer_phone) {
-        customerPhone = order.customer_phone;
-      }
-
-      let phoneNumber = customerPhone ? String(customerPhone).replace(/\D/g, '') : '';
-      if (!phoneNumber && restaurantMobile) {
-        phoneNumber = String(restaurantMobile).replace(/\D/g, '');
-      }
+      let phoneNumber = phoneVal ? String(phoneVal).replace(/\D/g, '') : '';
       
       if (phoneNumber && phoneNumber.length === 10) {
         phoneNumber = `91${phoneNumber}`;
       }
       
       const whatsappUrl = phoneNumber ? `https://wa.me/${phoneNumber}?text=${encodedMessage}` : `https://wa.me/?text=${encodedMessage}`;
-      
       window.open(whatsappUrl, '_blank');
     } catch (err) {
-      console.error("Share error:", err);
+      console.error("WhatsApp share error:", err);
       toast.error("Failed to generate WhatsApp link");
     } finally {
       setSharing(false);
     }
+  };
+
+  const handleWhatsAppShare = async () => {
+    if (!order) return;
+
+    let customerPhone = '';
+    if (order.customer_details && order.customer_details.phone) {
+      customerPhone = order.customer_details.phone;
+    } else if (order.customer_phone) {
+      customerPhone = order.customer_phone;
+    }
+
+    if (!customerPhone) {
+      setInputPhoneNumber('');
+      setShowWhatsAppModal(true);
+      return;
+    }
+
+    await sendWhatsAppMessage(customerPhone);
   };
 
   if (loading) {
@@ -363,9 +376,29 @@ const OrderDetails = () => {
               </Row>
 
               {order.comment && (
-                <div>
+                <div className="mb-4">
                   <div className="text-small text-muted mb-1">COMMENT</div>
                   <div className="bg-light p-2 rounded">{order.comment}</div>
+                </div>
+              )}
+
+              {restaurantInfo && (restaurantInfo.gst_no || restaurantInfo.fssai_no) && (
+                <div className="mt-4">
+                  <div className="text-small text-muted mb-2">RESTAURANT REGISTRATIONS</div>
+                  <div className="bg-light p-3 rounded" style={{ borderLeft: '4px solid #23b3f4' }}>
+                    {restaurantInfo.gst_no && (
+                      <div className="mb-2">
+                        <span className="text-muted small d-block" style={{ fontWeight: 600 }}>GSTIN</span>
+                        <strong className="text-dark small">{restaurantInfo.gst_no}</strong>
+                      </div>
+                    )}
+                    {restaurantInfo.fssai_no && (
+                      <div className="mb-0">
+                        <span className="text-muted small d-block" style={{ fontWeight: 600 }}>FSSAI License No.</span>
+                        <strong className="text-dark small">{restaurantInfo.fssai_no}</strong>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </Card.Body>
@@ -526,7 +559,119 @@ const OrderDetails = () => {
       </Card>
     </Col>
   </Row>
-</div>
+      <Modal show={showWhatsAppModal} onHide={() => setShowWhatsAppModal(false)} centered className="modal-custom-whatsapp">
+        <style>{`
+          .modal-custom-whatsapp .modal-content {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+          }
+          .modal-custom-whatsapp .modal-header {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-bottom: 1px solid #bbf7d0;
+            padding: 20px 24px;
+          }
+          .modal-custom-whatsapp .modal-title {
+            font-weight: 800;
+            color: #166534;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          }
+          .modal-custom-whatsapp .modal-body {
+            padding: 24px;
+            background: #fff;
+          }
+          .modal-custom-whatsapp .modal-footer {
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 16px 24px;
+          }
+          .whatsapp-input {
+            border-radius: 10px !important;
+            border: 2px solid #e2e8f0 !important;
+            padding: 10px 15px !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            transition: all 0.2s ease-in-out !important;
+          }
+          .whatsapp-input:focus {
+            border-color: #22c55e !important;
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15) !important;
+            outline: none !important;
+          }
+          .whatsapp-btn-send {
+            background: #22c55e !important;
+            border: none !important;
+            border-radius: 50px !important;
+            padding: 10px 24px !important;
+            font-weight: 700 !important;
+            color: #fff !important;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25) !important;
+            transition: all 0.2s ease-in-out !important;
+          }
+          .whatsapp-btn-send:hover {
+            background: #15803d !important;
+            box-shadow: 0 6px 16px rgba(34, 197, 94, 0.35) !important;
+          }
+          .whatsapp-btn-cancel {
+            background: #e2e8f0 !important;
+            border: none !important;
+            border-radius: 50px !important;
+            padding: 10px 24px !important;
+            font-weight: 700 !important;
+            color: #475569 !important;
+            transition: all 0.2s ease-in-out !important;
+          }
+          .whatsapp-btn-cancel:hover {
+            background: #cbd5e1 !important;
+          }
+        `}</style>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <div style={{ background: '#22c55e', color: '#fff', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '10px' }}>
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.393 0 12.03c0 2.12.554 4.189 1.602 6.006L0 24l6.117-1.604a11.803 11.803 0 005.925 1.585h.005c6.634 0 12.032-5.391 12.036-12.028a11.8 11.8 0 00-3.417-8.467z" />
+              </svg>
+            </div>
+            Send WhatsApp Bill
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group className="mb-3">
+            <Form.Label className="small fw-bold text-secondary">Customer Contact Number *</Form.Label>
+            <Form.Control
+              type="text"
+              pattern="[0-9]*"
+              maxLength="10"
+              placeholder="Enter 10-digit mobile number"
+              className="whatsapp-input"
+              value={inputPhoneNumber}
+              onChange={(e) => setInputPhoneNumber(e.target.value.replace(/\D/g, ''))}
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button className="whatsapp-btn-cancel" onClick={() => setShowWhatsAppModal(false)}>
+            Cancel
+          </Button>
+          <Button
+            className="whatsapp-btn-send"
+            onClick={() => {
+              if (inputPhoneNumber.length !== 10) {
+                alert('Please enter a valid 10-digit mobile number');
+                return;
+              }
+              setShowWhatsAppModal(false);
+              sendWhatsAppMessage(inputPhoneNumber);
+            }}
+          >
+            Send WhatsApp
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
   );
 };
 
