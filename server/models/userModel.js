@@ -105,6 +105,48 @@ const userSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  printSettings: {
+    showLogo: {
+      type: Boolean,
+      default: true,
+    },
+    showGst: {
+      type: Boolean,
+      default: true,
+    },
+    showCustomerDetails: {
+      type: Boolean,
+      default: true,
+    },
+    footerNote: {
+      type: String,
+      default: "Thanks, Visit Again",
+    },
+    headerNote: {
+      type: String,
+      default: "",
+    },
+    paperWidth: {
+      type: String,
+      default: "58mm",
+    },
+    addQrCode: {
+      type: Boolean,
+      default: false,
+    },
+    qrTargetType: {
+      type: String,
+      default: "feedback",
+    },
+    qrUrl: {
+      type: String,
+      default: "",
+    },
+    qrTitle: {
+      type: String,
+      default: "",
+    },
+  },
 });
 
 // userModel.js

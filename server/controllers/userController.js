@@ -418,7 +418,7 @@ const getUserData = async (req, res) => {
         return res.status(404).json({ message: "Staff not found" });
       }
 
-      const adminUser = await User.findById(staff.user_id).select("name logo").lean();
+      const adminUser = await User.findById(staff.user_id).select("name logo printSettings").lean();
 
       return res.json({
         _id: staff._id,
@@ -433,6 +433,7 @@ const getUserData = async (req, res) => {
         admin_id: staff.user_id,
         restaurant_name: adminUser?.name || "",
         logo: adminUser?.logo || "",
+        printSettings: adminUser?.printSettings || null,
       });
     }
 
@@ -458,6 +459,7 @@ const getUserData = async (req, res) => {
       purchasedPlan: 1,
       restaurant_token: 1,
       isApproved: 1,
+      printSettings: 1,
       // don't include password, otp, feedbacks by default
     };
 
@@ -737,6 +739,41 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+const updatePrintSettings = async (req, res) => {
+  const { printSettings } = req.body;
+  const userId = req.user._id;
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        printSettings: {
+          showLogo: printSettings?.showLogo ?? true,
+          showGst: printSettings?.showGst ?? true,
+          showCustomerDetails: printSettings?.showCustomerDetails ?? true,
+          footerNote: printSettings?.footerNote ?? "Thanks, Visit Again",
+          headerNote: printSettings?.headerNote ?? "",
+          paperWidth: printSettings?.paperWidth ?? "58mm",
+          addQrCode: printSettings?.addQrCode ?? false,
+          qrTargetType: printSettings?.qrTargetType ?? "feedback",
+          qrUrl: printSettings?.qrUrl ?? "",
+          qrTitle: printSettings?.qrTitle ?? "",
+        },
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Print settings updated successfully.",
+      printSettings: updatedUser.printSettings,
+    });
+  } catch (error) {
+    console.error("Error updating print settings:", error);
+    res.status(500).send("Failed to update print settings.");
+  }
+};
+
 module.exports = {
   contactEmail,
   sendEnquiry,
@@ -751,5 +788,6 @@ module.exports = {
   resetAdminPassword,
   updateUser,
   updateTax,
+  updatePrintSettings,
   getAllUsers,
 };

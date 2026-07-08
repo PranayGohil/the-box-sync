@@ -2,195 +2,255 @@ import { toast } from 'react-toastify';
 import { getUserTaxInfo, getOrderById } from 'api/orderService';
 
 /**
- * Generates HTML for a single counter's KOT slip.
+ * Generates HTML for a single counter's KOT slip optimized for thermal printing.
  */
 export const printCounterBill = (ord, userData, counterName, items) => {
+  const printSettings = userData?.printSettings || {};
+  const showCustomerDetails = printSettings.showCustomerDetails ?? true;
+
   return `
-    <div style="page-break-after: always; font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 10px; border: 1px solid #ccc;">
+    <div class="receipt-container" style="page-break-after: always;">
       <!-- Restaurant Header -->
-      <div style="text-align: center; margin-bottom: 10px;">
-        <h3 style="margin: 5px;">${userData.name}</h3>
+      <div class="receipt-header">
+        <h3 style="margin: 0;">${userData.name}</h3>
       </div>
 
-      <hr style="border: 0.5px dashed #ccc;" />
+      <hr class="dashed-line" />
 
       <!-- Counter Badge -->
-      <div style="text-align: center; margin: 8px 0;">
-        <span style="background: #000; color: #fff; padding: 4px 16px; border-radius: 4px; font-size: 14px; font-weight: bold;">
+      <div class="text-center" style="margin: 6px 0;">
+        <span style="color: #000; font-size: 12px; font-weight: bold; display: inline-block;">
           ${counterName} Counter
         </span>
       </div>
 
-      <hr style="border: 0.5px dashed #ccc;" />
+      <hr class="dashed-line" />
 
       <!-- Order Info -->
-      <table style="width: 100%; font-size: 12px; margin-bottom: 8px;">
+      <table class="info-table">
         <tr>
           <td><strong>Bill No:</strong> ${ord.order_no || ord._id}</td>
-          <td style="text-align: right;"><strong>${ord.order_type}</strong></td>
+          <td class="text-right"><strong>${ord.order_type}</strong></td>
         </tr>
         <tr>
           <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
-          <td style="text-align: right;">
+          <td class="text-right">
             ${ord.table_no
-      ? `<strong>Table:</strong> ${ord.table_no}`
-      : ord.token
-        ? `<strong>Token:</strong> ${ord.token}`
-        : ''}
+              ? `<strong>Table:</strong> ${ord.table_no}`
+              : ord.token
+                ? `<strong>Token:</strong> ${ord.token}`
+                : ''}
           </td>
         </tr>
-        ${ord.customer_name
-      ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
-      : ''}
+        ${(showCustomerDetails && ord.customer_name)
+          ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
+          : ''}
       </table>
 
       <!-- Items Table -->
-      <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
-    <thead>
+      <table class="items-table">
+        <thead>
           <tr>
-            <th style="text-align: left; border-bottom: 1px solid #ccc;">Item</th>
-            <th style="text-align: center; border-bottom: 1px solid #ccc;">Qty</th>
+            <th class="text-left">Item</th>
+            <th class="text-center" style="width: 40px;">Qty</th>
           </tr>
-    </thead>
-    <tbody>
+        </thead>
+        <tbody>
           ${items.map(item => `
             <tr>
               <td>
-                 ${item.dish_name}
+                ${item.dish_name}
                 ${((item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra)) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) ? `
-                  <div style="font-size: 10px; color: #555; margin-top: 2px;">
+                  <div style="font-size: 9px; color: #000; margin-top: 1px;">
                     ${item.selected_variant && item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}${item.selected_variant && item.selected_variant.extra ? ` (${item.selected_variant.extra})` : ''}
                     ${item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 ? ' • ' : ''}
                     ${Array.isArray(item.selected_addons) ? item.selected_addons.filter(a => a && a.addon_name).map(addon => addon.addon_name).join(' • ') : ''}
                   </div>
                 ` : ''}
               </td>
-              <td style="text-align: center;">${item.quantity}</td>
+              <td class="text-center">${item.quantity}</td>
             </tr>
           `).join('')}
         </tbody>
       </table>
+      <hr class="dashed-line" />
+      <div style="height: 70px; clear: both; display: block; font-size: 1px; line-height: 1px;">&nbsp;</div>
     </div>
   `;
 };
 
 /**
- * Generates HTML for the full customer-facing bill.
+ * Generates HTML for the full customer-facing bill optimized for thermal printing.
  */
 export const printFullBill = (ord, userData, items, subTotal) => {
+  const uploadDir = process.env.REACT_APP_UPLOAD_DIR || 'http://localhost:5001/uploads';
+  const printSettings = userData?.printSettings || {};
+
+  const showLogo = printSettings.showLogo ?? true;
+  const logoUrl = (showLogo && userData.logo) ? `${uploadDir}${userData.logo.startsWith('/') ? '' : '/'}${userData.logo}` : '';
+
+  const showCustomerDetails = printSettings.showCustomerDetails ?? true;
+  const headerNote = printSettings.headerNote || '';
+  const footerNote = printSettings.footerNote || 'Thanks, Visit Again';
+
+  // QR Code Configuration
+  const addQrCode = printSettings.addQrCode ?? false;
+  const qrTargetType = printSettings.qrTargetType || 'feedback';
+  const qrUrl = printSettings.qrUrl || '';
+  const qrTitle = printSettings.qrTitle || '';
+
+  let qrTargetUrl = '';
+  let defaultQrText = 'Scan Me';
+
+  if (addQrCode) {
+    if (qrTargetType === 'feedback') {
+      const feedbackToken = userData.restaurant_token || '';
+      const feedbackHome = process.env.REACT_APP_HOME_URL || 'https://www.theboxsync.com/menu';
+      qrTargetUrl = `${feedbackHome}/feedback.html?token=${feedbackToken}`;
+      defaultQrText = 'Scan to Give Feedback';
+    } else if (qrTargetType === 'website') {
+      const resCode = userData.restaurant_code || '';
+      const websiteUrl = process.env.REACT_APP_WEBSITE_URL || 'http://localhost:5173';
+      qrTargetUrl = `${websiteUrl}/${resCode}`;
+      defaultQrText = 'Scan to View Menu';
+    } else if (qrTargetType === 'custom') {
+      qrTargetUrl = qrUrl;
+      defaultQrText = 'Scan to Visit Us';
+    }
+  }
+
+  const qrText = qrTitle || defaultQrText;
+  const qrCodeUrl = (addQrCode && qrTargetUrl) ? `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrTargetUrl)}` : '';
+
   return `
-    <div style="page-break-after: always; font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 10px; border: 1px solid #ccc;">
+    <div class="receipt-container" style="page-break-after: always;">
       <!-- Restaurant Header -->
-      <div style="text-align: center; margin-bottom: 10px;">
-        <h2 style="margin: 5px;">${userData.name}</h2>
-        <p style="margin: 0; font-size: 14px;">${userData.address}</p>
-        <p style="margin: 0; font-size: 14px;">${userData.city}, ${userData.state} - ${userData.pincode}</p>
-        <p style="margin: 5px; font-size: 14px;"><strong>Ph:</strong> ${userData.mobile}</p>
-        ${userData.gst_no ? `<p style="font-size: 14px;"><strong>GST:</strong> ${userData.gst_no}</p>` : ''}
+      <div class="receipt-header">
+        ${logoUrl ? `
+          <div style="text-align: center; margin-bottom: 6px;">
+            <img src="${logoUrl}" alt="Logo" style="max-width: 80px; max-height: 80px; object-fit: contain;" />
+          </div>
+        ` : ''}
+        <h2>${userData.name}</h2>
+        <p>${userData.address}</p>
+        <p>${userData.city}, ${userData.state} - ${userData.pincode}</p>
+        <p><strong>Ph:</strong> ${userData.mobile}</p>
+        ${userData.gst_no ? `<p><strong>GST:</strong> ${userData.gst_no}</p>` : ''}
+        ${headerNote ? `<p style="font-style: italic; margin: 4px 0 0 0; font-size: 10px;">${headerNote}</p>` : ''}
       </div>
 
-      <hr style="border: 0.5px dashed #ccc;" />
+      <hr class="dashed-line" />
 
       <!-- Order Info -->
-      <table style="width: 100%; font-size: 14px; margin-bottom: 20px;">
+      <table class="info-table">
         <tr>
           <td><strong>Bill No:</strong> ${ord.order_no || ord._id}</td>
-          <td style="text-align: right;"><strong>${ord.order_type}</strong></td>
+          <td class="text-right"><strong>${ord.order_type}</strong></td>
         </tr>
         <tr>
           <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
-          <td style="text-align: right;">
+          <td class="text-right">
             ${ord.table_no
-      ? `<strong>Table:</strong> ${ord.table_no}`
-      : ord.token
-        ? `<strong>Token:</strong> ${ord.token}`
-        : ''}
+              ? `<strong>Table:</strong> ${ord.table_no}`
+              : ord.token
+                ? `<strong>Token:</strong> ${ord.token}`
+                : ''}
           </td>
         </tr>
-        ${ord.customer_name
-      ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
-      : ''}
+        ${(showCustomerDetails && ord.customer_name)
+          ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
+          : ''}
       </table>
 
       <!-- Items Table -->
-      <table style="width: 100%; font-size: 14px; margin-bottom: 20px;">
+      <table class="items-table">
         <thead>
           <tr>
-            <th style="text-align: left; border-bottom: 1px solid #ccc;">Item</th>
-            <th style="text-align: center; border-bottom: 1px solid #ccc;">Qty</th>
-            <th style="text-align: center; border-bottom: 1px solid #ccc;">Price</th>
-            <th style="text-align: right; border-bottom: 1px solid #ccc;">Amount</th>
+            <th class="text-left">Item</th>
+            <th class="text-center" style="width: 30px;">Qty</th>
+            <th class="text-center" style="width: 50px;">Price</th>
+            <th class="text-right" style="width: 60px;">Amount</th>
           </tr>
         </thead>
         <tbody>
           ${items.map(item => `
-             <tr>
+            <tr>
               <td>
                 ${item.dish_name}
                 ${((item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra)) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) ? `
-                  <div style="font-size: 10px; color: #555; margin-top: 2px;">
+                  <div style="font-size: 9px; color: #000; margin-top: 1px;">
                     ${item.selected_variant && item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}${item.selected_variant && item.selected_variant.extra ? ` (${item.selected_variant.extra})` : ''}
                     ${item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 ? ' • ' : ''}
-                    ${Array.isArray(item.selected_addons) ? item.selected_addons.filter(a => a && a.addon_name).map(addon => `${addon.addon_name} (+₹${addon.price})`).join(' • ') : ''}
+                    ${Array.isArray(item.selected_addons) ? item.selected_addons.filter(a => a && a.addon_name).map(addon => addon.addon_name).join(' • ') : ''}
                   </div>
                 ` : ''}
               </td>
-              <td style="text-align: center;">${item.quantity}</td>
-              <td style="text-align: center;">₹${item.dish_price}</td>
-              <td style="text-align: right;">₹${(item.dish_price * item.quantity).toFixed(2)}</td>
+              <td class="text-center">${item.quantity}</td>
+              <td class="text-center">₹${item.dish_price}</td>
+              <td class="text-right">₹${(item.dish_price * item.quantity).toFixed(2)}</td>
             </tr>
           `).join('')}
+        </tbody>
+      </table>
 
+      <hr class="dashed-line" />
+
+      <!-- Totals Table -->
+      <table class="total-table">
+        <tbody>
           <tr>
-            <td colspan="3" style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
-              <strong>Sub Total:</strong>
-            </td>
-            <td style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
-              <strong>₹${parseFloat(subTotal).toFixed(2)}</strong>
-            </td>
+            <td class="text-right" style="padding-top: 4px;"><strong>Sub Total:</strong></td>
+            <td class="text-right" style="width: 80px; padding-top: 4px;"><strong>₹${parseFloat(subTotal).toFixed(2)}</strong></td>
           </tr>
 
           ${ord.cgst_amount > 0 ? `
             <tr>
-              <td colspan="3" style="text-align: right;"><strong>CGST (${ord.cgst_percent || 0}%):</strong></td>
-              <td style="text-align: right;">₹${parseFloat(ord.cgst_amount).toFixed(2)}</td>
+              <td class="text-right"><strong>CGST (${ord.cgst_percent || 0}%):</strong></td>
+              <td class="text-right">₹${parseFloat(ord.cgst_amount).toFixed(2)}</td>
             </tr>
           ` : ''}
 
           ${ord.sgst_amount > 0 ? `
             <tr>
-              <td colspan="3" style="text-align: right;"><strong>SGST (${ord.sgst_percent || 0}%):</strong></td>
-              <td style="text-align: right;">₹${parseFloat(ord.sgst_amount).toFixed(2)}</td>
+              <td class="text-right"><strong>SGST (${ord.sgst_percent || 0}%):</strong></td>
+              <td class="text-right">₹${parseFloat(ord.sgst_amount).toFixed(2)}</td>
             </tr>
           ` : ''}
 
           ${ord.vat_amount > 0 ? `
             <tr>
-              <td colspan="3" style="text-align: right;"><strong>VAT (${ord.vat_percent || 0}%):</strong></td>
-              <td style="text-align: right;">₹${parseFloat(ord.vat_amount).toFixed(2)}</td>
+              <td class="text-right"><strong>VAT (${ord.vat_percent || 0}%):</strong></td>
+              <td class="text-right">₹${parseFloat(ord.vat_amount).toFixed(2)}</td>
             </tr>
           ` : ''}
 
           ${ord.discount_amount > 0 ? `
             <tr>
-              <td colspan="3" style="text-align: right;"><strong>Discount:</strong></td>
-              <td style="text-align: right;">₹${parseFloat(ord.discount_amount).toFixed(2)}</td>
+              <td class="text-right"><strong>Discount:</strong></td>
+              <td class="text-right">-₹${parseFloat(ord.discount_amount).toFixed(2)}</td>
             </tr>
           ` : ''}
 
           <tr>
-            <td colspan="3" style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
-              <strong>Total Amount:</strong>
-            </td>
-            <td style="text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">
-              <strong>₹${parseFloat(ord.total_amount).toFixed(2)}</strong>
-            </td>
+            <td class="text-right" style="border-top: 1px dashed #000; padding-top: 6px;"><strong>Total Amount:</strong></td>
+            <td class="text-right" style="border-top: 1px dashed #000; padding-top: 6px;"><strong>₹${parseFloat(ord.total_amount).toFixed(2)}</strong></td>
           </tr>
         </tbody>
       </table>
 
-      <hr style="border: 0.5px dashed #ccc;" />
-      <p style="text-align: center; font-size: 12px;"><strong>Thanks, Visit Again</strong></p>
+      <hr class="dashed-line" />
+
+      ${qrCodeUrl ? `
+        <div style="text-align: center; margin: 8px 0 4px 0; clear: both; display: block;">
+          <img src="${qrCodeUrl}" alt="Scan QR" style="width: 65px; height: 65px; display: inline-block;" />
+          <p style="font-size: 9px; font-weight: bold; margin: 4px 0 0 0; color: #000;">${qrText}</p>
+        </div>
+        <hr class="dashed-line" />
+      ` : ''}
+
+      <p class="text-center" style="font-size: 11px; margin: 4px 0 0 0;"><strong>${footerNote}</strong></p>
+      <hr class="dashed-line" />
+      <div style="height: 70px; clear: both; display: block; font-size: 1px; line-height: 1px;">&nbsp;</div>
     </div>
   `;
 };
@@ -232,6 +292,10 @@ export const openPrintWindow = async (order_id, setPrinting) => {
       return;
     }
 
+    const printSettings = userData?.printSettings || {};
+    const paperWidth = printSettings.paperWidth || '58mm';
+    const maxContainerWidth = paperWidth === '80mm' ? '390px' : '290px';
+
     let allBillsHTML = printFullBill(order, userData, order.order_items, order.sub_total);
     Object.entries(groupedByCounter).forEach(([counterName, items]) => {
       allBillsHTML += printCounterBill(order, userData, counterName, items);
@@ -241,6 +305,101 @@ export const openPrintWindow = async (order_id, setPrinting) => {
       <html>
       <head>
         <title>Print Bills</title>
+        <style>
+          @page {
+            margin: 0;
+          }
+          body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            color: #000;
+            background: #fff;
+          }
+          .receipt-container {
+            width: 100%;
+            max-width: ${maxContainerWidth};
+            margin: 0;
+            padding: 6px;
+            box-sizing: border-box;
+          }
+          .receipt-header {
+            text-align: center;
+            margin-bottom: 6px;
+          }
+          .receipt-header h2 {
+            margin: 0 0 2px 0;
+            font-size: 13px;
+            font-weight: bold;
+          }
+          .receipt-header h3 {
+            margin: 0 0 2px 0;
+            font-size: 12px;
+            font-weight: bold;
+          }
+          .receipt-header p {
+            margin: 1px 0;
+            font-size: 10px;
+          }
+          .dashed-line {
+            border: none;
+            border-top: 1px dashed #000;
+            margin: 6px 0;
+          }
+          .info-table {
+            width: 100%;
+            font-size: 10px;
+            margin-bottom: 6px;
+          }
+          .info-table td {
+            padding: 1px 0;
+          }
+          .items-table {
+            width: 100%;
+            font-size: 10px;
+            margin-bottom: 6px;
+            border-collapse: collapse;
+          }
+          .items-table th {
+            border-bottom: 1px dashed #000;
+            padding: 3px 1px;
+            font-weight: bold;
+          }
+          .items-table td {
+            padding: 3px 1px;
+            vertical-align: top;
+          }
+          .total-table {
+            width: 100%;
+            font-size: 10px;
+            margin-top: 2px;
+            border-collapse: collapse;
+          }
+          .total-table td {
+            padding: 2px 1px;
+          }
+          .text-center {
+            text-align: center;
+          }
+          .text-right {
+            text-align: right;
+          }
+          .text-left {
+            text-align: left;
+          }
+          @media print {
+            body {
+              width: 100%;
+            }
+            .receipt-container {
+              max-width: 100% !important;
+              padding: 0 6px 0 6px !important;
+              margin: 0 0 70px 0 !important;
+              border: none !important;
+            }
+          }
+        </style>
         <script>
           window.onload = function() {
             window.focus();
@@ -276,9 +435,6 @@ export const openPrintWindow = async (order_id, setPrinting) => {
 /**
  * Prints a full bill directly from the live PaymentModal state
  * without requiring the order to be saved first.
- *
- * @param {object} liveData  - { paymentData, orderItems, customerInfo, orderType, orderId }
- * @param {Function} setPrinting - state setter to show loading state
  */
 export const printModalBill = async (liveData, setPrinting) => {
   const { paymentData, orderItems, customerInfo, orderType, orderId, orderNo } = liveData;
@@ -318,23 +474,111 @@ export const printModalBill = async (liveData, setPrinting) => {
       return;
     }
 
-    let billHTML = printFullBill(ord, userData, orderItems, ord.sub_total);
+    const printSettings = userData?.printSettings || {};
+    const paperWidth = printSettings.paperWidth || '58mm';
+    const maxContainerWidth = paperWidth === '80mm' ? '390px' : '290px';
 
-    const groupedByCounter = {};
-    orderItems.forEach(item => {
-      const counterName = item.counter || 'Default';
-      if (!groupedByCounter[counterName]) groupedByCounter[counterName] = [];
-      groupedByCounter[counterName].push(item);
-    });
-
-    Object.entries(groupedByCounter).forEach(([counterName, items]) => {
-      billHTML += printCounterBill(ord, userData, counterName, items);
-    });
+    const billHTML = printFullBill(ord, userData, orderItems, ord.sub_total);
 
     printWindow.document.write(`
       <html>
       <head>
         <title>Print Bill</title>
+        <style>
+          @page {
+            margin: 0;
+          }
+          body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            color: #000;
+            background: #fff;
+          }
+          .receipt-container {
+            width: 100%;
+            max-width: ${maxContainerWidth};
+            margin: 0;
+            padding: 6px;
+            box-sizing: border-box;
+          }
+          .receipt-header {
+            text-align: center;
+            margin-bottom: 6px;
+          }
+          .receipt-header h2 {
+            margin: 0 0 2px 0;
+            font-size: 13px;
+            font-weight: bold;
+          }
+          .receipt-header h3 {
+            margin: 0 0 2px 0;
+            font-size: 12px;
+            font-weight: bold;
+          }
+          .receipt-header p {
+            margin: 1px 0;
+            font-size: 10px;
+          }
+          .dashed-line {
+            border: none;
+            border-top: 1px dashed #000;
+            margin: 6px 0;
+          }
+          .info-table {
+            width: 100%;
+            font-size: 10px;
+            margin-bottom: 6px;
+          }
+          .info-table td {
+            padding: 1px 0;
+          }
+          .items-table {
+            width: 100%;
+            font-size: 10px;
+            margin-bottom: 6px;
+            border-collapse: collapse;
+          }
+          .items-table th {
+            border-bottom: 1px dashed #000;
+            padding: 3px 1px;
+            font-weight: bold;
+          }
+          .items-table td {
+            padding: 3px 1px;
+            vertical-align: top;
+          }
+          .total-table {
+            width: 100%;
+            font-size: 10px;
+            margin-top: 2px;
+            border-collapse: collapse;
+          }
+          .total-table td {
+            padding: 2px 1px;
+          }
+          .text-center {
+            text-align: center;
+          }
+          .text-right {
+            text-align: right;
+          }
+          .text-left {
+            text-align: left;
+          }
+          @media print {
+            body {
+              width: 100%;
+            }
+            .receipt-container {
+              max-width: 100% !important;
+              padding: 0 6px 0 6px !important;
+              margin: 0 0 70px 0 !important;
+              border: none !important;
+            }
+          }
+        </style>
         <script>
           window.onload = function() {
             window.focus();
@@ -357,12 +601,7 @@ export const printModalBill = async (liveData, setPrinting) => {
 };
 
 /**
- * Prints a KOT slip from in-memory items (no API call).
- * Groups items by counter field if present.
- *
- * @param {object} slipData - { orderNo, orderType, tokenNumber, tableNo, items, kotNo, timestamp }
- * @param {object} userData - { name } — restaurant name
- * @param {Function} setPrinting - loading state setter
+ * Prints a KOT slip from in-memory items (no API call) optimized for thermal printing.
  */
 export const printKOTSlip = (slipData, userData, setPrinting) => {
   const { orderNo, orderType, tokenNumber, tableNo, items, kotNo, timestamp } = slipData;
@@ -379,49 +618,78 @@ export const printKOTSlip = (slipData, userData, setPrinting) => {
   const restaurantName = userData?.name || '';
   const printTime = new Date(timestamp || new Date()).toLocaleString('en-IN');
 
+  const printSettings = userData?.printSettings || {};
+  const showCustomerDetails = printSettings.showCustomerDetails ?? true;
+  const paperWidth = printSettings.paperWidth || '58mm';
+  const maxContainerWidth = paperWidth === '80mm' ? '390px' : '290px';
+
   let html = '';
   Object.entries(groupedByCounter).forEach(([counterName, counterItems]) => {
     html += `
-      <div style="page-break-after:always;font-family:Arial,sans-serif;max-width:400px;margin:0 auto;padding:10px;border:1px solid #ccc;">
-        <div style="text-align:center;margin-bottom:8px;"><h3 style="margin:3px;">${restaurantName}</h3></div>
-        <hr style="border:0.5px dashed #ccc;"/>
-        <div style="text-align:center;margin:6px 0;">
-          <span style="background:#000;color:#fff;padding:4px 16px;border-radius:4px;font-size:14px;font-weight:bold;">${counterName} Counter</span>
+      <div class="receipt-container" style="page-break-after:always;">
+        <!-- Restaurant Header -->
+        <div class="receipt-header">
+          <h3 style="margin: 0;">${restaurantName}</h3>
         </div>
-        <div style="text-align:center;font-size:14px;font-weight:bold;margin:4px 0;">KOT #${kotNo}</div>
-        <hr style="border:0.5px dashed #ccc;"/>
-        <table style="width:100%;font-size:12px;margin-bottom:8px;">
-          <tr><td><strong>Bill No:</strong> ${orderNo || '-'}</td><td style="text-align:right;"><strong>${orderType}</strong></td></tr>
+
+        <hr class="dashed-line" />
+
+        <!-- Counter Badge -->
+        <div class="text-center" style="margin: 6px 0;">
+          <span style="color: #000; font-size: 12px; font-weight: bold; display: inline-block;">
+            ${counterName} Counter
+          </span>
+        </div>
+        <div class="text-center" style="font-size: 13px; font-weight: bold; margin: 4px 0;">KOT #${kotNo}</div>
+
+        <hr class="dashed-line" />
+
+        <!-- Order Info -->
+        <table class="info-table">
+          <tr>
+            <td><strong>Bill No:</strong> ${orderNo || '-'}</td>
+            <td class="text-right"><strong>${orderType}</strong></td>
+          </tr>
           <tr>
             <td><strong>Time:</strong> ${printTime}</td>
-            <td style="text-align:right;">${tableNo ? `<strong>Table:</strong> ${tableNo}` : tokenNumber ? `<strong>Token:</strong> ${tokenNumber}` : ''}</td>
+            <td class="text-right">
+              ${tableNo ? `<strong>Table:</strong> ${tableNo}` : tokenNumber ? `<strong>Token:</strong> ${tokenNumber}` : ''}
+            </td>
           </tr>
         </table>
-        <table style="width:100%;font-size:13px;margin-bottom:10px;">
-          <thead><tr>
-            <th style="text-align:left;border-bottom:1px solid #ccc;padding:3px 0;">Item</th>
-            <th style="text-align:center;border-bottom:1px solid #ccc;width:40px;">Qty</th>
-          </tr></thead>
+
+        <!-- Items Table -->
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th class="text-left">Item</th>
+              <th class="text-center" style="width: 40px;">Qty</th>
+            </tr>
+          </thead>
           <tbody>
             ${counterItems.map(item => `
               <tr>
-                <td style="padding:4px 0;">
+                <td>
                   ${item.dish_name}
                   ${((item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra)) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) ? `
-                    <div style="font-size: 11px; color: #555; margin-top: 2px; font-weight: bold;">
+                    <div style="font-size: 9px; color: #000; margin-top: 1px;">
                       ${item.selected_variant && item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}${item.selected_variant && item.selected_variant.extra ? ` (${item.selected_variant.extra})` : ''}
                       ${item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 ? ' • ' : ''}
                       ${Array.isArray(item.selected_addons) ? item.selected_addons.filter(a => a && a.addon_name).map(addon => addon.addon_name).join(' • ') : ''}
                     </div>
                   ` : ''}
-                  ${item.special_notes ? `<div style="font-size:11px;color:#666;font-style:italic;">Note: ${item.special_notes}</div>` : ''}
+                  ${item.special_notes ? `<div style="font-size:10px;color:#000;font-style:italic;margin-top:1px;">Note: ${item.special_notes}</div>` : ''}
                 </td>
-                <td style="text-align:center;font-size:16px;font-weight:bold;">${item.quantity}</td>
-        </tr>`).join('')}
-    </tbody>
-  </table>
-        <hr style="border:0.5px dashed #ccc;"/>
-        <div style="text-align:center;font-size:10px;color:#999;">KOT Print — ${printTime}</div>
+                <td class="text-center">${item.quantity}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <hr class="dashed-line" />
+        <div class="text-center" style="font-size: 10px; color: #000; margin-top: 4px;">KOT Print — ${printTime}</div>
+        <hr class="dashed-line" />
+        <div style="height: 70px; clear: both; display: block; font-size: 1px; line-height: 1px;">&nbsp;</div>
       </div>`;
   });
 
@@ -432,9 +700,106 @@ export const printKOTSlip = (slipData, userData, setPrinting) => {
     return;
   }
   printWindow.document.write(`
-    <html><head><title>KOT #${kotNo}</title>
-    <script>window.onload=function(){window.focus();window.print();setTimeout(function(){window.close();},100);};</script>
-    </head><body>${html}</body></html>`);
+    <html>
+    <head>
+      <title>KOT #${kotNo}</title>
+      <style>
+        @page {
+          margin: 0;
+        }
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: Arial, sans-serif;
+          font-size: 11px;
+          color: #000;
+          background: #fff;
+        }
+        .receipt-container {
+          width: 100%;
+          max-width: ${maxContainerWidth};
+          margin: 0;
+          padding: 6px;
+          box-sizing: border-box;
+        }
+        .receipt-header {
+          text-align: center;
+          margin-bottom: 6px;
+        }
+        .receipt-header h2 {
+          margin: 0 0 2px 0;
+          font-size: 13px;
+          font-weight: bold;
+        }
+        .receipt-header h3 {
+          margin: 0 0 2px 0;
+          font-size: 12px;
+          font-weight: bold;
+        }
+        .receipt-header p {
+          margin: 1px 0;
+          font-size: 10px;
+        }
+        .dashed-line {
+          border: none;
+          border-top: 1px dashed #000;
+          margin: 6px 0;
+        }
+        .info-table {
+          width: 100%;
+          font-size: 10px;
+          margin-bottom: 6px;
+        }
+        .info-table td {
+          padding: 1px 0;
+        }
+        .items-table {
+          width: 100%;
+          font-size: 10px;
+          margin-bottom: 6px;
+          border-collapse: collapse;
+        }
+        .items-table th {
+          border-bottom: 1px dashed #000;
+          padding: 3px 1px;
+          font-weight: bold;
+        }
+        .items-table td {
+          padding: 3px 1px;
+          vertical-align: top;
+        }
+        .text-center {
+          text-align: center;
+        }
+        .text-right {
+          text-align: right;
+        }
+        .text-left {
+          text-align: left;
+        }
+        @media print {
+          body {
+            width: 100%;
+          }
+          .receipt-container {
+            max-width: 100% !important;
+            padding: 0 6px 0 6px !important;
+            margin: 0 0 70px 0 !important;
+            border: none !important;
+          }
+        }
+      </style>
+      <script>
+        window.onload=function(){
+          window.focus();
+          window.print();
+          setTimeout(function(){window.close();},100);
+        };
+      </script>
+    </head>
+    <body>${html}</body>
+    </html>
+  `);
   printWindow.document.close();
   printWindow.focus();
   setPrinting(false);
