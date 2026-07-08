@@ -101,7 +101,7 @@ export default function Login() {
             {otpSent ? 'Verify OTP' : 'Sign In'}
           </h1>
           <p className="text-white-60">
-            {otpSent ? 'Enter the 6-digit code sent to your email' : 'Sign in securely using email & One-Time Password'}
+            {otpSent ? 'Enter the 6-digit code sent to your email' : 'Sign in with your email'}
           </p>
         </div>
 

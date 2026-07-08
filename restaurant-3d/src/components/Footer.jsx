@@ -151,13 +151,13 @@ export default function Footer() {
                 {settings?.contact_email || 'hello@emberandgold.com'}
               </li>
             </ul>
-            <div className="mt-3 glass rounded-3 p-2">
+            <div className="mt-3 glass rounded-3 p-3">
               <h6 className="small text-brand-400 fw-bold mb-1.5" style={{ fontSize: '0.75rem' }}>Opening Hours</h6>
               {settings?.opening_hours?.length > 0 ? (
                 <div className="d-flex flex-column gap-1">
                   {settings.opening_hours.map((h, i) => (
                     <div key={i} className="d-flex justify-content-between" style={{ fontSize: '0.75rem' }}>
-                      <span className="text-white-60">{h.day}</span>
+                      <span className="text-white-60">{h.day || h.dayRange || 'Everyday'}</span>
                       <span className="text-white fw-medium">{h.from} - {h.to}</span>
                     </div>
                   ))}
@@ -257,7 +257,7 @@ export default function Footer() {
             © {new Date().getFullYear()} {settings?.restaurant_name || 'Ember & Gold'}. All rights reserved.
           </p>
           <div className="d-flex gap-4">
-            {['Privacy Policy', 'Terms of Service', 'Allergen Info'].map(t => (
+            {['Privacy Policy', 'Terms of Service'].map(t => (
               <a key={t} href="#" className="small text-white-60 text-decoration-none transition-colors">
                 {t}
               </a>

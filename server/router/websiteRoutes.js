@@ -9,6 +9,7 @@ const {
   getFeaturedDishesByCode,
   createPublicReservation,
   getPublicMenuByCode,
+  submitPublicContactForm,
 } = require("../controllers/websiteController");
 
 const websiteRouter = express.Router();
@@ -21,6 +22,7 @@ websiteRouter.get("/settings/:code", getWebsiteSettingsByCode);
 websiteRouter.get("/featured-dishes/:code", getFeaturedDishesByCode);
 websiteRouter.get("/menu/:code", getPublicMenuByCode);
 websiteRouter.post("/reservation/:code", createPublicReservation);
+websiteRouter.post("/contact/:code", submitPublicContactForm);
 
 
 

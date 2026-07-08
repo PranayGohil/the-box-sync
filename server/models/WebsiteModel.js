@@ -34,6 +34,8 @@ const websiteSchema = new mongoose.Schema({
     label: String
   }],
   contact_details: String,
+  contact_title: String,
+  contact_subtitle: String,
   map_location: String,
   place_id: String,
   formatted_address: String,

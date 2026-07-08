@@ -3,6 +3,7 @@ const Menu = require("../models/menuModel");
 const User = require("../models/userModel");
 const Reservation = require("../models/reservationModel");
 const Subscription = require("../models/subscriptionModel");
+const { sendEmail } = require("../utils/emailService");
 
 // GET current settings
 exports.getWebsiteSettings = async (req, res) => {
@@ -43,11 +44,14 @@ exports.getWebsiteSettings = async (req, res) => {
         logo: user?.logo || "",
         show_reservation: true,
         has_reservation_plan: hasReservationAccess,
+        contact_title: "We'd Love to Hear From You",
+        contact_subtitle: "Get in Touch",
+        contact_details: "Whether you're booking a table, asking about our menu, or just want to say hello — reach out and we'll respond promptly.",
       });
     }
 
     // Merge existing settings with user data for empty fields
-    
+
     const response = {
       ...settings.toObject(),
       restaurant_name: settings.restaurant_name || user?.name || "",
@@ -93,6 +97,8 @@ exports.updateWebsiteSettings = async (req, res) => {
       legacy_layout,
       legacy_bullets,
       contact_details,
+      contact_title,
+      contact_subtitle,
       testimonials,
       social_links,
       map_location,
@@ -165,6 +171,8 @@ exports.updateWebsiteSettings = async (req, res) => {
         legacy_layout,
         legacy_bullets: (typeof legacy_bullets === 'string' && legacy_bullets.trim()) ? JSON.parse(legacy_bullets) : (Array.isArray(legacy_bullets) ? legacy_bullets : []),
         contact_details,
+        contact_title,
+        contact_subtitle,
         testimonials: (typeof testimonials === 'string' && testimonials.trim()) ? JSON.parse(testimonials) : (Array.isArray(testimonials) ? testimonials : []),
         social_links: (typeof social_links === 'string' && social_links.trim()) ? JSON.parse(social_links) : (Array.isArray(social_links) ? social_links : []),
         map_location,
@@ -191,10 +199,10 @@ exports.updateWebsiteSettings = async (req, res) => {
     res.json(updated);
   } catch (err) {
     console.error("Website update full error:", err);
-    res.status(500).json({ 
-      error: "Failed to update settings", 
+    res.status(500).json({
+      error: "Failed to update settings",
       details: err.message,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined 
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
   }
 };
@@ -261,6 +269,9 @@ exports.getWebsiteSettingsByCode = async (req, res) => {
       logo: settings?.logo || user.logo,
       contact_email: settings?.contact_email || user.email,
       contact_phone: settings?.contact_phone || user.mobile,
+      contact_title: settings?.contact_title || "We'd Love to Hear From You",
+      contact_subtitle: settings?.contact_subtitle || "Get in Touch",
+      contact_details: settings?.contact_details || "Whether you're booking a table, asking about our menu, or just want to say hello — reach out and we'll respond promptly.",
       hero_title: settings?.hero_title || "Welcome to Our Restaurant",
       hero_subtitle: settings?.hero_subtitle || "Delicious. Authentic. Fresh.",
       hero_details: settings?.hero_details || "Experience extraordinary flavors where every dish tells a story.",
@@ -365,5 +376,68 @@ exports.getPublicMenuByCode = async (req, res) => {
   } catch (err) {
     console.error("Error fetching public menu:", err);
     res.status(500).json({ error: "Server error while fetching menu" });
+  }
+};
+
+// ✅ 5. Submit Public Contact Form (Sends email to restaurant owner)
+exports.submitPublicContactForm = async (req, res) => {
+  try {
+    const { code } = req.params;
+    const { name, email, subject, message } = req.body;
+
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({ error: "All fields are required." });
+    }
+
+    const user = await User.findOne({ restaurant_code: code });
+    if (!user) {
+      return res.status(404).json({ error: "Restaurant not found." });
+    }
+
+    const settings = await Website.findOne({ user_id: user._id });
+
+    // Send email to owner
+    const ownerEmail = user.email;
+    const emailSubject = `New Contact Form Submission: ${subject}`;
+
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px;">
+        <h2 style="color: #f27a1a; border-bottom: 2px solid #f27a1a; padding-bottom: 10px;">Contact Inquiry Received</h2>
+        <p>Hello <strong>${user.name || 'Owner'}</strong>,</p>
+        <p>You have received a new message from the contact form on your restaurant website (<strong>${settings?.restaurant_name || user.name || 'Your Restaurant'}</strong>):</p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          <tr>
+            <td style="padding: 8px; font-weight: bold; width: 120px; border-bottom: 1px solid #eee;">Name:</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${name}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">Email:</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><a href="mailto:${email}">${email}</a></td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">Subject:</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${subject}</td>
+          </tr>
+        </table>
+        
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border-left: 4px solid #f27a1a; margin-top: 15px;">
+          <strong style="display: block; margin-bottom: 5px;">Message:</strong>
+          <p style="white-space: pre-wrap; margin: 0; line-height: 1.5;">${message}</p>
+        </div>
+      </div>
+    `;
+
+    await sendEmail({
+      to: ownerEmail,
+      subject: emailSubject,
+      html: emailHtml,
+      replyTo: email
+    });
+
+    res.json({ success: true, message: "Contact message sent successfully." });
+  } catch (error) {
+    console.error("Error sending contact email:", error);
+    res.status(500).json({ error: "Failed to send contact message." });
   }
 };
