@@ -202,7 +202,7 @@ export default function OrderDetail() {
       return;
     }
     let feedbackBaseUrl = import.meta.env.VITE_FEEDBACK_URL || 'https://www.theboxsync.com/feedback.html';
-    
+
     // Normalize local filesystem paths to avoid browser "Not allowed to load local resource" errors
     if (feedbackBaseUrl.includes(':\\') || feedbackBaseUrl.includes(':/') || feedbackBaseUrl.startsWith('file:')) {
       const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';

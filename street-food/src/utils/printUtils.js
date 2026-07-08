@@ -286,11 +286,19 @@ export const openPrintWindow = async (order_id, setPrinting) => {
       groupedByCounter[counterName].push(item);
     });
 
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast.error('Popup blocked! Please allow popups.');
-      return;
+    let printFrame = document.getElementById('print-frame');
+    if (!printFrame) {
+      printFrame = document.createElement('iframe');
+      printFrame.id = 'print-frame';
+      printFrame.style.position = 'absolute';
+      printFrame.style.width = '0px';
+      printFrame.style.height = '0px';
+      printFrame.style.border = '0px';
+      printFrame.style.top = '0px';
+      printFrame.style.left = '0px';
+      document.body.appendChild(printFrame);
     }
+    const printWindow = printFrame.contentWindow;
 
     const printSettings = userData?.printSettings || {};
     const paperWidth = printSettings.paperWidth || '58mm';
@@ -468,11 +476,19 @@ export const printModalBill = async (liveData, setPrinting) => {
       payment_type: paymentData.paymentType || 'Cash',
     };
 
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast.error('Popup blocked! Please allow popups.');
-      return;
+    let printFrame = document.getElementById('print-frame');
+    if (!printFrame) {
+      printFrame = document.createElement('iframe');
+      printFrame.id = 'print-frame';
+      printFrame.style.position = 'absolute';
+      printFrame.style.width = '0px';
+      printFrame.style.height = '0px';
+      printFrame.style.border = '0px';
+      printFrame.style.top = '0px';
+      printFrame.style.left = '0px';
+      document.body.appendChild(printFrame);
     }
+    const printWindow = printFrame.contentWindow;
 
     const printSettings = userData?.printSettings || {};
     const paperWidth = printSettings.paperWidth || '58mm';
@@ -693,12 +709,19 @@ export const printKOTSlip = (slipData, userData, setPrinting) => {
       </div>`;
   });
 
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) {
-    toast.error('Popup blocked! Please allow popups.');
-    setPrinting(false);
-    return;
+  let printFrame = document.getElementById('print-frame');
+  if (!printFrame) {
+    printFrame = document.createElement('iframe');
+    printFrame.id = 'print-frame';
+    printFrame.style.position = 'absolute';
+    printFrame.style.width = '0px';
+    printFrame.style.height = '0px';
+    printFrame.style.border = '0px';
+    printFrame.style.top = '0px';
+    printFrame.style.left = '0px';
+    document.body.appendChild(printFrame);
   }
+  const printWindow = printFrame.contentWindow;
   printWindow.document.write(`
     <html>
     <head>
