@@ -6,8 +6,7 @@ const NavLogo = () => {
   return (
     <div className="logo position-relative">
       <Link to={DEFAULT_PATHS.APP}>
-        {/* <div className="img" /> */}
-        <h1 className='fw-bold text-white pb-0 mb-0'> THE BOX </h1>
+        <img src="/img/logo/logo-light.png" alt="logo" style={{ maxHeight: "38px", width: "auto", display: "block" }} />
       </Link>
     </div>
   );
