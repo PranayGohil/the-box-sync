@@ -34,7 +34,7 @@ const isRestaurantOpen = (settings) => {
   const now = new Date();
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const currentDay = dayNames[now.getDay()];
-  
+
   const currentHours = String(now.getHours()).padStart(2, '0');
   const currentMinutes = String(now.getMinutes()).padStart(2, '0');
   const currentTime = `${currentHours}:${currentMinutes}`;
@@ -42,33 +42,33 @@ const isRestaurantOpen = (settings) => {
   const convertTo24h = (timeStr) => {
     if (!timeStr) return "00:00";
     if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
-    
+
     const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
     if (!match) return timeStr;
-    
+
     let hours = parseInt(match[1], 10);
     const minutes = match[2];
     const ampm = match[3].toUpperCase();
-    
+
     if (ampm === "PM" && hours < 12) hours += 12;
     if (ampm === "AM" && hours === 12) hours = 0;
-    
+
     return `${String(hours).padStart(2, '0')}:${minutes}`;
   };
 
   const dayMatches = (dayConfig, currentDayName) => {
     const config = dayConfig.trim().toLowerCase();
     const cur = currentDayName.trim().toLowerCase();
-    
+
     if (config === "everyday" || config === "every day") return true;
     if (config === cur) return true;
-    
+
     const dayIndices = {
       sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6
     };
-    
+
     const curIdx = dayIndices[cur];
-    
+
     if (config.includes("-") || config.includes("to")) {
       const parts = config.split(/[-–]|to/).map(s => s.trim());
       if (parts.length === 2) {
@@ -76,7 +76,7 @@ const isRestaurantOpen = (settings) => {
         const endDay = parts[1];
         const startIdx = dayIndices[startDay];
         const endIdx = dayIndices[endDay];
-        
+
         if (startIdx !== undefined && endIdx !== undefined) {
           if (startIdx <= endIdx) {
             return curIdx >= startIdx && curIdx <= endIdx;
@@ -86,20 +86,20 @@ const isRestaurantOpen = (settings) => {
         }
       }
     }
-    
+
     return false;
   };
 
   if (settings.opening_hours && settings.opening_hours.length > 0) {
     let matchedDaySlot = false;
     let isOpenInMatchedSlot = false;
-    
+
     for (const slot of settings.opening_hours) {
       if (slot.day && dayMatches(slot.day, currentDay)) {
         matchedDaySlot = true;
         const fromTime = convertTo24h(slot.from);
         const toTime = convertTo24h(slot.to);
-        
+
         if (fromTime <= toTime) {
           if (currentTime >= fromTime && currentTime <= toTime) {
             isOpenInMatchedSlot = true;
@@ -111,14 +111,14 @@ const isRestaurantOpen = (settings) => {
         }
       }
     }
-    
+
     if (matchedDaySlot) return isOpenInMatchedSlot;
   }
 
   if (settings.open_time_from && settings.open_time_to) {
     const fromTime = convertTo24h(settings.open_time_from);
     const toTime = convertTo24h(settings.open_time_to);
-    
+
     if (fromTime <= toTime) {
       return currentTime >= fromTime && currentTime <= toTime;
     } else {
@@ -1020,127 +1020,169 @@ export default function Checkout() {
                   <div>
                     <div className="d-flex justify-content-between align-items-center mb-4">
                       <h5 className="fw-semibold text-white mb-0">Delivery Details</h5>
-                      <button
-                        type="button"
-                        onClick={handleOpenAddAddressForm}
-                        className="btn-primary py-1 px-3 small rounded"
-                        style={{ fontSize: '11px' }}
-                      >
-                        + Add Address
-                      </button>
+                      {user?.addresses && user.addresses.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleOpenAddAddressForm}
+                          className="btn-primary py-1 px-3 small rounded"
+                          style={{ fontSize: '11px' }}
+                        >
+                          + Add Address
+                        </button>
+                      )}
                     </div>
 
-                    {user?.addresses && user.addresses.length > 0 && (
-                      <div className="mb-4">
-                        <label className="form-label small text-white-60 mb-2">Select a Saved Address:</label>
-                        <div className="d-flex flex-column gap-2 mb-4">
-                          {user.addresses.map((addr) => (
+                    {user?.addresses && user.addresses.length > 0 ? (
+                      <>
+                        <div className="mb-4">
+                          <label className="form-label small text-white-60 mb-2">Select a Saved Address:</label>
+                          <div className="d-flex flex-column gap-2 mb-4">
+                            {user.addresses.map((addr) => (
+                              <button
+                                key={addr._id}
+                                type="button"
+                                onClick={() => {
+                                  setValue('address', addr.address);
+                                  setValue('city', addr.city);
+                                  setValue('postcode', addr.pincode);
+                                  setSelectedAddress(addr);
+                                  toast.success('Address populated!', {
+                                    style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(242,122,26,0.3)', borderRadius: '12px' }
+                                  });
+                                }}
+                                className={`btn text-start p-3 rounded-3 w-100 transition-all border text-white ${selectedAddress?._id === addr._id ? 'border-brand-500 bg-brand-500 bg-opacity-10' : 'border-white-10 hover:bg-white-5'}`}
+                                style={{
+                                  background: selectedAddress?._id === addr._id ? 'rgba(242,122,26,0.05)' : 'rgba(255,255,255,0.02)',
+                                  fontSize: '0.9rem'
+                                }}
+                              >
+                                <div className="d-flex justify-content-between align-items-center mb-1">
+                                  <span className="fw-semibold small text-brand-400">
+                                    {addr.tag || 'Address'} ({addr.city})
+                                  </span>
+                                  {selectedAddress?._id === addr._id && (
+                                    <span className="badge bg-brand-500 text-white" style={{ fontSize: '10px' }}>Selected</span>
+                                  )}
+                                </div>
+                                <div className="small text-white-80">{addr.address}</div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {calculatingDelivery && (
+                          <div className="alert bg-dark border border-white-10 text-white d-flex align-items-center gap-2 mb-4">
+                            <span className="spinner-border spinner-border-sm text-brand-400" role="status" />
+                            <span className="small">Calculating driving distance and delivery charges...</span>
+                          </div>
+                        )}
+
+                        {deliveryError && (
+                          <div className="alert alert-danger bg-danger bg-opacity-10 border border-danger border-opacity-20 text-white-80 small mb-4">
+                            ❌ {deliveryError}
+                          </div>
+                        )}
+
+                        {deliveryDetails && (
+                          <div className="alert bg-success bg-opacity-10 border border-success border-opacity-20 text-white small mb-4">
+                            <div className="fw-bold text-success mb-1">✓ Delivery Eligible!</div>
+                            <div className="d-flex flex-column flex-wrap gap-x-4 text-white-80">
+                              <div>Road Distance: <span className="text-white fw-bold">{deliveryDetails.distance} km</span></div>
+                              <div>Estimated Time: <span className="text-white fw-bold">{deliveryDetails.duration}</span></div>
+                              <div>Charge: <span className="text-white fw-bold">₹{deliveryDetails.delivery_charge === 0 ? 'Free' : deliveryDetails.delivery_charge}</span></div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="row g-3">
+                          <div className="col-12 col-sm-6">
+                            <Field
+                              label="Full Name" id="fullName"
+                              placeholder="John Doe"
+                              error={errors.fullName}
+                              {...register('fullName', { required: 'Name is required' })}
+                            />
+                          </div>
+                          <div className="col-12 col-sm-6">
+                            <Field
+                              label="Phone Number" id="phone"
+                              placeholder="+44 7700 900000"
+                              type="tel"
+                              error={errors.phone}
+                              {...register('phone', {
+                                required: 'Phone is required',
+                                pattern: { value: /^[+\d\s]{7,15}$/, message: 'Invalid phone number' },
+                              })}
+                            />
+                          </div>
+                          <div className="col-12">
+                            <Field
+                              label="Delivery Address" id="address"
+                              placeholder="42 Gourmet Lane, London..."
+                              error={errors.address}
+                              {...register('address', { required: 'Address is required' })}
+                              disabled
+                            />
+                          </div>
+                          <div className="col-12 col-sm-6">
+                            <Field
+                              label="City" id="city"
+                              placeholder="London"
+                              error={errors.city}
+                              {...register('city', { required: 'City is required' })}
+                              disabled
+                            />
+                          </div>
+                          <div className="col-12 col-sm-6">
+                            <Field
+                              label="Postcode" id="postcode"
+                              placeholder="EC1A 1BB"
+                              error={errors.postcode}
+                              {...register('postcode', { required: 'Postcode is required' })}
+                              disabled
+                            />
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="row g-3">
+                        <div className="col-12 col-sm-6">
+                          <Field
+                            label="Full Name" id="fullName"
+                            placeholder="John Doe"
+                            error={errors.fullName}
+                            {...register('fullName', { required: 'Name is required' })}
+                          />
+                        </div>
+                        <div className="col-12 col-sm-6">
+                          <Field
+                            label="Phone Number" id="phone"
+                            placeholder="+44 7700 900000"
+                            type="tel"
+                            error={errors.phone}
+                            {...register('phone', {
+                              required: 'Phone is required',
+                              pattern: { value: /^[+\d\s]{7,15}$/, message: 'Invalid phone number' },
+                            })}
+                          />
+                        </div>
+                        <div className="col-12 mt-2">
+                          <div
+                            className="text-center p-4 rounded-3 border border-dashed border-white-10 hover:bg-white-5 transition-all d-flex flex-column align-items-center gap-3"
+                            style={{ background: 'rgba(255,255,255,0.01)' }}
+                          >
+                            <div className="text-white-60 small">No saved delivery address found.</div>
                             <button
-                              key={addr._id}
                               type="button"
-                              onClick={() => {
-                                setValue('address', addr.address);
-                                setValue('city', addr.city);
-                                setValue('postcode', addr.pincode);
-                                setSelectedAddress(addr);
-                                toast.success('Address populated!', {
-                                  style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(242,122,26,0.3)', borderRadius: '12px' }
-                                });
-                              }}
-                              className={`btn text-start p-3 rounded-3 w-100 transition-all border text-white ${selectedAddress?._id === addr._id ? 'border-brand-500 bg-brand-500 bg-opacity-10' : 'border-white-10 hover:bg-white-5'}`}
-                              style={{
-                                background: selectedAddress?._id === addr._id ? 'rgba(242,122,26,0.05)' : 'rgba(255,255,255,0.02)',
-                                fontSize: '0.9rem'
-                              }}
+                              onClick={handleOpenAddAddressForm}
+                              className="btn-primary py-2 px-4 rounded font-semibold d-inline-flex align-items-center gap-2"
                             >
-                              <div className="d-flex justify-content-between align-items-center mb-1">
-                                <span className="fw-semibold small text-brand-400">
-                                  {addr.tag || 'Address'} ({addr.city})
-                                </span>
-                                {selectedAddress?._id === addr._id && (
-                                  <span className="badge bg-brand-500 text-white" style={{ fontSize: '10px' }}>Selected</span>
-                                )}
-                              </div>
-                              <div className="small text-white-80">{addr.address}</div>
+                              + Add Delivery Address
                             </button>
-                          ))}
+                          </div>
                         </div>
                       </div>
                     )}
-
-                    {calculatingDelivery && (
-                      <div className="alert bg-dark border border-white-10 text-white d-flex align-items-center gap-2 mb-4">
-                        <span className="spinner-border spinner-border-sm text-brand-400" role="status" />
-                        <span className="small">Calculating driving distance and delivery charges...</span>
-                      </div>
-                    )}
-
-                    {deliveryError && (
-                      <div className="alert alert-danger bg-danger bg-opacity-10 border border-danger border-opacity-20 text-white-80 small mb-4">
-                        ❌ {deliveryError}
-                      </div>
-                    )}
-
-                    {deliveryDetails && (
-                      <div className="alert bg-success bg-opacity-10 border border-success border-opacity-20 text-white small mb-4">
-                        <div className="fw-bold text-success mb-1">✓ Delivery Eligible!</div>
-                        <div className="d-flex flex-column flex-wrap gap-x-4 text-white-80">
-                          <div>Road Distance: <span className="text-white fw-bold">{deliveryDetails.distance} km</span></div>
-                          <div>Estimated Time: <span className="text-white fw-bold">{deliveryDetails.duration}</span></div>
-                          <div>Charge: <span className="text-white fw-bold">₹{deliveryDetails.delivery_charge === 0 ? 'Free' : deliveryDetails.delivery_charge}</span></div>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="row g-3">
-                      <div className="col-12 col-sm-6">
-                        <Field
-                          label="Full Name" id="fullName"
-                          placeholder="John Doe"
-                          error={errors.fullName}
-                          {...register('fullName', { required: 'Name is required' })}
-                        />
-                      </div>
-                      <div className="col-12 col-sm-6">
-                        <Field
-                          label="Phone Number" id="phone"
-                          placeholder="+44 7700 900000"
-                          type="tel"
-                          error={errors.phone}
-                          {...register('phone', {
-                            required: 'Phone is required',
-                            pattern: { value: /^[+\d\s]{7,15}$/, message: 'Invalid phone number' },
-                          })}
-                        />
-                      </div>
-                      <div className="col-12">
-                        <Field
-                          label="Delivery Address" id="address"
-                          placeholder="42 Gourmet Lane, London..."
-                          error={errors.address}
-                          {...register('address', { required: 'Address is required' })}
-                          disabled
-                        />
-                      </div>
-                      <div className="col-12 col-sm-6">
-                        <Field
-                          label="City" id="city"
-                          placeholder="London"
-                          error={errors.city}
-                          {...register('city', { required: 'City is required' })}
-                          disabled
-                        />
-                      </div>
-                      <div className="col-12 col-sm-6">
-                        <Field
-                          label="Postcode" id="postcode"
-                          placeholder="EC1A 1BB"
-                          error={errors.postcode}
-                          {...register('postcode', { required: 'Postcode is required' })}
-                          disabled
-                        />
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>

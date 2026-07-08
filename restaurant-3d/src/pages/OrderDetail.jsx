@@ -46,12 +46,6 @@ export default function OrderDetail() {
   const handlePrint = () => {
     if (!order || !settings) return;
 
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast.error('Popup blocked! Please allow popups.');
-      return;
-    }
-
     const itemsHTML = order.order_items.map(item => `
       <tr>
         <td style="padding: 6px 0; font-size: 14px; color: #333;">
@@ -79,13 +73,6 @@ export default function OrderDetail() {
             body { margin: 0; padding: 10px; }
           }
         </style>
-        <script>
-          window.onload = function() {
-            window.focus();
-            window.print();
-            setTimeout(function() { window.close(); }, 250);
-          };
-        </script>
       </head>
       <body style="font-family: 'Courier New', Courier, monospace; max-width: 400px; margin: 0 auto; padding: 20px; color: #000;">
         <div style="text-align: center; margin-bottom: 15px;">
@@ -183,8 +170,30 @@ export default function OrderDetail() {
       </html>
     `;
 
-    printWindow.document.write(invoiceHTML);
-    printWindow.document.close();
+    // Create a hidden iframe for print compatibility with mobile devices
+    let printFrame = document.getElementById('print-frame');
+    if (!printFrame) {
+      printFrame = document.createElement('iframe');
+      printFrame.id = 'print-frame';
+      printFrame.style.position = 'absolute';
+      printFrame.style.width = '0px';
+      printFrame.style.height = '0px';
+      printFrame.style.border = '0px';
+      printFrame.style.top = '0px';
+      printFrame.style.left = '0px';
+      document.body.appendChild(printFrame);
+    }
+
+    const doc = printFrame.contentDocument || printFrame.contentWindow.document;
+    doc.open();
+    doc.write(invoiceHTML);
+    doc.close();
+
+    // Trigger printing from the iframe
+    setTimeout(() => {
+      printFrame.contentWindow.focus();
+      printFrame.contentWindow.print();
+    }, 500);
   };
 
   const handleFeedbackRedirect = () => {
@@ -193,7 +202,7 @@ export default function OrderDetail() {
       return;
     }
     let feedbackBaseUrl = import.meta.env.VITE_FEEDBACK_URL || 'https://www.theboxsync.com/feedback.html';
-    
+
     // Normalize local filesystem paths to avoid browser "Not allowed to load local resource" errors
     if (feedbackBaseUrl.includes(':\\') || feedbackBaseUrl.includes(':/') || feedbackBaseUrl.startsWith('file:')) {
       const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
