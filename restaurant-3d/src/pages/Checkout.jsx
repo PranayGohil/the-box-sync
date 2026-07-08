@@ -34,7 +34,7 @@ const isRestaurantOpen = (settings) => {
   const now = new Date();
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const currentDay = dayNames[now.getDay()];
-  
+
   const currentHours = String(now.getHours()).padStart(2, '0');
   const currentMinutes = String(now.getMinutes()).padStart(2, '0');
   const currentTime = `${currentHours}:${currentMinutes}`;
@@ -42,33 +42,33 @@ const isRestaurantOpen = (settings) => {
   const convertTo24h = (timeStr) => {
     if (!timeStr) return "00:00";
     if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
-    
+
     const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
     if (!match) return timeStr;
-    
+
     let hours = parseInt(match[1], 10);
     const minutes = match[2];
     const ampm = match[3].toUpperCase();
-    
+
     if (ampm === "PM" && hours < 12) hours += 12;
     if (ampm === "AM" && hours === 12) hours = 0;
-    
+
     return `${String(hours).padStart(2, '0')}:${minutes}`;
   };
 
   const dayMatches = (dayConfig, currentDayName) => {
     const config = dayConfig.trim().toLowerCase();
     const cur = currentDayName.trim().toLowerCase();
-    
+
     if (config === "everyday" || config === "every day") return true;
     if (config === cur) return true;
-    
+
     const dayIndices = {
       sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6
     };
-    
+
     const curIdx = dayIndices[cur];
-    
+
     if (config.includes("-") || config.includes("to")) {
       const parts = config.split(/[-–]|to/).map(s => s.trim());
       if (parts.length === 2) {
@@ -76,7 +76,7 @@ const isRestaurantOpen = (settings) => {
         const endDay = parts[1];
         const startIdx = dayIndices[startDay];
         const endIdx = dayIndices[endDay];
-        
+
         if (startIdx !== undefined && endIdx !== undefined) {
           if (startIdx <= endIdx) {
             return curIdx >= startIdx && curIdx <= endIdx;
@@ -86,20 +86,20 @@ const isRestaurantOpen = (settings) => {
         }
       }
     }
-    
+
     return false;
   };
 
   if (settings.opening_hours && settings.opening_hours.length > 0) {
     let matchedDaySlot = false;
     let isOpenInMatchedSlot = false;
-    
+
     for (const slot of settings.opening_hours) {
       if (slot.day && dayMatches(slot.day, currentDay)) {
         matchedDaySlot = true;
         const fromTime = convertTo24h(slot.from);
         const toTime = convertTo24h(slot.to);
-        
+
         if (fromTime <= toTime) {
           if (currentTime >= fromTime && currentTime <= toTime) {
             isOpenInMatchedSlot = true;
@@ -111,14 +111,14 @@ const isRestaurantOpen = (settings) => {
         }
       }
     }
-    
+
     if (matchedDaySlot) return isOpenInMatchedSlot;
   }
 
   if (settings.open_time_from && settings.open_time_to) {
     const fromTime = convertTo24h(settings.open_time_from);
     const toTime = convertTo24h(settings.open_time_to);
-    
+
     if (fromTime <= toTime) {
       return currentTime >= fromTime && currentTime <= toTime;
     } else {
@@ -1171,7 +1171,7 @@ export default function Checkout() {
                             className="text-center p-4 rounded-3 border border-dashed border-white-10 hover:bg-white-5 transition-all d-flex flex-column align-items-center gap-3"
                             style={{ background: 'rgba(255,255,255,0.01)' }}
                           >
-                            <div className="text-white-60 small">No saved delivery address found. Please add your address to calculate delivery.</div>
+                            <div className="text-white-60 small">No saved delivery address found.</div>
                             <button
                               type="button"
                               onClick={handleOpenAddAddressForm}
