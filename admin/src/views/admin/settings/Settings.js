@@ -14,6 +14,7 @@ import TaxAndCharges from './tax-charges/TaxAndCharges';
 import Subscription from './subscription/Subscription';
 import ManageWebsite from './manage-website/ManageWebsite';
 import ForgotPassword from './forgot-password/ForgotPassword';
+import PrintConfig from './print-config/PrintConfig';
 
 const NavContent = ({ activePlans }) => {
   return (
@@ -49,20 +50,24 @@ const NavContent = ({ activePlans }) => {
           </div>
         </div>
 
-        {activePlans.includes('Restaurant Website') && (
-          <div className="mb-1">
-            <div className="operations-section-header">
-              <CsLineIcons icon="web-page" size="17" />
-              <span className="align-middle">Customization</span>
-            </div>
-            <div className="operations-sub-menu-container">
+        <div className="mb-1">
+          <div className="operations-section-header">
+            <CsLineIcons icon="web-page" size="17" />
+            <span className="align-middle">Customization</span>
+          </div>
+          <div className="operations-sub-menu-container">
+            {activePlans.includes('Restaurant Website') && (
               <Nav.Link as={NavLink} to="/settings/manage-website" className="px-0">
                 <i className="me-2 sw-3 d-inline-block" />
                 <span className="align-middle">Manage Website</span>
               </Nav.Link>
-            </div>
+            )}
+            <Nav.Link as={NavLink} to="/settings/print-config" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Print Settings</span>
+            </Nav.Link>
           </div>
-        )}
+        </div>
 
         <div className="mb-1">
           <div className="operations-section-header">
@@ -102,9 +107,9 @@ const mobileNavItems = [
     items: [{ label: 'Subscription', to: '/settings/subscription' }],
   },
   {
-    label: 'Manage Website',
-    icon: 'web-page',
-    items: [{ label: 'Manage Website', to: '/settings/manage-website' }],
+    label: 'Print Settings',
+    icon: 'print',
+    items: [{ label: 'Print Configuration', to: '/settings/print-config' }],
   },
   {
     label: 'Forgot Password',
@@ -196,6 +201,7 @@ const Settings = () => {
               )}
             />
             <Route exact path="/settings/forgot-password" render={() => <ForgotPassword />} />
+            <Route exact path="/settings/print-config" render={() => <PrintConfig />} />
           </Switch>
         </Col>
       </Row>
