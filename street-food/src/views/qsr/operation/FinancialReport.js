@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, ProgressBar, Modal, Toast, ToastContainer } from 'react-bootstrap';
 import axios from 'axios';
 import { format } from 'date-fns';
@@ -30,6 +30,12 @@ const FinancialReport = () => {
   const [reportData, setReportData] = useState(null);
 
   const { currentUser, activePlans } = useContext(AuthContext);
+  const API_BASE = process.env.REACT_APP_API;
+  const COMPANY_NAME = `${currentUser?.name || 'TheBox'}`;
+
+  const getHeaders = () => ({
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  });
 
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
@@ -163,12 +169,7 @@ const FinancialReport = () => {
     });
   };
 
-  const API_BASE = process.env.REACT_APP_API;
-  const COMPANY_NAME = `${currentUser?.name || 'TheBox'}`;
 
-  const getHeaders = () => ({
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-  });
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -617,52 +618,50 @@ const FinancialReport = () => {
         </div>
 
         {/* Audit Filters */}
-        {['QSR', 'Café', 'Fine Dine', 'Cloud', 'Chain'].includes(currentUser?.purchasedPlan) && (
-          <Card className="financial-report-interactive-card financial-report-filter-card border-0 mb-4 no-print shadow-sm">
-            <Card.Body className="p-4">
-              <div className="financial-report-card-title-container">
-                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Report Date Filters</h2>
-                <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
-              </div>
-              <Row className="g-3 align-items-end mt-1">
-                <Col xs={12} md={3}>
-                  <Form.Label className="financial-report-stat-label mb-2">Preset Period</Form.Label>
-                  <Form.Select 
-                    value={datePreset} 
-                    onChange={(e) => {
-                      setDatePreset(e.target.value);
-                      handlePeriodChange(e.target.value);
-                    }}
-                  >
-                    <option value="this_week">This Week</option>
-                    <option value="last_week">Last Week</option>
-                    <option value="this_month">This Month</option>
-                    <option value="last_month">Last Month</option>
-                    <option value="last_30_days">Last 30 Days</option>
-                    <option value="last_90_days">Last 90 Days</option>
-                    <option value="last_180_days">Last 180 Days</option>
-                    <option value="last_365_days">Last 365 Days (1 Year)</option>
-                    <option value="custom">Custom Range</option>
-                  </Form.Select>
-                </Col>
-                <Col xs={12} md={3}>
-                  <Form.Label className="financial-report-stat-label mb-2">Start Date</Form.Label>
-                  <Form.Control type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setDatePreset('custom'); }} />
-                </Col>
-                <Col xs={12} md={3}>
-                  <Form.Label className="financial-report-stat-label mb-2">End Date</Form.Label>
-                  <Form.Control type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); setDatePreset('custom'); }} />
-                </Col>
-                <Col xs={12} md={3}>
-                  <Button className="financial-report-custom-btn-outline w-100" onClick={fetchFinancialReport} disabled={loading}>
-                    <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
-                    {loading ? 'Processing...' : 'Generate'}
-                  </Button>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-        )}
+        <Card className="financial-report-interactive-card financial-report-filter-card border-0 mb-4 no-print shadow-sm">
+          <Card.Body className="p-4">
+            <div className="financial-report-card-title-container">
+              <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Report Date Filters</h2>
+              <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
+            </div>
+            <Row className="g-3 align-items-end mt-1">
+              <Col xs={12} md={3}>
+                <Form.Label className="financial-report-stat-label mb-2">Preset Period</Form.Label>
+                <Form.Select 
+                  value={datePreset} 
+                  onChange={(e) => {
+                    setDatePreset(e.target.value);
+                    handlePeriodChange(e.target.value);
+                  }}
+                >
+                  <option value="this_week">This Week</option>
+                  <option value="last_week">Last Week</option>
+                  <option value="this_month">This Month</option>
+                  <option value="last_month">Last Month</option>
+                  <option value="last_30_days">Last 30 Days</option>
+                  <option value="last_90_days">Last 90 Days</option>
+                  <option value="last_180_days">Last 180 Days</option>
+                  <option value="last_365_days">Last 365 Days (1 Year)</option>
+                  <option value="custom">Custom Range</option>
+                </Form.Select>
+              </Col>
+              <Col xs={12} md={3}>
+                <Form.Label className="financial-report-stat-label mb-2">Start Date</Form.Label>
+                <Form.Control type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setDatePreset('custom'); }} />
+              </Col>
+              <Col xs={12} md={3}>
+                <Form.Label className="financial-report-stat-label mb-2">End Date</Form.Label>
+                <Form.Control type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); setDatePreset('custom'); }} />
+              </Col>
+              <Col xs={12} md={3}>
+                <Button className="financial-report-custom-btn-outline w-100" onClick={fetchFinancialReport} disabled={loading}>
+                  <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
+                  {loading ? 'Processing...' : 'Generate'}
+                </Button>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
 
         {/* Action Bar */}
         <Card className="financial-report-interactive-card border-0 mb-4 no-print shadow-sm">
