@@ -1819,7 +1819,7 @@ const orderHistory = async (req, res) => {
 
 const updateOrderStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, customer_name, customer_phone } = req.body;
     const orderId = req.params.id;
 
     const order = await Order.findById(orderId);
@@ -1827,25 +1827,54 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    if (status === "Cancelled" && order.order_status === "Save") {
-      await Order.findByIdAndDelete(orderId);
-      // broadcast update
-      broadcastOrderUpdate(req, { ...order.toObject(), order_status: "Cancelled", deleted: true });
-      return res.json({ success: true, message: "Order deleted", order: { ...order.toObject(), order_status: "Cancelled", deleted: true } });
+    if (customer_name !== undefined) {
+      order.customer_name = customer_name;
+    }
+    if (customer_phone !== undefined) {
+      order.customer_phone = customer_phone;
+      if (customer_phone) {
+        try {
+          let existingCustomer = await Customer.findOne({ phone: customer_phone });
+          if (existingCustomer) {
+            existingCustomer.name = customer_name || existingCustomer.name || order.customer_name;
+            await existingCustomer.save();
+            order.customer_id = existingCustomer._id;
+          } else {
+            const newCust = new Customer({
+              phone: customer_phone,
+              name: customer_name || order.customer_name || 'Guest',
+              user_id: order.user_id
+            });
+            const savedCust = await newCust.save();
+            order.customer_id = savedCust._id;
+          }
+        } catch (err) {
+          console.error("Error creating/linking customer:", err);
+        }
+      }
     }
 
-    order.order_status = status;
-    if (status === "KOT") {
-      const targetStatus = await getTargetItemStatus(order.user_id);
-      order.order_items = order.order_items.map((item) => ({
-        ...item,
-        status: item.status === "Pending" ? targetStatus : item.status,
-      }));
-    } else if (status === "Cancelled" || status === "Rejected") {
-      order.order_items = order.order_items.map((item) => ({
-        ...item,
-        status: "Cancelled",
-      }));
+    if (status) {
+      if (status === "Cancelled" && order.order_status === "Save") {
+        await Order.findByIdAndDelete(orderId);
+        // broadcast update
+        broadcastOrderUpdate(req, { ...order.toObject(), order_status: "Cancelled", deleted: true });
+        return res.json({ success: true, message: "Order deleted", order: { ...order.toObject(), order_status: "Cancelled", deleted: true } });
+      }
+
+      order.order_status = status;
+      if (status === "KOT") {
+        const targetStatus = await getTargetItemStatus(order.user_id);
+        order.order_items = order.order_items.map((item) => ({
+          ...item,
+          status: item.status === "Pending" ? targetStatus : item.status,
+        }));
+      } else if (status === "Cancelled" || status === "Rejected") {
+        order.order_items = order.order_items.map((item) => ({
+          ...item,
+          status: "Cancelled",
+        }));
+      }
     }
 
     await order.save();
@@ -1989,6 +2018,24 @@ const calculateDeliveryController = async (req, res) => {
   }
 };
 
+const deleteOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await Order.findOne({ _id: id, user_id: req.user._id });
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+    if (order.order_status !== "Save") {
+      return res.status(400).json({ success: false, message: "Only unpaid saved orders can be deleted" });
+    }
+    await Order.deleteOne({ _id: id });
+    res.json({ success: true, message: "Order deleted successfully" });
+  } catch (error) {
+    console.error("Delete Order Error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   addCustomer,
   getOrderData,
@@ -2003,4 +2050,5 @@ module.exports = {
   calculateDeliveryController,
   updateOrderStatus,
   getTargetItemStatus,
+  deleteOrder,
 };

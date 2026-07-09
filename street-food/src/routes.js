@@ -15,6 +15,8 @@ const order = {
 }
 const inventory = {
   main: lazy(() => import('views/qsr/inventory/Inventory')),
+  details: lazy(() => import('views/qsr/operation/inventory/InventoryDetails')),
+  edit: lazy(() => import('views/qsr/operation/inventory/EditInventory')),
 }
 const dashboards = {
   index: lazy(() => import('views/dashboards/Dashboards')),
@@ -44,16 +46,29 @@ const allRoutes = {
       component: order.unified,
     },
     {
-      path: `${appRoot}/inventory`,
-      label: 'Inventory',
-      icon: 'boxes',
-      component: inventory.main,
-    },
-    {
       path: `${appRoot}/operations`,
       label: 'Operations',
       icon: 'list',
       component: qsr.operation,
+    },
+    {
+      path: `${appRoot}/inventory`,
+      label: 'Inventory',
+      icon: 'boxes',
+      component: inventory.main,
+      exact: true,
+    },
+    {
+      path: `${appRoot}/inventory/details/:id`,
+      component: inventory.details,
+      hideInMenu: true,
+      exact: true,
+    },
+    {
+      path: `${appRoot}/inventory/edit/:id`,
+      component: inventory.edit,
+      hideInMenu: true,
+      exact: true,
     },
     {
       path: `/settings`,

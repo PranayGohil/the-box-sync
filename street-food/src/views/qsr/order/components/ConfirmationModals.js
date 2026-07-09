@@ -93,8 +93,56 @@ export const LeaveConfirmationModal = ({
   history,
   handleSaveOrder,
   isLoading,
-  canKOT
+  canKOT,
+  hasUnpaidBill = false,
+  handleOpenPaymentModal,
+  setOrderItems
 }) => {
+  if (hasUnpaidBill) {
+    return (
+      <Modal
+        show={showLeaveModal}
+        onHide={() => {
+          setShowLeaveModal(false);
+          setNextLocation(null);
+        }}
+        centered
+        backdrop="static"
+        keyboard={false}
+        className="modal-custom-confirm"
+      >
+        <style>{modalStyles}</style>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CsLineIcons icon="credit-card" size="20" />
+            </div>
+            Unpaid Bill Detected
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="mb-0">
+            A bill has been printed for this order. You must complete the payment before you can navigate to another page.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <button
+            type="button"
+            className="btn-qsr-blue w-100"
+            onClick={() => {
+              setShowLeaveModal(false);
+              if (handleOpenPaymentModal) {
+                handleOpenPaymentModal();
+              }
+            }}
+          >
+            Complete Payment
+          </button>
+        </Modal.Footer>
+      </Modal>
+    );
+  }
+
   return (
     <Modal
       show={showLeaveModal}
@@ -118,7 +166,7 @@ export const LeaveConfirmationModal = ({
       </Modal.Header>
       <Modal.Body>
         <p className="mb-0">
-          You have unsaved changes. If you leave now, these changes will be lost permanently.
+          You have items in your cart. Would you like to save this order or discard it before leaving?
         </p>
       </Modal.Body>
       <Modal.Footer>
@@ -127,12 +175,16 @@ export const LeaveConfirmationModal = ({
           className="btn-qsr-red"
           style={{ marginRight: 'auto' }}
           onClick={() => {
+            if (setOrderItems) {
+              setOrderItems([]);
+            }
             allowNavigationRef.current = true;
             setIsDirty(false);
             setShowLeaveModal(false);
-            if (nextLocation) {
+            const target = nextLocation === '/operations' ? '/operations/order-history' : nextLocation;
+            if (target) {
               setTimeout(() => {
-                history.push(nextLocation);
+                history.push(target);
               }, 0);
             }
           }}
@@ -140,49 +192,18 @@ export const LeaveConfirmationModal = ({
           Discard & Leave
         </button>
         
-        {orderStatus === 'Save' && (
-          <button
-            type="button"
-            className="btn-qsr-secondary"
-            onClick={async () => {
-              const success = await handleSaveOrder('Save');
-              if (success) {
-                allowNavigationRef.current = true;
-                setShowLeaveModal(false);
-                if (nextLocation) {
-                  setTimeout(() => {
-                    history.push(nextLocation);
-                  }, 0);
-                }
-              }
-            }}
-            disabled={isLoading}
-          >
-            Save Order
-          </button>
-        )}
-
-        {canKOT && (
-          <button
-            type="button"
-            className="btn-qsr-blue"
-            onClick={async () => {
-              const success = await handleSaveOrder('KOT');
-              if (success) {
-                allowNavigationRef.current = true;
-                setShowLeaveModal(false);
-                if (nextLocation) {
-                  setTimeout(() => {
-                    history.push(nextLocation);
-                  }, 0);
-                }
-              }
-            }}
-            disabled={isLoading}
-          >
-            Kitchen
-          </button>
-        )}
+        <button
+          type="button"
+          className="btn-qsr-secondary"
+          onClick={async () => {
+            allowNavigationRef.current = true;
+            setShowLeaveModal(false);
+            await handleSaveOrder('Save', '/operations/order-history');
+          }}
+          disabled={isLoading}
+        >
+          Save Order
+        </button>
       </Modal.Footer>
     </Modal>
   );

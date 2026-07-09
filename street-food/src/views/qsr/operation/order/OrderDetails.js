@@ -28,6 +28,7 @@ const OrderDetails = () => {
   const [sharing, setSharing] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [inputPhoneNumber, setInputPhoneNumber] = useState('');
+  const [inputCustomerName, setInputCustomerName] = useState('');
   const [restaurantInfo, setRestaurantInfo] = useState(null);
 
   useEffect(() => {
@@ -90,26 +91,29 @@ const OrderDetails = () => {
       const restaurantName = restaurantInfo?.name || 'Restaurant';
 
       let message = `*${restaurantName}*\n`;
-      message += `*Order Summary*\n`;
+      message += `*Order Summary*\n\n`;
       if (restaurantInfo?.gst_no) {
-        message += `GSTIN: ${restaurantInfo.gst_no}\n`;
+        message += `*GSTIN:* ${restaurantInfo.gst_no}\n`;
       }
       if (restaurantInfo?.fssai_no) {
-        message += `FSSAI No: ${restaurantInfo.fssai_no}\n`;
+        message += `*FSSAI No:* ${restaurantInfo.fssai_no}\n`;
       }
+
+
+      message += `*Customer Name :* ${order.customer_name || 'Guest'}\n`;
+      const contactNum = order.customer_phone || order.customer_details?.phone || '';
+      message += `*Customer Contact :* ${contactNum}\n`;
       message += `*Bill No:* ${order.order_no || order.id}\n`;
-      message += `*Date:* ${new Date(order.order_date).toLocaleString('en-IN')}\n`;
-      if (order.customer_name) {
-        message += `*Customer:* ${order.customer_name}\n`;
-      }
-      message += `\n*Items:*\n`;
+      message += `*Date:* ${new Date(order.order_date).toLocaleString('en-IN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })}\n\n`;
+
+      message += `*Items:*\n`;
       order.order_items.forEach(item => {
         message += `- ${item.quantity} x ${item.dish_name} - ₹${(item.dish_price * item.quantity).toFixed(2)}\n`;
       });
       message += `\n*Sub Total:* ₹${parseFloat(order.sub_total || 0).toFixed(2)}\n`;
-      if (order.cgst_amount > 0) message += `CGST: ₹${parseFloat(order.cgst_amount).toFixed(2)}\n`;
-      if (order.sgst_amount > 0) message += `SGST: ₹${parseFloat(order.sgst_amount).toFixed(2)}\n`;
-      if (order.vat_amount > 0) message += `VAT: ₹${parseFloat(order.vat_amount).toFixed(2)}\n`;
+      if (order.cgst_amount > 0) message += `*CGST:* ₹${parseFloat(order.cgst_amount).toFixed(2)}\n`;
+      if (order.sgst_amount > 0) message += `*SGST:* ₹${parseFloat(order.sgst_amount).toFixed(2)}\n`;
+      if (order.vat_amount > 0) message += `*VAT:* ₹${parseFloat(order.vat_amount).toFixed(2)}\n`;
       if (order.discount_amount > 0) message += `*Discount:* -₹${parseFloat(order.discount_amount).toFixed(2)}\n`;
       if (order.waveoff_amount > 0) message += `*Waveoff:* -₹${parseFloat(order.waveoff_amount).toFixed(2)}\n`;
       message += `*Total Amount:* ₹${parseFloat(order.total_amount || 0).toFixed(2)}\n\n`;
@@ -132,6 +136,40 @@ const OrderDetails = () => {
     }
   };
 
+  const saveCustomerDetailsAndSend = async () => {
+    if (inputPhoneNumber.length !== 10) {
+      alert('Please enter a valid 10-digit mobile number');
+      return;
+    }
+    setSharing(true);
+    setShowWhatsAppModal(false);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.put(`${process.env.REACT_APP_API}/order/update-status/${order.id}`, {
+        customer_name: inputCustomerName,
+        customer_phone: inputPhoneNumber
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setOrder((prev) => ({
+          ...prev,
+          customer_name: inputCustomerName,
+          customer_phone: inputPhoneNumber,
+          customer_details: {
+            ...prev?.customer_details,
+            phone: inputPhoneNumber
+          }
+        }));
+        toast.success("Customer details updated successfully");
+      }
+    } catch (err) {
+      console.error("Failed to save customer details:", err);
+      toast.error("Failed to update customer details on server");
+    }
+    await sendWhatsAppMessage(inputPhoneNumber);
+  };
+
   const handleWhatsAppShare = async () => {
     if (!order) return;
 
@@ -144,6 +182,7 @@ const OrderDetails = () => {
 
     if (!customerPhone) {
       setInputPhoneNumber('');
+      setInputCustomerName(order.customer_name || '');
       setShowWhatsAppModal(true);
       return;
     }
@@ -218,64 +257,64 @@ const OrderDetails = () => {
   }
 
   return (
-    <div className="container-fluid pb-5">
+    <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
-      <section className="scroll-section" id="title">
-        <div className="page-title-container mb-4 mt-5 mt-lg-0">
-          <Row className="g-0 align-items-center gy-3">
-            <Col xs="auto" className="me-auto">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
-              <BreadcrumbList items={breadcrumbs} />
-            </Col>
-            <Col xs="12" md="6" className="text-md-end mt-0 d-flex gap-2 justify-content-md-end flex-wrap flex-md-nowrap">
-              <Button
-                variant="outline-primary"
-                onClick={() => history.push('/operations/order-history')}
-                className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
-                style={{ minWidth: '100px', borderColor: '#23b3f4', color: '#23b3f4' }}
-              >
-                <CsLineIcons icon="arrow-left" className="me-2" size="15" /> <span>Back</span>
-              </Button>
-              <Button
-                variant="outline-primary"
-                onClick={handleWhatsAppShare}
-                disabled={sharing || !order}
-                className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
-                style={{ minWidth: '130px', borderColor: '#23b3f4', color: '#23b3f4' }}
-              >
-                {sharing ? (
-                  <>
-                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
-                    <span className="ms-2">Opening...</span>
-                  </>
-                ) : (
-                  <>
-                    <CsLineIcons icon="whatsapp" className="me-2" size="15" /> <span>WhatsApp</span>
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline-primary"
-                onClick={handlePrint}
-                disabled={printing}
-                className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
-                style={{ minWidth: '130px', borderColor: '#23b3f4', color: '#23b3f4' }}
-              >
-                {printing ? (
-                  <>
-                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
-                    <span className="ms-2">Printing...</span>
-                  </>
-                ) : (
-                  <>
-                    <CsLineIcons icon="print" className="me-2" size="15" /> <span>Print Invoice</span>
-                  </>
-                )}
-              </Button>
-            </Col>
-          </Row>
-        </div>
-      </section>
+      <div className="qsr-page-title-container">
+        <Row className="g-0 align-items-center">
+          <Col xs="auto" className="me-auto">
+            <h1 className="qsr-page-title">{title}</h1>
+            <BreadcrumbList items={breadcrumbs} />
+          </Col>
+        </Row>
+        <Row className="g-0 mt-3">
+          <Col xs="12" className="d-flex gap-2 flex-wrap justify-content-start">
+            <Button
+              variant="outline-primary"
+              onClick={() => history.push('/operations/order-history')}
+              className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
+              style={{ minWidth: '100px', borderColor: '#23b3f4', color: '#23b3f4' }}
+            >
+              <CsLineIcons icon="arrow-left" className="me-2" size="15" /> <span>Back</span>
+            </Button>
+            <Button
+              variant="outline-primary"
+              onClick={handleWhatsAppShare}
+              disabled={sharing || !order}
+              className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
+              style={{ minWidth: '130px', borderColor: '#23b3f4', color: '#23b3f4' }}
+            >
+              {sharing ? (
+                <>
+                  <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                  <span className="ms-2">Opening...</span>
+                </>
+              ) : (
+                <>
+                  <CsLineIcons icon="whatsapp" className="me-2" size="15" /> <span>WhatsApp</span>
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline-primary"
+              onClick={handlePrint}
+              disabled={printing}
+              className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
+              style={{ minWidth: '130px', borderColor: '#23b3f4', color: '#23b3f4' }}
+            >
+              {printing ? (
+                <>
+                  <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                  <span className="ms-2">Printing...</span>
+                </>
+              ) : (
+                <>
+                  <CsLineIcons icon="print" className="me-2" size="15" /> <span>Print Invoice</span>
+                </>
+              )}
+            </Button>
+          </Col>
+        </Row>
+      </div>
 
       <Row className="mb-n4">
         <Col xl="5" className="mb-4">
@@ -291,8 +330,13 @@ const OrderDetails = () => {
                 <div className="text-small text-muted mb-1">CUSTOMER INFO</div>
                 <div className="mb-2">
                   <CsLineIcons icon="user" size={16} className="me-2 text-muted" />
-                  <strong>{order.customer_name || 'Guest'}</strong>
-                  {order.customer_phone && <span className="ms-2 text-muted">({order.customer_phone})</span>}
+                  <strong>Name: </strong>
+                  <span>{order.customer_name || 'Guest'}</span>
+                </div>
+                <div>
+                  <CsLineIcons icon="phone" size={16} className="me-2 text-muted" />
+                  <strong>Contact: </strong>
+                  <span>{order.customer_phone || order.customer_details?.phone || 'N/A'}</span>
                 </div>
               </div>
 
@@ -303,7 +347,7 @@ const OrderDetails = () => {
                 </Col>
                 <Col xs={6}>
                   <div className="text-small text-muted mb-1">ORDER DATE</div>
-                  <div className="h6 mb-0">{order.order_date ? new Date(order.order_date).toLocaleString() : '-'}</div>
+                  <div className="h6 mb-0">{order.order_date ? new Date(order.order_date).toLocaleString('en-IN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }) : '-'}</div>
                 </Col>
                 <Col xs={6}>
                   <div className="text-small text-muted mb-1">STATUS</div>
@@ -363,26 +407,6 @@ const OrderDetails = () => {
                 <div className="mb-4">
                   <div className="text-small text-muted mb-1">COMMENT</div>
                   <div className="bg-light p-2 rounded">{order.comment}</div>
-                </div>
-              )}
-
-              {restaurantInfo && (restaurantInfo.gst_no || restaurantInfo.fssai_no) && (
-                <div className="mt-4">
-                  <div className="text-small text-muted mb-2">RESTAURANT REGISTRATIONS</div>
-                  <div className="bg-light p-3 rounded" style={{ borderLeft: '4px solid #23b3f4' }}>
-                    {restaurantInfo.gst_no && (
-                      <div className="mb-2">
-                        <span className="text-muted small d-block" style={{ fontWeight: 600 }}>GSTIN</span>
-                        <strong className="text-dark small">{restaurantInfo.gst_no}</strong>
-                      </div>
-                    )}
-                    {restaurantInfo.fssai_no && (
-                      <div className="mb-0">
-                        <span className="text-muted small d-block" style={{ fontWeight: 600 }}>FSSAI License No.</span>
-                        <strong className="text-dark small">{restaurantInfo.fssai_no}</strong>
-                      </div>
-                    )}
-                  </div>
                 </div>
               )}
             </Card.Body>
@@ -622,7 +646,17 @@ const OrderDetails = () => {
             Send WhatsApp Bill
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+         <Modal.Body>
+          <Form.Group className="mb-3">
+            <Form.Label className="small fw-bold text-secondary">Customer Name</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter customer name (optional)"
+              className="whatsapp-input mb-3"
+              value={inputCustomerName}
+              onChange={(e) => setInputCustomerName(e.target.value)}
+            />
+          </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label className="small fw-bold text-secondary">Customer Contact Number *</Form.Label>
             <Form.Control
@@ -642,14 +676,7 @@ const OrderDetails = () => {
           </Button>
           <Button
             className="whatsapp-btn-send"
-            onClick={() => {
-              if (inputPhoneNumber.length !== 10) {
-                alert('Please enter a valid 10-digit mobile number');
-                return;
-              }
-              setShowWhatsAppModal(false);
-              sendWhatsAppMessage(inputPhoneNumber);
-            }}
+            onClick={saveCustomerDetailsAndSend}
           >
             Send WhatsApp
           </Button>

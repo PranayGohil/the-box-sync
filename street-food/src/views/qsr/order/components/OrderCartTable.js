@@ -43,7 +43,7 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div
                 style={{
-                  fontSize: '11px',
+                  fontSize: '13px',
                   fontWeight: 700,
                   color: '#1e293b',
                   lineHeight: 1.1,
@@ -56,7 +56,7 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
               </div>
               {(item.selected_variant || (Array.isArray(item.selected_addons) && item.selected_addons.length > 0)) && (
                 <div
-                  style={{ fontSize: '9px', fontWeight: 600, color: '#64748b', marginTop: '2px', marginBottom: '2px', lineHeight: 1.2, whiteSpace: 'normal' }}
+                  style={{ fontSize: '10.5px', fontWeight: 600, color: '#64748b', marginTop: '2px', marginBottom: '2px', lineHeight: 1.2, whiteSpace: 'normal' }}
                 >
                   {item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && (
                     <>
@@ -68,7 +68,7 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
                   {Array.isArray(item.selected_addons) && item.selected_addons.map((addon) => `${addon.addon_name} (+₹${addon.price})`).join(' • ')}
                 </div>
               )}
-              {st && (
+              {st && item.status !== 'Pending' && (
                 <span
                   style={{
                     display: 'inline-block',
@@ -94,16 +94,16 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
                   onClick={() => updateItemQuantity(index, -1)}
                   disabled={item.quantity <= 1 || isLocked}
                   style={{
-                    width: '20px',
-                    height: '20px',
+                    width: '22px',
+                    height: '22px',
                     borderRadius: '5px',
                     border: '1px solid rgba(226,232,240,0.9)',
-                    background: '#fff',
+                    background: 'transparent',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '12px',
+                    fontSize: '13px',
                     fontWeight: 700,
                     color: '#475569',
                     padding: 0,
@@ -112,15 +112,15 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
                   −
                 </button>
 
-                <span style={{ minWidth: '14px', textAlign: 'center', fontWeight: 800, fontSize: '12px', color: '#1e293b' }}>{item.quantity}</span>
+                <span style={{ minWidth: '14px', textAlign: 'center', fontWeight: 800, fontSize: '13px', color: '#1e293b' }}>{item.quantity}</span>
 
                 <button
                   type="button"
                   onClick={() => updateItemQuantity(index, 1)}
                   disabled={isLocked}
                   style={{
-                    width: '20px',
-                    height: '20px',
+                    width: '22px',
+                    height: '22px',
                     borderRadius: '5px',
                     border: '1px solid rgba(35,179,244,0.3)',
                     background: 'rgba(35,179,244,0.05)',
@@ -128,7 +128,7 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '12px',
+                    fontSize: '13px',
                     fontWeight: 700,
                     color: '#23b3f4',
                     padding: 0,
@@ -138,7 +138,7 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
                 </button>
               </div>
 
-              <div style={{ minWidth: '35px', textAlign: 'right', fontWeight: 800, fontSize: '11.5px', color: '#23b3f4' }}>
+              <div style={{ minWidth: '40px', textAlign: 'right', fontWeight: 800, fontSize: '13px', color: '#23b3f4' }}>
                 ₹{(item.dish_price * item.quantity).toFixed(0)}
               </div>
 
@@ -146,8 +146,8 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
                 type="button"
                 onClick={() => removeItem(index)}
                 style={{
-                  width: '20px',
-                  height: '20px',
+                  width: '22px',
+                  height: '22px',
                   borderRadius: '5px',
                   border: 'none',
                   background: 'transparent',
@@ -160,7 +160,7 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
                   opacity: 0.6,
                 }}
               >
-                <CsLineIcons icon="bin" size="11" />
+                <CsLineIcons icon="bin" size="13" />
               </button>
             </div>
           </div>

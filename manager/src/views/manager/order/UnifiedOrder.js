@@ -430,6 +430,7 @@ const UnifiedOrder = () => {
   // ── Navigation Guard ──────────────────────────────────────────────────────
   useEffect(() => {
     const handleBeforeUnload = (e) => {
+      if (allowNavigationRef.current) return;
       if (!isDirty) return;
       e.preventDefault();
       e.returnValue = '';
@@ -554,18 +555,18 @@ const UnifiedOrder = () => {
       order_status: status,
       customer_name: customerInfo.name,
       comment: customerInfo.comment,
-      bill_amount: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount),
-      sub_total: parseFloat(paymentData.subTotal),
-      cgst_percent: parseFloat(paymentData.cgstPercent),
-      sgst_percent: parseFloat(paymentData.sgstPercent),
-      vat_percent: parseFloat(paymentData.vatPercent),
-      cgst_amount: parseFloat(paymentData.cgstAmount),
-      sgst_amount: parseFloat(paymentData.sgstAmount),
-      vat_amount: parseFloat(paymentData.vatAmount),
-      discount_amount: parseFloat(paymentData.discountAmount) + pointsDiscountAmount,
-      waveoff_amount: parseFloat(paymentData.waveoffAmount),
-      total_amount: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount),
-      paid_amount: status === 'Paid' ? Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount) : parseFloat(paymentData.paidAmount),
+      bill_amount: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount) || 0,
+      sub_total: parseFloat(paymentData.subTotal) || 0,
+      cgst_percent: parseFloat(paymentData.cgstPercent) || 0,
+      sgst_percent: parseFloat(paymentData.sgstPercent) || 0,
+      vat_percent: parseFloat(paymentData.vatPercent) || 0,
+      cgst_amount: parseFloat(paymentData.cgstAmount) || 0,
+      sgst_amount: parseFloat(paymentData.sgstAmount) || 0,
+      vat_amount: parseFloat(paymentData.vatAmount) || 0,
+      discount_amount: (parseFloat(paymentData.discountAmount) || 0) + pointsDiscountAmount,
+      waveoff_amount: parseFloat(paymentData.waveoffAmount) || 0,
+      total_amount: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount) || 0,
+      paid_amount: status === 'Paid' ? Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount) || 0 : parseFloat(paymentData.paidAmount) || 0,
       payment_type: paymentData.paymentType,
       order_source: 'Manager',
     };

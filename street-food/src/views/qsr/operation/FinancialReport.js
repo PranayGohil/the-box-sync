@@ -118,7 +118,7 @@ const FinancialReport = () => {
       allData.push(['FINANCIAL AUDIT REPORT']);
       allData.push(['Company:', COMPANY_NAME]);
       allData.push(['Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`]);
-      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy HH:mm')]);
+      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy hh:mm a')]);
       allData.push([]);
 
       if (exportOptions.includeSummary) {
@@ -441,11 +441,11 @@ const FinancialReport = () => {
   return (
     <>
       <HtmlHead title={title} description={description} />
-      <div className="container-fluid ps-lg-4 pe-lg-5">
-        <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
+      <div className="container-fluid qsr-page-container">
+        <div className="qsr-page-title-container no-print">
           <Row className="g-0 align-items-center">
             <Col xs="auto" className="me-auto">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
           </Row>
@@ -784,7 +784,8 @@ const FinancialReport = () => {
                     <h2 className="small-title mb-0" style={{ color: '#f97316', fontWeight: '800' }}>Inventory Purchases & Bills (COGS)</h2>
                     <CsLineIcons icon="box" size="18" style={{ color: '#f97316' }} />
                   </div>
-                  <div className="table-responsive mt-3">
+                  {/* Desktop Table View */}
+                  <div className="table-responsive mt-3 d-none d-md-block">
                     <Table borderless hover className="align-middle mb-0">
                       <thead className="financial-report-stat-label">
                         <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
@@ -815,6 +816,57 @@ const FinancialReport = () => {
                         ))}
                       </tbody>
                     </Table>
+                  </div>
+
+                  {/* Mobile Card List View */}
+                  <div className="d-block d-md-none mt-3">
+                    {reportData.inventoryPurchases.map((inv, idx) => {
+                      const totalAmt = inv.total_amount || 0;
+                      const dateStr = inv.bill_date 
+                        ? format(new Date(inv.bill_date), 'dd-MM-yyyy') 
+                        : format(new Date(inv.request_date), 'dd-MM-yyyy');
+
+                      return (
+                        <div 
+                          key={idx} 
+                          className="p-3 mb-3 border-0 shadow-sm"
+                          style={{ 
+                            borderRadius: '1.25rem', 
+                            borderLeft: '5px solid #f97316',
+                            background: '#f8fafc'
+                          }}
+                        >
+                          <div className="d-flex justify-content-between align-items-center mb-2">
+                            <span className="text-muted fw-bold small" style={{ fontSize: '11px', letterSpacing: '0.03em' }}>
+                              {dateStr}
+                            </span>
+                            <Badge bg={inv.status === 'Completed' ? 'success' : inv.status === 'Pending' ? 'warning' : 'secondary'} className="rounded-pill px-2.5 py-1" style={{ fontSize: '10px', fontWeight: '800' }}>
+                              {inv.status || 'Completed'}
+                            </Badge>
+                          </div>
+
+                          <div className="mb-2">
+                            <div className="fw-extrabold text-dark d-flex align-items-center" style={{ fontSize: '14px', letterSpacing: '-0.01em' }}>
+                              <CsLineIcons icon="file-text" size="14" className="text-muted me-1.5" />
+                              <span>Bill: {inv.bill_number || '—'}</span>
+                            </div>
+                            <div className="text-muted mt-1 d-flex align-items-center" style={{ fontSize: '12px' }}>
+                              <CsLineIcons icon="user" size="12" className="text-muted me-1.5" />
+                              <span>Vendor: <span className="fw-semibold text-dark">{inv.vendor_name || '—'}</span></span>
+                            </div>
+                            <div className="text-muted mt-1 d-flex align-items-center" style={{ fontSize: '12px' }}>
+                              <CsLineIcons icon="tag" size="12" className="text-muted me-1.5" />
+                              <span>Category: <span className="fw-semibold text-dark">{inv.category || '—'}</span></span>
+                            </div>
+                          </div>
+
+                          <div className="d-flex justify-content-between align-items-center border-top pt-2 mt-2" style={{ borderColor: 'rgba(0,0,0,0.03)' }}>
+                            <span className="text-muted fw-bold small" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>TOTAL AMOUNT</span>
+                            <span className="fw-extrabold" style={{ fontSize: '14px', color: '#f97316' }}>{formatCurrency(totalAmt)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </Card.Body>
               </Card>

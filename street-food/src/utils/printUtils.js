@@ -33,7 +33,7 @@ export const printCounterBill = (ord, userData, counterName, items) => {
           <td class="text-right"><strong>${ord.order_type}</strong></td>
         </tr>
         <tr>
-          <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
+          <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString('en-IN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })}</td>
           <td class="text-right">
             ${ord.table_no
       ? `<strong>Table:</strong> ${ord.table_no}`
@@ -148,7 +148,7 @@ export const printFullBill = (ord, userData, items, subTotal) => {
           <td class="text-right"><strong>${ord.order_type}</strong></td>
         </tr>
         <tr>
-          <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
+          <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString('en-IN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })}</td>
           <td class="text-right">
             ${ord.table_no
       ? `<strong>Table:</strong> ${ord.table_no}`
@@ -665,7 +665,7 @@ export const printKOTSlip = (slipData, userData, setPrinting) => {
   });
 
   const restaurantName = userData?.name || '';
-  const printTime = new Date(timestamp || new Date()).toLocaleString('en-IN');
+  const printTime = new Date(timestamp || new Date()).toLocaleString('en-IN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
 
   const printSettings = userData?.printSettings || {};
   const showCustomerDetails = printSettings.showCustomerDetails ?? true;

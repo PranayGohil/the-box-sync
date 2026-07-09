@@ -109,7 +109,7 @@ const BottomCartSheet = ({
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            {/* Save Order */}
+            {/* Save */}
             {showSave && (
               <button
                 type="button"
@@ -126,14 +126,18 @@ const BottomCartSheet = ({
                 ) : (
                   <CsLineIcons icon="save" size="14" />
                 )}{' '}
-                Save Order
+                Save
               </button>
             )}
             {/* Cancel Order */}
             {orderId && orderStatus !== 'Paid' && (
               <button
                 type="button"
-                style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: 'transparent', color: '#ef4444', border: '1.5px solid rgba(239,68,68,0.25)', cursor: 'pointer' }}
+                style={{
+                  width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
+                  background: 'transparent', color: '#ef4444', border: '1.5px solid rgba(239,68,68,0.25)',
+                  cursor: 'pointer', gridColumn: showPayment ? 'span 1' : 'span 2'
+                }}
                 onClick={() => setShowCancelModal(true)}
                 disabled={isLoading}
               >
@@ -159,7 +163,7 @@ const BottomCartSheet = ({
                     width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, 
                     background: '#23b3f4', color: '#fff', border: 'none', boxShadow: '0 4px 12px rgba(35,179,244,0.3)', 
                     cursor: 'pointer',
-                    gridColumn: 'span 2'
+                    gridColumn: (orderId && orderStatus !== 'Paid') ? 'span 1' : 'span 2'
                   }}
                   onClick={() => { setShowCartSheet(false); handleOpenPaymentModal(); }}
                 >
@@ -277,7 +281,7 @@ const BottomCartSheet = ({
                 <div>
                   <div className="fw-bold h5 mb-0 text-success">₹{parseFloat(record.amount).toFixed(2)}</div>
                   <div className="text-muted" style={{ fontSize: '11px', fontWeight: 600 }}>
-                    {record.type} • {new Date(record.timestamp).toLocaleString('en-IN')}
+                    {record.type} • {new Date(record.timestamp).toLocaleString('en-IN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })}
                   </div>
                 </div>
                 <div style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', padding: '4px 10px', borderRadius: '50px', fontSize: '11px', fontWeight: 800 }}>

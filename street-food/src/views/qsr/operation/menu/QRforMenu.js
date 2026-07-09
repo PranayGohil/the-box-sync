@@ -77,7 +77,7 @@ const QRforMenu = ({ setSection }) => {
   const { currentUser } = useContext(AuthContext);
   const restaurant_code = currentUser?.restaurant_code;
 
-  const menuLink = restaurantToken 
+  const menuLink = restaurantToken
     ? `${process.env.REACT_APP_HOME_URL}/menu.html?token=${restaurantToken}`
     : `${process.env.REACT_APP_HOME_URL}/menu/${restaurant_code}`;
 
@@ -142,13 +142,13 @@ const QRforMenu = ({ setSection }) => {
   }
 
   return (
-    <div className="container-fluid px-lg-5 pb-5">
+    <div className="container-fluid qsr-page-container">
       <style>{customStyles}</style>
-      
-      <div className="page-title-container mb-4 mt-5 mt-lg-0 text-start">
+
+      <div className="qsr-page-title-container text-start">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto text-start">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>Menu QR Code</h1>
+            <h1 className="qsr-page-title">Menu QR Code</h1>
             <div className="text-muted mt-1 small">Generate and share your restaurant's digital menu</div>
           </Col>
           <Col xs="auto">
@@ -178,9 +178,9 @@ const QRforMenu = ({ setSection }) => {
                     </div>
 
                     <div className="qrfor-menu-qr-frame mb-4" ref={qrCodeRef}>
-                      <QRCodeSVG 
-                        size={220} 
-                        value={menuLink} 
+                      <QRCodeSVG
+                        size={220}
+                        value={menuLink}
                         level="H"
                         includeMargin={false}
                       />

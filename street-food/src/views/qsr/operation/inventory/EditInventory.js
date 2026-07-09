@@ -257,14 +257,13 @@ const EditInventory = () => {
   `;
 
   return (
-    <div className="add-inventory-inventory-container pb-5">
+    <div className="container-fluid qsr-page-container add-inventory-inventory-container pb-5">
       <style>{customStyles}</style>
       <HtmlHead title={title} />
-      <div className="container-fluid px-lg-5">
-        <div className="page-title-container mb-4 mt-5 mt-lg-0">
+      <div className="qsr-page-title-container">
           <Row className="g-0 align-items-center">
             <Col xs="auto" className="me-auto">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'inventory', text: 'Inventory Management' }, { to: '', title: 'Edit' }]} />
             </Col>
             <Col xs="auto" className="d-none d-lg-block">
@@ -381,9 +380,21 @@ const EditInventory = () => {
                   <div className="d-flex flex-wrap gap-2 mt-3">
                     {filePreviews.map((f, i) => (
                       <div key={i} className="add-inventory-file-pill">
-                        <CsLineIcons icon={f.name.match(/\.(pdf)$/i) || f.type === 'pdf' ? 'file-text' : 'image'} size="14" /> {f.name.substring(0, 15)}...
+                        <CsLineIcons icon={(f.name && f.name.match(/\.(pdf)$/i)) || f.type === 'pdf' ? 'file-text' : 'image'} size="14" /> {f.name ? f.name.substring(f.name.lastIndexOf('/') + 1).substring(0, 15) : ''}...
                       </div>
                     ))}
+                    {filePreviews.length > 0 && (
+                      <Button 
+                        variant="link" 
+                        className="text-danger p-0 text-decoration-none small fw-bold d-inline-flex align-items-center gap-1 ms-2"
+                        onClick={() => {
+                          setFieldValue('bill_files', []);
+                          setFilePreviews([]);
+                        }}
+                      >
+                        <CsLineIcons icon="close" size="12" /> Clear All
+                      </Button>
+                    )}
                   </div>
                 </Col>
               </Row>
@@ -532,7 +543,6 @@ const EditInventory = () => {
             </Card.Body>
           </Card>
         </Form>
-      </div>
 
       {isSubmitting && (
         <div

@@ -296,7 +296,7 @@ const CompleteInventory = () => {
               });
 
               toast.success('Inventory synchronization successful!');
-              history.push('/operations/inventory-history');
+              history.push('/inventory');
             } catch (error) {
               toast.error(error.response?.data?.message || 'Completion failed.');
             } finally {

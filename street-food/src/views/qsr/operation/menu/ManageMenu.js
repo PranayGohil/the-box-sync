@@ -162,7 +162,7 @@ const ManageMenu = () => {
   }
 
   return (
-    <div className="container-fluid px-lg-5 pb-5">
+    <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
       <style>{`
         .hover-elevate {
@@ -179,10 +179,10 @@ const ManageMenu = () => {
           background-color: #f8fafc !important;
         }
       `}</style>
-      <div className="page-title-container mb-4 mt-5 mt-lg-0 text-start">
+      <div className="qsr-page-title-container text-start">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto text-start">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+            <h1 className="qsr-page-title">{title}</h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
           <Col xs="12" md="5" className="d-flex flex-column flex-sm-row justify-content-md-end gap-2 mt-3 mt-md-0">

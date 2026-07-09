@@ -285,7 +285,7 @@ const OrderHistory = () => {
       const sheetData = [
         ['ORDER HISTORY REPORT'],
         [],
-        ['Company:', COMPANY_NAME, '', 'Export Date:', format(new Date(), 'dd MMM yyyy HH:mm')],
+        ['Company:', COMPANY_NAME, '', 'Export Date:', format(new Date(), 'dd MMM yyyy hh:mm a')],
         [],
         ['KPI SUMMARY'],
         ['Total Orders', 'Total Revenue', 'Average Order Value'],
@@ -308,7 +308,7 @@ const OrderHistory = () => {
         const tableDetails = order.table_area ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}` : (order.table_no ? `T${order.table_no}` : (order.token ? `Token ${order.token}` : 'N/A'));
         sheetData.push([
           order.order_no || order._id || '',
-          format(orderDate, 'dd-MM-yyyy HH:mm'),
+          format(orderDate, 'dd-MM-yyyy hh:mm a'),
           order.customer_name || 'Guest',
           tableDetails,
           order.payment_type || 'N/A',
@@ -391,7 +391,7 @@ const OrderHistory = () => {
       doc.text('REPORT GENERATED', docWidth - 15, yPosition + 12, { align: 'right' });
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(209, 213, 219);
-      doc.text(format(new Date(), 'dd MMM yyyy HH:mm'), docWidth - 15, yPosition + 17, { align: 'right' });
+      doc.text(format(new Date(), 'dd MMM yyyy hh:mm a'), docWidth - 15, yPosition + 17, { align: 'right' });
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(255, 255, 255);
       doc.text('BUSINESS NAME', docWidth - 15, yPosition + 25, { align: 'right' });
@@ -465,7 +465,7 @@ const OrderHistory = () => {
           const tableDetails = order.table_area ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}` : (order.table_no ? `T${order.table_no}` : (order.token ? `Token ${order.token}` : 'N/A'));
           return [
             order.order_no || (order._id || '').substring(18),
-            format(orderDate, 'dd-MM-yy HH:mm'),
+            format(orderDate, 'dd-MM-yy hh:mm a'),
             (order.customer_name || 'Guest').substring(0, 15),
             tableDetails,
             order.payment_type || 'N/A',
@@ -546,7 +546,7 @@ const OrderHistory = () => {
         id: 'order_time',
         headerClassName: 'text-small text-uppercase w-15',
         disableSortBy: true,
-        Cell: ({ value }) => format(new Date(value), 'HH:mm'),
+        Cell: ({ value }) => format(new Date(value), 'hh:mm a'),
       },
       {
         Header: 'Name',
@@ -574,8 +574,8 @@ const OrderHistory = () => {
         isSorted: sortBy === 'order_status',
         isSortedDesc: sortBy === 'order_status' && sortOrder === 'desc',
         Cell: ({ value }) => (
-          <Badge bg={value === 'Save' ? 'warning' : value === 'Paid' || value === 'Completed' ? 'success' : value === 'KOT' ? 'warning' : value === 'Cancelled' ? 'danger' : 'secondary'} className="rounded-pill px-3">
-            {value}
+          <Badge bg={value === 'Save' ? 'warning' : value === 'Paid' || value === 'Completed' ? 'success' : value === 'KOT' ? 'info' : value === 'Cancelled' ? 'danger' : 'secondary'} className="rounded-pill px-3">
+            {value === 'KOT' ? 'Bill Printed' : value}
           </Badge>
         ),
       },
@@ -676,13 +676,36 @@ const OrderHistory = () => {
 
   return (
     <>
-      <div className="container-fluid pb-5">
+      <style>{`
+        input[type="date"], input[placeholder="DD/MM/YYYY"] {
+          position: relative;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231ea8e7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 15px center !important;
+          background-size: 18px 18px !important;
+          padding-right: 40px !important;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator, input[placeholder="DD/MM/YYYY"]::-webkit-calendar-picker-indicator {
+          cursor: pointer !important;
+          display: block !important;
+          opacity: 0 !important;
+          position: absolute !important;
+          right: 0 !important;
+          top: 0 !important;
+          width: 40px !important;
+          height: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          z-index: 2 !important;
+        }
+      `}</style>
+      <div className="container-fluid qsr-page-container">
         <HtmlHead title={title} description={description} />
 
-        <div className="page-title-container mb-4 mt-5 pt-1 mt-md-0 pt-md-0">
+        <div className="qsr-page-title-container">
           <Row className="g-0 align-items-center">
             <Col xs="auto" className="me-auto">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>
+              <h1 className="qsr-page-title">
                 {title}
               </h1>
               <BreadcrumbList items={breadcrumbs} />
@@ -780,21 +803,27 @@ const OrderHistory = () => {
                   <Col xs="12" sm="6">
                     <Form.Label className="small fw-bold text-muted mb-1">From</Form.Label>
                     <Form.Control
-                      type="date"
+                      type={filters.fromDate ? "date" : "text"}
+                      placeholder="DD/MM/YYYY"
                       value={filters.fromDate}
                       onChange={(e) => handleFilterChange('fromDate', e.target.value)}
+                      onFocus={(e) => { e.target.type = 'date'; }}
+                      onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
                       className="rounded-pill px-3 border-0 shadow-sm"
-                      style={{ height: '44px', fontSize: '14px' }}
+                      style={{ height: '44px', fontSize: '14px', paddingRight: '40px' }}
                     />
                   </Col>
                   <Col xs="12" sm="6">
                     <Form.Label className="small fw-bold text-muted mb-1">To</Form.Label>
                     <Form.Control
-                      type="date"
+                      type={filters.toDate ? "date" : "text"}
+                      placeholder="DD/MM/YYYY"
                       value={filters.toDate}
                       onChange={(e) => handleFilterChange('toDate', e.target.value)}
+                      onFocus={(e) => { e.target.type = 'date'; }}
+                      onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
                       className="rounded-pill px-3 border-0 shadow-sm"
-                      style={{ height: '44px', fontSize: '14px' }}
+                      style={{ height: '44px', fontSize: '14px', paddingRight: '40px' }}
                     />
                   </Col>
                 </Row>
@@ -840,7 +869,7 @@ const OrderHistory = () => {
                           <div className="fw-bolder text-primary mb-1" style={{ fontSize: '14px' }}>
                             {order.order_no || 'ORD-0000'}
                           </div>
-                          <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd MMM yyyy, HH:mm')}</div>
+                          <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd MMM yyyy, hh:mm a')}</div>
                         </div>
                         <Badge
                           bg={order.order_status === 'Save' ? 'warning' : order.order_status === 'Paid' || order.order_status === 'Completed' ? 'success' : order.order_status === 'KOT' ? 'warning' : order.order_status === 'Cancelled' ? 'danger' : 'secondary'}
@@ -1048,20 +1077,26 @@ const OrderHistory = () => {
                         <div className="d-flex flex-column flex-sm-row gap-3">
                           <div className="flex-grow-1 position-relative">
                             <Form.Control
-                              type="date"
+                              type={exportFilters.fromDate ? "date" : "text"}
+                              placeholder="DD/MM/YYYY"
                               value={exportFilters.fromDate}
                               onChange={(e) => setExportFilters({ ...exportFilters, fromDate: e.target.value })}
+                              onFocus={(e) => { e.target.type = 'date'; }}
+                              onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
                               className="border-0 shadow-sm rounded-pill px-4"
-                              style={{ height: '48px', fontSize: '14px' }}
+                              style={{ height: '48px', fontSize: '14px', paddingRight: '40px' }}
                             />
                           </div>
                           <div className="flex-grow-1 position-relative">
                             <Form.Control
-                              type="date"
+                              type={exportFilters.toDate ? "date" : "text"}
+                              placeholder="DD/MM/YYYY"
                               value={exportFilters.toDate}
                               onChange={(e) => setExportFilters({ ...exportFilters, toDate: e.target.value })}
+                              onFocus={(e) => { e.target.type = 'date'; }}
+                              onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
                               className="border-0 shadow-sm rounded-pill px-4"
-                              style={{ height: '48px', fontSize: '14px' }}
+                              style={{ height: '48px', fontSize: '14px', paddingRight: '40px' }}
                             />
                           </div>
                         </div>

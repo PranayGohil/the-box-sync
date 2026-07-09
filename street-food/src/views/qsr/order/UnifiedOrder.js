@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
+import { useWindowSize } from 'hooks/useWindowSize';
 import { Button, Row, Col, Card, Form, Badge } from 'react-bootstrap';
 import axios from 'axios';
 import {
@@ -82,6 +83,7 @@ const UnifiedOrder = () => {
   const history = useHistory();
   const location = useLocation();
   const { socket } = useSocket();
+  const { width } = useWindowSize();
 
   const urlParams = new URLSearchParams(location.search);
   const orderId = urlParams.get('orderId');
@@ -89,7 +91,7 @@ const UnifiedOrder = () => {
   const mode = urlParams.get('mode'); // 'new' | 'edit'
 
   const { activePlans } = useContext(AuthContext);
-  const canKOT = activePlans ? activePlans.includes('KOT Panel') : false;
+  const canKOT = false;
 
   // Default type from URL path
   const defaultType = location.pathname.includes('dine-in') ? 'Dine In' : location.pathname.includes('delivery') ? 'Delivery' : 'Takeaway';
@@ -112,6 +114,9 @@ const UnifiedOrder = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [nextLocation, setNextLocation] = useState(null);
+  const [hasUnpaidBill, setHasUnpaidBill] = useState(false);
   const [kotPrinting, setKotPrinting] = useState(false);
   const [kotHistory, setKotHistory] = useState([]);
   const [paymentHistory, setPaymentHistory] = useState([]);
@@ -383,10 +388,56 @@ const UnifiedOrder = () => {
       .catch(console.error);
   }, [orderId, tableId]);
 
+  // Auto-open mobile cart sheet in edit mode once initial data is loaded and width is resolved
+  useEffect(() => {
+    if (isInitialized && isEditMode && width && width < 992) {
+      setShowCartSheet(true);
+    }
+  }, [isInitialized, isEditMode, width]);
+
   // ── Navigation Guard ──
-  const handleNavigation = (path) => {
-    history.push(path);
-  };
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (allowNavigationRef.current) return;
+      if (!isDirty && !orderNo) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty, orderNo]);
+
+  useEffect(() => {
+    const unblock = history.block((loc) => {
+      if (allowNavigationRef.current) {
+        allowNavigationRef.current = false;
+        return true;
+      }
+
+      // Case 1: Bill Printed but Unpaid
+      const hasGeneratedBill = !!orderNo;
+      const isNotPaid = orderStatus !== 'Paid';
+      
+      if (hasGeneratedBill && isNotPaid && loc.pathname !== window.location.pathname) {
+        setNextLocation(loc.pathname);
+        setHasUnpaidBill(true);
+        setShowLeaveModal(true);
+        return false;
+      }
+
+      // Case 2: Items in cart but Bill NOT printed yet
+      const hasItems = orderItems.length > 0;
+      if (hasItems && !hasGeneratedBill && isNotPaid && isDirty && loc.pathname !== window.location.pathname) {
+        setNextLocation(loc.pathname);
+        setHasUnpaidBill(false);
+        setShowLeaveModal(true);
+        return false;
+      }
+
+      return true;
+    });
+    return () => unblock();
+  }, [isDirty, orderNo, orderStatus, orderItems, history]);
 
   // ── KOT Delta ─────────────────────────────────────────────────────────────
   const computeKOTDelta = (currentItems, snapshotItems) => {
@@ -471,18 +522,18 @@ const UnifiedOrder = () => {
       order_status: status,
       customer_name: customerInfo.name,
       comment: customerInfo.comment,
-      bill_amount: parseFloat(paymentData.total),
-      sub_total: parseFloat(paymentData.subTotal),
-      cgst_percent: parseFloat(paymentData.cgstPercent),
-      sgst_percent: parseFloat(paymentData.sgstPercent),
-      vat_percent: parseFloat(paymentData.vatPercent),
-      cgst_amount: parseFloat(paymentData.cgstAmount),
-      sgst_amount: parseFloat(paymentData.sgstAmount),
-      vat_amount: parseFloat(paymentData.vatAmount),
-      discount_amount: parseFloat(paymentData.discountAmount),
-      waveoff_amount: parseFloat(paymentData.waveoffAmount),
-      total_amount: parseFloat(paymentData.total),
-      paid_amount: parseFloat(paymentData.paidAmount),
+      bill_amount: parseFloat(paymentData.total) || 0,
+      sub_total: parseFloat(paymentData.subTotal) || 0,
+      cgst_percent: parseFloat(paymentData.cgstPercent) || 0,
+      sgst_percent: parseFloat(paymentData.sgstPercent) || 0,
+      vat_percent: parseFloat(paymentData.vatPercent) || 0,
+      cgst_amount: parseFloat(paymentData.cgstAmount) || 0,
+      sgst_amount: parseFloat(paymentData.sgstAmount) || 0,
+      vat_amount: parseFloat(paymentData.vatAmount) || 0,
+      discount_amount: parseFloat(paymentData.discountAmount) || 0,
+      waveoff_amount: parseFloat(paymentData.waveoffAmount) || 0,
+      total_amount: parseFloat(paymentData.total) || 0,
+      paid_amount: parseFloat(paymentData.paidAmount) || 0,
       payment_type: paymentData.paymentType,
       order_source: 'QSR',
     };
@@ -632,7 +683,7 @@ const UnifiedOrder = () => {
   };
 
   // ── Save / Cancel / Pay ───────────────────────────────────────────────────
-  const handleSaveOrder = async (status = 'Save') => {
+  const handleSaveOrder = async (status = 'Save', redirectPath = null) => {
     if (!validateOrder()) return false;
     setIsLoading(true);
     try {
@@ -665,11 +716,21 @@ const UnifiedOrder = () => {
           }
         }
 
-        if (status !== 'Paid' && status !== 'KOT') {
-          window.location.href = '/order/new';
-        } else {
+        let targetPath = redirectPath || nextLocation || '/order/new';
+        if (targetPath === '/operations') {
+          targetPath = '/operations/order-history';
+        }
+        allowNavigationRef.current = true;
+        
+        if (status === 'Paid') {
           toast.success('Order saved and marked as Paid!');
-          window.location.href = '/order/new';
+        }
+
+        if (redirectPath || nextLocation) {
+          setNextLocation(null);
+          history.push(targetPath);
+        } else {
+          window.location.href = targetPath;
         }
         return true;
       }
@@ -853,25 +914,6 @@ const UnifiedOrder = () => {
                 visibleFields={visibleFields}
                 requiredFields={requiredFields}
               />
-              {/* Special Instructions - Moved here to save space for cart */}
-              <div className="mt-2">
-                <Form.Control
-                  as="textarea"
-                  rows={1}
-                  value={customerInfo.comment}
-                  onChange={(e) => setCustomerInfo((prev) => ({ ...prev, comment: e.target.value }))}
-                  placeholder="Notes..."
-                  style={{
-                    borderRadius: '6px',
-                    border: '1.5px solid rgba(226,232,240,0.9)',
-                    fontSize: '11.5px',
-                    height: '28px',
-                    resize: 'none',
-                    color: '#333',
-                    background: '#f8fafc',
-                  }}
-                />
-              </div>
             </div>
 
             <div className="pos-cart-section">
@@ -893,13 +935,13 @@ const UnifiedOrder = () => {
                 handlePrint={handlePrint}
                 history={history}
                 setShowCartSheet={setShowCartSheet}
-                onKotAndPrint={handleKotAndPrint}
-                kotPrinting={kotPrinting}
-                kotHistory={kotHistory}
-                onReprintKOT={handleReprintKOT}
+                onKotAndPrint={undefined}
+                kotPrinting={false}
+                kotHistory={[]}
+                onReprintKOT={undefined}
                 paymentHistory={paymentHistory}
                 alreadyPaid={parseFloat(initialStateRef.current?.paid_amount) || 0}
-                canKOT={canKOT}
+                canKOT={false}
                 orderType={orderType}
               />
             </div>
@@ -928,6 +970,22 @@ const UnifiedOrder = () => {
       />
 
       <CancelOrderModal showCancelModal={showCancelModal} setShowCancelModal={setShowCancelModal} handleCancelOrder={handleCancelOrder} isLoading={isLoading} />
+      <LeaveConfirmationModal
+        showLeaveModal={showLeaveModal}
+        setShowLeaveModal={setShowLeaveModal}
+        setNextLocation={setNextLocation}
+        orderStatus={orderStatus}
+        allowNavigationRef={allowNavigationRef}
+        setIsDirty={setIsDirty}
+        nextLocation={nextLocation}
+        history={history}
+        handleSaveOrder={handleSaveOrder}
+        isLoading={isLoading}
+        canKOT={canKOT}
+        hasUnpaidBill={hasUnpaidBill}
+        handleOpenPaymentModal={handleOpenPaymentModal}
+        setOrderItems={setOrderItems}
+      />
 
       {/* Mobile Bottom Sheet */}
       <BottomCartSheet
@@ -948,11 +1006,11 @@ const UnifiedOrder = () => {
         handlePrint={handlePrint}
         history={history}
         alreadyPaid={parseFloat(initialStateRef.current?.paid_amount) || 0}
-        canKOT={canKOT}
-        onKotAndPrint={handleKotAndPrint}
-        kotPrinting={kotPrinting}
-        kotHistory={kotHistory}
-        onReprintKOT={handleReprintKOT}
+        canKOT={false}
+        onKotAndPrint={undefined}
+        kotPrinting={false}
+        kotHistory={[]}
+        onReprintKOT={undefined}
         paymentHistory={paymentHistory}
         orderType={orderType}
       >
@@ -990,18 +1048,6 @@ const UnifiedOrder = () => {
           visibleFields={visibleFields}
           requiredFields={requiredFields}
         />
-
-        <Form.Group className="mb-3">
-          <Form.Label className="fw-semibold small text-muted">Special Instructions</Form.Label>
-          <Form.Control
-            as="textarea"
-            rows={2}
-            value={customerInfo.comment}
-            onChange={(e) => setCustomerInfo((prev) => ({ ...prev, comment: e.target.value }))}
-            placeholder="Any special instructions..."
-            style={{ borderRadius: '12px', border: '1px solid rgba(35,179,244,0.2)', fontSize: '13px' }}
-          />
-        </Form.Group>
       </BottomCartSheet>
       <MobileCartBar orderItems={orderItems} paymentData={paymentData} setShowCartSheet={setShowCartSheet} />
     </>

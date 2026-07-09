@@ -11,11 +11,26 @@ import CreatableSelect from 'react-select/creatable';
 
 const customStyles = `
   .pill-input {
-    border-radius: 12px !important;
-    padding: 0.7rem 1.2rem !important;
+    border-radius: 10px !important;
+    padding: 0.45rem 1rem !important;
     border: 1px solid #e5e7eb !important;
     background: #ffffff !important;
     transition: all 0.2s ease !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+  }
+  input.pill-input {
+    height: 38px !important;
+  }
+  textarea.pill-input {
+    min-height: 60px !important;
+    height: auto !important;
+  }
+  @media (max-width: 767.98px) {
+    textarea.pill-input {
+      min-height: 130px !important;
+    }
   }
   .pill-input:focus {
     border-color: #23b3f4 !important;
@@ -84,17 +99,7 @@ const customStyles = `
     background: #23b3f4 !important;
     border-color: #23b3f4 !important;
   }
-  .square-delete-btn {
-    width: 48px !important;
-    min-width: 48px !important;
-    height: 48px !important;
-    border-radius: 12px !important;
-    padding: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-shrink: 0 !important;
-  }
+
 `;
 
 const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }) => {
@@ -106,11 +111,15 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
   const selectStyles = {
     control: (base, state) => ({
       ...base,
-      borderRadius: '8px',
-      padding: '2px',
+      borderRadius: '10px',
+      padding: '0px',
       border: state.isFocused ? '1px solid #23b3f4' : '1px solid #e5e7eb',
       boxShadow: state.isFocused ? '0 0 0 4px rgba(35, 179, 244, 0.1)' : 'none',
       backgroundColor: '#fff',
+      fontSize: '0.88rem',
+      fontWeight: '600',
+      minHeight: '38px',
+      height: '38px',
       '&:hover': { border: '1px solid #23b3f4' },
     }),
     menuPortal: (base) => ({
@@ -170,6 +179,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
   }, [data]);
 
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
       dish_name: data?.dish_name || '',
       description: data?.description || '',
@@ -208,7 +218,6 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
         })
       ),
     }),
-    enableReinitialize: true,
     onSubmit: async (values) => {
       setIsSubmitting(true);
       try {
@@ -377,7 +386,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                 <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Description</Form.Label>
                 <Form.Control
                   as="textarea"
-                  rows={2}
+                  rows={3}
                   name="description"
                   value={formik.values.description}
                   onChange={formik.handleChange}
@@ -389,7 +398,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
               </Form.Group>
             </Col>
 
-            <Col md={4} xs={6}>
+            <Col xs={4}>
               <div
                 className="d-flex align-items-center gap-2 cursor-pointer mb-4"
                 onClick={() => formik.setFieldValue('is_special', !formik.values.is_special)}
@@ -401,7 +410,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
               </div>
             </Col>
 
-            <Col md={4} xs={6}>
+            <Col xs={4}>
               <div
                 className="d-flex align-items-center gap-2 cursor-pointer mb-4"
                 onClick={() => formik.setFieldValue('is_available', !formik.values.is_available)}
@@ -413,7 +422,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
               </div>
             </Col>
 
-            <Col md={4} xs={6}>
+            <Col xs={4}>
               <div
                 className="d-flex align-items-center gap-2 cursor-pointer mb-4"
                 onClick={() => formik.setFieldValue('hide_on_kot', !formik.values.hide_on_kot)}
@@ -437,7 +446,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                 </div>
                 <div className="d-flex flex-column gap-2">
                   {(formik.values.variants || []).map((variant, vIdx) => (
-                    <Row key={vIdx} className="g-2 align-items-end mb-2">
+                    <Row key={vIdx} className="g-2 align-items-start mb-2">
                       <Col xs={12} sm={4}>
                         <Form.Group>
                           <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
@@ -448,8 +457,8 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                               ...selectStyles,
                               control: (base, state) => ({
                                 ...selectStyles.control(base, state),
-                                minHeight: '48px',
-                                borderRadius: '12px',
+                                minHeight: '38px',
+                                borderRadius: '10px',
                               }),
                             }}
                             isClearable
@@ -477,7 +486,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                             onChange={formik.handleChange}
                             placeholder="Price"
                             className="pill-input"
-                            style={{ height: '48px', borderRadius: '12px' }}
+                            style={{ height: '38px', borderRadius: '10px' }}
                             isInvalid={formik.touched.variants?.[vIdx]?.price && !!formik.errors.variants?.[vIdx]?.price}
                           />
                           {formik.errors.variants?.[vIdx]?.price && <div className="text-danger small mt-1">{formik.errors.variants[vIdx].price}</div>}
@@ -493,8 +502,8 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                               ...selectStyles,
                               control: (base, state) => ({
                                 ...selectStyles.control(base, state),
-                                minHeight: '48px',
-                                borderRadius: '12px',
+                                minHeight: '38px',
+                                borderRadius: '10px',
                               }),
                             }}
                             isClearable
@@ -507,7 +516,10 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                           />
                         </Form.Group>
                       </Col>
-                      <Col xs="auto" className="pb-1">
+                      <Col xs="auto" sm="auto" className="d-flex flex-column justify-content-start pb-0 px-1">
+                        <Form.Label className="d-none d-sm-block mb-1" style={{ fontSize: '0.75rem', visibility: 'hidden' }}>
+                          Delete
+                        </Form.Label>
                         <Button
                           variant="outline-danger"
                           onClick={() => {
@@ -516,7 +528,8 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                             formik.setFieldValue('variants', newVariants);
                           }}
                           disabled={formik.values.variants.length === 1}
-                          className="square-delete-btn btn btn-outline-danger"
+                          style={{ height: '36px', width: '36px', minWidth: '36px', borderRadius: '50%', padding: 0 }}
+                          className="d-flex align-items-center justify-content-center btn btn-outline-danger"
                         >
                           <CsLineIcons icon="bin" size="14" />
                         </Button>
@@ -548,7 +561,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                 </div>
                 <div className="d-flex flex-column gap-2">
                   {(formik.values.addons || []).map((addon, aIdx) => (
-                    <Row key={aIdx} className="g-2 align-items-end mb-2">
+                    <Row key={aIdx} className="g-2 align-items-start mb-2">
                       <Col xs={8} sm={6}>
                         <Form.Group>
                           <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
@@ -559,8 +572,8 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                               ...selectStyles,
                               control: (base, state) => ({
                                 ...selectStyles.control(base, state),
-                                minHeight: '48px',
-                                borderRadius: '12px',
+                                minHeight: '38px',
+                                borderRadius: '10px',
                               }),
                             }}
                             isClearable
@@ -586,13 +599,16 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                             onChange={formik.handleChange}
                             placeholder="Price"
                             className="pill-input"
-                            style={{ height: '48px', borderRadius: '12px' }}
+                            style={{ height: '38px', borderRadius: '10px' }}
                             isInvalid={formik.touched.addons?.[aIdx]?.price && !!formik.errors.addons?.[aIdx]?.price}
                           />
                           {formik.errors.addons?.[aIdx]?.price && <div className="text-danger small mt-1">{formik.errors.addons[aIdx].price}</div>}
                         </Form.Group>
                       </Col>
-                      <Col xs="auto" className="pb-1">
+                      <Col xs="auto" sm="auto" className="d-flex flex-column justify-content-start pb-0 px-1">
+                        <Form.Label className="d-none d-sm-block mb-1" style={{ fontSize: '0.75rem', visibility: 'hidden' }}>
+                          Delete
+                        </Form.Label>
                         <Button
                           variant="outline-danger"
                           onClick={() => {
@@ -600,7 +616,8 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                             newAddons.splice(aIdx, 1);
                             formik.setFieldValue('addons', newAddons);
                           }}
-                          className="square-delete-btn btn btn-outline-danger"
+                          style={{ height: '36px', width: '36px', minWidth: '36px', borderRadius: '50%', padding: 0 }}
+                          className="d-flex align-items-center justify-content-center btn btn-outline-danger"
                         >
                           <CsLineIcons icon="bin" size="14" />
                         </Button>

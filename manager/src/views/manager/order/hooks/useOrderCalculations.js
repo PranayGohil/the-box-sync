@@ -65,8 +65,6 @@ const useOrderCalculations = ({
       }
 
       const total = subTotal + cgstAmount + sgstAmount + vatAmount - (parseFloat(discountAmount) || 0);
-      const pAmount = parseFloat(prev.paidAmount) || 0;
-      const waveoffAmount = pAmount > 0 ? total - pAmount : 0;
 
       return {
         ...prev,
@@ -74,7 +72,8 @@ const useOrderCalculations = ({
         discountValue,
         discountAmount: parseFloat(discountAmount || 0).toFixed(2),
         total: total.toFixed(2),
-        waveoffAmount: waveoffAmount.toFixed(2),
+        paidAmount: total.toFixed(2),
+        waveoffAmount: '0.00',
       };
     });
   };
@@ -88,13 +87,13 @@ const useOrderCalculations = ({
         const sgstAmount = parseFloat(prev.sgstAmount) || 0;
         const vatAmount = parseFloat(prev.vatAmount) || 0;
         const total = subTotal + cgstAmount + sgstAmount + vatAmount;
-        const pAmount = parseFloat(prev.paidAmount) || 0;
         return {
           ...prev,
           discountValue: '',
           discountAmount: '0.00',
           total: total.toFixed(2),
-          waveoffAmount: pAmount > 0 ? (total - pAmount).toFixed(2) : '0.00',
+          paidAmount: total.toFixed(2),
+          waveoffAmount: '0.00',
         };
       });
       return;
@@ -112,16 +111,14 @@ const useOrderCalculations = ({
       discountAmount = (subTotal * limitedValue) / 100;
       setPaymentData((prev) => {
         const total = subTotal + cgstAmount + sgstAmount + vatAmount - discountAmount;
-        const pAmount = parseFloat(prev.paidAmount) || 0;
-        return { ...prev, discountValue: value, discountAmount: discountAmount.toFixed(2), total: total.toFixed(2), waveoffAmount: pAmount > 0 ? (total - pAmount).toFixed(2) : '0.00' };
+        return { ...prev, discountValue: value, discountAmount: discountAmount.toFixed(2), total: total.toFixed(2), paidAmount: total.toFixed(2), waveoffAmount: '0.00' };
       });
     } else {
       const limitedValue = Math.min(dValue, subTotal);
       discountAmount = limitedValue;
       setPaymentData((prev) => {
         const total = subTotal + cgstAmount + sgstAmount + vatAmount - discountAmount;
-        const pAmount = parseFloat(prev.paidAmount) || 0;
-        return { ...prev, discountValue: value, discountAmount: discountAmount.toFixed(2), total: total.toFixed(2), waveoffAmount: pAmount > 0 ? (total - pAmount).toFixed(2) : '0.00' };
+        return { ...prev, discountValue: value, discountAmount: discountAmount.toFixed(2), total: total.toFixed(2), paidAmount: total.toFixed(2), waveoffAmount: '0.00' };
       });
     }
   };

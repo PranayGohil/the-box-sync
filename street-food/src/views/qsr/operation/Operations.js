@@ -17,9 +17,6 @@ import AddDishes from './menu/AddDishes';
 import QRforMenu from './menu/QRforMenu';
 
 import FinancialReport from './FinancialReport';
-import InventoryHistory from './inventory/InventoryHistory';
-import InventoryDetails from './inventory/InventoryDetails';
-import EditInventory from './inventory/EditInventory';
 
 const NavContent = () => {
   const { activePlans } = useContext(AuthContext);
@@ -104,25 +101,7 @@ const NavContent = () => {
           </div>
         </div>
 
-        <div className="mb-1">
-          <div className="section-header">
-            <CsLineIcons icon="boxes" size="17" />
-            <span className="align-middle">Inventory</span>
-          </div>
-          <div className="sub-menu-container">
-            <Nav.Link as={NavLink} to="/inventory" className="px-0" isActive={(match, location) => {
-              const inventoryPaths = [
-                '/operations/inventory-history',
-                '/operations/edit-inventory',
-                '/operations/inventory-details'
-              ];
-              return location.pathname.startsWith('/inventory') || inventoryPaths.some(p => location.pathname.startsWith(p));
-            }}>
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Inventory Management</span>
-            </Nav.Link>
-          </div>
-        </div>
+
 
         <div className="mb-1">
           <div className="section-header">
@@ -149,7 +128,6 @@ const MobileBottomNav = () => {
   const navItems = [
     { label: 'Order', icon: 'cart', to: '/operations/order-history' },
     { label: 'Menu', icon: 'book-open', to: '/operations/manage-menu' },
-    { label: 'Inventory', icon: 'boxes', to: '/inventory' },
     { label: 'Report', icon: 'file-text', to: '/operations/financial-report' },
   ];
 
@@ -220,7 +198,14 @@ const MobileBottomNav = () => {
 
       <div className="bottom-nav-pill">
         {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.to);
+          let isActive = false;
+          if (item.label === 'Order') {
+            isActive = pathname.startsWith('/operations/order-history') || pathname.startsWith('/operations/order-details');
+          } else if (item.label === 'Menu') {
+            isActive = pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu');
+          } else {
+            isActive = pathname.startsWith(item.to);
+          }
           return (
             <NavLink
               key={item.label}
@@ -255,7 +240,7 @@ const Operations = () => {
               <NavContent />
             </div>
           </Col>
-        ) : (<div className="pt-7" />)}
+        ) : null}
         <Col>
           <Switch>
             <Route exact path="/operations" render={() => <Redirect to="/operations/order-history" />} />
@@ -267,9 +252,6 @@ const Operations = () => {
             <Route exact path="/operations/qr-for-menu" render={() => <QRforMenu />} />
 
             <Route exact path="/operations/financial-report" render={() => <FinancialReport />} />
-            <Route exact path="/operations/inventory-history" render={() => <InventoryHistory />} />
-            <Route exact path="/operations/inventory-details/:id" render={() => <InventoryDetails />} />
-            <Route exact path="/operations/edit-inventory/:id" render={() => <EditInventory />} />
           </Switch>
         </Col>
       </Row>

@@ -172,21 +172,20 @@ const InventoryDetails = () => {
   `;
 
   return (
-    <div className="inventory-details-details-container">
+    <div className="container-fluid qsr-page-container inventory-details-details-container">
       <style>{customStyles}</style>
       <HtmlHead title="Inventory Details" />
-      <div className="container-fluid px-3 px-lg-5">
-        <div className="page-title-container mb-4 mt-5 mt-lg-0">
+      <div className="qsr-page-title-container">
           <Row className="g-3 align-items-center">
             <Col xs={12} md={7}>
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>Inventory Details</h1>
+              <h1 className="qsr-page-title">Inventory Details</h1>
               <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'inventory', text: 'Inventory Management' }, { to: '', title: 'Details' }]} />
             </Col>
             <Col xs={12} md={5} className="d-flex flex-wrap justify-content-start justify-content-md-end gap-2 mt-3 mt-md-0">
               <Button variant="outline-secondary" onClick={() => history.push('/inventory')} className="rounded-pill px-4 fw-bold border-2">
                 <CsLineIcons icon="arrow-left" size="14" className="me-2" /> Back
               </Button>
-              <Button variant="outline-warning" onClick={() => history.push(`/operations/edit-inventory/${id}`)} className="rounded-pill px-4 fw-bold border-2">
+              <Button variant="outline-warning" onClick={() => history.push(`/inventory/edit/${id}`)} className="rounded-pill px-4 fw-bold border-2">
                 <CsLineIcons icon="edit" size="14" className="me-2" /> Edit
               </Button>
               <Button variant="outline-danger" onClick={() => setShowDeleteModal(true)} className="rounded-pill px-4 fw-bold border-2">
@@ -412,7 +411,6 @@ const InventoryDetails = () => {
             </Row>
           </Card>
         )}
-      </div>
 
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered backdrop="static" contentClassName="inventory-delete-modal-content">
         <Modal.Header closeButton className="border-0 pb-0">

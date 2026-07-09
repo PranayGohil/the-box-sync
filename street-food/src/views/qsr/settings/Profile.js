@@ -437,13 +437,6 @@ const Profile = () => {
                           <Form.Control.Feedback type="invalid">{errors.mobile}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
-                      <Col md={12}>
-                        <Form.Group>
-                          <Form.Label className="small fw-bold opacity-75">FSSAI Registration No.</Form.Label>
-                          <Form.Control type="text" name="fssai_no" value={values.fssai_no} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.fssai_no && errors.fssai_no} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} />
-                          <Form.Control.Feedback type="invalid">{errors.fssai_no}</Form.Control.Feedback>
-                        </Form.Group>
-                      </Col>
                       {(editMode && (values.email !== profile.email || values.mobile !== profile.mobile)) && (
                         <Col md={12}>
                           <Form.Group className="mt-2 animate__animated animate__fadeIn">
@@ -473,7 +466,7 @@ const Profile = () => {
                     </div>
                     <Row className="g-3 mb-2">
                       {/* GST Number Card */}
-                      <Col lg={12} xl={6} md={12}>
+                      <Col xs={12}>
                         <div
                           className="p-3 rounded-4 d-flex align-items-center justify-content-between flex-wrap gap-2"
                           style={{
@@ -511,49 +504,6 @@ const Profile = () => {
                           >
                             <CsLineIcons icon={profile.gst_no ? 'edit' : 'plus'} size="14" className="me-1" />
                             {profile.gst_no ? 'Edit' : 'Add GST'}
-                          </Button>
-                        </div>
-                      </Col>
-
-                      {/* FSSAI Licence Card */}
-                      <Col lg={12} xl={6} md={12}>
-                        <div
-                          className="p-3 rounded-4 d-flex align-items-center justify-content-between flex-wrap gap-2"
-                          style={{
-                            background: profile.fssai_no ? 'rgba(34, 197, 94, 0.06)' : 'rgba(249, 115, 22, 0.06)',
-                            border: `1.5px dashed ${profile.fssai_no ? 'rgba(34,197,94,0.3)' : 'rgba(249,115,22,0.35)'}`,
-                          }}
-                        >
-                          <div className="d-flex align-items-center gap-3 text-truncate">
-                            <div
-                              className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
-                              style={{
-                                width: 42, height: 42,
-                                background: profile.fssai_no ? 'rgba(34,197,94,0.12)' : 'rgba(249,115,22,0.12)',
-                              }}
-                            >
-                              <CsLineIcons icon="tag" size="20" style={{ color: profile.fssai_no ? '#22c55e' : '#f97316' }} />
-                            </div>
-                            <div className="text-truncate">
-                              <div className="fw-bold text-dark small mb-0">FSSAI Licence</div>
-                              {profile.fssai_no ? (
-                                <div className="text-muted" style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}>
-                                  {profile.fssai_no}
-                                </div>
-                              ) : (
-                                <Badge bg="warning" text="dark" className="rounded-pill px-2 py-1" style={{ fontSize: '0.7rem' }}>Not Added</Badge>
-                              )}
-                            </div>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="none"
-                            className="profile-custom-btn-outline px-3 py-1 flex-shrink-0"
-                            style={{ fontSize: '0.78rem' }}
-                            onClick={() => openComplianceModal('fssai')}
-                          >
-                            <CsLineIcons icon={profile.fssai_no ? 'edit' : 'plus'} size="14" className="me-1" />
-                            {profile.fssai_no ? 'Edit' : 'Add FSSAI'}
                           </Button>
                         </div>
                       </Col>

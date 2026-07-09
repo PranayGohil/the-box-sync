@@ -96,9 +96,9 @@ const PaymentSummaryBox = ({
         </div>
 
         {/* Action Buttons - Full Width Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '6px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
 
-          {/* Save Order */}
+          {/* Save */}
           {showSave && (
             <button
               type="button"
@@ -117,26 +117,50 @@ const PaymentSummaryBox = ({
               ) : (
                 <CsLineIcons icon="save" size="14" />
               )}
-              Save Order
+              Save
             </button>
           )}
 
-          {/* Process Payment — primary CTA */}
-          {orderItems.length > 0 && !isPaid && (
-            <button
-              type="button"
-              style={{
-                ...btnBase,
-                background: '#23b3f4',
-                color: '#ffffff',
-                boxShadow: '0 4px 12px rgba(35, 179, 244, 0.3)',
-                padding: '0.6rem',
-              }}
-              onClick={handleOpenPaymentModal}
-            >
-              <CsLineIcons icon="credit-card" size="13" stroke="#fff" />
-              {dueAmount > 0.01 && totalPaid > 0 ? 'Pay' : 'Payment'}
-            </button>
+          {/* Cancel and Payment Row */}
+          {((orderId && orderStatus !== 'Paid') || (orderItems.length > 0 && !isPaid)) && (
+            <div style={{ display: 'grid', gridTemplateColumns: (orderId && orderStatus !== 'Paid') && (orderItems.length > 0 && !isPaid) ? '1fr 1fr' : '1fr', gap: '6px' }}>
+              {/* Cancel Order */}
+              {orderId && orderStatus !== 'Paid' && (
+                <button
+                  type="button"
+                  style={{
+                    ...btnBase,
+                    background: 'transparent',
+                    color: '#ef4444',
+                    border: '1.5px solid rgba(239,68,68,0.25)',
+                    padding: '0.6rem',
+                  }}
+                  onClick={() => setShowCancelModal(true)}
+                  disabled={isLoading}
+                >
+                  <CsLineIcons icon="close" size="14" />
+                  Cancel
+                </button>
+              )}
+
+              {/* Process Payment — primary CTA */}
+              {orderItems.length > 0 && !isPaid && (
+                <button
+                  type="button"
+                  style={{
+                    ...btnBase,
+                    background: '#23b3f4',
+                    color: '#ffffff',
+                    boxShadow: '0 4px 12px rgba(35, 179, 244, 0.3)',
+                    padding: '0.6rem',
+                  }}
+                  onClick={handleOpenPaymentModal}
+                >
+                  <CsLineIcons icon="credit-card" size="13" stroke="#fff" />
+                  {dueAmount > 0.01 && totalPaid > 0 ? 'Pay' : 'Payment'}
+                </button>
+              )}
+            </div>
           )}
 
           {/* New Order when Paid */}
@@ -154,8 +178,8 @@ const PaymentSummaryBox = ({
           )}
 
 
-          {/* Secondary row: History + Cancel */}
-          {(kotHistory.length > 0 || paymentHistory.length > 0 || (orderId && orderStatus !== 'Paid')) && (
+          {/* Secondary row: History only */}
+          {(kotHistory.length > 0 || paymentHistory.length > 0) && (
             <div style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
               {kotHistory.length > 0 && (
                 <button
@@ -175,17 +199,6 @@ const PaymentSummaryBox = ({
                 >
                   <CsLineIcons icon="credit-card" size="12" />
                   Payments ({paymentHistory.length})
-                </button>
-              )}
-              {orderId && orderStatus !== 'Paid' && (
-                <button
-                  type="button"
-                  style={{ ...btnBase, flex: 1, background: 'transparent', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)', fontSize: '11px', padding: '0.4rem' }}
-                  onClick={() => setShowCancelModal(true)}
-                  disabled={isLoading}
-                >
-                  <CsLineIcons icon="close" size="12" />
-                  Cancel
                 </button>
               )}
             </div>
@@ -247,7 +260,7 @@ const PaymentSummaryBox = ({
               <div key={record.id} style={{ border: '1px solid rgba(226,232,240,0.9)', borderRadius: '10px', padding: '12px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontWeight: 800, fontSize: '16px', color: '#10b981' }}>₹{parseFloat(record.amount).toFixed(2)}</div>
-                  <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>{record.type} • {new Date(record.timestamp).toLocaleString('en-IN')}</div>
+                  <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>{record.type} • {new Date(record.timestamp).toLocaleString('en-IN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })}</div>
                 </div>
                 <Badge bg="success">Paid</Badge>
               </div>

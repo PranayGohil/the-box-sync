@@ -324,7 +324,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                     type="submit"
                     form="edit_category_form"
                     disabled={isSubmitting}
-                    className="px-5 py-2 edit-dish-category-modal-custom-btn-outline d-flex align-items-center gap-2"
+                    className="px-5 py-2 edit-dish-category-modal-custom-btn-outline d-flex align-items-center justify-content-center gap-2"
                 >
                     {isSubmitting ? (
                         <>

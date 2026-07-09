@@ -14,6 +14,7 @@ const {
   deliveryFromSiteController,
   calculateDeliveryController,
   updateOrderStatus,
+  deleteOrder,
 } = require("../controllers/orderController");
 const { getBluetoothPrintJson } = require("../controllers/printController");
 
@@ -36,6 +37,7 @@ orderRouter.route("/delivery").post(authMiddleware, deliveryController);
 orderRouter.route("/delivery-from-site/:rescode").post(deliveryFromSiteController);
 orderRouter.route("/calculate-delivery/:rescode").post(calculateDeliveryController);
 orderRouter.route("/update-status/:id").put(authMiddleware, updateOrderStatus);
+orderRouter.route("/delete-order/:id").delete(authMiddleware, deleteOrder);
 
 orderRouter.route("/bluetooth-json/:orderId").get(getBluetoothPrintJson);
 

@@ -83,7 +83,7 @@ const AddInventory = () => {
           headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         toast.success('Inventory synchronized successfully!');
-        history.push('/operations/inventory-history');
+        history.push('/inventory');
       } catch (err) {
         toast.error(err.response?.data?.message || 'Operation failed');
       } finally {
