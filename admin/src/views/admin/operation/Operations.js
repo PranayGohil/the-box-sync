@@ -138,7 +138,7 @@ const NavContent = () => {
               return inventoryPaths.some(p => location.pathname.startsWith(p));
             }}>
               <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Daily Inventory Workstation</span>
+              <span className="align-middle">Manage Inventory</span>
             </Nav.Link>
           </div>
         </div>

@@ -88,8 +88,8 @@ const UnifiedOrder = () => {
   const tableId = urlParams.get('tableId');
   const mode = urlParams.get('mode'); // 'new' | 'edit'
 
-  const { activePlans } = useContext(AuthContext);
-  const canKOT = activePlans ? activePlans.includes('KOT Panel') : false;
+  const { activePlans, kotUserExists } = useContext(AuthContext);
+  const canKOT = activePlans ? (activePlans.includes('KOT Panel') && kotUserExists) : false;
   const backPath = (activePlans && activePlans.includes('Manager') && activePlans.includes('QSR')) ? '/dashboard/manager' : '/dashboard';
 
   // Default type from URL path
@@ -246,12 +246,43 @@ const UnifiedOrder = () => {
       kotSnapshotRef.current = JSON.parse(JSON.stringify(items));
       // Load KOT and Payment history from localStorage
       try {
-        const savedKot = localStorage.getItem(`kot_history_${orderId}`);
+        const savedKot = localStorage.getItem(`kot_history_${activeId}`);
         if (savedKot) setKotHistory(JSON.parse(savedKot));
-        const savedPayment = localStorage.getItem(`payment_history_${orderId}`);
+        const savedPayment = localStorage.getItem(`payment_history_${activeId}`);
         if (savedPayment) setPaymentHistory(JSON.parse(savedPayment));
       } catch (e) {
         console.error(e);
+      }
+
+      // Check if we need to auto-print after full reload
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get('print') === 'true') {
+        const newUrl = window.location.pathname + window.location.search.replace(/[&?]print=true/, '');
+        window.history.replaceState({}, '', newUrl);
+        openPrintWindow(activeId, setPrinting);
+      } else if (searchParams.get('printKOT') === 'true') {
+        const newUrl = window.location.pathname + window.location.search.replace(/[&?]printKOT=true/, '');
+        window.history.replaceState({}, '', newUrl);
+        const savedKotStr = localStorage.getItem(`kot_history_${activeId}`);
+        if (savedKotStr) {
+          const savedKotList = JSON.parse(savedKotStr);
+          const latestRecord = savedKotList[savedKotList.length - 1];
+          if (latestRecord) {
+            printKOTSlip(
+              {
+                orderNo: order.order_no || '',
+                orderType: detectedType,
+                tokenNumber: order.token || null,
+                tableNo: custInfo.table_no || '',
+                items: latestRecord.items,
+                kotNo: latestRecord.kotNo,
+                timestamp: latestRecord.timestamp
+              },
+              userData,
+              setKotPrinting
+            );
+          }
+        }
       }
     } catch (err) {
       console.error('Error fetching order details:', err);
@@ -521,7 +552,7 @@ const UnifiedOrder = () => {
       if (!validateOrder()) return;
       setPrinting(true);
       try {
-        const status = orderStatus && orderStatus !== 'Save' ? orderStatus : 'KOT';
+        const status = orderStatus || 'Save';
         const payload = buildPayload(status);
         const token = localStorage.getItem('token');
         const response = await API_MAP[orderType](payload, token);
@@ -540,12 +571,11 @@ const UnifiedOrder = () => {
             if (!orderId) {
               allowNavigationRef.current = true;
               if (orderType === 'Dine In' && tableId) {
-                window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`;
+                window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit&print=true`;
               } else {
-                window.location.href = `/order/${orderType.toLowerCase()}?orderId=${savedId}&mode=edit`;
+                window.location.href = `/order/${orderType.toLowerCase()}?orderId=${savedId}&mode=edit&print=true`;
               }
             } else {
-              // Already in edit mode: sync fetch populated order and print it
               await fetchOrderDetails(savedId);
               openPrintWindow(savedId, setPrinting);
             }
@@ -593,26 +623,22 @@ const UnifiedOrder = () => {
         setKotHistory(newHistory);
         if (savedId) localStorage.setItem(`kot_history_${savedId}`, JSON.stringify(newHistory));
 
-        printKOTSlip(
-          { orderNo, orderType, tokenNumber, tableNo: customerInfo.table_no || tableInfo.table_no, items: delta, kotNo, timestamp },
-          userData,
-          setKotPrinting
-        );
         toast.success(`KOT #${kotNo} sent to kitchen!`);
 
         // For new orders, update URL so subsequent saves work correctly
         if (!orderId && savedId) {
           allowNavigationRef.current = true;
-          // Maintain tableId in URL if Dine In
           if (orderType === 'Dine In' && tableId) {
-            window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`;
+            window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit&printKOT=true`;
           } else {
-            window.location.href = `/order/${orderType.toLowerCase()}?orderId=${savedId}&mode=edit`;
+            window.location.href = `/order/${orderType.toLowerCase()}?orderId=${savedId}&mode=edit&printKOT=true`;
           }
-        } else if (orderType === 'Dine In' && tableId) {
-          window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`;
         } else {
-          window.location.href = `/order/${orderType.toLowerCase()}?orderId=${savedId}&mode=edit`;
+          printKOTSlip(
+            { orderNo, orderType, tokenNumber, tableNo: customerInfo.table_no || tableInfo.table_no, items: delta, kotNo, timestamp },
+            userData,
+            setKotPrinting
+          );
         }
       }
     } catch (err) {

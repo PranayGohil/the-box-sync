@@ -255,7 +255,42 @@ export const printFullBill = (ord, userData, items, subTotal) => {
   `;
 };
 
+const handleMobilePrintOption = (orderId) => {
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+  if (isMobile) {
+    const useBluetooth = window.confirm(
+      "Select printing method:\n\nClick 'OK' to print via Bluetooth Print app.\nClick 'Cancel' to use standard browser print."
+    );
+    if (useBluetooth) {
+      if (!orderId) {
+        toast.warning("Cannot print via Bluetooth app: Order ID is missing. Please save the order first.");
+        return true;
+      }
+      const apiBase = process.env.REACT_APP_API || 'http://localhost:5001/api';
+      const printUrl = `${apiBase}/order/bluetooth-json/${orderId}`;
+      window.location.href = `my.bluetoothprint.scheme://${printUrl}`;
+      return true;
+    }
+  }
+  return false;
+};
+
 export const openPrintWindow = async (order_id, setPrinting) => {
+  if (handleMobilePrintOption(order_id)) {
+    if (typeof setPrinting === 'function') {
+      try {
+        setPrinting((prev) => {
+          if (prev && typeof prev === 'object') {
+            return { ...prev, [order_id]: false };
+          }
+          return false;
+        });
+      } catch (e) {
+        setPrinting(false);
+      }
+    }
+    return;
+  }
   try {
     if (typeof setPrinting === 'function') {
       try {

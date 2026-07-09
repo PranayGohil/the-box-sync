@@ -10,6 +10,7 @@ export const AuthProvider = ({ children }) => {
   const history = useHistory();
   const [currentUser, setCurrentUser] = useState(null);
   const [activePlans, setActivePlans] = useState([]);
+  const [kotUserExists, setKotUserExists] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -47,7 +48,27 @@ export const AuthProvider = ({ children }) => {
       if (['Fine Dine', 'Chain'].includes(userTier)) checkFeats.add('Manager');
       if (['QSR', 'Café', 'Chain', 'Cloud'].includes(userTier)) checkFeats.add('QSR');
       
-      setActivePlans(Array.from(checkFeats));
+      const featsArray = Array.from(checkFeats);
+      setActivePlans(featsArray);
+
+      if (checkFeats.has('KOT Panel')) {
+        try {
+          const res = await axios.get(
+            `${process.env.REACT_APP_API}/panel-user/KOT Panel`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+            }
+          );
+          setKotUserExists(res.data?.exists || false);
+        } catch (error) {
+          console.error('Error checking KOT panel user existence:', error);
+          setKotUserExists(false);
+        }
+      } else {
+        setKotUserExists(false);
+      }
     } catch (error) {
       console.error('Error fetching subscription plans:', error);
     }
@@ -106,5 +127,5 @@ export const AuthProvider = ({ children }) => {
     setIsLogin(false);
   };
 
-  return <AuthContext.Provider value={{ currentUser, activePlans, isLogin, loading, login, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ currentUser, activePlans, kotUserExists, isLogin, loading, login, logout }}>{children}</AuthContext.Provider>;
 };

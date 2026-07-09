@@ -95,9 +95,11 @@ io.on("connection", (socket) => {
       const order = await Order.findById(orderId);
       if (order) {
         order.order_status = "KOT";
+        const { getTargetItemStatus } = require("./controllers/orderController");
+        const targetStatus = await getTargetItemStatus(order.user_id);
         order.order_items = order.order_items.map((item) => ({
           ...item,
-          status: item.status === "Pending" ? "Preparing" : item.status,
+          status: item.status === "Pending" ? targetStatus : item.status,
         }));
         await order.save();
 

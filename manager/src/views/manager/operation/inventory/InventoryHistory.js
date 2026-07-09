@@ -1594,11 +1594,11 @@ const CorrectionRequestsTab = () => {
 const InventoryHistory = () => {
   const history = useHistory();
   const brandColor = '#23b3f4';
-  const title = 'Inventory Workstation';
+  const title = 'Manage Inventory';
   const breadcrumbs = [
     { to: '', text: 'Home' },
     { to: 'operations/inventory-history', text: 'Operations' },
-    { to: 'operations/inventory-history', title: 'Inventory Workstation' }
+    { to: 'operations/inventory-history', title: 'Manage Inventory' }
   ];
 
   const [activeTab, setActiveTab] = useState('tracker');

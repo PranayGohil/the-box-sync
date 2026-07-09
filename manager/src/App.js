@@ -14,11 +14,11 @@ import Loading from 'components/loading/Loading';
 import { AuthContext } from 'contexts/AuthContext';
 
 const App = () => {
-  const { activePlans, loading, isLogin, currentUser } = React.useContext(AuthContext);
+  const { activePlans, kotUserExists, loading, isLogin, currentUser } = React.useContext(AuthContext);
 
   const filteredRoutes = useMemo(() => {
-    return filterRoutesByPlans(allRoutes, activePlans);
-  }, [activePlans]);
+    return filterRoutesByPlans(allRoutes, activePlans, kotUserExists);
+  }, [activePlans, kotUserExists]);
 
   const routes = useMemo(() => getRoutes({ data: filteredRoutes, isLogin, userRole: currentUser?.role || 'admin' }), [isLogin, currentUser, filteredRoutes]);
 
