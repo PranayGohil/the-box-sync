@@ -250,6 +250,37 @@ const UnifiedOrder = () => {
       } catch (e) {
         console.error(e);
       }
+
+      // Check if we need to auto-print after full reload
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get('print') === 'true') {
+        const newUrl = window.location.pathname + window.location.search.replace(/[&?]print=true/, '');
+        window.history.replaceState({}, '', newUrl);
+        openPrintWindow(activeId, setPrinting);
+      } else if (searchParams.get('printKOT') === 'true') {
+        const newUrl = window.location.pathname + window.location.search.replace(/[&?]printKOT=true/, '');
+        window.history.replaceState({}, '', newUrl);
+        const savedKotStr = localStorage.getItem(`kot_history_${activeId}`);
+        if (savedKotStr) {
+          const savedKotList = JSON.parse(savedKotStr);
+          const latestRecord = savedKotList[savedKotList.length - 1];
+          if (latestRecord) {
+            printKOTSlip(
+              {
+                orderNo: order.order_no || '',
+                orderType: detectedType,
+                tokenNumber: order.token || null,
+                tableNo: custInfo.table_no || '',
+                items: latestRecord.items,
+                kotNo: latestRecord.kotNo,
+                timestamp: latestRecord.timestamp
+              },
+              userData,
+              setKotPrinting
+            );
+          }
+        }
+      }
     } catch (err) {
       console.error('Error fetching order details:', err);
     }
@@ -501,9 +532,9 @@ const UnifiedOrder = () => {
             if (!orderId) {
               allowNavigationRef.current = true;
               if (orderType === 'Dine In' && tableId) {
-                window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit`;
+                window.location.href = `/order/dine-in?tableId=${tableId}&orderId=${savedId}&mode=edit&print=true`;
               } else {
-                window.location.href = `/order/new?orderId=${savedId}&mode=edit`;
+                window.location.href = `/order/new?orderId=${savedId}&mode=edit&print=true`;
               }
             } else {
               // Already in edit mode: sync fetch populated order and print it

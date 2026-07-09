@@ -181,7 +181,7 @@ export const printFullBill = (ord, userData, items, subTotal) => {
                   <div style="font-size: 9px; color: #000; margin-top: 1px;">
                     ${item.selected_variant && item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}${item.selected_variant && item.selected_variant.extra ? ` (${item.selected_variant.extra})` : ''}
                     ${item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 ? ' • ' : ''}
-                    ${Array.isArray(item.selected_addons) ? item.selected_addons.filter(a => a && a.addon_name).map(addon => addon.addon_name).join(' • ') : ''}
+                    ${Array.isArray(item.selected_addons) ? item.selected_addons.filter(a => a && a.addon_name).map(addon => `${addon.addon_name} (+₹${addon.price})`).join(' • ') : ''}
                   </div>
                 ` : ''}
               </td>
@@ -255,7 +255,49 @@ export const printFullBill = (ord, userData, items, subTotal) => {
   `;
 };
 
+const handleMobilePrintOption = (orderId) => {
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+  if (isMobile) {
+    const useBluetooth = window.confirm(
+      "Select printing method:\n\nClick 'OK' to print via Bluetooth Print app.\nClick 'Cancel' to use standard browser print."
+    );
+      if (useBluetooth) {
+        if (!orderId) {
+          toast.warning("Cannot print via Bluetooth app: Order ID is missing. Please save the order first.");
+          return true;
+        }
+        const apiBase = process.env.REACT_APP_API || 'http://localhost:5001/api';
+        const printUrl = `${apiBase}/order/bluetooth-json/${orderId}`;
+        
+        // Use an invisible iframe instead of window.location.href to avoid tearing down the connection abruptly
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = `my.bluetoothprint.scheme://${printUrl}`;
+        document.body.appendChild(iframe);
+        setTimeout(() => document.body.removeChild(iframe), 2000);
+        
+        return true;
+      }
+  }
+  return false;
+};
+
 export const openPrintWindow = async (order_id, setPrinting) => {
+  if (handleMobilePrintOption(order_id)) {
+    if (typeof setPrinting === 'function') {
+      try {
+        setPrinting((prev) => {
+          if (prev && typeof prev === 'object') {
+            return { ...prev, [order_id]: false };
+          }
+          return false;
+        });
+      } catch (e) {
+        setPrinting(false);
+      }
+    }
+    return;
+  }
   try {
     if (typeof setPrinting === 'function') {
       try {
@@ -305,9 +347,7 @@ export const openPrintWindow = async (order_id, setPrinting) => {
     const maxContainerWidth = paperWidth === '80mm' ? '390px' : '290px';
 
     let allBillsHTML = printFullBill(order, userData, order.order_items, order.sub_total);
-    Object.entries(groupedByCounter).forEach(([counterName, items]) => {
-      allBillsHTML += printCounterBill(order, userData, counterName, items);
-    });
+
 
     printWindow.document.write(`
       <html>

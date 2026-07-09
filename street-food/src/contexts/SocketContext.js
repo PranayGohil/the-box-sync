@@ -1,6 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { io } from "socket.io-client";
-import { toast } from "react-toastify";
+import React, { createContext, useContext, useState } from "react";
 import { AuthContext } from "./AuthContext";
 
 const SocketContext = createContext();
@@ -8,29 +6,15 @@ const SocketContext = createContext();
 export const useSocket = () => useContext(SocketContext);
 
 export const SocketProvider = ({ children }) => {
-  const [socket, setSocket] = useState(null);
+  // Provide a dummy socket object so components calling socket.emit don't crash
+  const [socket] = useState({
+    emit: () => {},
+    on: () => {},
+    off: () => {},
+    disconnect: () => {}
+  });
   const [notifications, setNotifications] = useState([]);
-  const { currentUser } = useContext(AuthContext);
-
-  useEffect(() => {
-    const s = io(process.env.REACT_APP_API_URL, {
-      transports: ["websocket"],
-    });
-
-    s.on("connect", () => {
-      if (currentUser) {
-        s.emit("register", {
-          userId: currentUser._id,
-          role: "QSR",
-        });
-      }
-    });
-
-    setSocket(s);
-
-    return () => s.disconnect();
-  }, [currentUser]);
-
+  
   return (
     <SocketContext.Provider value={{ socket, notifications, setNotifications }}>
       {children}

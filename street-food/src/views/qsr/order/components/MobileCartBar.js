@@ -31,14 +31,13 @@ const MobileCartBar = ({ orderItems, paymentData, setShowCartSheet }) => {
             from { transform: translateY(100%); }
             to { transform: translateY(0); }
           }
-          .mobile-sticky-spacer { height: 72px; }
+          .mobile-sticky-spacer { display: none !important; }
         }
         @media (min-width: 1200px) {
-          .mobile-cart-bar, .mobile-sticky-spacer { display: none !important; }
+          .mobile-cart-bar { display: none !important; }
         }
       `}</style>
 
-      <div className="mobile-sticky-spacer" />
       <div
         role="button"
         tabIndex={0}

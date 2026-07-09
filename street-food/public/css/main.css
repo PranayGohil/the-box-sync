@@ -526,14 +526,17 @@
 /* Mobile */
 @media (max-width: 1199px) {
   .pos-wrapper {
-    height: auto;
-    overflow: visible;
-    margin: 0;
-    background: transparent;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--nav-size-slim, 72px));
+    overflow: hidden;
+    margin: -24px -12px -24px;
+    background: #f1f5f9;
   }
   .pos-body {
     flex-direction: column;
-    overflow: visible;
+    flex: 1;
+    overflow: hidden;
   }
   .pos-order-panel {
     width: 100%;
@@ -541,10 +544,17 @@
     border-top: 1px solid rgba(226, 232, 240, 0.9);
   }
   .pos-menu-area {
-    min-height: 60vh;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
   }
   .pos-menu-grid {
-    max-height: 55vh;
+    flex: 1;
+    max-height: none;
+    overflow-y: auto;
+    padding-bottom: 90px;
   }
   .pos-topbar {
     padding: 10px 12px;
