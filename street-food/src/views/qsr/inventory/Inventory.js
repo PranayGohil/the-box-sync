@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useHistory } from 'react-router-dom';
 import { Row, Col, Card, Button, Form, Spinner, Badge, Table, Modal, Alert } from 'react-bootstrap';
 import axios from 'axios';
 import { Formik, FieldArray } from 'formik';
@@ -6,6 +7,7 @@ import * as Yup from 'yup';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
+import CreatableSelect from 'react-select/creatable';
 
 const addValidationSchema = Yup.object().shape({
   bill_date: Yup.date().required('Date is required'),
@@ -31,7 +33,26 @@ const useValidationSchema = Yup.object().shape({
   comment: Yup.string().max(200, 'Comment must be under 200 characters'),
 });
 
+const DEFAULT_UNITS = [
+  'kg',
+  'g',
+  'L',
+  'ml',
+  'pcs',
+  'box',
+  'pkt',
+  'doz',
+  'bottle',
+  'can',
+  'bag',
+  'tin',
+  'bunch',
+  'tray',
+  'roll'
+];
+
 const Inventory = () => {
+  const history = useHistory();
   const [stock, setStock] = useState([]);
   const [inventoryList, setInventoryList] = useState([]);
   const [loadingList, setLoadingList] = useState(true);
@@ -41,6 +62,9 @@ const Inventory = () => {
   const [showUseModal, setShowUseModal] = useState(false);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchStock = useCallback(async () => {
     try {
@@ -82,10 +106,16 @@ const Inventory = () => {
     fetchInventory();
   }, [fetchStock, fetchInventory]);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this inventory entry? This will reverse any stock added.')) return;
+  const confirmDelete = (id) => {
+    setDeleteTargetId(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTargetId) return;
+    setDeleting(true);
     try {
-      const res = await axios.delete(`${process.env.REACT_APP_API}/inventory/delete/${id}`, {
+      const res = await axios.delete(`${process.env.REACT_APP_API}/inventory/delete/${deleteTargetId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       if (res.data?.success || res.status === 200) {
@@ -96,6 +126,10 @@ const Inventory = () => {
     } catch (err) {
       console.error(err);
       toast.error('Failed to delete inventory entry');
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
+      setDeleteTargetId(null);
     }
   };
 
@@ -133,6 +167,40 @@ const Inventory = () => {
         .mobile-log-card:active, .mobile-log-card:hover {
           border-color: #23b3f4;
           box-shadow: 0 4px 12px rgba(35,179,244,0.05);
+        }
+        .inventory-delete-modal-content .btn {
+          border-radius: 50px !important;
+          font-weight: 600 !important;
+          padding: 6px 20px !important;
+          height: 38px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 6px !important;
+          font-size: 0.88rem !important;
+        }
+        .inventory-delete-modal-content .btn-outline-secondary {
+          border: 1px solid #64748b !important;
+          color: #64748b !important;
+          background-color: #ffffff !important;
+        }
+        .inventory-delete-modal-content .btn-outline-secondary:hover {
+          background-color: #64748b !important;
+          color: #ffffff !important;
+          box-shadow: 0 4px 12px rgba(100, 116, 139, 0.25) !important;
+        }
+        .inventory-delete-modal-content .btn-outline-danger {
+          border: 1px solid #ef4444 !important;
+          color: #ef4444 !important;
+          background-color: #ffffff !important;
+        }
+        .inventory-delete-modal-content .btn-outline-danger:hover {
+          background-color: #ef4444 !important;
+          color: #ffffff !important;
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
+        }
+        .inventory-delete-modal-content .btn-outline-danger:hover svg {
+          stroke: #ffffff !important;
         }
       `}</style>
       
@@ -196,9 +264,34 @@ const Inventory = () => {
       </Card>
 
       {/* Main Inventory Log Table */}
-      <Card className="border-0 shadow-sm">
+      <style>{`
+        .inventory-workstation-card {
+          background: #ffffff !important;
+          border-radius: 1.5rem !important;
+          border: 1px solid rgba(0, 0, 0, 0.05) !important;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.01) !important;
+          overflow: hidden;
+        }
+        .table-reconcile thead th {
+          background: #f8fafc;
+          color: #475569;
+          font-size: 0.7rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          padding: 1rem 1.25rem;
+          border-bottom: 2px solid #e2e8f0;
+        }
+        .table-reconcile tbody td {
+          padding: 1rem 1.25rem;
+          font-size: 0.875rem;
+          color: #334155;
+          border-bottom: 1px solid #f1f5f9;
+        }
+      `}</style>
+      <Card className="inventory-workstation-card border-0 mb-4 shadow-sm">
         <Card.Body className="p-4">
-          <h5 className="fw-bold text-secondary mb-3">Purchase Logs</h5>
+          <h5 className="fw-bold mb-3" style={{ color: '#23b3f4' }}>Purchase Logs</h5>
           {loadingList ? (
             <div className="text-center py-5"><Spinner animation="border" variant="primary" /></div>
           ) : inventoryList.length === 0 ? (
@@ -211,94 +304,116 @@ const Inventory = () => {
             <>
               {/* Desktop Table View */}
               <div className="table-responsive d-none d-md-block">
-                <Table hover align="middle" className="mb-0">
-                  <thead className="bg-light text-secondary small fw-bold text-uppercase">
+                <Table hover className="align-middle table-reconcile mb-0">
+                  <thead>
                     <tr>
-                      <th className="ps-4">Date</th>
+                      <th>Date</th>
                       <th>Bill #</th>
                       <th>Vendor</th>
-                      <th>Category</th>
-                      <th>Items Purchased</th>
                       <th>Total Amount</th>
-                      <th className="pe-4 text-end">Action</th>
+                      <th>Paid Amount</th>
+                      <th>Due Amount</th>
+                      <th className="text-end">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="small">
-                    {inventoryList.map((item) => (
-                      <tr key={item._id}>
-                        <td className="ps-4 fw-semibold text-dark">
-                          {item.bill_date ? new Date(item.bill_date).toLocaleDateString('en-IN') : new Date(item.request_date).toLocaleDateString('en-IN')}
-                        </td>
-                        <td className="fw-bold">{item.bill_number || '—'}</td>
-                        <td>{item.vendor_name || '—'}</td>
-                        <td><Badge bg="light" text="dark" className="border">{item.category}</Badge></td>
-                        <td>
-                          {item.items?.map((it, idx) => (
-                            <div key={idx} className="small text-muted">
-                              • {it.item_name} <span className="fw-bold text-primary">({it.item_quantity} {it.unit})</span>
+                  <tbody>
+                    {inventoryList.map((item) => {
+                      const totalAmt = Number(item.total_amount || 0);
+                      const paidAmt = Number(item.paid_amount || 0);
+                      const dueAmt = item.unpaid_amount !== undefined && item.unpaid_amount !== null && item.unpaid_amount !== ''
+                        ? Number(item.unpaid_amount)
+                        : Math.max(0, totalAmt - paidAmt);
+
+                      return (
+                        <tr key={item._id}>
+                          <td>
+                            {item.bill_date ? new Date(item.bill_date).toLocaleDateString('en-IN') : new Date(item.request_date).toLocaleDateString('en-IN')}
+                          </td>
+                          <td className="fw-bold text-dark">{item.bill_number || '—'}</td>
+                          <td>{item.vendor_name || '—'}</td>
+                          <td className="fw-bold text-primary" style={{ color: '#23b3f4' }}>₹{totalAmt.toFixed(2)}</td>
+                          <td className="fw-bold text-success">₹{paidAmt.toFixed(2)}</td>
+                          <td>
+                            <span className={`fw-bold ${dueAmt > 0 ? 'text-danger' : 'text-success'}`}>
+                              ₹{dueAmt.toFixed(2)}
+                            </span>
+                          </td>
+                          <td className="text-end">
+                            <div className="d-flex justify-content-end gap-1">
+                              <Button variant="outline-primary" size="sm" onClick={() => history.push(`/operations/inventory-details/${item._id}`)}>
+                                View
+                              </Button>
+                              <Button variant="outline-warning" size="sm" onClick={() => history.push(`/operations/edit-inventory/${item._id}`)}>
+                                Edit
+                              </Button>
+                              <Button variant="outline-danger" size="sm" onClick={() => confirmDelete(item._id)}>
+                                Delete
+                              </Button>
                             </div>
-                          ))}
-                        </td>
-                        <td className="fw-bold text-primary">₹{item.total_amount || 0}</td>
-                        <td className="pe-4 text-end">
-                          <Button variant="outline-danger" size="sm" className="rounded-circle p-1.5" onClick={() => handleDelete(item._id)}>
-                            <CsLineIcons icon="bin" size="15" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </Table>
               </div>
 
               {/* Mobile Card List View */}
               <div className="d-block d-md-none">
-                {inventoryList.map((item) => (
-                  <div key={item._id} className="mobile-log-card">
-                    <div className="d-flex justify-content-between align-items-start mb-2">
-                      <div>
-                        <span className="text-muted small fw-semibold">
-                          {item.bill_date ? new Date(item.bill_date).toLocaleDateString('en-IN') : new Date(item.request_date).toLocaleDateString('en-IN')}
-                        </span>
-                        <div className="fw-bold text-dark mt-1" style={{ fontSize: '13.5px' }}>
-                          Bill: {item.bill_number || '—'}
+                {inventoryList.map((item) => {
+                  const totalAmt = Number(item.total_amount || 0);
+                  const paidAmt = Number(item.paid_amount || 0);
+                  const dueAmt = item.unpaid_amount !== undefined && item.unpaid_amount !== null && item.unpaid_amount !== ''
+                    ? Number(item.unpaid_amount)
+                    : Math.max(0, totalAmt - paidAmt);
+
+                  return (
+                    <div key={item._id} className="mobile-log-card border rounded-4 p-3 mb-3 bg-white shadow-sm">
+                      <div className="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                          <span className="text-muted small fw-semibold">
+                            {item.bill_date ? new Date(item.bill_date).toLocaleDateString('en-IN') : new Date(item.request_date).toLocaleDateString('en-IN')}
+                          </span>
+                          <div className="fw-bold text-dark mt-1" style={{ fontSize: '14px' }}>
+                            Bill: {item.bill_number || '—'}
+                          </div>
+                        </div>
+                        <div className="d-flex justify-content-end gap-1">
+                          <Button variant="outline-primary" size="sm" onClick={() => history.push(`/operations/inventory-details/${item._id}`)}>
+                            View
+                          </Button>
+                          <Button variant="outline-warning" size="sm" onClick={() => history.push(`/operations/edit-inventory/${item._id}`)}>
+                            Edit
+                          </Button>
+                          <Button variant="outline-danger" size="sm" onClick={() => confirmDelete(item._id)}>
+                            Delete
+                          </Button>
                         </div>
                       </div>
-                      <Badge bg="light" text="dark" className="border">
-                        {item.category}
-                      </Badge>
-                    </div>
 
-                    <div className="text-muted small mb-2">
-                      <span className="fw-semibold text-secondary">Vendor:</span> {item.vendor_name || '—'}
-                    </div>
-
-                    <div className="py-2 px-3 bg-light rounded-3 mb-3">
-                      <div className="small fw-bold text-secondary mb-1">Purchased Items:</div>
-                      {item.items?.map((it, idx) => (
-                        <div key={idx} className="small text-muted mb-1 d-flex justify-content-between">
-                          <span>• {it.item_name}</span>
-                          <span className="fw-bold text-primary">{it.item_quantity} {it.unit}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <div className="small text-muted fw-bold">Total Amount</div>
-                        <div className="fw-extrabold text-primary h5 mb-0">₹{item.total_amount || 0}</div>
+                      <div className="text-muted small mb-3 border-bottom pb-2">
+                        <span className="fw-semibold text-secondary">Vendor:</span> {item.vendor_name || '—'}
                       </div>
-                      <Button 
-                        variant="outline-danger" 
-                        size="sm" 
-                        className="rounded-circle p-2" 
-                        onClick={() => handleDelete(item._id)}
-                      >
-                        <CsLineIcons icon="bin" size="14" />
-                      </Button>
+
+                      <Row className="g-2 text-center bg-light rounded-3 p-2">
+                        <Col xs={4} className="border-end">
+                          <div className="small text-muted fw-bold" style={{ fontSize: '11px' }}>TOTAL</div>
+                          <div className="fw-bold text-primary" style={{ color: '#23b3f4', fontSize: '13px' }}>₹{totalAmt.toFixed(2)}</div>
+                        </Col>
+                        <Col xs={4} className="border-end">
+                          <div className="small text-muted fw-bold" style={{ fontSize: '11px' }}>PAID</div>
+                          <div className="fw-bold text-success" style={{ fontSize: '13px' }}>₹{paidAmt.toFixed(2)}</div>
+                        </Col>
+                        <Col xs={4}>
+                          <div className="small text-muted fw-bold" style={{ fontSize: '11px' }}>DUE</div>
+                          <div className={`fw-bold ${dueAmt > 0 ? 'text-danger' : 'text-success'}`} style={{ fontSize: '13px' }}>
+                            ₹{dueAmt.toFixed(2)}
+                          </div>
+                        </Col>
+                      </Row>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}
@@ -356,7 +471,15 @@ const Inventory = () => {
           {({ values, errors, touched, handleChange, handleSubmit }) => {
             const subTotal = values.items.reduce((acc, curr) => acc + (Number(curr.item_quantity) || 0) * (Number(curr.item_price) || 0), 0);
             const totalAmount = subTotal + (Number(values.tax) || 0) - (Number(values.discount) || 0);
+            const unpaidAmount = totalAmount - (Number(values.paid_amount) || 0);
             
+            const availableUnits = Array.from(new Set([
+              ...DEFAULT_UNITS,
+              ...stock.map(s => s.unit?.trim()).filter(Boolean),
+              ...inventoryList.flatMap(inv => inv.items?.map(it => it.unit?.trim()) || []).filter(Boolean),
+              ...values.items.map(it => it.unit?.trim()).filter(Boolean)
+            ]));
+
             return (
               <Form onSubmit={handleSubmit}>
                 <Modal.Body className="px-4 py-3">
@@ -450,13 +573,33 @@ const Inventory = () => {
                             <Col xs={4} sm={2}>
                               <Form.Group>
                                 <Form.Label className="small fw-bold d-block d-sm-none">Unit</Form.Label>
-                                <Form.Control
-                                  type="text"
-                                  name={`items[${index}].unit`}
+                                <CreatableSelect
+                                  isClearable
+                                  menuPlacement="auto"
+                                  menuPortalTarget={document.body}
+                                  options={availableUnits.map((u) => ({ label: u, value: u }))}
+                                  value={item.unit ? { label: item.unit, value: item.unit } : null}
+                                  onChange={(selected) => {
+                                    handleChange({
+                                      target: {
+                                        name: `items[${index}].unit`,
+                                        value: selected ? selected.value : '',
+                                      },
+                                    });
+                                  }}
                                   placeholder="Unit"
-                                  value={item.unit}
-                                  onChange={handleChange}
-                                  isInvalid={touched.items?.[index]?.unit && errors.items?.[index]?.unit}
+                                  classNamePrefix="react-select"
+                                  styles={{
+                                    control: (base) => ({
+                                      ...base,
+                                      borderColor: touched.items?.[index]?.unit && errors.items?.[index]?.unit ? '#dc3545' : base.borderColor,
+                                      minHeight: '38px',
+                                      height: '38px',
+                                    }),
+                                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                    menu: (base) => ({ ...base, zIndex: 9999 }),
+                                  }}
+                                  formatCreateLabel={(inputValue) => `Add "${inputValue}"`}
                                 />
                               </Form.Group>
                             </Col>
@@ -495,57 +638,72 @@ const Inventory = () => {
                     )}
                   </FieldArray>
 
-                  <h6 className="fw-bold text-secondary border-bottom pb-2 mt-4 mb-3">Billing Totals</h6>
-                  
-                  <Row className="g-3">
-                    <Col md={4}>
-                      <Form.Group>
-                        <Form.Label className="small fw-bold">Tax Amount</Form.Label>
-                        <Form.Control 
-                          type="number" 
-                          name="tax" 
-                          value={values.tax} 
-                          onChange={handleChange}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group>
-                        <Form.Label className="small fw-bold">Discount Amount</Form.Label>
-                        <Form.Control 
-                          type="number" 
-                          name="discount" 
-                          value={values.discount} 
-                          onChange={handleChange}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group>
-                        <Form.Label className="small fw-bold">Paid Amount *</Form.Label>
-                        <Form.Control 
-                          type="number" 
-                          name="paid_amount" 
-                          value={values.paid_amount} 
-                          onChange={handleChange}
-                          isInvalid={touched.paid_amount && errors.paid_amount}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={12} className="d-flex flex-column justify-content-end align-items-end text-end mt-4">
-                      <div className="small fw-bold text-muted">Sub Total: ₹{subTotal.toFixed(2)}</div>
-                      <h4 className="fw-extrabold text-primary mb-0 mt-1">Total: ₹{totalAmount.toFixed(2)}</h4>
-                    </Col>
-                  </Row>
+                  <div className="add-inventory-summary-hub mt-4">
+                    <Row className="g-4">
+                      <Col md={4}>
+                        <div className="add-inventory-input-group-label">Sub Total</div>
+                        <div className="h4 fw-bold text-muted">₹ {subTotal.toFixed(2)}</div>
+                      </Col>
+                      <Col md={4}>
+                        <div className="add-inventory-input-group-label">Tax Amount</div>
+                        <Form.Control type="number" className="add-inventory-modern-input" name="tax" value={values.tax} onChange={handleChange} />
+                      </Col>
+                      <Col md={4}>
+                        <div className="add-inventory-input-group-label">Discount</div>
+                        <Form.Control type="number" className="add-inventory-modern-input" name="discount" value={values.discount} onChange={handleChange} />
+                      </Col>
+
+                      <Col xs={12} md={12}>
+                        <div className="add-inventory-total-display shadow-sm flex-column flex-md-row align-items-stretch align-items-md-center gap-3">
+                          <div>
+                            <div className="add-inventory-input-group-label mb-1">Updated Payable</div>
+                            <div className="add-inventory-total-val">₹ {totalAmount.toFixed(2)}</div>
+                          </div>
+                          <div className="text-start text-md-end" style={{ minWidth: '200px' }}>
+                            <div className="add-inventory-input-group-label">Revised Paid Amount</div>
+                            <Form.Control
+                              type="number"
+                              className="add-inventory-modern-input text-md-center fw-bold text-primary"
+                              style={{ fontSize: '1.25rem' }}
+                              name="paid_amount"
+                              value={values.paid_amount}
+                              onChange={handleChange}
+                              isInvalid={touched.paid_amount && errors.paid_amount}
+                              placeholder="0.00"
+                            />
+                            {touched.paid_amount && errors.paid_amount && <div className="text-danger small mt-1">{errors.paid_amount}</div>}
+                          </div>
+                        </div>
+                      </Col>
+
+                      <Col xs={12} md={12} className="text-end pt-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                        <div className="d-flex align-items-center gap-2 w-100 justify-content-center justify-content-md-start">
+                          <div className="sw-2 sh-2 rounded-circle bg-warning flex-shrink-0" />
+                          <span className="fw-bold text-muted">Pending Balance: ₹ {unpaidAmount.toFixed(2)}</span>
+                        </div>
+                        <div className="d-flex align-items-center gap-3 w-100 justify-content-center justify-content-md-end">
+                          <Button 
+                            variant="light" 
+                            className="px-4 py-3 fw-bold rounded-pill shadow-sm" 
+                            onClick={() => setShowAddModal(false)} 
+                            disabled={isSubmitting}
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            type="submit" 
+                            variant="primary" 
+                            className="manage-menu-custom-btn-outline border-primary text-primary shadow-sm px-5 py-3 fw-bold d-flex align-items-center justify-content-center" 
+                            style={{ borderRadius: '50px', border: '2px solid #23b3f4', color: '#23b3f4' }}
+                            disabled={isSubmitting}
+                          >
+                            {isSubmitting ? <Spinner animation="border" size="sm" className="me-2" /> : <CsLineIcons icon="save" className="me-2" />} Update & Finalize Changes
+                          </Button>
+                        </div>
+                      </Col>
+                    </Row>
+                  </div>
                 </Modal.Body>
-                <Modal.Footer>
-                  <Button variant="light" className="rounded-pill px-4" onClick={() => setShowAddModal(false)} disabled={isSubmitting}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" variant="primary" className="rounded-pill px-4 shadow-sm" disabled={isSubmitting}>
-                    {isSubmitting ? <Spinner animation="border" size="sm" /> : 'Record Purchase'}
-                  </Button>
-                </Modal.Footer>
               </Form>
             );
           }}
@@ -642,6 +800,53 @@ const Inventory = () => {
             </Form>
           )}
         </Formik>
+      </Modal>
+
+      <Modal show={showDeleteModal} onHide={() => !deleting && setShowDeleteModal(false)} centered backdrop="static" contentClassName="inventory-delete-modal-content">
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>
+            Confirm Deletion
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="py-4">
+          <div className="d-flex align-items-center mb-3">
+            <div className="p-3 rounded-circle me-3" style={{ backgroundColor: 'rgba(207, 38, 55, 0.1)' }}>
+              <CsLineIcons icon="bin" size="24" style={{ color: '#cf2637' }} />
+            </div>
+            <div>
+              <p className="mb-1 fw-bold text-dark">Permanently delete this record?</p>
+              <p className="mb-0 text-muted small">This log will be cleared from your history and any stock added by this purchase will be reversed.</p>
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0">
+          <Button 
+            variant="outline-secondary" 
+            onClick={() => setShowDeleteModal(false)} 
+            disabled={deleting}
+            className="rounded-pill px-4 fw-bold border-2"
+          >
+            Cancel
+          </Button>
+          <Button 
+            variant="outline-danger" 
+            onClick={handleDelete} 
+            disabled={deleting}
+            className="rounded-pill px-4 fw-bold border-2"
+          >
+            {deleting ? (
+              <>
+                <Spinner as="span" animation="border" size="sm" className="me-2" />
+                Deleting...
+              </>
+            ) : (
+              <div className="d-flex align-items-center">
+                <CsLineIcons icon="bin" size="14" className="me-2" />
+                Delete
+              </div>
+            )}
+          </Button>
+        </Modal.Footer>
       </Modal>
     </div>
   );

@@ -4,10 +4,28 @@ const PayrollConfig = require("../models/PayrollConfig");
 const getConfig = async (req, res) => {
   try {
     const user_id = req.user;
-    let config = await PayrollConfig.findOne({ user_id });
+    if (req.query.all === 'true') {
+      const configs = await PayrollConfig.find({ user_id });
+      return res.status(200).json({ success: true, data: configs });
+    }
+    const branchId = req.query.branch_id && req.query.branch_id !== 'null' ? req.query.branch_id : null;
+    let config = await PayrollConfig.findOne({ user_id, branch_id: branchId });
 
     if (!config) {
-      config = await PayrollConfig.create({ user_id });
+      if (branchId) {
+        let globalConfig = await PayrollConfig.findOne({ user_id, branch_id: null });
+        if (!globalConfig) {
+          globalConfig = await PayrollConfig.create({ user_id, branch_id: null });
+        }
+        const configObj = globalConfig.toObject();
+        delete configObj._id;
+        delete configObj.createdAt;
+        delete configObj.updatedAt;
+        configObj.branch_id = branchId;
+        config = await PayrollConfig.create(configObj);
+      } else {
+        config = await PayrollConfig.create({ user_id, branch_id: null });
+      }
     } else {
       let isUpdated = false;
       
@@ -61,12 +79,26 @@ const getConfig = async (req, res) => {
 const updateConfig = async (req, res) => {
   try {
     const user_id = req.user;
-    const { custom_earnings, custom_deductions, statutory_config, org_rules, network_restrictions, wfh_config } = req.body;
+    const branchId = req.query.branch_id && req.query.branch_id !== 'null' ? req.query.branch_id : null;
+    const { custom_earnings, custom_deductions, statutory_config, org_rules, network_restrictions, wfh_config, global_weekly_offs } = req.body;
 
-    let config = await PayrollConfig.findOne({ user_id });
+    let config = await PayrollConfig.findOne({ user_id, branch_id: branchId });
 
     if (!config) {
-      config = new PayrollConfig({ user_id });
+      if (branchId) {
+        let globalConfig = await PayrollConfig.findOne({ user_id, branch_id: null });
+        if (!globalConfig) {
+          globalConfig = await PayrollConfig.create({ user_id, branch_id: null });
+        }
+        const configObj = globalConfig.toObject();
+        delete configObj._id;
+        delete configObj.createdAt;
+        delete configObj.updatedAt;
+        configObj.branch_id = branchId;
+        config = new PayrollConfig(configObj);
+      } else {
+        config = new PayrollConfig({ user_id, branch_id: null });
+      }
     }
 
     if (custom_earnings !== undefined) {
@@ -92,6 +124,11 @@ const updateConfig = async (req, res) => {
             ...org_rules
         };
         config.markModified('org_rules');
+    }
+
+    if (global_weekly_offs !== undefined) {
+        config.global_weekly_offs = global_weekly_offs;
+        config.markModified('global_weekly_offs');
     }
 
     if (network_restrictions !== undefined) {

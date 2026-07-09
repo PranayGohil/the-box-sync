@@ -85,12 +85,10 @@ const NavContent = () => {
               <i className="me-2 sw-3 d-inline-block" />
               <span className="align-middle">Add Dish</span>
             </Nav.Link>
-            {activePlans.includes('Scan For Menu') && (
-              <Nav.Link as={NavLink} to="/operations/qr-for-menu" className="px-0">
-                <i className="me-2 sw-3 d-inline-block" />
-                <span className="align-middle">QR for Menu</span>
-              </Nav.Link>
-            )}
+            <Nav.Link as={NavLink} to="/operations/qr-for-menu" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">QR for Menu</span>
+            </Nav.Link>
           </div>
         </div>
 
@@ -319,19 +317,7 @@ const Operations = () => {
 
             <Route exact path="/operations/manage-menu" render={() => <ManageMenu />} />
             <Route exact path="/operations/add-dish" render={() => <AddDishes />} />
-            <Route
-              exact
-              path="/operations/qr-for-menu"
-              render={() => (
-                <>
-                  {activePlans.includes('Scan For Menu') ? (
-                    <QRforMenu />
-                  ) : (
-                    <div className="text-center">You need to buy or renew to Scan For Menu plan to access this page.</div>
-                  )}
-                </>
-              )}
-            />
+            <Route exact path="/operations/qr-for-menu" render={() => <QRforMenu />} />
 
             <Route exact path="/operations/requested-inventory" render={() => <Redirect to="/operations/inventory-history" />} />
             <Route exact path="/operations/inventory-history" render={() => <InventoryHistory />} />

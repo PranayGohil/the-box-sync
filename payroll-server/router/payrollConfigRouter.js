@@ -54,7 +54,8 @@ async function convertDocxToHtmlWithPageBreaks(wordPath, mammothOptions) {
 router.get("/word-preview", authMiddleware, async (req, res) => {
   try {
     const userId = (req.user && typeof req.user === 'object') ? (req.user.id || req.user._id) : req.user;
-    const config = await PayrollConfig.findOne({ user_id: userId });
+    const branchId = req.query.branch_id && req.query.branch_id !== 'null' ? req.query.branch_id : null;
+    const config = await PayrollConfig.getEffectiveConfig(userId, branchId);
 
     const queryFilepath = req.query.filepath;
     const forceRefresh = req.query.refresh === '1';

@@ -21,12 +21,18 @@ router.get('/balances', authMiddleware, async (req, res) => {
       query.staff_id = req.query.staff_id;
     }
 
-    let balances = await LeaveBalance.find(query).populate('staff_id', 'f_name l_name staff_id position leave_policy_configuration');
+    let balances = await LeaveBalance.find(query).populate('staff_id', 'f_name l_name staff_id position leave_policy_configuration branch_id');
 
     // Auto-initialize if no balances found for staff member accessing their own account
     if (balances.length === 0 && req.user && req.user.Role === 'Staff' && req.user.staff_id) {
       const staff_id = req.user.staff_id;
-      const policy = await LeavePolicy.findOne({ user_id: userId });
+      const staff = await Staff.findById(staff_id).lean();
+      const branchId = staff?.branch_id || null;
+      let policy = await LeavePolicy.findOne({ user_id: userId, branch_id: branchId });
+      if (!policy && branchId) {
+        policy = await LeavePolicy.findOne({ user_id: userId, branch_id: null });
+      }
+
       if (policy) {
         const initialBalances = policy.leave_types.map(lt => ({
           leave_type_id: lt.leave_type_id,
@@ -40,18 +46,23 @@ router.get('/balances', authMiddleware, async (req, res) => {
           { staff_id, user_id: userId, year },
           { balances: initialBalances },
           { new: true, upsert: true }
-        ).populate('staff_id', 'f_name l_name staff_id position leave_policy_configuration');
+        ).populate('staff_id', 'f_name l_name staff_id position leave_policy_configuration branch_id');
 
         balances = [newBalance];
       }
     } else if (balances.length > 0) {
       // Sync balances with current leave policy
-      const policy = await LeavePolicy.findOne({ user_id: userId });
-      if (policy) {
-        let anyUpdated = false;
-        for (const record of balances) {
-          let recordUpdated = false;
-          
+      let anyUpdated = false;
+      for (const record of balances) {
+        let recordUpdated = false;
+        
+        const branchId = record.staff_id?.branch_id || null;
+        let policy = await LeavePolicy.findOne({ user_id: userId, branch_id: branchId });
+        if (!policy && branchId) {
+          policy = await LeavePolicy.findOne({ user_id: userId, branch_id: null });
+        }
+
+        if (policy) {
           // 1. Update existing leave types
           record.balances.forEach(b => {
             const policyType = policy.leave_types.find(lt => lt.leave_type_id === b.leave_type_id);
@@ -61,7 +72,7 @@ router.get('/balances', authMiddleware, async (req, res) => {
             }
           });
 
-          // 2. Add any missing leave types from global policy
+          // 2. Add any missing leave types
           policy.leave_types.forEach(pt => {
             const exists = record.balances.find(b => b.leave_type_id === pt.leave_type_id);
             if (!exists) {
@@ -82,9 +93,9 @@ router.get('/balances', authMiddleware, async (req, res) => {
             anyUpdated = true;
           }
         }
-        if (anyUpdated) {
-          balances = await LeaveBalance.find(query).populate('staff_id', 'f_name l_name staff_id position leave_policy_configuration');
-        }
+      }
+      if (anyUpdated) {
+        balances = await LeaveBalance.find(query).populate('staff_id', 'f_name l_name staff_id position leave_policy_configuration branch_id');
       }
     }
     // If accessed by staff, filter out disabled leaves from the response
@@ -97,7 +108,7 @@ router.get('/balances', authMiddleware, async (req, res) => {
         const plainRecord = record.toObject();
         plainRecord.balances = plainRecord.balances.filter(b => {
           const cfg = config.find(c => c.leave_type_id === b.leave_type_id);
-          return !(cfg && cfg.is_active === false);
+          return (cfg && cfg.is_active === true);
         });
         return plainRecord;
       });
@@ -116,8 +127,15 @@ router.post('/balances/init', authMiddleware, async (req, res) => {
     const userId = String(req.user._id || req.user);
     const { staff_id, year } = req.body;
     
+    // Get staff branch
+    const staff = await Staff.findById(staff_id).lean();
+    const branchId = staff?.branch_id || null;
+
     // Get policy
-    const policy = await LeavePolicy.findOne({ user_id: userId });
+    let policy = await LeavePolicy.findOne({ user_id: userId, branch_id: branchId });
+    if (!policy && branchId) {
+      policy = await LeavePolicy.findOne({ user_id: userId, branch_id: null });
+    }
     if (!policy) return res.status(400).json({ success: false, message: "Leave policy not configured" });
 
     // Build initial balances based on policy
@@ -186,12 +204,11 @@ router.post('/requests', authMiddleware, async (req, res) => {
       return res.status(404).json({ success: false, message: "Staff not found" });
     }
     
-    // Check if the specific leave type is disabled for this staff
-    if (staff.leave_policy_configuration && staff.leave_policy_configuration.length > 0) {
-      const config = staff.leave_policy_configuration.find(c => c.leave_type_id === leave_type_id);
-      if (config && config.is_active === false) {
-        return res.status(403).json({ success: false, message: "This specific leave type is currently disabled for your profile." });
-      }
+    // Check if the specific leave type is enabled for this staff
+    const configList = staff.leave_policy_configuration || [];
+    const config = configList.find(c => c.leave_type_id === leave_type_id);
+    if (!config || config.is_active === false) {
+      return res.status(403).json({ success: false, message: "This specific leave type is currently disabled for your profile." });
     }
 
     if (!is_half_day) {

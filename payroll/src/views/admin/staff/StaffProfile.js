@@ -533,7 +533,7 @@ const StaffProfile = () => {
                       <Row className="g-3">
                         {globalLeavePolicies.map((policy) => {
                           const currentConfig = staff.leave_policy_configuration?.find(c => c.leave_type_id === policy.leave_type_id);
-                          const isActive = currentConfig ? currentConfig.is_active : true;
+                          const isActive = currentConfig ? currentConfig.is_active : false;
                           const bal = leaveBalances.find(b => b.leave_type_id === policy.leave_type_id) || {};
                           
                           return (

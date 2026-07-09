@@ -6,7 +6,11 @@ const payrollConfigSchema = new Schema(
     user_id: {
       type: String,
       required: true,
-      unique: true, // One global config per tenant/user
+    },
+    branch_id: {
+      type: Schema.Types.ObjectId,
+      ref: "branch",
+      default: null,
     },
     // ── Network Restrictions ──────────────────────────────────────────
     network_restrictions: {
@@ -137,6 +141,17 @@ const payrollConfigSchema = new Schema(
     timestamps: true,
   }
 );
+
+payrollConfigSchema.statics.getEffectiveConfig = async function(userId, branchId) {
+  let config = null;
+  if (branchId) {
+    config = await this.findOne({ user_id: userId, branch_id: branchId });
+  }
+  if (!config) {
+    config = await this.findOne({ user_id: userId, branch_id: null });
+  }
+  return config;
+};
 
 const PayrollConfig = mongoose.model("payrollconfig", payrollConfigSchema);
 module.exports = PayrollConfig;

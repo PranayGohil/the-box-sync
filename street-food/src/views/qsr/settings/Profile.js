@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Card, Col, Row, Spinner, Alert } from 'react-bootstrap';
+import { Button, Form, Card, Col, Row, Spinner, Alert, Modal, Badge } from 'react-bootstrap';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
 import axios from 'axios';
@@ -32,6 +32,7 @@ const Profile = () => {
     email: '',
     mobile: '',
     fssai_no: '',
+    gst_no: '',
     address: '',
     country: '',
     state: '',
@@ -45,6 +46,12 @@ const Profile = () => {
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [loadingStates, setLoadingStates] = useState({ countries: true, states: false, cities: false });
+
+  // Compliance Modal State
+  const [complianceModal, setComplianceModal] = useState({ show: false, type: null }); // type: 'gst' | 'fssai'
+  const [complianceValue, setComplianceValue] = useState('');
+  const [complianceSaving, setComplianceSaving] = useState(false);
+  const [complianceError, setComplianceError] = useState('');
 
   // Yup validation schema
   const validationSchema = Yup.object().shape({
@@ -98,6 +105,7 @@ const Profile = () => {
           email: data.email || '',
           mobile: data.mobile ? String(data.mobile) : '',
           fssai_no: data.fssai_no || '',
+          gst_no: data.gst_no || '',
           address: data.address || '',
           country: data.country || '',
           state: data.state || '',
@@ -187,6 +195,65 @@ const Profile = () => {
         setLogoPreview(URL.createObjectURL(file));
         setUploadingLogo(false);
       }, 500);
+    }
+  };
+
+  const openComplianceModal = (type) => {
+    setComplianceValue(type === 'gst' ? profile.gst_no : profile.fssai_no);
+    setComplianceError('');
+    setComplianceModal({ show: true, type });
+  };
+
+  const handleComplianceSave = async () => {
+    const { type } = complianceModal;
+    setComplianceSaving(true);
+    setComplianceError('');
+
+    // Validate
+    if (type === 'gst') {
+      const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+      if (complianceValue && !gstRegex.test(complianceValue)) {
+        setComplianceError('GST number format is invalid (e.g. 22AAAAA0000A1Z5)');
+        setComplianceSaving(false);
+        return;
+      }
+    }
+    if (type === 'fssai') {
+      if (complianceValue && !/^[0-9]{14}$/.test(complianceValue)) {
+        setComplianceError('FSSAI number must be exactly 14 digits');
+        setComplianceSaving(false);
+        return;
+      }
+    }
+
+    try {
+      if (type === 'gst') {
+        // Use update-tax endpoint for gst_no
+        await axios.put(
+          `${process.env.REACT_APP_API}/user/update-tax`,
+          { gst_no: complianceValue, taxInfo: {} },
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        setProfile((prev) => ({ ...prev, gst_no: complianceValue }));
+      } else {
+        // Use general update endpoint for fssai_no
+        const formData = new FormData();
+        formData.append('fssai_no', complianceValue);
+        await axios.put(`${process.env.REACT_APP_API}/user/update`, formData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        setProfile((prev) => ({ ...prev, fssai_no: complianceValue }));
+      }
+      toast.success(`${type === 'gst' ? 'GST Number' : 'FSSAI Licence'} updated successfully!`);
+      setComplianceModal({ show: false, type: null });
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.error || 'Failed to save. Please try again.';
+      setComplianceError(msg);
+    } finally {
+      setComplianceSaving(false);
     }
   };
 
@@ -397,6 +464,101 @@ const Profile = () => {
                       )}
                     </Row>
 
+                    {/* Business Compliance Section */}
+                    <div className="profile-section-header mt-5 mb-3">
+                      <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                        <CsLineIcons icon="shield" size="20" className="text-primary" />
+                        Business Compliance
+                      </h5>
+                    </div>
+                    <Row className="g-3 mb-2">
+                      {/* GST Number Card */}
+                      <Col lg={12} xl={6} md={12}>
+                        <div
+                          className="p-3 rounded-4 d-flex align-items-center justify-content-between flex-wrap gap-2"
+                          style={{
+                            background: profile.gst_no ? 'rgba(34, 197, 94, 0.06)' : 'rgba(249, 115, 22, 0.06)',
+                            border: `1.5px dashed ${profile.gst_no ? 'rgba(34,197,94,0.3)' : 'rgba(249,115,22,0.35)'}`,
+                          }}
+                        >
+                          <div className="d-flex align-items-center gap-3">
+                            <div
+                              className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                              style={{
+                                width: 42, height: 42,
+                                background: profile.gst_no ? 'rgba(34,197,94,0.12)' : 'rgba(249,115,22,0.12)',
+                              }}
+                            >
+                              <CsLineIcons icon="file-text" size="20" style={{ color: profile.gst_no ? '#22c55e' : '#f97316' }} />
+                            </div>
+                            <div className="text-truncate">
+                              <div className="fw-bold text-dark small mb-0">GST Number</div>
+                              {profile.gst_no ? (
+                                <div className="text-muted" style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}>
+                                  {profile.gst_no}
+                                </div>
+                              ) : (
+                                <Badge bg="warning" text="dark" className="rounded-pill px-2 py-1" style={{ fontSize: '0.7rem' }}>Not Added</Badge>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="none"
+                            className="profile-custom-btn-outline px-3 py-1 flex-shrink-0"
+                            style={{ fontSize: '0.78rem' }}
+                            onClick={() => openComplianceModal('gst')}
+                          >
+                            <CsLineIcons icon={profile.gst_no ? 'edit' : 'plus'} size="14" className="me-1" />
+                            {profile.gst_no ? 'Edit' : 'Add GST'}
+                          </Button>
+                        </div>
+                      </Col>
+
+                      {/* FSSAI Licence Card */}
+                      <Col lg={12} xl={6} md={12}>
+                        <div
+                          className="p-3 rounded-4 d-flex align-items-center justify-content-between flex-wrap gap-2"
+                          style={{
+                            background: profile.fssai_no ? 'rgba(34, 197, 94, 0.06)' : 'rgba(249, 115, 22, 0.06)',
+                            border: `1.5px dashed ${profile.fssai_no ? 'rgba(34,197,94,0.3)' : 'rgba(249,115,22,0.35)'}`,
+                          }}
+                        >
+                          <div className="d-flex align-items-center gap-3 text-truncate">
+                            <div
+                              className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                              style={{
+                                width: 42, height: 42,
+                                background: profile.fssai_no ? 'rgba(34,197,94,0.12)' : 'rgba(249,115,22,0.12)',
+                              }}
+                            >
+                              <CsLineIcons icon="tag" size="20" style={{ color: profile.fssai_no ? '#22c55e' : '#f97316' }} />
+                            </div>
+                            <div className="text-truncate">
+                              <div className="fw-bold text-dark small mb-0">FSSAI Licence</div>
+                              {profile.fssai_no ? (
+                                <div className="text-muted" style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}>
+                                  {profile.fssai_no}
+                                </div>
+                              ) : (
+                                <Badge bg="warning" text="dark" className="rounded-pill px-2 py-1" style={{ fontSize: '0.7rem' }}>Not Added</Badge>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="none"
+                            className="profile-custom-btn-outline px-3 py-1 flex-shrink-0"
+                            style={{ fontSize: '0.78rem' }}
+                            onClick={() => openComplianceModal('fssai')}
+                          >
+                            <CsLineIcons icon={profile.fssai_no ? 'edit' : 'plus'} size="14" className="me-1" />
+                            {profile.fssai_no ? 'Edit' : 'Add FSSAI'}
+                          </Button>
+                        </div>
+                      </Col>
+                    </Row>
+
                     <div className="profile-section-header mt-5">
                       <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                         <CsLineIcons icon="pin" size="20" className="text-primary" />
@@ -532,6 +694,76 @@ const Profile = () => {
           </Card>
         </div>
       )}
+
+      {/* Compliance Add/Edit Modal */}
+      <Modal
+        show={complianceModal.show}
+        onHide={() => !complianceSaving && setComplianceModal({ show: false, type: null })}
+        centered
+        contentClassName="border-0 shadow-lg"
+        style={{ borderRadius: '1.5rem' }}
+      >
+        <Modal.Header className="border-0 pb-0 px-4 pt-4" closeButton={!complianceSaving}>
+          <Modal.Title className="fw-bold d-flex align-items-center gap-2" style={{ color: '#1ea8e7' }}>
+            <CsLineIcons icon={complianceModal.type === 'gst' ? 'file-text' : 'tag'} size="22" style={{ color: '#1ea8e7' }} />
+            {complianceModal.type === 'gst'
+              ? (profile.gst_no ? 'Edit GST Number' : 'Add GST Number')
+              : (profile.fssai_no ? 'Edit FSSAI Licence' : 'Add FSSAI Licence')}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="px-4 pt-3 pb-1">
+          <p className="text-muted small mb-3">
+            {complianceModal.type === 'gst'
+              ? 'Enter your 15-digit GST Identification Number (GSTIN).'
+              : 'Enter your 14-digit FSSAI Registration / Licence Number.'}
+          </p>
+          <Form.Group>
+            <Form.Label className="small fw-bold opacity-75">
+              {complianceModal.type === 'gst' ? 'GST Number' : 'FSSAI Licence No.'}
+            </Form.Label>
+            <Form.Control
+              type="text"
+              placeholder={complianceModal.type === 'gst' ? 'e.g. 22AAAAA0000A1Z5' : 'e.g. 12345678901234'}
+              value={complianceValue}
+              onChange={(e) => { setComplianceValue(e.target.value.toUpperCase()); setComplianceError(''); }}
+              disabled={complianceSaving}
+              maxLength={complianceModal.type === 'gst' ? 15 : 14}
+              isInvalid={!!complianceError}
+              autoFocus
+            />
+            {complianceError && <Form.Control.Feedback type="invalid">{complianceError}</Form.Control.Feedback>}
+          </Form.Group>
+          {complianceModal.type === 'fssai' && (
+            <small className="text-muted d-block mt-2">Leave blank to remove existing FSSAI number.</small>
+          )}
+          {complianceModal.type === 'gst' && (
+            <small className="text-muted d-block mt-2">Leave blank to remove existing GST number.</small>
+          )}
+        </Modal.Body>
+        <Modal.Footer className="border-0 px-4 pt-2 pb-4 d-flex gap-2">
+          <Button
+            variant="none"
+            className="profile-custom-btn-outline px-4"
+            onClick={() => setComplianceModal({ show: false, type: null })}
+            disabled={complianceSaving}
+          >
+            <CsLineIcons icon="close" size="16" className="me-1" />
+            Cancel
+          </Button>
+          <Button
+            variant="none"
+            className="profile-custom-btn-outline px-5"
+            onClick={handleComplianceSave}
+            disabled={complianceSaving}
+          >
+            {complianceSaving ? (
+              <><Spinner as="span" animation="border" size="sm" className="me-2" />Saving...</>
+            ) : (
+              <><CsLineIcons icon="save" size="16" className="me-1" />Save</>
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

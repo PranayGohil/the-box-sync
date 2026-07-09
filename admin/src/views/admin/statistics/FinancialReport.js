@@ -44,7 +44,8 @@ const FinancialReport = () => {
     includeTaxBreakdown: true,
     includePaymentMethods: true,
     includeFinancialInsights: true,
-    includeCharts: true,
+    includeInventoryPurchases: true,
+    includeExpensesWastage: true,
   });
 
   const [startDate, setStartDate] = useState(format(new Date().setMonth(new Date().getMonth() - 1), 'yyyy-MM-dd'));
@@ -128,6 +129,7 @@ const FinancialReport = () => {
         allData.push(['Net Revenue', reportData.summary.netRevenue, 'Post-deduction yield']);
         allData.push(['Total Deductions', reportData.summary.totalDiscount + reportData.summary.totalWaveOff, `${reportData.summary.discountPercentage}% ratio`]);
         allData.push(['Fiscal Tax', reportData.summary.totalTax, `${reportData.summary.taxPercentage}% effective`]);
+        allData.push(['Inventory Purchases (COGS)', reportData.summary.inventoryCost || 0, 'Total material cost']);
         allData.push(['Gross Profit Estimate', reportData.summary.grossProfit, `Margin: ${reportData.summary.grossProfitMargin}%`]);
         allData.push([]);
         allData.push([]);
@@ -141,6 +143,28 @@ const FinancialReport = () => {
           allData.push([`${day.date.day}-${day.date.month}-${day.date.year}`, day.grossRevenue, day.discount + day.waveOff, day.netRevenue, day.tax, day.orders]);
         });
         allData.push(['Audit Period Total', reportData.summary.grossRevenue, reportData.summary.totalDiscount + reportData.summary.totalWaveOff, reportData.summary.netRevenue, reportData.summary.totalTax, reportData.summary.totalOrders]);
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeInventoryPurchases && reportData.inventoryPurchases?.length > 0) {
+        setExportProgress(50);
+        allData.push(['INVENTORY PURCHASES BREAKDOWN']);
+        allData.push(['Date', 'Bill Number', 'Vendor', 'Category', 'Total Amount', 'Status']);
+        reportData.inventoryPurchases.forEach(inv => {
+          allData.push([inv.bill_date ? format(new Date(inv.bill_date), 'dd-MM-yyyy') : format(new Date(inv.request_date), 'dd-MM-yyyy'), inv.bill_number || '—', inv.vendor_name || '—', inv.category || '—', inv.total_amount || 0, inv.status || 'Completed']);
+        });
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeExpensesWastage && reportData.wastageLogs?.length > 0) {
+        setExportProgress(60);
+        allData.push(['WASTAGE & EXPENSES BREAKDOWN']);
+        allData.push(['Date', 'Item Name', 'Wastage Type', 'Quantity', 'Reason']);
+        reportData.wastageLogs.forEach(w => {
+          allData.push([format(new Date(w.date), 'dd-MM-yyyy'), w.item_name || '—', w.wastage_type || '—', `${w.quantity || 0} ${w.unit || ''}`, w.reason || '—']);
+        });
         allData.push([]);
         allData.push([]);
       }
@@ -223,8 +247,54 @@ const FinancialReport = () => {
             ['Net Revenue', formatCurrencyPDF(reportData.summary.netRevenue), 'Post-deduction yield'],
             ['Total Deductions', formatCurrencyPDF(reportData.summary.totalDiscount + reportData.summary.totalWaveOff), `${reportData.summary.discountPercentage}% ratio`],
             ['Fiscal Tax', formatCurrencyPDF(reportData.summary.totalTax), `${reportData.summary.taxPercentage}% effective`],
+            ['Inventory Purchases (COGS)', formatCurrencyPDF(reportData.summary.inventoryCost || 0), 'Total material cost'],
             ['Gross Profit Estimate', formatCurrencyPDF(reportData.summary.grossProfit), `Margin: ${reportData.summary.grossProfitMargin}%`]
           ],
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeInventoryPurchases && reportData.inventoryPurchases?.length > 0) {
+        setExportProgress(45);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Inventory Purchases Breakdown', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Date', 'Bill Number', 'Vendor', 'Category', 'Total Amount', 'Status']],
+          body: reportData.inventoryPurchases.map(inv => [
+            inv.bill_date ? format(new Date(inv.bill_date), 'dd-MM-yyyy') : format(new Date(inv.request_date), 'dd-MM-yyyy'),
+            inv.bill_number || '—',
+            inv.vendor_name || '—',
+            inv.category || '—',
+            formatCurrencyPDF(inv.total_amount || 0),
+            inv.status || 'Completed'
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeExpensesWastage && reportData.wastageLogs?.length > 0) {
+        setExportProgress(50);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Wastage & Expenses Breakdown', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Date', 'Item Name', 'Wastage Type', 'Quantity', 'Reason']],
+          body: reportData.wastageLogs.map(w => [
+            format(new Date(w.date), 'dd-MM-yyyy'),
+            w.item_name || '—',
+            w.wastage_type || '—',
+            `${w.quantity || 0} ${w.unit || ''}`,
+            w.reason || '—'
+          ]),
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
           margin: { bottom: 15 }
@@ -460,6 +530,32 @@ const FinancialReport = () => {
               ))}
             </Row>
 
+            {/* Inventory & Expense Summary Metrics */}
+            <Row className="g-3 mb-4">
+              {[
+                { label: 'Inventory Purchases (COGS)', value: reportData.summary.inventoryCost || 0, note: 'Total raw material bills', icon: 'box', color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)', border: '#f97316' },
+                { label: 'Wastage & Expense Logs', value: reportData.summary.totalWastageCount || 0, isCount: true, note: 'Recorded loss & expense entries', icon: 'bin', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', border: '#ef4444' },
+                { label: 'Net Operating Profit', value: reportData.summary.grossProfit || 0, note: `Margin: ${reportData.summary.grossProfitMargin || 0}% after inventory`, icon: 'trend-up', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', border: '#10b981' }
+              ].map((stat, idx) => (
+                <Col xl="4" md="6" key={idx}>
+                  <Card className="financial-report-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: `4px solid ${stat.border}` }}>
+                    <Card.Body className="p-4 financial-report-stat-card-inner">
+                      <div className="d-flex justify-content-between align-items-start">
+                        <div>
+                          <div className="financial-report-stat-label mb-2">{stat.label}</div>
+                          <div className="financial-report-stat-value" style={{ color: stat.color }}>{stat.isCount ? stat.value : formatCurrency(stat.value)}</div>
+                          <div className="smaller text-muted fw-bold mt-1">{stat.note}</div>
+                        </div>
+                        <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: stat.bg }}>
+                          <CsLineIcons icon={stat.icon} size="24" style={{ color: stat.color }} />
+                        </div>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+
             {/* Revenue Flow & Health Indicators */}
             <Row className="g-3 mb-4">
               <Col lg={7}>
@@ -675,6 +771,86 @@ const FinancialReport = () => {
               </Card.Body>
             </Card>
 
+            {/* Inventory Purchases Table */}
+            {reportData.inventoryPurchases?.length > 0 && (
+              <Card className="financial-report-interactive-card border-0 shadow-sm mb-4">
+                <Card.Body className="p-4">
+                  <div className="financial-report-card-title-container">
+                    <h2 className="small-title mb-0" style={{ color: '#f97316', fontWeight: '800' }}>Inventory Purchases & Bills (COGS)</h2>
+                    <CsLineIcons icon="box" size="18" style={{ color: '#f97316' }} />
+                  </div>
+                  <div className="table-responsive mt-3">
+                    <Table borderless hover className="align-middle mb-0">
+                      <thead className="financial-report-stat-label">
+                        <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
+                          <th className="py-3">Date</th>
+                          <th className="py-3">Bill Number</th>
+                          <th className="py-3">Vendor</th>
+                          <th className="py-3">Category</th>
+                          <th className="py-3 text-end">Total Amount</th>
+                          <th className="py-3 text-center">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData.inventoryPurchases.map((inv, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
+                            <td className="py-3 fw-bold text-dark">
+                              {inv.bill_date ? format(new Date(inv.bill_date), 'dd-MM-yyyy') : format(new Date(inv.request_date), 'dd-MM-yyyy')}
+                            </td>
+                            <td className="py-3 fw-bold text-muted smaller">{inv.bill_number || '—'}</td>
+                            <td className="py-3 fw-bold text-dark">{inv.vendor_name || '—'}</td>
+                            <td className="py-3 text-muted smaller">{inv.category || '—'}</td>
+                            <td className="py-3 text-end fw-bold" style={{ color: '#f97316' }}>{formatCurrency(inv.total_amount || 0)}</td>
+                            <td className="py-3 text-center">
+                              <Badge bg={inv.status === 'Completed' ? 'success' : inv.status === 'Pending' ? 'warning' : 'secondary'} className="rounded-pill px-3 py-1">
+                                {inv.status || 'Completed'}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                </Card.Body>
+              </Card>
+            )}
+
+            {/* Wastage & Operational Expenses Table */}
+            {reportData.wastageLogs?.length > 0 && (
+              <Card className="financial-report-interactive-card border-0 shadow-sm mb-4">
+                <Card.Body className="p-4">
+                  <div className="financial-report-card-title-container">
+                    <h2 className="small-title mb-0" style={{ color: '#ef4444', fontWeight: '800' }}>Wastage & Operational Expense Logs</h2>
+                    <CsLineIcons icon="bin" size="18" style={{ color: '#ef4444' }} />
+                  </div>
+                  <div className="table-responsive mt-3">
+                    <Table borderless hover className="align-middle mb-0">
+                      <thead className="financial-report-stat-label">
+                        <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
+                          <th className="py-3">Date</th>
+                          <th className="py-3">Item Name</th>
+                          <th className="py-3">Wastage Type</th>
+                          <th className="py-3 text-end">Quantity</th>
+                          <th className="py-3">Reason / Notes</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData.wastageLogs.map((w, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
+                            <td className="py-3 fw-bold text-dark">{format(new Date(w.date), 'dd-MM-yyyy')}</td>
+                            <td className="py-3 fw-bold text-dark">{w.item_name || '—'}</td>
+                            <td className="py-3 text-capitalize text-danger fw-bold smaller">{w.wastage_type || '—'}</td>
+                            <td className="py-3 text-end fw-bold text-dark">{`${w.quantity || 0} ${w.unit || ''}`}</td>
+                            <td className="py-3 text-muted smaller">{w.reason || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                </Card.Body>
+              </Card>
+            )}
+
             {/* Fiscal Intelligence Alerts */}
             <Card className="financial-report-interactive-card border-0 shadow-sm mb-4">
               <Card.Body className="p-4">
@@ -686,7 +862,7 @@ const FinancialReport = () => {
                   {[
                     { title: 'Discount Policy', text: `Rate: ${reportData.summary.discountPercentage}%. ${reportData.summary.discountPercentage > 15 ? 'Alert: Exposure detected.' : 'Healthy parameters.'}`, variant: reportData.summary.discountPercentage > 15 ? 'danger' : 'success', icon: 'tag' },
                     { title: 'Tax Remittance', text: `Total: ${formatCurrency(reportData.summary.totalTax)}. Modules ready for compliance filing.`, variant: 'info', icon: 'dollar' },
-                    { title: 'Revenue Yield', text: `Net Yield: ${formatCurrency(reportData.summary.netRevenue)}. Avg Order: ${formatCurrency(reportData.summary.netRevenue / reportData.summary.totalOrders)}.`, variant: 'primary', icon: 'trend-up' }
+                    { title: 'Revenue Yield', text: `Net Yield: ${formatCurrency(reportData.summary.netRevenue)}. Avg Order: ${reportData.summary.totalOrders > 0 ? formatCurrency(reportData.summary.netRevenue / reportData.summary.totalOrders) : formatCurrency(0)}.`, variant: 'primary', icon: 'trend-up' }
                   ].map((insight, i) => (
                     <Col md={4} key={i}>
                       <Alert variant={insight.variant} className="financial-report-interactive-card border-0 h-100 p-4 mb-0 shadow-none" style={{ background: `rgba(var(--bs-${insight.variant}-rgb), 0.05)` }}>
@@ -716,6 +892,8 @@ const FinancialReport = () => {
              {[
               { label: 'Executive Fiscal Summary', key: 'includeSummary' },
               { label: 'Daily Operational Ledger', key: 'includeDailyBreakdown' },
+              { label: 'Inventory Purchases Breakdown (COGS)', key: 'includeInventoryPurchases' },
+              { label: 'Wastage & Expense Logs', key: 'includeExpensesWastage' },
               { label: 'Tax Compliance Breakdown', key: 'includeTaxBreakdown' },
               { label: 'Payment Channel Analysis', key: 'includePaymentMethods' },
               { label: 'Fiscal Intelligence Alerts', key: 'includeFinancialInsights' }

@@ -98,6 +98,29 @@ const PaymentSummaryBox = ({
         {/* Action Buttons - Full Width Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '6px' }}>
 
+          {/* Save Order */}
+          {showSave && (
+            <button
+              type="button"
+              style={{
+                ...btnBase,
+                background: 'transparent',
+                color: '#23b3f4',
+                border: '1.5px solid #23b3f4',
+                padding: '0.6rem',
+              }}
+              onClick={() => handleSaveOrder('Save')}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <CsLineIcons icon="spinner" size="14" className="spin" />
+              ) : (
+                <CsLineIcons icon="save" size="14" />
+              )}
+              Save Order
+            </button>
+          )}
+
           {/* Process Payment — primary CTA */}
           {orderItems.length > 0 && !isPaid && (
             <button

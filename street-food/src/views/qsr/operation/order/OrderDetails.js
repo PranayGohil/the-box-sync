@@ -306,18 +306,6 @@ const OrderDetails = () => {
                   <div className="h6 mb-0">{order.order_date ? new Date(order.order_date).toLocaleString() : '-'}</div>
                 </Col>
                 <Col xs={6}>
-                  <div className="text-small text-muted mb-1">ORDER TYPE</div>
-                  <div className="h6 mb-0">
-                    <Badge bg={
-                      order.order_type === 'Dine In' ? 'primary' :
-                        order.order_type === 'Takeaway' ? 'warning' :
-                          order.order_type === 'Delivery' ? 'success' : 'secondary'
-                    } className="rounded-pill px-3">
-                      {order.order_type || '-'}
-                    </Badge>
-                  </div>
-                </Col>
-                <Col xs={6}>
                   <div className="text-small text-muted mb-1">STATUS</div>
                   <div className="h6 mb-0">
                     <Badge bg={
@@ -332,7 +320,7 @@ const OrderDetails = () => {
               </Row>
 
               <Row className="g-3 mb-4">
-                {order.order_type === 'Dine In' && order.table_area && (
+                {order.table_area && (
                   <Col xs={6}>
                     <div className="text-small text-muted mb-1">TABLE DETAILS</div>
                     <div>
@@ -341,10 +329,10 @@ const OrderDetails = () => {
                     </div>
                   </Col>
                 )}
-                {order.order_type === 'Takeaway' && (
+                {order.token && (
                   <Col xs={6}>
                     <div className="text-small text-muted mb-1">TOKEN</div>
-                    <div className="h6 mb-0">{order.token || '-'}</div>
+                    <div className="h6 mb-0">{order.token}</div>
                   </Col>
                 )}
                 <Col xs={6}>
@@ -369,10 +357,6 @@ const OrderDetails = () => {
                     </div>
                   </Col>
                 )}
-                <Col xs={6}>
-                  <div className="text-small text-muted mb-1">ORDER SOURCE</div>
-                  <div>{order.order_source || '-'}</div>
-                </Col>
               </Row>
 
               {order.comment && (

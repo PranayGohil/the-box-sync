@@ -2,6 +2,7 @@ const Order = require("../models/orderModel");
 const Menu = require("../models/menuModel");
 const Customer = require("../models/customerModel");
 const Inventory = require("../models/inventoryModel");
+const WastageLog = require("../models/wastageLogModel");
 
 // ============================================
 // UTILITY FUNCTIONS
@@ -2296,6 +2297,18 @@ const getFinancialReport = async (req, res) => {
       { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
     ]);
 
+    // Inventory Purchases Breakdown
+    const inventoryPurchases = await Inventory.find({
+      user_id: restaurantId,
+      request_date: { $gte: startDate, $lte: endDate },
+    }).sort({ request_date: -1 });
+
+    // Wastage & Expense Logs Breakdown
+    const wastageLogs = await WastageLog.find({
+      user_id: restaurantId,
+      date: { $gte: startDate, $lte: endDate },
+    }).sort({ date: -1 });
+
     const summary = financialSummary[0] || {};
 
     res.status(200).json({
@@ -2303,40 +2316,43 @@ const getFinancialReport = async (req, res) => {
       period,
       dateRange: { start: startDate, end: endDate },
       summary: {
-        grossRevenue: Math.round(summary.grossRevenue * 100) / 100,
-        netRevenue: Math.round(summary.netRevenue * 100) / 100,
+        grossRevenue: Math.round((summary.grossRevenue || 0) * 100) / 100,
+        netRevenue: Math.round((summary.netRevenue || 0) * 100) / 100,
 
         // NEW
         inventoryCost: Math.round(totalInventoryCost * 100) / 100,
         grossProfit: Math.round(grossProfit * 100) / 100,
         grossProfitMargin,
+        totalWastageCount: wastageLogs.length || 0,
 
-        totalDiscount: Math.round(summary.totalDiscount * 100) / 100,
-        totalWaveOff: Math.round(summary.totalWaveOff * 100) / 100,
-        totalTax: Math.round(summary.totalTax * 100) / 100,
-        cgstAmount: Math.round(summary.cgstAmount * 100) / 100,
-        sgstAmount: Math.round(summary.sgstAmount * 100) / 100,
-        vatAmount: Math.round(summary.vatAmount * 100) / 100,
-        totalPaid: Math.round(summary.totalPaid * 100) / 100,
+        totalDiscount: Math.round((summary.totalDiscount || 0) * 100) / 100,
+        totalWaveOff: Math.round((summary.totalWaveOff || 0) * 100) / 100,
+        totalTax: Math.round((summary.totalTax || 0) * 100) / 100,
+        cgstAmount: Math.round((summary.cgstAmount || 0) * 100) / 100,
+        sgstAmount: Math.round((summary.sgstAmount || 0) * 100) / 100,
+        vatAmount: Math.round((summary.vatAmount || 0) * 100) / 100,
+        totalPaid: Math.round((summary.totalPaid || 0) * 100) / 100,
         totalOrders: summary.totalOrders || 0,
 
         discountPercentage:
-          summary.grossRevenue > 0
+          (summary.grossRevenue || 0) > 0
             ? Math.round(
-              (summary.totalDiscount / summary.grossRevenue) * 100 * 100
+              ((summary.totalDiscount || 0) / summary.grossRevenue) * 100 * 100
             ) / 100
             : 0,
 
         taxPercentage:
-          summary.netRevenue > 0
+          (summary.netRevenue || 0) > 0
             ? Math.round(
-              (summary.totalTax / summary.netRevenue) * 100 * 100
+              ((summary.totalTax || 0) / summary.netRevenue) * 100 * 100
             ) / 100
             : 0,
       },
       dailyFinancials,
       paymentMethodFinancials,
       taxBreakdown,
+      inventoryPurchases,
+      wastageLogs,
     });
   } catch (error) {
     console.error(error);

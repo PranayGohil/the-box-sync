@@ -392,7 +392,7 @@ const CompanyProfile = () => {
                 </div>
 
                 <a
-                  href={`${process.env.REACT_APP_EMPLOYEE_URL || 'http://localhost:3003'}`}
+                  href={`${process.env.REACT_APP_EMPLOYEE_URL || 'https://employee.theboxsync.com'}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="d-block mb-3 p-2 bg-light text-primary fw-bold rounded border text-center text-decoration-none"
@@ -404,7 +404,7 @@ const CompanyProfile = () => {
                   size="sm"
                   className="w-100"
                   onClick={() => {
-                    navigator.clipboard.writeText(`${process.env.REACT_APP_EMPLOYEE_URL || 'http://localhost:3003'}`);
+                    navigator.clipboard.writeText(`${process.env.REACT_APP_EMPLOYEE_URL || 'https://employee.theboxsync.com'}`);
                     toast.success('Employee Panel link copied to clipboard!');
                   }}
                 >

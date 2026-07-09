@@ -35,7 +35,7 @@ router.get('/requests', authMiddleware, async (req, res) => {
     }
 
     const requests = await AssetRequest.find(query)
-      .populate('staff_id', 'f_name l_name staff_id position')
+      .populate('staff_id', 'f_name l_name staff_id position photo')
       .sort({ createdAt: -1 });
 
     res.json({ success: true, data: requests });

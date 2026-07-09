@@ -153,9 +153,7 @@ const EditStaff = () => {
       .required('Phone number is required')
       .matches(/^[0-9]{10}$/, 'Phone number must be 10 digits'),
     email: Yup.string().required('Email is required').email('Enter a valid email address'),
-    password: Yup.string()
-      .min(6, 'Password must be at least 6 characters')
-      .notRequired(),
+
     salary: Yup.number().positive('Salary must be a positive number').nullable().notRequired(),
     salary_calculation_base: Yup.string().required('Salary calculation base is required').oneOf(['working_days', 'working_hours']),
     position: Yup.string().notRequired(),
@@ -214,7 +212,8 @@ const EditStaff = () => {
     increment_plan: Yup.object().shape({
       type: Yup.string().oneOf(['percentage', 'flat']),
       value: Yup.number().min(0).nullable(),
-      scheduled_date: Yup.string().nullable()
+      scheduled_date: Yup.string().nullable(),
+      base: Yup.string().oneOf(['basic', 'gross', 'net']).nullable()
     }).nullable()
   });
 
@@ -269,29 +268,6 @@ const EditStaff = () => {
     };
   }, [showFaceModal]);
 
-  const handleFaceCapture = async () => {
-    try {
-      setIsCapturing(true);
-      const screenshot = webcamRef.current.getScreenshot();
-      const img = await faceapi.fetchImage(screenshot);
-      const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-      if (detection) {
-        const descriptorArray = Array.from(detection.descriptor);
-        setFaceDescriptor(descriptorArray);
-        faceDescriptorRef.current = descriptorArray;
-        setCaptureStatus('success');
-        setShowFaceModal(false);
-        toast.success('Face captured successfully!');
-      } else {
-        toast.error('No face detected. Please try again.');
-      }
-    } catch (err) {
-      toast.error('Error capturing face. Try again.');
-    } finally {
-      setIsCapturing(false);
-    }
-  };
-
   const formik = useFormik({
     initialValues: {
       staff_id: '',
@@ -307,7 +283,7 @@ const EditStaff = () => {
       gender: '',
       phone_no: '',
       email: '',
-      password: '',
+
       salary: '',
       salary_calculation_base: 'working_days',
       attendance_method: 'any',
@@ -342,7 +318,8 @@ const EditStaff = () => {
       increment_plan: {
         type: 'percentage',
         value: '',
-        scheduled_date: ''
+        scheduled_date: '',
+        base: 'basic'
       }
     },
     validationSchema: editStaff,
@@ -399,6 +376,191 @@ const EditStaff = () => {
 
     const { values, handleChange, handleSubmit, setFieldValue, errors, touched } = formik;
 
+  const base64ToFile = (base64String, filename) => {
+    const arr = base64String.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  };
+
+  const handleFaceCapture = async () => {
+    try {
+      setIsCapturing(true);
+      const screenshot = webcamRef.current.getScreenshot();
+      const img = await faceapi.fetchImage(screenshot);
+      const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+      if (detection) {
+        const descriptorArray = Array.from(detection.descriptor);
+        setFaceDescriptor(descriptorArray);
+        faceDescriptorRef.current = descriptorArray;
+
+        // Convert captured face to file and set to photo
+        const capturedFile = base64ToFile(screenshot, 'photo.jpg');
+        setFieldValue('photo', capturedFile);
+        setPhotoPreview(screenshot);
+
+        setCaptureStatus('success');
+        setShowFaceModal(false);
+        toast.success('Face captured successfully!');
+      } else {
+        toast.error('No face detected. Please try again.');
+      }
+    } catch (err) {
+      toast.error('Error capturing face. Try again.');
+    } finally {
+      setIsCapturing(false);
+    }
+  };
+
+  const grossSalary = Object.values(values.salary_structure?.custom_earnings || {}).reduce((acc, val) => acc + (Number(val) || 0), 0);
+  const pfPercentage = Number(values.salary_structure?.deductions?.pf_percentage || 0);
+  const esiPercentage = Number(values.salary_structure?.deductions?.esi_percentage || 0);
+  const ptAmount = Number(values.salary_structure?.deductions?.pt || 0);
+  const basicSalary = Number(values.salary_structure?.custom_earnings?.basic || 0);
+  const statConfig = payrollConfig?.statutory_config || {};
+
+  let pfDeduction = 0;
+  if (statConfig?.pf?.is_mandatory) {
+    const limit = statConfig.pf.salary_limit || 0;
+    let pfBase = basicSalary;
+    if (limit > 0 && pfBase > limit) pfBase = limit;
+    pfDeduction = parseFloat((pfBase * (pfPercentage / 100)).toFixed(2));
+  } else {
+    pfDeduction = parseFloat((basicSalary * (pfPercentage / 100)).toFixed(2));
+  }
+
+  let esiDeduction = 0;
+  if (statConfig?.esi?.is_mandatory) {
+    const limit = statConfig.esi.gross_limit || 21000;
+    if (grossSalary <= limit) {
+      esiDeduction = parseFloat((grossSalary * (esiPercentage / 100)).toFixed(2));
+    }
+  } else {
+    esiDeduction = parseFloat((grossSalary * (esiPercentage / 100)).toFixed(2));
+  }
+
+  const ptDeduction = ptAmount;
+  const totalCustomDeductions = Object.values(values.salary_structure?.custom_deductions || {}).reduce((acc, val) => acc + (Number(val) || 0), 0);
+  const totalDeductions = pfDeduction + esiDeduction + ptDeduction + totalCustomDeductions;
+  const netSalary = grossSalary - totalDeductions;
+
+  // Safe calculation values avoiding NaN crashes
+  const safeGrossSalary = Number.isNaN(grossSalary) ? 0 : grossSalary;
+  const safeTotalDeductions = Number.isNaN(totalDeductions) ? 0 : totalDeductions;
+  const safeNetSalary = Number.isNaN(netSalary) ? 0 : netSalary;
+
+  const activeEarnings = payrollConfig?.custom_earnings?.filter(e => e.is_active) || [];
+  const hasEarnings = activeEarnings.length > 0;
+  const activeCustomDeductions = payrollConfig?.custom_deductions?.filter(d => d.is_active) || [];
+  const hasStatutoryDeductions = !!(statConfig?.pf?.is_mandatory ||
+                                    statConfig?.esi?.is_mandatory ||
+                                    statConfig?.pt?.is_applicable);
+  const hasDeductions = activeCustomDeductions.length > 0 || hasStatutoryDeductions;
+  const hasGlobalWeeklyOff = payrollConfig?.global_weekly_offs && payrollConfig.global_weekly_offs.length > 0;
+
+  useEffect(() => {
+    if (values.salary !== safeGrossSalary) {
+      setFieldValue('salary', safeGrossSalary);
+    }
+  }, [safeGrossSalary, values.salary, setFieldValue]);
+
+  useEffect(() => {
+    if (payrollConfig && !hasGlobalWeeklyOff && values.weekly_off_policy === 'global') {
+      setFieldValue('weekly_off_policy', 'custom');
+    }
+  }, [payrollConfig, hasGlobalWeeklyOff, values.weekly_off_policy, setFieldValue]);
+
+  const savedBranchIdRef = useRef(null);
+  const isStaffDataLoaded = useRef(false);
+
+  useEffect(() => {
+    const fetchBranchLeavePolicy = async () => {
+      try {
+        const branchId = values.branch_id || '';
+        const token = localStorage.getItem('token');
+        const url = branchId 
+          ? `${process.env.REACT_APP_API}/leave-policy?branch_id=${branchId}`
+          : `${process.env.REACT_APP_API}/leave-policy`;
+        const res = await axios.get(url, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data && res.data.success) {
+          setGlobalLeavePolicies(res.data.data.leave_types || []);
+          
+          if (isStaffDataLoaded.current && values.branch_id !== savedBranchIdRef.current) {
+            const mapped = (res.data.data.leave_types || []).map(lt => ({
+              leave_type_id: lt.leave_type_id,
+              is_active: false
+            }));
+            setFieldValue('leave_policy_configuration', mapped);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch leave policy for branch', err);
+      }
+    };
+
+    const fetchBranchPayrollConfig = async () => {
+      try {
+        const branchId = values.branch_id || '';
+        const token = localStorage.getItem('token');
+        const url = branchId 
+          ? `${process.env.REACT_APP_API}/payroll-config?branch_id=${branchId}`
+          : `${process.env.REACT_APP_API}/payroll-config`;
+        const res = await axios.get(url, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data && res.data.success && res.data.data) {
+          const configData = res.data.data;
+          setPayrollConfig(configData);
+          
+          if (isStaffDataLoaded.current && values.branch_id !== savedBranchIdRef.current) {
+            const activeConfigEarnings = (configData.custom_earnings || []).filter(e => e.is_active);
+            const initialCustomEarnings = {};
+            activeConfigEarnings.forEach(e => {
+              initialCustomEarnings[e.id] = 0;
+            });
+            setFieldValue('salary_structure.custom_earnings', initialCustomEarnings);
+
+            const activeDeductions = (configData.custom_deductions || []).filter(d => d.is_active);
+            const initialCustomDeductions = {};
+            activeDeductions.forEach(d => {
+              initialCustomDeductions[d.id] = 0;
+            });
+            setFieldValue('salary_structure.custom_deductions', initialCustomDeductions);
+
+            if (configData.statutory_config?.pf?.is_mandatory) {
+              setFieldValue('salary_structure.deductions.pf_percentage', configData.statutory_config.pf.employee_percentage);
+            } else {
+              setFieldValue('salary_structure.deductions.pf_percentage', 0);
+            }
+            if (configData.statutory_config?.esi?.is_mandatory) {
+              setFieldValue('salary_structure.deductions.esi_percentage', configData.statutory_config.esi.employee_percentage);
+            } else {
+              setFieldValue('salary_structure.deductions.esi_percentage', 0);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch payroll config for branch', err);
+      }
+    };
+
+    const loadAll = async () => {
+      await fetchBranchLeavePolicy();
+      await fetchBranchPayrollConfig();
+    };
+
+    if (values.branch_id !== undefined) {
+      loadAll();
+    }
+  }, [values.branch_id, setFieldValue]);
+
   const handleAddCustomWeeklyOff = () => {
     const current = values.custom_weekly_offs ? [...values.custom_weekly_offs] : [];
     current.push({ day: 'Sunday', type: 'all_weeks', weeks: [] });
@@ -451,20 +613,34 @@ const EditStaff = () => {
       try {
         setLoading((prev) => ({ ...prev, initial: true }));
 
-        const [positionsRes, staffRes, leavePolicyRes, configRes, branchesRes] = await Promise.all([
+        const [positionsRes, staffRes, branchesRes] = await Promise.all([
           axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
           axios.get(`${process.env.REACT_APP_API}/staff/get/${id}`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
-          axios.get(`${process.env.REACT_APP_API}/leave-policy`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-          }),
-          axios.get(`${process.env.REACT_APP_API}/payroll-config`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-          }),
           axios.get(`${process.env.REACT_APP_API}/branch/all`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          })
+        ]);
+
+        const staff = staffRes.data.data;
+        const branchId = staff.branch_id || '';
+
+        // Fetch branch-specific config and leave policy
+        const configUrl = branchId 
+          ? `${process.env.REACT_APP_API}/payroll-config?branch_id=${branchId}`
+          : `${process.env.REACT_APP_API}/payroll-config`;
+        const leaveUrl = branchId 
+          ? `${process.env.REACT_APP_API}/leave-policy?branch_id=${branchId}`
+          : `${process.env.REACT_APP_API}/leave-policy`;
+
+        const [configRes, leavePolicyRes] = await Promise.all([
+          axios.get(configUrl, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          }),
+          axios.get(leaveUrl, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           })
         ]);
@@ -483,11 +659,11 @@ const EditStaff = () => {
 
         setPositions(positionsRes.data.data);
 
-        const staff = staffRes.data.data;
         setFieldValue('staff_id', staff.staff_id);
         setFieldValue('f_name', staff.f_name);
         setFieldValue('l_name', staff.l_name);
         setFieldValue('branch_id', staff.branch_id || '');
+        savedBranchIdRef.current = staff.branch_id || '';
         setFieldValue('birth_date', staff.birth_date);
         setFieldValue('joining_date', staff.joining_date);
         setFieldValue('address', staff.address);
@@ -522,16 +698,16 @@ const EditStaff = () => {
         setFieldValue('custom_weekly_offs', staff.custom_weekly_offs || [{ day: 'Sunday', type: 'all_weeks', weeks: [] }]);
         setFieldValue('leave_policy_configuration', staff.leave_policy_configuration || []);
 
-        // Pre-fill custom_earnings
-        const activeEarnings = (configRes.data.data?.custom_earnings || []).filter(e => e.is_active);
+        // Pre-fill custom_earnings using branch-specific configuration
+        const activeConfigEarnings = (configRes.data.data?.custom_earnings || []).filter(e => e.is_active);
         const mappedCustomEarnings = {};
-        activeEarnings.forEach(e => {
+        activeConfigEarnings.forEach(e => {
           mappedCustomEarnings[e.id] = (staff.salary_structure?.custom_earnings?.[e.id] !== undefined)
             ? staff.salary_structure.custom_earnings[e.id]
             : 0;
         });
 
-        // Pre-fill custom_deductions
+        // Pre-fill custom_deductions using branch-specific configuration
         const activeDeductions = (configRes.data.data?.custom_deductions || []).filter(d => d.is_active);
         const mappedCustomDeductions = {};
         activeDeductions.forEach(d => {
@@ -554,13 +730,14 @@ const EditStaff = () => {
           setFieldValue('increment_plan', {
             type: staff.increment_plan.type || 'percentage',
             value: staff.increment_plan.value !== undefined ? staff.increment_plan.value : '',
-            scheduled_date: staff.increment_plan.scheduled_date || ''
+            scheduled_date: staff.increment_plan.scheduled_date || '',
+            base: staff.increment_plan.base || 'basic'
           });
         }
 
         setFieldValue('phone_no', staff.phone_no || '');
         setFieldValue('email', staff.email || '');
-        setFieldValue('password', staff.password || '');
+
         setFieldValue('salary', staff.salary || '');
         setFieldValue('position', staff.position || '');
         setFieldValue('document_type', staff.document_type || '');
@@ -592,6 +769,7 @@ const EditStaff = () => {
         if (staff.pan_image) {
           setPanImagePreview(`${process.env.REACT_APP_UPLOAD_DIR}/${staff.pan_image}`);
         }
+        isStaffDataLoaded.current = true;
       } catch (error) {
         console.error('Error fetching data:', error);
         toast.error('Failed to fetch staff data.');
@@ -1187,35 +1365,7 @@ const EditStaff = () => {
                       <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
-                    <Form.Group>
-                      <Form.Label className="small fw-bold">Password</Form.Label>
-                      <div className="position-relative">
-                        <Form.Control
-                          type={showPassword ? 'text' : 'password'}
-                          name="password"
-                          autoComplete="new-password"
-                          placeholder="Leave blank to keep current"
-                          value={values.password}
-                          onChange={handleChange}
-                          isInvalid={touched.password && errors.password}
-                          disabled={loading.submitting}
-                          style={{ paddingRight: '40px' }}
-                        />
-                        <Button
-                          variant="link"
-                          className="position-absolute end-0 top-50 translate-middle-y me-2 p-0 text-muted"
-                          style={{ zIndex: 5, textDecoration: 'none' }}
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="18" />
-                        </Button>
-                      </div>
-                      {touched.password && errors.password && (
-                        <div className="text-danger mt-1 small">{errors.password}</div>
-                      )}
-                    </Form.Group>
-                  </Col>
+
                 </Row>
               </Card.Body>
             </Card>
@@ -1325,144 +1475,193 @@ const EditStaff = () => {
                     </Form.Group>
                   </Col>
                 </Row>
+                {(hasEarnings || hasDeductions) && (
+                  <>
+                    <hr className="my-4 opacity-50" />
 
-                <hr className="my-4 opacity-50" />
-
-                <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
-                  <CsLineIcons icon="money" size="18" />
-                  Salary Structure Breakdown
-                </h6>
-                <Row className="g-3">
-                  <Col md={6}>
-                    <div className="bg-light rounded-3 p-3 shadow-sm border border-faint h-100">
-                      <div className="d-flex justify-content-between align-items-center mb-3">
-                        <div className="small fw-bold text-muted text-uppercase letter-spacing-1">Monthly Earnings</div>
-                        <Button 
-                          variant="none" 
-                          size="sm" 
-                          className="text-primary p-0 d-flex align-items-center gap-1 hover-scale"
-                          onClick={() => {
-                            setNewFieldName('');
-                            setShowAddEarningModal(true);
-                          }}
-                        >
-                          <CsLineIcons icon="plus" size="14" /> Add Field
-                        </Button>
-                      </div>
-                      {payrollConfig?.custom_earnings?.filter(e => e.is_active).map((earning) => (
-                        <Form.Group className="mb-2" key={earning.id}>
-                          <Form.Label className="small fw-bold opacity-75">{earning.label}</Form.Label>
-                          <Form.Control
-                            type="number"
-                            name={`salary_structure.custom_earnings.${earning.id}`}
-                            value={values.salary_structure?.custom_earnings?.[earning.id] ?? 0}
-                            onChange={(e) => setFieldValue(`salary_structure.custom_earnings.${earning.id}`, Number(e.target.value))}
-                            size="sm"
-                          />
-                        </Form.Group>
-                      ))}
-                      {(!payrollConfig?.custom_earnings || payrollConfig.custom_earnings.filter(e => e.is_active).length === 0) && (
-                        <div className="text-muted small">No active earning components defined.</div>
+                    <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                      <CsLineIcons icon="money" size="18" />
+                      Salary Structure Breakdown
+                    </h6>
+                    <Row className="g-3">
+                      {hasEarnings && (
+                        <Col md={hasDeductions ? 6 : 12}>
+                          <div className="bg-light rounded-3 p-3 shadow-sm border border-faint h-100">
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                              <div className="small fw-bold text-muted text-uppercase letter-spacing-1">Monthly Earnings</div>
+                              <Button 
+                                variant="none" 
+                                size="sm" 
+                                className="text-primary p-0 d-flex align-items-center gap-1 hover-scale"
+                                onClick={() => {
+                                  setNewFieldName('');
+                                  setShowAddEarningModal(true);
+                                }}
+                              >
+                                <CsLineIcons icon="plus" size="14" /> Add Field
+                              </Button>
+                            </div>
+                            {payrollConfig?.custom_earnings?.filter(e => e.is_active).map((earning) => (
+                              <Form.Group className="mb-2" key={earning.id}>
+                                <Form.Label className="small fw-bold opacity-75">{earning.label}</Form.Label>
+                                <Form.Control
+                                  type="number"
+                                  name={`salary_structure.custom_earnings.${earning.id}`}
+                                  value={values.salary_structure?.custom_earnings?.[earning.id] ?? ''}
+                                  onChange={(e) => setFieldValue(`salary_structure.custom_earnings.${earning.id}`, e.target.value === '' ? '' : Number(e.target.value))}
+                                  onFocus={() => {
+                                    if (values.salary_structure?.custom_earnings?.[earning.id] === 0) {
+                                      setFieldValue(`salary_structure.custom_earnings.${earning.id}`, '');
+                                    }
+                                  }}
+                                  size="sm"
+                                />
+                              </Form.Group>
+                            ))}
+                            {(!payrollConfig?.custom_earnings || payrollConfig.custom_earnings.filter(e => e.is_active).length === 0) && (
+                              <div className="text-muted small">No active earning components defined.</div>
+                            )}
+                          </div>
+                        </Col>
                       )}
+                      {hasDeductions && (
+                        <Col md={hasEarnings ? 6 : 12}>
+                          <div className="bg-light rounded-3 p-3 shadow-sm border border-faint h-100">
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                              <div className="small fw-bold text-muted text-uppercase letter-spacing-1">Deductions</div>
+                              <Button 
+                                variant="none" 
+                                size="sm" 
+                                className="text-primary p-0 d-flex align-items-center gap-1 hover-scale"
+                                onClick={() => {
+                                  setNewFieldName('');
+                                  setShowAddDeductionModal(true);
+                                }}
+                              >
+                                <CsLineIcons icon="plus" size="14" /> Add Field
+                              </Button>
+                            </div>
+
+                            {payrollConfig?.statutory_config?.pf?.is_mandatory && (
+                              <Form.Group className="mb-2">
+                                <Form.Label className="small fw-bold opacity-75">PF (%)</Form.Label>
+                                <Form.Control
+                                  type="number"
+                                  name="salary_structure.deductions.pf_percentage"
+                                  value={values.salary_structure?.deductions?.pf_percentage ?? ''}
+                                  onChange={(e) => setFieldValue('salary_structure.deductions.pf_percentage', e.target.value === '' ? '' : Number(e.target.value))}
+                                  onFocus={() => {
+                                    if (values.salary_structure?.deductions?.pf_percentage === 0) {
+                                      setFieldValue('salary_structure.deductions.pf_percentage', '');
+                                    }
+                                  }}
+                                  isInvalid={touched.salary_structure?.deductions?.pf_percentage && !!errors.salary_structure?.deductions?.pf_percentage}
+                                  size="sm"
+                                />
+                                {touched.salary_structure?.deductions?.pf_percentage && errors.salary_structure?.deductions?.pf_percentage && (
+                                  <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.pf_percentage}</div>
+                                )}
+                              </Form.Group>
+                            )}
+
+                            {payrollConfig?.statutory_config?.esi?.is_mandatory && (
+                              <Form.Group className="mb-2">
+                                <Form.Label className="small fw-bold opacity-75">ESI (%)</Form.Label>
+                                <Form.Control
+                                  type="number"
+                                  name="salary_structure.deductions.esi_percentage"
+                                  value={values.salary_structure?.deductions?.esi_percentage ?? ''}
+                                  onChange={(e) => setFieldValue('salary_structure.deductions.esi_percentage', e.target.value === '' ? '' : Number(e.target.value))}
+                                  onFocus={() => {
+                                    if (values.salary_structure?.deductions?.esi_percentage === 0) {
+                                      setFieldValue('salary_structure.deductions.esi_percentage', '');
+                                    }
+                                  }}
+                                  isInvalid={touched.salary_structure?.deductions?.esi_percentage && !!errors.salary_structure?.deductions?.esi_percentage}
+                                  size="sm"
+                                />
+                                {touched.salary_structure?.deductions?.esi_percentage && errors.salary_structure?.deductions?.esi_percentage && (
+                                  <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.esi_percentage}</div>
+                                )}
+                              </Form.Group>
+                            )}
+
+                            {payrollConfig?.statutory_config?.pt?.is_applicable && (
+                              <Form.Group className="mb-2">
+                                <Form.Label className="small fw-bold opacity-75">PT (Monthly)</Form.Label>
+                                <Form.Control
+                                  type="number"
+                                  name="salary_structure.deductions.pt"
+                                  value={values.salary_structure?.deductions?.pt ?? ''}
+                                  onChange={(e) => setFieldValue('salary_structure.deductions.pt', e.target.value === '' ? '' : Number(e.target.value))}
+                                  onFocus={() => {
+                                    if (values.salary_structure?.deductions?.pt === 0) {
+                                      setFieldValue('salary_structure.deductions.pt', '');
+                                    }
+                                  }}
+                                  isInvalid={touched.salary_structure?.deductions?.pt && !!errors.salary_structure?.deductions?.pt}
+                                  size="sm"
+                                />
+                                {touched.salary_structure?.deductions?.pt && errors.salary_structure?.deductions?.pt && (
+                                  <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.pt}</div>
+                                )}
+                              </Form.Group>
+                            )}
+
+                            {payrollConfig?.custom_deductions?.filter(d => d.is_active).length > 0 && (
+                              <>
+                                <hr className="my-3 opacity-50" />
+                                <div className="small fw-bold text-muted mb-3 text-uppercase letter-spacing-1">Custom Deductions</div>
+                                {payrollConfig.custom_deductions.filter(d => d.is_active).map((deduction) => (
+                                  <Form.Group className="mb-2" key={deduction.id}>
+                                    <Form.Label className="small fw-bold opacity-75">{deduction.label}</Form.Label>
+                                    <Form.Control
+                                      type="number"
+                                      name={`salary_structure.custom_deductions.${deduction.id}`}
+                                      value={values.salary_structure?.custom_deductions?.[deduction.id] ?? ''}
+                                      onChange={(e) => setFieldValue(`salary_structure.custom_deductions.${deduction.id}`, e.target.value === '' ? '' : Number(e.target.value))}
+                                      onFocus={() => {
+                                        if (values.salary_structure?.custom_deductions?.[deduction.id] === 0) {
+                                          setFieldValue(`salary_structure.custom_deductions.${deduction.id}`, '');
+                                        }
+                                      }}
+                                      size="sm"
+                                    />
+                                  </Form.Group>
+                                ))}
+                              </>
+                            )}
+
+                            {(!payrollConfig?.statutory_config?.pf?.is_mandatory &&
+                              !payrollConfig?.statutory_config?.esi?.is_mandatory &&
+                              !payrollConfig?.statutory_config?.pt?.is_applicable &&
+                              (!payrollConfig?.custom_deductions || payrollConfig.custom_deductions.filter(d => d.is_active).length === 0)) && (
+                                <div className="text-muted small">No active deduction components defined.</div>
+                            )}
+                          </div>
+                        </Col>
+                      )}
+                    </Row>
+
+                    <div className="bg-light rounded-3 p-3 shadow-sm border border-faint mt-4">
+                      <Row className="g-3 align-items-center">
+                        <Col md={4} className="text-center text-md-start">
+                          <div className="small fw-bold text-muted text-uppercase mb-1">Total Salary (Gross)</div>
+                          <h4 className="fw-bold text-success mb-0">₹ {safeGrossSalary.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
+                        </Col>
+                        <Col md={4} className="text-center text-md-start border-start border-faint">
+                          <div className="small fw-bold text-muted text-uppercase mb-1">Total Deductions</div>
+                          <h4 className="fw-bold text-danger mb-0">₹ {safeTotalDeductions.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
+                        </Col>
+                        <Col md={4} className="text-center text-md-start border-start border-faint">
+                          <div className="small fw-bold text-muted text-uppercase mb-1">Net Salary</div>
+                          <h4 className="fw-bold text-primary mb-0">₹ {safeNetSalary.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
+                        </Col>
+                      </Row>
                     </div>
-                  </Col>
-                  <Col md={6}>
-                    <div className="bg-light rounded-3 p-3 shadow-sm border border-faint h-100">
-                      <div className="d-flex justify-content-between align-items-center mb-3">
-                        <div className="small fw-bold text-muted text-uppercase letter-spacing-1">Deductions</div>
-                        <Button 
-                          variant="none" 
-                          size="sm" 
-                          className="text-primary p-0 d-flex align-items-center gap-1 hover-scale"
-                          onClick={() => {
-                            setNewFieldName('');
-                            setShowAddDeductionModal(true);
-                          }}
-                        >
-                          <CsLineIcons icon="plus" size="14" /> Add Field
-                        </Button>
-                      </div>
+                  </>
+                )}
 
-                      {payrollConfig?.statutory_config?.pf?.is_mandatory && (
-                        <Form.Group className="mb-2">
-                          <Form.Label className="small fw-bold opacity-75">PF (%)</Form.Label>
-                          <Form.Control
-                            type="number"
-                            name="salary_structure.deductions.pf_percentage"
-                            value={values.salary_structure?.deductions?.pf_percentage}
-                            onChange={handleChange}
-                            isInvalid={touched.salary_structure?.deductions?.pf_percentage && !!errors.salary_structure?.deductions?.pf_percentage}
-                            size="sm"
-                          />
-                          {touched.salary_structure?.deductions?.pf_percentage && errors.salary_structure?.deductions?.pf_percentage && (
-                            <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.pf_percentage}</div>
-                          )}
-                        </Form.Group>
-                      )}
-
-                      {payrollConfig?.statutory_config?.esi?.is_mandatory && (
-                        <Form.Group className="mb-2">
-                          <Form.Label className="small fw-bold opacity-75">ESI (%)</Form.Label>
-                          <Form.Control
-                            type="number"
-                            name="salary_structure.deductions.esi_percentage"
-                            value={values.salary_structure?.deductions?.esi_percentage}
-                            onChange={handleChange}
-                            isInvalid={touched.salary_structure?.deductions?.esi_percentage && !!errors.salary_structure?.deductions?.esi_percentage}
-                            size="sm"
-                          />
-                          {touched.salary_structure?.deductions?.esi_percentage && errors.salary_structure?.deductions?.esi_percentage && (
-                            <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.esi_percentage}</div>
-                          )}
-                        </Form.Group>
-                      )}
-
-                      {payrollConfig?.statutory_config?.pt?.is_applicable && (
-                        <Form.Group className="mb-2">
-                          <Form.Label className="small fw-bold opacity-75">PT (Monthly)</Form.Label>
-                          <Form.Control
-                            type="number"
-                            name="salary_structure.deductions.pt"
-                            value={values.salary_structure?.deductions?.pt}
-                            onChange={handleChange}
-                            isInvalid={touched.salary_structure?.deductions?.pt && !!errors.salary_structure?.deductions?.pt}
-                            size="sm"
-                          />
-                          {touched.salary_structure?.deductions?.pt && errors.salary_structure?.deductions?.pt && (
-                            <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.pt}</div>
-                          )}
-                        </Form.Group>
-                      )}
-
-                      {payrollConfig?.custom_deductions?.filter(d => d.is_active).length > 0 && (
-                        <>
-                          <hr className="my-3 opacity-50" />
-                          <div className="small fw-bold text-muted mb-3 text-uppercase letter-spacing-1">Custom Deductions</div>
-                          {payrollConfig.custom_deductions.filter(d => d.is_active).map((deduction) => (
-                            <Form.Group className="mb-2" key={deduction.id}>
-                              <Form.Label className="small fw-bold opacity-75">{deduction.label}</Form.Label>
-                              <Form.Control
-                                type="number"
-                                name={`salary_structure.custom_deductions.${deduction.id}`}
-                                value={values.salary_structure?.custom_deductions?.[deduction.id] ?? 0}
-                                onChange={(e) => setFieldValue(`salary_structure.custom_deductions.${deduction.id}`, Number(e.target.value))}
-                                size="sm"
-                              />
-                            </Form.Group>
-                          ))}
-                        </>
-                      )}
-
-                      {(!payrollConfig?.statutory_config?.pf?.is_mandatory &&
-                        !payrollConfig?.statutory_config?.esi?.is_mandatory &&
-                        !payrollConfig?.statutory_config?.pt?.is_applicable &&
-                        (!payrollConfig?.custom_deductions || payrollConfig.custom_deductions.filter(d => d.is_active).length === 0)) && (
-                          <div className="text-muted small">No active deduction components defined.</div>
-                      )}
-                    </div>
-                  </Col>
-                </Row>
-                
                 <hr className="my-4 opacity-50" />
                 <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
                   <CsLineIcons icon="calendar" size="18" />
@@ -1478,14 +1677,28 @@ const EditStaff = () => {
                           menuPortalTarget={document.body}
                           styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                           name="weekly_off_policy"
-                          options={[
+                          options={hasGlobalWeeklyOff ? [
                             { value: 'global', label: 'Global Company Policy (Use Settings)' },
+                            { value: 'custom', label: 'Custom Employee Policy' }
+                          ] : [
                             { value: 'custom', label: 'Custom Employee Policy' }
                           ]}
                           value={values.weekly_off_policy ? { label: values.weekly_off_policy === 'custom' ? 'Custom Employee Policy' : 'Global Company Policy (Use Settings)', value: values.weekly_off_policy } : null}
-                          onChange={(selected) => setFieldValue('weekly_off_policy', selected ? selected.value : 'global')}
+                          onChange={(selected) => setFieldValue('weekly_off_policy', selected ? selected.value : 'custom')}
                           onBlur={() => formik.setFieldTouched('weekly_off_policy', true)}
                         />
+                        {values.weekly_off_policy === 'global' && (
+                          <div className="mt-2 text-muted small fw-medium ms-1">
+                            Active Policy: <span className="text-primary fw-bold">{(() => {
+                              const branch = branches.find(b => b._id === values.branch_id);
+                              const branchName = branch ? `${branch.name} Branch` : 'Global / All Branches';
+                              const weekOffsStr = (payrollConfig?.global_weekly_offs || [])
+                                .map(wo => `${wo.day}${wo.type === 'specific_weeks' ? ` (Weeks: ${wo.weeks.join(', ')})` : ''}`)
+                                .join(', ') || 'None';
+                              return `${branchName} - ${weekOffsStr}`;
+                            })()}</span>
+                          </div>
+                        )}
                       </Form.Group>
                     </Col>
                     
@@ -1568,47 +1781,47 @@ const EditStaff = () => {
                 </div>
 
                 <hr className="my-4 opacity-50" />
-                <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
-                  <CsLineIcons icon="calendar" size="18" />
-                  Leave Policy Configuration
-                </h6>
-                <div className="bg-light rounded-3 p-3 shadow-sm border border-faint mb-4">
-                  {globalLeavePolicies.length === 0 ? (
-                    <div className="text-muted small">No global leave policies configured.</div>
-                  ) : (
-                    <Row className="g-3">
-                      {globalLeavePolicies.map((policy) => {
-                         const currentConfig = values.leave_policy_configuration?.find(c => c.leave_type_id === policy.leave_type_id);
-                         const isChecked = currentConfig ? currentConfig.is_active : true;
-                         return (
-                           <Col md={4} key={policy.leave_type_id}>
-                             <div className="d-flex justify-content-between align-items-center p-2 border rounded bg-white">
-                               <div>
-                                 <div className="fw-bold small">{policy.name}</div>
-                                 <div className="text-muted" style={{ fontSize: '0.75rem' }}>{policy.days_per_year} Days / Year</div>
+                {globalLeavePolicies && globalLeavePolicies.length > 0 && (
+                  <>
+                    <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                      <CsLineIcons icon="calendar" size="18" />
+                      Leave Policy Configuration
+                    </h6>
+                    <div className="bg-light rounded-3 p-3 shadow-sm border border-faint mb-4">
+                      <Row className="g-3">
+                        {globalLeavePolicies.map((policy) => {
+                           const currentConfig = values.leave_policy_configuration?.find(c => c.leave_type_id === policy.leave_type_id);
+                           const isChecked = currentConfig ? currentConfig.is_active : false;
+                           return (
+                             <Col md={4} key={policy.leave_type_id}>
+                               <div className="d-flex justify-content-between align-items-center p-2 border rounded bg-white">
+                                 <div>
+                                   <div className="fw-bold small">{policy.name}</div>
+                                   <div className="text-muted" style={{ fontSize: '0.75rem' }}>{policy.days_per_year} Days / Year</div>
+                                 </div>
+                                 <Form.Check
+                                   type="switch"
+                                   id={`leave-switch-${policy.leave_type_id}`}
+                                   checked={isChecked}
+                                   onChange={(e) => {
+                                       const newConfig = [...(values.leave_policy_configuration || [])];
+                                       const index = newConfig.findIndex(c => c.leave_type_id === policy.leave_type_id);
+                                       if (index >= 0) {
+                                         newConfig[index].is_active = e.target.checked;
+                                       } else {
+                                         newConfig.push({ leave_type_id: policy.leave_type_id, is_active: e.target.checked });
+                                       }
+                                       setFieldValue('leave_policy_configuration', newConfig);
+                                   }}
+                                 />
                                </div>
-                               <Form.Check
-                                 type="switch"
-                                 id={`leave-switch-${policy.leave_type_id}`}
-                                 checked={isChecked}
-                                 onChange={(e) => {
-                                     const newConfig = [...(values.leave_policy_configuration || [])];
-                                     const index = newConfig.findIndex(c => c.leave_type_id === policy.leave_type_id);
-                                     if (index >= 0) {
-                                       newConfig[index].is_active = e.target.checked;
-                                     } else {
-                                       newConfig.push({ leave_type_id: policy.leave_type_id, is_active: e.target.checked });
-                                     }
-                                     setFieldValue('leave_policy_configuration', newConfig);
-                                 }}
-                               />
-                             </div>
-                           </Col>
-                         );
-                      })}
-                    </Row>
-                  )}
-                </div>
+                             </Col>
+                           );
+                        })}
+                      </Row>
+                    </div>
+                  </>
+                )}
                 
                 <hr className="my-4 opacity-50" />
                 <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
@@ -1617,7 +1830,7 @@ const EditStaff = () => {
                 </h6>
                 <div className="bg-light rounded-3 p-3 shadow-sm border border-faint">
                   <Row className="g-3 align-items-end">
-                    <Col md={4}>
+                    <Col md={3}>
                       <Form.Group>
                         <Form.Label className="small fw-bold opacity-75">Scheduled Date</Form.Label>
                         <Form.Control
@@ -1629,7 +1842,31 @@ const EditStaff = () => {
                         />
                       </Form.Group>
                     </Col>
-                    <Col md={4}>
+                    <Col md={3}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold opacity-75">Increment Base</Form.Label>
+                        <Select
+                          classNamePrefix="react-select"
+                          menuPortalTarget={document.body}
+                          styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                          name="increment_plan.base"
+                          options={[
+                            { value: 'basic', label: `Basic Salary (₹${basicSalary})` },
+                            { value: 'gross', label: `Gross Salary (₹${safeGrossSalary})` },
+                            { value: 'net', label: `Net Salary (₹${safeNetSalary})` }
+                          ]}
+                          value={values.increment_plan?.base ? { 
+                            value: values.increment_plan.base, 
+                            label: values.increment_plan.base === 'basic' ? `Basic Salary (₹${basicSalary})` : 
+                                   values.increment_plan.base === 'gross' ? `Gross Salary (₹${safeGrossSalary})` : 
+                                   `Net Salary (₹${safeNetSalary})` 
+                          } : { value: 'basic', label: `Basic Salary (₹${basicSalary})` }}
+                          onChange={(selected) => setFieldValue('increment_plan.base', selected ? selected.value : 'basic')}
+                          onBlur={() => formik.setFieldTouched('increment_plan.base', true)}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={3}>
                       <Form.Group>
                         <Form.Label className="small fw-bold opacity-75">Increment Type</Form.Label>
                         <Select
@@ -1647,7 +1884,7 @@ const EditStaff = () => {
                         />
                       </Form.Group>
                     </Col>
-                    <Col md={4}>
+                    <Col md={3}>
                       <Form.Group>
                         <Form.Label className="small fw-bold opacity-75">Increment Value</Form.Label>
                         <Form.Control
@@ -1662,11 +1899,47 @@ const EditStaff = () => {
                     </Col>
                   </Row>
                   {values.increment_plan?.scheduled_date && values.increment_plan?.value > 0 && (
-                    <div className="mt-3 p-2 bg-white border rounded small text-muted d-flex align-items-center gap-2">
-                      <CsLineIcons icon="info-hexagon" size="14" className="text-info" />
-                      <span>
-                        An increment of <strong>{values.increment_plan.type === 'percentage' ? `${values.increment_plan.value}%` : `₹${values.increment_plan.value}`}</strong> is scheduled for <strong>{new Date(values.increment_plan.scheduled_date).toLocaleDateString()}</strong>.
-                      </span>
+                    <div className="mt-3 p-3 bg-white border rounded small text-muted">
+                      <div className="d-flex align-items-center gap-2 mb-2">
+                        <CsLineIcons icon="info-hexagon" size="18" className="text-info" />
+                        <span className="fw-bold text-info">Increment Projection</span>
+                      </div>
+                      {(() => {
+                        const val = Number(values.increment_plan.value) || 0;
+                        const type = values.increment_plan.type || 'percentage';
+                        const base = values.increment_plan.base || 'basic';
+                        
+                        let baseAmount = 0;
+                        let baseLabel = '';
+                        if (base === 'basic') {
+                          baseAmount = basicSalary;
+                          baseLabel = 'Basic Salary';
+                        } else if (base === 'gross') {
+                          baseAmount = safeGrossSalary;
+                          baseLabel = 'Gross Salary';
+                        } else if (base === 'net') {
+                          baseAmount = safeNetSalary;
+                          baseLabel = 'Net Salary';
+                        }
+
+                        const incrementAmt = type === 'percentage' ? (baseAmount * val) / 100 : val;
+                        const newBaseAmount = baseAmount + incrementAmt;
+
+                        return (
+                          <div className="fw-medium">
+                            <div>An increment of <strong>{type === 'percentage' ? `${val}%` : `₹${val}`}</strong> calculated on <strong>{baseLabel} (₹{baseAmount.toLocaleString('en-IN')})</strong>.</div>
+                            <div className="mt-2 pt-2 border-top">
+                              Calculated Increment Amount: <strong className="text-success fs-6">₹{incrementAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                            </div>
+                            <div className="mt-1">
+                              Projected New {baseLabel}: <strong className="text-primary fs-6">₹{newBaseAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                            </div>
+                            <div className="mt-2 text-uppercase text-muted" style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}>
+                              Scheduled execution date: <strong>{new Date(values.increment_plan.scheduled_date).toLocaleDateString()}</strong>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
@@ -1701,29 +1974,7 @@ const EditStaff = () => {
                   </div>
                 </div>
 
-                <input
-                  type="file"
-                  id="photo-upload"
-                  className="d-none"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) handleFileChange('photo', file, setPhotoPreview);
-                  }}
-                  disabled={loading.submitting || uploadingFiles.photo}
-                />
-                <Button 
-                  as="label" 
-                  htmlFor="photo-upload" 
-                  className="custom-btn-outline px-4 mx-auto"
-                  style={{ maxWidth: 'fit-content' }}
-                  disabled={loading.submitting || uploadingFiles.photo}
-                >
-                  {uploadingFiles.photo ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
-                  {photoPreview ? 'Change Photo' : 'Upload Photo'}
-                </Button>
-                
-                <div className="mt-3 text-center">
+                <div className="text-center">
                   <Button
                     variant={faceDescriptor ? "success" : "outline-primary"}
                     className="custom-btn-outline px-4 mx-auto d-flex align-items-center justify-content-center gap-2"
@@ -2066,10 +2317,80 @@ const EditStaff = () => {
 
       {/* Face Capture Modal */}
       <Modal show={showFaceModal} onHide={() => setShowFaceModal(false)} centered size="lg">
-          <Modal.Header closeButton>
-            <Modal.Title>Face Capture</Modal.Title>
+          <Modal.Header closeButton className="border-0 pb-0">
+            <Modal.Title className="fw-bold">AI Face Capture Terminal</Modal.Title>
           </Modal.Header>
-          <Modal.Body className="d-flex flex-column align-items-center">
+          <Modal.Body className="d-flex flex-column align-items-center pt-2">
+            <style>{`
+              .modal-webcam-container {
+                position: relative;
+                width: 100%;
+                max-width: 640px;
+                aspect-ratio: 16/9;
+                margin: 0 auto;
+                background: #0f172a;
+                border-radius: 1.25rem;
+                overflow: hidden;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 0 0 4px rgba(35, 179, 244, 0.2);
+                border: 3px solid #e2e8f0;
+              }
+
+              .scanner-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(to bottom, rgba(35,179,244,0.15) 0%, rgba(35,179,244,0) 10%, rgba(35,179,244,0) 90%, rgba(35,179,244,0.15) 100%);
+                pointer-events: none;
+                z-index: 10;
+              }
+
+              @keyframes scan {
+                0% { top: 0%; }
+                50% { top: 100%; }
+                100% { top: 0%; }
+              }
+
+              .scanner-laser-line {
+                position: absolute;
+                left: 0;
+                width: 100%;
+                height: 3px;
+                background: rgba(35, 179, 244, 0.8);
+                box-shadow: 0 0 12px 4px rgba(35, 179, 244, 0.8);
+                z-index: 11;
+                pointer-events: none;
+                animation: scan 4s linear infinite;
+              }
+
+              .camera-status-text {
+                position: absolute;
+                bottom: 1.25rem;
+                left: 50%;
+                transform: translateX(-50%);
+                color: white;
+                padding: 0.45rem 1.5rem;
+                border-radius: 50px;
+                font-weight: 700;
+                font-size: 0.8rem;
+                letter-spacing: 0.08em;
+                z-index: 12;
+                white-space: nowrap;
+                backdrop-filter: blur(5px);
+                transition: all 0.3s ease;
+                text-transform: uppercase;
+              }
+              .camera-status-text.status-warning {
+                background: rgba(245, 158, 11, 0.8);
+                box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+              }
+              .camera-status-text.status-success {
+                background: rgba(16, 185, 129, 0.8);
+                box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+              }
+            `}</style>
+            
             {loading.faceModels ? (
               <div className="text-center py-5">
                 <Spinner animation="border" variant="primary" className="mb-3" />
@@ -2078,22 +2399,18 @@ const EditStaff = () => {
               </div>
             ) : (
               <>
-                <div
-                  style={{
-                    position: 'relative',
-                    width: '100%',
-                    maxWidth: '640px',
-                    aspectRatio: '4 / 3',
-                    margin: '0 auto',
-                    background: '#000',
-                  }}
-                >
+                <p className="text-muted text-center mb-4 small" style={{ maxWidth: '500px' }}>
+                  Position yourself in the center of the frame. Once the AI system successfully locks onto your face and displays <span className="text-success fw-bold">FACE DETECTED</span>, press the button below to capture.
+                </p>
+
+                <div className="modal-webcam-container">
                   <Webcam
                     ref={webcamRef}
                     audio={false}
                     screenshotFormat="image/jpeg"
                     videoConstraints={{
                       facingMode: 'user',
+                      aspectRatio: 16 / 9
                     }}
                     style={{
                       position: 'absolute',
@@ -2103,52 +2420,61 @@ const EditStaff = () => {
                       height: '100%',
                       objectFit: 'cover',
                       zIndex: 1,
-                      borderRadius: '8px',
+                      transform: 'scaleX(-1)',
                     }}
                   />
 
                   <canvas
                     id="faceCanvas"
                     width={640}
-                    height={480}
+                    height={360}
                     style={{
                       position: 'absolute',
                       top: 0,
                       left: 0,
                       width: '100%',
                       height: '100%',
-                      zIndex: 2,
+                      zIndex: 5,
                       pointerEvents: 'none',
+                      transform: 'scaleX(-1)',
                     }}
                   />
+
+                  <div className="scanner-laser-line" />
+                  <div className="scanner-overlay" />
+                  
+                  <div className={`camera-status-text ${faceBox ? 'status-success' : 'status-warning'}`}>
+                    {faceBox ? 'FACE DETECTED' : 'ALIGN YOUR FACE'}
+                  </div>
                 </div>
 
-                {!faceBox && (
-                  <Alert variant="warning" className="mt-3">
-                    <CsLineIcons icon="warning" className="me-2" />
-                    Please position your face in the frame
-                  </Alert>
-                )}
-
-                <Button variant="primary" className="mt-4" disabled={!faceBox || isCapturing} onClick={handleFaceCapture} style={{ minWidth: '150px' }}>
-                  {isCapturing ? (
-                    <>
-                      <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                      Capturing...
-                    </>
-                  ) : (
-                    <>
-                      <CsLineIcons icon="camera" className="me-2" />
-                      Capture Face
-                    </>
-                  )}
-                </Button>
+                <div className="mt-4 mb-2 text-center">
+                  <Button 
+                    variant={faceBox ? "primary" : "outline-secondary"} 
+                    className="custom-btn-outline px-5 py-2.5 d-flex align-items-center gap-2" 
+                    disabled={!faceBox || isCapturing} 
+                    onClick={handleFaceCapture}
+                    style={{ borderRadius: '50px' }}
+                  >
+                    {isCapturing ? (
+                      <>
+                        <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <CsLineIcons icon="camera" size="18" />
+                        Capture & Enroll
+                      </>
+                    )}
+                  </Button>
+                </div>
               </>
             )}
           </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowFaceModal(false)} disabled={isCapturing}>
-              Close
+          <Modal.Footer className="border-0 pt-0">
+            <Button variant="link" className="text-muted text-decoration-none" onClick={() => setShowFaceModal(false)} disabled={isCapturing}>
+              Cancel
             </Button>
           </Modal.Footer>
         </Modal>

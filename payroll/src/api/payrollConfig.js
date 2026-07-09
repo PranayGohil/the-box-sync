@@ -8,18 +8,25 @@ const authHeader = () => {
     };
 };
 
-export const getPayrollConfig = async () => {
-    const response = await axios.get(`${API_URL}/payroll-config`, authHeader());
+export const getPayrollConfig = async (branchId = null) => {
+    const url = branchId 
+        ? `${API_URL}/payroll-config?branch_id=${branchId}`
+        : `${API_URL}/payroll-config`;
+    const response = await axios.get(url, authHeader());
     return response.data;
 };
 
-export const updatePayrollConfig = async (configData) => {
-    const response = await axios.put(`${API_URL}/payroll-config`, configData, authHeader());
+export const updatePayrollConfig = async (configData, branchId = null) => {
+    const url = branchId 
+        ? `${API_URL}/payroll-config?branch_id=${branchId}`
+        : `${API_URL}/payroll-config`;
+    const response = await axios.put(url, configData, authHeader());
     return response.data;
 };
 
-export const getWordTemplateHtml = async (filepath = '') => {
-    const response = await axios.get(`${API_URL}/payroll-config/word-preview?filepath=${encodeURIComponent(filepath)}`, authHeader());
+export const getWordTemplateHtml = async (filepath = '', branchId = null) => {
+    const branchQuery = branchId ? `&branch_id=${branchId}` : '';
+    const response = await axios.get(`${API_URL}/payroll-config/word-preview?filepath=${encodeURIComponent(filepath)}${branchQuery}`, authHeader());
     return response.data;
 };
 

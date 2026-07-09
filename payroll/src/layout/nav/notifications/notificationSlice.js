@@ -100,8 +100,8 @@ export const fetchNotifications = () => async (dispatch) => {
     openFeedbacks.forEach(f => {
       notifications.push({
         id: `feedback-${f._id}`,
-        img: f.staff_id?.photo && !f.is_anonymous ? `${process.env.REACT_APP_UPLOAD_DIR}${f.staff_id.photo}` : '/img/profile/profile-5.webp',
-        detail: `New ${f.type} submitted: "${f.title}" by ${f.is_anonymous ? 'Anonymous Employee' : `${f.staff_id?.f_name || ''} ${f.staff_id?.l_name || ''}`}.`,
+        img: f.staff_id?.photo ? `${process.env.REACT_APP_UPLOAD_DIR}${f.staff_id.photo}` : '/img/profile/profile-5.webp',
+        detail: `New ${f.type} submitted: "${f.title}" by ${f.staff_id?.f_name || ''} ${f.staff_id?.l_name || ''}.`,
         link: '/feedbacks',
         date: formatDateSafely(f.createdAt),
       });
@@ -122,7 +122,7 @@ export const fetchNotifications = () => async (dispatch) => {
     pendingAssets.forEach(r => {
       notifications.push({
         id: `asset-${r._id}`,
-        img: '/img/profile/profile-2.webp',
+        img: r.staff_id?.photo ? `${process.env.REACT_APP_UPLOAD_DIR}${r.staff_id.photo}` : '/img/profile/profile-2.webp',
         detail: `New asset request: "${r.asset_name}" (${r.asset_type}) by ${r.staff_id?.f_name || ''} ${r.staff_id?.l_name || ''}.`,
         link: '/assets',
         date: formatDateSafely(r.createdAt),

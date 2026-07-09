@@ -732,7 +732,7 @@ const sendJoiningLetter = async (req, res) => {
     const defaultJoiningLetter = `<p><strong>Subject: Offer of Employment</strong></p><p><br></p><p>Dear [First Name],</p><p><br></p><p>We are thrilled to offer you the position of <strong>[Job Title]</strong> with our company. Your expected joining date is <strong>[Date of Joining]</strong>. Your starting basic salary will be <strong>[Basic Salary]</strong>.</p><p><br></p><p>Your Staff ID is: <strong>[Staff ID]</strong></p><p><br></p><p>Welcome to the team!</p><p><br></p><p>Sincerely,</p><p>Management</p>`;
 
     // 2. Fetch Payroll Config for template
-    const config = await PayrollConfig.findOne({ user_id: userId });
+    const config = await PayrollConfig.getEffectiveConfig(userId, staff.branch_id);
     const placeholders = compilePlaceholders(staff, config);
 
     // 3. Define PDF generation options from config
@@ -1029,7 +1029,7 @@ const submitResignation = async (req, res) => {
     }
 
     // Fetch Notice Period from PayrollConfig
-    const config = await PayrollConfig.findOne({ user_id: userId });
+    const config = await PayrollConfig.getEffectiveConfig(userId, staff.branch_id);
     const noticePeriodDays = config?.org_rules?.notice_period_days || 30;
 
     staff.resignation = {
@@ -1164,7 +1164,7 @@ const previewJoiningLetter = async (req, res) => {
       return res.status(404).json({ success: false, message: "Staff member not found" });
     }
 
-    const config = await PayrollConfig.findOne({ user_id: adminUserId }).lean();
+    const config = await PayrollConfig.getEffectiveConfig(adminUserId, staff.branch_id);
     
     let template = config?.document_templates?.joining_letter_template || `
       <p>Dear [First Name] [Last Name],</p>

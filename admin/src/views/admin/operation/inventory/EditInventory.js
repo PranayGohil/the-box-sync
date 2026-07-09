@@ -178,19 +178,19 @@ const EditInventory = () => {
     .add-inventory-inventory-container .btn:not(.btn-sm) {
       border-radius: 50px !important;
       font-weight: 600 !important;
-      padding: 10px 28px !important;
-      height: 48px !important;
+      padding: 6px 20px !important;
+      height: 38px !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
-      gap: 8px !important;
-      font-size: 0.95rem !important;
+      gap: 6px !important;
+      font-size: 0.88rem !important;
     }
     .add-inventory-inventory-container .btn.btn-sm {
       border-radius: 50px !important;
       font-weight: 600 !important;
       padding: 6px 16px !important;
-      height: 36px !important;
+      height: 34px !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;

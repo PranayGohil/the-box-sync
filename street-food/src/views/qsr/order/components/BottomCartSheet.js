@@ -109,6 +109,26 @@ const BottomCartSheet = ({
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            {/* Save Order */}
+            {showSave && (
+              <button
+                type="button"
+                style={{
+                  width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
+                  background: 'transparent', color: '#23b3f4', border: '1.5px solid #23b3f4',
+                  cursor: 'pointer', gridColumn: 'span 2'
+                }}
+                onClick={() => { setShowCartSheet(false); handleSaveOrder('Save'); }}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <CsLineIcons icon="spinner" size="14" className="spin" />
+                ) : (
+                  <CsLineIcons icon="save" size="14" />
+                )}{' '}
+                Save Order
+              </button>
+            )}
             {/* Cancel Order */}
             {orderId && orderStatus !== 'Paid' && (
               <button

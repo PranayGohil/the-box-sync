@@ -119,6 +119,7 @@ const addStaff = new Schema({
     type: { type: String, enum: ['percentage', 'flat'], default: 'percentage' },
     value: { type: Number, default: 0 },
     scheduled_date: { type: String, default: "" },
+    base: { type: String, enum: ['basic', 'gross', 'net'], default: 'basic' },
     is_applied: { type: Boolean, default: false }
   },
   photo: {
@@ -157,6 +158,14 @@ const addStaff = new Schema({
   },
   password: {
     type: String,
+    select: false,
+  },
+  otp: {
+    type: String,
+    select: false,
+  },
+  otp_expires: {
+    type: Date,
     select: false,
   },
   // ── Compliance & Bank Details ──────────────────────────────────────────────

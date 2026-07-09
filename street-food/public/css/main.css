@@ -555,19 +555,23 @@
   }
   .pos-menu-filters {
     padding: 8px 10px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
   }
   .pos-categories-btn {
     order: 1;
-  }
-  .pos-search-wrap {
-    order: 3;
-    width: 100%;
-    margin-top: 8px;
+    padding: 0.3rem 0.75rem !important;
   }
   .pos-item-count {
     order: 2;
-    margin-left: auto;
+    margin-left: 0;
+  }
+  .pos-search-wrap {
+    order: 3;
+    width: auto;
+    margin-top: 0;
+    flex: 1;
   }
 }
 

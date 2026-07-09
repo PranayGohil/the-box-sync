@@ -87,7 +87,7 @@ const EditInventory = () => {
           headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         toast.success('Inventory modified and synchronized successfully!');
-        history.push('/operations/inventory-history');
+        history.push('/inventory');
       } catch (err) {
         toast.error(err.response?.data?.message || 'Update failed');
       } finally {
@@ -178,19 +178,19 @@ const EditInventory = () => {
     .add-inventory-inventory-container .btn:not(.btn-sm) {
       border-radius: 50px !important;
       font-weight: 600 !important;
-      padding: 10px 28px !important;
-      height: 48px !important;
+      padding: 6px 20px !important;
+      height: 38px !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
-      gap: 8px !important;
-      font-size: 0.95rem !important;
+      gap: 6px !important;
+      font-size: 0.88rem !important;
     }
     .add-inventory-inventory-container .btn.btn-sm {
       border-radius: 50px !important;
       font-weight: 600 !important;
       padding: 6px 16px !important;
-      height: 36px !important;
+      height: 34px !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
@@ -265,11 +265,11 @@ const EditInventory = () => {
           <Row className="g-0 align-items-center">
             <Col xs="auto" className="me-auto">
               <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
-              <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations', text: 'Operations' }, { to: 'operations/edit-inventory', title: 'Edit' }]} />
+              <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'inventory', text: 'Inventory Management' }, { to: '', title: 'Edit' }]} />
             </Col>
             <Col xs="auto" className="d-none d-lg-block">
               <Button 
-                onClick={() => history.goBack()} 
+                onClick={() => history.push('/inventory')} 
                 className="manage-menu-custom-btn-outline shadow-sm px-4 py-2 d-flex align-items-center"
                 style={{ borderRadius: '50px', border: '2px solid #23b3f4', color: '#23b3f4', fontWeight: '700' }}
               >
@@ -279,7 +279,7 @@ const EditInventory = () => {
           </Row>
           <div className="mt-2 d-lg-none d-flex justify-content-start">
              <Button 
-                onClick={() => history.goBack()} 
+                onClick={() => history.push('/inventory')} 
                 className="manage-menu-custom-btn-outline shadow-sm px-4 py-2 d-flex align-items-center"
                 style={{ borderRadius: '50px', border: '2px solid #23b3f4', color: '#23b3f4', fontWeight: '700' }}
               >

@@ -10,12 +10,14 @@ router.get('/', authMiddleware, async (req, res) => {
       ? req.user.user_id
       : String(req.user?._id || req.user);
     
-    let policy = await LeavePolicy.findOne({ user_id: userId });
+    const branchId = req.query.branch_id && req.query.branch_id !== 'null' ? req.query.branch_id : null;
+    let policy = await LeavePolicy.findOne({ user_id: userId, branch_id: branchId });
     
     // Create default if doesn't exist
     if (!policy) {
       policy = await LeavePolicy.create({
         user_id: userId,
+        branch_id: branchId,
         leave_types: []
       });
     }
@@ -32,13 +34,14 @@ router.put('/', authMiddleware, async (req, res) => {
   try {
     const userId = String(req.user._id || req.user);
     const { leave_types } = req.body;
+    const branchId = req.query.branch_id && req.query.branch_id !== 'null' ? req.query.branch_id : null;
 
     if (!leave_types || !Array.isArray(leave_types)) {
       return res.status(400).json({ success: false, message: "leave_types array is required" });
     }
 
     const updated = await LeavePolicy.findOneAndUpdate(
-      { user_id: userId },
+      { user_id: userId, branch_id: branchId },
       { leave_types },
       { new: true, upsert: true }
     );

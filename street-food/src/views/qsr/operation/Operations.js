@@ -17,6 +17,9 @@ import AddDishes from './menu/AddDishes';
 import QRforMenu from './menu/QRforMenu';
 
 import FinancialReport from './FinancialReport';
+import InventoryHistory from './inventory/InventoryHistory';
+import InventoryDetails from './inventory/InventoryDetails';
+import EditInventory from './inventory/EditInventory';
 
 const NavContent = () => {
   const { activePlans } = useContext(AuthContext);
@@ -94,12 +97,30 @@ const NavContent = () => {
               <i className="me-2 sw-3 d-inline-block" />
               <span className="align-middle">Add Dish</span>
             </Nav.Link>
-            {activePlans?.includes('Scan For Menu') && (
-              <Nav.Link as={NavLink} to="/operations/qr-for-menu" className="px-0">
-                <i className="me-2 sw-3 d-inline-block" />
-                <span className="align-middle">QR for Menu</span>
-              </Nav.Link>
-            )}
+            <Nav.Link as={NavLink} to="/operations/qr-for-menu" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">QR for Menu</span>
+            </Nav.Link>
+          </div>
+        </div>
+
+        <div className="mb-1">
+          <div className="section-header">
+            <CsLineIcons icon="boxes" size="17" />
+            <span className="align-middle">Inventory</span>
+          </div>
+          <div className="sub-menu-container">
+            <Nav.Link as={NavLink} to="/inventory" className="px-0" isActive={(match, location) => {
+              const inventoryPaths = [
+                '/operations/inventory-history',
+                '/operations/edit-inventory',
+                '/operations/inventory-details'
+              ];
+              return location.pathname.startsWith('/inventory') || inventoryPaths.some(p => location.pathname.startsWith(p));
+            }}>
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Inventory Management</span>
+            </Nav.Link>
           </div>
         </div>
 
@@ -122,22 +143,33 @@ const NavContent = () => {
 
 const MobileBottomNav = () => {
   const { pathname } = useLocation();
+  const { attrMobile, navClasses } = useSelector((state) => state.menu);
+  const isMenuOpen = attrMobile || (navClasses && navClasses['mobile-side-in']);
 
   const navItems = [
     { label: 'Order', icon: 'cart', to: '/operations/order-history' },
     { label: 'Menu', icon: 'book-open', to: '/operations/manage-menu' },
+    { label: 'Inventory', icon: 'boxes', to: '/inventory' },
     { label: 'Report', icon: 'file-text', to: '/operations/financial-report' },
   ];
 
   return (
-    <div className="bottom-nav-wrapper d-lg-none">
+    <div
+      className="bottom-nav-wrapper d-lg-none"
+      style={{
+        opacity: isMenuOpen ? 0 : 1,
+        pointerEvents: isMenuOpen ? 'none' : 'auto',
+        visibility: isMenuOpen ? 'hidden' : 'visible',
+        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+      }}
+    >
       <style>{`
         .bottom-nav-wrapper {
           position: fixed;
           bottom: 20px;
           left: 50%;
           transform: translateX(-50%);
-          z-index: 1050;
+          z-index: 990;
           width: 95%;
           max-width: 500px;
           display: flex;
@@ -232,25 +264,12 @@ const Operations = () => {
 
             <Route exact path="/operations/manage-menu" render={() => <ManageMenu />} />
             <Route exact path="/operations/add-dish" render={() => <AddDishes />} />
-            <Route
-              exact
-              path="/operations/qr-for-menu"
-              render={() => (
-                <>
-                  {activePlans?.includes('Scan For Menu') ? (
-                    <QRforMenu />
-                  ) : (
-                    <div className="text-center p-5">
-                      <CsLineIcons icon="warning-hexagon" className="text-warning mb-3" size="50" />
-                      <h4>Access Restricted</h4>
-                      <p className="text-muted">You need the 'Scan For Menu' plan to access this feature.</p>
-                    </div>
-                  )}
-                </>
-              )}
-            />
+            <Route exact path="/operations/qr-for-menu" render={() => <QRforMenu />} />
 
             <Route exact path="/operations/financial-report" render={() => <FinancialReport />} />
+            <Route exact path="/operations/inventory-history" render={() => <InventoryHistory />} />
+            <Route exact path="/operations/inventory-details/:id" render={() => <InventoryDetails />} />
+            <Route exact path="/operations/edit-inventory/:id" render={() => <EditInventory />} />
           </Switch>
         </Col>
       </Row>

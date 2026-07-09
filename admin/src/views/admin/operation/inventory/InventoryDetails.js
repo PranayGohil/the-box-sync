@@ -73,22 +73,23 @@ const InventoryDetails = () => {
     .inventory-details-details-container .btn:hover {
       transform: translateY(-2px) !important;
     }
-    .inventory-details-details-container .btn:not(.btn-sm) {
+    .inventory-details-details-container .btn:not(.btn-sm),
+    .inventory-delete-modal-content .btn {
       border-radius: 50px !important;
       font-weight: 600 !important;
-      padding: 10px 28px !important;
-      height: 48px !important;
+      padding: 6px 20px !important;
+      height: 38px !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
-      gap: 8px !important;
-      font-size: 0.95rem !important;
+      gap: 6px !important;
+      font-size: 0.88rem !important;
     }
     .inventory-details-details-container .btn.btn-sm {
       border-radius: 50px !important;
       font-weight: 600 !important;
       padding: 6px 16px !important;
-      height: 36px !important;
+      height: 34px !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
@@ -118,17 +119,20 @@ const InventoryDetails = () => {
     .inventory-details-details-container .btn-outline-primary:hover svg {
       stroke: #ffffff !important;
     }
-    .inventory-details-details-container .btn-outline-danger {
+    .inventory-details-details-container .btn-outline-danger,
+    .inventory-delete-modal-content .btn-outline-danger {
       border: 1px solid #ef4444 !important;
       color: #ef4444 !important;
       background-color: #ffffff !important;
     }
-    .inventory-details-details-container .btn-outline-danger:hover {
+    .inventory-details-details-container .btn-outline-danger:hover,
+    .inventory-delete-modal-content .btn-outline-danger:hover {
       background-color: #ef4444 !important;
       color: #ffffff !important;
       box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
     }
-    .inventory-details-details-container .btn-outline-danger:hover svg {
+    .inventory-details-details-container .btn-outline-danger:hover svg,
+    .inventory-delete-modal-content .btn-outline-danger:hover svg {
       stroke: #ffffff !important;
     }
     .inventory-details-details-container .btn-outline-warning {
@@ -144,17 +148,20 @@ const InventoryDetails = () => {
     .inventory-details-details-container .btn-outline-warning:hover svg {
       stroke: #ffffff !important;
     }
-    .inventory-details-details-container .btn-outline-secondary {
+    .inventory-details-details-container .btn-outline-secondary,
+    .inventory-delete-modal-content .btn-outline-secondary {
       border: 1px solid #64748b !important;
       color: #64748b !important;
       background-color: #ffffff !important;
     }
-    .inventory-details-details-container .btn-outline-secondary:hover {
+    .inventory-details-details-container .btn-outline-secondary:hover,
+    .inventory-delete-modal-content .btn-outline-secondary:hover {
       background-color: #64748b !important;
       color: #ffffff !important;
       box-shadow: 0 4px 12px rgba(100, 116, 139, 0.25) !important;
     }
-    .inventory-details-details-container .btn-outline-secondary:hover svg {
+    .inventory-details-details-container .btn-outline-secondary:hover svg,
+    .inventory-delete-modal-content .btn-outline-secondary:hover svg {
       stroke: #ffffff !important;
     }
 
@@ -400,7 +407,7 @@ const InventoryDetails = () => {
         )}
       </div>
 
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered backdrop="static">
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered backdrop="static" contentClassName="inventory-delete-modal-content">
         <Modal.Header closeButton className="border-0 pb-0">
           <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>
             Confirm Deletion
@@ -412,26 +419,25 @@ const InventoryDetails = () => {
               <CsLineIcons icon="bin" size="24" style={{ color: '#cf2637' }} />
             </div>
             <div>
-              <p className="mb-0 fw-bold text-dark">Permanently delete this record?</p>
-              <p className="mb-1 text-muted small">This clears the inventory log from your historical logs.</p>
-              <p className="mb-0 text-success small fw-semibold">Don't worry, your physical stock quantities remain perfectly safe.</p>
+              <p className="mb-1 fw-bold text-dark">Permanently delete this record?</p>
+              <p className="mb-0 text-muted small">This log will be cleared from your history without affecting your physical stock quantities.</p>
             </div>
           </div>
         </Modal.Body>
         <Modal.Footer className="border-0 pt-0">
           <Button 
-            variant="light" 
+            variant="outline-secondary" 
             onClick={() => setShowDeleteModal(false)} 
             disabled={deleting}
-            className="rounded-pill px-4 fw-bold inventory-details-btn-action text-muted border-0"
+            className="rounded-pill px-4 fw-bold border-2"
           >
             Cancel
           </Button>
           <Button 
-            variant="danger" 
+            variant="outline-danger" 
             onClick={handleDelete} 
             disabled={deleting}
-            className="rounded-pill px-4 fw-bold shadow-sm inventory-details-btn-action text-danger border-danger"
+            className="rounded-pill px-4 fw-bold border-2"
           >
             {deleting ? (
               <>
@@ -440,7 +446,7 @@ const InventoryDetails = () => {
               </>
             ) : (
               <div className="d-flex align-items-center">
-                <CsLineIcons icon="bin" size="16" className="me-2" stroke="currentColor" />
+                <CsLineIcons icon="bin" size="14" className="me-2" />
                 Delete
               </div>
             )}

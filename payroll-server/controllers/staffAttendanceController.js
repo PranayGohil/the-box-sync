@@ -224,7 +224,7 @@ const getAttendanceByStaff = async (req, res) => {
             .sort({ date: -1 })
             .lean();
 
-        const payrollConfig = await PayrollConfig.findOne({ user_id: adminUserId }).lean();
+        const payrollConfig = await PayrollConfig.getEffectiveConfig(adminUserId, staff.branch_id);
         const globalOffs = payrollConfig?.global_weekly_offs || [];
         
         const weekOffs = generateWeekOffs(staff, globalOffs, attendance);
@@ -276,7 +276,7 @@ const getAttendanceSummary = async (req, res) => {
         }
 
         const records = await StaffAttendance.find({ staff_id: staffId }).lean();
-        const config = await PayrollConfig.findOne({ user_id: adminUserId }).lean();
+        const config = await PayrollConfig.getEffectiveConfig(adminUserId, staff.branch_id);
 
         const present = records.filter((r) => r.status === "present").length;
         const absent = records.filter((r) => r.status === "absent").length;
@@ -396,9 +396,8 @@ const checkIn = async (req, res) => {
         if (!record.wfh_tracking) record.wfh_tracking = {};
         record.wfh_tracking.is_wfh = !!is_wfh;
 
-        // ── Compute late_by_minutes using PayrollConfig ──────────────────
         try {
-            const config = await PayrollConfig.findOne({ user_id: staff.user_id }).lean();
+            const config = await PayrollConfig.getEffectiveConfig(staff.user_id, staff.branch_id);
             if (config && config.org_rules && record.in_time) {
                 // Only set late on the first check-in of the day (i.e. the daily in_time)
                 const isFirstCheckIn = (record.sessions && record.sessions.length <= 1);
@@ -469,9 +468,8 @@ const checkOut = async (req, res) => {
             record.out_time = out_time;
         }
 
-        // ── Compute overtime_hours using PayrollConfig ───────────────────
         try {
-            const config = await PayrollConfig.findOne({ user_id: staff.user_id }).lean();
+            const config = await PayrollConfig.getEffectiveConfig(staff.user_id, staff.branch_id);
             if (config && config.org_rules && record.out_time) {
                 record.overtime_hours = computeOvertimeHours(record.out_time, config.org_rules);
             }

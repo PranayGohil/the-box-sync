@@ -198,10 +198,9 @@ const previewPayroll = async (req, res) => {
                 .lean();
         }
 
-        const globalConfig = await PayrollConfig.findOne({ user_id }).lean();
-
         const previews = await Promise.all(
             staffList.map(async (staff) => {
+                const globalConfig = await PayrollConfig.getEffectiveConfig(user_id, staff.branch_id);
                 const { leave_summary, present_days, absent_days, total_ot } = await getAttendanceCounts(staff._id, parseInt(month), parseInt(year));
 
                 // Find active salary advances for this staff to auto-deduct
@@ -289,17 +288,16 @@ const generatePayroll = async (req, res) => {
             if (!staff) return res.status(404).json({ success: false, message: "Staff not found" });
             staffList = [staff];
         } else {
-            staffList = await Staff.find({ user_id }).select("_id staff_id f_name l_name salary salary_structure overtime_rate position bank_account uan_number pan_number").lean();
+            staffList = await Staff.find({ user_id }).select("_id staff_id f_name l_name salary salary_structure overtime_rate position bank_account uan_number pan_number branch_id").lean();
         }
 
         if (staffList.length === 0) return res.status(404).json({ success: false, message: "No staff found" });
-
-        const globalConfig = await PayrollConfig.findOne({ user_id }).lean();
 
         const results = { created: [], updated: [], errors: [] };
 
         for (const staff of staffList) {
             try {
+                const globalConfig = await PayrollConfig.getEffectiveConfig(user_id, staff.branch_id);
                 const sid = staff._id.toString();
 
                 const { leave_summary, present_days, absent_days, total_ot } = await getAttendanceCounts(staff._id, month, year);

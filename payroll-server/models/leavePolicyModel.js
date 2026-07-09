@@ -6,7 +6,11 @@ const leavePolicySchema = new Schema(
     user_id: {
       type: String,
       required: true,
-      unique: true, // One policy per tenant
+    },
+    branch_id: {
+      type: Schema.Types.ObjectId,
+      ref: "branch",
+      default: null,
     },
     leave_types: [
       {

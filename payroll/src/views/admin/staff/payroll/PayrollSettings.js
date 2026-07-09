@@ -182,6 +182,9 @@ const PayrollSettings = () => {
     const [originalConfig, setOriginalConfig] = useState(null);
     const [isDirty, setIsDirty] = useState(false);
     const [uploadingWord, setUploadingWord] = useState(false);
+    const [branches, setBranches] = useState([]);
+    const [selectedBranch, setSelectedBranch] = useState(null);
+    const [allConfigs, setAllConfigs] = useState([]);
 
     // States for Attendance / Wi-Fi IP restrictions
     const [adminPublicIp, setAdminPublicIp] = useState('');
@@ -299,10 +302,38 @@ const PayrollSettings = () => {
         }
     };
 
-    const fetchConfig = async () => {
+    const fetchBranches = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.get(`${process.env.REACT_APP_API}/branch/all`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.data && res.data.success) {
+                setBranches(res.data.data || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch branches', err);
+        }
+    };
+
+    const fetchAllConfigs = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.get(`${process.env.REACT_APP_API}/payroll-config?all=true`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.data && res.data.success) {
+                setAllConfigs(res.data.data || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch all configurations', err);
+        }
+    };
+
+    const fetchConfig = async (branchId = null) => {
         try {
             setLoading(true);
-            const res = await getPayrollConfig();
+            const res = await getPayrollConfig(branchId);
             if (res.success && res.data) {
                 const statutory = res.data.statutory_config || {};
                 if (statutory.pf?.is_mandatory) setExpandEPF(true);
@@ -346,7 +377,11 @@ const PayrollSettings = () => {
         }
     };
 
-    useEffect(() => { fetchConfig(); }, []);
+    useEffect(() => {
+        fetchBranches();
+        fetchConfig();
+        fetchAllConfigs();
+    }, []);
 
     useEffect(() => {
         axios.get(`${process.env.REACT_APP_API}/kiosk/me`, {
@@ -432,11 +467,12 @@ const PayrollSettings = () => {
     const handleSave = async () => {
         try {
             setSaving(true);
-            const res = await updatePayrollConfig(config);
+            const res = await updatePayrollConfig(config, selectedBranch?.value || null);
             if (res.success) {
                 toast.success('Settings updated successfully');
                 setOriginalConfig(JSON.parse(JSON.stringify(config)));
                 setIsDirty(false);
+                fetchAllConfigs();
             } else {
                 toast.error(res.message || 'Failed to update settings');
             }
@@ -665,7 +701,31 @@ const PayrollSettings = () => {
                         <Card.Body className="p-4">
                             <h5 className="fw-bold mb-4 text-primary">Organizational Rules</h5>
                             <Row className="g-4">
-                                <Col md="6">
+                                {branches.length > 0 && (
+                                    <Col md="4">
+                                        <Form.Group>
+                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Select Branch</Form.Label>
+                                            <Select
+                                                classNamePrefix="react-select"
+                                                options={[
+                                                    { value: null, label: 'Global / All Branches' },
+                                                    ...branches.map(b => ({ value: b._id, label: `${b.name} Branch` }))
+                                                ]}
+                                                value={selectedBranch || { value: null, label: 'Global / All Branches' }}
+                                                onChange={(selected) => {
+                                                    if (isDirty && !window.confirm('You have unsaved changes. Switching branches will discard them. Proceed?')) {
+                                                        return;
+                                                    }
+                                                    setSelectedBranch(selected);
+                                                    fetchConfig(selected ? selected.value : null);
+                                                }}
+                                                placeholder="Select Branch"
+                                                className="react-select-premium shadow-sm"
+                                            />
+                                        </Form.Group>
+                                    </Col>
+                                )}
+                                <Col md={branches.length > 0 ? "4" : "6"}>
                                     <Form.Group>
                                         <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Leave Cycle Start Month</Form.Label>
                                         <Select
@@ -681,7 +741,7 @@ const PayrollSettings = () => {
                                         />
                                     </Form.Group>
                                 </Col>
-                                <Col md="6">
+                                <Col md={branches.length > 0 ? "4" : "6"}>
                                     <Form.Group>
                                         <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Weekly Off Days</Form.Label>
                                         <div className="d-flex flex-wrap gap-2 mt-1">
@@ -700,6 +760,35 @@ const PayrollSettings = () => {
                                         </div>
                                     </Form.Group>
                                 </Col>
+                                {allConfigs.length > 0 && (
+                                    <Col xs="12" className="mt-4">
+                                        <hr className="my-3 opacity-50" />
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-3">Branch Weekly Off Overview</Form.Label>
+                                        <Row className="g-3">
+                                            {allConfigs.map(c => {
+                                                const branch = branches.find(b => b._id === c.branch_id);
+                                                const branchName = branch ? `${branch.name} Branch` : 'Global / All Branches';
+                                                
+                                                let weekOffsStr = '';
+                                                if (c.global_weekly_offs && c.global_weekly_offs.length > 0) {
+                                                    weekOffsStr = c.global_weekly_offs.map(wo => wo.day).join(', ');
+                                                } else if (c.org_rules?.weekly_off_days) {
+                                                    weekOffsStr = c.org_rules.weekly_off_days.map(d => WEEK_DAYS.find(wd => wd.value === d)?.label).filter(Boolean).join(', ');
+                                                }
+                                                if (!weekOffsStr) weekOffsStr = 'None';
+
+                                                return (
+                                                    <Col key={c._id} xs="12" sm="6" md="4">
+                                                        <div className="d-flex justify-content-between align-items-center p-3 border rounded bg-white shadow-sm" style={{ borderRadius: '12px' }}>
+                                                            <span className="fw-bold text-dark small">{branchName}</span>
+                                                            <Badge bg="info" className="py-1.5 px-2.5 rounded-pill text-white fw-bold">{weekOffsStr}</Badge>
+                                                        </div>
+                                                    </Col>
+                                                );
+                                            })}
+                                        </Row>
+                                    </Col>
+                                )}
                             </Row>
                         </Card.Body>
                     </Card>

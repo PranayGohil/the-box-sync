@@ -1827,6 +1827,13 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
+    if (status === "Cancelled" && order.order_status === "Save") {
+      await Order.findByIdAndDelete(orderId);
+      // broadcast update
+      broadcastOrderUpdate(req, { ...order.toObject(), order_status: "Cancelled", deleted: true });
+      return res.json({ success: true, message: "Order deleted", order: { ...order.toObject(), order_status: "Cancelled", deleted: true } });
+    }
+
     order.order_status = status;
     if (status === "KOT") {
       const targetStatus = await getTargetItemStatus(order.user_id);

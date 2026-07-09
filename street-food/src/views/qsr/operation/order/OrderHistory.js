@@ -72,6 +72,10 @@ const OrderHistory = () => {
     toDate: '',
   });
 
+  // Delete Modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
+
   // Ref to prevent infinite loops
   const fetchRef = useRef(false);
 
@@ -152,6 +156,32 @@ const OrderHistory = () => {
     }
   };
 
+  const handleDeleteOrder = async () => {
+    if (!orderToDelete) return;
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const res = await axios.put(
+        `${process.env.REACT_APP_API}/order/update-status/${orderToDelete}`,
+        { status: 'Cancelled' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.success) {
+        toast.success('Saved order deleted successfully');
+        fetchOrders();
+      } else {
+        toast.error(res.data.message || 'Failed to delete order');
+      }
+    } catch (err) {
+      console.error('Delete order error:', err);
+      toast.error('Error deleting order');
+    } finally {
+      setLoading(false);
+      setShowDeleteModal(false);
+      setOrderToDelete(null);
+    }
+  };
+
   const handlePageSizeChange = (newPageSize) => {
     setPageSize(newPageSize);
     setPageIndex(0);
@@ -206,8 +236,6 @@ const OrderHistory = () => {
 
   const getActiveFilterCount = () => {
     let count = 0;
-    if (filters.orderStatus) count++;
-    if (filters.orderType) count++;
     if (filters.fromDate) count++;
     if (filters.toDate) count++;
     if (searchTerm) count++;
@@ -274,7 +302,7 @@ const OrderHistory = () => {
       sheetData.push([]);
       sheetData.push([]);
       const tableHeaderRowIndex = sheetData.length;
-      sheetData.push(['Order No', 'Date & Time', 'Customer', 'Type', 'Table Area', 'Source', 'Payment Mode', 'Total Amount', 'Status']);
+      sheetData.push(['Order No', 'Date & Time', 'Customer', 'Table Area', 'Payment Mode', 'Total Amount', 'Status']);
       orders.forEach((order) => {
         const orderDate = new Date(order.order_date);
         const tableDetails = order.table_area ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}` : (order.table_no ? `T${order.table_no}` : (order.token ? `Token ${order.token}` : 'N/A'));
@@ -282,9 +310,7 @@ const OrderHistory = () => {
           order.order_no || order._id || '',
           format(orderDate, 'dd-MM-yyyy HH:mm'),
           order.customer_name || 'Guest',
-          order.order_type || 'N/A',
           tableDetails,
-          order.order_source || 'N/A',
           order.payment_type || 'N/A',
           order.total_amount || 0,
           order.order_status || 'N/A',
@@ -433,7 +459,7 @@ const OrderHistory = () => {
       setExportProgress(70);
       autoTable(doc, {
         startY: yPosition,
-        head: [['Order No', 'Date & Time', 'Customer', 'Type', 'Table Area', 'Source', 'Payment Mode', 'Total Amount', 'Status']],
+        head: [['Order No', 'Date & Time', 'Customer', 'Table Area', 'Payment Mode', 'Total Amount', 'Status']],
         body: orders.map((order) => {
           const orderDate = new Date(order.order_date);
           const tableDetails = order.table_area ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}` : (order.table_no ? `T${order.table_no}` : (order.token ? `Token ${order.token}` : 'N/A'));
@@ -441,9 +467,7 @@ const OrderHistory = () => {
             order.order_no || (order._id || '').substring(18),
             format(orderDate, 'dd-MM-yy HH:mm'),
             (order.customer_name || 'Guest').substring(0, 15),
-            order.order_type || 'N/A',
             tableDetails,
-            order.order_source || 'N/A',
             order.payment_type || 'N/A',
             formatCurrencyPDF(order.total_amount),
             order.order_status || 'N/A',
@@ -534,32 +558,6 @@ const OrderHistory = () => {
         Cell: ({ value }) => value || 'Guest',
       },
       {
-        Header: 'Type',
-        accessor: 'order_type',
-        headerClassName: 'text-small text-uppercase w-15',
-        sortable: true,
-        isSorted: sortBy === 'order_type',
-        isSortedDesc: sortBy === 'order_type' && sortOrder === 'desc',
-        Cell: ({ value }) => (
-          <Badge bg={value === 'Dine In' ? 'primary' : value === 'Takeaway' ? 'warning' : value === 'Delivery' ? 'success' : 'secondary'} className="rounded-pill px-3">
-            {value}
-          </Badge>
-        ),
-      },
-      {
-        Header: 'Source',
-        accessor: 'order_source',
-        headerClassName: 'text-small text-uppercase w-15',
-        sortable: true,
-        isSorted: sortBy === 'order_source',
-        isSortedDesc: sortBy === 'order_source' && sortOrder === 'desc',
-        Cell: ({ value }) => (
-          <Badge bg={value === 'Manager' ? 'info' : value === 'Captain' ? 'primary' : value === 'QSR' ? 'secondary' : 'dark'} className="rounded-pill px-3">
-            {value}
-          </Badge>
-        ),
-      },
-      {
         Header: 'Amount',
         accessor: 'total_amount',
         headerClassName: 'text-small text-uppercase w-15',
@@ -576,7 +574,7 @@ const OrderHistory = () => {
         isSorted: sortBy === 'order_status',
         isSortedDesc: sortBy === 'order_status' && sortOrder === 'desc',
         Cell: ({ value }) => (
-          <Badge bg={value === 'Paid' || value === 'Save' || value === 'Completed' ? 'success' : value === 'KOT' ? 'warning' : value === 'Cancelled' ? 'danger' : 'secondary'} className="rounded-pill px-3">
+          <Badge bg={value === 'Save' ? 'warning' : value === 'Paid' || value === 'Completed' ? 'success' : value === 'KOT' ? 'warning' : value === 'Cancelled' ? 'danger' : 'secondary'} className="rounded-pill px-3">
             {value}
           </Badge>
         ),
@@ -588,25 +586,53 @@ const OrderHistory = () => {
         disableSortBy: true,
         Cell: ({ row }) => (
           <div className="d-flex justify-content-center gap-2">
-            <Button
-              variant="outline-primary"
-              size="sm"
-              title="View"
-              className="btn-icon btn-icon-only"
-              onClick={() => history.push(`/operations/order-details/${row.original.id}`)}
-            >
-              <CsLineIcons icon="eye" size="15" />
-            </Button>
-            <Button
-              variant="outline-secondary"
-              size="sm"
-              title="Print"
-              className="btn-icon btn-icon-only"
-              onClick={() => handlePrint(row.original.id)}
-              disabled={printing[row.original.id]}
-            >
-              {printing[row.original.id] ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="print" size="15" />}
-            </Button>
+            {row.original.order_status === "Save" ? (
+              <>
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  title="Edit Order"
+                  className="btn-icon btn-icon-only"
+                  onClick={() => history.push(`/order/new?orderId=${row.original.id}&mode=edit`)}
+                >
+                  <CsLineIcons icon="edit" size="15" />
+                </Button>
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  title="Delete Order"
+                  className="btn-icon btn-icon-only"
+                  onClick={() => {
+                    setOrderToDelete(row.original.id);
+                    setShowDeleteModal(true);
+                  }}
+                >
+                  <CsLineIcons icon="bin" size="15" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  title="View"
+                  className="btn-icon btn-icon-only"
+                  onClick={() => history.push(`/operations/order-details/${row.original.id}`)}
+                >
+                  <CsLineIcons icon="eye" size="15" />
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  title="Print"
+                  className="btn-icon btn-icon-only"
+                  onClick={() => handlePrint(row.original.id)}
+                  disabled={printing[row.original.id]}
+                >
+                  {printing[row.original.id] ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="print" size="15" />}
+                </Button>
+              </>
+            )}
           </div>
         ),
       },
@@ -751,7 +777,7 @@ const OrderHistory = () => {
               <div>
                 <Row className="g-3">
                   {/* Date Range Filter */}
-                  <Col xs="6" sm="6" md="3">
+                  <Col xs="12" sm="6">
                     <Form.Label className="small fw-bold text-muted mb-1">From</Form.Label>
                     <Form.Control
                       type="date"
@@ -761,7 +787,7 @@ const OrderHistory = () => {
                       style={{ height: '44px', fontSize: '14px' }}
                     />
                   </Col>
-                  <Col xs="6" sm="6" md="3">
+                  <Col xs="12" sm="6">
                     <Form.Label className="small fw-bold text-muted mb-1">To</Form.Label>
                     <Form.Control
                       type="date"
@@ -770,53 +796,6 @@ const OrderHistory = () => {
                       className="rounded-pill px-3 border-0 shadow-sm"
                       style={{ height: '44px', fontSize: '14px' }}
                     />
-                  </Col>
-
-                  {/* Order Status Filter */}
-                  <Col xs="12" sm="6" md="3">
-                    <Form.Label className="small fw-bold text-muted mb-1">Status</Form.Label>
-                    <Dropdown className="w-100">
-                      <Dropdown.Toggle
-                        variant="white"
-                        className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-3"
-                        style={{ height: '44px', fontSize: '14px' }}
-                      >
-                        {filters.orderStatus || 'All Status'}
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu
-                        className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
-                        style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
-                      >
-                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', '')}>All Status</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Paid')}>Paid</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Save')}>Save</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'KOT')}>KOT</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Cancelled')}>Cancelled</Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  </Col>
-
-                  {/* Order Type Filter */}
-                  <Col xs="12" sm="6" md="3">
-                    <Form.Label className="small fw-bold text-muted mb-1">Type</Form.Label>
-                    <Dropdown className="w-100">
-                      <Dropdown.Toggle
-                        variant="white"
-                        className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-3"
-                        style={{ height: '44px', fontSize: '14px' }}
-                      >
-                        {filters.orderType || 'All Types'}
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu
-                        className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
-                        style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
-                      >
-                        <Dropdown.Item onClick={() => handleFilterChange('orderType', '')}>All Types</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Dine In')}>Dine In</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Takeaway')}>Takeaway</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Delivery')}>Delivery</Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
                   </Col>
                 </Row>
               </div>
@@ -864,7 +843,7 @@ const OrderHistory = () => {
                           <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd MMM yyyy, HH:mm')}</div>
                         </div>
                         <Badge
-                          bg={order.order_status === 'Paid' || order.order_status === 'Completed' || order.order_status === 'Save' ? 'success' : order.order_status === 'KOT' ? 'warning' : order.order_status === 'Cancelled' ? 'danger' : 'secondary'}
+                          bg={order.order_status === 'Save' ? 'warning' : order.order_status === 'Paid' || order.order_status === 'Completed' ? 'success' : order.order_status === 'KOT' ? 'warning' : order.order_status === 'Cancelled' ? 'danger' : 'secondary'}
                           className="rounded-pill px-3 py-1"
                         >
                           {order.order_status}
@@ -872,13 +851,7 @@ const OrderHistory = () => {
                       </div>
 
                       <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
-                        <Col xs="6">
-                          <div className="text-muted small mb-1">Type</div>
-                          <Badge bg={order.order_type === 'Dine In' ? 'primary' : order.order_type === 'Takeaway' ? 'warning' : order.order_type === 'Delivery' ? 'success' : 'secondary'} className="rounded-pill px-3 py-1">
-                            {order.order_type}
-                          </Badge>
-                        </Col>
-                        <Col xs="6" className="text-end">
+                        <Col xs="12" className="d-flex justify-content-between align-items-center">
                           <div className="text-muted small">Amount</div>
                           <div className="fw-bolder text-dark" style={{ fontSize: '15px' }}>
                             ₹{parseFloat(order.total_amount).toFixed(2)}
@@ -886,28 +859,55 @@ const OrderHistory = () => {
                         </Col>
                       </Row>
 
-                      <div className="d-flex justify-content-between align-items-center">
-                        <Badge bg={order.order_source === 'Manager' ? 'info' : order.order_source === 'Captain' ? 'primary' : order.order_source === 'QSR' ? 'secondary' : 'dark'} className="rounded-pill px-3 py-1">
-                          {order.order_source}
-                        </Badge>
+                      <div className="d-flex justify-content-end align-items-center">
                         <div className="d-flex gap-2">
-                          <Button
-                            variant="outline-primary"
-                            size="sm"
-                            className="btn-icon btn-icon-only rounded-circle"
-                            onClick={() => history.push(`/operations/order-details/${order.id}`)}
-                          >
-                            <CsLineIcons icon="eye" size="14" />
-                          </Button>
-                          <Button
-                            variant="outline-secondary"
-                            size="sm"
-                            className="btn-icon btn-icon-only rounded-circle"
-                            onClick={() => handlePrint(order.id)}
-                            disabled={printing[order.id]}
-                          >
-                            {printing[order.id] ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="print" size="14" />}
-                          </Button>
+                          {order.order_status === "Save" ? (
+                            <>
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                className="btn-icon btn-icon-only rounded-circle"
+                                onClick={() => history.push(`/order/new?orderId=${order.id}&mode=edit`)}
+                                title="Edit Order"
+                              >
+                                <CsLineIcons icon="edit" size="14" />
+                              </Button>
+                              <Button
+                                variant="outline-danger"
+                                size="sm"
+                                className="btn-icon btn-icon-only rounded-circle"
+                                onClick={() => {
+                                  setOrderToDelete(order.id);
+                                  setShowDeleteModal(true);
+                                }}
+                                title="Delete Order"
+                              >
+                                <CsLineIcons icon="bin" size="14" />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                className="btn-icon btn-icon-only rounded-circle"
+                                onClick={() => history.push(`/operations/order-details/${order.id}`)}
+                                title="View Details"
+                              >
+                                <CsLineIcons icon="eye" size="14" />
+                              </Button>
+                              <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                className="btn-icon btn-icon-only rounded-circle"
+                                onClick={() => handlePrint(order.id)}
+                                disabled={printing[order.id]}
+                                title="Print Order"
+                              >
+                                {printing[order.id] ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="print" size="14" />}
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </Card.Body>
@@ -924,6 +924,44 @@ const OrderHistory = () => {
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered className="modal-glass">
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="fw-bold text-danger d-flex align-items-center">
+            <div
+              className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3"
+              style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+            >
+              <CsLineIcons icon="bin" size="20" className="text-danger" />
+            </div>
+            <span>Delete Saved Order</span>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="px-4 pt-4">
+          <p className="text-muted mb-4">
+            Are you sure you want to permanently delete this saved order? This action cannot be undone.
+          </p>
+          <div className="d-flex justify-content-end gap-3 mt-4">
+            <Button
+              variant="outline-secondary"
+              onClick={() => setShowDeleteModal(false)}
+              className="px-4 rounded-pill fw-bold border-0 shadow-sm"
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDeleteOrder}
+              className="px-4 rounded-pill fw-bold shadow-sm"
+              disabled={loading}
+            >
+              {loading ? <Spinner size="sm" animation="border" /> : 'Delete Order'}
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
 
       {/* Export Modal */}
       <Modal show={showExportModal} onHide={() => !exporting && setShowExportModal(false)} size="lg" centered className="modal-glass">
@@ -1027,47 +1065,6 @@ const OrderHistory = () => {
                             />
                           </div>
                         </div>
-                      </Col>
-
-                      {/* Status and Type */}
-                      <Col xs={12} sm={6}>
-                        <Form.Label className="small fw-bold text-muted mb-2 ms-3">Status</Form.Label>
-                        <Dropdown className="w-100">
-                          <Dropdown.Toggle
-                            variant="white"
-                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4 no-dropdown-caret"
-                            style={{ height: '48px', fontSize: '14px', color: '#1ea8e7' }}
-                          >
-                            <span>{exportFilters.orderStatus || 'All Status'}</span>
-                            <CsLineIcons icon="chevron-right" size="13" />
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu className="w-100 shadow border-0" style={{ borderRadius: '1rem' }}>
-                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: '' })}>All Status</Dropdown.Item>
-                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Paid' })}>Paid</Dropdown.Item>
-                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Save' })}>Save</Dropdown.Item>
-                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'KOT' })}>KOT</Dropdown.Item>
-                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Cancelled' })}>Cancelled</Dropdown.Item>
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </Col>
-                      <Col xs={12} sm={6}>
-                        <Form.Label className="small fw-bold text-muted mb-2 ms-3">Order Type</Form.Label>
-                        <Dropdown className="w-100">
-                          <Dropdown.Toggle
-                            variant="white"
-                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4 no-dropdown-caret"
-                            style={{ height: '48px', fontSize: '14px', color: '#1ea8e7' }}
-                          >
-                            <span>{exportFilters.orderType || 'All Types'}</span>
-                            <CsLineIcons icon="chevron-right" size="13" />
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu className="w-100 shadow border-0" style={{ borderRadius: '1rem' }}>
-                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: '' })}>All Types</Dropdown.Item>
-                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Dine In' })}>Dine In</Dropdown.Item>
-                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Takeaway' })}>Takeaway</Dropdown.Item>
-                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Delivery' })}>Delivery</Dropdown.Item>
-                          </Dropdown.Menu>
-                        </Dropdown>
                       </Col>
 
                       {/* Payment Mode */}

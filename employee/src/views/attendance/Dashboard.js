@@ -1883,19 +1883,7 @@ export default function Dashboard() {
                               />
                             </Form.Group>
 
-                            <Form.Group className="mb-4">
-                              <Form.Check 
-                                type="checkbox"
-                                id="anonymous-submit"
-                                label="Submit Anonymously"
-                                className="small text-muted fw-bold"
-                                checked={feedbackForm.is_anonymous}
-                                onChange={(e) => setFeedbackForm({...feedbackForm, is_anonymous: e.target.checked})}
-                              />
-                              <small className="text-muted d-block mt-1" style={{ fontSize: '0.75rem' }}>
-                                If checked, HR will review the request but your identity will remain hidden.
-                              </small>
-                            </Form.Group>
+
 
                             <Button 
                               variant="primary" 
@@ -1978,11 +1966,7 @@ export default function Dashboard() {
                                       <span className="badge bg-light text-dark text-capitalize me-2 mb-1" style={{ fontSize: '0.7rem' }}>
                                         {item.type}
                                       </span>
-                                      {item.is_anonymous && (
-                                        <span className="badge bg-soft-secondary text-secondary" style={{ fontSize: '0.7rem' }}>
-                                          Anonymous
-                                        </span>
-                                      )}
+
                                       <h6 className="fw-bold text-dark mb-0 mt-1">{item.title}</h6>
                                     </div>
                                     <Badge 

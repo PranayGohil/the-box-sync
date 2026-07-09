@@ -44,7 +44,8 @@ const FinancialReport = () => {
     includeTaxBreakdown: true,
     includePaymentMethods: true,
     includeFinancialInsights: true,
-    includeCharts: true,
+    includeInventoryPurchases: true,
+    includeExpensesWastage: true,
   });
 
   const [startDate, setStartDate] = useState(format(new Date().setMonth(new Date().getMonth() - 1), 'yyyy-MM-dd'));
@@ -122,44 +123,69 @@ const FinancialReport = () => {
 
       if (exportOptions.includeSummary) {
         setExportProgress(20);
-        allData.push(['EXECUTIVE FISCAL SUMMARY']);
+        allData.push(['FINANCIAL SUMMARY']);
         allData.push(['Metric', 'Value', 'Note']);
-        allData.push(['Gross Revenue', reportData.summary.grossRevenue, 'Total realization']);
-        allData.push(['Net Revenue', reportData.summary.netRevenue, 'Post-deduction yield']);
-        allData.push(['Total Deductions', reportData.summary.totalDiscount + reportData.summary.totalWaveOff, `${reportData.summary.discountPercentage}% ratio`]);
-        allData.push(['Fiscal Tax', reportData.summary.totalTax, `${reportData.summary.taxPercentage}% effective`]);
-        allData.push(['Gross Profit Estimate', reportData.summary.grossProfit, `Margin: ${reportData.summary.grossProfitMargin}%`]);
+        allData.push(['Gross Sales', reportData.summary.grossRevenue, 'Total before discounts']);
+        allData.push(['Net Sales', reportData.summary.netRevenue, 'Total after discounts']);
+        allData.push(['Total Discounts', reportData.summary.totalDiscount + reportData.summary.totalWaveOff, `${reportData.summary.discountPercentage}% of gross sales`]);
+        allData.push(['Total Taxes', reportData.summary.totalTax, `${reportData.summary.taxPercentage}% effective rate`]);
+        const collectionRateNum = reportData.summary.netRevenue > 0 ? ((reportData.summary.totalPaid / reportData.summary.netRevenue) * 100).toFixed(1) : '0.0';
+        allData.push(['Total Income Collected', reportData.summary.totalPaid, `Collected Rate: ${collectionRateNum}%`]);
+        allData.push(['Inventory Purchases (COGS)', reportData.summary.inventoryCost || 0, 'Total material cost']);
+        allData.push(['Net Operating Profit', reportData.summary.grossProfit || 0, `Margin: ${reportData.summary.grossProfitMargin || 0}%`]);
         allData.push([]);
         allData.push([]);
       }
 
       if (exportOptions.includeDailyBreakdown && sortedDailyFinancials?.length > 0) {
         setExportProgress(40);
-        allData.push(['DAILY OPERATIONAL LEDGER']);
-        allData.push(['Date', 'Gross Rev', 'Deductions', 'Net Yield', 'Fiscal Tax', 'Orders']);
+        allData.push(['DAILY SALES BREAKDOWN']);
+        allData.push(['Date', 'Gross Sales', 'Discounts', 'Net Sales', 'Total Taxes', 'Orders']);
         sortedDailyFinancials.forEach(day => {
           allData.push([`${day.date.day}-${day.date.month}-${day.date.year}`, day.grossRevenue, day.discount + day.waveOff, day.netRevenue, day.tax, day.orders]);
         });
-        allData.push(['Audit Period Total', reportData.summary.grossRevenue, reportData.summary.totalDiscount + reportData.summary.totalWaveOff, reportData.summary.netRevenue, reportData.summary.totalTax, reportData.summary.totalOrders]);
+        allData.push(['Total', reportData.summary.grossRevenue, reportData.summary.totalDiscount + reportData.summary.totalWaveOff, reportData.summary.netRevenue, reportData.summary.totalTax, reportData.summary.totalOrders]);
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeInventoryPurchases && reportData.inventoryPurchases?.length > 0) {
+        setExportProgress(50);
+        allData.push(['INVENTORY PURCHASES BREAKDOWN']);
+        allData.push(['Date', 'Bill Number', 'Vendor', 'Category', 'Total Amount', 'Status']);
+        reportData.inventoryPurchases.forEach(inv => {
+          allData.push([inv.bill_date ? format(new Date(inv.bill_date), 'dd-MM-yyyy') : format(new Date(inv.request_date), 'dd-MM-yyyy'), inv.bill_number || '—', inv.vendor_name || '—', inv.category || '—', inv.total_amount || 0, inv.status || 'Completed']);
+        });
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeExpensesWastage && reportData.wastageLogs?.length > 0) {
+        setExportProgress(60);
+        allData.push(['WASTAGE & EXPENSES BREAKDOWN']);
+        allData.push(['Date', 'Item Name', 'Wastage Type', 'Quantity', 'Reason']);
+        reportData.wastageLogs.forEach(w => {
+          allData.push([format(new Date(w.date), 'dd-MM-yyyy'), w.item_name || '—', w.wastage_type || '—', `${w.quantity || 0} ${w.unit || ''}`, w.reason || '—']);
+        });
         allData.push([]);
         allData.push([]);
       }
 
       if (exportOptions.includeTaxBreakdown) {
-        setExportProgress(60);
-        allData.push(['TAX COMPLIANCE BREAKDOWN']);
+        setExportProgress(70);
+        allData.push(['TAX BREAKDOWN']);
         allData.push(['Tax Type', 'Amount']);
         allData.push(['CGST / SGST', reportData.summary.cgstAmount + reportData.summary.sgstAmount]);
         allData.push(['VAT', reportData.summary.vatAmount]);
-        allData.push(['Total Tax', reportData.summary.totalTax]);
+        allData.push(['Total Taxes', reportData.summary.totalTax]);
         allData.push([]);
         allData.push([]);
       }
 
       if (exportOptions.includePaymentMethods && reportData.paymentMethodFinancials?.length > 0) {
-        setExportProgress(75);
-        allData.push(['PAYMENT CHANNEL ANALYSIS']);
-        allData.push(['Payment Method', 'Orders', 'Net Yield', 'Collected Amount']);
+        setExportProgress(80);
+        allData.push(['PAYMENT METHOD BREAKDOWN']);
+        allData.push(['Payment Method', 'Orders', 'Net Sales', 'Collected Amount']);
         reportData.paymentMethodFinancials.forEach(payment => {
           allData.push([payment.paymentMethod, payment.orderCount, payment.totalAmount, payment.paidAmount]);
         });
@@ -168,13 +194,13 @@ const FinancialReport = () => {
       }
 
       if (exportOptions.includeFinancialInsights) {
-        setExportProgress(85);
-        allData.push(['FISCAL INTELLIGENCE ALERTS']);
+        setExportProgress(90);
+        allData.push(['KEY BUSINESS ALERTS']);
         allData.push(['Alert', 'Detail']);
-        allData.push(['Discount Policy', `Rate: ${reportData.summary.discountPercentage}%. ${reportData.summary.discountPercentage > 15 ? 'Alert: Exposure detected.' : 'Healthy parameters.'}`]);
-        allData.push(['Tax Remittance', `Total: ${reportData.summary.totalTax}. Modules ready for compliance filing.`]);
-        allData.push(['Revenue Yield', `Net Yield: ${reportData.summary.netRevenue}. Avg Order: ${(reportData.summary.netRevenue / reportData.summary.totalOrders).toFixed(2)}.`]);
-        allData.push(['Collection Rate', `${((reportData.summary.totalPaid / reportData.summary.netRevenue) * 100).toFixed(1)}%`]);
+        allData.push(['Discount Policy', `Rate: ${reportData.summary.discountPercentage}%. ${reportData.summary.discountPercentage > 15 ? 'Alert: High discount rate.' : 'Healthy discount rate.'}`]);
+        allData.push(['Taxes Collected', `Total: ${reportData.summary.totalTax}. Ready for tax filing.`]);
+        allData.push(['Sales Performance', `Net Sales: ${reportData.summary.netRevenue}. Avg Order: ${reportData.summary.totalOrders > 0 ? (reportData.summary.netRevenue / reportData.summary.totalOrders).toFixed(2) : '0.00'}.`]);
+        allData.push(['Collection Rate', `${reportData.summary.netRevenue > 0 ? ((reportData.summary.totalPaid / reportData.summary.netRevenue) * 100).toFixed(1) : '0.0'}%`]);
         allData.push([]);
         allData.push([]);
       }
@@ -202,7 +228,7 @@ const FinancialReport = () => {
     setExportType('PDF');
     try {
       const doc = new jsPDF();
-      
+
       doc.setFontSize(16);
       doc.text('Financial Audit Report', 105, 15, { align: 'center' });
       doc.setFontSize(10);
@@ -214,16 +240,18 @@ const FinancialReport = () => {
       if (exportOptions.includeSummary) {
         setExportProgress(20);
         doc.setFontSize(12);
-        doc.text('Executive Fiscal Summary', 14, currentY);
+        doc.text('Financial Summary', 14, currentY);
         autoTable(doc, {
           startY: currentY + 5,
           head: [['Metric', 'Value', 'Note']],
           body: [
-            ['Gross Revenue', formatCurrencyPDF(reportData.summary.grossRevenue), 'Total realization'],
-            ['Net Revenue', formatCurrencyPDF(reportData.summary.netRevenue), 'Post-deduction yield'],
-            ['Total Deductions', formatCurrencyPDF(reportData.summary.totalDiscount + reportData.summary.totalWaveOff), `${reportData.summary.discountPercentage}% ratio`],
-            ['Fiscal Tax', formatCurrencyPDF(reportData.summary.totalTax), `${reportData.summary.taxPercentage}% effective`],
-            ['Gross Profit Estimate', formatCurrencyPDF(reportData.summary.grossProfit), `Margin: ${reportData.summary.grossProfitMargin}%`]
+            ['Gross Sales', formatCurrencyPDF(reportData.summary.grossRevenue), 'Total before discounts'],
+            ['Net Sales', formatCurrencyPDF(reportData.summary.netRevenue), 'Total after discounts'],
+            ['Total Discounts', formatCurrencyPDF(reportData.summary.totalDiscount + reportData.summary.totalWaveOff), `${reportData.summary.discountPercentage}% of gross sales`],
+            ['Total Taxes', formatCurrencyPDF(reportData.summary.totalTax), `${reportData.summary.taxPercentage}% effective rate`],
+            ['Total Income Collected', formatCurrencyPDF(reportData.summary.totalPaid), `Collected Rate: ${reportData.summary.netRevenue > 0 ? ((reportData.summary.totalPaid / reportData.summary.netRevenue) * 100).toFixed(1) : '0.0'}%`],
+            ['Inventory Purchases (COGS)', formatCurrencyPDF(reportData.summary.inventoryCost || 0), 'Total material cost'],
+            ['Net Operating Profit', formatCurrencyPDF(reportData.summary.grossProfit || 0), `Margin: ${reportData.summary.grossProfitMargin || 0}%`]
           ],
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
@@ -236,14 +264,14 @@ const FinancialReport = () => {
         setExportProgress(35);
         if (currentY > 250) { doc.addPage(); currentY = 20; }
         doc.setFontSize(12);
-        doc.text('Tax Compliance Breakdown', 14, currentY);
+        doc.text('Tax Breakdown', 14, currentY);
         autoTable(doc, {
           startY: currentY + 5,
           head: [['Tax Type', 'Amount']],
           body: [
             ['CGST / SGST', formatCurrencyPDF(reportData.summary.cgstAmount + reportData.summary.sgstAmount)],
             ['VAT', formatCurrencyPDF(reportData.summary.vatAmount)],
-            ['Total Tax', formatCurrencyPDF(reportData.summary.totalTax)]
+            ['Total Taxes', formatCurrencyPDF(reportData.summary.totalTax)]
           ],
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
@@ -256,10 +284,10 @@ const FinancialReport = () => {
         setExportProgress(50);
         if (currentY > 250) { doc.addPage(); currentY = 20; }
         doc.setFontSize(12);
-        doc.text('Payment Channel Analysis', 14, currentY);
+        doc.text('Payment Method Breakdown', 14, currentY);
         autoTable(doc, {
           startY: currentY + 5,
-          head: [['Payment Method', 'Orders', 'Net Yield', 'Collected Amount']],
+          head: [['Payment Method', 'Orders', 'Net Sales', 'Collected Amount']],
           body: reportData.paymentMethodFinancials.map(payment => [
             payment.paymentMethod,
             payment.orderCount.toString(),
@@ -273,12 +301,57 @@ const FinancialReport = () => {
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
+      if (exportOptions.includeInventoryPurchases && reportData.inventoryPurchases?.length > 0) {
+        setExportProgress(60);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Inventory Purchases Breakdown', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Date', 'Bill Number', 'Vendor', 'Category', 'Total Amount', 'Status']],
+          body: reportData.inventoryPurchases.map(inv => [
+            inv.bill_date ? format(new Date(inv.bill_date), 'dd-MM-yyyy') : format(new Date(inv.request_date), 'dd-MM-yyyy'),
+            inv.bill_number || '—',
+            inv.vendor_name || '—',
+            inv.category || '—',
+            formatCurrencyPDF(inv.total_amount || 0),
+            inv.status || 'Completed'
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
+      if (exportOptions.includeExpensesWastage && reportData.wastageLogs?.length > 0) {
+        setExportProgress(65);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Wastage & Expenses Breakdown', 14, currentY);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Date', 'Item Name', 'Wastage Type', 'Quantity', 'Reason']],
+          body: reportData.wastageLogs.map(w => [
+            format(new Date(w.date), 'dd-MM-yyyy'),
+            w.item_name || '—',
+            w.wastage_type || '—',
+            `${w.quantity || 0} ${w.unit || ''}`,
+            w.reason || '—'
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
       if (exportOptions.includeDailyBreakdown && sortedDailyFinancials?.length > 0) {
         setExportProgress(70);
         if (currentY > 250) { doc.addPage(); currentY = 20; }
         doc.setFontSize(12);
-        doc.text('Daily Operational Ledger', 14, currentY);
-        
+        doc.text('Daily Sales Breakdown', 14, currentY);
+
         const dailyBody = sortedDailyFinancials.map(day => [
           `${day.date.day}-${day.date.month}-${day.date.year}`,
           formatCurrencyPDF(day.grossRevenue),
@@ -289,7 +362,7 @@ const FinancialReport = () => {
         ]);
 
         dailyBody.push([
-          'Audit Period Total',
+          'Total',
           formatCurrencyPDF(reportData.summary.grossRevenue),
           formatCurrencyPDF(reportData.summary.totalDiscount + reportData.summary.totalWaveOff),
           formatCurrencyPDF(reportData.summary.netRevenue),
@@ -299,7 +372,7 @@ const FinancialReport = () => {
 
         autoTable(doc, {
           startY: currentY + 5,
-          head: [['Date', 'Gross Rev', 'Deductions', 'Net Yield', 'Fiscal Tax', 'Orders']],
+          head: [['Date', 'Gross Sales', 'Discounts', 'Net Sales', 'Total Taxes', 'Orders']],
           body: dailyBody,
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
@@ -318,14 +391,14 @@ const FinancialReport = () => {
         setExportProgress(90);
         if (currentY > 250) { doc.addPage(); currentY = 20; }
         doc.setFontSize(12);
-        doc.text('Fiscal Intelligence Alerts', 14, currentY);
+        doc.text('Key Business Alerts', 14, currentY);
         autoTable(doc, {
           startY: currentY + 5,
           head: [['Alert', 'Detail']],
           body: [
-            ['Discount Policy', `Rate: ${reportData.summary.discountPercentage}%. ${reportData.summary.discountPercentage > 15 ? 'Alert: Exposure detected.' : 'Healthy parameters.'}`],
-            ['Tax Remittance', `Total: ${formatCurrencyPDF(reportData.summary.totalTax)}. Modules ready for compliance filing.`],
-            ['Revenue Yield', `Net Yield: ${formatCurrencyPDF(reportData.summary.netRevenue)}. Avg Order: ${formatCurrencyPDF(reportData.summary.netRevenue / reportData.summary.totalOrders)}.`],
+            ['Discount Policy', `Rate: ${reportData.summary.discountPercentage}%. ${reportData.summary.discountPercentage > 15 ? 'Alert: High discount rate.' : 'Healthy discount rate.'}`],
+            ['Taxes Collected', `Total: ${formatCurrencyPDF(reportData.summary.totalTax)}. Ready for tax filing.`],
+            ['Sales Performance', `Net Sales: ${formatCurrencyPDF(reportData.summary.netRevenue)}. Avg Order: ${formatCurrencyPDF(reportData.summary.netRevenue / reportData.summary.totalOrders)}.`],
             ['Collection Rate', `${((reportData.summary.totalPaid / reportData.summary.netRevenue) * 100).toFixed(1)}%`]
           ],
           theme: 'grid',
@@ -383,16 +456,16 @@ const FinancialReport = () => {
           <Card className="financial-report-interactive-card financial-report-filter-card border-0 mb-4 no-print shadow-sm">
             <Card.Body className="p-4">
               <div className="financial-report-card-title-container">
-                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Fiscal Audit Parameters</h2>
+                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Report Date Filters</h2>
                 <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
               </div>
               <Row className="g-3 align-items-end mt-1">
                 <Col xs={12} md={5}>
-                  <Form.Label className="financial-report-stat-label mb-2">Audit Start Date</Form.Label>
+                  <Form.Label className="financial-report-stat-label mb-2">Start Date</Form.Label>
                   <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                 </Col>
                 <Col xs={12} md={5}>
-                  <Form.Label className="financial-report-stat-label mb-2">Audit End Date</Form.Label>
+                  <Form.Label className="financial-report-stat-label mb-2">End Date</Form.Label>
                   <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                 </Col>
                 <Col xs={12} md={2}>
@@ -436,10 +509,10 @@ const FinancialReport = () => {
             {/* Key Financial Metrics */}
             <Row className="g-3 mb-4">
               {[
-                { label: 'Gross Revenue', value: reportData.summary.grossRevenue, note: 'Total realization', icon: 'wallet', color: brandColor, bg: brandBg, border: brandColor },
-                { label: 'Net Revenue', value: reportData.summary.netRevenue, note: 'Post-deduction yield', icon: 'money', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', border: '#10b981' },
-                { label: 'Total Deductions', value: reportData.summary.totalDiscount + reportData.summary.totalWaveOff, note: `${reportData.summary.discountPercentage}% ratio`, icon: 'tag', color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.1)', border: '#f43f5e' },
-                { label: 'Fiscal Tax', value: reportData.summary.totalTax, note: `${reportData.summary.taxPercentage}% effective`, icon: 'dollar', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', border: '#f59e0b' }
+                { label: 'Gross Sales', value: reportData.summary.grossRevenue, note: 'Total before discounts', icon: 'wallet', color: brandColor, bg: brandBg, border: brandColor },
+                { label: 'Net Sales', value: reportData.summary.netRevenue, note: 'Total after discounts', icon: 'money', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', border: '#10b981' },
+                { label: 'Total Discounts', value: reportData.summary.totalDiscount + reportData.summary.totalWaveOff, note: `${reportData.summary.discountPercentage}% of gross sales`, icon: 'tag', color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.1)', border: '#f43f5e' },
+                { label: 'Total Taxes', value: reportData.summary.totalTax, note: `${reportData.summary.taxPercentage}% effective rate`, icon: 'dollar', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', border: '#f59e0b' }
               ].map((stat, idx) => (
                 <Col xl="3" md="6" key={idx}>
                   <Card className="financial-report-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: `4px solid ${stat.border}` }}>
@@ -460,32 +533,58 @@ const FinancialReport = () => {
               ))}
             </Row>
 
+            {/* Inventory & Expense Summary Metrics */}
+            <Row className="g-3 mb-4">
+              {[
+                { label: 'Inventory Purchases (COGS)', value: reportData.summary.inventoryCost || 0, note: 'Total raw material bills', icon: 'box', color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)', border: '#f97316' },
+                { label: 'Wastage & Expense Logs', value: reportData.summary.totalWastageCount || 0, isCount: true, note: 'Recorded loss & expense entries', icon: 'bin', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', border: '#ef4444' },
+                { label: 'Net Operating Profit', value: reportData.summary.grossProfit || 0, note: `Margin: ${reportData.summary.grossProfitMargin || 0}% after inventory`, icon: 'trend-up', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', border: '#10b981' }
+              ].map((stat, idx) => (
+                <Col xl="4" md="6" key={idx}>
+                  <Card className="financial-report-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: `4px solid ${stat.border}` }}>
+                    <Card.Body className="p-4 financial-report-stat-card-inner">
+                      <div className="d-flex justify-content-between align-items-start">
+                        <div>
+                          <div className="financial-report-stat-label mb-2">{stat.label}</div>
+                          <div className="financial-report-stat-value" style={{ color: stat.color }}>{stat.isCount ? stat.value : formatCurrency(stat.value)}</div>
+                          <div className="smaller text-muted fw-bold mt-1">{stat.note}</div>
+                        </div>
+                        <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: stat.bg }}>
+                          <CsLineIcons icon={stat.icon} size="24" style={{ color: stat.color }} />
+                        </div>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+
             {/* Revenue Flow & Health Indicators */}
             <Row className="g-3 mb-4">
               <Col lg={7}>
                 <Card className="financial-report-interactive-card border-0 shadow-sm h-100">
                   <Card.Body className="p-4">
                     <div className="financial-report-card-title-container">
-                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Revenue Architecture Analysis</h2>
+                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Sales Breakdown</h2>
                       <CsLineIcons icon="activity" size="18" style={{ color: brandColor }} />
                     </div>
                     <div className="mb-4 mt-3">
                       <div className="d-flex justify-content-between mb-2 smaller fw-bold">
-                        <span className="text-muted">Gross Realized</span>
+                        <span className="text-muted">Gross Sales</span>
                         <span className="text-primary">{formatCurrency(reportData.summary.grossRevenue)}</span>
                       </div>
                       <ProgressBar now={100} variant="primary" className="progress-pill" style={{ height: '8px' }} />
                     </div>
                     <div className="mb-4 ms-4">
                       <div className="d-flex justify-content-between mb-2 smaller text-danger fw-bold">
-                        <span>- Deductions (Discount + Waveoff)</span>
+                        <span>- Discounts & Offers</span>
                         <span>{formatCurrency(reportData.summary.totalDiscount + reportData.summary.totalWaveOff)}</span>
                       </div>
                       <ProgressBar now={((reportData.summary.totalDiscount + reportData.summary.totalWaveOff) / reportData.summary.grossRevenue) * 100} variant="danger" className="progress-pill" style={{ height: '6px' }} />
                     </div>
                     <div className="mb-4">
                       <div className="d-flex justify-content-between mb-2 fw-bold">
-                        <span className="text-muted">Net Yield (Post-Deduction)</span>
+                        <span className="text-muted">Net Sales (After Discounts)</span>
                         <span className="text-success">{formatCurrency(reportData.summary.netRevenue)}</span>
                       </div>
                       <ProgressBar now={(reportData.summary.netRevenue / reportData.summary.grossRevenue) * 100} variant="success" className="progress-pill" style={{ height: '8px' }} />
@@ -493,10 +592,12 @@ const FinancialReport = () => {
                     <div className="p-4 rounded-3 mt-4" style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
                       <div className="d-flex justify-content-between align-items-center">
                         <div>
-                          <div className="financial-report-stat-label mb-1 text-success">Estimated Operational Profit</div>
-                          <div className="financial-report-stat-value text-success h3 mb-0" style={{ fontSize: '1.6rem' }}>{formatCurrency(reportData.summary.grossProfit)}</div>
+                          <div className="financial-report-stat-label mb-1 text-success">Total Income Collected</div>
+                          <div className="financial-report-stat-value text-success h3 mb-0" style={{ fontSize: '1.6rem' }}>{formatCurrency(reportData.summary.totalPaid)}</div>
                         </div>
-                        <Badge bg="success" className="rounded-pill px-3 py-2 fw-bold" style={{ fontSize: '0.65rem' }}>MARGIN: {reportData.summary.grossProfitMargin}%</Badge>
+                        <Badge bg="success" className="rounded-pill px-3 py-2 fw-bold" style={{ fontSize: '0.65rem' }}>
+                          COLLECTED: {reportData.summary.netRevenue > 0 ? ((reportData.summary.totalPaid / reportData.summary.netRevenue) * 100).toFixed(1) : '0.0'}%
+                        </Badge>
                       </div>
                     </div>
                   </Card.Body>
@@ -506,34 +607,34 @@ const FinancialReport = () => {
                 <Card className="financial-report-interactive-card border-0 shadow-sm h-100">
                   <Card.Body className="p-4">
                     <div className="financial-report-card-title-container">
-                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Fiscal Health Indicators</h2>
+                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Business Health Indicators</h2>
                       <CsLineIcons icon="heart" size="18" style={{ color: brandColor }} />
                     </div>
                     <div className="mb-4 mt-3">
                       <div className="d-flex justify-content-between mb-2 align-items-center">
                         <span className="financial-report-stat-label">Collection Rate</span>
-                        <Badge bg="success" className="rounded-pill px-3 py-2">{((reportData.summary.totalPaid / reportData.summary.netRevenue) * 100).toFixed(1)}%</Badge>
+                        <Badge bg="success" className="rounded-pill px-3 py-2">{reportData.summary.netRevenue > 0 ? ((reportData.summary.totalPaid / reportData.summary.netRevenue) * 100).toFixed(1) : '0.0'}%</Badge>
                       </div>
-                      <ProgressBar now={(reportData.summary.totalPaid / reportData.summary.netRevenue) * 100} variant="success" className="progress-pill" style={{ height: '8px' }} />
-                      <small className="text-muted smaller d-block mt-2 fw-bold">Actual payments collected vs net yield</small>
+                      <ProgressBar now={reportData.summary.netRevenue > 0 ? (reportData.summary.totalPaid / reportData.summary.netRevenue) * 100 : 0} variant="success" className="progress-pill" style={{ height: '8px' }} />
+                      <small className="text-muted smaller d-block mt-2 fw-bold">Actual payments collected vs net sales</small>
                     </div>
                     <div className="mb-4">
                       <div className="d-flex justify-content-between mb-2 align-items-center">
-                        <span className="financial-report-stat-label">Discount Exposure</span>
+                        <span className="financial-report-stat-label">Discount Rate</span>
                         <Badge bg={reportData.summary.discountPercentage > 15 ? 'danger' : 'success'} className="rounded-pill px-3 py-2">{reportData.summary.discountPercentage}%</Badge>
                       </div>
                       <ProgressBar now={reportData.summary.discountPercentage} max={20} variant={reportData.summary.discountPercentage > 15 ? 'danger' : 'success'} className="progress-pill" style={{ height: '8px' }} />
-                      <small className="text-muted smaller d-block mt-2 fw-bold">Ideal: Under 10% of gross</small>
+                      <small className="text-muted smaller d-block mt-2 fw-bold">Ideal: Under 10% of gross sales</small>
                     </div>
                     <div className="p-4 rounded-3" style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}>
-                      <div className="financial-report-stat-label mb-3">Tax Compliance Breakdown</div>
+                      <div className="financial-report-stat-label mb-3">Tax Breakdown</div>
                       <div className="d-flex justify-content-between mb-2 smaller fw-bold">
-                          <span className="text-muted">CGST / SGST</span>
-                          <span className="text-dark">{formatCurrency(reportData.summary.cgstAmount + reportData.summary.sgstAmount)}</span>
+                        <span className="text-muted">CGST / SGST</span>
+                        <span className="text-dark">{formatCurrency(reportData.summary.cgstAmount + reportData.summary.sgstAmount)}</span>
                       </div>
                       <div className="d-flex justify-content-between smaller fw-bold">
-                          <span className="text-muted">VAT</span>
-                          <span className="text-dark">{formatCurrency(reportData.summary.vatAmount)}</span>
+                        <span className="text-muted">VAT</span>
+                        <span className="text-dark">{formatCurrency(reportData.summary.vatAmount)}</span>
                       </div>
                     </div>
                   </Card.Body>
@@ -545,7 +646,7 @@ const FinancialReport = () => {
             <Card className="financial-report-interactive-card border-0 shadow-sm mb-4">
               <Card.Body className="p-4">
                 <div className="financial-report-card-title-container">
-                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Payment Channel Distribution</h2>
+                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Payment Method Distribution</h2>
                   <CsLineIcons icon="pie-chart" size="18" style={{ color: brandColor }} />
                 </div>
                 <Row className="g-3 mt-1">
@@ -554,13 +655,13 @@ const FinancialReport = () => {
                       <Card className="financial-report-interactive-card border-0 p-3 h-100" style={{ background: 'rgba(0,0,0,0.01) !important', border: '1px solid rgba(0,0,0,0.05) !important' }}>
                         <div className="d-flex justify-content-between align-items-start mb-2">
                           <div className="fw-bold text-dark mb-0 text-truncate">{payment.paymentMethod}</div>
-                          <Badge bg="primary" className="rounded-pill px-2 flex-shrink-0 ms-2" style={{fontSize: '0.65rem', backgroundColor: brandColor}}>{payment.orderCount} orders</Badge>
+                          <Badge bg="primary" className="rounded-pill px-2 flex-shrink-0 ms-2" style={{ fontSize: '0.65rem', backgroundColor: brandColor }}>{payment.orderCount} orders</Badge>
                         </div>
                         <div className="d-flex justify-content-between mb-1 smaller">
-                          <span className="text-muted fw-bold">Net Yield:</span>
+                          <span className="text-muted fw-bold">Net Sales:</span>
                           <span className="text-primary fw-bold">{formatCurrency(payment.totalAmount)}</span>
                         </div>
-                        <ProgressBar now={(payment.totalAmount / reportData.summary.netRevenue) * 100} variant="info" className="progress-sm mb-2" style={{height: '3px'}} />
+                        <ProgressBar now={(payment.totalAmount / reportData.summary.netRevenue) * 100} variant="info" className="progress-sm mb-2" style={{ height: '3px' }} />
                         <div className="d-flex justify-content-between smaller">
                           <span className="text-muted">Collected:</span>
                           <span className="fw-bold text-success">{formatCurrency(payment.paidAmount)}</span>
@@ -576,18 +677,18 @@ const FinancialReport = () => {
             <Card className="financial-report-interactive-card border-0 shadow-sm mb-4">
               <Card.Body className="p-4">
                 <div className="financial-report-card-title-container">
-                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Daily Operational Fiscal Audit</h2>
+                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Daily Sales Breakdown</h2>
                   <CsLineIcons icon="list" size="18" style={{ color: brandColor }} />
                 </div>
                 <div className="d-none d-md-block table-responsive mt-3">
                   <Table borderless hover className="align-middle mb-0">
                     <thead className="financial-report-stat-label">
                       <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
-                        <th className="py-3">Audit Date</th>
-                        <th className="py-3 text-end">Gross Rev</th>
-                        <th className="py-3 text-end">Deductions</th>
-                        <th className="py-3 text-end">Net Yield</th>
-                        <th className="py-3 text-end">Fiscal Tax</th>
+                        <th className="py-3">Date</th>
+                        <th className="py-3 text-end">Gross Sales</th>
+                        <th className="py-3 text-end">Discounts</th>
+                        <th className="py-3 text-end">Net Sales</th>
+                        <th className="py-3 text-end">Total Taxes</th>
                         <th className="py-3 text-center">Volume</th>
                       </tr>
                     </thead>
@@ -609,7 +710,7 @@ const FinancialReport = () => {
                     </tbody>
                     <tfoot className="fw-bold" style={{ background: 'rgba(0,0,0,0.02)' }}>
                       <tr>
-                        <td className="py-4 financial-report-stat-label">Audit Period Total</td>
+                        <td className="py-4 financial-report-stat-label">Total</td>
                         <td className="py-4 text-end text-primary">{formatCurrency(reportData.summary.grossRevenue)}</td>
                         <td className="py-4 text-end text-danger">{formatCurrency(reportData.summary.totalDiscount + reportData.summary.totalWaveOff)}</td>
                         <td className="py-4 text-end text-success">{formatCurrency(reportData.summary.netRevenue)}</td>
@@ -619,7 +720,7 @@ const FinancialReport = () => {
                     </tfoot>
                   </Table>
                 </div>
-                
+
                 <div className="d-md-none d-flex flex-column gap-3 mt-3">
                   {sortedDailyFinancials.map((day, idx) => (
                     <div key={idx} className="p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}>
@@ -630,63 +731,143 @@ const FinancialReport = () => {
                         </Badge>
                       </div>
                       <div className="d-flex justify-content-between align-items-center mb-2 smaller">
-                        <span className="text-muted fw-bold">Gross Rev:</span>
+                        <span className="text-muted fw-bold">Gross Sales:</span>
                         <span className="fw-bold text-muted">{formatCurrency(day.grossRevenue)}</span>
                       </div>
                       <div className="d-flex justify-content-between align-items-center mb-2 smaller">
-                        <span className="text-muted fw-bold">Deductions:</span>
+                        <span className="text-muted fw-bold">Discounts:</span>
                         <span className="fw-bold text-danger">{formatCurrency(day.discount + day.waveOff)}</span>
                       </div>
                       <div className="d-flex justify-content-between align-items-center mb-2 smaller">
-                        <span className="text-muted fw-bold">Fiscal Tax:</span>
+                        <span className="text-muted fw-bold">Total Taxes:</span>
                         <span className="fw-bold text-warning">{formatCurrency(day.tax)}</span>
                       </div>
                       <div className="d-flex justify-content-between align-items-center smaller">
-                        <span className="text-muted fw-bold">Net Yield:</span>
+                        <span className="text-muted fw-bold">Net Sales:</span>
                         <span className="fw-bold text-primary">{formatCurrency(day.netRevenue)}</span>
                       </div>
                     </div>
                   ))}
-                  
+
                   <div className="p-3 rounded mt-2 border border-primary" style={{ backgroundColor: 'rgba(35, 179, 244, 0.05)' }}>
-                    <div className="financial-report-stat-label mb-3 text-primary text-center">Audit Period Total</div>
+                    <div className="financial-report-stat-label mb-3 text-primary text-center">Total</div>
                     <div className="d-flex justify-content-between align-items-center mb-2 smaller">
-                        <span className="text-muted fw-bold">Gross Rev:</span>
-                        <span className="fw-bold text-primary">{formatCurrency(reportData.summary.grossRevenue)}</span>
+                      <span className="text-muted fw-bold">Gross Sales:</span>
+                      <span className="fw-bold text-primary">{formatCurrency(reportData.summary.grossRevenue)}</span>
                     </div>
                     <div className="d-flex justify-content-between align-items-center mb-2 smaller">
-                        <span className="text-muted fw-bold">Deductions:</span>
-                        <span className="fw-bold text-danger">{formatCurrency(reportData.summary.totalDiscount + reportData.summary.totalWaveOff)}</span>
+                      <span className="text-muted fw-bold">Discounts:</span>
+                      <span className="fw-bold text-danger">{formatCurrency(reportData.summary.totalDiscount + reportData.summary.totalWaveOff)}</span>
                     </div>
                     <div className="d-flex justify-content-between align-items-center mb-2 smaller">
-                        <span className="text-muted fw-bold">Fiscal Tax:</span>
-                        <span className="fw-bold text-warning">{formatCurrency(reportData.summary.totalTax)}</span>
+                      <span className="text-muted fw-bold">Total Taxes:</span>
+                      <span className="fw-bold text-warning">{formatCurrency(reportData.summary.totalTax)}</span>
                     </div>
                     <div className="d-flex justify-content-between align-items-center mb-2 smaller">
-                        <span className="text-muted fw-bold">Net Yield:</span>
-                        <span className="fw-bold text-success">{formatCurrency(reportData.summary.netRevenue)}</span>
+                      <span className="text-muted fw-bold">Net Sales:</span>
+                      <span className="fw-bold text-success">{formatCurrency(reportData.summary.netRevenue)}</span>
                     </div>
                     <div className="d-flex justify-content-between align-items-center smaller">
-                        <span className="text-muted fw-bold">Total Volume:</span>
-                        <span className="fw-bold text-dark">{reportData.summary.totalOrders} ORDERS</span>
+                      <span className="text-muted fw-bold">Total Volume:</span>
+                      <span className="fw-bold text-dark">{reportData.summary.totalOrders} ORDERS</span>
                     </div>
                   </div>
                 </div>
               </Card.Body>
             </Card>
 
-            {/* Fiscal Intelligence Alerts */}
+            {/* Inventory Purchases Table */}
+            {reportData.inventoryPurchases?.length > 0 && (
+              <Card className="financial-report-interactive-card border-0 shadow-sm mb-4">
+                <Card.Body className="p-4">
+                  <div className="financial-report-card-title-container">
+                    <h2 className="small-title mb-0" style={{ color: '#f97316', fontWeight: '800' }}>Inventory Purchases & Bills (COGS)</h2>
+                    <CsLineIcons icon="box" size="18" style={{ color: '#f97316' }} />
+                  </div>
+                  <div className="table-responsive mt-3">
+                    <Table borderless hover className="align-middle mb-0">
+                      <thead className="financial-report-stat-label">
+                        <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
+                          <th className="py-3">Date</th>
+                          <th className="py-3">Bill Number</th>
+                          <th className="py-3">Vendor</th>
+                          <th className="py-3">Category</th>
+                          <th className="py-3 text-end">Total Amount</th>
+                          <th className="py-3 text-center">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData.inventoryPurchases.map((inv, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
+                            <td className="py-3 fw-bold text-dark">
+                              {inv.bill_date ? format(new Date(inv.bill_date), 'dd-MM-yyyy') : format(new Date(inv.request_date), 'dd-MM-yyyy')}
+                            </td>
+                            <td className="py-3 fw-bold text-muted smaller">{inv.bill_number || '—'}</td>
+                            <td className="py-3 fw-bold text-dark">{inv.vendor_name || '—'}</td>
+                            <td className="py-3 text-muted smaller">{inv.category || '—'}</td>
+                            <td className="py-3 text-end fw-bold" style={{ color: '#f97316' }}>{formatCurrency(inv.total_amount || 0)}</td>
+                            <td className="py-3 text-center">
+                              <Badge bg={inv.status === 'Completed' ? 'success' : inv.status === 'Pending' ? 'warning' : 'secondary'} className="rounded-pill px-3 py-1">
+                                {inv.status || 'Completed'}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                </Card.Body>
+              </Card>
+            )}
+
+            {/* Wastage & Operational Expenses Table */}
+            {reportData.wastageLogs?.length > 0 && (
+              <Card className="financial-report-interactive-card border-0 shadow-sm mb-4">
+                <Card.Body className="p-4">
+                  <div className="financial-report-card-title-container">
+                    <h2 className="small-title mb-0" style={{ color: '#ef4444', fontWeight: '800' }}>Wastage & Operational Expense Logs</h2>
+                    <CsLineIcons icon="bin" size="18" style={{ color: '#ef4444' }} />
+                  </div>
+                  <div className="table-responsive mt-3">
+                    <Table borderless hover className="align-middle mb-0">
+                      <thead className="financial-report-stat-label">
+                        <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
+                          <th className="py-3">Date</th>
+                          <th className="py-3">Item Name</th>
+                          <th className="py-3">Wastage Type</th>
+                          <th className="py-3 text-end">Quantity</th>
+                          <th className="py-3">Reason / Notes</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData.wastageLogs.map((w, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
+                            <td className="py-3 fw-bold text-dark">{format(new Date(w.date), 'dd-MM-yyyy')}</td>
+                            <td className="py-3 fw-bold text-dark">{w.item_name || '—'}</td>
+                            <td className="py-3 text-capitalize text-danger fw-bold smaller">{w.wastage_type || '—'}</td>
+                            <td className="py-3 text-end fw-bold text-dark">{`${w.quantity || 0} ${w.unit || ''}`}</td>
+                            <td className="py-3 text-muted smaller">{w.reason || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                </Card.Body>
+              </Card>
+            )}
+
+            {/* Key Business Alerts */}
             <Card className="financial-report-interactive-card border-0 shadow-sm mb-4">
               <Card.Body className="p-4">
                 <div className="financial-report-card-title-container">
-                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Executive Fiscal Intelligence</h2>
+                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Key Business Alerts</h2>
                   <CsLineIcons icon="star" size="18" style={{ color: brandColor }} />
                 </div>
                 <Row className="g-3 mt-1">
                   {[
-                    { title: 'Discount Policy', text: `Rate: ${reportData.summary.discountPercentage}%. ${reportData.summary.discountPercentage > 15 ? 'Alert: Exposure detected.' : 'Healthy parameters.'}`, variant: reportData.summary.discountPercentage > 15 ? 'danger' : 'success', icon: 'tag' },
-                    { title: 'Tax Remittance', text: `Total: ${formatCurrency(reportData.summary.totalTax)}. Modules ready for compliance filing.`, variant: 'info', icon: 'dollar' },
-                    { title: 'Revenue Yield', text: `Net Yield: ${formatCurrency(reportData.summary.netRevenue)}. Avg Order: ${formatCurrency(reportData.summary.netRevenue / reportData.summary.totalOrders)}.`, variant: 'primary', icon: 'trend-up' }
+                    { title: 'Discount Policy', text: `Rate: ${reportData.summary.discountPercentage}%. ${reportData.summary.discountPercentage > 15 ? 'Alert: High discount rate detected.' : 'Healthy discount rate.'}`, variant: reportData.summary.discountPercentage > 15 ? 'danger' : 'success', icon: 'tag' },
+                    { title: 'Taxes Collected', text: `Total: ${formatCurrency(reportData.summary.totalTax)}. Total taxes ready for filing.`, variant: 'info', icon: 'dollar' },
+                    { title: 'Sales Performance', text: `Net Sales: ${formatCurrency(reportData.summary.netRevenue)}. Avg Order: ${reportData.summary.totalOrders > 0 ? formatCurrency(reportData.summary.netRevenue / reportData.summary.totalOrders) : formatCurrency(0)}.`, variant: 'primary', icon: 'trend-up' }
                   ].map((insight, i) => (
                     <Col md={4} key={i}>
                       <Alert variant={insight.variant} className="financial-report-interactive-card border-0 h-100 p-4 mb-0 shadow-none" style={{ background: `rgba(var(--bs-${insight.variant}-rgb), 0.05)` }}>
@@ -708,19 +889,21 @@ const FinancialReport = () => {
       {/* Export Options Modal (Styled like Menu Report) */}
       <Modal show={showExportModal} onHide={() => setShowExportModal(false)} centered contentClassName="interactive-card border-0 shadow-lg">
         <Modal.Header className="border-0 p-4 pb-0" closeButton>
-          <Modal.Title className="fw-bold" style={{ color: brandColor }}>Fiscal Intelligence Export</Modal.Title>
+          <Modal.Title className="fw-bold" style={{ color: brandColor }}>Export Financial Report</Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4">
-          <p className="text-muted smaller fw-bold mb-4">Customize your fiscal audit report for compliance and accounting.</p>
+          <p className="text-muted smaller fw-bold mb-4">Choose what information to include in your export report.</p>
           <Form className="d-flex flex-column gap-3">
-             {[
-              { label: 'Executive Fiscal Summary', key: 'includeSummary' },
-              { label: 'Daily Operational Ledger', key: 'includeDailyBreakdown' },
-              { label: 'Tax Compliance Breakdown', key: 'includeTaxBreakdown' },
-              { label: 'Payment Channel Analysis', key: 'includePaymentMethods' },
-              { label: 'Fiscal Intelligence Alerts', key: 'includeFinancialInsights' }
+            {[
+              { label: 'Financial Summary', key: 'includeSummary' },
+              { label: 'Daily Sales Breakdown', key: 'includeDailyBreakdown' },
+              { label: 'Inventory Purchases Breakdown', key: 'includeInventoryPurchases' },
+              { label: 'Wastage & Expense Logs', key: 'includeExpensesWastage' },
+              { label: 'Tax Breakdown', key: 'includeTaxBreakdown' },
+              { label: 'Payment Method Breakdown', key: 'includePaymentMethods' },
+              { label: 'Key Business Alerts', key: 'includeFinancialInsights' }
             ].map(option => (
-              <Form.Check 
+              <Form.Check
                 key={option.key}
                 type="switch"
                 id={option.key}
@@ -733,7 +916,7 @@ const FinancialReport = () => {
         </Modal.Body>
         <Modal.Footer className="border-0 p-4 pt-0">
           <Button variant="light" className="financial-report-custom-btn-outline border-0 text-muted" onClick={() => setShowExportModal(false)}>Cancel</Button>
-          <Button className="financial-report-custom-btn-outline px-4" onClick={handleExportConfirm}>Generate Fiscal Audit</Button>
+          <Button className="financial-report-custom-btn-outline px-4" onClick={handleExportConfirm}>Download Report</Button>
         </Modal.Footer>
       </Modal>
 
