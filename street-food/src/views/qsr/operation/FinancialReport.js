@@ -41,6 +41,7 @@ const FinancialReport = () => {
   const [exportOptions, setExportOptions] = useState({
     includeSummary: true,
     includeDailyBreakdown: true,
+    includeWeeklyBreakdown: true,
     includeTaxBreakdown: true,
     includePaymentMethods: true,
     includeFinancialInsights: true,
@@ -50,6 +51,117 @@ const FinancialReport = () => {
 
   const [startDate, setStartDate] = useState(format(new Date().setMonth(new Date().getMonth() - 1), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [viewMode, setViewMode] = useState('daily');
+  const [datePreset, setDatePreset] = useState('last_30_days');
+
+  const weeklyFinancials = useMemo(() => {
+    if (!reportData?.dailyFinancials) return [];
+    const weeklyMap = {};
+    reportData.dailyFinancials.forEach((day) => {
+      const d = new Date(day.date.year, day.date.month - 1, day.date.day);
+      const dayOfWeek = d.getDay();
+      const diff = d.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const monday = new Date(d.setDate(diff));
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+
+      const weekKey = format(monday, 'yyyy-MM-dd');
+      const weekLabel = `${format(monday, 'dd MMM')} - ${format(sunday, 'dd MMM yyyy')}`;
+
+      if (!weeklyMap[weekKey]) {
+        weeklyMap[weekKey] = {
+          label: weekLabel,
+          keyDate: monday,
+          grossRevenue: 0,
+          discount: 0,
+          waveOff: 0,
+          netRevenue: 0,
+          tax: 0,
+          orders: 0,
+        };
+      }
+      weeklyMap[weekKey].grossRevenue += day.grossRevenue || 0;
+      weeklyMap[weekKey].discount += day.discount || 0;
+      weeklyMap[weekKey].waveOff += day.waveOff || 0;
+      weeklyMap[weekKey].netRevenue += day.netRevenue || 0;
+      weeklyMap[weekKey].tax += day.tax || 0;
+      weeklyMap[weekKey].orders += day.orders || 0;
+    });
+
+    return Object.values(weeklyMap).sort((a, b) => b.keyDate - a.keyDate);
+  }, [reportData?.dailyFinancials]);
+
+  const handlePeriodChange = (preset) => {
+    const today = new Date();
+    let start = new Date();
+    let end = new Date();
+
+    switch (preset) {
+      case 'this_week': {
+        const day = today.getDay();
+        const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+        start = new Date(today.setDate(diff));
+        end = new Date();
+        break;
+      }
+      case 'last_week': {
+        const today2 = new Date();
+        const day2 = today2.getDay();
+        const diffToMonday = today2.getDate() - day2 + (day2 === 0 ? -6 : 1);
+        const lastMonday = new Date(today2.setDate(diffToMonday - 7));
+        const lastSunday = new Date(lastMonday);
+        lastSunday.setDate(lastMonday.getDate() + 6);
+        start = lastMonday;
+        end = lastSunday;
+        break;
+      }
+      case 'this_month':
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+        end = new Date();
+        break;
+      case 'last_month':
+        start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        end = new Date(today.getFullYear(), today.getMonth(), 0);
+        break;
+      case 'last_30_days':
+        start = new Date(today.setDate(today.getDate() - 30));
+        end = new Date();
+        break;
+      case 'last_90_days':
+        start = new Date(today.setDate(today.getDate() - 90));
+        end = new Date();
+        break;
+      case 'last_180_days':
+        start = new Date(today.setDate(today.getDate() - 180));
+        end = new Date();
+        break;
+      case 'last_365_days':
+        start = new Date(today.setDate(today.getDate() - 365));
+        end = new Date();
+        break;
+      default:
+        return;
+    }
+
+    const formattedStart = format(start, 'yyyy-MM-dd');
+    const formattedEnd = format(end, 'yyyy-MM-dd');
+    setStartDate(formattedStart);
+    setEndDate(formattedEnd);
+
+    setLoading(true);
+    setError(null);
+    axios.get(`${API_BASE}/statistics/financial`, {
+      ...getHeaders(),
+      params: { period: 'custom', start_date: formattedStart, end_date: formattedEnd }
+    }).then(res => {
+      setReportData(res.data);
+    }).catch(err => {
+      console.error(err);
+      setError(err.response?.data?.error || 'Failed to load financial report');
+    }).finally(() => {
+      setLoading(false);
+    });
+  };
 
   const API_BASE = process.env.REACT_APP_API;
   const COMPANY_NAME = `${currentUser?.name || 'TheBox'}`;
@@ -143,6 +255,18 @@ const FinancialReport = () => {
         allData.push(['Date', 'Gross Sales', 'Discounts', 'Net Sales', 'Total Taxes', 'Orders']);
         sortedDailyFinancials.forEach(day => {
           allData.push([`${day.date.day}-${day.date.month}-${day.date.year}`, day.grossRevenue, day.discount + day.waveOff, day.netRevenue, day.tax, day.orders]);
+        });
+        allData.push(['Total', reportData.summary.grossRevenue, reportData.summary.totalDiscount + reportData.summary.totalWaveOff, reportData.summary.netRevenue, reportData.summary.totalTax, reportData.summary.totalOrders]);
+        allData.push([]);
+        allData.push([]);
+      }
+
+      if (exportOptions.includeWeeklyBreakdown && sortedDailyFinancials?.length > 0) {
+        setExportProgress(45);
+        allData.push(['WEEKLY SALES BREAKDOWN']);
+        allData.push(['Week Period', 'Gross Sales', 'Discounts', 'Net Sales', 'Total Taxes', 'Orders']);
+        weeklyFinancials.forEach(week => {
+          allData.push([week.label, week.grossRevenue, week.discount + week.waveOff, week.netRevenue, week.tax, week.orders]);
         });
         allData.push(['Total', reportData.summary.grossRevenue, reportData.summary.totalDiscount + reportData.summary.totalWaveOff, reportData.summary.netRevenue, reportData.summary.totalTax, reportData.summary.totalOrders]);
         allData.push([]);
@@ -387,6 +511,47 @@ const FinancialReport = () => {
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
+      if (exportOptions.includeWeeklyBreakdown && sortedDailyFinancials?.length > 0) {
+        setExportProgress(75);
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.text('Weekly Sales Breakdown', 14, currentY);
+
+        const weeklyBody = weeklyFinancials.map(week => [
+          week.label,
+          formatCurrencyPDF(week.grossRevenue),
+          formatCurrencyPDF(week.discount + week.waveOff),
+          formatCurrencyPDF(week.netRevenue),
+          formatCurrencyPDF(week.tax),
+          week.orders.toString()
+        ]);
+
+        weeklyBody.push([
+          'Total',
+          formatCurrencyPDF(reportData.summary.grossRevenue),
+          formatCurrencyPDF(reportData.summary.totalDiscount + reportData.summary.totalWaveOff),
+          formatCurrencyPDF(reportData.summary.netRevenue),
+          formatCurrencyPDF(reportData.summary.totalTax),
+          reportData.summary.totalOrders.toString()
+        ]);
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Week Period', 'Gross Sales', 'Discounts', 'Net Sales', 'Total Taxes', 'Orders']],
+          body: weeklyBody,
+          theme: 'grid',
+          headStyles: { fillColor: [35, 179, 244] },
+          margin: { bottom: 15 },
+          didParseCell(data) {
+            if (data.row.index === weeklyBody.length - 1) {
+              data.cell.styles.fontStyle = 'bold';
+              data.cell.styles.fillColor = [240, 240, 240];
+            }
+          }
+        });
+        currentY = doc.lastAutoTable.finalY + 15;
+      }
+
       if (exportOptions.includeFinancialInsights) {
         setExportProgress(90);
         if (currentY > 250) { doc.addPage(); currentY = 20; }
@@ -460,15 +625,35 @@ const FinancialReport = () => {
                 <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
               </div>
               <Row className="g-3 align-items-end mt-1">
-                <Col xs={12} md={5}>
+                <Col xs={12} md={3}>
+                  <Form.Label className="financial-report-stat-label mb-2">Preset Period</Form.Label>
+                  <Form.Select 
+                    value={datePreset} 
+                    onChange={(e) => {
+                      setDatePreset(e.target.value);
+                      handlePeriodChange(e.target.value);
+                    }}
+                  >
+                    <option value="this_week">This Week</option>
+                    <option value="last_week">Last Week</option>
+                    <option value="this_month">This Month</option>
+                    <option value="last_month">Last Month</option>
+                    <option value="last_30_days">Last 30 Days</option>
+                    <option value="last_90_days">Last 90 Days</option>
+                    <option value="last_180_days">Last 180 Days</option>
+                    <option value="last_365_days">Last 365 Days (1 Year)</option>
+                    <option value="custom">Custom Range</option>
+                  </Form.Select>
+                </Col>
+                <Col xs={12} md={3}>
                   <Form.Label className="financial-report-stat-label mb-2">Start Date</Form.Label>
-                  <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                  <Form.Control type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setDatePreset('custom'); }} />
                 </Col>
-                <Col xs={12} md={5}>
+                <Col xs={12} md={3}>
                   <Form.Label className="financial-report-stat-label mb-2">End Date</Form.Label>
-                  <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                  <Form.Control type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); setDatePreset('custom'); }} />
                 </Col>
-                <Col xs={12} md={2}>
+                <Col xs={12} md={3}>
                   <Button className="financial-report-custom-btn-outline w-100" onClick={fetchFinancialReport} disabled={loading}>
                     <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
                     {loading ? 'Processing...' : 'Generate'}
@@ -673,18 +858,31 @@ const FinancialReport = () => {
               </Card.Body>
             </Card>
 
-            {/* Daily Financial Audit Table */}
+            {/* Sales Breakdown Table */}
             <Card className="financial-report-interactive-card border-0 shadow-sm mb-4">
               <Card.Body className="p-4">
-                <div className="financial-report-card-title-container">
-                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Daily Sales Breakdown</h2>
-                  <CsLineIcons icon="list" size="18" style={{ color: brandColor }} />
+                <div className="financial-report-card-title-container d-flex justify-content-between align-items-center">
+                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                    {viewMode === 'daily' ? 'Daily Sales Breakdown' : 'Weekly Sales Breakdown'}
+                  </h2>
+                  <div className="d-flex align-items-center gap-2">
+                    <Form.Select 
+                      size="sm" 
+                      value={viewMode} 
+                      onChange={(e) => setViewMode(e.target.value)} 
+                      style={{ width: '130px', borderRadius: '50px', fontWeight: '600' }}
+                    >
+                      <option value="daily">Daily View</option>
+                      <option value="weekly">Weekly View</option>
+                    </Form.Select>
+                    <CsLineIcons icon="list" size="18" style={{ color: brandColor }} />
+                  </div>
                 </div>
                 <div className="d-none d-md-block table-responsive mt-3">
                   <Table borderless hover className="align-middle mb-0">
                     <thead className="financial-report-stat-label">
                       <tr style={{ borderBottom: '1.5px solid rgba(0,0,0,0.05)' }}>
-                        <th className="py-3">Date</th>
+                        <th className="py-3">{viewMode === 'daily' ? 'Date' : 'Week Period'}</th>
                         <th className="py-3 text-end">Gross Sales</th>
                         <th className="py-3 text-end">Discounts</th>
                         <th className="py-3 text-end">Net Sales</th>
@@ -693,20 +891,37 @@ const FinancialReport = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {sortedDailyFinancials.map((day, idx) => (
-                        <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
-                          <td className="py-3 fw-bold text-dark">{`${day.date.day}-${day.date.month}-${day.date.year}`}</td>
-                          <td className="py-3 text-end fw-bold text-muted smaller">{formatCurrency(day.grossRevenue)}</td>
-                          <td className="py-3 text-end fw-bold text-danger smaller">{formatCurrency(day.discount + day.waveOff)}</td>
-                          <td className="py-3 text-end fw-bold text-primary">{formatCurrency(day.netRevenue)}</td>
-                          <td className="py-3 text-end fw-bold text-warning smaller">{formatCurrency(day.tax)}</td>
-                          <td className="py-3 text-center">
-                            <Badge bg="light" className="text-dark rounded-pill px-3 py-2 fw-bold" style={{ fontSize: '0.65rem' }}>
-                              {day.orders} ORDERS
-                            </Badge>
-                          </td>
-                        </tr>
-                      ))}
+                      {viewMode === 'daily' ? (
+                        sortedDailyFinancials.map((day, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
+                            <td className="py-3 fw-bold text-dark">{`${day.date.day}-${day.date.month}-${day.date.year}`}</td>
+                            <td className="py-3 text-end fw-bold text-muted smaller">{formatCurrency(day.grossRevenue)}</td>
+                            <td className="py-3 text-end fw-bold text-danger smaller">{formatCurrency(day.discount + day.waveOff)}</td>
+                            <td className="py-3 text-end fw-bold text-primary">{formatCurrency(day.netRevenue)}</td>
+                            <td className="py-3 text-end fw-bold text-warning smaller">{formatCurrency(day.tax)}</td>
+                            <td className="py-3 text-center">
+                              <Badge bg="light" className="text-dark rounded-pill px-3 py-2 fw-bold" style={{ fontSize: '0.65rem' }}>
+                                {day.orders} ORDERS
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        weeklyFinancials.map((week, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
+                            <td className="py-3 fw-bold text-dark">{week.label}</td>
+                            <td className="py-3 text-end fw-bold text-muted smaller">{formatCurrency(week.grossRevenue)}</td>
+                            <td className="py-3 text-end fw-bold text-danger smaller">{formatCurrency(week.discount + week.waveOff)}</td>
+                            <td className="py-3 text-end fw-bold text-primary">{formatCurrency(week.netRevenue)}</td>
+                            <td className="py-3 text-end fw-bold text-warning smaller">{formatCurrency(week.tax)}</td>
+                            <td className="py-3 text-center">
+                              <Badge bg="light" className="text-dark rounded-pill px-3 py-2 fw-bold" style={{ fontSize: '0.65rem' }}>
+                                {week.orders} ORDERS
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                     <tfoot className="fw-bold" style={{ background: 'rgba(0,0,0,0.02)' }}>
                       <tr>
@@ -722,32 +937,61 @@ const FinancialReport = () => {
                 </div>
 
                 <div className="d-md-none d-flex flex-column gap-3 mt-3">
-                  {sortedDailyFinancials.map((day, idx) => (
-                    <div key={idx} className="p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}>
-                      <div className="d-flex justify-content-between align-items-center mb-3">
-                        <span className="fw-bold text-dark fs-6">{`${day.date.day}-${day.date.month}-${day.date.year}`}</span>
-                        <Badge bg="light" className="text-dark rounded-pill px-2 py-1 fw-bold" style={{ fontSize: '0.65rem' }}>
-                          {day.orders} ORDERS
-                        </Badge>
+                  {viewMode === 'daily' ? (
+                    sortedDailyFinancials.map((day, idx) => (
+                      <div key={idx} className="p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <span className="fw-bold text-dark fs-6">{`${day.date.day}-${day.date.month}-${day.date.year}`}</span>
+                          <Badge bg="light" className="text-dark rounded-pill px-2 py-1 fw-bold" style={{ fontSize: '0.65rem' }}>
+                            {day.orders} ORDERS
+                          </Badge>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                          <span className="text-muted fw-bold">Gross Sales:</span>
+                          <span className="fw-bold text-muted">{formatCurrency(day.grossRevenue)}</span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                          <span className="text-muted fw-bold">Discounts:</span>
+                          <span className="fw-bold text-danger">{formatCurrency(day.discount + day.waveOff)}</span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                          <span className="text-muted fw-bold">Total Taxes:</span>
+                          <span className="fw-bold text-warning">{formatCurrency(day.tax)}</span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center smaller">
+                          <span className="text-muted fw-bold">Net Sales:</span>
+                          <span className="fw-bold text-primary">{formatCurrency(day.netRevenue)}</span>
+                        </div>
                       </div>
-                      <div className="d-flex justify-content-between align-items-center mb-2 smaller">
-                        <span className="text-muted fw-bold">Gross Sales:</span>
-                        <span className="fw-bold text-muted">{formatCurrency(day.grossRevenue)}</span>
+                    ))
+                  ) : (
+                    weeklyFinancials.map((week, idx) => (
+                      <div key={idx} className="p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <span className="fw-bold text-dark fs-6">{week.label}</span>
+                          <Badge bg="light" className="text-dark rounded-pill px-2 py-1 fw-bold" style={{ fontSize: '0.65rem' }}>
+                            {week.orders} ORDERS
+                          </Badge>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                          <span className="text-muted fw-bold">Gross Sales:</span>
+                          <span className="fw-bold text-muted">{formatCurrency(week.grossRevenue)}</span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                          <span className="text-muted fw-bold">Discounts:</span>
+                          <span className="fw-bold text-danger">{formatCurrency(week.discount + week.waveOff)}</span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mb-2 smaller">
+                          <span className="text-muted fw-bold">Total Taxes:</span>
+                          <span className="fw-bold text-warning">{formatCurrency(week.tax)}</span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center smaller">
+                          <span className="text-muted fw-bold">Net Sales:</span>
+                          <span className="fw-bold text-primary">{formatCurrency(week.netRevenue)}</span>
+                        </div>
                       </div>
-                      <div className="d-flex justify-content-between align-items-center mb-2 smaller">
-                        <span className="text-muted fw-bold">Discounts:</span>
-                        <span className="fw-bold text-danger">{formatCurrency(day.discount + day.waveOff)}</span>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center mb-2 smaller">
-                        <span className="text-muted fw-bold">Total Taxes:</span>
-                        <span className="fw-bold text-warning">{formatCurrency(day.tax)}</span>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center smaller">
-                        <span className="text-muted fw-bold">Net Sales:</span>
-                        <span className="fw-bold text-primary">{formatCurrency(day.netRevenue)}</span>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
 
                   <div className="p-3 rounded mt-2 border border-primary" style={{ backgroundColor: 'rgba(35, 179, 244, 0.05)' }}>
                     <div className="financial-report-stat-label mb-3 text-primary text-center">Total</div>
@@ -949,6 +1193,7 @@ const FinancialReport = () => {
             {[
               { label: 'Financial Summary', key: 'includeSummary' },
               { label: 'Daily Sales Breakdown', key: 'includeDailyBreakdown' },
+              { label: 'Weekly Sales Breakdown', key: 'includeWeeklyBreakdown' },
               { label: 'Inventory Purchases Breakdown', key: 'includeInventoryPurchases' },
               { label: 'Wastage & Expense Logs', key: 'includeExpensesWastage' },
               { label: 'Tax Breakdown', key: 'includeTaxBreakdown' },
