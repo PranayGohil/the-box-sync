@@ -8,6 +8,7 @@ const manager = {
   operation: lazy(() => import('views/manager/operation/Operations')),
   staff: lazy(() => import('views/manager/staff/Staff')),
   kot: lazy(() => import('views/manager/kot/ViewKots')),
+  notifications: lazy(() => import('views/manager/notifications/NotificationsList')),
 };
 
 const qsr = {
@@ -67,6 +68,10 @@ const allRoutes = {
         { path: '/qsr-pos', label: 'QSR POS', component: qsr.unified },
         { path: '/delivery-partners', label: 'Delivery Partners', component: order.deliveryPartner },
       ]
+    },
+    {
+      path: `${appRoot}/notifications`,
+      component: manager.notifications,
     },
   ],
   sidebarItems: [

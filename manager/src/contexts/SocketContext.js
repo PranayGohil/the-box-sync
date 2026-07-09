@@ -447,6 +447,30 @@ export const SocketProvider = ({ children }) => {
       }
     });
 
+    s.on("inventory_status_update", (notification) => {
+      console.log("SocketContext: Received inventory_status_update socket event:", notification);
+      setNotifications((prev) => [...prev, notification]);
+      dispatch(addNotification(notification));
+      if (AudioManager.isEnabled()) {
+        AudioManager.play();
+      }
+      const title = notification.type === "inventory_approved" ? "Inventory Approved!" : "Inventory Rejected!";
+      const body = notification.type === "inventory_approved"
+        ? `Your request for ${notification.data?.category || 'items'} (₹${notification.data?.total_amount || 0}) is approved/delivered.`
+        : `Your request for ${notification.data?.category || 'items'} is rejected. Reason: ${notification.data?.reject_reason || 'N/A'}`;
+      
+      toast.info(body);
+
+      // Native browser notification
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, {
+          body,
+          icon: "/logo192.png",
+          requireInteraction: true
+        });
+      }
+    });
+
     setSocket(s);
 
     return () => s.disconnect();

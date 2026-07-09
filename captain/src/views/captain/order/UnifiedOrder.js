@@ -138,6 +138,63 @@ const UnifiedOrder = () => {
     initialStateRef.current = { orderItems: [], customerInfo: { ...freshCustomerInfo, table_no: tableInfo.table_no || '' } };
   };
 
+  // ── Validation ────────────────────────────────────────────────────────────
+  function validateOrder() {
+    if (orderItems.length === 0) { alert('Please add items to the order'); return false; }
+    if (orderType === 'Delivery') {
+      if (!customerInfo.name) { alert('Please enter customer name'); return false; }
+      if (!customerInfo.phone) { alert('Please enter customer phone number'); return false; }
+      if (!customerInfo.address) { alert('Please enter customer address'); return false; }
+    }
+    return true;
+  }
+
+  // ── Payload Builder ───────────────────────────────────────────────────────
+  function buildPayload(status, completeAll = false) {
+    const orderData = {
+      order_type: orderType,
+      order_date: orderDate ? new Date(orderDate) : new Date(),
+      order_items: orderItems.map((item) => ({
+        dish_name: item.dish_name, quantity: item.quantity, dish_price: item.dish_price,
+        special_notes: item.special_notes || '',
+        status: completeAll
+          ? (canKOT ? 'Preparing' : 'Completed')
+          : (status === 'KOT' || status === 'Paid')
+            ? (item.status === 'Pending' ? (canKOT ? 'Preparing' : 'Completed') : item.status)
+            : (status === 'Save' ? (item.status || 'Pending') : item.status),
+        selected_variant: item.selected_variant,
+        selected_addons: item.selected_addons,
+      })),
+      order_status: status,
+      customer_name: customerInfo.name,
+      comment: customerInfo.comment,
+      bill_amount: parseFloat(paymentData.total), sub_total: parseFloat(paymentData.subTotal),
+      cgst_percent: parseFloat(paymentData.cgstPercent), sgst_percent: parseFloat(paymentData.sgstPercent), vat_percent: parseFloat(paymentData.vatPercent),
+      cgst_amount: parseFloat(paymentData.cgstAmount), sgst_amount: parseFloat(paymentData.sgstAmount), vat_amount: parseFloat(paymentData.vatAmount),
+      discount_amount: parseFloat(paymentData.discountAmount), waveoff_amount: parseFloat(paymentData.waveoffAmount),
+      total_amount: parseFloat(paymentData.total), paid_amount: parseFloat(paymentData.paidAmount),
+      payment_type: paymentData.paymentType, order_source: 'Captain',
+    };
+
+    // DineIn-specific fields
+    if (orderType === 'Dine In') {
+      orderData.total_persons = customerInfo.total_persons;
+      orderData.waiter = customerInfo.waiter;
+      orderData.table_no = customerInfo.table_no || tableInfo.table_no;
+      if (tableInfo.area) orderData.table_area = tableInfo.area;
+    }
+
+    const custPayload = { name: customerInfo.name };
+    if (orderType !== 'Dine In') custPayload.phone = customerInfo.phone;
+    if (orderType === 'Delivery') custPayload.address = customerInfo.address;
+
+    return {
+      orderInfo: { ...orderData, order_id: orderId },
+      customerInfo: custPayload,
+      tableId: orderType === 'Dine In' ? tableId : undefined,
+    };
+  }
+
   // ── Data Fetchers ─────────────────────────────────────────────────────────
   async function fetchTableInfo() {
     try {
@@ -228,9 +285,9 @@ const UnifiedOrder = () => {
       kotSnapshotRef.current = JSON.parse(JSON.stringify(items));
       // Load KOT and Payment history from localStorage
       try {
-        const savedKot = localStorage.getItem(`kot_history_${activeId}`);
+        const savedKot = localStorage.getItem(`kot_history_${orderId}`);
         if (savedKot) setKotHistory(JSON.parse(savedKot));
-        const savedPayment = localStorage.getItem(`payment_history_${activeId}`);
+        const savedPayment = localStorage.getItem(`payment_history_${orderId}`);
         if (savedPayment) setPaymentHistory(JSON.parse(savedPayment));
       } catch (e) {
         console.error(e);
@@ -241,11 +298,11 @@ const UnifiedOrder = () => {
       if (searchParams.get('print') === 'true') {
         const newUrl = window.location.pathname + window.location.search.replace(/[&?]print=true/, '');
         window.history.replaceState({}, '', newUrl);
-        openPrintWindow(activeId, setPrinting);
+        openPrintWindow(orderId, setPrinting);
       } else if (searchParams.get('printKOT') === 'true') {
         const newUrl = window.location.pathname + window.location.search.replace(/[&?]printKOT=true/, '');
         window.history.replaceState({}, '', newUrl);
-        const savedKotStr = localStorage.getItem(`kot_history_${activeId}`);
+        const savedKotStr = localStorage.getItem(`kot_history_${orderId}`);
         if (savedKotStr) {
           const savedKotList = JSON.parse(savedKotStr);
           const latestRecord = savedKotList[savedKotList.length - 1];
@@ -443,63 +500,6 @@ const UnifiedOrder = () => {
       }
     }
     return delta;
-  };
-
-  // ── Validation ────────────────────────────────────────────────────────────
-  const validateOrder = () => {
-    if (orderItems.length === 0) { alert('Please add items to the order'); return false; }
-    if (orderType === 'Delivery') {
-      if (!customerInfo.name) { alert('Please enter customer name'); return false; }
-      if (!customerInfo.phone) { alert('Please enter customer phone number'); return false; }
-      if (!customerInfo.address) { alert('Please enter customer address'); return false; }
-    }
-    return true;
-  };
-
-  // ── Payload Builder ───────────────────────────────────────────────────────
-  const buildPayload = (status, completeAll = false) => {
-    const orderData = {
-      order_type: orderType,
-      order_date: orderDate ? new Date(orderDate) : new Date(),
-      order_items: orderItems.map((item) => ({
-        dish_name: item.dish_name, quantity: item.quantity, dish_price: item.dish_price,
-        special_notes: item.special_notes || '',
-        status: completeAll
-          ? (canKOT ? 'Preparing' : 'Completed')
-          : (status === 'KOT' || status === 'Paid')
-            ? (item.status === 'Pending' ? (canKOT ? 'Preparing' : 'Completed') : item.status)
-            : (status === 'Save' ? (item.status || 'Pending') : item.status),
-        selected_variant: item.selected_variant,
-        selected_addons: item.selected_addons,
-      })),
-      order_status: status,
-      customer_name: customerInfo.name,
-      comment: customerInfo.comment,
-      bill_amount: parseFloat(paymentData.total), sub_total: parseFloat(paymentData.subTotal),
-      cgst_percent: parseFloat(paymentData.cgstPercent), sgst_percent: parseFloat(paymentData.sgstPercent), vat_percent: parseFloat(paymentData.vatPercent),
-      cgst_amount: parseFloat(paymentData.cgstAmount), sgst_amount: parseFloat(paymentData.sgstAmount), vat_amount: parseFloat(paymentData.vatAmount),
-      discount_amount: parseFloat(paymentData.discountAmount), waveoff_amount: parseFloat(paymentData.waveoffAmount),
-      total_amount: parseFloat(paymentData.total), paid_amount: parseFloat(paymentData.paidAmount),
-      payment_type: paymentData.paymentType, order_source: 'Captain',
-    };
-
-    // DineIn-specific fields
-    if (orderType === 'Dine In') {
-      orderData.total_persons = customerInfo.total_persons;
-      orderData.waiter = customerInfo.waiter;
-      orderData.table_no = customerInfo.table_no || tableInfo.table_no;
-      if (tableInfo.area) orderData.table_area = tableInfo.area;
-    }
-
-    const custPayload = { name: customerInfo.name };
-    if (orderType !== 'Dine In') custPayload.phone = customerInfo.phone;
-    if (orderType === 'Delivery') custPayload.address = customerInfo.address;
-
-    return {
-      orderInfo: { ...orderData, order_id: orderId },
-      customerInfo: custPayload,
-      tableId: orderType === 'Dine In' ? tableId : undefined,
-    };
   };
 
   // ── KOT & Print ───────────────────────────────────────────────────────────
