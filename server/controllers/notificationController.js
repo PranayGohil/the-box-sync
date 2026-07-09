@@ -3,10 +3,13 @@ const Notification = require("../models/notificationModel");
 exports.getNotifications = async (req, res) => {
   try {
     const userId = req.user._id;
-    // Get latest 20 notifications for the logged-in restaurant admin
+    const role = req.user.Role;
+    const receiver = (role === "Manager" || role === "Staff") ? "Manager" : "Admin";
+
+    // Get latest 20 notifications for the logged-in role
     const notifications = await Notification.find({
       restaurant_id: userId,
-      receiver: "Admin",
+      receiver: receiver,
     })
       .sort({ createdAt: -1 })
       .limit(20)
@@ -22,8 +25,11 @@ exports.getNotifications = async (req, res) => {
 exports.markNotificationsRead = async (req, res) => {
   try {
     const userId = req.user._id;
+    const role = req.user.Role;
+    const receiver = (role === "Manager" || role === "Staff") ? "Manager" : "Admin";
+
     await Notification.updateMany(
-      { restaurant_id: userId, receiver: "Admin", read: false },
+      { restaurant_id: userId, receiver: receiver, read: false },
       { $set: { read: true } }
     );
     res.status(200).json({ success: true, message: "Notifications marked as read" });
@@ -37,8 +43,11 @@ exports.markSingleNotificationRead = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user._id;
+    const role = req.user.Role;
+    const receiver = (role === "Manager" || role === "Staff") ? "Manager" : "Admin";
+
     const notification = await Notification.findOneAndUpdate(
-      { _id: id, restaurant_id: userId, receiver: "Admin" },
+      { _id: id, restaurant_id: userId, receiver: receiver },
       { $set: { read: true } },
       { new: true }
     );
@@ -56,10 +65,13 @@ exports.deleteNotification = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user._id;
+    const role = req.user.Role;
+    const receiver = (role === "Manager" || role === "Staff") ? "Manager" : "Admin";
+
     const notification = await Notification.findOneAndDelete({
       _id: id,
       restaurant_id: userId,
-      receiver: "Admin"
+      receiver: receiver
     });
     if (!notification) {
       return res.status(404).json({ success: false, message: "Notification not found" });
@@ -74,9 +86,12 @@ exports.deleteNotification = async (req, res) => {
 exports.deleteAllNotifications = async (req, res) => {
   try {
     const userId = req.user._id;
+    const role = req.user.Role;
+    const receiver = (role === "Manager" || role === "Staff") ? "Manager" : "Admin";
+
     await Notification.deleteMany({
       restaurant_id: userId,
-      receiver: "Admin"
+      receiver: receiver
     });
     res.status(200).json({ success: true, message: "All notifications deleted successfully" });
   } catch (error) {

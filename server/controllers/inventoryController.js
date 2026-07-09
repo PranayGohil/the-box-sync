@@ -532,6 +532,31 @@ const completeInventoryRequest = async (req, res) => {
       { $set: { read: true } }
     );
 
+    // Create notification for Manager that Admin has delivered/approved the inventory request
+    const io = req.app.get("io");
+    const connectedUsers = req.app.get("connectedUsers");
+    const managerKey = `${inventory.user_id}_Manager`;
+
+    const managerNotification = await Notification.create({
+      restaurant_id: inventory.user_id,
+      sender: "Admin",
+      receiver: "Manager",
+      type: "inventory_approved",
+      data: {
+        _id: _id,
+        category: category,
+        total_amount: Number(total_amount) || 0,
+        status: "Completed",
+      },
+    });
+
+    if (io && connectedUsers && connectedUsers[managerKey]) {
+      io.to(connectedUsers[managerKey]).emit(
+        "inventory_status_update",
+        managerNotification
+      );
+    }
+
     res.status(200).json({
       success: true,
       message: "Inventory updated successfully",
@@ -570,6 +595,32 @@ const rejectInventoryRequest = async (req, res) => {
       },
       { $set: { read: true } }
     );
+
+    // Create notification for Manager that Admin has rejected the inventory request
+    const io = req.app.get("io");
+    const connectedUsers = req.app.get("connectedUsers");
+    const managerKey = `${userId}_Manager`;
+
+    const managerNotification = await Notification.create({
+      restaurant_id: userId,
+      sender: "Admin",
+      receiver: "Manager",
+      type: "inventory_rejected",
+      data: {
+        _id: id,
+        category: inventory.category,
+        total_amount: inventory.total_amount,
+        reject_reason: reject_reason || "",
+        status: "Rejected",
+      },
+    });
+
+    if (io && connectedUsers && connectedUsers[managerKey]) {
+      io.to(connectedUsers[managerKey]).emit(
+        "inventory_status_update",
+        managerNotification
+      );
+    }
 
     res
       .status(200)

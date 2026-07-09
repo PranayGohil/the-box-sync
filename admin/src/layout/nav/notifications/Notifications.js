@@ -134,7 +134,7 @@ const Notifications = () => {
 
     let detail = '';
     let link = '#/';
-    let img = '/img/profile/profile-default.webp';
+    let img = '/img/profile/profile-11.webp';
     let icon = '';
 
     if (item.type === 'new_inventory_request') {
@@ -145,11 +145,11 @@ const Notifications = () => {
     } else if (item.type === 'web_order_recieved') {
       detail = `New web order received! Total: ₹${item.data?.total_amount || 0}`;
       link = '/operations/order-history';
-      img = '/img/profile/profile-2.webp';
+      icon = 'cart';
     } else {
       detail = `${item.sender || 'System'}: New ${item.type?.replace(/_/g, ' ') || 'notification'}`;
       link = '#/';
-      img = '/img/profile/profile-default.webp';
+      img = '/img/profile/profile-11.webp';
     }
 
     return {
