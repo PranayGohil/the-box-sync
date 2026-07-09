@@ -117,7 +117,7 @@ const getUserSubscriptionInfoById = async (req, res) => {
   try {
     const userId = req.params.id;
     const user = await User.findById(userId)
-      .select("name email mobile restaurant_code")
+      .select("name email mobile restaurant_code isApproved is_street_food")
       .lean();
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -444,7 +444,7 @@ const buyCompletePlan = async (req, res) => {
 const getAllSubscriptions = async (req, res) => {
   try {
     const users = await User.find({})
-      .select("_id name email mobile restaurant_code isApproved")
+      .select("_id name email mobile restaurant_code isApproved is_street_food")
       .lean();
     const subscriptions = await Subscription.find({}).lean();
 
@@ -462,6 +462,7 @@ const getAllSubscriptions = async (req, res) => {
       mobile: user.mobile,
       restaurant_code: user.restaurant_code,
       isApproved: user.isApproved,
+      is_street_food: user.is_street_food,
       subscriptions: subsByUser[user._id.toString()] || [],
     }));
 

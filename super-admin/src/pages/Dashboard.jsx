@@ -160,7 +160,12 @@ const Dashboard = () => {
                 return (
                   <tr key={user._id}>
                     <td>
-                      <div className="fw-bold">{user.name}</div>
+                      <div className="d-flex align-items-center gap-2">
+                        <span className="fw-bold">{user.name}</span>
+                        {user.is_street_food && (
+                          <span className="badge bg-info text-white rounded-pill px-2" style={{ fontSize: '10px', fontWeight: 600 }}>Street Food</span>
+                        )}
+                      </div>
                       <div className="text-muted small">{user.email}</div>
                     </td>
                     <td><code className="text-primary fw-bold">{user.restaurant_code}</code></td>

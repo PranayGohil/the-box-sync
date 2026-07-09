@@ -217,7 +217,8 @@ const toggleApproval = async (req, res) => {
             <div style="padding: 24px; background: #fafafa;">
               <p style="color: #333; font-size: 16px;">Dear <strong>${user.name}</strong>,</p>
               <p style="color: #555;">We are pleased to inform you that your restaurant account at <strong>TheBox</strong> has been approved and activated by the Super Admin.</p>
-              <p style="color: #555;">You can now log in to your admin panel and start setting up your restaurant management features.</p>
+              <p style="color: #2e7d32; font-size: 16px; font-weight: bold; margin: 15px 0;">Your account is approved, now you are able to login.</p>
+              <p style="color: #555;">You can now log in to your dashboard and start setting up your management features.</p>
               
               <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; margin: 20px 0;">
                 <p style="margin: 0 0 8px 0; color: #4a5568;"><strong>Restaurant Details:</strong></p>

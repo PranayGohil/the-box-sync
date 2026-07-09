@@ -380,6 +380,12 @@ const login = async (req, res) => {
         .json({ success: false, message: "Invalid Credentials" });
     }
 
+    if (!userExists.isApproved) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Your account is pending activation from the Theboxsync side. We will notify you once it is activated." });
+    }
+
     const token = await userExists.generateAuthToken("Admin");
 
     res.json({

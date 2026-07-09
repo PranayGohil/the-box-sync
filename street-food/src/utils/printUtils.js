@@ -36,15 +36,15 @@ export const printCounterBill = (ord, userData, counterName, items) => {
           <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
           <td class="text-right">
             ${ord.table_no
-              ? `<strong>Table:</strong> ${ord.table_no}`
-              : ord.token
-                ? `<strong>Token:</strong> ${ord.token}`
-                : ''}
+      ? `<strong>Table:</strong> ${ord.table_no}`
+      : ord.token
+        ? `<strong>Token:</strong> ${ord.token}`
+        : ''}
           </td>
         </tr>
         ${(showCustomerDetails && ord.customer_name)
-          ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
-          : ''}
+      ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
+      : ''}
       </table>
 
       <!-- Items Table -->
@@ -151,15 +151,15 @@ export const printFullBill = (ord, userData, items, subTotal) => {
           <td><strong>Date:</strong> ${new Date(ord.order_date).toLocaleString()}</td>
           <td class="text-right">
             ${ord.table_no
-              ? `<strong>Table:</strong> ${ord.table_no}`
-              : ord.token
-                ? `<strong>Token:</strong> ${ord.token}`
-                : ''}
+      ? `<strong>Table:</strong> ${ord.table_no}`
+      : ord.token
+        ? `<strong>Token:</strong> ${ord.token}`
+        : ''}
           </td>
         </tr>
         ${(showCustomerDetails && ord.customer_name)
-          ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
-          : ''}
+      ? `<tr><td colspan="2"><strong>Customer:</strong> ${ord.customer_name}</td></tr>`
+      : ''}
       </table>
 
       <!-- Items Table -->
@@ -261,23 +261,16 @@ const handleMobilePrintOption = (orderId) => {
     const useBluetooth = window.confirm(
       "Select printing method:\n\nClick 'OK' to print via Bluetooth Print app.\nClick 'Cancel' to use standard browser print."
     );
-      if (useBluetooth) {
-        if (!orderId) {
-          toast.warning("Cannot print via Bluetooth app: Order ID is missing. Please save the order first.");
-          return true;
-        }
-        const apiBase = process.env.REACT_APP_API || 'http://localhost:5001/api';
-        const printUrl = `${apiBase}/order/bluetooth-json/${orderId}`;
-        
-        // Use an invisible iframe instead of window.location.href to avoid tearing down the connection abruptly
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = `my.bluetoothprint.scheme://${printUrl}`;
-        document.body.appendChild(iframe);
-        setTimeout(() => document.body.removeChild(iframe), 2000);
-        
+    if (useBluetooth) {
+      if (!orderId) {
+        toast.warning("Cannot print via Bluetooth app: Order ID is missing. Please save the order first.");
         return true;
       }
+      const apiBase = process.env.REACT_APP_API || 'http://localhost:5001/api';
+      const printUrl = `${apiBase}/order/bluetooth-json/${orderId}`;
+      window.location.href = `my.bluetoothprint.scheme://${printUrl}`;
+      return true;
+    }
   }
   return false;
 };
