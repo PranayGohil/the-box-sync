@@ -145,7 +145,7 @@ const NavContent = () => {
             return inventoryPaths.some(p => location.pathname.startsWith(p));
           }}>
             <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Daily Inventory Workstation</span>
+            <span className="align-middle">Manage Inventory</span>
           </Nav.Link>
         </div>
       </div>
@@ -277,7 +277,7 @@ const Operations = () => {
     <div className="position-relative pb-7 pb-lg-0">
       {/* MODERN MOBILE BOTTOM NAV */}
       {width && width < lgBreakpoint && <MobileBottomNav />}
-      
+
       <Row>
         {(width && width >= lgBreakpoint) ? (
           <Col xs="auto" className="d-none d-lg-flex">

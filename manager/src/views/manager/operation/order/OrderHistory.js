@@ -58,7 +58,7 @@ const OrderHistory = () => {
   const [totalRecords, setTotalRecords] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('updated_at');
+  const [sortBy, setSortBy] = useState('order_no');
   const [sortOrder, setSortOrder] = useState('desc');
 
   // Filter states
@@ -132,6 +132,7 @@ const OrderHistory = () => {
         }));
 
         setData(transformedOrders);
+        console.log("transformedOrders : ", transformedOrders)
 
         if (resData.pagination) {
           setTotalRecords(resData.pagination.total || 0);
@@ -880,6 +881,9 @@ const OrderHistory = () => {
         accessor: 'order_no',
         id: 'order_no',
         headerClassName: 'text-small text-uppercase w-15',
+        sortable: true,
+        isSorted: sortBy === 'order_no',
+        isSortedDesc: sortBy === 'order_no' && sortOrder === 'desc',
       },
       {
         Header: 'Date',

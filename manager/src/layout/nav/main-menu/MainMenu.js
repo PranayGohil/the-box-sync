@@ -28,12 +28,12 @@ const MainMenu = () => {
   const scrolled = useWindowScroll();
   const { width } = useWindowSize();
 
-  const { activePlans } = React.useContext(AuthContext);
+  const { activePlans, kotUserExists } = React.useContext(AuthContext);
 
   const filteredRoutes = useMemo(() => {
-    const filteredAll = filterRoutesByPlans(allRoutes, activePlans);
+    const filteredAll = filterRoutesByPlans(allRoutes, activePlans, kotUserExists);
     return attrMobile && useSidebar ? filteredAll : filteredAll.mainMenuItems;
-  }, [attrMobile, useSidebar, activePlans]);
+  }, [attrMobile, useSidebar, activePlans, kotUserExists]);
 
   const menuItemsMemo = useMemo(
     () =>

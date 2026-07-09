@@ -28,12 +28,13 @@ const MainMenu = () => {
   const scrolled = useWindowScroll();
   const { width } = useWindowSize();
 
-  const { activePlans } = React.useContext(AuthContext);
+  const { activePlans, kotUserExists } = React.useContext(AuthContext);
 
   const filteredRoutes = useMemo(() => {
     let routesToFilter = attrMobile && useSidebar ? allRoutes : allRoutes.mainMenuItems;
     
-    if (activePlans && !activePlans.includes('KOT Panel')) {
+    const showKOT = activePlans && activePlans.includes('KOT Panel') && kotUserExists;
+    if (!showKOT) {
       if (Array.isArray(routesToFilter)) {
         routesToFilter = routesToFilter.filter(route => route.label !== 'KOT');
       } else if (routesToFilter.mainMenuItems) {
@@ -44,7 +45,7 @@ const MainMenu = () => {
       }
     }
     return routesToFilter;
-  }, [attrMobile, useSidebar, activePlans]);
+  }, [attrMobile, useSidebar, activePlans, kotUserExists]);
 
   const menuItemsMemo = useMemo(
     () =>

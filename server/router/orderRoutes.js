@@ -15,6 +15,7 @@ const {
   calculateDeliveryController,
   updateOrderStatus,
 } = require("../controllers/orderController");
+const { getBluetoothPrintJson } = require("../controllers/printController");
 
 const orderRouter = express.Router();
 
@@ -35,5 +36,7 @@ orderRouter.route("/delivery").post(authMiddleware, deliveryController);
 orderRouter.route("/delivery-from-site/:rescode").post(deliveryFromSiteController);
 orderRouter.route("/calculate-delivery/:rescode").post(calculateDeliveryController);
 orderRouter.route("/update-status/:id").put(authMiddleware, updateOrderStatus);
+
+orderRouter.route("/bluetooth-json/:orderId").get(getBluetoothPrintJson);
 
 module.exports = orderRouter;

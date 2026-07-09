@@ -11,6 +11,7 @@ const Menu = require("../models/menuModel");
 const Notification = require("../models/notificationModel");
 const OrderCounter = require("../models/orderCounterModel");
 const { processOrderLoyalty } = require("./loyaltyController");
+const mongoose = require("mongoose");
 
 const recalculateOrderTotals = (orderInfo) => {
   if (!orderInfo || !Array.isArray(orderInfo.order_items)) return orderInfo;
@@ -71,6 +72,45 @@ const recalculateOrderTotals = (orderInfo) => {
   orderInfo.total_amount = total_amount;
 
   return orderInfo;
+};
+
+const getTargetItemStatus = async (userId) => {
+  try {
+    if (!userId) return "Completed";
+    const Subscription = require("../models/subscriptionModel");
+    const Kot = require("../models/kotModel");
+    const User = require("../models/userModel");
+
+    const user = await User.findById(userId).lean();
+    if (!user) return "Completed";
+
+    // 1. Check if user has KOT Panel subscription active
+    let hasKotSub = false;
+    const activeSub = await Subscription.findOne({
+      user_id: userId,
+      plan_name: "KOT Panel",
+      status: "active",
+      end_date: { $gt: new Date() }
+    }).lean();
+
+    if (activeSub) {
+      hasKotSub = true;
+    } else {
+      const tier = user.purchasedPlan || 'QSR';
+      if (tier === 'Fine Dine' || tier === 'Chain') {
+        hasKotSub = true;
+      }
+    }
+
+    if (!hasKotSub) return "Completed";
+
+    // 2. Check if KOT Panel user has been created
+    const kotUserExists = await Kot.findOne({ user_id: userId }).lean();
+    return kotUserExists ? "Preparing" : "Completed";
+  } catch (err) {
+    console.error("Error in getTargetItemStatus:", err);
+    return "Completed";
+  }
 };
 
 const broadcastOrderUpdate = (req, order) => {
@@ -386,9 +426,10 @@ const orderController = async (req, res) => {
 
     // ✅ 2. Update item statuses based on order status
     if (orderInfo.order_status === "KOT" || orderInfo.order_source === "QSR") {
+      const targetStatus = await getTargetItemStatus(orderInfo.user_id);
       orderInfo.order_items = orderInfo.order_items.map((item) => ({
         ...item,
-        status: item.status === "Pending" ? "Preparing" : item.status,
+        status: item.status === "Pending" ? targetStatus : item.status,
       }));
     }
 
@@ -592,9 +633,10 @@ const dineInController = async (req, res) => {
 
     // ✅ 2. Update item statuses based on order status
     if (orderInfo.order_status === "KOT") {
+      const targetStatus = await getTargetItemStatus(orderInfo.user_id);
       orderInfo.order_items = orderInfo.order_items.map((item) => ({
         ...item,
-        status: item.status === "Pending" ? "Preparing" : item.status,
+        status: item.status === "Pending" ? targetStatus : item.status,
       }));
     }
     // assign counters to items (only if menu exists, safe fallback)
@@ -855,9 +897,10 @@ const takeawayController = async (req, res) => {
 
     // ✅ 2. Update item statuses based on order status
     if (orderInfo.order_status === "KOT") {
+      const targetStatus = await getTargetItemStatus(orderInfo.user_id);
       orderInfo.order_items = orderInfo.order_items.map((item) => ({
         ...item,
-        status: item.status === "Pending" ? "Preparing" : item.status,
+        status: item.status === "Pending" ? targetStatus : item.status,
       }));
     }
 
@@ -1102,9 +1145,10 @@ const deliveryController = async (req, res) => {
 
     // ✅ 2. Update item statuses based on order status
     if (orderInfo.order_status === "KOT") {
+      const targetStatus = await getTargetItemStatus(orderInfo.user_id);
       orderInfo.order_items = orderInfo.order_items.map((item) => ({
         ...item,
-        status: item.status === "Pending" ? "Preparing" : item.status,
+        status: item.status === "Pending" ? targetStatus : item.status,
       }));
     }
 
@@ -1488,9 +1532,10 @@ const deliveryFromSiteController = async (req, res) => {
 
     // ✅ 2. Update item statuses based on order status
     if (orderInfo.order_status === "KOT") {
+      const targetStatus = await getTargetItemStatus(orderInfo.user_id);
       orderInfo.order_items = orderInfo.order_items.map((item) => ({
         ...item,
-        status: item.status === "Pending" ? "Preparing" : item.status,
+        status: item.status === "Pending" ? targetStatus : item.status,
       }));
     }
 
@@ -1618,7 +1663,7 @@ const orderHistory = async (req, res) => {
       search,
       page = 1,
       limit = 20,
-      sortBy = "updated_at",
+      sortBy = "order_no",
       sortOrder = "desc",
     } = req.query;
 
@@ -1627,7 +1672,7 @@ const orderHistory = async (req, res) => {
     const skip = (pageNumber - 1) * pageSize;
 
     const filter = {
-      user_id: req.user,
+      user_id: req.user._id ? String(req.user._id) : String(req.user),
     };
 
     // Existing filters
@@ -1677,36 +1722,78 @@ const orderHistory = async (req, res) => {
       ];
     }
 
-    // Sorting
-    const sort = {
-      [sortBy]: sortOrder === "asc" ? 1 : -1,
-    };
+    // Build aggregation pipeline to pin 'Save' orders to top,
+    // then sort by the requested field (default: order_no desc)
+    const sortDir = sortOrder === "asc" ? 1 : -1;
 
-    // Projection
-    const projection = {
-      order_no: 1,
-      token: 1,
-      table_no: 1,
-      table_area: 1,
-      order_type: 1,
-      order_status: 1,
-      order_source: 1,
-      bill_amount: 1,
-      total_amount: 1,
-      order_date: 1,
-      customer_name: 1,
-      payment_type: 1,
-      updated_at: 1,
-    };
+    const aggregationPipeline = [
+      // 1. Match the filter
+      { $match: filter },
 
-    // Parallel execution of query and count
+      // 2. Add computed fields for sorting:
+      //    - _sort_priority: 0 = Save (shown first), 1 = everything else
+      //    - _sort_order_no: numeric version of order_no string for correct numeric sort
+      {
+        $addFields: {
+          _sort_priority: {
+            $cond: [{ $eq: ["$order_status", "Save"] }, 0, 1],
+          },
+          _sort_order_no: {
+            $convert: {
+              input: {
+                $cond: [
+                  {
+                    $and: [
+                      { $eq: [{ $type: "$order_no" }, "string"] },
+                      { $gte: [{ $strLenCP: "$order_no" }, 5] },
+                    ],
+                  },
+                  { $substrCP: ["$order_no", 4, 10] },
+                  "$order_no",
+                ],
+              },
+              to: "int",
+              onError: 0,
+              onNull: 0,
+            },
+          },
+        },
+      },
+
+      // 3. Sort: priority ASC (Save first), then by requested field
+      {
+        $sort: sortBy === "order_no"
+          ? { _sort_priority: 1, _sort_order_no: sortDir }
+          : { _sort_priority: 1, [sortBy]: sortDir },
+      },
+
+      // 4. Project only needed fields (drop the computed helper fields)
+      {
+        $project: {
+          order_no: 1,
+          token: 1,
+          table_no: 1,
+          table_area: 1,
+          order_type: 1,
+          order_status: 1,
+          order_source: 1,
+          bill_amount: 1,
+          total_amount: 1,
+          order_date: 1,
+          customer_name: 1,
+          payment_type: 1,
+          updated_at: 1,
+        },
+      },
+
+      // 5. Paginate
+      { $skip: skip },
+      { $limit: pageSize },
+    ];
+
+    // Parallel execution of aggregation and count
     const [orders, total] = await Promise.all([
-      Order.find(filter)
-        .select(projection)
-        .sort(sort)
-        .skip(skip)
-        .limit(pageSize)
-        .lean(),
+      Order.aggregate(aggregationPipeline),
       Order.countDocuments(filter),
     ]);
 
@@ -1742,9 +1829,10 @@ const updateOrderStatus = async (req, res) => {
 
     order.order_status = status;
     if (status === "KOT") {
+      const targetStatus = await getTargetItemStatus(order.user_id);
       order.order_items = order.order_items.map((item) => ({
         ...item,
-        status: item.status === "Pending" ? "Preparing" : item.status,
+        status: item.status === "Pending" ? targetStatus : item.status,
       }));
     } else if (status === "Cancelled" || status === "Rejected") {
       order.order_items = order.order_items.map((item) => ({
@@ -1907,4 +1995,5 @@ module.exports = {
   deliveryFromSiteController,
   calculateDeliveryController,
   updateOrderStatus,
+  getTargetItemStatus,
 };

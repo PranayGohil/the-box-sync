@@ -43,7 +43,7 @@ const OrderHistory = () => {
   const [totalRecords, setTotalRecords] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('updated_at');
+  const [sortBy, setSortBy] = useState('order_no');
   const [sortOrder, setSortOrder] = useState('desc');
 
   // Filter states
@@ -738,6 +738,9 @@ const OrderHistory = () => {
         accessor: 'order_no',
         id: 'order_no',
         headerClassName: 'text-small text-uppercase w-15',
+        sortable: true,
+        isSorted: sortBy === 'order_no',
+        isSortedDesc: sortBy === 'order_no' && sortOrder === 'desc',
       },
       {
         Header: 'Date',
@@ -747,7 +750,7 @@ const OrderHistory = () => {
         sortable: true,
         isSorted: sortBy === 'order_date',
         isSortedDesc: sortBy === 'order_date' && sortOrder === 'desc',
-        Cell: ({ value }) => new Date(value).toLocaleDateString('en-IN'),
+        Cell: ({ value }) => format(new Date(value), 'dd MMM yyyy'),
       },
       {
         Header: 'Time',
@@ -755,7 +758,7 @@ const OrderHistory = () => {
         id: 'order_time',
         headerClassName: 'text-small text-uppercase w-15',
         disableSortBy: true,
-        Cell: ({ value }) => new Date(value).toLocaleTimeString(),
+        Cell: ({ value }) => format(new Date(value), 'HH:mm'),
       },
       {
         Header: 'Name',
@@ -764,6 +767,7 @@ const OrderHistory = () => {
         sortable: true,
         isSorted: sortBy === 'customer_name',
         isSortedDesc: sortBy === 'customer_name' && sortOrder === 'desc',
+        Cell: ({ value }) => value || 'Guest',
       },
       {
         Header: 'Type',

@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const history = useHistory();
   const [currentUser, setCurrentUser] = useState(null);
   const [activePlans, setActivePlans] = useState([]);
+  const [kotUserExists, setKotUserExists] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -22,9 +23,30 @@ export const AuthProvider = ({ children }) => {
           },
         }
       );
+      let allPlans = [];
       if (response.data?.data?.length > 0) {
         const active = response.data.data.filter((plan) => plan.status === 'active');
-        setActivePlans(active.map((plan) => plan.plan_name));
+        allPlans = active.map((plan) => plan.plan_name);
+      }
+      setActivePlans(allPlans);
+
+      if (allPlans.includes('KOT Panel')) {
+        try {
+          const res = await axios.get(
+            `${process.env.REACT_APP_API}/panel-user/KOT Panel`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+            }
+          );
+          setKotUserExists(res.data?.exists || false);
+        } catch (error) {
+          console.error('Error checking KOT panel user existence:', error);
+          setKotUserExists(false);
+        }
+      } else {
+        setKotUserExists(false);
       }
     } catch (error) {
       console.error('Error fetching subscription plans:', error);
@@ -70,6 +92,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       setCurrentUser(userData);
       setIsLogin(true);
+      await fetchUserSubscriptions();
       return { success: true };
     } catch (err) {
       return { success: false, message: err.response?.data?.message || 'Login failed' };
@@ -82,5 +105,5 @@ export const AuthProvider = ({ children }) => {
     setIsLogin(false);
   };
 
-  return <AuthContext.Provider value={{ currentUser, activePlans, isLogin, loading, login, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ currentUser, activePlans, kotUserExists, isLogin, loading, login, logout }}>{children}</AuthContext.Provider>;
 };

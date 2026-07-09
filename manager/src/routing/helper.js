@@ -286,10 +286,10 @@ export const convertToSearchItems = ({ data = [], authGuardActive = IS_AUTH_GUAR
   };
 };
 
-export const filterRoutesByPlans = (routesObj, activePlans = []) => {
+export const filterRoutesByPlans = (routesObj, activePlans = [], kotUserExists = false) => {
   const hasManager = activePlans.includes('Manager');
   const hasQsr = activePlans.includes('QSR');
-  const hasKot = activePlans.includes('KOT Panel');
+  const hasKot = activePlans.includes('KOT Panel') && kotUserExists;
   const hasStaff = activePlans.includes('Staff Management');
 
   const qsrComponents = routesObj.qsrComponents || {};
