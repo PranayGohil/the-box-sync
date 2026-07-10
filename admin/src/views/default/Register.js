@@ -10,6 +10,7 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import { AuthContext } from 'contexts/AuthContext';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
+import ImageCropperModal from 'components/cropper/ImageCropperModal';
 
 const Register = () => {
   const history = useHistory();
@@ -51,6 +52,7 @@ const Register = () => {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [cropperState, setCropperState] = useState({ show: false, imageSrc: '', aspect: undefined });
   const countdownRef = useRef(null);
 
   const pinRegex = /^[1-9][0-9]{5}$/;
@@ -304,12 +306,20 @@ const Register = () => {
                           onChange={(e) => {
                             const file = e.target.files[0];
                             if (file) {
-                              setUploadingLogo(true);
-                              setFieldValue('logo', file);
-                              setTimeout(() => {
-                                setPreviewLogo(URL.createObjectURL(file));
-                                setUploadingLogo(false);
-                              }, 500);
+                              if (!file.type.startsWith('image/')) {
+                                toast.error('Please select a valid image file');
+                                return;
+                              }
+                              if (file.size > 5 * 1024 * 1024) {
+                                toast.error('Image size should not exceed 5MB');
+                                return;
+                              }
+                              const reader = new FileReader();
+                              reader.addEventListener('load', () => {
+                                setCropperState({ show: true, imageSrc: reader.result, aspect: undefined });
+                              });
+                              reader.readAsDataURL(file);
+                              e.target.value = '';
                             }
                           }}
                         />
@@ -321,6 +331,16 @@ const Register = () => {
                         </div>
                       )}
                       {previewLogo && <img src={previewLogo} alt="Logo" className="img-thumbnail mt-2" style={{ maxWidth: '80px' }} />}
+                      <ImageCropperModal
+                        show={cropperState.show}
+                        onHide={() => setCropperState({ ...cropperState, show: false })}
+                        imageSrc={cropperState.imageSrc}
+                        onCropComplete={(croppedFile) => {
+                          setFieldValue('logo', croppedFile);
+                          setPreviewLogo(URL.createObjectURL(croppedFile));
+                        }}
+                        initialAspect={cropperState.aspect}
+                      />
                     </div>
 
                     <div className="login-auth-input-group">
