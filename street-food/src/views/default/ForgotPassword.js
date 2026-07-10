@@ -7,8 +7,8 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import { toast } from 'react-toastify';
 
 const ForgotPassword = () => {
-  const title = 'Forgot Password — The Box';
-  const description = 'Reset your password to The Box street food panel.';
+  const title = 'Forgot Password — TheBoxSync';
+  const description = 'Reset your password to TheBoxSync street food panel.';
 
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1); // Step 1: Request OTP, Step 2: Verify OTP, Step 3: Reset Password
@@ -179,7 +179,7 @@ const ForgotPassword = () => {
                   <input
                     type="email"
                     name="email"
-                    placeholder="you@restaurant.com"
+                    placeholder="Your Email ID"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}
@@ -327,11 +327,11 @@ const ForgotPassword = () => {
           )}
 
           <div className="login-auth-footer-link">
-            Remembered your password? <NavLink to="/login">Sign In →</NavLink>
+            Remember your password? <NavLink to="/login">Sign In →</NavLink>
           </div>
 
           <div className="login-auth-powered">
-            Powered by <strong>TheBoxSync</strong>
+            Powered by <strong><a href="https://theboxsync.com" target="_blank" rel="noopener noreferrer">TheBoxSync</a></strong>
           </div>
         </div>
       </div>

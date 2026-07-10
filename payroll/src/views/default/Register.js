@@ -692,7 +692,7 @@ const Register = () => {
         Already have an account? <RouterLink to="/login">Sign in →</RouterLink>
       </div>
       <div className="login-auth-powered">
-        Powered by <strong>TheBoxSync</strong>
+        Powered by <strong><a href="https://theboxsync.com" target="_blank" rel="noopener noreferrer">TheBoxSync</a></strong>
       </div>
     </div>
   );

@@ -633,7 +633,7 @@ const KioskScan = () => {
 
             <div className="w-100 border-top mt-3 pt-2.5 text-center" style={{ borderColor: 'rgba(226, 232, 240, 0.6)' }}>
               <span className="text-muted" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.7 }}>
-                Powered by <strong style={{ color: '#0f172a' }}>TheBoxSync</strong>
+                Powered by <strong style={{ color: '#0f172a' }}><a href="https://theboxsync.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>TheBoxSync</a></strong>
               </span>
             </div>
           </Card.Body>

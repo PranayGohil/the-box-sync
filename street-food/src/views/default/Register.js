@@ -13,8 +13,8 @@ import { toast } from 'react-toastify';
 
 const Register = () => {
   const history = useHistory();
-  const title = 'Register — The Box';
-  const description = 'Create your restaurant account on The Box.';
+  const title = 'Register — TheBoxSync';
+  const description = 'Create your restaurant account on TheBoxSync.';
 
 
 
@@ -252,7 +252,7 @@ const Register = () => {
       <div className="login-login-form-header">
         <div className="login-login-form-eyebrow">Restaurant Registration</div>
         <h2 className="login-login-form-title">Create your account</h2>
-        <p className="login-login-form-subtitle">Set up your restaurant on The Box platform</p>
+        <p className="login-login-form-subtitle">Set up your restaurant on TheBoxSync platform</p>
       </div>
       <div className="wizard wizard-default">
         <Wizard>
@@ -338,7 +338,7 @@ const Register = () => {
                           className="login-auth-input form-control"
                           name="email"
                           type="email"
-                          placeholder="you@restaurant.com"
+                          placeholder="Your Email ID"
                           onChange={(e) => {
                             const val = e.target.value;
                             setFieldValue('email', val);
@@ -656,7 +656,7 @@ const Register = () => {
         Already have an account? <RouterLink to="/login">Sign in →</RouterLink>
       </div>
       <div className="login-auth-powered">
-        Powered by <strong>TheBoxSync</strong>
+        Powered by <strong><a href="https://theboxsync.com" target="_blank" rel="noopener noreferrer">TheBoxSync</a></strong>
       </div>
     </div>
   );
@@ -673,7 +673,7 @@ const Register = () => {
           <br />
           <span>restaurant journey.</span>
         </h1>
-        <p className="login-login-hero-sub">Join hundreds of restaurants managing their operations smarter with The Box platform.</p>
+        <p className="login-login-hero-sub">Join hundreds of restaurants managing their operations smarter with TheBoxSync platform.</p>
         <div className="login-login-feature-pills">
           {['3-step quick setup', 'Email verification', 'Secure & encrypted', 'Instant access'].map((f) => (
             <div key={f} className="login-login-feature-pill">

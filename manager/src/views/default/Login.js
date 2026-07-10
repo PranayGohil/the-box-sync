@@ -171,7 +171,7 @@ const Login = () => {
           </form>
 
           <div className="login-auth-powered">
-            Powered by <strong>TheBoxSync</strong>
+            Powered by <strong><a href="https://theboxsync.com" target="_blank" rel="noopener noreferrer">TheBoxSync</a></strong>
           </div>
         </div>
       </div>

@@ -16,7 +16,7 @@ const Footer = () => {
           <Row>
             <Col xs="12" sm="6">
               <p className="mb-0 text-muted text-medium">
-                © {new Date().getFullYear()} Powered By TheBoxSync
+                © {new Date().getFullYear()} Powered By <a href="https://theboxsync.com" target="_blank" rel="noopener noreferrer">TheBoxSync</a>
               </p>
 
             </Col>

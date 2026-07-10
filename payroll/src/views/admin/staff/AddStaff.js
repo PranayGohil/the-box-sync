@@ -139,7 +139,7 @@ const AddStaff = () => {
         // eslint-disable-next-line react/no-this-in-sfc
         const { city, country } = this.parent;
         if (!value || value.length !== 6 || country !== 'India' || !city) return true;
-        
+
         try {
           const response = await fetch(`https://api.postalpincode.in/pincode/${value}`);
           const data = await response.json();
@@ -427,7 +427,7 @@ const AddStaff = () => {
     };
   }, [showFaceModal]);
 
-  
+
 
   const base64ToFile = (base64String, filename) => {
     const arr = base64String.split(',');
@@ -451,7 +451,7 @@ const AddStaff = () => {
         const descriptorArray = Array.from(detection.descriptor);
         setFaceDescriptor(descriptorArray);
         faceDescriptorRef.current = descriptorArray;
-        
+
         // Convert captured face to file and set to photo
         const capturedFile = base64ToFile(screenshot, 'photo.jpg');
         setFieldValue('photo', capturedFile);
@@ -510,8 +510,8 @@ const AddStaff = () => {
   const hasEarnings = activeEarnings.length > 0;
   const activeCustomDeductions = payrollConfig?.custom_deductions?.filter(d => d.is_active) || [];
   const hasStatutoryDeductions = !!(statConfig?.pf?.is_mandatory ||
-                                    statConfig?.esi?.is_mandatory ||
-                                    statConfig?.pt?.is_applicable);
+    statConfig?.esi?.is_mandatory ||
+    statConfig?.pt?.is_applicable);
   const hasDeductions = activeCustomDeductions.length > 0 || hasStatutoryDeductions;
   const hasGlobalWeeklyOff = payrollConfig?.global_weekly_offs && payrollConfig.global_weekly_offs.length > 0;
 
@@ -539,7 +539,7 @@ const AddStaff = () => {
       try {
         const branchId = values.branch_id || '';
         const token = localStorage.getItem('token');
-        const url = branchId 
+        const url = branchId
           ? `${process.env.REACT_APP_API}/leave-policy?branch_id=${branchId}`
           : `${process.env.REACT_APP_API}/leave-policy`;
         const res = await axios.get(url, {
@@ -547,7 +547,7 @@ const AddStaff = () => {
         });
         if (res.data && res.data.success) {
           setGlobalLeavePolicies(res.data.data.leave_types || []);
-          
+
           const mapped = (res.data.data.leave_types || []).map(lt => ({
             leave_type_id: lt.leave_type_id,
             is_active: false
@@ -563,7 +563,7 @@ const AddStaff = () => {
       try {
         const branchId = values.branch_id || '';
         const token = localStorage.getItem('token');
-        const url = branchId 
+        const url = branchId
           ? `${process.env.REACT_APP_API}/payroll-config?branch_id=${branchId}`
           : `${process.env.REACT_APP_API}/payroll-config`;
         const res = await axios.get(url, {
@@ -572,7 +572,7 @@ const AddStaff = () => {
         if (res.data && res.data.success && res.data.data) {
           const configData = res.data.data;
           setPayrollConfig(configData);
-          
+
           const activeConfigEarnings = (configData.custom_earnings || []).filter(e => e.is_active);
           const initialCustomEarnings = {};
           activeConfigEarnings.forEach(e => {
@@ -659,7 +659,7 @@ const AddStaff = () => {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           })
         ]);
-        
+
         setPositions(positionsRes.data.data);
         if (branchesRes.data?.success) {
           setBranches(branchesRes.data.data);
@@ -670,18 +670,18 @@ const AddStaff = () => {
 
         if (leavePolicyRes?.data?.success && leavePolicyRes?.data?.data?.leave_types) {
           setGlobalLeavePolicies(leavePolicyRes.data.data.leave_types);
-          
+
           const mapped = leavePolicyRes.data.data.leave_types.map(lt => ({
             leave_type_id: lt.leave_type_id,
             is_active: false
           }));
           formik.setFieldValue('leave_policy_configuration', mapped);
-          
+
         }
 
         if (configRes.data.success && configRes.data.data) {
           setPayrollConfig(configRes.data.data);
-          
+
           // Pre-fill initial custom_earnings values
           const activeConfigEarnings = (configRes.data.data.custom_earnings || []).filter(e => e.is_active);
           const initialCustomEarnings = {};
@@ -719,7 +719,7 @@ const AddStaff = () => {
   const handleAddCustomEarning = async () => {
     if (!newFieldName.trim()) return;
     const newId = newFieldName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
-    
+
     if (payrollConfig?.custom_earnings?.some(e => e.id === newId)) {
       toast.error('An earning component with this name already exists.');
       return;
@@ -752,7 +752,7 @@ const AddStaff = () => {
   const handleAddCustomDeduction = async () => {
     if (!newFieldName.trim()) return;
     const newId = newFieldName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
-    
+
     if (payrollConfig?.custom_deductions?.some(d => d.id === newId)) {
       toast.error('A deduction component with this name already exists.');
       return;
@@ -812,7 +812,7 @@ const AddStaff = () => {
 
   const handleFileChange = (fieldName, file, setPreview, aspect = undefined) => {
     if (!file) return;
-    
+
     const reader = new FileReader();
     reader.addEventListener("load", () => {
       setCropperState({
@@ -824,16 +824,16 @@ const AddStaff = () => {
       });
     });
     reader.readAsDataURL(file);
-    
+
     // To clear the file input so the same file can be selected again if cancelled
     const fileInput = document.getElementById(`${fieldName.replace('_', '-')}-upload`);
-    if(fileInput) fileInput.value = '';
+    if (fileInput) fileInput.value = '';
   };
 
   const handleCropComplete = async (croppedFile) => {
     const { fieldName, setPreview } = cropperState;
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: true }));
-    
+
     const previewUrl = URL.createObjectURL(croppedFile);
     setPreview(previewUrl);
     setFieldValue(fieldName, croppedFile);
@@ -1050,713 +1050,713 @@ const AddStaff = () => {
           </Row>
         </div>
 
-      {fileUploadError && (
-        <Alert variant="danger" className="glass-card border-0 mb-4 p-4 shadow-sm d-flex align-items-center gap-3">
-          <CsLineIcons icon="error" size="24" className="text-danger" />
-          <span className="fw-bold">{fileUploadError}</span>
-        </Alert>
-      )}
+        {fileUploadError && (
+          <Alert variant="danger" className="glass-card border-0 mb-4 p-4 shadow-sm d-flex align-items-center gap-3">
+            <CsLineIcons icon="error" size="24" className="text-danger" />
+            <span className="fw-bold">{fileUploadError}</span>
+          </Alert>
+        )}
 
-      <Form onSubmit={handleSubmit}>
-        <Row className="g-4">
-          <Col lg={8}>
-            {/* Main Details Section */}
-            <Card className="glass-card border-0 mb-4">
-              <Card.Body className="p-4">
-                <div className="section-header">
-                  <div className="d-flex align-items-center gap-2 mb-0">
-                    <div className="bg-soft-primary p-2 rounded-3">
-                      <CsLineIcons icon="user" size="20" className="text-primary" />
+        <Form onSubmit={handleSubmit}>
+          <Row className="g-4">
+            <Col lg={8}>
+              {/* Main Details Section */}
+              <Card className="glass-card border-0 mb-4">
+                <Card.Body className="p-4">
+                  <div className="section-header">
+                    <div className="d-flex align-items-center gap-2 mb-0">
+                      <div className="bg-soft-primary p-2 rounded-3">
+                        <CsLineIcons icon="user" size="20" className="text-primary" />
+                      </div>
+                      <h5 className="fw-bold mb-0">Personal Details</h5>
                     </div>
-                    <h5 className="fw-bold mb-0">Personal Details</h5>
                   </div>
-                </div>
 
-                <Row className="g-3">
-                  <Col md={4}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Staff ID</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="staff_id"
-                        placeholder="e.g. STF001"
-                        value={values.staff_id}
-                        onChange={handleChange}
-                        isInvalid={touched.staff_id && errors.staff_id}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.staff_id}</Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-                  <Col md={4}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>First Name</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="f_name"
-                        placeholder="First Name"
-                        value={values.f_name}
-                        onChange={handleChange}
-                        isInvalid={touched.f_name && errors.f_name}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.f_name}</Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-                  <Col md={4}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Last Name</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="l_name"
-                        placeholder="Last Name"
-                        value={values.l_name}
-                        onChange={handleChange}
-                        isInvalid={touched.l_name && errors.l_name}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.l_name}</Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-
-                  <Col md={4}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Gender</Form.Label>
-                      <Select
-                        classNamePrefix="react-select"
-                        menuPortalTarget={document.body}
-                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                        name="gender"
-                        options={[
-                          { value: 'Male', label: 'Male' },
-                          { value: 'Female', label: 'Female' },
-                          { value: 'Other', label: 'Other' }
-                        ]}
-                        value={values.gender ? { label: values.gender, value: values.gender } : null}
-                        onChange={(selected) => setFieldValue('gender', selected ? selected.value : '')}
-                        onBlur={() => formik.setFieldTouched('gender', true)}
-                        isDisabled={loading.submitting}
-                        placeholder="Select Gender"
-                      />
-                      {touched.gender && errors.gender && (
-                        <div className="text-danger mt-1 small fw-bold">{errors.gender}</div>
-                      )}
-                    </Form.Group>
-                  </Col>
-
-                  <Col md={4}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Birth Date</Form.Label>
-                      <div className="position-relative date-input-container">
-                        <Form.Control
-                          ref={birthDateRef}
-                          type="date"
-                          name="birth_date"
-                          value={values.birth_date}
-                          onChange={handleChange}
-                          isInvalid={touched.birth_date && errors.birth_date}
-                          disabled={loading.submitting}
-                          className="pe-5"
-                        />
-                        <div 
-                          className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
-                          style={{ cursor: 'pointer', zIndex: 5 }}
-                          onClick={() => birthDateRef.current?.showPicker()}
-                        >
-                          <CsLineIcons icon="calendar" size="18" className="text-primary" />
-                        </div>
-                      </div>
-                      {touched.birth_date && errors.birth_date && (
-                        <div className="text-danger mt-1 small">{errors.birth_date}</div>
-                      )}
-                    </Form.Group>
-                  </Col>
-                  <Col md={4}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Joining Date</Form.Label>
-                      <div className="position-relative date-input-container">
-                        <Form.Control
-                          ref={joiningDateRef}
-                          type="date"
-                          name="joining_date"
-                          value={values.joining_date}
-                          onChange={handleChange}
-                          isInvalid={touched.joining_date && errors.joining_date}
-                          disabled={loading.submitting}
-                          className="pe-5"
-                        />
-                        <div 
-                          className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
-                          style={{ cursor: 'pointer', zIndex: 5 }}
-                          onClick={() => joiningDateRef.current?.showPicker()}
-                        >
-                          <CsLineIcons icon="calendar" size="18" className="text-primary" />
-                        </div>
-                      </div>
-                      {touched.joining_date && errors.joining_date && (
-                        <div className="text-danger mt-1 small">{errors.joining_date}</div>
-                      )}
-                    </Form.Group>
-                  </Col>
-
-                  <Col xs={12}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Residential Address</Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        rows={2}
-                        name="address"
-                        placeholder="Complete Street Address..."
-                        value={values.address}
-                        onChange={handleChange}
-                        isInvalid={touched.address && errors.address}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.address}</Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-
-                  <Col md={3}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Country</Form.Label>
-                      <Select
-                        classNamePrefix="react-select"
-                        menuPortalTarget={document.body}
-                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                        name="country"
-                        options={countries.map(c => ({ value: c.name, label: c.name }))}
-                        value={values.country ? { label: values.country, value: values.country } : null}
-                        onChange={handleCountryChange}
-                        onBlur={() => formik.setFieldTouched('country', true)}
-                        isDisabled={loading.submitting}
-                        placeholder="Select Country"
-                      />
-                      {touched.country && errors.country && (
-                        <div className="text-danger mt-1 small fw-bold">{errors.country}</div>
-                      )}
-                    </Form.Group>
-                  </Col>
-                  <Col md={3}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>State</Form.Label>
-                      <Select
-                        classNamePrefix="react-select"
-                        menuPortalTarget={document.body}
-                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                        name="state"
-                        options={states.map(s => ({ value: s.name, label: s.name }))}
-                        value={values.state ? { label: values.state, value: values.state } : null}
-                        onChange={handleStateChange}
-                        onBlur={() => formik.setFieldTouched('state', true)}
-                        isDisabled={!values.country || loading.submitting}
-                        placeholder="Select State"
-                      />
-                      {touched.state && errors.state && (
-                        <div className="text-danger mt-1 small fw-bold">{errors.state}</div>
-                      )}
-                    </Form.Group>
-                  </Col>
-                  <Col md={3}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>City</Form.Label>
-                      <Select
-                        classNamePrefix="react-select"
-                        menuPortalTarget={document.body}
-                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                        name="city"
-                        options={cities.map(c => ({ value: c.name, label: c.name }))}
-                        value={values.city ? { label: values.city, value: values.city } : null}
-                        onChange={(selected) => setFieldValue('city', selected ? selected.value : '')}
-                        onBlur={() => formik.setFieldTouched('city', true)}
-                        isDisabled={!values.state || loading.submitting}
-                        placeholder="Select City"
-                      />
-                      {touched.city && errors.city && (
-                        <div className="text-danger mt-1 small fw-bold">{errors.city}</div>
-                      )}
-                    </Form.Group>
-                  </Col>
-                  <Col md={3}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Pincode</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="pincode"
-                        placeholder="e.g. 400001"
-                        value={values.pincode}
-                        onChange={handleChange}
-                        isInvalid={touched.pincode && errors.pincode}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.pincode}</Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-
-                  <Col md={4}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Contact Number</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="phone_no"
-                        placeholder="10-digit number"
-                        value={values.phone_no}
-                        onChange={handleChange}
-                        isInvalid={touched.phone_no && errors.phone_no}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.phone_no}</Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-                  <Col md={4}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Email Address</Form.Label>
-                      <Form.Control
-                        type="email"
-                        name="email"
-                        placeholder="email@restaurant.com"
-                        value={values.email}
-                        onChange={handleChange}
-                        isInvalid={touched.email && errors.email}
-                        disabled={loading.submitting}
-                      />
-                      <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-
-                </Row>
-              </Card.Body>
-            </Card>
-
-            {/* Employment & Payroll Section */}
-            <Card className="glass-card border-0 mb-4">
-              <Card.Body className="p-4">
-                <div className="section-header">
-                  <div className="d-flex align-items-center gap-2 mb-0">
-                    <div className="bg-soft-primary p-2 rounded-3">
-                      <CsLineIcons icon="suitcase" size="20" className="text-primary" />
-                    </div>
-                    <h5 className="fw-bold mb-0">Employment & Payroll</h5>
-                  </div>
-                </div>
-
-                <Row className="g-3 mb-3">
-                  <Col md={6}>
-                    <Form.Group>
-                      <Form.Label>Job Position</Form.Label>
-                      <CreatableSelect
-                        isClearable
-                        isDisabled={loading.submitting || loading.positions}
-                        options={positionOptions}
-                        value={values.position ? { label: values.position, value: values.position } : null}
-                        onChange={(selected) => setFieldValue('position', selected ? selected.value : '')}
-                        onBlur={() => formik.setFieldTouched('position', true)}
-                        placeholder="Select or type..."
-                        classNamePrefix="react-select"
-                        menuPortalTarget={document.body}
-                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                      />
-                      {touched.position && errors.position && <div className="text-danger mt-1 small fw-bold">{errors.position}</div>}
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group>
-                      <Form.Label>Branch</Form.Label>
-                      <Form.Select
-                        name="branch_id"
-                        value={values.branch_id}
-                        onChange={handleChange}
-                        isInvalid={touched.branch_id && errors.branch_id}
-                        disabled={loading.submitting}
-                        style={{ height: '38px', borderRadius: '8px' }}
-                      >
-                        <option value="">Select Branch</option>
-                        {branches.map(branch => (
-                          <option key={branch._id} value={branch._id}>{branch.name}</option>
-                        ))}
-                      </Form.Select>
-                      {touched.branch_id && errors.branch_id && <div className="text-danger mt-1 small fw-bold">{errors.branch_id}</div>}
-                    </Form.Group>
-                  </Col>
-                </Row>
-
-                <Row className="g-3">
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Salary Calculation Base</Form.Label>
-                      <Select
-                        classNamePrefix="react-select"
-                        menuPortalTarget={document.body}
-                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                        name="salary_calculation_base"
-                        options={[
-                          { value: 'working_days', label: 'Based on Working Days' },
-                          { value: 'working_hours', label: 'Based on Working Hours' }
-                        ]}
-                        value={values.salary_calculation_base ? { label: values.salary_calculation_base === 'working_hours' ? 'Based on Working Hours' : 'Based on Working Days', value: values.salary_calculation_base } : null}
-                        onChange={(selected) => setFieldValue('salary_calculation_base', selected ? selected.value : 'working_days')}
-                        onBlur={() => formik.setFieldTouched('salary_calculation_base', true)}
-                        isDisabled={loading.submitting}
-                        placeholder="Select Base"
-                      />
-                      {touched.salary_calculation_base && errors.salary_calculation_base && (
-                        <div className="text-danger mt-1 small fw-bold">{errors.salary_calculation_base}</div>
-                      )}
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Work Location</Form.Label>
-                      <div className="d-flex gap-2">
-                        <div
-                          className={`flex-fill text-center py-2 px-3 rounded-3 border fw-semibold small ${values.attendance_method !== 'wfh' ? 'bg-primary text-white border-primary' : 'bg-light text-muted border-secondary'}`}
-                          style={{ cursor: loading.submitting ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
-                          onClick={() => { if (!loading.submitting) setFieldValue('attendance_method', 'any'); }}
-                        >
-                          Office
-                        </div>
-                        <div
-                          className={`flex-fill text-center py-2 px-3 rounded-3 border fw-semibold small ${values.attendance_method === 'wfh' ? 'bg-primary text-white border-primary' : 'bg-light text-muted border-secondary'}`}
-                          style={{ cursor: loading.submitting ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
-                          onClick={() => { if (!loading.submitting) setFieldValue('attendance_method', 'wfh'); }}
-                        >
-                          Work From Home
-                        </div>
-                      </div>
-                      <div className="text-muted mt-1" style={{ fontSize: '0.72rem' }}>
-                        {values.attendance_method === 'wfh'
-                          ? 'Permanently remote — no WFH leave required each day'
-                          : 'Must submit & get WFH leave approved to work remotely'}
-                      </div>
-                    </Form.Group>
-                  </Col>
-                </Row>
-                {(hasEarnings || hasDeductions) && (
-                  <>
-                    <hr className="my-4 opacity-50" />
-
-                    <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
-                      <CsLineIcons icon="money" size="18" />
-                      Salary Structure Breakdown
-                    </h6>
-                    <Row className="g-3">
-                      {hasEarnings && (
-                        <Col md={hasDeductions ? 6 : 12}>
-                          <div className="bg-light rounded-3 p-3 shadow-sm border border-faint h-100">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                              <div className="small fw-bold text-muted text-uppercase letter-spacing-1">Monthly Earnings</div>
-                              <Button 
-                                variant="none" 
-                                size="sm" 
-                                className="text-primary p-0 d-flex align-items-center gap-1 hover-scale"
-                                onClick={() => {
-                                  setNewFieldName('');
-                                  setShowAddEarningModal(true);
-                                }}
-                              >
-                                <CsLineIcons icon="plus" size="14" /> Add Field
-                              </Button>
-                            </div>
-                            {payrollConfig?.custom_earnings?.filter(e => e.is_active).map((earning, idx) => (
-                              <Form.Group className="mb-2" key={earning.id}>
-                                <Form.Label className="small fw-bold opacity-75">{earning.label}</Form.Label>
-                                <Form.Control
-                                  type="number"
-                                  name={`salary_structure.custom_earnings.${earning.id}`}
-                                  value={values.salary_structure?.custom_earnings?.[earning.id] ?? ''}
-                                  onChange={(e) => setFieldValue(`salary_structure.custom_earnings.${earning.id}`, e.target.value === '' ? '' : Number(e.target.value))}
-                                  onFocus={() => {
-                                    if (values.salary_structure?.custom_earnings?.[earning.id] === 0) {
-                                      setFieldValue(`salary_structure.custom_earnings.${earning.id}`, '');
-                                    }
-                                  }}
-                                  size="sm"
-                                />
-                              </Form.Group>
-                            ))}
-                            {(!payrollConfig?.custom_earnings || payrollConfig.custom_earnings.filter(e => e.is_active).length === 0) && (
-                              <div className="text-muted small">No active earning components defined.</div>
-                            )}
-                          </div>
-                        </Col>
-                      )}
-                      {hasDeductions && (
-                        <Col md={hasEarnings ? 6 : 12}>
-                          <div className="bg-light rounded-3 p-3 shadow-sm border border-faint h-100">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                              <div className="small fw-bold text-muted text-uppercase letter-spacing-1">Deductions</div>
-                              <Button 
-                                variant="none" 
-                                size="sm" 
-                                className="text-primary p-0 d-flex align-items-center gap-1 hover-scale"
-                                onClick={() => {
-                                  setNewFieldName('');
-                                  setShowAddDeductionModal(true);
-                                }}
-                              >
-                                <CsLineIcons icon="plus" size="14" /> Add Field
-                              </Button>
-                            </div>
-
-                            {payrollConfig?.statutory_config?.pf?.is_mandatory && (
-                              <Form.Group className="mb-2">
-                                <Form.Label className="small fw-bold opacity-75">PF (%)</Form.Label>
-                                <Form.Control
-                                  type="number"
-                                  name="salary_structure.deductions.pf_percentage"
-                                  value={values.salary_structure?.deductions?.pf_percentage ?? ''}
-                                  onChange={(e) => setFieldValue('salary_structure.deductions.pf_percentage', e.target.value === '' ? '' : Number(e.target.value))}
-                                  onFocus={() => {
-                                    if (values.salary_structure?.deductions?.pf_percentage === 0) {
-                                      setFieldValue('salary_structure.deductions.pf_percentage', '');
-                                    }
-                                  }}
-                                  isInvalid={touched.salary_structure?.deductions?.pf_percentage && !!errors.salary_structure?.deductions?.pf_percentage}
-                                  size="sm"
-                                />
-                                {touched.salary_structure?.deductions?.pf_percentage && errors.salary_structure?.deductions?.pf_percentage && (
-                                  <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.pf_percentage}</div>
-                                )}
-                              </Form.Group>
-                            )}
-
-                            {payrollConfig?.statutory_config?.esi?.is_mandatory && (
-                              <Form.Group className="mb-2">
-                                <Form.Label className="small fw-bold opacity-75">ESI (%)</Form.Label>
-                                <Form.Control
-                                  type="number"
-                                  name="salary_structure.deductions.esi_percentage"
-                                  value={values.salary_structure?.deductions?.esi_percentage ?? ''}
-                                  onChange={(e) => setFieldValue('salary_structure.deductions.esi_percentage', e.target.value === '' ? '' : Number(e.target.value))}
-                                  onFocus={() => {
-                                    if (values.salary_structure?.deductions?.esi_percentage === 0) {
-                                      setFieldValue('salary_structure.deductions.esi_percentage', '');
-                                    }
-                                  }}
-                                  isInvalid={touched.salary_structure?.deductions?.esi_percentage && !!errors.salary_structure?.deductions?.esi_percentage}
-                                  size="sm"
-                                />
-                                {touched.salary_structure?.deductions?.esi_percentage && errors.salary_structure?.deductions?.esi_percentage && (
-                                  <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.esi_percentage}</div>
-                                )}
-                              </Form.Group>
-                            )}
-
-                            {payrollConfig?.statutory_config?.pt?.is_applicable && (
-                              <Form.Group className="mb-2">
-                                <Form.Label className="small fw-bold opacity-75">PT (Monthly)</Form.Label>
-                                <Form.Control
-                                  type="number"
-                                  name="salary_structure.deductions.pt"
-                                  value={values.salary_structure?.deductions?.pt ?? ''}
-                                  onChange={(e) => setFieldValue('salary_structure.deductions.pt', e.target.value === '' ? '' : Number(e.target.value))}
-                                  onFocus={() => {
-                                    if (values.salary_structure?.deductions?.pt === 0) {
-                                      setFieldValue('salary_structure.deductions.pt', '');
-                                    }
-                                  }}
-                                  isInvalid={touched.salary_structure?.deductions?.pt && !!errors.salary_structure?.deductions?.pt}
-                                  size="sm"
-                                />
-                                {touched.salary_structure?.deductions?.pt && errors.salary_structure?.deductions?.pt && (
-                                  <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.pt}</div>
-                                )}
-                              </Form.Group>
-                            )}
-
-                            {payrollConfig?.custom_deductions?.filter(d => d.is_active).length > 0 && (
-                              <>
-                                <hr className="my-3 opacity-50" />
-                                <div className="small fw-bold text-muted mb-3 text-uppercase letter-spacing-1">Custom Deductions</div>
-                                {payrollConfig.custom_deductions.filter(d => d.is_active).map((deduction) => (
-                                  <Form.Group className="mb-2" key={deduction.id}>
-                                    <Form.Label className="small fw-bold opacity-75">{deduction.label}</Form.Label>
-                                    <Form.Control
-                                      type="number"
-                                      name={`salary_structure.custom_deductions.${deduction.id}`}
-                                      value={values.salary_structure?.custom_deductions?.[deduction.id] ?? ''}
-                                      onChange={(e) => setFieldValue(`salary_structure.custom_deductions.${deduction.id}`, e.target.value === '' ? '' : Number(e.target.value))}
-                                      onFocus={() => {
-                                        if (values.salary_structure?.custom_deductions?.[deduction.id] === 0) {
-                                          setFieldValue(`salary_structure.custom_deductions.${deduction.id}`, '');
-                                        }
-                                      }}
-                                      size="sm"
-                                    />
-                                  </Form.Group>
-                                ))}
-                              </>
-                            )}
-
-                            {(!payrollConfig?.statutory_config?.pf?.is_mandatory &&
-                              !payrollConfig?.statutory_config?.esi?.is_mandatory &&
-                              !payrollConfig?.statutory_config?.pt?.is_applicable &&
-                              (!payrollConfig?.custom_deductions || payrollConfig.custom_deductions.filter(d => d.is_active).length === 0)) && (
-                                <div className="text-muted small">No active deduction components defined.</div>
-                            )}
-                          </div>
-                        </Col>
-                      )}
-                    </Row>
-
-                    <div className="bg-light rounded-3 p-3 shadow-sm border border-faint mt-4">
-                      <Row className="g-3 align-items-center">
-                        <Col md={4} className="text-center text-md-start">
-                          <div className="small fw-bold text-muted text-uppercase mb-1">Total Salary (Gross)</div>
-                          <h4 className="fw-bold text-success mb-0">₹ {safeGrossSalary.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
-                        </Col>
-                        <Col md={4} className="text-center text-md-start border-start border-faint">
-                          <div className="small fw-bold text-muted text-uppercase mb-1">Total Deductions</div>
-                          <h4 className="fw-bold text-danger mb-0">₹ {safeTotalDeductions.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
-                        </Col>
-                        <Col md={4} className="text-center text-md-start border-start border-faint">
-                          <div className="small fw-bold text-muted text-uppercase mb-1">Net Salary</div>
-                          <h4 className="fw-bold text-primary mb-0">₹ {safeNetSalary.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
-                        </Col>
-                      </Row>
-                    </div>
-                  </>
-                )}
-
-                <hr className="my-4 opacity-50" />
-                <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
-                  <CsLineIcons icon="calendar" size="18" />
-                  Weekly Off Policy
-                </h6>
-                <div className="bg-light rounded-3 p-3 shadow-sm border border-faint mb-4">
                   <Row className="g-3">
-                    <Col md={12}>
-                      <Form.Group>
-                        <Form.Label className="small fw-bold opacity-75">Select Policy</Form.Label>
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Staff ID</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="staff_id"
+                          placeholder="e.g. STF001"
+                          value={values.staff_id}
+                          onChange={handleChange}
+                          isInvalid={touched.staff_id && errors.staff_id}
+                          disabled={loading.submitting}
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.staff_id}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>First Name</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="f_name"
+                          placeholder="First Name"
+                          value={values.f_name}
+                          onChange={handleChange}
+                          isInvalid={touched.f_name && errors.f_name}
+                          disabled={loading.submitting}
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.f_name}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Last Name</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="l_name"
+                          placeholder="Last Name"
+                          value={values.l_name}
+                          onChange={handleChange}
+                          isInvalid={touched.l_name && errors.l_name}
+                          disabled={loading.submitting}
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.l_name}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Gender</Form.Label>
                         <Select
                           classNamePrefix="react-select"
                           menuPortalTarget={document.body}
                           styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                          name="weekly_off_policy"
-                          options={hasGlobalWeeklyOff ? [
-                            { value: 'global', label: 'Global Company Policy (Use Settings)' },
-                            { value: 'custom', label: 'Custom Employee Policy' }
-                          ] : [
-                            { value: 'custom', label: 'Custom Employee Policy' }
+                          name="gender"
+                          options={[
+                            { value: 'Male', label: 'Male' },
+                            { value: 'Female', label: 'Female' },
+                            { value: 'Other', label: 'Other' }
                           ]}
-                          value={values.weekly_off_policy ? { label: values.weekly_off_policy === 'custom' ? 'Custom Employee Policy' : 'Global Company Policy (Use Settings)', value: values.weekly_off_policy } : null}
-                          onChange={(selected) => setFieldValue('weekly_off_policy', selected ? selected.value : 'custom')}
-                          onBlur={() => formik.setFieldTouched('weekly_off_policy', true)}
+                          value={values.gender ? { label: values.gender, value: values.gender } : null}
+                          onChange={(selected) => setFieldValue('gender', selected ? selected.value : '')}
+                          onBlur={() => formik.setFieldTouched('gender', true)}
+                          isDisabled={loading.submitting}
+                          placeholder="Select Gender"
                         />
-                        {values.weekly_off_policy === 'global' && (
-                          <div className="mt-2 text-muted small fw-medium ms-1">
-                            Active Policy: <span className="text-primary fw-bold">{(() => {
-                              const branch = branches.find(b => b._id === values.branch_id);
-                              const branchName = branch ? `${branch.name} Branch` : 'Global / All Branches';
-                              const weekOffsStr = (payrollConfig?.global_weekly_offs || [])
-                                .map(wo => `${wo.day}${wo.type === 'specific_weeks' ? ` (Weeks: ${wo.weeks.join(', ')})` : ''}`)
-                                .join(', ') || 'None';
-                              return `${branchName} - ${weekOffsStr}`;
-                            })()}</span>
-                          </div>
+                        {touched.gender && errors.gender && (
+                          <div className="text-danger mt-1 small fw-bold">{errors.gender}</div>
                         )}
                       </Form.Group>
                     </Col>
-                    
-                    {values.weekly_off_policy === 'custom' && (
+
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Birth Date</Form.Label>
+                        <div className="position-relative date-input-container">
+                          <Form.Control
+                            ref={birthDateRef}
+                            type="date"
+                            name="birth_date"
+                            value={values.birth_date}
+                            onChange={handleChange}
+                            isInvalid={touched.birth_date && errors.birth_date}
+                            disabled={loading.submitting}
+                            className="pe-5"
+                          />
+                          <div
+                            className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
+                            style={{ cursor: 'pointer', zIndex: 5 }}
+                            onClick={() => birthDateRef.current?.showPicker()}
+                          >
+                            <CsLineIcons icon="calendar" size="18" className="text-primary" />
+                          </div>
+                        </div>
+                        {touched.birth_date && errors.birth_date && (
+                          <div className="text-danger mt-1 small">{errors.birth_date}</div>
+                        )}
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Joining Date</Form.Label>
+                        <div className="position-relative date-input-container">
+                          <Form.Control
+                            ref={joiningDateRef}
+                            type="date"
+                            name="joining_date"
+                            value={values.joining_date}
+                            onChange={handleChange}
+                            isInvalid={touched.joining_date && errors.joining_date}
+                            disabled={loading.submitting}
+                            className="pe-5"
+                          />
+                          <div
+                            className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
+                            style={{ cursor: 'pointer', zIndex: 5 }}
+                            onClick={() => joiningDateRef.current?.showPicker()}
+                          >
+                            <CsLineIcons icon="calendar" size="18" className="text-primary" />
+                          </div>
+                        </div>
+                        {touched.joining_date && errors.joining_date && (
+                          <div className="text-danger mt-1 small">{errors.joining_date}</div>
+                        )}
+                      </Form.Group>
+                    </Col>
+
+                    <Col xs={12}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Residential Address</Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          rows={2}
+                          name="address"
+                          placeholder="Complete Street Address..."
+                          value={values.address}
+                          onChange={handleChange}
+                          isInvalid={touched.address && errors.address}
+                          disabled={loading.submitting}
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.address}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={3}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Country</Form.Label>
+                        <Select
+                          classNamePrefix="react-select"
+                          menuPortalTarget={document.body}
+                          styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                          name="country"
+                          options={countries.map(c => ({ value: c.name, label: c.name }))}
+                          value={values.country ? { label: values.country, value: values.country } : null}
+                          onChange={handleCountryChange}
+                          onBlur={() => formik.setFieldTouched('country', true)}
+                          isDisabled={loading.submitting}
+                          placeholder="Select Country"
+                        />
+                        {touched.country && errors.country && (
+                          <div className="text-danger mt-1 small fw-bold">{errors.country}</div>
+                        )}
+                      </Form.Group>
+                    </Col>
+                    <Col md={3}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>State</Form.Label>
+                        <Select
+                          classNamePrefix="react-select"
+                          menuPortalTarget={document.body}
+                          styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                          name="state"
+                          options={states.map(s => ({ value: s.name, label: s.name }))}
+                          value={values.state ? { label: values.state, value: values.state } : null}
+                          onChange={handleStateChange}
+                          onBlur={() => formik.setFieldTouched('state', true)}
+                          isDisabled={!values.country || loading.submitting}
+                          placeholder="Select State"
+                        />
+                        {touched.state && errors.state && (
+                          <div className="text-danger mt-1 small fw-bold">{errors.state}</div>
+                        )}
+                      </Form.Group>
+                    </Col>
+                    <Col md={3}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>City</Form.Label>
+                        <Select
+                          classNamePrefix="react-select"
+                          menuPortalTarget={document.body}
+                          styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                          name="city"
+                          options={cities.map(c => ({ value: c.name, label: c.name }))}
+                          value={values.city ? { label: values.city, value: values.city } : null}
+                          onChange={(selected) => setFieldValue('city', selected ? selected.value : '')}
+                          onBlur={() => formik.setFieldTouched('city', true)}
+                          isDisabled={!values.state || loading.submitting}
+                          placeholder="Select City"
+                        />
+                        {touched.city && errors.city && (
+                          <div className="text-danger mt-1 small fw-bold">{errors.city}</div>
+                        )}
+                      </Form.Group>
+                    </Col>
+                    <Col md={3}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Pincode</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="pincode"
+                          placeholder="e.g. 400001"
+                          value={values.pincode}
+                          onChange={handleChange}
+                          isInvalid={touched.pincode && errors.pincode}
+                          disabled={loading.submitting}
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.pincode}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Contact Number</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="phone_no"
+                          placeholder="10-digit number"
+                          value={values.phone_no}
+                          onChange={handleChange}
+                          isInvalid={touched.phone_no && errors.phone_no}
+                          disabled={loading.submitting}
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.phone_no}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Email Address</Form.Label>
+                        <Form.Control
+                          type="email"
+                          name="email"
+                          placeholder="Your Email ID"
+                          value={values.email}
+                          onChange={handleChange}
+                          isInvalid={touched.email && errors.email}
+                          disabled={loading.submitting}
+                        />
+                        <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+
+                  </Row>
+                </Card.Body>
+              </Card>
+
+              {/* Employment & Payroll Section */}
+              <Card className="glass-card border-0 mb-4">
+                <Card.Body className="p-4">
+                  <div className="section-header">
+                    <div className="d-flex align-items-center gap-2 mb-0">
+                      <div className="bg-soft-primary p-2 rounded-3">
+                        <CsLineIcons icon="suitcase" size="20" className="text-primary" />
+                      </div>
+                      <h5 className="fw-bold mb-0">Employment & Payroll</h5>
+                    </div>
+                  </div>
+
+                  <Row className="g-3 mb-3">
+                    <Col md={6}>
+                      <Form.Group>
+                        <Form.Label>Job Position</Form.Label>
+                        <CreatableSelect
+                          isClearable
+                          isDisabled={loading.submitting || loading.positions}
+                          options={positionOptions}
+                          value={values.position ? { label: values.position, value: values.position } : null}
+                          onChange={(selected) => setFieldValue('position', selected ? selected.value : '')}
+                          onBlur={() => formik.setFieldTouched('position', true)}
+                          placeholder="Select or type..."
+                          classNamePrefix="react-select"
+                          menuPortalTarget={document.body}
+                          styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                        />
+                        {touched.position && errors.position && <div className="text-danger mt-1 small fw-bold">{errors.position}</div>}
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group>
+                        <Form.Label>Branch</Form.Label>
+                        <Form.Select
+                          name="branch_id"
+                          value={values.branch_id}
+                          onChange={handleChange}
+                          isInvalid={touched.branch_id && errors.branch_id}
+                          disabled={loading.submitting}
+                          style={{ height: '38px', borderRadius: '8px' }}
+                        >
+                          <option value="">Select Branch</option>
+                          {branches.map(branch => (
+                            <option key={branch._id} value={branch._id}>{branch.name}</option>
+                          ))}
+                        </Form.Select>
+                        {touched.branch_id && errors.branch_id && <div className="text-danger mt-1 small fw-bold">{errors.branch_id}</div>}
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  <Row className="g-3">
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Salary Calculation Base</Form.Label>
+                        <Select
+                          classNamePrefix="react-select"
+                          menuPortalTarget={document.body}
+                          styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                          name="salary_calculation_base"
+                          options={[
+                            { value: 'working_days', label: 'Based on Working Days' },
+                            { value: 'working_hours', label: 'Based on Working Hours' }
+                          ]}
+                          value={values.salary_calculation_base ? { label: values.salary_calculation_base === 'working_hours' ? 'Based on Working Hours' : 'Based on Working Days', value: values.salary_calculation_base } : null}
+                          onChange={(selected) => setFieldValue('salary_calculation_base', selected ? selected.value : 'working_days')}
+                          onBlur={() => formik.setFieldTouched('salary_calculation_base', true)}
+                          isDisabled={loading.submitting}
+                          placeholder="Select Base"
+                        />
+                        {touched.salary_calculation_base && errors.salary_calculation_base && (
+                          <div className="text-danger mt-1 small fw-bold">{errors.salary_calculation_base}</div>
+                        )}
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Work Location</Form.Label>
+                        <div className="d-flex gap-2">
+                          <div
+                            className={`flex-fill text-center py-2 px-3 rounded-3 border fw-semibold small ${values.attendance_method !== 'wfh' ? 'bg-primary text-white border-primary' : 'bg-light text-muted border-secondary'}`}
+                            style={{ cursor: loading.submitting ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
+                            onClick={() => { if (!loading.submitting) setFieldValue('attendance_method', 'any'); }}
+                          >
+                            Office
+                          </div>
+                          <div
+                            className={`flex-fill text-center py-2 px-3 rounded-3 border fw-semibold small ${values.attendance_method === 'wfh' ? 'bg-primary text-white border-primary' : 'bg-light text-muted border-secondary'}`}
+                            style={{ cursor: loading.submitting ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
+                            onClick={() => { if (!loading.submitting) setFieldValue('attendance_method', 'wfh'); }}
+                          >
+                            Work From Home
+                          </div>
+                        </div>
+                        <div className="text-muted mt-1" style={{ fontSize: '0.72rem' }}>
+                          {values.attendance_method === 'wfh'
+                            ? 'Permanently remote — no WFH leave required each day'
+                            : 'Must submit & get WFH leave approved to work remotely'}
+                        </div>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  {(hasEarnings || hasDeductions) && (
+                    <>
+                      <hr className="my-4 opacity-50" />
+
+                      <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                        <CsLineIcons icon="money" size="18" />
+                        Salary Structure Breakdown
+                      </h6>
+                      <Row className="g-3">
+                        {hasEarnings && (
+                          <Col md={hasDeductions ? 6 : 12}>
+                            <div className="bg-light rounded-3 p-3 shadow-sm border border-faint h-100">
+                              <div className="d-flex justify-content-between align-items-center mb-3">
+                                <div className="small fw-bold text-muted text-uppercase letter-spacing-1">Monthly Earnings</div>
+                                <Button
+                                  variant="none"
+                                  size="sm"
+                                  className="text-primary p-0 d-flex align-items-center gap-1 hover-scale"
+                                  onClick={() => {
+                                    setNewFieldName('');
+                                    setShowAddEarningModal(true);
+                                  }}
+                                >
+                                  <CsLineIcons icon="plus" size="14" /> Add Field
+                                </Button>
+                              </div>
+                              {payrollConfig?.custom_earnings?.filter(e => e.is_active).map((earning, idx) => (
+                                <Form.Group className="mb-2" key={earning.id}>
+                                  <Form.Label className="small fw-bold opacity-75">{earning.label}</Form.Label>
+                                  <Form.Control
+                                    type="number"
+                                    name={`salary_structure.custom_earnings.${earning.id}`}
+                                    value={values.salary_structure?.custom_earnings?.[earning.id] ?? ''}
+                                    onChange={(e) => setFieldValue(`salary_structure.custom_earnings.${earning.id}`, e.target.value === '' ? '' : Number(e.target.value))}
+                                    onFocus={() => {
+                                      if (values.salary_structure?.custom_earnings?.[earning.id] === 0) {
+                                        setFieldValue(`salary_structure.custom_earnings.${earning.id}`, '');
+                                      }
+                                    }}
+                                    size="sm"
+                                  />
+                                </Form.Group>
+                              ))}
+                              {(!payrollConfig?.custom_earnings || payrollConfig.custom_earnings.filter(e => e.is_active).length === 0) && (
+                                <div className="text-muted small">No active earning components defined.</div>
+                              )}
+                            </div>
+                          </Col>
+                        )}
+                        {hasDeductions && (
+                          <Col md={hasEarnings ? 6 : 12}>
+                            <div className="bg-light rounded-3 p-3 shadow-sm border border-faint h-100">
+                              <div className="d-flex justify-content-between align-items-center mb-3">
+                                <div className="small fw-bold text-muted text-uppercase letter-spacing-1">Deductions</div>
+                                <Button
+                                  variant="none"
+                                  size="sm"
+                                  className="text-primary p-0 d-flex align-items-center gap-1 hover-scale"
+                                  onClick={() => {
+                                    setNewFieldName('');
+                                    setShowAddDeductionModal(true);
+                                  }}
+                                >
+                                  <CsLineIcons icon="plus" size="14" /> Add Field
+                                </Button>
+                              </div>
+
+                              {payrollConfig?.statutory_config?.pf?.is_mandatory && (
+                                <Form.Group className="mb-2">
+                                  <Form.Label className="small fw-bold opacity-75">PF (%)</Form.Label>
+                                  <Form.Control
+                                    type="number"
+                                    name="salary_structure.deductions.pf_percentage"
+                                    value={values.salary_structure?.deductions?.pf_percentage ?? ''}
+                                    onChange={(e) => setFieldValue('salary_structure.deductions.pf_percentage', e.target.value === '' ? '' : Number(e.target.value))}
+                                    onFocus={() => {
+                                      if (values.salary_structure?.deductions?.pf_percentage === 0) {
+                                        setFieldValue('salary_structure.deductions.pf_percentage', '');
+                                      }
+                                    }}
+                                    isInvalid={touched.salary_structure?.deductions?.pf_percentage && !!errors.salary_structure?.deductions?.pf_percentage}
+                                    size="sm"
+                                  />
+                                  {touched.salary_structure?.deductions?.pf_percentage && errors.salary_structure?.deductions?.pf_percentage && (
+                                    <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.pf_percentage}</div>
+                                  )}
+                                </Form.Group>
+                              )}
+
+                              {payrollConfig?.statutory_config?.esi?.is_mandatory && (
+                                <Form.Group className="mb-2">
+                                  <Form.Label className="small fw-bold opacity-75">ESI (%)</Form.Label>
+                                  <Form.Control
+                                    type="number"
+                                    name="salary_structure.deductions.esi_percentage"
+                                    value={values.salary_structure?.deductions?.esi_percentage ?? ''}
+                                    onChange={(e) => setFieldValue('salary_structure.deductions.esi_percentage', e.target.value === '' ? '' : Number(e.target.value))}
+                                    onFocus={() => {
+                                      if (values.salary_structure?.deductions?.esi_percentage === 0) {
+                                        setFieldValue('salary_structure.deductions.esi_percentage', '');
+                                      }
+                                    }}
+                                    isInvalid={touched.salary_structure?.deductions?.esi_percentage && !!errors.salary_structure?.deductions?.esi_percentage}
+                                    size="sm"
+                                  />
+                                  {touched.salary_structure?.deductions?.esi_percentage && errors.salary_structure?.deductions?.esi_percentage && (
+                                    <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.esi_percentage}</div>
+                                  )}
+                                </Form.Group>
+                              )}
+
+                              {payrollConfig?.statutory_config?.pt?.is_applicable && (
+                                <Form.Group className="mb-2">
+                                  <Form.Label className="small fw-bold opacity-75">PT (Monthly)</Form.Label>
+                                  <Form.Control
+                                    type="number"
+                                    name="salary_structure.deductions.pt"
+                                    value={values.salary_structure?.deductions?.pt ?? ''}
+                                    onChange={(e) => setFieldValue('salary_structure.deductions.pt', e.target.value === '' ? '' : Number(e.target.value))}
+                                    onFocus={() => {
+                                      if (values.salary_structure?.deductions?.pt === 0) {
+                                        setFieldValue('salary_structure.deductions.pt', '');
+                                      }
+                                    }}
+                                    isInvalid={touched.salary_structure?.deductions?.pt && !!errors.salary_structure?.deductions?.pt}
+                                    size="sm"
+                                  />
+                                  {touched.salary_structure?.deductions?.pt && errors.salary_structure?.deductions?.pt && (
+                                    <div className="text-danger mt-1 small fw-bold">{errors.salary_structure.deductions.pt}</div>
+                                  )}
+                                </Form.Group>
+                              )}
+
+                              {payrollConfig?.custom_deductions?.filter(d => d.is_active).length > 0 && (
+                                <>
+                                  <hr className="my-3 opacity-50" />
+                                  <div className="small fw-bold text-muted mb-3 text-uppercase letter-spacing-1">Custom Deductions</div>
+                                  {payrollConfig.custom_deductions.filter(d => d.is_active).map((deduction) => (
+                                    <Form.Group className="mb-2" key={deduction.id}>
+                                      <Form.Label className="small fw-bold opacity-75">{deduction.label}</Form.Label>
+                                      <Form.Control
+                                        type="number"
+                                        name={`salary_structure.custom_deductions.${deduction.id}`}
+                                        value={values.salary_structure?.custom_deductions?.[deduction.id] ?? ''}
+                                        onChange={(e) => setFieldValue(`salary_structure.custom_deductions.${deduction.id}`, e.target.value === '' ? '' : Number(e.target.value))}
+                                        onFocus={() => {
+                                          if (values.salary_structure?.custom_deductions?.[deduction.id] === 0) {
+                                            setFieldValue(`salary_structure.custom_deductions.${deduction.id}`, '');
+                                          }
+                                        }}
+                                        size="sm"
+                                      />
+                                    </Form.Group>
+                                  ))}
+                                </>
+                              )}
+
+                              {(!payrollConfig?.statutory_config?.pf?.is_mandatory &&
+                                !payrollConfig?.statutory_config?.esi?.is_mandatory &&
+                                !payrollConfig?.statutory_config?.pt?.is_applicable &&
+                                (!payrollConfig?.custom_deductions || payrollConfig.custom_deductions.filter(d => d.is_active).length === 0)) && (
+                                  <div className="text-muted small">No active deduction components defined.</div>
+                                )}
+                            </div>
+                          </Col>
+                        )}
+                      </Row>
+
+                      <div className="bg-light rounded-3 p-3 shadow-sm border border-faint mt-4">
+                        <Row className="g-3 align-items-center">
+                          <Col md={4} className="text-center text-md-start">
+                            <div className="small fw-bold text-muted text-uppercase mb-1">Total Salary (Gross)</div>
+                            <h4 className="fw-bold text-success mb-0">₹ {safeGrossSalary.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
+                          </Col>
+                          <Col md={4} className="text-center text-md-start border-start border-faint">
+                            <div className="small fw-bold text-muted text-uppercase mb-1">Total Deductions</div>
+                            <h4 className="fw-bold text-danger mb-0">₹ {safeTotalDeductions.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
+                          </Col>
+                          <Col md={4} className="text-center text-md-start border-start border-faint">
+                            <div className="small fw-bold text-muted text-uppercase mb-1">Net Salary</div>
+                            <h4 className="fw-bold text-primary mb-0">₹ {safeNetSalary.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
+                          </Col>
+                        </Row>
+                      </div>
+                    </>
+                  )}
+
+                  <hr className="my-4 opacity-50" />
+                  <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                    <CsLineIcons icon="calendar" size="18" />
+                    Weekly Off Policy
+                  </h6>
+                  <div className="bg-light rounded-3 p-3 shadow-sm border border-faint mb-4">
+                    <Row className="g-3">
                       <Col md={12}>
-                        <div className="d-flex justify-content-between align-items-center mb-2 mt-3">
+                        <Form.Group>
+                          <Form.Label className="small fw-bold opacity-75">Select Policy</Form.Label>
+                          <Select
+                            classNamePrefix="react-select"
+                            menuPortalTarget={document.body}
+                            styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                            name="weekly_off_policy"
+                            options={hasGlobalWeeklyOff ? [
+                              { value: 'global', label: 'Global Company Policy (Use Settings)' },
+                              { value: 'custom', label: 'Custom Employee Policy' }
+                            ] : [
+                              { value: 'custom', label: 'Custom Employee Policy' }
+                            ]}
+                            value={values.weekly_off_policy ? { label: values.weekly_off_policy === 'custom' ? 'Custom Employee Policy' : 'Global Company Policy (Use Settings)', value: values.weekly_off_policy } : null}
+                            onChange={(selected) => setFieldValue('weekly_off_policy', selected ? selected.value : 'custom')}
+                            onBlur={() => formik.setFieldTouched('weekly_off_policy', true)}
+                          />
+                          {values.weekly_off_policy === 'global' && (
+                            <div className="mt-2 text-muted small fw-medium ms-1">
+                              Active Policy: <span className="text-primary fw-bold">{(() => {
+                                const branch = branches.find(b => b._id === values.branch_id);
+                                const branchName = branch ? `${branch.name} Branch` : 'Global / All Branches';
+                                const weekOffsStr = (payrollConfig?.global_weekly_offs || [])
+                                  .map(wo => `${wo.day}${wo.type === 'specific_weeks' ? ` (Weeks: ${wo.weeks.join(', ')})` : ''}`)
+                                  .join(', ') || 'None';
+                                return `${branchName} - ${weekOffsStr}`;
+                              })()}</span>
+                            </div>
+                          )}
+                        </Form.Group>
+                      </Col>
+
+                      {values.weekly_off_policy === 'custom' && (
+                        <Col md={12}>
+                          <div className="d-flex justify-content-between align-items-center mb-2 mt-3">
                             <Form.Label className="small fw-bold opacity-75 mb-0">Custom Weekly Offs</Form.Label>
                             <Badge bg="primary" style={{ cursor: 'pointer' }} onClick={handleAddCustomWeeklyOff}>+ Add Day</Badge>
-                        </div>
-                        <div className="d-flex flex-column gap-3">
+                          </div>
+                          <div className="d-flex flex-column gap-3">
                             {values.custom_weekly_offs && values.custom_weekly_offs.map((woff, idx) => (
-                                <div key={idx} className="p-3 border rounded-3 bg-white shadow-sm position-relative">
-                                    {values.custom_weekly_offs.length > 1 && (
-                                        <span 
-                                            className="position-absolute top-0 end-0 p-2 text-danger" 
-                                            style={{ cursor: 'pointer', zIndex: 10 }}
-                                            onClick={() => handleRemoveCustomWeeklyOff(idx)}
+                              <div key={idx} className="p-3 border rounded-3 bg-white shadow-sm position-relative">
+                                {values.custom_weekly_offs.length > 1 && (
+                                  <span
+                                    className="position-absolute top-0 end-0 p-2 text-danger"
+                                    style={{ cursor: 'pointer', zIndex: 10 }}
+                                    onClick={() => handleRemoveCustomWeeklyOff(idx)}
+                                  >
+                                    <CsLineIcons icon="bin" size="15" />
+                                  </span>
+                                )}
+                                <Row className="g-2">
+                                  <Col md={6}>
+                                    <Select
+                                      classNamePrefix="react-select"
+                                      menuPortalTarget={document.body}
+                                      styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                      options={[
+                                        { value: 'Sunday', label: 'Sunday' },
+                                        { value: 'Monday', label: 'Monday' },
+                                        { value: 'Tuesday', label: 'Tuesday' },
+                                        { value: 'Wednesday', label: 'Wednesday' },
+                                        { value: 'Thursday', label: 'Thursday' },
+                                        { value: 'Friday', label: 'Friday' },
+                                        { value: 'Saturday', label: 'Saturday' }
+                                      ]}
+                                      value={woff.day ? { value: woff.day, label: woff.day } : null}
+                                      onChange={(selected) => handleUpdateCustomWeeklyOff(idx, 'day', selected.value)}
+                                    />
+                                  </Col>
+                                  <Col md={6}>
+                                    <Select
+                                      classNamePrefix="react-select"
+                                      menuPortalTarget={document.body}
+                                      styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                      options={[
+                                        { value: 'all_weeks', label: 'Every Week' },
+                                        { value: 'specific_weeks', label: 'Specific Weeks' }
+                                      ]}
+                                      value={woff.type ? { value: woff.type, label: woff.type === 'all_weeks' ? 'Every Week' : 'Specific Weeks' } : null}
+                                      onChange={(selected) => handleUpdateCustomWeeklyOff(idx, 'type', selected.value)}
+                                    />
+                                  </Col>
+                                </Row>
+
+                                {woff.type === 'specific_weeks' && (
+                                  <div className="mt-2">
+                                    <div className="small text-muted mb-1">Select Weeks:</div>
+                                    <div className="d-flex flex-wrap gap-2">
+                                      {[1, 2, 3, 4, 5].map(w => (
+                                        <Badge
+                                          key={w}
+                                          bg={(woff.weeks || []).includes(w) ? 'primary' : 'light'}
+                                          text={(woff.weeks || []).includes(w) ? 'white' : 'dark'}
+                                          className="border cursor-pointer px-2 py-1"
+                                          onClick={() => toggleSpecificCustomWeek(idx, w)}
                                         >
-                                            <CsLineIcons icon="bin" size="15" />
-                                        </span>
-                                    )}
-                                    <Row className="g-2">
-                                        <Col md={6}>
-                                            <Select
-                                                classNamePrefix="react-select"
-                                                menuPortalTarget={document.body}
-                                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                                                options={[
-                                                    { value: 'Sunday', label: 'Sunday' },
-                                                    { value: 'Monday', label: 'Monday' },
-                                                    { value: 'Tuesday', label: 'Tuesday' },
-                                                    { value: 'Wednesday', label: 'Wednesday' },
-                                                    { value: 'Thursday', label: 'Thursday' },
-                                                    { value: 'Friday', label: 'Friday' },
-                                                    { value: 'Saturday', label: 'Saturday' }
-                                                ]}
-                                                value={woff.day ? { value: woff.day, label: woff.day } : null}
-                                                onChange={(selected) => handleUpdateCustomWeeklyOff(idx, 'day', selected.value)}
-                                            />
-                                        </Col>
-                                        <Col md={6}>
-                                            <Select
-                                                classNamePrefix="react-select"
-                                                menuPortalTarget={document.body}
-                                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                                                options={[
-                                                    { value: 'all_weeks', label: 'Every Week' },
-                                                    { value: 'specific_weeks', label: 'Specific Weeks' }
-                                                ]}
-                                                value={woff.type ? { value: woff.type, label: woff.type === 'all_weeks' ? 'Every Week' : 'Specific Weeks' } : null}
-                                                onChange={(selected) => handleUpdateCustomWeeklyOff(idx, 'type', selected.value)}
-                                            />
-                                        </Col>
-                                    </Row>
-                                    
-                                    {woff.type === 'specific_weeks' && (
-                                        <div className="mt-2">
-                                            <div className="small text-muted mb-1">Select Weeks:</div>
-                                            <div className="d-flex flex-wrap gap-2">
-                                                {[1, 2, 3, 4, 5].map(w => (
-                                                    <Badge
-                                                        key={w}
-                                                        bg={(woff.weeks || []).includes(w) ? 'primary' : 'light'}
-                                                        text={(woff.weeks || []).includes(w) ? 'white' : 'dark'}
-                                                        className="border cursor-pointer px-2 py-1"
-                                                        onClick={() => toggleSpecificCustomWeek(idx, w)}
-                                                    >
-                                                        {w}{w === 1 ? 'st' : w === 2 ? 'nd' : w === 3 ? 'rd' : 'th'}
-                                                    </Badge>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                          {w}{w === 1 ? 'st' : w === 2 ? 'nd' : w === 3 ? 'rd' : 'th'}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             ))}
-                        </div>
-                      </Col>
-                    )}
-                 </Row>
-              </div>
-                {globalLeavePolicies && globalLeavePolicies.length > 0 && (
-                  <>
-                    <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
-                      <CsLineIcons icon="calendar" size="18" />
-                      Leave Policy Configuration
-                    </h6>
-                    <div className="bg-light rounded-3 p-3 shadow-sm border border-faint mb-4">
-                      <Row className="g-3">
-                        {globalLeavePolicies.map((policy, idx) => {
-                           const currentConfig = values.leave_policy_configuration?.find(c => c.leave_type_id === policy.leave_type_id);
-                           const isChecked = currentConfig ? currentConfig.is_active : false;
-                           return (
-                             <Col md={4} key={policy.leave_type_id}>
-                               <div className="d-flex justify-content-between align-items-center p-2 border rounded bg-white">
-                                 <div>
-                                   <div className="fw-bold small">{policy.name}</div>
-                                   <div className="text-muted" style={{ fontSize: '0.75rem' }}>{policy.days_per_year} Days / Year</div>
-                                 </div>
-                                 <Form.Check
-                                   type="switch"
-                                   id={`leave-switch-${policy.leave_type_id}`}
-                                   checked={isChecked}
-                                   onChange={(e) => {
+                          </div>
+                        </Col>
+                      )}
+                    </Row>
+                  </div>
+                  {globalLeavePolicies && globalLeavePolicies.length > 0 && (
+                    <>
+                      <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                        <CsLineIcons icon="calendar" size="18" />
+                        Leave Policy Configuration
+                      </h6>
+                      <div className="bg-light rounded-3 p-3 shadow-sm border border-faint mb-4">
+                        <Row className="g-3">
+                          {globalLeavePolicies.map((policy, idx) => {
+                            const currentConfig = values.leave_policy_configuration?.find(c => c.leave_type_id === policy.leave_type_id);
+                            const isChecked = currentConfig ? currentConfig.is_active : false;
+                            return (
+                              <Col md={4} key={policy.leave_type_id}>
+                                <div className="d-flex justify-content-between align-items-center p-2 border rounded bg-white">
+                                  <div>
+                                    <div className="fw-bold small">{policy.name}</div>
+                                    <div className="text-muted" style={{ fontSize: '0.75rem' }}>{policy.days_per_year} Days / Year</div>
+                                  </div>
+                                  <Form.Check
+                                    type="switch"
+                                    id={`leave-switch-${policy.leave_type_id}`}
+                                    checked={isChecked}
+                                    onChange={(e) => {
                                       const newConfig = [...(values.leave_policy_configuration || [])];
                                       const index = newConfig.findIndex(c => c.leave_type_id === policy.leave_type_id);
                                       if (index >= 0) {
@@ -1765,489 +1765,489 @@ const AddStaff = () => {
                                         newConfig.push({ leave_type_id: policy.leave_type_id, is_active: e.target.checked });
                                       }
                                       setFieldValue('leave_policy_configuration', newConfig);
-                                   }}
-                                 />
-                               </div>
-                             </Col>
-                           );
-                        })}
-                      </Row>
+                                    }}
+                                  />
+                                </div>
+                              </Col>
+                            );
+                          })}
+                        </Row>
+                      </div>
+                      <hr className="my-4 opacity-50" />
+                    </>
+                  )}
+                  <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                    <CsLineIcons icon="trend-up" size="18" />
+                    Upcoming Increment Plan
+                  </h6>
+                  <div className="bg-light rounded-3 p-3 shadow-sm border border-faint">
+                    <Row className="g-3 align-items-end">
+                      <Col md={3}>
+                        <Form.Group>
+                          <Form.Label className="small fw-bold opacity-75">Scheduled Date</Form.Label>
+                          <Form.Control
+                            type="date"
+                            name="increment_plan.scheduled_date"
+                            value={values.increment_plan?.scheduled_date}
+                            onChange={handleChange}
+                            size="sm"
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={3}>
+                        <Form.Group>
+                          <Form.Label className="small fw-bold opacity-75">Increment Base</Form.Label>
+                          <Select
+                            classNamePrefix="react-select"
+                            menuPortalTarget={document.body}
+                            styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                            name="increment_plan.base"
+                            options={[
+                              { value: 'basic', label: `Basic Salary (₹${basicSalary})` },
+                              { value: 'gross', label: `Gross Salary (₹${safeGrossSalary})` },
+                              { value: 'net', label: `Net Salary (₹${safeNetSalary})` }
+                            ]}
+                            value={values.increment_plan?.base ? {
+                              value: values.increment_plan.base,
+                              label: values.increment_plan.base === 'basic' ? `Basic Salary (₹${basicSalary})` :
+                                values.increment_plan.base === 'gross' ? `Gross Salary (₹${safeGrossSalary})` :
+                                  `Net Salary (₹${safeNetSalary})`
+                            } : { value: 'basic', label: `Basic Salary (₹${basicSalary})` }}
+                            onChange={(selected) => setFieldValue('increment_plan.base', selected ? selected.value : 'basic')}
+                            onBlur={() => formik.setFieldTouched('increment_plan.base', true)}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={3}>
+                        <Form.Group>
+                          <Form.Label className="small fw-bold opacity-75">Increment Type</Form.Label>
+                          <Select
+                            classNamePrefix="react-select"
+                            menuPortalTarget={document.body}
+                            styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                            name="increment_plan.type"
+                            options={[
+                              { value: 'percentage', label: 'Percentage (%)' },
+                              { value: 'flat', label: 'Flat Amount (₹)' }
+                            ]}
+                            value={values.increment_plan?.type ? { label: values.increment_plan.type === 'percentage' ? 'Percentage (%)' : 'Flat Amount (₹)', value: values.increment_plan.type } : null}
+                            onChange={(selected) => setFieldValue('increment_plan.type', selected ? selected.value : 'percentage')}
+                            onBlur={() => formik.setFieldTouched('increment_plan.type', true)}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={3}>
+                        <Form.Group>
+                          <Form.Label className="small fw-bold opacity-75">Increment Value</Form.Label>
+                          <Form.Control
+                            type="number"
+                            name="increment_plan.value"
+                            value={values.increment_plan?.value}
+                            onChange={handleChange}
+                            placeholder={values.increment_plan?.type === 'percentage' ? "e.g. 10" : "e.g. 5000"}
+                            size="sm"
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    {values.increment_plan?.scheduled_date && values.increment_plan?.value > 0 && (
+                      <div className="mt-3 p-3 bg-white border rounded small text-muted">
+                        <div className="d-flex align-items-center gap-2 mb-2">
+                          <CsLineIcons icon="info-hexagon" size="18" className="text-info" />
+                          <span className="fw-bold text-info">Increment Projection</span>
+                        </div>
+                        {(() => {
+                          const val = Number(values.increment_plan.value) || 0;
+                          const type = values.increment_plan.type || 'percentage';
+                          const base = values.increment_plan.base || 'basic';
+
+                          let baseAmount = 0;
+                          let baseLabel = '';
+                          if (base === 'basic') {
+                            baseAmount = basicSalary;
+                            baseLabel = 'Basic Salary';
+                          } else if (base === 'gross') {
+                            baseAmount = safeGrossSalary;
+                            baseLabel = 'Gross Salary';
+                          } else if (base === 'net') {
+                            baseAmount = safeNetSalary;
+                            baseLabel = 'Net Salary';
+                          }
+
+                          const incrementAmt = type === 'percentage' ? (baseAmount * val) / 100 : val;
+                          const newBaseAmount = baseAmount + incrementAmt;
+
+                          return (
+                            <div className="fw-medium">
+                              <div>An increment of <strong>{type === 'percentage' ? `${val}%` : `₹${val}`}</strong> calculated on <strong>{baseLabel} (₹{baseAmount.toLocaleString('en-IN')})</strong>.</div>
+                              <div className="mt-2 pt-2 border-top">
+                                Calculated Increment Amount: <strong className="text-success fs-6">₹{incrementAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                              </div>
+                              <div className="mt-1">
+                                Projected New {baseLabel}: <strong className="text-primary fs-6">₹{newBaseAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                              </div>
+                              <div className="mt-2 text-uppercase text-muted" style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}>
+                                Scheduled execution date: <strong>{new Date(values.increment_plan.scheduled_date).toLocaleDateString()}</strong>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                </Card.Body>
+              </Card>
+
+            </Col>
+            <Col lg={4}>
+              {/* Profile Photo Section */}
+              <Card className="glass-card border-0 mb-4 text-center">
+                <Card.Body className="p-4">
+                  <div className="section-header text-start">
+                    <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                      <CsLineIcons icon="camera" size="20" className="text-primary" />
+                      Profile Photo
+                    </h5>
+                  </div>
+
+                  <div className="d-flex flex-column align-items-center">
+                    <div className="preview-container mb-3 shadow-sm border-2">
+                      {photoPreview ? (
+                        <img src={photoPreview} alt="Preview" className="preview-image" />
+                      ) : (
+                        <CsLineIcons icon="user" size="40" className="text-muted opacity-20" />
+                      )}
                     </div>
-                    <hr className="my-4 opacity-50" />
-                  </>
-                )}
-                <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
-                  <CsLineIcons icon="trend-up" size="18" />
-                  Upcoming Increment Plan
-                </h6>
-                <div className="bg-light rounded-3 p-3 shadow-sm border border-faint">
-                  <Row className="g-3 align-items-end">
-                    <Col md={3}>
+
+                    <Form.Group className="w-100">
+                      <div className="text-center">
+                        <Button
+                          variant={faceDescriptor ? "success" : "outline-primary"}
+                          className="custom-btn-outline px-4 mx-auto d-flex align-items-center justify-content-center gap-2"
+                          onClick={() => setShowFaceModal(true)}
+                          disabled={loading.submitting}
+                          style={{ maxWidth: 'fit-content' }}
+                        >
+                          <CsLineIcons icon={faceDescriptor ? "check" : "camera"} size="18" />
+                          {faceDescriptor ? "Face Captured" : "Capture Face"}
+                        </Button>
+                      </div>
+                      {touched.photo && errors.photo && <div className="text-danger mt-2 small fw-bold">{errors.photo}</div>}
+                    </Form.Group>
+                  </div>
+                </Card.Body>
+              </Card>
+
+              {/* Account & Compliance Section */}
+              <Card className="glass-card border-0 mb-4">
+                <Card.Body className="p-4">
+                  <div className="section-header">
+                    <div className="d-flex align-items-center gap-2 mb-0">
+                      <div className="bg-soft-primary p-2 rounded-3">
+                        <CsLineIcons icon="wallet" size="20" className="text-primary" />
+                      </div>
+                      <h5 className="fw-bold mb-0">Bank & Compliance Details</h5>
+                    </div>
+                  </div>
+
+                  <Row className="g-4 mb-4">
+                    <Col md={6}>
                       <Form.Group>
-                        <Form.Label className="small fw-bold opacity-75">Scheduled Date</Form.Label>
+                        <Form.Label>Account Number</Form.Label>
                         <Form.Control
-                          type="date"
-                          name="increment_plan.scheduled_date"
-                          value={values.increment_plan?.scheduled_date}
+                          type="text"
+                          name="bank_account.account_number"
+                          placeholder="Enter Account Number"
+                          value={values.bank_account.account_number}
                           onChange={handleChange}
-                          size="sm"
+                          disabled={loading.submitting}
                         />
                       </Form.Group>
                     </Col>
-                    <Col md={3}>
+                    <Col md={6}>
                       <Form.Group>
-                        <Form.Label className="small fw-bold opacity-75">Increment Base</Form.Label>
-                        <Select
-                          classNamePrefix="react-select"
-                          menuPortalTarget={document.body}
-                          styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                          name="increment_plan.base"
-                          options={[
-                            { value: 'basic', label: `Basic Salary (₹${basicSalary})` },
-                            { value: 'gross', label: `Gross Salary (₹${safeGrossSalary})` },
-                            { value: 'net', label: `Net Salary (₹${safeNetSalary})` }
-                          ]}
-                          value={values.increment_plan?.base ? { 
-                            value: values.increment_plan.base, 
-                            label: values.increment_plan.base === 'basic' ? `Basic Salary (₹${basicSalary})` : 
-                                   values.increment_plan.base === 'gross' ? `Gross Salary (₹${safeGrossSalary})` : 
-                                   `Net Salary (₹${safeNetSalary})` 
-                          } : { value: 'basic', label: `Basic Salary (₹${basicSalary})` }}
-                          onChange={(selected) => setFieldValue('increment_plan.base', selected ? selected.value : 'basic')}
-                          onBlur={() => formik.setFieldTouched('increment_plan.base', true)}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={3}>
-                      <Form.Group>
-                        <Form.Label className="small fw-bold opacity-75">Increment Type</Form.Label>
-                        <Select
-                          classNamePrefix="react-select"
-                          menuPortalTarget={document.body}
-                          styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                          name="increment_plan.type"
-                          options={[
-                            { value: 'percentage', label: 'Percentage (%)' },
-                            { value: 'flat', label: 'Flat Amount (₹)' }
-                          ]}
-                          value={values.increment_plan?.type ? { label: values.increment_plan.type === 'percentage' ? 'Percentage (%)' : 'Flat Amount (₹)', value: values.increment_plan.type } : null}
-                          onChange={(selected) => setFieldValue('increment_plan.type', selected ? selected.value : 'percentage')}
-                          onBlur={() => formik.setFieldTouched('increment_plan.type', true)}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={3}>
-                      <Form.Group>
-                        <Form.Label className="small fw-bold opacity-75">Increment Value</Form.Label>
+                        <Form.Label>IFSC Code</Form.Label>
                         <Form.Control
-                          type="number"
-                          name="increment_plan.value"
-                          value={values.increment_plan?.value}
+                          type="text"
+                          name="bank_account.ifsc_code"
+                          placeholder="Enter IFSC Code"
+                          value={values.bank_account.ifsc_code}
                           onChange={handleChange}
-                          placeholder={values.increment_plan?.type === 'percentage' ? "e.g. 10" : "e.g. 5000"}
-                          size="sm"
+                          disabled={loading.submitting}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group>
+                        <Form.Label>Bank Name</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="bank_account.bank_name"
+                          placeholder="Enter Bank Name"
+                          value={values.bank_account.bank_name}
+                          onChange={handleChange}
+                          disabled={loading.submitting}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group>
+                        <Form.Label>Branch</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="bank_account.branch"
+                          placeholder="Enter Branch Name"
+                          value={values.bank_account.branch}
+                          onChange={handleChange}
+                          disabled={loading.submitting}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={12}>
+                      <Form.Group>
+                        <Form.Label>PF / UAN Number</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="uan_number"
+                          placeholder="Enter PF or UAN Number"
+                          value={values.uan_number}
+                          onChange={handleChange}
+                          disabled={loading.submitting}
                         />
                       </Form.Group>
                     </Col>
                   </Row>
-                  {values.increment_plan?.scheduled_date && values.increment_plan?.value > 0 && (
-                    <div className="mt-3 p-3 bg-white border rounded small text-muted">
-                      <div className="d-flex align-items-center gap-2 mb-2">
-                        <CsLineIcons icon="info-hexagon" size="18" className="text-info" />
-                        <span className="fw-bold text-info">Increment Projection</span>
+                </Card.Body>
+              </Card>
+
+              {/* Documents Section */}
+              <Card className="glass-card border-0 mb-4">
+                <Card.Body className="p-4">
+                  <div className="section-header mb-4">
+                    <div className="d-flex align-items-center gap-2 mb-0">
+                      <div className="bg-soft-primary p-2 rounded-3">
+                        <CsLineIcons icon="shield" size="20" className="text-primary" />
                       </div>
-                      {(() => {
-                        const val = Number(values.increment_plan.value) || 0;
-                        const type = values.increment_plan.type || 'percentage';
-                        const base = values.increment_plan.base || 'basic';
-                        
-                        let baseAmount = 0;
-                        let baseLabel = '';
-                        if (base === 'basic') {
-                          baseAmount = basicSalary;
-                          baseLabel = 'Basic Salary';
-                        } else if (base === 'gross') {
-                          baseAmount = safeGrossSalary;
-                          baseLabel = 'Gross Salary';
-                        } else if (base === 'net') {
-                          baseAmount = safeNetSalary;
-                          baseLabel = 'Net Salary';
-                        }
+                      <h5 className="fw-bold mb-0">Identification</h5>
+                    </div>
+                  </div>
 
-                        const incrementAmt = type === 'percentage' ? (baseAmount * val) / 100 : val;
-                        const newBaseAmount = baseAmount + incrementAmt;
+                  <div className="bg-light rounded p-3 mb-4 border border-faint">
+                    <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                      <CsLineIcons icon="credit-card" size="18" />
+                      PAN Card Details (Required)
+                    </h6>
+                    <Form.Group className="mb-4">
+                      <Form.Label>PAN Number</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="pan_number"
+                        placeholder="Enter PAN Number"
+                        value={values.pan_number}
+                        onChange={handleChange}
+                        isInvalid={touched.pan_number && errors.pan_number}
+                        disabled={loading.submitting}
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.pan_number}</Form.Control.Feedback>
+                    </Form.Group>
 
-                        return (
-                          <div className="fw-medium">
-                            <div>An increment of <strong>{type === 'percentage' ? `${val}%` : `₹${val}`}</strong> calculated on <strong>{baseLabel} (₹{baseAmount.toLocaleString('en-IN')})</strong>.</div>
-                            <div className="mt-2 pt-2 border-top">
-                              Calculated Increment Amount: <strong className="text-success fs-6">₹{incrementAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                            </div>
-                            <div className="mt-1">
-                              Projected New {baseLabel}: <strong className="text-primary fs-6">₹{newBaseAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                            </div>
-                            <div className="mt-2 text-uppercase text-muted" style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}>
-                              Scheduled execution date: <strong>{new Date(values.increment_plan.scheduled_date).toLocaleDateString()}</strong>
-                            </div>
+                    <Form.Group className="mb-0">
+                      <Form.Label>PAN Card Image</Form.Label>
+                      <div className="id-preview-container mb-2">
+                        {panImagePreview ? (
+                          <img src={panImagePreview} alt="PAN Card" className="preview-image" />
+                        ) : (
+                          <div className="text-center p-4">
+                            <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
+                            <div className="small text-muted">No Image Selected</div>
                           </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-                </div>
-              </Card.Body>
-            </Card>
-
-          </Col>
-          <Col lg={4}>
-            {/* Profile Photo Section */}
-            <Card className="glass-card border-0 mb-4 text-center">
-              <Card.Body className="p-4">
-                <div className="section-header text-start">
-                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <CsLineIcons icon="camera" size="20" className="text-primary" />
-                    Profile Photo
-                  </h5>
-                </div>
-
-                <div className="d-flex flex-column align-items-center">
-                  <div className="preview-container mb-3 shadow-sm border-2">
-                    {photoPreview ? (
-                      <img src={photoPreview} alt="Preview" className="preview-image" />
-                    ) : (
-                      <CsLineIcons icon="user" size="40" className="text-muted opacity-20" />
-                    )}
-                  </div>
-
-                  <Form.Group className="w-100">
-                    <div className="text-center">
-                      <Button
-                        variant={faceDescriptor ? "success" : "outline-primary"}
-                        className="custom-btn-outline px-4 mx-auto d-flex align-items-center justify-content-center gap-2"
-                        onClick={() => setShowFaceModal(true)}
-                        disabled={loading.submitting}
-                        style={{ maxWidth: 'fit-content' }}
-                      >
-                        <CsLineIcons icon={faceDescriptor ? "check" : "camera"} size="18" /> 
-                        {faceDescriptor ? "Face Captured" : "Capture Face"}
-                      </Button>
-                    </div>
-                    {touched.photo && errors.photo && <div className="text-danger mt-2 small fw-bold">{errors.photo}</div>}
-                  </Form.Group>
-                </div>
-              </Card.Body>
-            </Card>
-
-            {/* Account & Compliance Section */}
-            <Card className="glass-card border-0 mb-4">
-              <Card.Body className="p-4">
-                <div className="section-header">
-                  <div className="d-flex align-items-center gap-2 mb-0">
-                    <div className="bg-soft-primary p-2 rounded-3">
-                      <CsLineIcons icon="wallet" size="20" className="text-primary" />
-                    </div>
-                    <h5 className="fw-bold mb-0">Bank & Compliance Details</h5>
-                  </div>
-                </div>
-
-                <Row className="g-4 mb-4">
-                  <Col md={6}>
-                    <Form.Group>
-                      <Form.Label>Account Number</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="bank_account.account_number"
-                        placeholder="Enter Account Number"
-                        value={values.bank_account.account_number}
-                        onChange={handleChange}
-                        disabled={loading.submitting}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group>
-                      <Form.Label>IFSC Code</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="bank_account.ifsc_code"
-                        placeholder="Enter IFSC Code"
-                        value={values.bank_account.ifsc_code}
-                        onChange={handleChange}
-                        disabled={loading.submitting}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group>
-                      <Form.Label>Bank Name</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="bank_account.bank_name"
-                        placeholder="Enter Bank Name"
-                        value={values.bank_account.bank_name}
-                        onChange={handleChange}
-                        disabled={loading.submitting}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group>
-                      <Form.Label>Branch</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="bank_account.branch"
-                        placeholder="Enter Branch Name"
-                        value={values.bank_account.branch}
-                        onChange={handleChange}
-                        disabled={loading.submitting}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={12}>
-                    <Form.Group>
-                      <Form.Label>PF / UAN Number</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="uan_number"
-                        placeholder="Enter PF or UAN Number"
-                        value={values.uan_number}
-                        onChange={handleChange}
-                        disabled={loading.submitting}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-
-            {/* Documents Section */}
-            <Card className="glass-card border-0 mb-4">
-              <Card.Body className="p-4">
-                <div className="section-header mb-4">
-                  <div className="d-flex align-items-center gap-2 mb-0">
-                    <div className="bg-soft-primary p-2 rounded-3">
-                      <CsLineIcons icon="shield" size="20" className="text-primary" />
-                    </div>
-                    <h5 className="fw-bold mb-0">Identification</h5>
-                  </div>
-                </div>
-
-                <div className="bg-light rounded p-3 mb-4 border border-faint">
-                  <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
-                    <CsLineIcons icon="credit-card" size="18" />
-                    PAN Card Details (Required)
-                  </h6>
-                  <Form.Group className="mb-4">
-                    <Form.Label>PAN Number</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="pan_number"
-                      placeholder="Enter PAN Number"
-                      value={values.pan_number}
-                      onChange={handleChange}
-                      isInvalid={touched.pan_number && errors.pan_number}
-                      disabled={loading.submitting}
-                    />
-                    <Form.Control.Feedback type="invalid">{errors.pan_number}</Form.Control.Feedback>
-                  </Form.Group>
-
-                  <Form.Group className="mb-0">
-                    <Form.Label>PAN Card Image</Form.Label>
-                    <div className="id-preview-container mb-2">
-                      {panImagePreview ? (
-                        <img src={panImagePreview} alt="PAN Card" className="preview-image" />
-                      ) : (
-                        <div className="text-center p-4">
-                          <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
-                          <div className="small text-muted">No Image Selected</div>
-                        </div>
-                      )}
-                    </div>
-                    <Form.Control
-                      type="file"
-                      id="pan-image-upload"
-                      className="d-none"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange('pan_image', e.target.files[0], setPanImagePreview, 1.58)}
-                    />
-                    <div className="d-flex flex-column gap-3 align-items-start w-100">
-                      <Button
-                        as="label"
-                        htmlFor="pan-image-upload"
-                        className="custom-btn-outline px-4"
-                        style={{ maxWidth: 'fit-content' }}
-                        disabled={loading.submitting || uploadingFiles.pan_image}
-                      >
-                        {uploadingFiles.pan_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
-                        {panImagePreview ? 'Change PAN Image' : 'Upload PAN Image'}
-                      </Button>
-                    </div>
-                  </Form.Group>
-                </div>
-
-                <div className="bg-light rounded p-3 mb-4 border border-faint">
-                  <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
-                    <CsLineIcons icon="file-text" size="18" />
-                    Additional Identification (Required)
-                  </h6>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Document Type</Form.Label>
-                    <Select
-                          classNamePrefix="react-select"
-                          menuPortalTarget={document.body}
-                          styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                          name="document_type"
-                          options={[
-                            { value: 'Aadhar Card', label: 'Aadhar Card' },
-                            { value: 'National Identity Card', label: 'National Identity Card' },
-                            { value: 'Driving License', label: 'Driving License' },
-                            { value: 'Voter ID Card', label: 'Voter ID Card' },
-                            { value: 'Passport', label: 'Passport' }
-                          ]}
-                          value={values.document_type ? { label: values.document_type, value: values.document_type } : null}
-                          onChange={(selected) => {
-                            setFieldValue('document_type', selected ? selected.value : '');
-                            if (selected && selected.value !== 'National Identity Card' && selected.value !== 'Aadhar Card') {
-                              setFieldValue('back_image', '');
-                            }
-                          }}
-                          onBlur={() => formik.setFieldTouched('document_type', true)}
-                          isDisabled={loading.submitting}
-                          placeholder="Select Document"
-                        />
-                    {touched.document_type && errors.document_type && (
-                      <div className="text-danger mt-1 small fw-bold">{errors.document_type}</div>
-                    )}
-                  </Form.Group>
-
-                <Form.Group className="mb-4">
-                  <Form.Label>Document Number</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="id_number"
-                    placeholder="Enter ID Number"
-                    value={values.id_number}
-                    onChange={handleChange}
-                    isInvalid={touched.id_number && errors.id_number}
-                    disabled={loading.submitting}
-                  />
-                  <Form.Control.Feedback type="invalid">{errors.id_number}</Form.Control.Feedback>
-                </Form.Group>
-
-                <Form.Group className="mb-4">
-                  <Form.Label>Front Image</Form.Label>
-                  <div className="id-preview-container mb-2">
-                    {frontImagePreview ? (
-                      <img src={frontImagePreview} alt="Front" className="preview-image" />
-                    ) : (
-                      <div className="text-center p-4">
-                        <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
-                        <div className="small text-muted">No Image Selected</div>
+                        )}
                       </div>
-                    )}
+                      <Form.Control
+                        type="file"
+                        id="pan-image-upload"
+                        className="d-none"
+                        accept="image/*"
+                        onChange={(e) => handleFileChange('pan_image', e.target.files[0], setPanImagePreview, 1.58)}
+                      />
+                      <div className="d-flex flex-column gap-3 align-items-start w-100">
+                        <Button
+                          as="label"
+                          htmlFor="pan-image-upload"
+                          className="custom-btn-outline px-4"
+                          style={{ maxWidth: 'fit-content' }}
+                          disabled={loading.submitting || uploadingFiles.pan_image}
+                        >
+                          {uploadingFiles.pan_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                          {panImagePreview ? 'Change PAN Image' : 'Upload PAN Image'}
+                        </Button>
+                      </div>
+                    </Form.Group>
                   </div>
-                    <Form.Control
-                      type="file"
-                      id="front-image-upload"
-                      className="d-none"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange('front_image', e.target.files[0], setFrontImagePreview, 1.58)}
-                    />{' '}
-                  <div className="d-flex flex-column gap-3 align-items-start w-100">
-                    <Button
-                      as="label"
-                      htmlFor="front-image-upload"
-                      className="custom-btn-outline px-4"
-                      style={{ maxWidth: 'fit-content' }}
-                      disabled={loading.submitting || uploadingFiles.front_image}
-                    >
-                      {uploadingFiles.front_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
-                      {frontImagePreview ? 'Change Front Image' : 'Upload Front Image'}
-                    </Button>
-                    {touched.front_image && errors.front_image && <div className="text-danger mt-1 small fw-bold">{errors.front_image}</div>}
-                    
-                  </div>
-                </Form.Group>
 
-                {(values.document_type === 'National Identity Card' || values.document_type === 'Aadhar Card') && (
-                  <Form.Group className="mb-4">
-                    <Form.Label>Back Image</Form.Label>
-                    <div className="id-preview-container mb-2">
-                      {backImagePreview ? (
-                        <img src={backImagePreview} alt="Back" className="preview-image" />
-                      ) : (
-                        <div className="text-center p-4">
-                          <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
-                          <div className="small text-muted">No Image Selected</div>
-                        </div>
+                  <div className="bg-light rounded p-3 mb-4 border border-faint">
+                    <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                      <CsLineIcons icon="file-text" size="18" />
+                      Additional Identification (Required)
+                    </h6>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Document Type</Form.Label>
+                      <Select
+                        classNamePrefix="react-select"
+                        menuPortalTarget={document.body}
+                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                        name="document_type"
+                        options={[
+                          { value: 'Aadhar Card', label: 'Aadhar Card' },
+                          { value: 'National Identity Card', label: 'National Identity Card' },
+                          { value: 'Driving License', label: 'Driving License' },
+                          { value: 'Voter ID Card', label: 'Voter ID Card' },
+                          { value: 'Passport', label: 'Passport' }
+                        ]}
+                        value={values.document_type ? { label: values.document_type, value: values.document_type } : null}
+                        onChange={(selected) => {
+                          setFieldValue('document_type', selected ? selected.value : '');
+                          if (selected && selected.value !== 'National Identity Card' && selected.value !== 'Aadhar Card') {
+                            setFieldValue('back_image', '');
+                          }
+                        }}
+                        onBlur={() => formik.setFieldTouched('document_type', true)}
+                        isDisabled={loading.submitting}
+                        placeholder="Select Document"
+                      />
+                      {touched.document_type && errors.document_type && (
+                        <div className="text-danger mt-1 small fw-bold">{errors.document_type}</div>
                       )}
-                    </div>
-                    <Form.Control
-                      type="file"
-                      id="back-image-upload"
-                      className="d-none"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange('back_image', e.target.files[0], setBackImagePreview, 1.58)}
-                    />
-                    <div className="d-flex flex-column gap-3 align-items-start w-100">
-                      <Button
-                        as="label"
-                        htmlFor="back-image-upload"
-                        className="custom-btn-outline px-4"
-                        style={{ maxWidth: 'fit-content' }}
-                        disabled={loading.submitting || uploadingFiles.back_image}
-                      >
-                        {uploadingFiles.back_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
-                        {backImagePreview ? 'Change Back Image' : 'Upload Back Image'}
-                      </Button>
-                      {touched.back_image && errors.back_image && <div className="text-danger mt-1 small fw-bold">{errors.back_image}</div>}
-                    </div>
-                  </Form.Group>
-                )}
-                
-                <div className="d-flex justify-content-center mt-4 pt-3 border-top" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
-                  <Button
-                    variant="primary"
-                    type="submit"
-                    className="custom-btn-outline px-5 py-3 w-100"
-                    disabled={loading.submitting || uploadingFiles.photo || uploadingFiles.front_image || uploadingFiles.back_image || uploadingFiles.pan_image}
-                  >
-                    {loading.submitting ? (
-                      <>
-                        <Spinner animation="border" size="sm" className="me-2" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <CsLineIcons icon="save" size="20" className="me-2" />
-                        Register Staff Member
-                      </>
+                    </Form.Group>
+
+                    <Form.Group className="mb-4">
+                      <Form.Label>Document Number</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="id_number"
+                        placeholder="Enter ID Number"
+                        value={values.id_number}
+                        onChange={handleChange}
+                        isInvalid={touched.id_number && errors.id_number}
+                        disabled={loading.submitting}
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.id_number}</Form.Control.Feedback>
+                    </Form.Group>
+
+                    <Form.Group className="mb-4">
+                      <Form.Label>Front Image</Form.Label>
+                      <div className="id-preview-container mb-2">
+                        {frontImagePreview ? (
+                          <img src={frontImagePreview} alt="Front" className="preview-image" />
+                        ) : (
+                          <div className="text-center p-4">
+                            <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
+                            <div className="small text-muted">No Image Selected</div>
+                          </div>
+                        )}
+                      </div>
+                      <Form.Control
+                        type="file"
+                        id="front-image-upload"
+                        className="d-none"
+                        accept="image/*"
+                        onChange={(e) => handleFileChange('front_image', e.target.files[0], setFrontImagePreview, 1.58)}
+                      />{' '}
+                      <div className="d-flex flex-column gap-3 align-items-start w-100">
+                        <Button
+                          as="label"
+                          htmlFor="front-image-upload"
+                          className="custom-btn-outline px-4"
+                          style={{ maxWidth: 'fit-content' }}
+                          disabled={loading.submitting || uploadingFiles.front_image}
+                        >
+                          {uploadingFiles.front_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                          {frontImagePreview ? 'Change Front Image' : 'Upload Front Image'}
+                        </Button>
+                        {touched.front_image && errors.front_image && <div className="text-danger mt-1 small fw-bold">{errors.front_image}</div>}
+
+                      </div>
+                    </Form.Group>
+
+                    {(values.document_type === 'National Identity Card' || values.document_type === 'Aadhar Card') && (
+                      <Form.Group className="mb-4">
+                        <Form.Label>Back Image</Form.Label>
+                        <div className="id-preview-container mb-2">
+                          {backImagePreview ? (
+                            <img src={backImagePreview} alt="Back" className="preview-image" />
+                          ) : (
+                            <div className="text-center p-4">
+                              <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
+                              <div className="small text-muted">No Image Selected</div>
+                            </div>
+                          )}
+                        </div>
+                        <Form.Control
+                          type="file"
+                          id="back-image-upload"
+                          className="d-none"
+                          accept="image/*"
+                          onChange={(e) => handleFileChange('back_image', e.target.files[0], setBackImagePreview, 1.58)}
+                        />
+                        <div className="d-flex flex-column gap-3 align-items-start w-100">
+                          <Button
+                            as="label"
+                            htmlFor="back-image-upload"
+                            className="custom-btn-outline px-4"
+                            style={{ maxWidth: 'fit-content' }}
+                            disabled={loading.submitting || uploadingFiles.back_image}
+                          >
+                            {uploadingFiles.back_image ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                            {backImagePreview ? 'Change Back Image' : 'Upload Back Image'}
+                          </Button>
+                          {touched.back_image && errors.back_image && <div className="text-danger mt-1 small fw-bold">{errors.back_image}</div>}
+                        </div>
+                      </Form.Group>
                     )}
-                  </Button>
-                </div>
-                </div>
-              </Card.Body>
+
+                    <div className="d-flex justify-content-center mt-4 pt-3 border-top" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
+                      <Button
+                        variant="primary"
+                        type="submit"
+                        className="custom-btn-outline px-5 py-3 w-100"
+                        disabled={loading.submitting || uploadingFiles.photo || uploadingFiles.front_image || uploadingFiles.back_image || uploadingFiles.pan_image}
+                      >
+                        {loading.submitting ? (
+                          <>
+                            <Spinner animation="border" size="sm" className="me-2" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <CsLineIcons icon="save" size="20" className="me-2" />
+                            Register Staff Member
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Form>
+
+        {/* Modern Overlay */}
+        {loading.submitting && (
+          <div
+            className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+            style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}
+          >
+            <Card className="glass-card border-0 p-5 shadow-lg text-center" style={{ maxWidth: '400px' }}>
+              <Spinner animation="grow" variant="primary" className="mb-4" />
+              <h4 className="fw-bold">Securing Records</h4>
+              <p className="text-muted mb-0">Please wait while we encrypt and store the staff profile and documents.</p>
             </Card>
-          </Col>
-        </Row>
-      </Form>
+          </div>
+        )}
 
-      {/* Modern Overlay */}
-      {loading.submitting && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-          style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}
-        >
-          <Card className="glass-card border-0 p-5 shadow-lg text-center" style={{ maxWidth: '400px' }}>
-            <Spinner animation="grow" variant="primary" className="mb-4" />
-            <h4 className="fw-bold">Securing Records</h4>
-            <p className="text-muted mb-0">Please wait while we encrypt and store the staff profile and documents.</p>
-          </Card>
-        </div>
-      )}
-
-      {/* Face Capture Modal */}
-      <Modal show={showFaceModal} onHide={() => setShowFaceModal(false)} centered size="lg">
+        {/* Face Capture Modal */}
+        <Modal show={showFaceModal} onHide={() => setShowFaceModal(false)} centered size="lg">
           <Modal.Header closeButton className="border-0 pb-0">
             <Modal.Title className="fw-bold">AI Face Capture Terminal</Modal.Title>
           </Modal.Header>
@@ -2321,7 +2321,7 @@ const AddStaff = () => {
                 box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
               }
             `}</style>
-            
+
             {loading.faceModels ? (
               <div className="text-center py-5">
                 <Spinner animation="border" variant="primary" className="mb-3" />
@@ -2373,17 +2373,17 @@ const AddStaff = () => {
 
                   <div className="scanner-laser-line" />
                   <div className="scanner-overlay" />
-                  
+
                   <div className={`camera-status-text ${faceBox ? 'status-success' : 'status-warning'}`}>
                     {faceBox ? 'FACE DETECTED' : 'ALIGN YOUR FACE'}
                   </div>
                 </div>
 
                 <div className="mt-4 mb-2 text-center">
-                  <Button 
-                    variant={faceBox ? "primary" : "outline-secondary"} 
-                    className="custom-btn-outline px-5 py-2.5 d-flex align-items-center gap-2" 
-                    disabled={!faceBox || isCapturing} 
+                  <Button
+                    variant={faceBox ? "primary" : "outline-secondary"}
+                    className="custom-btn-outline px-5 py-2.5 d-flex align-items-center gap-2"
+                    disabled={!faceBox || isCapturing}
                     onClick={handleFaceCapture}
                     style={{ borderRadius: '50px' }}
                   >
@@ -2467,9 +2467,9 @@ const AddStaff = () => {
             <Button variant="primary" className="rounded" size="sm" onClick={handleAddCustomDeduction}>Add Deduction</Button>
           </Modal.Footer>
         </Modal>
+      </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default AddStaff;
