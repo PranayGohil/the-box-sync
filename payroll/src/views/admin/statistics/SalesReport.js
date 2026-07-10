@@ -171,9 +171,9 @@ const SalesReport = () => {
     if (groupBy === 'hour') {
       if (_id.hour === undefined) return '—';
       date.setHours(_id.hour, 0, 0, 0);
-      if (isToday(date)) return `Today ${format(date, 'HH:mm')}`;
-      if (isYesterday(date)) return `Yesterday ${format(date, 'HH:mm')}`;
-      return format(date, 'dd-MM-yyyy HH:mm', { locale: enIN });
+       if (isToday(date)) return `Today ${format(date, 'hh:mm a')}`;
+       if (isYesterday(date)) return `Yesterday ${format(date, 'hh:mm a')}`;
+       return format(date, 'dd-MM-yyyy hh:mm a', { locale: enIN });
     }
 
     if (groupBy === 'day') {
@@ -266,7 +266,7 @@ const SalesReport = () => {
           [],
           ['Company:', COMPANY_NAME],
           ['Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`],
-          ['Generated:', format(new Date(), 'dd MMM yyyy HH:mm')],
+          ['Generated:', format(new Date(), 'dd MMM yyyy hh:mm a')],
           [],
           ['METRICS'],
           ['Metric', 'Value'],

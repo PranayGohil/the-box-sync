@@ -192,7 +192,7 @@ export default function ViewStaffPayroll() {
                 ['Position:', staffData.position],
                 ['Base Salary:', `₹${staffData.salary}`],
                 ['OT Rate/hr:', `₹${staffData.overtime_rate}`],
-                ['Generated:', format(new Date(), 'dd MMM yyyy HH:mm')],
+                ['Generated:', format(new Date(), 'dd MMM yyyy hh:mm a')],
                 [],
                 ['CAREER SUMMARY'],
                 ['Metric', 'Value'],
@@ -254,7 +254,7 @@ export default function ViewStaffPayroll() {
             doc.setFontSize(10);
             doc.text(`Staff ID: ${staffData.staff_id}  |  Position: ${staffData.position}  |  Base Salary: ₹${staffData.salary}  |  OT Rate: ₹${staffData.overtime_rate}/hr`, 20, y);
             y += 6;
-            doc.text(`Generated: ${format(new Date(), 'dd MMM yyyy HH:mm')}`, 20, y);
+            doc.text(`Generated: ${format(new Date(), 'dd MMM yyyy hh:mm a')}`, 20, y);
             y += 14;
 
             setExportProgress(30);

@@ -17,6 +17,7 @@ import { useSocket } from 'contexts/SocketContext';
 import { AuthContext } from 'contexts/AuthContext';
 import { toast } from 'react-toastify';
 import { openPrintWindow, printKOTSlip, printModalBill } from 'utils/printUtils';
+import DatePicker from 'react-datepicker';
 import MenuGrid from './components/MenuGrid';
 import OrderCartTable from './components/OrderCartTable';
 import CustomerInfoForm from './components/CustomerInfoForm';
@@ -28,6 +29,7 @@ import { LeaveConfirmationModal, CancelOrderModal } from './components/Confirmat
 import useMenuFetcher from './hooks/useMenuFetcher';
 import useOrderCart from './hooks/useOrderCart';
 import useOrderCalculations from './hooks/useOrderCalculations';
+import 'react-datepicker/dist/react-datepicker.css';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 const ORDER_TYPES = ['Takeaway', 'Delivery'];
@@ -77,6 +79,31 @@ const getLocalDateTimeString = (date = new Date()) => {
   const tzoffset = date.getTimezoneOffset() * 60000;
   return new Date(date.getTime() - tzoffset).toISOString().slice(0, 16);
 };
+
+const CustomDateInput = React.forwardRef(({ value, onClick }, ref) => (
+  <div className="position-relative d-inline-block" style={{ cursor: 'pointer', minWidth: '190px' }} onClick={onClick}>
+    <Form.Control
+      size="sm"
+      value={value}
+      ref={ref}
+      readOnly
+      style={{
+        borderRadius: '50px',
+        borderColor: 'rgba(35,179,244,0.35)',
+        color: '#23b3f4',
+        fontWeight: 700,
+        fontSize: '12px',
+        padding: '0.15rem 2rem 0.15rem 0.75rem',
+        cursor: 'pointer',
+        background: '#fff',
+        textAlign: 'center',
+      }}
+    />
+    <span className="position-absolute end-0 top-50 translate-middle-y pe-3" style={{ pointerEvents: 'none', color: '#23b3f4' }}>
+      <CsLineIcons icon="calendar" size="14" />
+    </span>
+  </div>
+));
 
 // ── Component ──────────────────────────────────────────────────────────────────
 const UnifiedOrder = () => {
@@ -278,7 +305,7 @@ const UnifiedOrder = () => {
                 tableNo: custInfo.table_no || '',
                 items: latestRecord.items,
                 kotNo: latestRecord.kotNo,
-                timestamp: latestRecord.timestamp
+                timestamp: latestRecord.timestamp,
               },
               userData,
               setKotPrinting
@@ -317,24 +344,28 @@ const UnifiedOrder = () => {
   // ── Dirty Check ───────────────────────────────────────────────────────────
   const hasUnsavedChanges = () => {
     const initial = initialStateRef.current;
-    const currentEditable = orderItems.filter((i) => i.status !== 'Completed').map((i) => ({
-      dish_name: i.dish_name,
-      quantity: i.quantity,
-      special_notes: i.special_notes || '',
-      dish_price: i.dish_price,
-      status: i.status || 'Pending',
-      selected_variant: i.selected_variant ? { name: i.selected_variant.name, price: i.selected_variant.price } : null,
-      selected_addons: (i.selected_addons || []).map((a) => ({ name: a.name, price: a.price })),
-    }));
-    const initialEditable = initial.orderItems.filter((i) => i.status !== 'Completed').map((i) => ({
-      dish_name: i.dish_name,
-      quantity: i.quantity,
-      special_notes: i.special_notes || '',
-      dish_price: i.dish_price,
-      status: i.status || 'Pending',
-      selected_variant: i.selected_variant ? { name: i.selected_variant.name, price: i.selected_variant.price } : null,
-      selected_addons: (i.selected_addons || []).map((a) => ({ name: a.name, price: a.price })),
-    }));
+    const currentEditable = orderItems
+      .filter((i) => i.status !== 'Completed')
+      .map((i) => ({
+        dish_name: i.dish_name,
+        quantity: i.quantity,
+        special_notes: i.special_notes || '',
+        dish_price: i.dish_price,
+        status: i.status || 'Pending',
+        selected_variant: i.selected_variant ? { name: i.selected_variant.name, price: i.selected_variant.price } : null,
+        selected_addons: (i.selected_addons || []).map((a) => ({ name: a.name, price: a.price })),
+      }));
+    const initialEditable = initial.orderItems
+      .filter((i) => i.status !== 'Completed')
+      .map((i) => ({
+        dish_name: i.dish_name,
+        quantity: i.quantity,
+        special_notes: i.special_notes || '',
+        dish_price: i.dish_price,
+        status: i.status || 'Pending',
+        selected_variant: i.selected_variant ? { name: i.selected_variant.name, price: i.selected_variant.price } : null,
+        selected_addons: (i.selected_addons || []).map((a) => ({ name: a.name, price: a.price })),
+      }));
 
     const currentCust = {
       name: customerInfo.name || '',
@@ -355,8 +386,7 @@ const UnifiedOrder = () => {
       comment: initial.customerInfo.comment || '',
     };
 
-    return JSON.stringify(currentEditable) !== JSON.stringify(initialEditable) ||
-      JSON.stringify(currentCust) !== JSON.stringify(initialCust);
+    return JSON.stringify(currentEditable) !== JSON.stringify(initialEditable) || JSON.stringify(currentCust) !== JSON.stringify(initialCust);
   };
 
   // Guard: only run after initial data is loaded
@@ -417,7 +447,7 @@ const UnifiedOrder = () => {
       // Case 1: Bill Printed but Unpaid
       const hasGeneratedBill = !!orderNo;
       const isNotPaid = orderStatus !== 'Paid';
-      
+
       if (hasGeneratedBill && isNotPaid && loc.pathname !== window.location.pathname) {
         setNextLocation(loc.pathname);
         setHasUnpaidBill(true);
@@ -721,7 +751,7 @@ const UnifiedOrder = () => {
           targetPath = '/operations/order-history';
         }
         allowNavigationRef.current = true;
-        
+
         if (status === 'Paid') {
           toast.success('Order saved and marked as Paid!');
         }
@@ -835,7 +865,6 @@ const UnifiedOrder = () => {
               Token #{tokenNumber}
             </div>
           )}
-
         </div>
 
         {/* POS Body */}
@@ -870,21 +899,18 @@ const UnifiedOrder = () => {
                 </div>
                 {/* Right side date picker for laptop/large viewports */}
                 <div className="d-none d-lg-flex align-items-center gap-1">
-                  <span className="text-muted small fw-semibold" style={{ fontSize: '11px' }}>Date:</span>
-                  <Form.Control
-                    type="datetime-local"
-                    size="sm"
-                    value={orderDate}
-                    onChange={(e) => setOrderDate(e.target.value)}
-                    style={{
-                      borderRadius: '50px',
-                      borderColor: 'rgba(35,179,244,0.35)',
-                      color: '#23b3f4',
-                      fontWeight: 700,
-                      fontSize: '12px',
-                      padding: '0.15rem 0.5rem',
-                      maxWidth: '185px',
-                    }}
+                  <span className="text-muted small fw-semibold" style={{ fontSize: '11px' }}>
+                    Date:
+                  </span>
+                  <DatePicker
+                    showTimeSelect
+                    timeFormat="hh:mm a"
+                    timeIntervals={15}
+                    timeCaption="Time"
+                    dateFormat="dd/MM/yyyy hh:mm a"
+                    selected={orderDate ? new Date(orderDate) : new Date()}
+                    onChange={(date) => setOrderDate(getLocalDateTimeString(date))}
+                    customInput={<CustomDateInput />}
                   />
                 </div>
                 {tokenNumber && (
@@ -1017,21 +1043,18 @@ const UnifiedOrder = () => {
         {/* Date control for mobile opened cart */}
         <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
           <div className="d-flex align-items-center gap-2">
-            <span className="text-muted small fw-bold text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Date:</span>
-            <Form.Control
-              type="datetime-local"
-              size="sm"
-              value={orderDate}
-              onChange={(e) => setOrderDate(e.target.value)}
-              style={{
-                borderRadius: '50px',
-                borderColor: 'rgba(35,179,244,0.35)',
-                color: '#23b3f4',
-                fontWeight: 700,
-                fontSize: '12px',
-                padding: '0.15rem 0.5rem',
-                maxWidth: '185px',
-              }}
+            <span className="text-muted small fw-bold text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>
+              Date:
+            </span>
+            <DatePicker
+              showTimeSelect
+              timeFormat="hh:mm a"
+              timeIntervals={15}
+              timeCaption="Time"
+              dateFormat="dd/MM/yyyy hh:mm a"
+              selected={orderDate ? new Date(orderDate) : new Date()}
+              onChange={(date) => setOrderDate(getLocalDateTimeString(date))}
+              customInput={<CustomDateInput />}
             />
           </div>
         </div>

@@ -401,8 +401,8 @@ const AdminDailyStockLogs = () => {
 
         <Card className="admin-daily-stock-logs-filter-bar border-0">
           <Row className="g-2 align-items-end">
-            <Col md={3}><div><div className="admin-daily-stock-logs-log-header-text mb-1">From</div><Form.Control type="date" className="admin-daily-stock-logs-modern-input w-100" value={fromDate} onChange={(e) => setFromDate(e.target.value)} /></div></Col>
-            <Col md={3}><div><div className="admin-daily-stock-logs-log-header-text mb-1">To</div><Form.Control type="date" className="admin-daily-stock-logs-modern-input w-100" value={toDate} onChange={(e) => setToDate(e.target.value)} /></div></Col>
+            <Col md={3}><div><div className="admin-daily-stock-logs-log-header-text mb-1">From</div><Form.Control type={fromDate ? "date" : "text"} placeholder="dd-mm-yyyy" onFocus={(e) => { e.target.type = "date"; }} onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }} className="admin-daily-stock-logs-modern-input w-100 text-dark" value={fromDate} onChange={(e) => setFromDate(e.target.value)} /></div></Col>
+            <Col md={3}><div><div className="admin-daily-stock-logs-log-header-text mb-1">To</div><Form.Control type={toDate ? "date" : "text"} placeholder="dd-mm-yyyy" onFocus={(e) => { e.target.type = "date"; }} onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }} className="admin-daily-stock-logs-modern-input w-100 text-dark" value={toDate} onChange={(e) => setToDate(e.target.value)} /></div></Col>
             <Col md="auto"><Button variant="outline-primary" className="admin-daily-stock-logs-btn-pill-action border-2 px-3" onClick={fetchLogs} disabled={loading}>{loading ? <Spinner animation="border" size="sm" /> : 'Refresh'}</Button></Col>
           </Row>
         </Card>

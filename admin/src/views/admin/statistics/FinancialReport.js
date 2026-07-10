@@ -118,7 +118,7 @@ const FinancialReport = () => {
       allData.push(['FINANCIAL AUDIT REPORT']);
       allData.push(['Company:', COMPANY_NAME]);
       allData.push(['Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`]);
-      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy HH:mm')]);
+      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy hh:mm a')]);
       allData.push([]);
 
       if (exportOptions.includeSummary) {

@@ -88,13 +88,13 @@ const PrintConfig = () => {
   }, []);
 
   return (
-    <div className="container-fluid pb-5 ps-lg-4">
+    <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4">
-        <Row className="g-3 align-items-center">
-          <Col xs="12" md="7">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
+      <div className="qsr-page-title-container">
+        <Row className="g-0 align-items-center">
+          <Col xs="auto" className="me-auto">
+            <h1 className="qsr-page-title">{title}</h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
         </Row>
@@ -125,9 +125,7 @@ const PrintConfig = () => {
                           checked={formik.values.showLogo}
                           onChange={(e) => formik.setFieldValue('showLogo', e.target.checked)}
                         />
-                        <Form.Text className="text-muted">
-                          Toggle displaying the restaurant logo image at the top of customer receipts.
-                        </Form.Text>
+                        <Form.Text className="text-muted">Toggle displaying the restaurant logo image at the top of customer receipts.</Form.Text>
                       </Form.Group>
                     </Col>
 
@@ -140,9 +138,7 @@ const PrintConfig = () => {
                           checked={formik.values.showCustomerDetails}
                           onChange={(e) => formik.setFieldValue('showCustomerDetails', e.target.checked)}
                         />
-                        <Form.Text className="text-muted">
-                          Include the customer's name and details on KOT and customer receipts.
-                        </Form.Text>
+                        <Form.Text className="text-muted">Include the customer's name and details on KOT and customer receipts.</Form.Text>
                       </Form.Group>
                     </Col>
                   </Row>
@@ -158,18 +154,11 @@ const PrintConfig = () => {
                     <Col xs="12" md="6" className="mb-3">
                       <Form.Group>
                         <Form.Label>Print Paper Width</Form.Label>
-                        <Form.Control
-                          as="select"
-                          name="paperWidth"
-                          value={formik.values.paperWidth}
-                          onChange={formik.handleChange}
-                        >
+                        <Form.Control as="select" name="paperWidth" value={formik.values.paperWidth} onChange={formik.handleChange}>
                           <option value="58mm">58mm (Standard 2-inch Printer)</option>
                           <option value="80mm">80mm (Wide 3-inch Printer)</option>
                         </Form.Control>
-                        <Form.Text className="text-muted">
-                          Specifies the layout constraints to ensure text lines do not overflow.
-                        </Form.Text>
+                        <Form.Text className="text-muted">Specifies the layout constraints to ensure text lines do not overflow.</Form.Text>
                       </Form.Group>
                     </Col>
                   </Row>
@@ -193,9 +182,7 @@ const PrintConfig = () => {
                           onChange={formik.handleChange}
                           isInvalid={formik.touched.headerNote && formik.errors.headerNote}
                         />
-                        <Form.Control.Feedback type="invalid">
-                          {formik.errors.headerNote}
-                        </Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">{formik.errors.headerNote}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
 
@@ -210,15 +197,13 @@ const PrintConfig = () => {
                           onChange={formik.handleChange}
                           isInvalid={formik.touched.footerNote && formik.errors.footerNote}
                         />
-                        <Form.Control.Feedback type="invalid">
-                          {formik.errors.footerNote}
-                        </Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">{formik.errors.footerNote}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                   </Row>
 
-                  <div className="d-flex justify-content-end">
-                    <Button type="submit" variant="none" className="profile-custom-btn-outline px-4" disabled={saving}>
+                  <div className="d-flex profile-button-group-responsive justify-content-end mt-4">
+                    <Button type="submit" variant="none" className="profile-custom-btn-outline px-4 w-100 w-md-auto" disabled={saving}>
                       {saving ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />

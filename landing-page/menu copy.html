@@ -35,9 +35,9 @@
         /* ── Restaurant brand bar ── */
         .restaurant-brand {
             text-align: center;
-            padding: 10px 0;
+            padding: 20px 0;
             border-bottom: 1px solid #eee;
-            margin-bottom: 15px;
+            margin-bottom: 30px;
         }
 
         .restaurant-brand img {
@@ -47,95 +47,27 @@
         }
 
         .restaurant-brand h3 {
-            font-size: 20px;
+            font-size: 24px;
             color: #1b3a6b;
-            margin: 0;
-            font-weight: 700;
+            margin-bottom: 5px;
         }
 
-        /* ── Controls Wrapper ── */
-        .menu-controls-wrapper {
-            margin-bottom: 20px;
-        }
-
-        .menu-search-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .search-container {
-            flex: 1;
-            max-width: 500px;
-            position: relative;
-        }
-
-        .search-container input {
-            width: 100%;
-            height: 36px;
-            padding: 0 12px;
-            border-radius: 18px;
-            border: 2px solid #eee;
-            outline: none;
-            font-size: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
-            transition: border-color 0.3s;
-        }
-
-        .search-container input:focus {
-            border-color: #1b3a6b;
-        }
-
-        .categories-btn-wrapper {
-            flex-shrink: 0;
-        }
-
-        .categories-btn {
-            padding: 0 12px !important;
-            font-size: 12px !important;
-            height: 36px !important;
-            line-height: 36px !important;
-            border-radius: 18px !important;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            white-space: nowrap;
-        }
-
-        .categories-btn i {
-            margin-right: 8px;
-            margin-left: 0;
-        }
-
-        .menu-filter-sort-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
+        /* ── Filter ── */
         .menu-filter {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
+            text-align: center;
+            margin-bottom: 40px;
         }
 
         .filter-btn {
             border: 2px solid #eee;
-            padding: 4px 12px;
-            margin: 0;
+            padding: 8px 24px;
+            margin: 5px;
             border-radius: 30px;
             background: #fff;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 11px;
+            font-size: 14px;
             color: #666;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .filter-btn.active,
@@ -145,62 +77,32 @@
             color: #fff;
         }
 
-        .sort-select-wrapper {
-            flex-shrink: 0;
-        }
-
-        .sort-select {
-            height: 36px !important;
-            padding: 0 10px !important;
-            border-radius: 18px !important;
-            outline: none;
-            font-size: 12px !important;
-            color: #666;
-            cursor: pointer;
-            background-color: #fff;
-            min-width: 130px !important;
-        }
-
         /* ── Menu items ── */
         .menu-category {
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
 
         .menu-category h3 {
-            font-size: 18px;
+            font-size: 22px;
             font-weight: 700;
             color: #1b3a6b;
-            margin-bottom: 15px;
-            padding-bottom: 6px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
             border-bottom: 2px solid #1b3a6b;
             display: inline-block;
         }
 
         .menu-item {
             display: flex;
-            flex-direction: column;
-            align-items: stretch;
-            padding: 8px;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
             background: #fff;
-            margin-bottom: 10px;
-            border-radius: 10px;
+            margin-bottom: 15px;
+            border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             border: 1px solid #eee;
             transition: transform 0.3s;
-        }
-
-        .menu-top-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            width: 100%;
-        }
-
-        .menu-main-content {
-            display: flex;
-            align-items: flex-start;
-            flex-grow: 1;
-            overflow: hidden;
         }
 
         .menu-item:hover {
@@ -209,52 +111,50 @@
 
         .menu-left h4 {
             margin: 0;
-            font-size: 13px;
+            font-size: 16px;
             display: flex;
             align-items: center;
             font-weight: 600;
-            flex-wrap: wrap;
-            gap: 4px;
         }
 
         .menu-left p {
-            margin: 2px 0 0;
-            font-size: 11px;
+            margin: 5px 0 0;
+            font-size: 13px;
             color: #777;
         }
 
         .menu-right {
             font-weight: 700;
             color: #1b3a6b;
-            font-size: 13px;
+            font-size: 16px;
             white-space: nowrap;
-            margin-left: 6px;
-            margin-right: 6px;
+            margin-left: 10px;
         }
 
         .dish-img {
-            width: 50px;
-            height: 50px;
+            width: 70px;
+            height: 70px;
             object-fit: cover;
-            border-radius: 6px;
-            margin-right: 8px;
+            border-radius: 8px;
+            margin-right: 15px;
+            border: 1px solid #eee;
             flex-shrink: 0;
         }
 
         .egg-icon {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             border: 2px solid #856404;
             display: inline-block;
-            margin-right: 4px;
+            margin-right: 8px;
             position: relative;
             border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
         }
 
         .egg-icon::after {
             content: "";
-            width: 4px;
-            height: 4px;
+            width: 6px;
+            height: 6px;
             background: #856404;
             border-radius: 50%;
             position: absolute;
@@ -262,14 +162,33 @@
             left: 2px;
         }
 
+        .sort-select {
+            padding: 8px 15px;
+            border-radius: 30px;
+            border: 2px solid #eee;
+            outline: none;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .menu-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
         /* ── Veg / Non-veg icons ── */
         .veg-icon,
         .nonveg-icon {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             border: 2px solid;
             display: inline-block;
-            margin-right: 4px;
+            margin-right: 8px;
             position: relative;
         }
 
@@ -279,8 +198,8 @@
 
         .veg-icon::after {
             content: "";
-            width: 4px;
-            height: 4px;
+            width: 6px;
+            height: 6px;
             background: green;
             position: absolute;
             top: 2px;
@@ -293,8 +212,8 @@
 
         .nonveg-icon::after {
             content: "";
-            width: 4px;
-            height: 4px;
+            width: 6px;
+            height: 6px;
             background: red;
             border-radius: 50%;
             position: absolute;
@@ -303,119 +222,42 @@
         }
 
         .badge-special {
-            font-size: 8px;
+            font-size: 10px;
             background: #fff3cd;
             color: #856404;
-            padding: 1px 4px;
+            padding: 2px 8px;
             border-radius: 4px;
-            margin-left: 4px;
-            white-space: nowrap;
+            margin-left: 8px;
         }
 
         .badge-unavailable {
-            font-size: 8px;
+            font-size: 10px;
             background: #f8d7da;
             color: #721c24;
-            padding: 1px 4px;
+            padding: 2px 8px;
             border-radius: 4px;
-            margin-left: 4px;
-            white-space: nowrap;
+            margin-left: 8px;
         }
 
-        .badge-customizable {
-            font-size: 8px;
-            background: #e0f2fe;
-            color: #0284c7;
-            padding: 1px 4px;
-            border-radius: 4px;
-            margin-left: 4px;
-            white-space: nowrap;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        /* ── Customizations Collapsible ── */
-        .customization-wrapper {
-            margin-top: 5px;
-        }
-
-        .customization-toggle {
-            font-size: 11px;
-            color: #0284c7;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            user-select: none;
-            padding: 2px 0;
-        }
-
-        .customization-toggle i {
-            font-size: 9px;
-            transition: transform 0.2s;
-            margin-left: 4px;
-        }
-
-        .customization-content {
-            border-top: 1px dashed #e2e8f0;
-            padding-top: 8px;
-        }
-
-        .customization-section {
-            margin-bottom: 8px;
-        }
-
-        .customization-section:last-child {
-            margin-bottom: 0;
-        }
-
-        .customization-section-title {
-            font-size: 10px;
-            font-weight: 700;
-            color: #475569;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .variant-list, .addon-list {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .variant-item, .addon-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* ── Search Bar ── */
+        .search-container {
             width: 100%;
-            font-size: 11px;
-            color: #64748b;
+            max-width: 500px;
+            /* margin: 0 auto 30px; */
+            position: relative;
         }
 
-        .variant-left-side {
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        .search-container input {
+            width: 100%;
+            padding: 12px 20px;
+            border-radius: 30px;
+            border: 2px solid #eee;
+            outline: none;
+            transition: border-color 0.3s;
         }
 
-        .variant-size, .addon-name {
-            font-weight: 500;
-            color: #334155;
-            background: #f1f5f9;
-            padding: 1px 6px;
-            border-radius: 4px;
-        }
-
-        .variant-price, .addon-price {
-            color: #23b3f4;
-            font-weight: 700;
-        }
-
-        .variant-extra {
-            font-style: italic;
-            font-size: 10px;
-            color: #94a3b8;
+        .search-container input:focus {
+            border-color: #1b3a6b;
         }
 
         /* ── Modal styling ── */
@@ -459,98 +301,6 @@
 
             100% {
                 transform: rotate(360deg);
-            }
-        }
-
-        /* Responsive styling */
-        @media (max-width: 768px) {
-            .menu-controls-wrapper {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 12px;
-                margin-bottom: 20px;
-            }
-            
-            .menu-search-row,
-            .menu-filter-sort-row {
-                display: contents;
-            }
-            
-            .search-container {
-                grid-row: 1;
-                grid-column: 1 / -1;
-            }
-            
-            .categories-btn-wrapper {
-                grid-row: 2;
-                grid-column: 1;
-            }
-            
-            .sort-select-wrapper {
-                grid-row: 2;
-                grid-column: 2;
-            }
-            
-            .menu-filter {
-                grid-row: 3;
-                grid-column: 1 / -1;
-                
-                display: flex;
-                justify-content: space-between;
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                padding: 5px 15px 10px 15px;
-                margin: 0 -15px;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-                gap: 5px;
-            }
-
-            .menu-filter::-webkit-scrollbar {
-                display: none;
-            }
-
-            .filter-btn {
-                padding: 4px 10px;
-                font-size: 11px;
-                flex: 1 1 auto;
-                min-width: 0;
-                justify-content: center;
-                white-space: nowrap;
-            }
-
-            .categories-btn-wrapper .theme-btn,
-            .sort-select-wrapper .sort-select {
-                width: 100%;
-                height: 36px !important;
-                font-size: 12px !important;
-                padding: 0 10px !important;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-sizing: border-box;
-                border-radius: 18px !important;
-            }
-            
-            .categories-btn-wrapper .theme-btn {
-                margin: 0;
-                line-height: normal;
-            }
-        }
-
-        .breadcumb-container-wrapper {
-            padding: 20px 0 !important;
-        }
-
-        @media (max-width: 576px) {
-            .wrapper.my-5 {
-                margin-top: 10px !important;
-                margin-bottom: 15px !important;
-            }
-
-            #restaurantLogo {
-                width: 80px !important;
-                height: 80px !important;
             }
         }
     </style>
@@ -684,44 +434,43 @@
                         <!-- Brand Info -->
                         <div class="restaurant-brand d-flex flex-column align-items-center justify-content-center"
                             id="restaurantBrand">
-                            <img id="restaurantLogo" src="" alt="" onerror="this.style.display='none';"
+                            <img id="restaurantLogo" src="" alt=""
                                 style="display:none; width:100px; height:100px; border-radius: 50%; object-fit: cover;">
                             <h3 id="restaurantName"></h3>
+                            <p id="restaurantCity"></p>
                         </div>
 
-                        <!-- Menu Header Actions Container -->
-                        <div class="menu-controls-wrapper mb-4">
-                            <!-- Search & Categories Row -->
-                            <div class="menu-search-row">
-                                <div class="search-container">
-                                    <input type="text" id="menuSearch" placeholder="Search for dishes...">
-                                </div>
-                                <div class="categories-btn-wrapper">
-                                    <h4 id="headerTableNo" style="display:none; color: #1b3a6b;"></h4>
-                                    <button class="theme-btn categories-btn" data-bs-toggle="modal" data-bs-target="#categorylist">
-                                        <i class="fas fa-list mr-1"></i> Categories
-                                    </button>
-                                </div>
+                        <!-- Search -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="search-container">
+                                <input type="text" id="menuSearch" placeholder="Search for dishes...">
                             </div>
+                            <div>
+                                <h4 id="headerTableNo" style="display:none; color: #1b3a6b;"></h4>
+                                <button class="theme-btn" data-bs-toggle="modal" data-bs-target="#categorylist">
+                                    <i class="fas fa-list mr-2"></i> Categories
+                                </button>
+                            </div>
+                        </div>
 
-                            <!-- Filter & Sort Row -->
-                            <div class="menu-filter-sort-row">
-                                <div class="menu-filter">
-                                    <button class="filter-btn active" data-filter="all">All</button>
-                                    <button class="filter-btn" data-filter="veg"><span class="veg-icon"></span> Veg</button>
-                                    <button class="filter-btn" data-filter="nonveg"><span class="nonveg-icon"></span> Non-Veg</button>
-                                    <button class="filter-btn" data-filter="egg"><span class="egg-icon"></span> Egg</button>
-                                    <button class="filter-btn" data-filter="special"><i class="fas fa-star mr-1" style="color: #e8a020;"></i> Special</button>
-                                </div>
-                                <div class="sort-select-wrapper">
-                                    <select id="menuSort" class="sort-select">
-                                        <option value="default">Default Order</option>
-                                        <option value="price-low">Price: Low to High</option>
-                                        <option value="price-high">Price: High to Low</option>
-                                        <option value="name-az">Name: A to Z</option>
-                                    </select>
-                                </div>
+
+                        <!-- Filter & Sort -->
+                        <div class="menu-header-actions">
+                            <div class="menu-filter">
+                                <button class="filter-btn active" data-filter="all">All</button>
+                                <button class="filter-btn" data-filter="veg"><span class="veg-icon"></span> Veg</button>
+                                <button class="filter-btn" data-filter="nonveg"><span class="nonveg-icon"></span>
+                                    Non-Veg</button>
+                                <button class="filter-btn" data-filter="egg"><span class="egg-icon"></span> Egg</button>
+                                <button class="filter-btn" data-filter="special"><i class="fas fa-star mr-1"
+                                        style="color: #e8a020;"></i> Special</button>
                             </div>
+                            <select id="menuSort" class="sort-select">
+                                <option value="default">Default Order</option>
+                                <option value="price-low">Price: Low to High</option>
+                                <option value="price-high">Price: High to Low</option>
+                                <option value="name-az">Name: A to Z</option>
+                            </select>
                         </div>
 
                         <!-- Menu List -->
@@ -756,13 +505,6 @@
     <script>
         const API_BASE = 'https://api.theboxsync.com/api';
         const IMG_BASE = 'https://api.theboxsync.com/uploads';
-
-        function toggleCustomizations(el) {
-            const content = $(el).siblings('.customization-content');
-            content.slideToggle(200);
-            const icon = $(el).find('i');
-            icon.toggleClass('fa-chevron-down fa-chevron-up');
-        }
 
         let menuToken = null;
         let allMenuData = [];
@@ -808,6 +550,7 @@
                 if (!data.success) throw new Error(data.message || 'Restaurant not found.');
 
                 qs('restaurantName').textContent = data.restaurant_name || '';
+                qs('restaurantCity').textContent = data.restaurant_city || '';
 
                 if (data.restaurant_logo) {
                     qs('restaurantLogo').src = IMG_BASE + data.restaurant_logo;
@@ -893,87 +636,17 @@
                     const imgSrc = dish.dish_img ? `${IMG_BASE}${dish.dish_img}` : placeholderImg;
                     const imgHtml = `<img class="dish-img" src="${imgSrc}" alt="${escapeHtml(dish.dish_name)}" onerror="this.src='${placeholderImg}'">`;
 
-                    // 1. Price Formatting (range if variants exist)
-                    let priceHtml = '';
-                    const hasVariants = dish.has_variants && Array.isArray(dish.variants) && dish.variants.length > 0;
-                    if (hasVariants) {
-                        const prices = dish.variants.map(v => Number(v.price) || 0);
-                        const min = Math.min(...prices);
-                        const max = Math.max(...prices);
-                        priceHtml = min === max ? `₹${min.toFixed(0)}/-` : `₹${min.toFixed(0)} - ₹${max.toFixed(0)}/-`;
-                    } else {
-                        priceHtml = `₹${Number(dish.dish_price || 0).toFixed(0)}/-`;
-                    }
-
-                    // 2. Customizable Badge
-                    const hasAddons = Array.isArray(dish.addons) && dish.addons.length > 0;
-                    const isCustomizable = hasVariants || hasAddons;
-                    const customizableBadge = isCustomizable ? '<span class="badge-customizable">Customizable</span>' : '';
-
-                    // 3. Customizations Collapsible html
-                    let customHtml = '';
-                    if (isCustomizable) {
-                        let sections = '';
-                        if (hasVariants) {
-                            sections += `
-                                <div class="customization-section">
-                                    <div class="customization-section-title">Sizes</div>
-                                    <div class="variant-list">
-                                        ${dish.variants.map(v => `
-                                            <div class="variant-item">
-                                                <div class="variant-left-side">
-                                                    ${v.size_name ? `<span class="variant-size">${escapeHtml(v.size_name)}</span>` : ''}
-                                                    ${v.extra ? `<span class="variant-extra">(${escapeHtml(v.extra)})</span>` : ''}
-                                                </div>
-                                                <span class="variant-price">₹${Number(v.price || 0).toFixed(0)}</span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            `;
-                        }
-                        if (hasAddons) {
-                            sections += `
-                                <div class="customization-section">
-                                    <div class="customization-section-title">Add-ons</div>
-                                    <div class="addon-list">
-                                        ${dish.addons.map(a => `
-                                            <div class="addon-item">
-                                                <span class="addon-name">${escapeHtml(a.addon_name)}</span>
-                                                <span class="addon-price">+₹${Number(a.price || 0).toFixed(0)}</span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            `;
-                        }
-
-                        customHtml = `
-                            <div class="customization-wrapper mt-2">
-                                <div class="customization-toggle" onclick="toggleCustomizations(this)">
-                                    <span>View Options</span><i class="fas fa-chevron-down"></i>
-                                </div>
-                                <div class="customization-content mt-2" style="display: none;">
-                                    ${sections}
-                                </div>
-                            </div>
-                        `;
-                    }
-
                     return `
                                     <div class="col-lg-6">
                                         <div class="menu-item">
-                                            <div class="menu-top-row">
-                                                <div class="menu-main-content">
-                                                    ${imgHtml}
-                                                    <div class="menu-left overflow-hidden">
-                                                        <h4>${dishIcon}${escapeHtml(dish.dish_name)} ${dish.is_special ? '<span class="badge-special">Special</span>' : ''} ${customizableBadge} ${dish.is_available === false ? '<span class="badge-unavailable">Out of stock</span>' : ''}</h4>
-                                                        <p class="text-truncate">${escapeHtml(dish.description || '')}</p>
-                                                    </div>
+                                            <div class="d-flex align-items-center flex-grow-1 overflow-hidden">
+                                                ${imgHtml}
+                                                <div class="menu-left overflow-hidden">
+                                                    <h4>${dishIcon}${escapeHtml(dish.dish_name)} ${dish.is_special ? '<span class="badge-special">Special</span>' : ''} ${dish.is_available === false ? '<span class="badge-unavailable">Out of stock</span>' : ''}</h4>
+                                                    <p class="text-truncate">${escapeHtml(dish.description || '')}</p>
                                                 </div>
-                                                <div class="menu-right">${priceHtml}</div>
                                             </div>
-                                            ${customHtml}
+                                            <div class="menu-right">₹${Number(dish.dish_price).toFixed(0)}</div>
                                         </div>
                                     </div>
                                 `;

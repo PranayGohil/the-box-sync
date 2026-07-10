@@ -360,8 +360,11 @@ const AdminWastageLog = () => {
                       <div className="flex-grow-1" style={{ minWidth: '140px' }}>
                         <div className="admin-wastage-log-input-group-label small mb-1 text-truncate">From</div>
                         <Form.Control 
-                          type="date" 
-                          className="admin-wastage-log-modern-input w-100" 
+                          type={fromDate ? "date" : "text"} 
+                          placeholder="dd-mm-yyyy"
+                          onFocus={(e) => { e.target.type = "date"; }}
+                          onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
+                          className="admin-wastage-log-modern-input w-100 text-dark" 
                           style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' fill=\'%2364748b\' viewBox=\'0 0 16 16\'%3E%3Cpath d=\'M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: '10px center', backgroundSize: '14px 14px' }}
                           value={fromDate} 
                           onChange={(e) => setFromDate(e.target.value)} 
@@ -370,8 +373,11 @@ const AdminWastageLog = () => {
                       <div className="flex-grow-1" style={{ minWidth: '140px' }}>
                         <div className="admin-wastage-log-input-group-label small mb-1 text-truncate">To</div>
                         <Form.Control 
-                          type="date" 
-                          className="admin-wastage-log-modern-input w-100" 
+                          type={toDate ? "date" : "text"} 
+                          placeholder="dd-mm-yyyy"
+                          onFocus={(e) => { e.target.type = "date"; }}
+                          onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
+                          className="admin-wastage-log-modern-input w-100 text-dark" 
                           style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' fill=\'%2364748b\' viewBox=\'0 0 16 16\'%3E%3Cpath d=\'M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: '10px center', backgroundSize: '14px 14px' }}
                           value={toDate} 
                           onChange={(e) => setToDate(e.target.value)} 

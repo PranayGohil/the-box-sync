@@ -172,31 +172,28 @@ const TaxAndCharges = () => {
   }
 
   return (
-    <div className="container-fluid pb-5 ps-lg-4">
+    <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
-      
-      <Row className="g-3 align-items-center mb-4">
-        <Col xs={12} md={7}>
-          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
-          <BreadcrumbList items={breadcrumbs} />
-        </Col>
-      </Row>
+
+      <div className="qsr-page-title-container">
+        <Row className="g-0 align-items-center">
+          <Col xs="auto" className="me-auto">
+            <h1 className="qsr-page-title">{title}</h1>
+            <BreadcrumbList items={breadcrumbs} />
+          </Col>
+        </Row>
+      </div>
 
       <Row className="g-4">
         {/* GST SECTION */}
         {gstProfile.gst_no && (
           <Col lg={12}>
-            <Formik
-              initialValues={gstProfile}
-              validationSchema={gstValidationSchema}
-              onSubmit={handleGstSubmit}
-              enableReinitialize
-            >
+            <Formik initialValues={gstProfile} validationSchema={gstValidationSchema} onSubmit={handleGstSubmit} enableReinitialize>
               {({ values, errors, touched, handleChange, handleBlur, handleSubmit, resetForm }) => (
                 <Form onSubmit={handleSubmit}>
                   <Card className="profile-glass-card border-0 mb-4">
                     <Card.Body className="p-4 p-md-5">
-                      <div className="d-flex align-items-md-center justify-content-between mb-4">
+                      <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
                         <div className="profile-section-header mb-0">
                           <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                             <CsLineIcons icon="percentage" size="20" className="text-primary" />
@@ -214,39 +211,63 @@ const TaxAndCharges = () => {
                         <Col xs={12} md={6}>
                           <Form.Group>
                             <Form.Label className="small fw-bold opacity-75">GST Registration Number</Form.Label>
-                            <Form.Control
-                              type="text"
-                              name="gst_no"
-                              value={values.gst_no}
-                              disabled={true}
-                              className="bg-light border-0"
-                            />
+                            <Form.Control type="text" name="gst_no" value={values.gst_no} disabled={true} className="bg-light border-0" />
                             <Form.Control.Feedback type="invalid">{errors.gst_no}</Form.Control.Feedback>
                           </Form.Group>
                         </Col>
                         <Col xs={4} md={2}>
                           <Form.Group>
                             <Form.Label className="small fw-bold opacity-75">CGST (%)</Form.Label>
-                            <Form.Control type="number" name="cgst" value={values.cgst} onChange={handleChange} disabled={!gstEditMode || gstSaving} className={!gstEditMode ? "bg-light border-0" : ""} />
+                            <Form.Control
+                              type="number"
+                              name="cgst"
+                              value={values.cgst}
+                              onChange={handleChange}
+                              disabled={!gstEditMode || gstSaving}
+                              className={!gstEditMode ? 'bg-light border-0' : ''}
+                            />
                           </Form.Group>
                         </Col>
                         <Col xs={4} md={2}>
                           <Form.Group>
                             <Form.Label className="small fw-bold opacity-75">SGST (%)</Form.Label>
-                            <Form.Control type="number" name="sgst" value={values.sgst} onChange={handleChange} disabled={!gstEditMode || gstSaving} className={!gstEditMode ? "bg-light border-0" : ""} />
+                            <Form.Control
+                              type="number"
+                              name="sgst"
+                              value={values.sgst}
+                              onChange={handleChange}
+                              disabled={!gstEditMode || gstSaving}
+                              className={!gstEditMode ? 'bg-light border-0' : ''}
+                            />
                           </Form.Group>
                         </Col>
                         <Col xs={4} md={2}>
                           <Form.Group>
                             <Form.Label className="small fw-bold opacity-75">VAT (%)</Form.Label>
-                            <Form.Control type="number" name="vat" value={values.vat} onChange={handleChange} disabled={!gstEditMode || gstSaving} className={!gstEditMode ? "bg-light border-0" : ""} />
+                            <Form.Control
+                              type="number"
+                              name="vat"
+                              value={values.vat}
+                              onChange={handleChange}
+                              disabled={!gstEditMode || gstSaving}
+                              className={!gstEditMode ? 'bg-light border-0' : ''}
+                            />
                           </Form.Group>
                         </Col>
                       </Row>
 
                       {gstEditMode && (
-                        <div className="d-flex gap-3 mt-4">
-                          <Button variant="none" className="profile-custom-btn-outline" onClick={() => { resetForm(); setGstEditMode(false); }}>Cancel</Button>
+                        <div className="d-flex profile-button-group-responsive gap-3 mt-4">
+                          <Button
+                            variant="none"
+                            className="profile-custom-btn-outline"
+                            onClick={() => {
+                              resetForm();
+                              setGstEditMode(false);
+                            }}
+                          >
+                            Cancel
+                          </Button>
                           <Button variant="none" className="profile-custom-btn-outline" type="submit" disabled={gstSaving}>
                             {gstSaving ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="save" size="18" />} Save Tax
                           </Button>
@@ -265,7 +286,7 @@ const TaxAndCharges = () => {
           <Card className="profile-glass-card border-0">
             <Card.Body className="p-4 p-md-5">
               <Form onSubmit={containerFormik.handleSubmit}>
-                <div className="d-flex align-items-md-center justify-content-between mb-4">
+                <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
                   <div className="profile-section-header mb-0">
                     <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                       <CsLineIcons icon="box" size="20" className="text-primary" />
@@ -291,7 +312,7 @@ const TaxAndCharges = () => {
                             onChange={containerFormik.handleChange}
                             disabled={!containerEditMode || containerSaving}
                             placeholder="e.g. Small Box"
-                            className={!containerEditMode ? "bg-white border-0" : ""}
+                            className={!containerEditMode ? 'bg-white border-0' : ''}
                           />
                         </Form.Group>
                       </Col>
@@ -305,7 +326,7 @@ const TaxAndCharges = () => {
                             onChange={containerFormik.handleChange}
                             disabled={!containerEditMode || containerSaving}
                             placeholder="e.g. 500"
-                            className={!containerEditMode ? "bg-white border-0" : ""}
+                            className={!containerEditMode ? 'bg-white border-0' : ''}
                           />
                         </Form.Group>
                       </Col>
@@ -344,7 +365,7 @@ const TaxAndCharges = () => {
                             onChange={containerFormik.handleChange}
                             disabled={!containerEditMode || containerSaving}
                             placeholder="0.00"
-                            className={!containerEditMode ? "bg-white border-0" : ""}
+                            className={!containerEditMode ? 'bg-white border-0' : ''}
                           />
                         </Form.Group>
                       </Col>
@@ -364,8 +385,10 @@ const TaxAndCharges = () => {
                     <Button variant="none" className="profile-custom-btn-outline mb-3 w-100 w-md-auto" onClick={addContainer} disabled={containerSaving}>
                       <CsLineIcons icon="plus" size="18" /> Add Type
                     </Button>
-                    <div className="d-flex gap-3">
-                      <Button variant="none" className="profile-custom-btn-outline" onClick={() => setContainerEditMode(false)}>Cancel</Button>
+                    <div className="d-flex profile-button-group-responsive gap-3">
+                      <Button variant="none" className="profile-custom-btn-outline" onClick={() => setContainerEditMode(false)}>
+                        Cancel
+                      </Button>
                       <Button variant="none" className="profile-custom-btn-outline" type="submit" disabled={containerSaving}>
                         {containerSaving ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="save" size="18" />} Save Matrix
                       </Button>

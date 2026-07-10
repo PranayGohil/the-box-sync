@@ -49,11 +49,12 @@ html[data-layout='fluid'] {
 
 html[data-layout='boxed'] {
   @include respond-below(lg) {
-    main .container {
-      width: 100%;
-      max-width: initial;
-      padding-right: 0;
-      padding-left: 0;
+    main .container,
+    main .container-fluid {
+      width: 100% !important;
+      max-width: initial !important;
+      padding-right: 0 !important;
+      padding-left: 0 !important;
     }
   }
 }

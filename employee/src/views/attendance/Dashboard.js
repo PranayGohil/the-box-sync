@@ -594,7 +594,7 @@ export default function Dashboard() {
 
   const getCurrentTime = () => {
     const now = new Date();
-    return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   const calculateLeaveDays = (from, to, isHalfDay) => {

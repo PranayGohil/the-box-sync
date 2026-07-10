@@ -134,9 +134,9 @@ const SalesReport = () => {
     if (groupBy === 'hour') {
       if (_id.hour === undefined) return '—';
       date.setHours(_id.hour, 0, 0, 0);
-      if (isToday(date)) return `Today ${format(date, 'HH:mm')}`;
-      if (isYesterday(date)) return `Yesterday ${format(date, 'HH:mm')}`;
-      return format(date, 'dd-MM-yyyy HH:mm', { locale: enIN });
+      if (isToday(date)) return `Today ${format(date, 'hh:mm a')}`;
+      if (isYesterday(date)) return `Yesterday ${format(date, 'hh:mm a')}`;
+      return format(date, 'dd-MM-yyyy hh:mm a', { locale: enIN });
     }
 
     if (groupBy === 'day') {
@@ -228,7 +228,7 @@ const SalesReport = () => {
       allData.push(['SALES REPORT']);
       allData.push(['Company:', COMPANY_NAME]);
       allData.push(['Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`]);
-      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy HH:mm')]);
+      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy hh:mm a')]);
       allData.push([]);
 
       if (exportOptions.includeSummary) {

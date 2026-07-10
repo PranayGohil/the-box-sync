@@ -194,7 +194,7 @@ const OrderDetails = () => {
     return (
       <>
         <HtmlHead title={title} description={description} />
-        <div className="page-title-container">
+        <div className="page-title-container mt-5 pt-1 mt-md-0 pt-md-0 mb-4">
           <h1 className="mb-0 pb-0 display-4">{title}</h1>
           <BreadcrumbList items={breadcrumbs} />
         </div>
@@ -212,7 +212,7 @@ const OrderDetails = () => {
     return (
       <>
         <HtmlHead title={title} description={description} />
-        <div className="page-title-container">
+        <div className="page-title-container mt-5 pt-1 mt-md-0 pt-md-0 mb-4">
           <h1 className="mb-0 pb-0 display-4">{title}</h1>
           <BreadcrumbList items={breadcrumbs} />
         </div>
@@ -236,7 +236,7 @@ const OrderDetails = () => {
     return (
       <>
         <HtmlHead title={title} description={description} />
-        <div className="page-title-container">
+        <div className="page-title-container mt-5 pt-1 mt-md-0 pt-md-0 mb-4">
           <h1 className="mb-0 pb-0 display-4">{title}</h1>
           <BreadcrumbList items={breadcrumbs} />
         </div>
@@ -259,7 +259,7 @@ const OrderDetails = () => {
   return (
     <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
-      <div className="qsr-page-title-container">
+      <div className="qsr-page-title-container mt-5 pt-1 mt-md-0 pt-md-0 mb-4">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto">
             <h1 className="qsr-page-title">{title}</h1>

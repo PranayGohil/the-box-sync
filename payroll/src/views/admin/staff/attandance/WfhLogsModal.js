@@ -16,7 +16,7 @@ const WfhLogsModal = ({ show, onHide, attendance }) => {
   ].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
   const formatTime = (ts) => {
-    return new Date(ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    return new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   return (

@@ -1968,6 +1968,19 @@ textarea.add-dishes-pill-input {
   }
 }
 
+.settings-content-col .qsr-page-container {
+  padding-left: 0.5rem !important;
+  margin-top: 0.75rem !important;
+}
+
+@media (max-width: 991px) {
+  .settings-content-col .qsr-page-container {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    margin-top: 0.5rem !important;
+  }
+}
+
 .qsr-page-title-container {
   margin-bottom: 2rem !important;
   margin-top: 1.5rem !important;

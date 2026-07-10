@@ -200,7 +200,7 @@ const OperationalReport = () => {
           [],
           ['Company:', COMPANY_NAME],
           ['Report Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`],
-          ['Generated On:', format(new Date(), 'dd MMM yyyy HH:mm')],
+          ['Generated On:', format(new Date(), 'dd MMM yyyy hh:mm a')],
           [],
           ['KEY OPERATIONAL METRICS'],
           ['Metric', 'Value'],

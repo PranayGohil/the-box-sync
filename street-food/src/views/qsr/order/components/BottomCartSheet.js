@@ -26,6 +26,7 @@ const BottomCartSheet = ({
   const showKOTPrintButton = showKOTButtons;
   const showPrintBill = (!isPaid || isDirty || dueAmount > 0.01) && orderItems.length > 0;
   const showPayment = (orderStatus === 'KOT' || (orderStatus === 'Save' && orderItems.length > 0) || (isPaid && dueAmount > 0.01));
+  const showCancel = orderId && orderStatus !== 'Paid';
 
   let paymentSpan = 'span 1';
   let totalUnpaidActions = 0;
@@ -109,42 +110,6 @@ const BottomCartSheet = ({
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            {/* Save */}
-            {showSave && (
-              <button
-                type="button"
-                style={{
-                  width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
-                  background: 'transparent', color: '#23b3f4', border: '1.5px solid #23b3f4',
-                  cursor: 'pointer', gridColumn: 'span 2'
-                }}
-                onClick={() => { setShowCartSheet(false); handleSaveOrder('Save'); }}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <CsLineIcons icon="spinner" size="14" className="spin" />
-                ) : (
-                  <CsLineIcons icon="save" size="14" />
-                )}{' '}
-                Save
-              </button>
-            )}
-            {/* Cancel Order */}
-            {orderId && orderStatus !== 'Paid' && (
-              <button
-                type="button"
-                style={{
-                  width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
-                  background: 'transparent', color: '#ef4444', border: '1.5px solid rgba(239,68,68,0.25)',
-                  cursor: 'pointer', gridColumn: showPayment ? 'span 1' : 'span 2'
-                }}
-                onClick={() => setShowCancelModal(true)}
-                disabled={isLoading}
-              >
-                Cancel
-              </button>
-            )}
-            {/* Paid state: Go to New Order */}
             {isPaid && !isDirty && dueAmount <= 0.01 ? (
               <button
                 type="button"
@@ -156,20 +121,144 @@ const BottomCartSheet = ({
                 New Order
               </button>
             ) : (
-              showPayment && (
-                <button
-                  type="button"
-                  style={{ 
-                    width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, 
-                    background: '#23b3f4', color: '#fff', border: 'none', boxShadow: '0 4px 12px rgba(35,179,244,0.3)', 
-                    cursor: 'pointer',
-                    gridColumn: (orderId && orderStatus !== 'Paid') ? 'span 1' : 'span 2'
-                  }}
-                  onClick={() => { setShowCartSheet(false); handleOpenPaymentModal(); }}
-                >
-                  {dueAmount > 0.01 && totalPaid > 0 ? 'Pay' : 'Payment'}
-                </button>
-              )
+              <>
+                {/* Save & Payment in one row */}
+                {showSave && showPayment ? (
+                  <>
+                    <button
+                      type="button"
+                      style={{
+                        width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
+                        background: 'transparent', color: '#23b3f4', border: '1.5px solid #23b3f4',
+                        cursor: 'pointer', gridColumn: 'span 1'
+                      }}
+                      onClick={() => { setShowCartSheet(false); handleSaveOrder('Save'); }}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <CsLineIcons icon="spinner" size="14" className="spin" />
+                      ) : (
+                        <CsLineIcons icon="save" size="14" />
+                      )}{' '}
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      style={{ 
+                        width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, 
+                        background: '#23b3f4', color: '#fff', border: 'none', boxShadow: '0 4px 12px rgba(35,179,244,0.3)', 
+                        cursor: 'pointer', gridColumn: 'span 1'
+                      }}
+                      onClick={() => { setShowCartSheet(false); handleOpenPaymentModal(); }}
+                    >
+                      {dueAmount > 0.01 && totalPaid > 0 ? 'Pay' : 'Payment'}
+                    </button>
+                    {showCancel && (
+                      <button
+                        type="button"
+                        style={{
+                          width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
+                          background: 'transparent', color: '#ef4444', border: '1.5px solid rgba(239,68,68,0.25)',
+                          cursor: 'pointer', gridColumn: 'span 2'
+                        }}
+                        onClick={() => setShowCancelModal(true)}
+                        disabled={isLoading}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </>
+                ) : showSave ? (
+                  <>
+                    <button
+                      type="button"
+                      style={{
+                        width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
+                        background: 'transparent', color: '#23b3f4', border: '1.5px solid #23b3f4',
+                        cursor: 'pointer', gridColumn: 'span 2'
+                      }}
+                      onClick={() => { setShowCartSheet(false); handleSaveOrder('Save'); }}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <CsLineIcons icon="spinner" size="14" className="spin" />
+                      ) : (
+                        <CsLineIcons icon="save" size="14" />
+                      )}{' '}
+                      Save
+                    </button>
+                    {showCancel && (
+                      <button
+                        type="button"
+                        style={{
+                          width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
+                          background: 'transparent', color: '#ef4444', border: '1.5px solid rgba(239,68,68,0.25)',
+                          cursor: 'pointer', gridColumn: 'span 2'
+                        }}
+                        onClick={() => setShowCancelModal(true)}
+                        disabled={isLoading}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </>
+                ) : showPayment ? (
+                  showCancel ? (
+                    <>
+                      <button
+                        type="button"
+                        style={{
+                          width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
+                          background: 'transparent', color: '#ef4444', border: '1.5px solid rgba(239,68,68,0.25)',
+                          cursor: 'pointer', gridColumn: 'span 1'
+                        }}
+                        onClick={() => setShowCancelModal(true)}
+                        disabled={isLoading}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        style={{ 
+                          width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, 
+                          background: '#23b3f4', color: '#fff', border: 'none', boxShadow: '0 4px 12px rgba(35,179,244,0.3)', 
+                          cursor: 'pointer', gridColumn: 'span 1'
+                        }}
+                        onClick={() => { setShowCartSheet(false); handleOpenPaymentModal(); }}
+                      >
+                        {dueAmount > 0.01 && totalPaid > 0 ? 'Pay' : 'Payment'}
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      style={{ 
+                        width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, 
+                        background: '#23b3f4', color: '#fff', border: 'none', boxShadow: '0 4px 12px rgba(35,179,244,0.3)', 
+                        cursor: 'pointer', gridColumn: 'span 2'
+                      }}
+                      onClick={() => { setShowCartSheet(false); handleOpenPaymentModal(); }}
+                    >
+                      {dueAmount > 0.01 && totalPaid > 0 ? 'Pay' : 'Payment'}
+                    </button>
+                  )
+                ) : (
+                  showCancel && (
+                    <button
+                      type="button"
+                      style={{
+                        width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
+                        background: 'transparent', color: '#ef4444', border: '1.5px solid rgba(239,68,68,0.25)',
+                        cursor: 'pointer', gridColumn: 'span 2'
+                      }}
+                      onClick={() => setShowCancelModal(true)}
+                      disabled={isLoading}
+                    >
+                      Cancel
+                    </button>
+                  )
+                )}
+              </>
             )}
           </div>
         </div>
@@ -215,7 +304,7 @@ const BottomCartSheet = ({
                       PRINT #{record.kotNo}
                     </span>
                     <span className="text-muted small fw-semibold">
-                      {new Date(record.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(record.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
                     </span>
                   </div>
                   <button 
