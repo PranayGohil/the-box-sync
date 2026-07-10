@@ -20,11 +20,9 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
   const [rotation, setRotation] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Initialize selected aspect ratio based on initialAspect prop
   const defaultAspect = ASPECT_RATIOS.find((r) => r.value === initialAspect) || ASPECT_RATIOS[0];
   const [selectedAspect, setSelectedAspect] = useState(defaultAspect);
 
-  // Reset states on show/hide
   useEffect(() => {
     if (show) {
       setRotation(0);
@@ -32,11 +30,9 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
     }
   }, [show, defaultAspect]);
 
-  // Update Cropper aspect ratio dynamically
   useEffect(() => {
     const cropper = cropperRef.current?.cropper;
     if (cropper) {
-      // In Cropper.js, passing NaN (or 0) disables aspect ratio constraint to enable free-form cropping
       const ratioValue = selectedAspect.value === undefined ? NaN : selectedAspect.value;
       cropper.setAspectRatio(ratioValue);
     }
@@ -56,18 +52,14 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
     if (cropper) {
       setIsProcessing(true);
       try {
-        cropper
-          .getCroppedCanvas({
-            imageSmoothingQuality: 'high',
-          })
-          .toBlob((blob) => {
-            if (blob) {
-              const file = new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' });
-              onCropComplete(file);
-              onHide();
-            }
-            setIsProcessing(false);
-          }, 'image/jpeg');
+        cropper.getCroppedCanvas({ imageSmoothingQuality: 'high' }).toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' });
+            onCropComplete(file);
+            onHide();
+          }
+          setIsProcessing(false);
+        }, 'image/jpeg');
       } catch (e) {
         console.error('Error generating cropped canvas:', e);
         setIsProcessing(false);
@@ -76,102 +68,105 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
   };
 
   return (
-    <Modal show={show} onHide={onHide} size="lg" centered backdrop="static" keyboard={false} className="cropper-modal-premium">
+    <Modal show={show} onHide={onHide} size="md" centered backdrop="static" keyboard={false} className="cropper-modal-premium">
       <style>{`
         .cropper-modal-premium .modal-content {
-          border-radius: 1.25rem;
+          border-radius: 1rem;
           border: none;
           overflow: hidden;
           background: #1e1e24;
           color: #f8fafc;
+          max-height: 95vh;
+          display: flex;
+          flex-direction: column;
         }
         .cropper-modal-premium .modal-header {
           border-bottom: 1px solid #2d2d34;
           background: #1e1e24;
           color: #f8fafc;
+          padding: 0.75rem 1.25rem;
+          flex-shrink: 0;
         }
         .cropper-modal-premium .modal-title {
           font-weight: 700;
+          font-size: 1rem;
         }
         .cropper-modal-premium .btn-close {
           filter: invert(1) grayscale(1) brightness(2);
         }
         .cropper-modal-premium .modal-body {
           background: #121214;
-          padding: 1.5rem;
+          padding: 0.85rem 1rem;
+          overflow: hidden;
+          flex: 1 1 auto;
+          display: flex;
+          flex-direction: column;
+          gap: 0.6rem;
         }
         .cropper-modal-premium .modal-footer {
           border-top: 1px solid #2d2d34;
           background: #1e1e24;
+          padding: 0.65rem 1rem;
+          flex-shrink: 0;
         }
         .cropper-wrapper {
           position: relative;
           width: 100%;
-          height: 400px;
+          flex: 1 1 auto;
+          min-height: 0;
           background-color: #09090b;
-          border-radius: 0.75rem;
+          border-radius: 0.6rem;
           overflow: hidden;
         }
         .aspect-ratio-scroll {
           display: flex;
-          gap: 0.5rem;
+          gap: 0.4rem;
           overflow-x: auto;
-          padding-bottom: 0.75rem;
+          padding-bottom: 2px;
           scrollbar-width: thin;
           scrollbar-color: #38bdf8 #2d2d34;
         }
-        .aspect-ratio-scroll::-webkit-scrollbar {
-          height: 6px;
-        }
-        .aspect-ratio-scroll::-webkit-scrollbar-track {
-          background: #2d2d34;
-          border-radius: 3px;
-        }
-        .aspect-ratio-scroll::-webkit-scrollbar-thumb {
-          background-color: #38bdf8;
-          border-radius: 3px;
-        }
+        .aspect-ratio-scroll::-webkit-scrollbar { height: 4px; }
+        .aspect-ratio-scroll::-webkit-scrollbar-track { background: #2d2d34; border-radius: 2px; }
+        .aspect-ratio-scroll::-webkit-scrollbar-thumb { background-color: #38bdf8; border-radius: 2px; }
         .aspect-pill {
           background: #222227;
           border: 1px solid #2d2d34;
           color: #cbd5e1;
           border-radius: 50px;
-          padding: 0.35rem 1rem;
-          font-size: 0.8rem;
+          padding: 0.25rem 0.75rem;
+          font-size: 0.75rem;
           font-weight: 600;
           white-space: nowrap;
-          transition: all 0.2s ease;
+          transition: all 0.18s ease;
           cursor: pointer;
+          line-height: 1.4;
         }
-        .aspect-pill:hover {
-          background: #2d2d34;
-          color: #fff;
-          border-color: #38bdf8;
-        }
+        .aspect-pill:hover { background: #2d2d34; color: #fff; border-color: #38bdf8; }
         .aspect-pill.active {
           background: #38bdf8;
           color: #121214;
           border-color: #38bdf8;
-          box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+          box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
         }
-        
-        /* Cropper custom styles */
-        .cropper-view-box {
-          outline: 2px solid #38bdf8 !important;
-          outline-color: #38bdf8 !important;
+        .cropper-section-label {
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #64748b;
+          margin-bottom: 0.35rem;
+          display: block;
         }
-        .cropper-point {
-          background-color: #38bdf8 !important;
-        }
-        .cropper-line {
-          background-color: #38bdf8 !important;
-        }
+        .cropper-view-box { outline: 2px solid #38bdf8 !important; outline-color: #38bdf8 !important; }
+        .cropper-point { background-color: #38bdf8 !important; }
+        .cropper-line { background-color: #38bdf8 !important; }
       `}</style>
       <Modal.Header closeButton>
         <Modal.Title>Crop Image</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <div className="cropper-wrapper">
+        <div className="cropper-wrapper" style={{ height: '280px' }}>
           {imageSrc && (
             <Cropper
               ref={cropperRef}
@@ -191,37 +186,35 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
           )}
         </div>
 
-        <div className="mt-4">
-          <Form.Group className="mb-4">
-            <Form.Label className="small fw-bold text-uppercase text-muted letter-spacing-1 mb-2 d-block">Aspect Ratio</Form.Label>
-            <div className="aspect-ratio-scroll">
-              {ASPECT_RATIOS.map((ratio) => {
-                const isActive = selectedAspect.label === ratio.label;
-                return (
-                  <button key={ratio.label} type="button" className={`aspect-pill ${isActive ? 'active' : ''}`} onClick={() => setSelectedAspect(ratio)}>
-                    {ratio.label === 'Free' ? (
-                      <span className="d-flex align-items-center gap-1">
-                        <CsLineIcons icon="crop" size="13" /> Free Crop
-                      </span>
-                    ) : (
-                      ratio.label
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </Form.Group>
+        <div>
+          <span className="cropper-section-label">Aspect Ratio</span>
+          <div className="aspect-ratio-scroll">
+            {ASPECT_RATIOS.map((ratio) => {
+              const isActive = selectedAspect.label === ratio.label;
+              return (
+                <button key={ratio.label} type="button" className={`aspect-pill ${isActive ? 'active' : ''}`} onClick={() => setSelectedAspect(ratio)}>
+                  {ratio.label === 'Free' ? (
+                    <span className="d-flex align-items-center gap-1">
+                      <CsLineIcons icon="crop" size="11" /> Free
+                    </span>
+                  ) : (
+                    ratio.label
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-          <Form.Group className="d-flex align-items-center gap-3">
-            <Form.Label className="mb-0 fw-bold text-muted small" style={{ minWidth: '60px' }}>
-              Rotate
-            </Form.Label>
-            <Form.Range value={rotation} min={0} max={360} step={1} onChange={handleRotationChange} style={{ accentColor: '#38bdf8' }} />
-          </Form.Group>
+        <div className="d-flex align-items-center gap-2">
+          <span className="cropper-section-label mb-0" style={{ minWidth: '48px' }}>
+            Rotate
+          </span>
+          <Form.Range value={rotation} min={0} max={360} step={1} onChange={handleRotationChange} style={{ accentColor: '#38bdf8' }} />
         </div>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="outline-light" onClick={onHide} disabled={isProcessing} className="rounded-pill px-4">
+        <Button variant="outline-light" onClick={onHide} disabled={isProcessing} className="rounded-pill px-3" size="sm">
           Cancel
         </Button>
         <Button
@@ -229,6 +222,7 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
           onClick={handleSave}
           disabled={isProcessing}
           className="rounded-pill px-4 text-dark fw-bold"
+          size="sm"
           style={{ backgroundColor: '#38bdf8', borderColor: '#38bdf8' }}
         >
           {isProcessing ? 'Processing...' : 'Crop & Save'}
