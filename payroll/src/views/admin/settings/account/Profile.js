@@ -554,7 +554,6 @@ const Profile = () => {
           </Card>
         </div>
       )}
-    </div>
       <ImageCropperModal
         show={cropperState.show}
         onHide={() => setCropperState({ ...cropperState, show: false })}
@@ -562,6 +561,7 @@ const Profile = () => {
         onCropComplete={handleCropComplete}
         initialAspect={cropperState.aspect}
       />
+    </div>
   );
 };
 
