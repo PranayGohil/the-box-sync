@@ -1,8 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
-import Cropper from 'react-easy-crop';
+import Cropper from 'react-cropper';
+import 'cropperjs/dist/cropper.css';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
-import getCroppedImg from './cropImage';
 
 const ASPECT_RATIOS = [
   { label: 'Free', value: undefined },
@@ -16,32 +16,62 @@ const ASPECT_RATIOS = [
 ];
 
 const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspect = undefined }) => {
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
+  const cropperRef = useRef(null);
   const [rotation, setRotation] = useState(0);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Initialize selected aspect ratio based on initialAspect prop
   const defaultAspect = ASPECT_RATIOS.find((r) => r.value === initialAspect) || ASPECT_RATIOS[0];
   const [selectedAspect, setSelectedAspect] = useState(defaultAspect);
 
-  const onCropCompleteHandler = useCallback((croppedArea, croppedAreaPixelsObj) => {
-    setCroppedAreaPixels(croppedAreaPixelsObj);
-  }, []);
+  // Reset states on show/hide
+  useEffect(() => {
+    if (show) {
+      setRotation(0);
+      setSelectedAspect(defaultAspect);
+    }
+  }, [show, defaultAspect]);
 
-  const handleSave = async () => {
-    try {
+  // Update Cropper aspect ratio dynamically
+  useEffect(() => {
+    const cropper = cropperRef.current?.cropper;
+    if (cropper) {
+      // In Cropper.js, passing NaN (or 0) disables aspect ratio constraint to enable free-form cropping
+      const ratioValue = selectedAspect.value === undefined ? NaN : selectedAspect.value;
+      cropper.setAspectRatio(ratioValue);
+    }
+  }, [selectedAspect]);
+
+  const handleRotationChange = (e) => {
+    const val = Number(e.target.value);
+    setRotation(val);
+    const cropper = cropperRef.current?.cropper;
+    if (cropper) {
+      cropper.rotateTo(val);
+    }
+  };
+
+  const handleSave = () => {
+    const cropper = cropperRef.current?.cropper;
+    if (cropper) {
       setIsProcessing(true);
-      const croppedImageBlob = await getCroppedImg(imageSrc, croppedAreaPixels, rotation);
-      // convert blob to file
-      const file = new File([croppedImageBlob], 'cropped-image.jpg', { type: 'image/jpeg' });
-      onCropComplete(file);
-      onHide();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsProcessing(false);
+      try {
+        cropper
+          .getCroppedCanvas({
+            imageSmoothingQuality: 'high',
+          })
+          .toBlob((blob) => {
+            if (blob) {
+              const file = new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' });
+              onCropComplete(file);
+              onHide();
+            }
+            setIsProcessing(false);
+          }, 'image/jpeg');
+      } catch (e) {
+        console.error('Error generating cropped canvas:', e);
+        setIsProcessing(false);
+      }
     }
   };
 
@@ -73,6 +103,14 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
         .cropper-modal-premium .modal-footer {
           border-top: 1px solid #2d2d34;
           background: #1e1e24;
+        }
+        .cropper-wrapper {
+          position: relative;
+          width: 100%;
+          height: 400px;
+          background-color: #09090b;
+          border-radius: 0.75rem;
+          overflow: hidden;
         }
         .aspect-ratio-scroll {
           display: flex;
@@ -116,23 +154,39 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
           border-color: #38bdf8;
           box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
         }
+        
+        /* Cropper custom styles */
+        .cropper-view-box {
+          outline: 2px solid #38bdf8 !important;
+          outline-color: #38bdf8 !important;
+        }
+        .cropper-point {
+          background-color: #38bdf8 !important;
+        }
+        .cropper-line {
+          background-color: #38bdf8 !important;
+        }
       `}</style>
       <Modal.Header closeButton>
         <Modal.Title>Crop Image</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <div style={{ position: 'relative', width: '100%', height: '400px', backgroundColor: '#09090b', borderRadius: '0.75rem', overflow: 'hidden' }}>
+        <div className="cropper-wrapper">
           {imageSrc && (
             <Cropper
-              image={imageSrc}
-              crop={crop}
-              zoom={zoom}
-              rotation={rotation}
-              aspect={selectedAspect.value}
-              onCropChange={setCrop}
-              onCropComplete={onCropCompleteHandler}
-              onZoomChange={setZoom}
-              onRotationChange={setRotation}
+              ref={cropperRef}
+              src={imageSrc}
+              style={{ height: '100%', width: '100%' }}
+              viewMode={1}
+              dragMode="move"
+              guides={true}
+              scalable={true}
+              cropBoxMovable={true}
+              cropBoxResizable={true}
+              toggleDragModeOnDblclick={false}
+              background={false}
+              responsive={true}
+              checkOrientation={false}
             />
           )}
         </div>
@@ -158,18 +212,11 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
             </div>
           </Form.Group>
 
-          <Form.Group className="mb-3 d-flex align-items-center gap-3">
-            <Form.Label className="mb-0 fw-bold text-muted small" style={{ minWidth: '60px' }}>
-              Zoom
-            </Form.Label>
-            <Form.Range value={zoom} min={1} max={3} step={0.1} onChange={(e) => setZoom(Number(e.target.value))} style={{ accentColor: '#38bdf8' }} />
-          </Form.Group>
-
           <Form.Group className="d-flex align-items-center gap-3">
             <Form.Label className="mb-0 fw-bold text-muted small" style={{ minWidth: '60px' }}>
               Rotate
             </Form.Label>
-            <Form.Range value={rotation} min={0} max={360} step={1} onChange={(e) => setRotation(Number(e.target.value))} style={{ accentColor: '#38bdf8' }} />
+            <Form.Range value={rotation} min={0} max={360} step={1} onChange={handleRotationChange} style={{ accentColor: '#38bdf8' }} />
           </Form.Group>
         </div>
       </Modal.Body>
