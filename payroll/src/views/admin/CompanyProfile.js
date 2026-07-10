@@ -135,9 +135,7 @@ const CompanyProfile = () => {
       });
 
       toast.success(res.data.message || 'Profile updated successfully!');
-      setInitialData(formData);
-      setPassword('');
-      setLogoFile(null);
+      window.location.reload();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error(error.response?.data?.error || 'Failed to update profile.');

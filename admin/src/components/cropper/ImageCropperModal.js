@@ -52,14 +52,16 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
     if (cropper) {
       setIsProcessing(true);
       try {
-        cropper.getCroppedCanvas({ imageSmoothingQuality: 'high' }).toBlob((blob) => {
-          if (blob) {
-            const file = new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' });
-            onCropComplete(file);
-            onHide();
-          }
-          setIsProcessing(false);
-        }, 'image/jpeg');
+        cropper
+          .getCroppedCanvas({ imageSmoothingQuality: 'high' })
+          .toBlob((blob) => {
+            if (blob) {
+              const file = new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' });
+              onCropComplete(file);
+              onHide();
+            }
+            setIsProcessing(false);
+          }, 'image/jpeg');
       } catch (e) {
         console.error('Error generating cropped canvas:', e);
         setIsProcessing(false);
@@ -74,16 +76,17 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
           border-radius: 1rem;
           border: none;
           overflow: hidden;
-          background: #1e1e24;
-          color: #f8fafc;
+          background: #ffffff;
+          color: #1e293b;
           max-height: 95vh;
           display: flex;
           flex-direction: column;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
         .cropper-modal-premium .modal-header {
-          border-bottom: 1px solid #2d2d34;
-          background: #1e1e24;
-          color: #f8fafc;
+          border-bottom: 1px solid #e2e8f0;
+          background: #ffffff;
+          color: #1e293b;
           padding: 0.75rem 1.25rem;
           flex-shrink: 0;
         }
@@ -91,11 +94,8 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
           font-weight: 700;
           font-size: 1rem;
         }
-        .cropper-modal-premium .btn-close {
-          filter: invert(1) grayscale(1) brightness(2);
-        }
         .cropper-modal-premium .modal-body {
-          background: #121214;
+          background: #f8fafc;
           padding: 0.85rem 1rem;
           overflow: hidden;
           flex: 1 1 auto;
@@ -104,8 +104,8 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
           gap: 0.6rem;
         }
         .cropper-modal-premium .modal-footer {
-          border-top: 1px solid #2d2d34;
-          background: #1e1e24;
+          border-top: 1px solid #e2e8f0;
+          background: #ffffff;
           padding: 0.65rem 1rem;
           flex-shrink: 0;
         }
@@ -114,9 +114,10 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
           width: 100%;
           flex: 1 1 auto;
           min-height: 0;
-          background-color: #09090b;
+          background-color: #f1f5f9;
           border-radius: 0.6rem;
           overflow: hidden;
+          border: 1px solid #e2e8f0;
         }
         .aspect-ratio-scroll {
           display: flex;
@@ -124,15 +125,15 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
           overflow-x: auto;
           padding-bottom: 2px;
           scrollbar-width: thin;
-          scrollbar-color: #38bdf8 #2d2d34;
+          scrollbar-color: #1ea8e7 #e2e8f0;
         }
         .aspect-ratio-scroll::-webkit-scrollbar { height: 4px; }
-        .aspect-ratio-scroll::-webkit-scrollbar-track { background: #2d2d34; border-radius: 2px; }
-        .aspect-ratio-scroll::-webkit-scrollbar-thumb { background-color: #38bdf8; border-radius: 2px; }
+        .aspect-ratio-scroll::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 2px; }
+        .aspect-ratio-scroll::-webkit-scrollbar-thumb { background-color: #1ea8e7; border-radius: 2px; }
         .aspect-pill {
-          background: #222227;
-          border: 1px solid #2d2d34;
-          color: #cbd5e1;
+          background: #ffffff;
+          border: 1px solid #cbd5e1;
+          color: #475569;
           border-radius: 50px;
           padding: 0.25rem 0.75rem;
           font-size: 0.75rem;
@@ -142,12 +143,12 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
           cursor: pointer;
           line-height: 1.4;
         }
-        .aspect-pill:hover { background: #2d2d34; color: #fff; border-color: #38bdf8; }
+        .aspect-pill:hover { background: #f1f5f9; color: #0f172a; border-color: #1ea8e7; }
         .aspect-pill.active {
-          background: #38bdf8;
-          color: #121214;
-          border-color: #38bdf8;
-          box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+          background: #1ea8e7;
+          color: #ffffff;
+          border-color: #1ea8e7;
+          box-shadow: 0 0 10px rgba(30, 168, 231, 0.3);
         }
         .cropper-section-label {
           font-size: 0.68rem;
@@ -158,9 +159,9 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
           margin-bottom: 0.35rem;
           display: block;
         }
-        .cropper-view-box { outline: 2px solid #38bdf8 !important; outline-color: #38bdf8 !important; }
-        .cropper-point { background-color: #38bdf8 !important; }
-        .cropper-line { background-color: #38bdf8 !important; }
+        .cropper-view-box { outline: 2px solid #1ea8e7 !important; outline-color: #1ea8e7 !important; }
+        .cropper-point { background-color: #1ea8e7 !important; }
+        .cropper-line { background-color: #1ea8e7 !important; }
       `}</style>
       <Modal.Header closeButton>
         <Modal.Title>Crop Image</Modal.Title>
@@ -207,23 +208,21 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
         </div>
 
         <div className="d-flex align-items-center gap-2">
-          <span className="cropper-section-label mb-0" style={{ minWidth: '48px' }}>
-            Rotate
-          </span>
-          <Form.Range value={rotation} min={0} max={360} step={1} onChange={handleRotationChange} style={{ accentColor: '#38bdf8' }} />
+          <span className="cropper-section-label mb-0" style={{ minWidth: '48px' }}>Rotate</span>
+          <Form.Range value={rotation} min={0} max={360} step={1} onChange={handleRotationChange} style={{ accentColor: '#1ea8e7' }} />
         </div>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="outline-light" onClick={onHide} disabled={isProcessing} className="rounded-pill px-3" size="sm">
+        <Button variant="outline-secondary" onClick={onHide} disabled={isProcessing} className="rounded-pill px-3" size="sm">
           Cancel
         </Button>
         <Button
           variant="info"
           onClick={handleSave}
           disabled={isProcessing}
-          className="rounded-pill px-4 text-dark fw-bold"
+          className="rounded-pill px-4 text-white fw-bold"
           size="sm"
-          style={{ backgroundColor: '#38bdf8', borderColor: '#38bdf8' }}
+          style={{ backgroundColor: '#1ea8e7', borderColor: '#1ea8e7' }}
         >
           {isProcessing ? 'Processing...' : 'Crop & Save'}
         </Button>
