@@ -354,7 +354,7 @@ const Register = () => {
                           className="login-auth-input form-control"
                           name="email"
                           type="email"
-                          placeholder="you@company.com"
+                          placeholder="Your Email ID"
                           onChange={(e) => {
                             const val = e.target.value;
                             setFieldValue('email', val);

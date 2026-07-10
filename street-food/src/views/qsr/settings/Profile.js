@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Card, Col, Row, Spinner, Alert, Modal, Badge } from 'react-bootstrap';
+import { Button, Form, Card, Col, Row, Spinner, Alert, Modal, Badge, Image } from 'react-bootstrap';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
 import axios from 'axios';
@@ -48,6 +48,7 @@ const Profile = () => {
     imageSrc: '',
     aspect: undefined,
   });
+  const [isWideLogo, setIsWideLogo] = useState(false);
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
@@ -385,11 +386,21 @@ const Profile = () => {
 
                     <div className="mb-4 d-flex justify-content-center">
                       <div
-                        className="rounded-circle border border-4 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center"
-                        style={{ width: '180px', height: '180px' }}
+                        className={`border border-4 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center ${
+                          isWideLogo ? 'rounded-3' : 'rounded-circle'
+                        }`}
+                        style={isWideLogo ? { width: '220px', height: '110px' } : { width: '180px', height: '180px' }}
                       >
                         {getLogoSrc() ? (
-                          <img src={getLogoSrc()} alt="Logo" className="w-100 h-100 object-fit-cover" />
+                          <Image
+                            src={getLogoSrc()}
+                            alt="Logo"
+                            style={isWideLogo ? { width: '100%', height: '100%', objectFit: 'contain' } : { width: '100%', height: '100%', objectFit: 'cover' }}
+                            onLoad={(e) => {
+                              const { naturalWidth, naturalHeight } = e.target;
+                              setIsWideLogo(naturalWidth >= naturalHeight * 1.8);
+                            }}
+                          />
                         ) : (
                           <CsLineIcons icon="image" size="64" className="text-muted opacity-20" />
                         )}
