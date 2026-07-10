@@ -551,6 +551,7 @@ const UnifiedOrder = () => {
       }),
       order_status: status,
       customer_name: customerInfo.name,
+      customer_phone: customerInfo.phone || '',
       comment: customerInfo.comment,
       bill_amount: parseFloat(paymentData.total) || 0,
       sub_total: parseFloat(paymentData.subTotal) || 0,
@@ -577,7 +578,7 @@ const UnifiedOrder = () => {
     }
 
     const custPayload = { name: customerInfo.name };
-    if (orderType !== 'Dine In') custPayload.phone = customerInfo.phone;
+    if (customerInfo.phone) custPayload.phone = customerInfo.phone;
     if (orderType === 'Delivery') custPayload.address = customerInfo.address;
 
     return {

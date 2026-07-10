@@ -168,6 +168,7 @@ const UnifiedOrder = () => {
       order_status: status,
       customer_name: customerInfo.name,
       comment: customerInfo.comment,
+      customer_phone: customerInfo.phone || '',
       bill_amount: parseFloat(paymentData.total), sub_total: parseFloat(paymentData.subTotal),
       cgst_percent: parseFloat(paymentData.cgstPercent), sgst_percent: parseFloat(paymentData.sgstPercent), vat_percent: parseFloat(paymentData.vatPercent),
       cgst_amount: parseFloat(paymentData.cgstAmount), sgst_amount: parseFloat(paymentData.sgstAmount), vat_amount: parseFloat(paymentData.vatAmount),
@@ -185,7 +186,7 @@ const UnifiedOrder = () => {
     }
 
     const custPayload = { name: customerInfo.name };
-    if (orderType !== 'Dine In') custPayload.phone = customerInfo.phone;
+    if (customerInfo.phone) custPayload.phone = customerInfo.phone;
     if (orderType === 'Delivery') custPayload.address = customerInfo.address;
 
     return {

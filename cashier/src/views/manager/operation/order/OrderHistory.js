@@ -409,7 +409,6 @@ const OrderHistory = () => {
   //   }
   // };
 
-
   const formatCurrencyPDF = (amount) => {
     return `INR ${parseFloat(amount).toFixed(2)}`;
   };
@@ -476,7 +475,8 @@ const OrderHistory = () => {
       if (exportFilters.fromDate || exportFilters.toDate) {
         sheetData.push([
           'Date Range:',
-          `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
+          `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${
+            exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
           }`,
         ]);
       }
@@ -496,7 +496,13 @@ const OrderHistory = () => {
       // Main Table Rows
       orders.forEach((order) => {
         const orderDate = new Date(order.order_date);
-        const tableDetails = order.table_area ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}` : (order.table_no ? `T${order.table_no}` : (order.token ? `Token ${order.token}` : 'N/A'));
+        const tableDetails = order.table_area
+          ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}`
+          : order.table_no
+          ? `T${order.table_no}`
+          : order.token
+          ? `Token ${order.token}`
+          : 'N/A';
         sheetData.push([
           order.order_no || order._id || '',
           format(orderDate, 'dd-MM-yyyy hh:mm a'),
@@ -522,7 +528,7 @@ const OrderHistory = () => {
         { wch: 12 }, // Source
         { wch: 15 }, // Payment Mode
         { wch: 15 }, // Total Amount
-        { wch: 12 }  // Status
+        { wch: 12 }, // Status
       ];
 
       // Format KPI Summary cells (Row 7, index 6)
@@ -686,7 +692,7 @@ const OrderHistory = () => {
       const kpiCards = [
         { title: 'TOTAL ORDERS', value: orders.length.toString(), color: [35, 179, 244] },
         { title: 'TOTAL REVENUE', value: formatCurrencyForCard(totalAmount), color: [16, 185, 129] }, // Green
-        { title: 'AVG ORDER VALUE', value: formatCurrencyForCard(avgOrderValue), color: [245, 158, 11] } // Orange
+        { title: 'AVG ORDER VALUE', value: formatCurrencyForCard(avgOrderValue), color: [245, 158, 11] }, // Orange
       ];
 
       kpiCards.forEach((card, idx) => {
@@ -717,7 +723,12 @@ const OrderHistory = () => {
       // 4. FILTERS SECTION
       const activeFilters = [];
       if (exportFilters.fromDate || exportFilters.toDate) {
-        activeFilters.push({ label: 'Date Period', val: `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'}` });
+        activeFilters.push({
+          label: 'Date Period',
+          val: `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${
+            exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
+          }`,
+        });
       }
       if (exportFilters.orderSource) activeFilters.push({ label: 'Source', val: exportFilters.orderSource });
       if (exportFilters.orderStatus) activeFilters.push({ label: 'Status', val: exportFilters.orderStatus });
@@ -766,7 +777,13 @@ const OrderHistory = () => {
         head: [['Order No', 'Date & Time', 'Customer', 'Type', 'Table Area', 'Source', 'Payment Mode', 'Total Amount', 'Status']],
         body: orders.map((order) => {
           const orderDate = new Date(order.order_date);
-          const tableDetails = order.table_area ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}` : (order.table_no ? `T${order.table_no}` : (order.token ? `Token ${order.token}` : 'N/A'));
+          const tableDetails = order.table_area
+            ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}`
+            : order.table_no
+            ? `T${order.table_no}`
+            : order.token
+            ? `Token ${order.token}`
+            : 'N/A';
           return [
             order.order_no || (order._id || '').substring(18),
             format(orderDate, 'dd-MM-yy hh:mm a'),
@@ -818,8 +835,10 @@ const OrderHistory = () => {
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(7.5);
           doc.setTextColor(156, 163, 175);
-          doc.text(`${COMPANY_NAME}   |   Order History Report   |   Page ${pageData.pageNumber} of ${totalPagesCount}`, docWidth / 2, docHeight - 9, { align: 'center' });
-        }
+          doc.text(`${COMPANY_NAME}   |   Order History Report   |   Page ${pageData.pageNumber} of ${totalPagesCount}`, docWidth / 2, docHeight - 9, {
+            align: 'center',
+          });
+        },
       });
 
       setExportProgress(95);
@@ -919,7 +938,10 @@ const OrderHistory = () => {
         isSorted: sortBy === 'order_type',
         isSortedDesc: sortBy === 'order_type' && sortOrder === 'desc',
         Cell: ({ value }) => (
-          <Badge bg={value === 'Dine In' ? 'primary' : value === 'Takeaway' ? 'warning' : value === 'Delivery' ? 'success' : 'secondary'} className="rounded-pill px-3">
+          <Badge
+            bg={value === 'Dine In' ? 'primary' : value === 'Takeaway' ? 'warning' : value === 'Delivery' ? 'success' : 'secondary'}
+            className="rounded-pill px-3"
+          >
             {value}
           </Badge>
         ),
@@ -954,7 +976,18 @@ const OrderHistory = () => {
         isSorted: sortBy === 'order_status',
         isSortedDesc: sortBy === 'order_status' && sortOrder === 'desc',
         Cell: ({ value }) => (
-          <Badge bg={value === 'Paid' || value === 'Save' || value === 'Completed' ? 'success' : value === 'KOT' ? 'warning' : value === 'Cancelled' ? 'danger' : 'secondary'} className="rounded-pill px-3">
+          <Badge
+            bg={
+              value === 'Paid' || value === 'Save' || value === 'Completed'
+                ? 'success'
+                : value === 'KOT'
+                ? 'warning'
+                : value === 'Cancelled'
+                ? 'danger'
+                : 'secondary'
+            }
+            className="rounded-pill px-3"
+          >
             {value}
           </Badge>
         ),
@@ -1023,7 +1056,9 @@ const OrderHistory = () => {
         <HtmlHead title={title} description={description} />
         <section className="scroll-section" id="title">
           <div className="page-title-container mt-5 pt-1 mt-md-0 pt-md-0">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
+              {title}
+            </h1>
             <BreadcrumbList items={breadcrumbs} />
           </div>
         </section>
@@ -1038,11 +1073,36 @@ const OrderHistory = () => {
 
   return (
     <div className="container-fluid pb-5">
+      <style>{`
+        input[type="date"], input[placeholder="DD/MM/YYYY"] {
+          position: relative;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231ea8e7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 15px center !important;
+          background-size: 18px 18px !important;
+          padding-right: 40px !important;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator, input[placeholder="DD/MM/YYYY"]::-webkit-calendar-picker-indicator {
+          cursor: pointer !important;
+          display: block !important;
+          opacity: 0 !important;
+          position: absolute !important;
+          right: 0 !important;
+          top: 0 !important;
+          width: 40px !important;
+          height: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          z-index: 2 !important;
+        }
+      `}</style>
       <HtmlHead title={title} description={description} />
 
       <section className="scroll-section" id="title">
         <div className="page-title-container mb-4 mt-5 pt-1 mt-md-0 pt-md-0">
-          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
+            {title}
+          </h1>
           <BreadcrumbList items={breadcrumbs} />
         </div>
       </section>
@@ -1131,11 +1191,7 @@ const OrderHistory = () => {
                   Filter Records
                 </h5>
                 {getActiveFilterCount() > 0 && (
-                  <Button
-                    variant="link"
-                    className="p-0 text-danger text-decoration-none small fw-bold"
-                    onClick={handleClearFilters}
-                  >
+                  <Button variant="link" className="p-0 text-danger text-decoration-none small fw-bold" onClick={handleClearFilters}>
                     <CsLineIcons icon="close" size="12" className="me-1" />
                     Clear All
                   </Button>
@@ -1169,39 +1225,39 @@ const OrderHistory = () => {
                   {/* Date Range Filter */}
                   <Col xs="12" sm="6" md="2">
                     <Form.Label className="small fw-bold text-muted mb-1">From</Form.Label>
-                    <div
-                      className="d-flex align-items-center bg-white shadow-sm rounded-pill px-3"
-                      style={{ height: '44px', border: '1px solid #f1f5f9', minWidth: 0, overflow: 'hidden' }}
-                    >
-                      <CsLineIcons icon="calendar" size="14" className="text-primary me-2 flex-shrink-0" />
+                    <div className="flex-grow-1 position-relative">
                       <Form.Control
-                        type={filters.fromDate ? "date" : "text"}
-                        placeholder="dd-mm-yyyy"
-                        onFocus={(e) => { e.target.type = "date"; }}
-                        onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
+                        type={filters.fromDate ? 'date' : 'text'}
+                        placeholder="DD/MM/YYYY"
+                        onFocus={(e) => {
+                          e.target.type = 'date';
+                        }}
+                        onBlur={(e) => {
+                          if (!e.target.value) e.target.type = 'text';
+                        }}
                         value={filters.fromDate}
                         onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-                        className="border-0 bg-transparent shadow-none p-0 w-100 text-dark"
-                        style={{ fontSize: '13px', outline: 'none', minWidth: 0 }}
+                        className="border-0 shadow-sm rounded-pill px-3 text-dark w-100"
+                        style={{ height: '44px', fontSize: '13px', paddingRight: '40px' }}
                       />
                     </div>
                   </Col>
                   <Col xs="12" sm="6" md="2">
                     <Form.Label className="small fw-bold text-muted mb-1">To</Form.Label>
-                    <div
-                      className="d-flex align-items-center bg-white shadow-sm rounded-pill px-3"
-                      style={{ height: '44px', border: '1px solid #f1f5f9', minWidth: 0, overflow: 'hidden' }}
-                    >
-                      <CsLineIcons icon="calendar" size="14" className="text-primary me-2 flex-shrink-0" />
+                    <div className="flex-grow-1 position-relative">
                       <Form.Control
-                        type={filters.toDate ? "date" : "text"}
-                        placeholder="dd-mm-yyyy"
-                        onFocus={(e) => { e.target.type = "date"; }}
-                        onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
+                        type={filters.toDate ? 'date' : 'text'}
+                        placeholder="DD/MM/YYYY"
+                        onFocus={(e) => {
+                          e.target.type = 'date';
+                        }}
+                        onBlur={(e) => {
+                          if (!e.target.value) e.target.type = 'text';
+                        }}
                         value={filters.toDate}
                         onChange={(e) => handleFilterChange('toDate', e.target.value)}
-                        className="border-0 bg-transparent shadow-none p-0 w-100 text-dark"
-                        style={{ fontSize: '13px', outline: 'none', minWidth: 0 }}
+                        className="border-0 shadow-sm rounded-pill px-3 text-dark w-100"
+                        style={{ height: '44px', fontSize: '13px', paddingRight: '40px' }}
                       />
                     </div>
                   </Col>
@@ -1269,7 +1325,9 @@ const OrderHistory = () => {
                           className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
                           style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
                         >
-                          <Dropdown.Item active={filters.tableArea === ''} onClick={() => handleFilterChange('tableArea', '')}>All Areas</Dropdown.Item>
+                          <Dropdown.Item active={filters.tableArea === ''} onClick={() => handleFilterChange('tableArea', '')}>
+                            All Areas
+                          </Dropdown.Item>
                           {tableAreas.map((area) => (
                             <Dropdown.Item key={area} active={filters.tableArea === area} onClick={() => handleFilterChange('tableArea', area)}>
                               {area}
@@ -1327,10 +1385,18 @@ const OrderHistory = () => {
                           <div className="fw-bolder text-primary mb-1" style={{ fontSize: '14px' }}>
                             {order.order_no || 'ORD-0000'}
                           </div>
-                           <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd MMM yyyy, hh:mm a')}</div>
+                          <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd MMM yyyy, hh:mm a')}</div>
                         </div>
                         <Badge
-                          bg={order.order_status === 'Paid' || order.order_status === 'Completed' || order.order_status === 'Save' ? 'success' : order.order_status === 'KOT' ? 'warning' : order.order_status === 'Cancelled' ? 'danger' : 'secondary'}
+                          bg={
+                            order.order_status === 'Paid' || order.order_status === 'Completed' || order.order_status === 'Save'
+                              ? 'success'
+                              : order.order_status === 'KOT'
+                              ? 'warning'
+                              : order.order_status === 'Cancelled'
+                              ? 'danger'
+                              : 'secondary'
+                          }
                           className="rounded-pill px-3 py-1"
                         >
                           {order.order_status}
@@ -1340,7 +1406,18 @@ const OrderHistory = () => {
                       <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
                         <Col xs="6">
                           <div className="text-muted small mb-1">Type</div>
-                          <Badge bg={order.order_type === 'Dine In' ? 'primary' : order.order_type === 'Takeaway' ? 'warning' : order.order_type === 'Delivery' ? 'success' : 'secondary'} className="rounded-pill px-3 py-1">
+                          <Badge
+                            bg={
+                              order.order_type === 'Dine In'
+                                ? 'primary'
+                                : order.order_type === 'Takeaway'
+                                ? 'warning'
+                                : order.order_type === 'Delivery'
+                                ? 'success'
+                                : 'secondary'
+                            }
+                            className="rounded-pill px-3 py-1"
+                          >
                             {order.order_type}
                           </Badge>
                         </Col>
@@ -1353,7 +1430,18 @@ const OrderHistory = () => {
                       </Row>
 
                       <div className="d-flex justify-content-between align-items-center">
-                        <Badge bg={order.order_source === 'Manager' ? 'info' : order.order_source === 'Captain' ? 'primary' : order.order_source === 'QSR' ? 'secondary' : 'dark'} className="rounded-pill px-3 py-1">
+                        <Badge
+                          bg={
+                            order.order_source === 'Manager'
+                              ? 'info'
+                              : order.order_source === 'Captain'
+                              ? 'primary'
+                              : order.order_source === 'QSR'
+                              ? 'secondary'
+                              : 'dark'
+                          }
+                          className="rounded-pill px-3 py-1"
+                        >
                           {order.order_source}
                         </Badge>
                         <div className="d-flex gap-2">
@@ -1430,7 +1518,7 @@ const OrderHistory = () => {
                             <div className="fw-bold text-dark">Excel Data</div>
                             <div className="text-muted xsmall">Tabular .xlsx</div>
                           </div>
-                          <Form.Check type="radio" className="ms-2" checked={exportFormat === 'excel'} onChange={() => { }} />
+                          <Form.Check type="radio" className="ms-2" checked={exportFormat === 'excel'} onChange={() => {}} />
                         </Card.Body>
                       </Card>
                     </Col>
@@ -1448,7 +1536,7 @@ const OrderHistory = () => {
                             <div className="fw-bold text-dark">PDF Report</div>
                             <div className="text-muted xsmall">Document .pdf</div>
                           </div>
-                          <Form.Check type="radio" className="ms-2" checked={exportFormat === 'pdf'} onChange={() => { }} />
+                          <Form.Check type="radio" className="ms-2" checked={exportFormat === 'pdf'} onChange={() => {}} />
                         </Card.Body>
                       </Card>
                     </Col>
@@ -1465,36 +1553,36 @@ const OrderHistory = () => {
                     <Col xs={12}>
                       <Form.Label className="small fw-bold text-muted mb-1">Date Range</Form.Label>
                       <div className="d-flex flex-column flex-sm-row gap-3">
-                        <div
-                          className="d-flex align-items-center flex-grow-1 bg-white shadow-sm rounded-pill px-3"
-                          style={{ height: '44px', border: '1px solid #f1f5f9' }}
-                        >
-                          <CsLineIcons icon="calendar" size="16" className="text-primary me-2" />
+                        <div className="flex-grow-1 position-relative">
                           <Form.Control
-                            type={exportFilters.fromDate ? "date" : "text"}
-                            placeholder="dd-mm-yyyy"
-                            onFocus={(e) => { e.target.type = "date"; }}
-                            onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
+                            type={exportFilters.fromDate ? 'date' : 'text'}
+                            placeholder="DD/MM/YYYY"
+                            onFocus={(e) => {
+                              e.target.type = 'date';
+                            }}
+                            onBlur={(e) => {
+                              if (!e.target.value) e.target.type = 'text';
+                            }}
                             value={exportFilters.fromDate}
                             onChange={(e) => setExportFilters({ ...exportFilters, fromDate: e.target.value })}
-                            className="border-0 bg-transparent shadow-none p-0 w-100 text-dark"
-                            style={{ fontSize: '14px', outline: 'none' }}
+                            className="border-0 shadow-sm rounded-pill px-4 text-dark w-100"
+                            style={{ height: '44px', fontSize: '14px', paddingRight: '40px' }}
                           />
                         </div>
-                        <div
-                          className="d-flex align-items-center flex-grow-1 bg-white shadow-sm rounded-pill px-3"
-                          style={{ height: '44px', border: '1px solid #f1f5f9' }}
-                        >
-                          <CsLineIcons icon="calendar" size="16" className="text-primary me-2" />
+                        <div className="flex-grow-1 position-relative">
                           <Form.Control
-                            type={exportFilters.toDate ? "date" : "text"}
-                            placeholder="dd-mm-yyyy"
-                            onFocus={(e) => { e.target.type = "date"; }}
-                            onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
+                            type={exportFilters.toDate ? 'date' : 'text'}
+                            placeholder="DD/MM/YYYY"
+                            onFocus={(e) => {
+                              e.target.type = 'date';
+                            }}
+                            onBlur={(e) => {
+                              if (!e.target.value) e.target.type = 'text';
+                            }}
                             value={exportFilters.toDate}
                             onChange={(e) => setExportFilters({ ...exportFilters, toDate: e.target.value })}
-                            className="border-0 bg-transparent shadow-none p-0 w-100 text-dark"
-                            style={{ fontSize: '14px', outline: 'none' }}
+                            className="border-0 shadow-sm rounded-pill px-4 text-dark w-100"
+                            style={{ height: '44px', fontSize: '14px', paddingRight: '40px' }}
                           />
                         </div>
                       </div>
@@ -1605,15 +1693,23 @@ const OrderHistory = () => {
                           className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
                           style={{ borderRadius: '1rem', maxHeight: '250px', overflowY: 'auto' }}
                         >
-                          <Dropdown.Item active={exportFilters.tableArea === ''} onClick={() => setExportFilters({ ...exportFilters, tableArea: '' })}>All Areas</Dropdown.Item>
+                          <Dropdown.Item active={exportFilters.tableArea === ''} onClick={() => setExportFilters({ ...exportFilters, tableArea: '' })}>
+                            All Areas
+                          </Dropdown.Item>
                           {tableAreas.length > 0 ? (
                             tableAreas.map((area) => (
-                              <Dropdown.Item key={area} active={exportFilters.tableArea === area} onClick={() => setExportFilters({ ...exportFilters, tableArea: area })}>
+                              <Dropdown.Item
+                                key={area}
+                                active={exportFilters.tableArea === area}
+                                onClick={() => setExportFilters({ ...exportFilters, tableArea: area })}
+                              >
                                 {area}
                               </Dropdown.Item>
                             ))
                           ) : (
-                            <Dropdown.Item disabled className="text-muted">No areas configured</Dropdown.Item>
+                            <Dropdown.Item disabled className="text-muted">
+                              No areas configured
+                            </Dropdown.Item>
                           )}
                         </Dropdown.Menu>
                       </Dropdown>
@@ -1647,11 +1743,7 @@ const OrderHistory = () => {
             Close
           </Button>
           {!exporting && (
-            <Button
-              type="button"
-              onClick={handleExportConfirm}
-              className="px-4 py-2 rounded-pill d-flex align-items-center manage-table-custom-btn-outline"
-            >
+            <Button type="button" onClick={handleExportConfirm} className="px-4 py-2 rounded-pill d-flex align-items-center manage-table-custom-btn-outline">
               <CsLineIcons icon="download" className="me-2" size="18" stroke="currentColor" />
               Download {exportFormat === 'excel' ? 'Excel' : 'PDF'}
             </Button>

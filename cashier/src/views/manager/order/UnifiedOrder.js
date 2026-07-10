@@ -509,6 +509,7 @@ const UnifiedOrder = () => {
       }),
       order_status: status,
       customer_name: customerInfo.name,
+      customer_phone: customerInfo.phone || '',
       comment: customerInfo.comment,
       bill_amount: parseFloat(paymentData.total),
       sub_total: parseFloat(paymentData.subTotal),
