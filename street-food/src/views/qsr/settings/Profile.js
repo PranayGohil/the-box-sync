@@ -71,11 +71,11 @@ const Profile = () => {
     pincode: Yup.string()
       .required('Pin code is required')
       .matches(/^[0-9]{6}$/, 'Pin code must be exactly 6 digits'),
-    password: Yup.string().when(['email', 'mobile'], {
-      is: (email, mobile) => {
-        return (email && email !== profile.email) || (mobile && mobile !== profile.mobile);
+    password: Yup.string().when(['mobile'], {
+      is: (mobile) => {
+        return mobile && mobile !== profile.mobile;
       },
-      then: (schema) => schema.required('Current password is required to change Email or Phone number'),
+      then: (schema) => schema.required('Current password is required to change Phone number'),
       otherwise: (schema) => schema.notRequired(),
     }),
   });
@@ -445,18 +445,14 @@ const Profile = () => {
                       </Col>
                       <Col md={6}>
                         <Form.Group>
-                          <Form.Label className="small fw-bold opacity-75">Email Address *</Form.Label>
+                          <Form.Label className="small fw-bold opacity-75">Email Address</Form.Label>
                           <Form.Control
                             type="email"
                             name="email"
                             value={values.email}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                            disabled={!editMode || saving}
-                            isInvalid={touched.email && errors.email}
-                            className={!editMode ? 'bg-light border-0 px-3 py-2 fw-bold' : ''}
+                            disabled={true}
+                            className="bg-light border-0 px-3 py-2 fw-bold text-muted"
                           />
-                          <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
                       <Col md={6}>
@@ -475,10 +471,10 @@ const Profile = () => {
                           <Form.Control.Feedback type="invalid">{errors.mobile}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
-                      {editMode && (values.email !== profile.email || values.mobile !== profile.mobile) && (
+                      {editMode && values.mobile !== profile.mobile && (
                         <Col md={12}>
                           <Form.Group className="mt-2 animate__animated animate__fadeIn">
-                            <Form.Label className="small fw-bold text-danger">Current Password * (Required to change Email or Phone Number)</Form.Label>
+                            <Form.Label className="small fw-bold text-danger">Current Password * (Required to change Phone Number)</Form.Label>
                             <Form.Control
                               type="password"
                               name="password"
