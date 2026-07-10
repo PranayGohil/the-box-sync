@@ -7,6 +7,7 @@ import Select from 'react-select';
 import { toast } from 'react-toastify';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
+import ImageCropperModal from 'components/cropper/ImageCropperModal';
 
 const CompanyProfile = () => {
   const title = 'Company Profile & Settings';
@@ -35,6 +36,7 @@ const CompanyProfile = () => {
   });
   const [logoFile, setLogoFile] = useState(null);
   const [password, setPassword] = useState('');
+  const [cropperState, setCropperState] = useState({ show: false, imageSrc: '', aspect: undefined });
 
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
@@ -87,9 +89,27 @@ const CompanyProfile = () => {
   };
 
   const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setLogoFile(e.target.files[0]);
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should not exceed 5MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        setCropperState({ show: true, imageSrc: reader.result, aspect: undefined });
+      });
+      reader.readAsDataURL(file);
+      e.target.value = '';
     }
+  };
+
+  const handleCropComplete = (croppedFile) => {
+    setLogoFile(croppedFile);
   };
 
   const handleSubmit = async (e) => {
@@ -416,6 +436,13 @@ const CompanyProfile = () => {
           </Col>
         </Row>
       </Form>
+      <ImageCropperModal
+        show={cropperState.show}
+        onHide={() => setCropperState({ ...cropperState, show: false })}
+        imageSrc={cropperState.imageSrc}
+        onCropComplete={handleCropComplete}
+        initialAspect={cropperState.aspect}
+      />
     </>
   );
 };
