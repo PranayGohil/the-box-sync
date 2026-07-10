@@ -155,7 +155,7 @@ const OrderDetails = () => {
     return (
       <>
         <HtmlHead title={title} description={description} />
-        <div className="page-title-container">
+        <div className="page-title-container mt-5 pt-1 mt-md-0 pt-md-0 mb-4">
           <h1 className="mb-0 pb-0 display-4">{title}</h1>
           <BreadcrumbList items={breadcrumbs} />
         </div>
@@ -173,7 +173,7 @@ const OrderDetails = () => {
     return (
       <>
         <HtmlHead title={title} description={description} />
-        <div className="page-title-container">
+        <div className="page-title-container mt-5 pt-1 mt-md-0 pt-md-0 mb-4">
           <h1 className="mb-0 pb-0 display-4">{title}</h1>
           <BreadcrumbList items={breadcrumbs} />
         </div>
@@ -197,7 +197,7 @@ const OrderDetails = () => {
     return (
       <>
         <HtmlHead title={title} description={description} />
-        <div className="page-title-container">
+        <div className="page-title-container mt-5 pt-1 mt-md-0 pt-md-0 mb-4">
           <h1 className="mb-0 pb-0 display-4">{title}</h1>
           <BreadcrumbList items={breadcrumbs} />
         </div>
@@ -221,7 +221,7 @@ const OrderDetails = () => {
     <div className="container-fluid pb-5">
       <HtmlHead title={title} description={description} />
       <section className="scroll-section" id="title">
-        <div className="page-title-container mb-4 mt-5 mt-lg-0">
+        <div className="page-title-container mt-5 pt-1 mt-md-0 pt-md-0 mb-4">
           <Row className="g-0 align-items-center gy-3">
             <Col xs="auto" className="me-auto">
               <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>

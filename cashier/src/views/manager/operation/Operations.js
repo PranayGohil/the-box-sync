@@ -105,7 +105,7 @@ const MobileBottomNav = () => {
 
       <div className="bottom-nav-pill">
         {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.to);
+          const isActive = pathname.startsWith('/operations/order-history') || pathname.startsWith('/operations/order-details');
           return (
             <NavLink
               key={item.label}

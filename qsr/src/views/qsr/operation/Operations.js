@@ -172,7 +172,14 @@ const MobileBottomNav = () => {
 
       <div className="bottom-nav-pill">
         {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.to);
+          let isActive = false;
+          if (item.label === 'Order') {
+            isActive = pathname.startsWith('/operations/order-history') || pathname.startsWith('/operations/order-details');
+          } else if (item.label === 'Menu') {
+            isActive = pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu');
+          } else {
+            isActive = pathname.startsWith(item.to);
+          }
           return (
             <NavLink
               key={item.label}

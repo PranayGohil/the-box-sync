@@ -28,6 +28,7 @@ const PaymentSummaryBox = ({
   const showKOTPrintButton = showKOTButtons;
   const showPrintBill = (!isPaid || isDirty || dueAmount > 0.01) && orderItems.length > 0;
   const showPayment = (orderStatus === 'KOT' || (orderStatus === 'Save' && orderItems.length > 0) || (isPaid && dueAmount > 0.01));
+  const showCancel = orderId && orderStatus !== 'Paid';
 
   let paymentSpan = 'span 1';
   let totalUnpaidActions = 0;
@@ -96,78 +97,12 @@ const PaymentSummaryBox = ({
         </div>
 
         {/* Action Buttons - Full Width Grid */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
 
-          {/* Save */}
-          {showSave && (
+          {isPaid && !isDirty && dueAmount <= 0.01 ? (
             <button
               type="button"
-              style={{
-                ...btnBase,
-                background: 'transparent',
-                color: '#23b3f4',
-                border: '1.5px solid #23b3f4',
-                padding: '0.6rem',
-              }}
-              onClick={() => handleSaveOrder('Save')}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <CsLineIcons icon="spinner" size="14" className="spin" />
-              ) : (
-                <CsLineIcons icon="save" size="14" />
-              )}
-              Save
-            </button>
-          )}
-
-          {/* Cancel and Payment Row */}
-          {((orderId && orderStatus !== 'Paid') || (orderItems.length > 0 && !isPaid)) && (
-            <div style={{ display: 'grid', gridTemplateColumns: (orderId && orderStatus !== 'Paid') && (orderItems.length > 0 && !isPaid) ? '1fr 1fr' : '1fr', gap: '6px' }}>
-              {/* Cancel Order */}
-              {orderId && orderStatus !== 'Paid' && (
-                <button
-                  type="button"
-                  style={{
-                    ...btnBase,
-                    background: 'transparent',
-                    color: '#ef4444',
-                    border: '1.5px solid rgba(239,68,68,0.25)',
-                    padding: '0.6rem',
-                  }}
-                  onClick={() => setShowCancelModal(true)}
-                  disabled={isLoading}
-                >
-                  <CsLineIcons icon="close" size="14" />
-                  Cancel
-                </button>
-              )}
-
-              {/* Process Payment — primary CTA */}
-              {orderItems.length > 0 && !isPaid && (
-                <button
-                  type="button"
-                  style={{
-                    ...btnBase,
-                    background: '#23b3f4',
-                    color: '#ffffff',
-                    boxShadow: '0 4px 12px rgba(35, 179, 244, 0.3)',
-                    padding: '0.6rem',
-                  }}
-                  onClick={handleOpenPaymentModal}
-                >
-                  <CsLineIcons icon="credit-card" size="13" stroke="#fff" />
-                  {dueAmount > 0.01 && totalPaid > 0 ? 'Pay' : 'Payment'}
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* New Order when Paid */}
-          {isPaid && !isDirty && dueAmount <= 0.01 && (
-            <button
-              type="button"
-              style={{ ...btnBase, background: '#23b3f4', color: '#fff', boxShadow: '0 4px 14px rgba(35,179,244,0.3)', padding: '0.6rem' }}
+              style={{ ...btnBase, background: '#23b3f4', color: '#fff', boxShadow: '0 4px 14px rgba(35,179,244,0.3)', padding: '0.6rem', gridColumn: 'span 2' }}
               onClick={() => {
                 window.location.href = '/order/new';
               }}
@@ -175,12 +110,184 @@ const PaymentSummaryBox = ({
               <CsLineIcons icon="plus" size="14" stroke="#fff" />
               New Order
             </button>
+          ) : (
+            <>
+              {/* Save & Payment in one row */}
+              {showSave && showPayment ? (
+                <>
+                  <button
+                    type="button"
+                    style={{
+                      ...btnBase,
+                      background: 'transparent',
+                      color: '#23b3f4',
+                      border: '1.5px solid #23b3f4',
+                      padding: '0.6rem',
+                      gridColumn: 'span 1',
+                    }}
+                    onClick={() => handleSaveOrder('Save')}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <CsLineIcons icon="spinner" size="14" className="spin" />
+                    ) : (
+                      <CsLineIcons icon="save" size="14" />
+                    )}
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      ...btnBase,
+                      background: '#23b3f4',
+                      color: '#ffffff',
+                      boxShadow: '0 4px 12px rgba(35, 179, 244, 0.3)',
+                      padding: '0.6rem',
+                      gridColumn: 'span 1',
+                    }}
+                    onClick={handleOpenPaymentModal}
+                  >
+                    <CsLineIcons icon="credit-card" size="13" stroke="#fff" />
+                    {dueAmount > 0.01 && totalPaid > 0 ? 'Pay' : 'Payment'}
+                  </button>
+                  {showCancel && (
+                    <button
+                      type="button"
+                      style={{
+                        ...btnBase,
+                        background: 'transparent',
+                        color: '#ef4444',
+                        border: '1.5px solid rgba(239,68,68,0.25)',
+                        padding: '0.6rem',
+                        gridColumn: 'span 2',
+                      }}
+                      onClick={() => setShowCancelModal(true)}
+                      disabled={isLoading}
+                    >
+                      <CsLineIcons icon="close" size="14" />
+                      Cancel
+                    </button>
+                  )}
+                </>
+              ) : showSave ? (
+                <>
+                  <button
+                    type="button"
+                    style={{
+                      ...btnBase,
+                      background: 'transparent',
+                      color: '#23b3f4',
+                      border: '1.5px solid #23b3f4',
+                      padding: '0.6rem',
+                      gridColumn: 'span 2',
+                    }}
+                    onClick={() => handleSaveOrder('Save')}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <CsLineIcons icon="spinner" size="14" className="spin" />
+                    ) : (
+                      <CsLineIcons icon="save" size="14" />
+                    )}
+                    Save
+                  </button>
+                  {showCancel && (
+                    <button
+                      type="button"
+                      style={{
+                        ...btnBase,
+                        background: 'transparent',
+                        color: '#ef4444',
+                        border: '1.5px solid rgba(239,68,68,0.25)',
+                        padding: '0.6rem',
+                        gridColumn: 'span 2',
+                      }}
+                      onClick={() => setShowCancelModal(true)}
+                      disabled={isLoading}
+                    >
+                      <CsLineIcons icon="close" size="14" />
+                      Cancel
+                    </button>
+                  )}
+                </>
+              ) : showPayment ? (
+                showCancel ? (
+                  <>
+                    <button
+                      type="button"
+                      style={{
+                        ...btnBase,
+                        background: 'transparent',
+                        color: '#ef4444',
+                        border: '1.5px solid rgba(239,68,68,0.25)',
+                        padding: '0.6rem',
+                        gridColumn: 'span 1',
+                      }}
+                      onClick={() => setShowCancelModal(true)}
+                      disabled={isLoading}
+                    >
+                      <CsLineIcons icon="close" size="14" />
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      style={{
+                        ...btnBase,
+                        background: '#23b3f4',
+                        color: '#ffffff',
+                        boxShadow: '0 4px 12px rgba(35, 179, 244, 0.3)',
+                        padding: '0.6rem',
+                        gridColumn: 'span 1',
+                      }}
+                      onClick={handleOpenPaymentModal}
+                    >
+                      <CsLineIcons icon="credit-card" size="13" stroke="#fff" />
+                      {dueAmount > 0.01 && totalPaid > 0 ? 'Pay' : 'Payment'}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    style={{
+                      ...btnBase,
+                      background: '#23b3f4',
+                      color: '#ffffff',
+                      boxShadow: '0 4px 12px rgba(35, 179, 244, 0.3)',
+                      padding: '0.6rem',
+                      gridColumn: 'span 2',
+                    }}
+                    onClick={handleOpenPaymentModal}
+                  >
+                    <CsLineIcons icon="credit-card" size="13" stroke="#fff" />
+                    {dueAmount > 0.01 && totalPaid > 0 ? 'Pay' : 'Payment'}
+                  </button>
+                )
+              ) : (
+                showCancel && (
+                  <button
+                    type="button"
+                    style={{
+                      ...btnBase,
+                      background: 'transparent',
+                      color: '#ef4444',
+                      border: '1.5px solid rgba(239,68,68,0.25)',
+                      padding: '0.6rem',
+                      gridColumn: 'span 2',
+                    }}
+                    onClick={() => setShowCancelModal(true)}
+                    disabled={isLoading}
+                  >
+                    <CsLineIcons icon="close" size="14" />
+                    Cancel
+                  </button>
+                )
+              )}
+            </>
           )}
-
 
           {/* Secondary row: History only */}
           {(kotHistory.length > 0 || paymentHistory.length > 0) && (
-            <div style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
+            <div style={{ display: 'flex', gap: '6px', marginTop: '2px', gridColumn: 'span 2' }}>
               {kotHistory.length > 0 && (
                 <button
                   type="button"
@@ -220,7 +327,7 @@ const PaymentSummaryBox = ({
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <div>
                     <Badge bg="dark" className="me-2">Print #{record.kotNo}</Badge>
-                    <small className="text-muted">{new Date(record.timestamp).toLocaleTimeString('en-IN')}</small>
+                    <small className="text-muted">{new Date(record.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</small>
                   </div>
                   <Button size="sm" variant="outline-primary" onClick={() => onReprintKOT && onReprintKOT(record)} disabled={kotPrinting}>
                     Reprint

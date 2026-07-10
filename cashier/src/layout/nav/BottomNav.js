@@ -22,12 +22,68 @@ const BottomNav = () => {
   ];
 
   const operationsItems = [
-    { to: '/operations/order-history', icon: 'handbag', label: 'Orders' },
-    { to: '/operations/manage-reservations', icon: 'calendar', label: 'Res', hide: !activePlans.includes('Reservation Manager') },
-    { to: '/operations/manage-table', icon: 'square', label: 'Tables' },
-    { to: '/operations/manage-menu', icon: 'list', label: 'Menu' },
-    { to: '/operations/inventory-history', icon: 'boxes', label: 'Inventory' },
-    { to: '/operations/feedback', icon: 'message', label: 'Feedback' },
+    {
+      to: '/operations/order-history',
+      icon: 'handbag',
+      label: 'Orders',
+      isActive: (match, location) => {
+        return location.pathname.startsWith('/operations/order-history') || location.pathname.startsWith('/operations/order-details');
+      }
+    },
+    {
+      to: '/operations/manage-reservations',
+      icon: 'calendar',
+      label: 'Res',
+      hide: !activePlans.includes('Reservation Manager'),
+      isActive: (match, location) => {
+        return location.pathname.startsWith('/operations/manage-reservations') || location.pathname.startsWith('/operations/qr-for-reservation');
+      }
+    },
+    {
+      to: '/operations/manage-table',
+      icon: 'square',
+      label: 'Tables',
+      isActive: (match, location) => {
+        return location.pathname.startsWith('/operations/manage-table') || location.pathname.startsWith('/operations/add-table');
+      }
+    },
+    {
+      to: '/operations/manage-menu',
+      icon: 'list',
+      label: 'Menu',
+      isActive: (match, location) => {
+        return location.pathname.startsWith('/operations/manage-menu') || location.pathname.startsWith('/operations/add-dish') || location.pathname.startsWith('/operations/qr-for-menu');
+      }
+    },
+    {
+      to: '/operations/inventory-history',
+      icon: 'boxes',
+      label: 'Inventory',
+      isActive: (match, location) => {
+        const inventoryPaths = [
+          '/operations/inventory-history',
+          '/operations/requested-inventory',
+          '/operations/add-inventory',
+          '/operations/edit-inventory',
+          '/operations/inventory-details',
+          '/operations/stock-management',
+          '/operations/daily-stock-logs',
+          '/operations/wastage-log',
+          '/operations/daily-opening-stock',
+          '/operations/daily-closing-stock',
+          '/operations/inventory-report'
+        ];
+        return inventoryPaths.some(p => location.pathname.startsWith(p));
+      }
+    },
+    {
+      to: '/operations/feedback',
+      icon: 'message',
+      label: 'Feedback',
+      isActive: (match, location) => {
+        return location.pathname.startsWith('/operations/feedback') || location.pathname.startsWith('/operations/qr-for-feedback');
+      }
+    },
   ].filter(item => !item.hide);
 
   let navItems = [];
@@ -99,7 +155,13 @@ const BottomNav = () => {
 
       <div className="bottom-nav-pill">
         {navItems.map((item) => (
-          <NavLink key={item.to} to={item.to} className="bottom-nav-item" activeClassName="active">
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className="bottom-nav-item"
+            activeClassName="active"
+            isActive={item.isActive}
+          >
             <CsLineIcons icon={item.icon} size="20" />
           </NavLink>
         ))}

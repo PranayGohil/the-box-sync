@@ -89,7 +89,7 @@ const MobileNavbar = () => {
 
   return (
     <>
-      <div 
+      <div
         className="settings-mobile-bottom-nav d-flex justify-content-around align-items-center position-fixed start-50 translate-middle-x"
         style={{
           width: 'calc(100% - 40px)',
@@ -124,7 +124,7 @@ const MobileNavbar = () => {
           </NavLink>
         ))}
       </div>
-      
+
       {/* Dynamic custom CSS to style the active nav link */}
       <style>{`
         .settings-mobile-bottom-nav a.active {
@@ -168,7 +168,7 @@ const Settings = () => {
             <MobileNavbar />
           </Col>
         )}
-        <Col className="settings-content-col">
+        <Col xs={12} lg className="settings-content-col">
           <Switch>
             <Route exact path="/settings" render={() => <Redirect to="/settings/profile" />} />
             <Route exact path="/settings/profile" render={() => <Profile />} />

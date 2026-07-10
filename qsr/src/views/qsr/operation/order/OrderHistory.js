@@ -257,7 +257,7 @@ const OrderHistory = () => {
       const sheetData = [
         ['ORDER HISTORY REPORT'],
         [],
-        ['Company:', COMPANY_NAME, '', 'Export Date:', format(new Date(), 'dd MMM yyyy HH:mm')],
+        ['Company:', COMPANY_NAME, '', 'Export Date:', format(new Date(), 'dd MMM yyyy hh:mm a')],
         [],
         ['KPI SUMMARY'],
         ['Total Orders', 'Total Revenue', 'Average Order Value'],
@@ -280,7 +280,7 @@ const OrderHistory = () => {
         const tableDetails = order.table_area ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}` : (order.table_no ? `T${order.table_no}` : (order.token ? `Token ${order.token}` : 'N/A'));
         sheetData.push([
           order.order_no || order._id || '',
-          format(orderDate, 'dd-MM-yyyy HH:mm'),
+          format(orderDate, 'dd-MM-yyyy hh:mm a'),
           order.customer_name || 'Guest',
           order.order_type || 'N/A',
           tableDetails,
@@ -365,7 +365,7 @@ const OrderHistory = () => {
       doc.text('REPORT GENERATED', docWidth - 15, yPosition + 12, { align: 'right' });
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(209, 213, 219);
-      doc.text(format(new Date(), 'dd MMM yyyy HH:mm'), docWidth - 15, yPosition + 17, { align: 'right' });
+      doc.text(format(new Date(), 'dd MMM yyyy hh:mm a'), docWidth - 15, yPosition + 17, { align: 'right' });
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(255, 255, 255);
       doc.text('BUSINESS NAME', docWidth - 15, yPosition + 25, { align: 'right' });
@@ -439,7 +439,7 @@ const OrderHistory = () => {
           const tableDetails = order.table_area ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}` : (order.table_no ? `T${order.table_no}` : (order.token ? `Token ${order.token}` : 'N/A'));
           return [
             order.order_no || (order._id || '').substring(18),
-            format(orderDate, 'dd-MM-yy HH:mm'),
+            format(orderDate, 'dd-MM-yy hh:mm a'),
             (order.customer_name || 'Guest').substring(0, 15),
             order.order_type || 'N/A',
             tableDetails,
@@ -525,7 +525,7 @@ const OrderHistory = () => {
         id: 'order_time',
         headerClassName: 'text-small text-uppercase w-15',
         disableSortBy: true,
-        Cell: ({ value }) => format(new Date(value), 'HH:mm'),
+        Cell: ({ value }) => format(new Date(value), 'hh:mm a'),
       },
       {
         Header: 'Name',
@@ -757,20 +757,26 @@ const OrderHistory = () => {
                   <Col xs="6" sm="6" md="3">
                     <Form.Label className="small fw-bold text-muted mb-1">From</Form.Label>
                     <Form.Control
-                      type="date"
+                      type={filters.fromDate ? "date" : "text"}
+                      placeholder="dd-mm-yyyy"
+                      onFocus={(e) => { e.target.type = "date"; }}
+                      onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
                       value={filters.fromDate}
                       onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-                      className="rounded-pill px-3 border-0 shadow-sm"
+                      className="rounded-pill px-3 border-0 shadow-sm text-dark"
                       style={{ height: '44px', fontSize: '14px' }}
                     />
                   </Col>
                   <Col xs="6" sm="6" md="3">
                     <Form.Label className="small fw-bold text-muted mb-1">To</Form.Label>
                     <Form.Control
-                      type="date"
+                      type={filters.toDate ? "date" : "text"}
+                      placeholder="dd-mm-yyyy"
+                      onFocus={(e) => { e.target.type = "date"; }}
+                      onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
                       value={filters.toDate}
                       onChange={(e) => handleFilterChange('toDate', e.target.value)}
-                      className="rounded-pill px-3 border-0 shadow-sm"
+                      className="rounded-pill px-3 border-0 shadow-sm text-dark"
                       style={{ height: '44px', fontSize: '14px' }}
                     />
                   </Col>
@@ -864,7 +870,7 @@ const OrderHistory = () => {
                           <div className="fw-bolder text-primary mb-1" style={{ fontSize: '14px' }}>
                             {order.order_no || 'ORD-0000'}
                           </div>
-                          <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd MMM yyyy, HH:mm')}</div>
+                          <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd MMM yyyy, hh:mm a')}</div>
                         </div>
                         <Badge
                           bg={order.order_status === 'Paid' || order.order_status === 'Completed' || order.order_status === 'Save' ? 'success' : order.order_status === 'KOT' ? 'warning' : order.order_status === 'Cancelled' ? 'danger' : 'secondary'}
@@ -1012,22 +1018,28 @@ const OrderHistory = () => {
                         <Form.Label className="small fw-bold text-muted mb-2 ms-3">Date Range</Form.Label>
                         <div className="d-flex flex-column flex-sm-row gap-3">
                           <div className="flex-grow-1 position-relative">
-                            <Form.Control
-                              type="date"
-                              value={exportFilters.fromDate}
-                              onChange={(e) => setExportFilters({ ...exportFilters, fromDate: e.target.value })}
-                              className="border-0 shadow-sm rounded-pill px-4"
-                              style={{ height: '48px', fontSize: '14px' }}
-                            />
+                             <Form.Control
+                               type={exportFilters.fromDate ? "date" : "text"}
+                               placeholder="dd-mm-yyyy"
+                               onFocus={(e) => { e.target.type = "date"; }}
+                               onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
+                               value={exportFilters.fromDate}
+                               onChange={(e) => setExportFilters({ ...exportFilters, fromDate: e.target.value })}
+                               className="border-0 shadow-sm rounded-pill px-4 text-dark"
+                               style={{ height: '48px', fontSize: '14px' }}
+                             />
                           </div>
                           <div className="flex-grow-1 position-relative">
-                            <Form.Control
-                              type="date"
-                              value={exportFilters.toDate}
-                              onChange={(e) => setExportFilters({ ...exportFilters, toDate: e.target.value })}
-                              className="border-0 shadow-sm rounded-pill px-4"
-                              style={{ height: '48px', fontSize: '14px' }}
-                            />
+                             <Form.Control
+                               type={exportFilters.toDate ? "date" : "text"}
+                               placeholder="dd-mm-yyyy"
+                               onFocus={(e) => { e.target.type = "date"; }}
+                               onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
+                               value={exportFilters.toDate}
+                               onChange={(e) => setExportFilters({ ...exportFilters, toDate: e.target.value })}
+                               className="border-0 shadow-sm rounded-pill px-4 text-dark"
+                               style={{ height: '48px', fontSize: '14px' }}
+                             />
                           </div>
                         </div>
                       </Col>

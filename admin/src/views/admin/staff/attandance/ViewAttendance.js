@@ -242,7 +242,7 @@ const ViewAttendance = () => {
           ['Staff ID:', staffData.staff_id],
           ['Name:', `${staffData.f_name} ${staffData.l_name}`],
           ['Position:', staffData.position],
-          ['Report Generated:', format(new Date(), 'dd MMM yyyy HH:mm')],
+          ['Report Generated:', format(new Date(), 'dd MMM yyyy hh:mm a')],
           [], ['KEY METRICS'], ['Metric', 'Value'],
           ['Total Days', stats.totalDays],
           ['Total Present', stats.totalPresent],
@@ -318,7 +318,7 @@ const ViewAttendance = () => {
         doc.setFontSize(11);
         doc.text(`Staff ID: ${staffData.staff_id}`, 20, yPosition); yPosition += 6;
         doc.text(`Position: ${staffData.position}`, 20, yPosition); yPosition += 6;
-        doc.text(`Report Generated: ${format(new Date(), 'dd MMM yyyy HH:mm')}`, 20, yPosition); yPosition += 15;
+        doc.text(`Report Generated: ${format(new Date(), 'dd MMM yyyy hh:mm a')}`, 20, yPosition); yPosition += 15;
       }
 
       if (exportOptions.includeStatistics) {

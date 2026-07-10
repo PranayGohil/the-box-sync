@@ -172,11 +172,53 @@ const MobileBottomNav = () => {
   if (attrMobile) return null;
 
   const navItems = [
-    { label: 'Order', icon: 'cart', to: '/operations/order-history' },
-    { label: 'Table', icon: 'layout-5', to: '/operations/manage-table', hide: !activePlans.includes('Table Management') },
-    { label: 'Menu', icon: 'book-open', to: '/operations/manage-menu' },
-    { label: 'Inventory', icon: 'boxes', to: '/operations/inventory-history' },
-    { label: 'Feedback', icon: 'message', to: '/operations/feedback', hide: !activePlans.includes('Feedback') },
+    {
+      label: 'Order',
+      icon: 'cart',
+      to: '/operations/order-history',
+      isActive: (path) => path.startsWith('/operations/order-history') || path.startsWith('/operations/order-details')
+    },
+    {
+      label: 'Table',
+      icon: 'layout-5',
+      to: '/operations/manage-table',
+      hide: !activePlans.includes('Table Management'),
+      isActive: (path) => path.startsWith('/operations/manage-table') || path.startsWith('/operations/add-table')
+    },
+    {
+      label: 'Menu',
+      icon: 'book-open',
+      to: '/operations/manage-menu',
+      isActive: (path) => path.startsWith('/operations/manage-menu') || path.startsWith('/operations/add-dish') || path.startsWith('/operations/qr-for-menu')
+    },
+    {
+      label: 'Inventory',
+      icon: 'boxes',
+      to: '/operations/inventory-history',
+      isActive: (path) => {
+        const inventoryPaths = [
+          '/operations/inventory-history',
+          '/operations/requested-inventory',
+          '/operations/add-inventory',
+          '/operations/edit-inventory',
+          '/operations/inventory-details',
+          '/operations/stock-management',
+          '/operations/daily-stock-logs',
+          '/operations/wastage-log',
+          '/operations/daily-opening-stock',
+          '/operations/daily-closing-stock',
+          '/operations/inventory-report'
+        ];
+        return inventoryPaths.some(p => path.startsWith(p));
+      }
+    },
+    {
+      label: 'Feedback',
+      icon: 'message',
+      to: '/operations/feedback',
+      hide: !activePlans.includes('Feedback'),
+      isActive: (path) => path.startsWith('/operations/feedback') || path.startsWith('/operations/qr-for-feedback')
+    },
   ].filter(item => !item.hide);
 
   return (
@@ -238,7 +280,7 @@ const MobileBottomNav = () => {
 
       <div className="bottom-nav-pill">
         {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.to);
+          const isActive = item.isActive ? item.isActive(pathname) : pathname.startsWith(item.to);
           return (
             <NavLink
               key={item.label}

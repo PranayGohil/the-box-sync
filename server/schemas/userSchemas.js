@@ -5,6 +5,7 @@ const sendOtpSchema = Joi.object({
     "string.email": "A valid email address is required",
     "any.required": "Email is required",
   }),
+  login_from: Joi.string().optional(),
 });
 
 const verifyOtpSchema = Joi.object({
@@ -14,6 +15,7 @@ const verifyOtpSchema = Joi.object({
     "number.max": "OTP must be a 6-digit number",
     "any.required": "OTP is required",
   }),
+  login_from: Joi.string().optional(),
 });
 
 const resetPasswordSchema = Joi.object({
@@ -22,6 +24,7 @@ const resetPasswordSchema = Joi.object({
     "string.min": "New password must be at least 6 characters",
     "any.required": "New password is required",
   }),
+  login_from: Joi.string().optional(),
 });
 
 const updateTaxSchema = Joi.object({

@@ -248,7 +248,7 @@ const BottomCartSheet = ({
                       PRINT #{record.kotNo}
                     </span>
                     <span className="text-muted small fw-semibold">
-                      {new Date(record.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(record.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
                     </span>
                   </div>
                   <button 

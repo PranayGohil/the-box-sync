@@ -697,8 +697,24 @@ const WastageLogsTab = () => {
             <p className="text-muted small mb-0">Revert or review wasted quantities</p>
           </div>
           <div className="d-flex align-items-center gap-2">
-            <Form.Control type="date" className="modern-input" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-            <Form.Control type="date" className="modern-input" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+            <Form.Control
+              type={fromDate ? "date" : "text"}
+              placeholder="dd-mm-yyyy"
+              onFocus={(e) => { e.target.type = "date"; }}
+              onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
+              className="modern-input text-dark"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+            />
+            <Form.Control
+              type={toDate ? "date" : "text"}
+              placeholder="dd-mm-yyyy"
+              onFocus={(e) => { e.target.type = "date"; }}
+              onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
+              className="modern-input text-dark"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+            />
           </div>
         </div>
 

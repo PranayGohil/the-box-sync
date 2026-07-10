@@ -194,7 +194,7 @@ const InventoryReport = () => {
       allData.push(['UNIFIED INVENTORY HUB REPORT']);
       allData.push(['Company:', COMPANY_NAME]);
       allData.push(['Period:', `${format(new Date(fromDate), 'dd MMM yyyy')} to ${format(new Date(toDate), 'dd MMM yyyy')}`]);
-      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy HH:mm')]);
+      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy hh:mm a')]);
       allData.push([]);
 
       if (exportOptions.includeOperations) {

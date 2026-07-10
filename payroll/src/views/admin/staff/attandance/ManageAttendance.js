@@ -705,7 +705,7 @@ export default function ManageAttendance() {
   });
 
   const getCurrentTime = () => {
-    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   const formatDateDisplay = (dateString) => {

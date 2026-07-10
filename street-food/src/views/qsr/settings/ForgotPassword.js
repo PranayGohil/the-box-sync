@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import axios from 'axios';
 import { Card, Col, Row, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -16,9 +17,11 @@ function ForgotPassword() {
     { to: 'settings/forgot-password', title: 'Forgot Password' },
   ];
 
+  const { currentUser } = useSelector((state) => state.auth);
+
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Reset
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(currentUser?.email || '');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -27,6 +30,25 @@ function ForgotPassword() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  useEffect(() => {
+    const fetchEmail = async () => {
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        const data = res.data.user || res.data;
+        if (data && data.email) {
+          setEmail(data.email);
+        }
+      } catch (err) {
+        console.error('Failed to fetch user email:', err);
+      }
+    };
+    fetchEmail();
+  }, []);
+
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -34,7 +56,7 @@ function ForgotPassword() {
     setSuccess('');
 
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API}/user/send-otp`, { email });
+      const response = await axios.post(`${process.env.REACT_APP_API}/user/send-otp`, { email, login_from: 'street-food' });
       setSuccess(response.data.message);
       setStep(2);
       toast.success('OTP sent successfully!');
@@ -54,7 +76,7 @@ function ForgotPassword() {
     setSuccess('');
 
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API}/user/verify-otp`, { email, otp });
+      const response = await axios.post(`${process.env.REACT_APP_API}/user/verify-otp`, { email, otp, login_from: 'street-food' });
       if (!response.data.verified) {
         throw new Error('OTP verification failed.');
       } else {
@@ -86,7 +108,7 @@ function ForgotPassword() {
     setSuccess('');
 
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API}/user/reset-password`, { email, newPassword });
+      const response = await axios.post(`${process.env.REACT_APP_API}/user/reset-password`, { email, newPassword, login_from: 'street-food' });
       setSuccess(response.data.message);
       toast.success('Password reset successfully! Redirecting to login...');
 
@@ -103,13 +125,13 @@ function ForgotPassword() {
   };
 
   return (
-    <div className="container-fluid pb-5 ps-lg-4">
+    <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
-      
-      <div className="page-title-container mb-4">
-        <Row className="g-3 align-items-center">
+
+      <div className="qsr-page-title-container">
+        <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
+            <h1 className="qsr-page-title">{title}</h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
         </Row>
@@ -133,8 +155,16 @@ function ForgotPassword() {
                 {step === 3 && 'Enter your new password and confirm it.'}
               </p>
 
-              {error && <Alert variant="danger" className="rounded-xl border-0 shadow-sm">{error}</Alert>}
-              {success && <Alert variant="success" className="rounded-xl border-0 shadow-sm">{success}</Alert>}
+              {error && (
+                <Alert variant="danger" className="rounded-xl border-0 shadow-sm">
+                  {error}
+                </Alert>
+              )}
+              {success && (
+                <Alert variant="success" className="rounded-xl border-0 shadow-sm">
+                  {success}
+                </Alert>
+              )}
 
               {step === 1 && (
                 <Form onSubmit={handleSendOtp}>
@@ -146,10 +176,10 @@ function ForgotPassword() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       placeholder="Enter your email"
-                      disabled={isLoading}
+                      disabled={true}
                     />
                   </Form.Group>
-                  <div className="d-flex justify-content-end align-items-center">
+                  <div className="d-flex profile-button-group-responsive justify-content-end align-items-center gap-3">
                     <Button className="profile-custom-btn-outline px-4 py-2" type="submit" disabled={isLoading}>
                       {isLoading ? (
                         <>
@@ -180,7 +210,7 @@ function ForgotPassword() {
                       disabled={isLoading}
                     />
                   </Form.Group>
-                  <div className="d-flex justify-content-between align-items-center">
+                  <div className="d-flex profile-button-group-responsive justify-content-between align-items-center gap-3">
                     <Button className="profile-custom-btn-outline px-4 py-2" type="submit" disabled={isLoading}>
                       {isLoading ? (
                         <>
@@ -258,7 +288,7 @@ function ForgotPassword() {
                       </span>
                     </div>
                   </Form.Group>
-                  <div className="d-flex justify-content-between align-items-center">
+                  <div className="d-flex profile-button-group-responsive justify-content-between align-items-center gap-3">
                     <Button className="profile-custom-btn-outline px-4 py-2" type="submit" disabled={isLoading}>
                       {isLoading ? (
                         <>

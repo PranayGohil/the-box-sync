@@ -63,8 +63,7 @@ const Profile = () => {
     mobile: Yup.string()
       .required('Phone number is required')
       .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits'),
-    fssai_no: Yup.string()
-      .matches(/^[0-9]{14}$/, { message: 'FSSAI number must be exactly 14 digits', excludeEmptyString: true }),
+    fssai_no: Yup.string().matches(/^[0-9]{14}$/, { message: 'FSSAI number must be exactly 14 digits', excludeEmptyString: true }),
     address: Yup.string().min(10, 'Address must be at least 10 characters'),
     country: Yup.string().required('Country is required'),
     state: Yup.string().required('State is required'),
@@ -117,12 +116,12 @@ const Profile = () => {
 
         // Pre-load states and cities if data exists
         if (profileData.country) {
-          const countryObj = Country.getAllCountries().find(c => c.name === profileData.country);
+          const countryObj = Country.getAllCountries().find((c) => c.name === profileData.country);
           if (countryObj) {
             const countryStates = State.getStatesOfCountry(countryObj.isoCode);
             setStates(countryStates);
             if (profileData.state) {
-              const stateObj = countryStates.find(s => s.name === profileData.state);
+              const stateObj = countryStates.find((s) => s.name === profileData.state);
               if (stateObj) {
                 setCities(City.getCitiesOfState(countryObj.isoCode, stateObj.isoCode));
               }
@@ -151,7 +150,7 @@ const Profile = () => {
 
     if (countryName) {
       setLoadingStates((prev) => ({ ...prev, states: true }));
-      const countryObj = Country.getAllCountries().find(c => c.name === countryName);
+      const countryObj = Country.getAllCountries().find((c) => c.name === countryName);
       if (countryObj) {
         setStates(State.getStatesOfCountry(countryObj.isoCode));
       }
@@ -167,9 +166,9 @@ const Profile = () => {
 
     if (stateName && countryName) {
       setLoadingStates((prev) => ({ ...prev, cities: true }));
-      const countryObj = Country.getAllCountries().find(c => c.name === countryName);
+      const countryObj = Country.getAllCountries().find((c) => c.name === countryName);
       if (countryObj) {
-        const stateObj = State.getStatesOfCountry(countryObj.isoCode).find(s => s.name === stateName);
+        const stateObj = State.getStatesOfCountry(countryObj.isoCode).find((s) => s.name === stateName);
         if (stateObj) {
           setCities(City.getCitiesOfState(countryObj.isoCode, stateObj.isoCode));
         }
@@ -326,15 +325,17 @@ const Profile = () => {
   }
 
   return (
-    <div className="container-fluid pb-5">
+    <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
 
-      <Row className="g-3 align-items-center mb-4">
-        <Col md={7}>
-          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
-          <BreadcrumbList items={breadcrumbs} />
-        </Col>
-      </Row>
+      <div className="qsr-page-title-container">
+        <Row className="g-0 align-items-center">
+          <Col xs="auto" className="me-auto">
+            <h1 className="qsr-page-title">{title}</h1>
+            <BreadcrumbList items={breadcrumbs} />
+          </Col>
+        </Row>
+      </div>
 
       <Formik
         initialValues={{
@@ -368,7 +369,10 @@ const Profile = () => {
                     </div>
 
                     <div className="mb-4 d-flex justify-content-center">
-                      <div className="rounded-circle border border-4 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center" style={{ width: '180px', height: '180px' }}>
+                      <div
+                        className="rounded-circle border border-4 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center"
+                        style={{ width: '180px', height: '180px' }}
+                      >
                         {getLogoSrc() ? (
                           <img src={getLogoSrc()} alt="Logo" className="w-100 h-100 object-fit-cover" />
                         ) : (
@@ -379,7 +383,14 @@ const Profile = () => {
 
                     {editMode && (
                       <div className="w-100 mt-auto">
-                        <input type="file" id="logo-upload" className="d-none" accept="image/*" onChange={handleLogoChange} disabled={uploadingLogo || saving} />
+                        <input
+                          type="file"
+                          id="logo-upload"
+                          className="d-none"
+                          accept="image/*"
+                          onChange={handleLogoChange}
+                          disabled={uploadingLogo || saving}
+                        />
                         <Button as="label" htmlFor="logo-upload" className="profile-custom-btn-outline w-100 mb-2" disabled={uploadingLogo || saving}>
                           {uploadingLogo ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
                           {getLogoSrc() ? 'Change Logo' : 'Upload Logo'}
@@ -419,25 +430,52 @@ const Profile = () => {
                       <Col md={6}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">Restaurant Name *</Form.Label>
-                          <Form.Control type="text" name="name" value={values.name} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.name && errors.name} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} />
+                          <Form.Control
+                            type="text"
+                            name="name"
+                            value={values.name}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            disabled={!editMode || saving}
+                            isInvalid={touched.name && errors.name}
+                            className={!editMode ? 'bg-light border-0 px-3 py-2 fw-bold' : ''}
+                          />
                           <Form.Control.Feedback type="invalid">{errors.name}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
                       <Col md={6}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">Email Address *</Form.Label>
-                          <Form.Control type="email" name="email" value={values.email} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.email && errors.email} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} />
+                          <Form.Control
+                            type="email"
+                            name="email"
+                            value={values.email}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            disabled={!editMode || saving}
+                            isInvalid={touched.email && errors.email}
+                            className={!editMode ? 'bg-light border-0 px-3 py-2 fw-bold' : ''}
+                          />
                           <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
                       <Col md={6}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">Phone Number *</Form.Label>
-                          <Form.Control type="text" name="mobile" value={values.mobile} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.mobile && errors.mobile} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} />
+                          <Form.Control
+                            type="text"
+                            name="mobile"
+                            value={values.mobile}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            disabled={!editMode || saving}
+                            isInvalid={touched.mobile && errors.mobile}
+                            className={!editMode ? 'bg-light border-0 px-3 py-2 fw-bold' : ''}
+                          />
                           <Form.Control.Feedback type="invalid">{errors.mobile}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
-                      {(editMode && (values.email !== profile.email || values.mobile !== profile.mobile)) && (
+                      {editMode && (values.email !== profile.email || values.mobile !== profile.mobile) && (
                         <Col md={12}>
                           <Form.Group className="mt-2 animate__animated animate__fadeIn">
                             <Form.Label className="small fw-bold text-danger">Current Password * (Required to change Email or Phone Number)</Form.Label>
@@ -466,7 +504,7 @@ const Profile = () => {
                     </div>
                     <Row className="g-3 mb-2">
                       {/* GST Number Card */}
-                      <Col xs={12}>
+                      <Col md={6} xs={12}>
                         <div
                           className="p-3 rounded-4 d-flex align-items-center justify-content-between flex-wrap gap-2"
                           style={{
@@ -478,7 +516,8 @@ const Profile = () => {
                             <div
                               className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
                               style={{
-                                width: 42, height: 42,
+                                width: 42,
+                                height: 42,
                                 background: profile.gst_no ? 'rgba(34,197,94,0.12)' : 'rgba(249,115,22,0.12)',
                               }}
                             >
@@ -491,7 +530,9 @@ const Profile = () => {
                                   {profile.gst_no}
                                 </div>
                               ) : (
-                                <Badge bg="warning" text="dark" className="rounded-pill px-2 py-1" style={{ fontSize: '0.7rem' }}>Not Added</Badge>
+                                <Badge bg="warning" text="dark" className="rounded-pill px-2 py-1" style={{ fontSize: '0.7rem' }}>
+                                  Not Added
+                                </Badge>
                               )}
                             </div>
                           </div>
@@ -504,6 +545,52 @@ const Profile = () => {
                           >
                             <CsLineIcons icon={profile.gst_no ? 'edit' : 'plus'} size="14" className="me-1" />
                             {profile.gst_no ? 'Edit' : 'Add GST'}
+                          </Button>
+                        </div>
+                      </Col>
+
+                      {/* FSSAI Licence Card */}
+                      <Col md={6} xs={12}>
+                        <div
+                          className="p-3 rounded-4 d-flex align-items-center justify-content-between flex-wrap gap-2"
+                          style={{
+                            background: profile.fssai_no ? 'rgba(34, 197, 94, 0.06)' : 'rgba(249, 115, 22, 0.06)',
+                            border: `1.5px dashed ${profile.fssai_no ? 'rgba(34,197,94,0.3)' : 'rgba(249,115,22,0.35)'}`,
+                          }}
+                        >
+                          <div className="d-flex align-items-center gap-3">
+                            <div
+                              className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                              style={{
+                                width: 42,
+                                height: 42,
+                                background: profile.fssai_no ? 'rgba(34,197,94,0.12)' : 'rgba(249,115,22,0.12)',
+                              }}
+                            >
+                              <CsLineIcons icon="tag" size="20" style={{ color: profile.fssai_no ? '#22c55e' : '#f97316' }} />
+                            </div>
+                            <div className="text-truncate">
+                              <div className="fw-bold text-dark small mb-0">FSSAI Licence</div>
+                              {profile.fssai_no ? (
+                                <div className="text-muted" style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}>
+                                  {profile.fssai_no}
+                                </div>
+                              ) : (
+                                <Badge bg="warning" text="dark" className="rounded-pill px-2 py-1" style={{ fontSize: '0.7rem' }}>
+                                  Not Added
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="none"
+                            className="profile-custom-btn-outline px-3 py-1 flex-shrink-0"
+                            style={{ fontSize: '0.78rem' }}
+                            onClick={() => openComplianceModal('fssai')}
+                          >
+                            <CsLineIcons icon={profile.fssai_no ? 'edit' : 'plus'} size="14" className="me-1" />
+                            {profile.fssai_no ? 'Edit' : 'Add FSSAI'}
                           </Button>
                         </div>
                       </Col>
@@ -520,11 +607,22 @@ const Profile = () => {
                       <Col md={12}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">Full Address</Form.Label>
-                          <Form.Control as="textarea" rows={3} name="address" value={values.address || ''} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.address && errors.address} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} style={{ resize: 'none' }} />
+                          <Form.Control
+                            as="textarea"
+                            rows={3}
+                            name="address"
+                            value={values.address || ''}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            disabled={!editMode || saving}
+                            isInvalid={touched.address && errors.address}
+                            className={!editMode ? 'bg-light border-0 px-3 py-2 fw-bold' : ''}
+                            style={{ resize: 'none' }}
+                          />
                           <Form.Control.Feedback type="invalid">{errors.address}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
-                      <Col md={4} xs={12}>
+                      <Col xs={6} md={4}>
                         <Form.Group className="mb-3">
                           <Form.Label className="small fw-bold opacity-75">Country *</Form.Label>
                           {editMode ? (
@@ -544,7 +642,7 @@ const Profile = () => {
                           {touched.country && errors.country && <div className="text-danger mt-1 small fw-bold">{errors.country}</div>}
                         </Form.Group>
                       </Col>
-                      <Col md={4} xs={12}>
+                      <Col xs={6} md={4}>
                         <Form.Group className="mb-3">
                           <Form.Label className="small fw-bold opacity-75">State *</Form.Label>
                           {editMode ? (
@@ -564,7 +662,7 @@ const Profile = () => {
                           {touched.state && errors.state && <div className="text-danger mt-1 small fw-bold">{errors.state}</div>}
                         </Form.Group>
                       </Col>
-                      <Col md={4} xs={12}>
+                      <Col xs={6} md={4}>
                         <Form.Group className="mb-3">
                           <Form.Label className="small fw-bold opacity-75">City *</Form.Label>
                           {editMode ? (
@@ -584,16 +682,30 @@ const Profile = () => {
                           {touched.city && errors.city && <div className="text-danger mt-1 small fw-bold">{errors.city}</div>}
                         </Form.Group>
                       </Col>
-                      <Col md={4} xs={12}>
+                      <Col xs={6} md={4}>
                         <Form.Group className="mb-3">
                           <Form.Label className="small fw-bold opacity-75">Pin Code *</Form.Label>
-                          <Form.Control type="text" name="pincode" value={values.pincode} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.pincode && errors.pincode} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} maxLength={6} />
+                          <Form.Control
+                            type="text"
+                            name="pincode"
+                            value={values.pincode}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            disabled={!editMode || saving}
+                            isInvalid={touched.pincode && errors.pincode}
+                            className={!editMode ? 'bg-light border-0 px-3 py-2 fw-bold' : ''}
+                            maxLength={6}
+                          />
                           <Form.Control.Feedback type="invalid">{errors.pincode}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
                     </Row>
 
-                    {error && <Alert variant="danger" className="mt-4 profile-glass-card border-0">{error}</Alert>}
+                    {error && (
+                      <Alert variant="danger" className="mt-4 profile-glass-card border-0">
+                        {error}
+                      </Alert>
+                    )}
                     {editMode && Object.keys(errors).length > 0 && (
                       <Alert variant="danger" className="mt-4 profile-glass-card border-0">
                         <div className="fw-bold mb-2">Please correct the following errors:</div>
@@ -607,7 +719,12 @@ const Profile = () => {
 
                     {editMode && (
                       <div className="d-flex profile-button-group-responsive gap-3 mt-5">
-                        <Button variant="none" className="profile-custom-btn-outline px-4" onClick={() => handleCancel(resetForm)} disabled={saving || isSubmitting}>
+                        <Button
+                          variant="none"
+                          className="profile-custom-btn-outline px-4"
+                          onClick={() => handleCancel(resetForm)}
+                          disabled={saving || isSubmitting}
+                        >
                           <CsLineIcons icon="close" size="18" />
                           Cancel
                         </Button>
@@ -629,14 +746,16 @@ const Profile = () => {
                   </Card.Body>
                 </Card>
               </Col>
-
             </Row>
           </Form>
         )}
       </Formik>
 
       {saving && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}>
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}
+        >
           <Card className="profile-glass-card border-0 p-5 shadow-lg text-center">
             <Spinner animation="grow" variant="primary" className="mb-4" />
             <h4 className="fw-bold">Updating Data</h4>
@@ -657,8 +776,12 @@ const Profile = () => {
           <Modal.Title className="fw-bold d-flex align-items-center gap-2" style={{ color: '#1ea8e7' }}>
             <CsLineIcons icon={complianceModal.type === 'gst' ? 'file-text' : 'tag'} size="22" style={{ color: '#1ea8e7' }} />
             {complianceModal.type === 'gst'
-              ? (profile.gst_no ? 'Edit GST Number' : 'Add GST Number')
-              : (profile.fssai_no ? 'Edit FSSAI Licence' : 'Add FSSAI Licence')}
+              ? profile.gst_no
+                ? 'Edit GST Number'
+                : 'Add GST Number'
+              : profile.fssai_no
+              ? 'Edit FSSAI Licence'
+              : 'Add FSSAI Licence'}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="px-4 pt-3 pb-1">
@@ -668,14 +791,15 @@ const Profile = () => {
               : 'Enter your 14-digit FSSAI Registration / Licence Number.'}
           </p>
           <Form.Group>
-            <Form.Label className="small fw-bold opacity-75">
-              {complianceModal.type === 'gst' ? 'GST Number' : 'FSSAI Licence No.'}
-            </Form.Label>
+            <Form.Label className="small fw-bold opacity-75">{complianceModal.type === 'gst' ? 'GST Number' : 'FSSAI Licence No.'}</Form.Label>
             <Form.Control
               type="text"
               placeholder={complianceModal.type === 'gst' ? 'e.g. 22AAAAA0000A1Z5' : 'e.g. 12345678901234'}
               value={complianceValue}
-              onChange={(e) => { setComplianceValue(e.target.value.toUpperCase()); setComplianceError(''); }}
+              onChange={(e) => {
+                setComplianceValue(e.target.value.toUpperCase());
+                setComplianceError('');
+              }}
               disabled={complianceSaving}
               maxLength={complianceModal.type === 'gst' ? 15 : 14}
               isInvalid={!!complianceError}
@@ -683,12 +807,8 @@ const Profile = () => {
             />
             {complianceError && <Form.Control.Feedback type="invalid">{complianceError}</Form.Control.Feedback>}
           </Form.Group>
-          {complianceModal.type === 'fssai' && (
-            <small className="text-muted d-block mt-2">Leave blank to remove existing FSSAI number.</small>
-          )}
-          {complianceModal.type === 'gst' && (
-            <small className="text-muted d-block mt-2">Leave blank to remove existing GST number.</small>
-          )}
+          {complianceModal.type === 'fssai' && <small className="text-muted d-block mt-2">Leave blank to remove existing FSSAI number.</small>}
+          {complianceModal.type === 'gst' && <small className="text-muted d-block mt-2">Leave blank to remove existing GST number.</small>}
         </Modal.Body>
         <Modal.Footer className="border-0 px-4 pt-2 pb-4 d-flex gap-2">
           <Button
@@ -700,16 +820,17 @@ const Profile = () => {
             <CsLineIcons icon="close" size="16" className="me-1" />
             Cancel
           </Button>
-          <Button
-            variant="none"
-            className="profile-custom-btn-outline px-5"
-            onClick={handleComplianceSave}
-            disabled={complianceSaving}
-          >
+          <Button variant="none" className="profile-custom-btn-outline px-5" onClick={handleComplianceSave} disabled={complianceSaving}>
             {complianceSaving ? (
-              <><Spinner as="span" animation="border" size="sm" className="me-2" />Saving...</>
+              <>
+                <Spinner as="span" animation="border" size="sm" className="me-2" />
+                Saving...
+              </>
             ) : (
-              <><CsLineIcons icon="save" size="16" className="me-1" />Save</>
+              <>
+                <CsLineIcons icon="save" size="16" className="me-1" />
+                Save
+              </>
             )}
           </Button>
         </Modal.Footer>

@@ -505,6 +505,14 @@ const sendAdminOtp = async (req, res) => {
       return res.status(404).json({ message: "Email not found." });
     }
 
+    if (req.body.login_from === 'street-food' && !user.is_street_food) {
+      return res.status(403).json({ message: "Only accounts registered via Street Food can reset password here." });
+    }
+
+    if (req.body.login_from !== 'street-food' && user.is_street_food) {
+      return res.status(403).json({ message: "Street Food accounts cannot reset password via the Admin panel." });
+    }
+
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
     user.otp = otp;
@@ -576,6 +584,14 @@ const resetAdminPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "Email not found." });
+    }
+
+    if (req.body.login_from === 'street-food' && !user.is_street_food) {
+      return res.status(403).json({ message: "Only accounts registered via Street Food can reset password here." });
+    }
+
+    if (req.body.login_from !== 'street-food' && user.is_street_food) {
+      return res.status(403).json({ message: "Street Food accounts cannot reset password via the Admin panel." });
     }
 
     // Update the password

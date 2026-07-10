@@ -395,15 +395,15 @@ const MenuGrid = ({
               background: #23b3f4;
             }
           `}</style>
-          <Modal.Header closeButton className="border-0">
+          <Modal.Header closeButton className="border-0 pb-0">
             <div>
-              <Modal.Title className="fw-bold mb-1" style={{ color: '#0f172a', fontSize: '1.25rem' }}>
+              <Modal.Title className="fw-bold mb-1" style={{ color: '#23b3f4', fontSize: '1.35rem' }}>
                 Customize Dish
               </Modal.Title>
-              <div className="text-muted small fw-semibold">{selectedCustomizeDish.dish_name}</div>
+              <div className="text-dark fw-bold" style={{ fontSize: '1.05rem', marginTop: '3px' }}>{selectedCustomizeDish.dish_name}</div>
             </div>
           </Modal.Header>
-          <Modal.Body>
+          <Modal.Body className="pt-2">
             {/* Sizes / Variants Section */}
             {selectedCustomizeDish.has_variants && Array.isArray(selectedCustomizeDish.variants) && selectedCustomizeDish.variants.length > 0 && (
               <div className="mb-4">

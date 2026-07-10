@@ -213,7 +213,7 @@ const PaymentSummaryBox = ({
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <div>
                     <Badge bg="dark" className="me-2">Print #{record.kotNo}</Badge>
-                    <small className="text-muted">{new Date(record.timestamp).toLocaleTimeString('en-IN')}</small>
+                    <small className="text-muted">{new Date(record.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</small>
                   </div>
                   <Button size="sm" variant="outline-primary" onClick={() => onReprintKOT && onReprintKOT(record)} disabled={kotPrinting}>
                     Reprint

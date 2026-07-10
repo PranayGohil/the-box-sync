@@ -34,7 +34,7 @@ const PaymentModal = ({
   const inputStyle = { borderRadius: '10px', border: '1.5px solid #e2e8f0', padding: '10px 15px', fontWeight: 600, fontSize: '15px' };
 
   return (
-    <Modal show={showPaymentModal} onHide={() => setShowPaymentModal(false)} centered size="lg" className="modal-custom-payment">
+    <Modal show={showPaymentModal} onHide={() => setShowPaymentModal(false)} centered size="lg" className="modal-custom-payment" scrollable>
       <style>{`
         .modal-custom-payment .modal-content {
           border-radius: 20px;
@@ -84,6 +84,115 @@ const PaymentModal = ({
           border-color: #23b3f4;
           background: rgba(35, 179, 244, 0.05);
           color: #23b3f4;
+        }
+        .payment-cancel-btn {
+          border: 1.5px solid rgba(239, 68, 68, 0.2) !important;
+          background: transparent !important;
+          color: #ef4444 !important;
+          border-radius: 12px !important;
+          padding: 10px 20px !important;
+          font-weight: 700 !important;
+          transition: all 0.2s ease !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 6px !important;
+          box-shadow: none !important;
+          text-decoration: none !important;
+        }
+        .payment-cancel-btn:hover {
+          background: rgba(239, 68, 68, 0.05) !important;
+          border-color: #ef4444 !important;
+          color: #ef4444 !important;
+          transform: translateY(-1px);
+        }
+        .payment-cancel-btn:active {
+          transform: translateY(0);
+        }
+        .payment-print-btn {
+          border-radius: 12px !important;
+          padding: 10px 20px !important;
+          font-weight: 700 !important;
+          border: 1.5px solid #e2e8f0 !important;
+          background: transparent !important;
+          color: #64748b !important;
+          transition: all 0.2s ease !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 6px !important;
+          text-decoration: none !important;
+        }
+        .payment-print-btn:hover:not(:disabled) {
+          background: rgba(100, 116, 139, 0.05) !important;
+          border-color: #94a3b8 !important;
+          color: #475569 !important;
+        }
+        .payment-submit-btn {
+          border-radius: 12px !important;
+          padding: 10px 30px !important;
+          font-weight: 800 !important;
+          background: #23b3f4 !important;
+          border: none !important;
+          color: #ffffff !important;
+          box-shadow: 0 10px 20px -5px rgba(35, 179, 244, 0.4) !important;
+          transition: all 0.2s ease !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 6px !important;
+          text-decoration: none !important;
+        }
+        .payment-submit-btn:hover:not(:disabled) {
+          background: #0ea5e9 !important;
+          box-shadow: 0 10px 20px -5px rgba(14, 165, 233, 0.6) !important;
+          transform: translateY(-1px);
+          color: #ffffff !important;
+        }
+        .payment-submit-btn:active:not(:disabled) {
+          transform: translateY(0);
+        }
+        @media (max-width: 576px) {
+          .modal-custom-payment .modal-content {
+            border-radius: 16px !important;
+          }
+          .modal-custom-payment .modal-header {
+            padding: 16px !important;
+          }
+          .modal-custom-payment .modal-body {
+            padding: 16px !important;
+          }
+          .summary-card {
+            padding: 12px 16px !important;
+            border-radius: 12px !important;
+          }
+          .payment-method-btn {
+            padding: 10px !important;
+            font-size: 13px !important;
+            border-radius: 8px !important;
+          }
+          .payment-modal-footer {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            grid-template-areas: 
+              "submit submit"
+              "cancel print" !important;
+            gap: 10px !important;
+            padding: 16px !important;
+          }
+          .payment-cancel-btn {
+            grid-area: cancel !important;
+            margin-right: 0 !important;
+            width: 100% !important;
+          }
+          .payment-print-btn {
+            grid-area: print !important;
+            width: 100% !important;
+          }
+          .payment-submit-btn {
+            grid-area: submit !important;
+            width: 100% !important;
+          }
         }
       `}</style>
 
@@ -247,35 +356,17 @@ const PaymentModal = ({
         </Row>
       </Modal.Body>
 
-      <Modal.Footer className="justify-content-between">
-        <Button variant="link" className="text-muted fw-bold text-decoration-none" onClick={() => setShowPaymentModal(false)}>
+      <Modal.Footer className="payment-modal-footer d-flex gap-2">
+        <Button variant="none" className="payment-cancel-btn me-auto" onClick={() => setShowPaymentModal(false)}>
+          <CsLineIcons icon="close" size="14" />
           Cancel
         </Button>
-        <div className="d-flex gap-2">
-          <Button
-            variant="outline-secondary"
-            style={{ borderRadius: '12px', padding: '10px 20px', fontWeight: 700 }}
-            onClick={handlePrintBill}
-            disabled={printing || isLoading}
-          >
-            {printing ? 'Printing...' : 'Print Bill'}
-          </Button>
-          <Button
-            variant="primary"
-            style={{
-              borderRadius: '12px',
-              padding: '10px 30px',
-              fontWeight: 800,
-              background: '#23b3f4',
-              border: 'none',
-              boxShadow: '0 10px 20px -5px rgba(35, 179, 244, 0.4)',
-            }}
-            onClick={handlePayment}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Processing...' : 'Complete Payment'}
-          </Button>
-        </div>
+        <Button variant="none" className="payment-print-btn" onClick={handlePrintBill} disabled={printing || isLoading}>
+          {printing ? 'Printing...' : 'Print Bill'}
+        </Button>
+        <Button variant="none" className="payment-submit-btn" onClick={handlePayment} disabled={isLoading}>
+          {isLoading ? 'Processing...' : 'Complete Payment'}
+        </Button>
       </Modal.Footer>
     </Modal>
   );

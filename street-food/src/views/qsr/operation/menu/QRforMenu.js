@@ -1,8 +1,9 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import { AuthContext } from 'contexts/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
-import { Button, Card, Row, Col, Alert, Spinner } from 'react-bootstrap';
+import { Button, Card, Row, Col, Spinner } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import axios from 'axios';
 import { toast } from 'react-toastify';
 
 const customStyles = `
@@ -65,6 +66,11 @@ const customStyles = `
   .qrfor-menu-custom-btn-outline:hover svg {
     stroke: #fff !important;
   }
+  @media (max-width: 768px) {
+    .qrfor-menu-qr-container-box {
+      padding: 1.5rem !important;
+    }
+  }
 `;
 
 const QRforMenu = ({ setSection }) => {
@@ -75,11 +81,8 @@ const QRforMenu = ({ setSection }) => {
   const qrCodeRef = useRef(null);
 
   const { currentUser } = useContext(AuthContext);
-  const restaurant_code = currentUser?.restaurant_code;
 
-  const menuLink = restaurantToken
-    ? `${process.env.REACT_APP_HOME_URL}/menu.html?token=${restaurantToken}`
-    : `${process.env.REACT_APP_HOME_URL}/menu/${restaurant_code}`;
+  const menuLink = `${process.env.REACT_APP_HOME_URL}/menu.html?token=${restaurantToken}`;
 
   useEffect(() => {
     if (currentUser?.restaurant_token) {
@@ -92,6 +95,35 @@ const QRforMenu = ({ setSection }) => {
     const timer = setTimeout(() => setLoading(false), 500);
     return () => clearTimeout(timer);
   }, []);
+
+  const handleGenerateToken = async () => {
+    setGeneratingQR(true);
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API}/reservation/generate-token`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+      if (res.data.success && res.data.restaurant_token) {
+        setRestaurantToken(res.data.restaurant_token);
+        toast.success('QR Code generated successfully!');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        throw new Error(res.data.message || 'Failed to generate token');
+      }
+    } catch (error) {
+      console.error('Error generating token:', error);
+      toast.error(error.response?.data?.message || 'Failed to generate QR Code. Please try again.');
+    } finally {
+      setGeneratingQR(false);
+    }
+  };
 
   const printQRCode = () => {
     if (!qrCodeRef.current) return;
@@ -153,10 +185,7 @@ const QRforMenu = ({ setSection }) => {
           </Col>
           <Col xs="auto">
             {setSection && (
-              <Button
-                className="qrfor-menu-custom-btn-outline px-4 py-2 d-flex align-items-center gap-2"
-                onClick={() => setSection("ViewMenu")}
-              >
+              <Button className="qrfor-menu-custom-btn-outline px-4 py-2 d-flex align-items-center gap-2" onClick={() => setSection('ViewMenu')}>
                 <CsLineIcons icon="eye" size="18" />
                 View Menu
               </Button>
@@ -170,7 +199,7 @@ const QRforMenu = ({ setSection }) => {
           <Card className="qrfor-menu-glass-card border-0 overflow-hidden">
             <Card.Body className="p-0">
               <div className="qrfor-menu-qr-container-box p-4 p-md-5">
-                {restaurant_code || restaurantToken ? (
+                {restaurantToken ? (
                   <>
                     <div className="text-center mb-5">
                       <h4 className="fw-bold text-dark mb-2">Digital Menu QR</h4>
@@ -178,12 +207,7 @@ const QRforMenu = ({ setSection }) => {
                     </div>
 
                     <div className="qrfor-menu-qr-frame mb-4" ref={qrCodeRef}>
-                      <QRCodeSVG
-                        size={220}
-                        value={menuLink}
-                        level="H"
-                        includeMargin={false}
-                      />
+                      <QRCodeSVG size={220} value={menuLink} level="H" includeMargin={false} />
                     </div>
 
                     <div className="w-100 mb-5 text-center">
@@ -223,9 +247,28 @@ const QRforMenu = ({ setSection }) => {
                   </>
                 ) : (
                   <div className="text-center py-5">
-                    <CsLineIcons icon="warning" size="48" className="text-warning mb-3" />
-                    <h5 className="fw-bold">Restaurant Code Not Found</h5>
-                    <p className="text-muted px-4">We couldn't retrieve your restaurant code. Please ensure your profile is complete or contact support.</p>
+                    <CsLineIcons icon="grid" size="48" className="text-primary mb-3" />
+                    <h4 className="fw-bold text-dark mb-2">No Active QR Code</h4>
+                    <p className="text-muted mb-4">
+                      You haven't generated a digital menu link yet. Click the button below to generate a unique QR code for your menu.
+                    </p>
+                    <Button
+                      className="btn-primary rounded-pill px-5 py-2 d-inline-flex align-items-center gap-2"
+                      onClick={handleGenerateToken}
+                      disabled={generatingQR}
+                    >
+                      {generatingQR ? (
+                        <>
+                          <Spinner animation="border" size="sm" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <CsLineIcons icon="plus" size="16" />
+                          Generate QR Code
+                        </>
+                      )}
+                    </Button>
                   </div>
                 )}
               </div>

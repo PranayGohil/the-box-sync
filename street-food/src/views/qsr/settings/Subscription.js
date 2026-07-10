@@ -36,15 +36,17 @@ const Subscription = () => {
       ]);
 
       if (plansRes.data?.data) {
-        setAvailablePlans(plansRes.data.data.filter(p => p.is_addon));
+        setAvailablePlans(plansRes.data.data.filter((p) => p.is_addon));
       }
 
       if (userRes.data?.data) {
-        setSubscriptions(userRes.data.data.map(sub => ({
-          ...sub,
-          formatted_start: new Date(sub.start_date).toLocaleDateString('en-IN'),
-          formatted_end: new Date(sub.end_date).toLocaleDateString('en-IN'),
-        })));
+        setSubscriptions(
+          userRes.data.data.map((sub) => ({
+            ...sub,
+            formatted_start: new Date(sub.start_date).toLocaleDateString('en-IN'),
+            formatted_end: new Date(sub.end_date).toLocaleDateString('en-IN'),
+          }))
+        );
       }
     } catch (err) {
       console.error('Failed to load subscription details', err);
@@ -77,7 +79,7 @@ const Subscription = () => {
     }
   };
 
-  const baseSub = subscriptions.find(sub => !sub.is_addon) || subscriptions[0];
+  const baseSub = subscriptions.find((sub) => !sub.is_addon) || subscriptions[0];
   const isBaseActive = baseSub ? baseSub.status === 'active' : true; // Default to active if no records yet
   const baseSubId = baseSub?._id;
 
@@ -91,15 +93,17 @@ const Subscription = () => {
   }
 
   return (
-    <div className="container-fluid pb-5 ps-lg-4">
+    <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
 
-      <Row className="g-3 align-items-center mb-4">
-        <Col xs={12} md={7}>
-          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
-          <BreadcrumbList items={breadcrumbs} />
-        </Col>
-      </Row>
+      <div className="qsr-page-title-container">
+        <Row className="g-0 align-items-center">
+          <Col xs="auto" className="me-auto">
+            <h1 className="qsr-page-title">{title}</h1>
+            <BreadcrumbList items={breadcrumbs} />
+          </Col>
+        </Row>
+      </div>
 
       <Card className="profile-glass-card border-0 mb-4">
         <Card.Body className="p-4 p-md-5">
@@ -107,17 +111,9 @@ const Subscription = () => {
           <div className="p-4 rounded-3 bg-light border mb-4">
             <Row className="align-items-center">
               <Col xs={12} md={8}>
-                <h5 className="fw-bold text-primary mb-1">
-                  Basic Plan
-                </h5>
-                <p className="text-muted small mb-0">
-                  Enjoy all billing operations, Dish Management, Inventory Management & print configurations.
-                </p>
-                {baseSub && (
-                  <small className="text-muted d-block mt-2">
-                    Valid till: {baseSub.formatted_end}
-                  </small>
-                )}
+                <h5 className="fw-bold text-primary mb-1">Basic Plan</h5>
+                <p className="text-muted small mb-0">Enjoy all billing operations, Dish Management, Inventory Management & print configurations.</p>
+                {baseSub && <small className="text-muted d-block mt-2">Valid till: {baseSub.formatted_end}</small>}
               </Col>
               <Col xs={12} md={4} className="text-md-end mt-3 mt-md-0">
                 {isBaseActive ? (
@@ -143,7 +139,6 @@ const Subscription = () => {
               </Col>
             </Row>
           </div>
-
         </Card.Body>
       </Card>
     </div>

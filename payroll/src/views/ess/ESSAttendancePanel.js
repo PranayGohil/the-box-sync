@@ -275,7 +275,7 @@ export default function ESSAttendancePanel() {
           <Card className="glass-card border-0 text-center py-4 h-100">
             <Card.Body>
               <h2 className="display-4 fw-bold mb-0" style={{ color: '#1ea8e7' }}>
-                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
               </h2>
               <p className="text-muted mb-5">
                 {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
