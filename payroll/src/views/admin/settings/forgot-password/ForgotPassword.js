@@ -102,6 +102,8 @@ function ForgotPassword() {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -185,7 +187,9 @@ function ForgotPassword() {
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
       <div className="page-title-container mb-4">
-        <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
+        <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
+          {title}
+        </h1>
         <BreadcrumbList items={breadcrumbs} />
       </div>
 
@@ -207,8 +211,16 @@ function ForgotPassword() {
                 {step === 3 && 'Enter your new password and confirm it.'}
               </p>
 
-              {error && <Alert variant="danger" className="rounded-xl border-0 shadow-sm">{error}</Alert>}
-              {success && <Alert variant="success" className="rounded-xl border-0 shadow-sm">{success}</Alert>}
+              {error && (
+                <Alert variant="danger" className="rounded-xl border-0 shadow-sm">
+                  {error}
+                </Alert>
+              )}
+              {success && (
+                <Alert variant="success" className="rounded-xl border-0 shadow-sm">
+                  {success}
+                </Alert>
+              )}
 
               {step === 1 && (
                 <Form onSubmit={handleSendOtp}>
@@ -232,9 +244,7 @@ function ForgotPassword() {
                           Sending...
                         </>
                       ) : (
-                        <>
-                          Send OTP
-                        </>
+                        <>Send OTP</>
                       )}
                     </Button>
                     <Link to="/login" className="custom-btn-outline px-4 py-2" style={{ border: 'none', background: 'transparent', boxShadow: 'none' }}>
@@ -258,9 +268,7 @@ function ForgotPassword() {
                       placeholder="Enter the OTP sent to your email"
                       disabled={isLoading}
                     />
-                    <Form.Text className="text-muted small mt-2 d-block">
-                      OTP is valid for 10 minutes
-                    </Form.Text>
+                    <Form.Text className="text-muted small mt-2 d-block">OTP is valid for 10 minutes</Form.Text>
                   </Form.Group>
                   <div className="d-flex justify-content-between align-items-center">
                     <Button className="custom-btn-solid" type="submit" disabled={isLoading} style={{ minWidth: '140px' }}>
@@ -288,27 +296,47 @@ function ForgotPassword() {
                 <Form onSubmit={handleResetPassword}>
                   <Form.Group className="mb-3">
                     <Form.Label className="small fw-bold text-muted">New Password</Form.Label>
-                    <Form.Control
-                      className="pill-input"
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                      placeholder="Enter your new password"
-                      disabled={isLoading}
-                    />
+                    <div className="position-relative">
+                      <Form.Control
+                        className="pill-input w-100"
+                        type={showPassword ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                        placeholder="Enter your new password"
+                        disabled={isLoading}
+                        style={{ paddingRight: '40px' }}
+                      />
+                      <span
+                        className="position-absolute"
+                        style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer', zIndex: 10 }}
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="15" />
+                      </span>
+                    </div>
                   </Form.Group>
                   <Form.Group className="mb-4">
                     <Form.Label className="small fw-bold text-muted">Confirm New Password</Form.Label>
-                    <Form.Control
-                      className="pill-input"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      placeholder="Confirm your new password"
-                      disabled={isLoading}
-                    />
+                    <div className="position-relative">
+                      <Form.Control
+                        className="pill-input w-100"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        placeholder="Confirm your new password"
+                        disabled={isLoading}
+                        style={{ paddingRight: '40px' }}
+                      />
+                      <span
+                        className="position-absolute"
+                        style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer', zIndex: 10 }}
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        <CsLineIcons icon={showConfirmPassword ? 'eye-off' : 'eye'} size="15" />
+                      </span>
+                    </div>
                   </Form.Group>
                   <div className="d-flex justify-content-between align-items-center">
                     <Button className="custom-btn-solid" type="submit" disabled={isLoading} style={{ minWidth: '160px' }}>

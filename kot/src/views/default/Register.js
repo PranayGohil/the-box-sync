@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Button, Form } from 'react-bootstrap';
 import * as Yup from 'yup';
@@ -8,6 +8,7 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 
 const Register = () => {
+  const [showPassword, setShowPassword] = useState(false);
   const title = 'Register';
   const description = 'Register Page';
 
@@ -75,9 +76,16 @@ const Register = () => {
               <Form.Control type="text" name="email" placeholder="Email" value={values.email} onChange={handleChange} />
               {errors.email && touched.email && <div className="d-block invalid-tooltip">{errors.email}</div>}
             </div>
-            <div className="mb-3 filled form-group tooltip-end-top">
+            <div className="mb-3 filled form-group tooltip-end-top position-relative">
               <CsLineIcons icon="lock-off" />
-              <Form.Control type="password" name="password" onChange={handleChange} value={values.password} placeholder="Password" />
+              <Form.Control type={showPassword ? 'text' : 'password'} name="password" onChange={handleChange} value={values.password} placeholder="Password" style={{ paddingRight: '40px' }} />
+              <span
+                className="position-absolute"
+                style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer', zIndex: 10 }}
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="15" />
+              </span>
               {errors.password && touched.password && <div className="d-block invalid-tooltip">{errors.password}</div>}
             </div>
             <div className="mb-3 position-relative form-group">

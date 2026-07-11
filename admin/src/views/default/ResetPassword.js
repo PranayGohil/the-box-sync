@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Button, Form } from 'react-bootstrap';
 import * as Yup from 'yup';
@@ -8,6 +8,9 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 
 const ResetPassword = () => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const title = 'Reset Password';
   const description = 'Reset Password Page';
   const validationSchema = Yup.object().shape({
@@ -63,14 +66,42 @@ const ResetPassword = () => {
         </div>
         <div>
           <form id="resetForm" className="tooltip-end-bottom" onSubmit={handleSubmit}>
-            <div className="mb-3 filled">
+            <div className="mb-3 filled position-relative">
               <CsLineIcons icon="lock-off" />
-              <Form.Control type="password" name="password" onChange={handleChange} value={values.password} placeholder="Password" />
+              <Form.Control
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                onChange={handleChange}
+                value={values.password}
+                placeholder="Password"
+                style={{ paddingRight: '40px' }}
+              />
+              <span
+                className="position-absolute"
+                style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer', zIndex: 10 }}
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="15" />
+              </span>
               {errors.password && touched.password && <div className="d-block invalid-tooltip">{errors.password}</div>}
             </div>
-            <div className="mb-3 filled">
+            <div className="mb-3 filled position-relative">
               <CsLineIcons icon="lock-on" />
-              <Form.Control type="password" name="passwordConfirm" onChange={handleChange} value={values.passwordConfirm} placeholder="Verify Password" />
+              <Form.Control
+                type={showConfirmPassword ? 'text' : 'password'}
+                name="passwordConfirm"
+                onChange={handleChange}
+                value={values.passwordConfirm}
+                placeholder="Verify Password"
+                style={{ paddingRight: '40px' }}
+              />
+              <span
+                className="position-absolute"
+                style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer', zIndex: 10 }}
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                <CsLineIcons icon={showConfirmPassword ? 'eye-off' : 'eye'} size="15" />
+              </span>
               {errors.passwordConfirm && touched.passwordConfirm && <div className="d-block invalid-tooltip">{errors.passwordConfirm}</div>}
             </div>
             <Button size="lg" type="submit">

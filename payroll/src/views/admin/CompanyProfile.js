@@ -36,6 +36,7 @@ const CompanyProfile = () => {
   });
   const [logoFile, setLogoFile] = useState(null);
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [cropperState, setCropperState] = useState({ show: false, imageSrc: '', aspect: undefined });
 
   const token = localStorage.getItem('token');
@@ -49,8 +50,8 @@ const CompanyProfile = () => {
         const { data } = res;
         const mappedCountry = data.country || '';
         const mappedState = data.state || '';
-        const cCode = Country.getAllCountries().find(c => c.name === mappedCountry)?.isoCode || '';
-        const sCode = cCode ? State.getStatesOfCountry(cCode).find(s => s.name === mappedState)?.isoCode || '' : '';
+        const cCode = Country.getAllCountries().find((c) => c.name === mappedCountry)?.isoCode || '';
+        const sCode = cCode ? State.getStatesOfCountry(cCode).find((s) => s.name === mappedState)?.isoCode || '' : '';
 
         const mappedData = {
           _id: data._id || '',
@@ -85,7 +86,7 @@ const CompanyProfile = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e) => {
@@ -115,14 +116,14 @@ const CompanyProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!password) {
-      toast.error("Password is required to save changes.");
+      toast.error('Password is required to save changes.');
       return;
     }
 
     setSubmitting(true);
     try {
       const submitData = new FormData();
-      Object.keys(formData).forEach(key => {
+      Object.keys(formData).forEach((key) => {
         submitData.append(key, formData[key]);
       });
       if (logoFile) {
@@ -131,7 +132,7 @@ const CompanyProfile = () => {
       submitData.append('password', password);
 
       const res = await axios.put(`${process.env.REACT_APP_API}/user/update`, submitData, {
-        headers: { ...headers, 'Content-Type': 'multipart/form-data' }
+        headers: { ...headers, 'Content-Type': 'multipart/form-data' },
       });
 
       toast.success(res.data.message || 'Profile updated successfully!');
@@ -158,7 +159,9 @@ const CompanyProfile = () => {
       <div className="page-title-container mb-4 mt-5 mt-lg-0">
         <Row className="g-3 align-items-center">
           <Col xs="12" md="6">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
+              {title}
+            </h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
         </Row>
@@ -226,16 +229,16 @@ const CompanyProfile = () => {
                   <Col sm="10" md="9" lg="4" className="mb-3 mb-lg-0">
                     <Select
                       classNamePrefix="react-select"
-                      options={Country.getAllCountries().map(c => ({ value: c.name, label: c.name, isoCode: c.isoCode }))}
+                      options={Country.getAllCountries().map((c) => ({ value: c.name, label: c.name, isoCode: c.isoCode }))}
                       value={{ value: formData.country, label: formData.country || 'Select Country' }}
                       onChange={(selected) => {
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
                           country: selected.value,
                           country_code: selected.isoCode,
                           state: '',
                           state_code: '',
-                          city: ''
+                          city: '',
                         }));
                       }}
                     />
@@ -246,14 +249,14 @@ const CompanyProfile = () => {
                   <Col sm="10" md="9" lg="4">
                     <Select
                       classNamePrefix="react-select"
-                      options={State.getStatesOfCountry(formData.country_code).map(s => ({ value: s.name, label: s.name, isoCode: s.isoCode }))}
+                      options={State.getStatesOfCountry(formData.country_code).map((s) => ({ value: s.name, label: s.name, isoCode: s.isoCode }))}
                       value={{ value: formData.state, label: formData.state || 'Select State' }}
                       onChange={(selected) => {
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
                           state: selected.value,
                           state_code: selected.isoCode,
-                          city: ''
+                          city: '',
                         }));
                       }}
                     />
@@ -266,12 +269,12 @@ const CompanyProfile = () => {
                   <Col sm="10" md="9" lg="4" className="mb-3 mb-lg-0">
                     <Select
                       classNamePrefix="react-select"
-                      options={City.getCitiesOfState(formData.country_code, formData.state_code).map(c => ({ value: c.name, label: c.name }))}
+                      options={City.getCitiesOfState(formData.country_code, formData.state_code).map((c) => ({ value: c.name, label: c.name }))}
                       value={{ value: formData.city, label: formData.city || 'Select City' }}
                       onChange={(selected) => {
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
-                          city: selected.value
+                          city: selected.value,
                         }));
                       }}
                     />
@@ -317,11 +320,26 @@ const CompanyProfile = () => {
                       <Form.Label className="col-form-label">Password</Form.Label>
                     </Col>
                     <Col sm="8" md="9" lg="10">
-                      <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Current Password" required />
+                      <div className="position-relative">
+                        <Form.Control
+                          type={showPassword ? 'text' : 'password'}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Current Password"
+                          required
+                          style={{ paddingRight: '40px' }}
+                        />
+                        <span
+                          className="position-absolute"
+                          style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer', zIndex: 10 }}
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="15" />
+                        </span>
+                      </div>
                     </Col>
                   </Row>
                 </div>
-
               </Card.Body>
             </Card>
 
@@ -339,7 +357,10 @@ const CompanyProfile = () => {
             <Card className="mb-5">
               <Card.Body>
                 <div className="d-flex align-items-center mb-3">
-                  <div className="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+                  <div
+                    className="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                    style={{ width: '40px', height: '40px' }}
+                  >
                     <CsLineIcons icon="check" size="20" />
                   </div>
                   <div>
@@ -348,7 +369,9 @@ const CompanyProfile = () => {
                   </div>
                 </div>
                 <hr />
-                <p className="text-muted small mb-0">Keeping your company profile updated ensures that all generated payroll slips and statutory reports contain accurate employer information.</p>
+                <p className="text-muted small mb-0">
+                  Keeping your company profile updated ensures that all generated payroll slips and statutory reports contain accurate employer information.
+                </p>
               </Card.Body>
             </Card>
 
@@ -356,7 +379,10 @@ const CompanyProfile = () => {
             <Card className="mb-5">
               <Card.Body>
                 <div className="d-flex align-items-center mb-3">
-                  <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+                  <div
+                    className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                    style={{ width: '40px', height: '40px' }}
+                  >
                     <CsLineIcons icon="link" size="20" />
                   </div>
                   <div>
@@ -389,9 +415,7 @@ const CompanyProfile = () => {
                     </Button>
                   </>
                 ) : (
-                  <div className="text-center p-2 bg-light text-muted fw-bold rounded border">
-                    Generating...
-                  </div>
+                  <div className="text-center p-2 bg-light text-muted fw-bold rounded border">Generating...</div>
                 )}
               </Card.Body>
             </Card>
@@ -400,7 +424,10 @@ const CompanyProfile = () => {
             <Card className="mb-5">
               <Card.Body>
                 <div className="d-flex align-items-center mb-3">
-                  <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+                  <div
+                    className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                    style={{ width: '40px', height: '40px' }}
+                  >
                     <CsLineIcons icon="link" size="20" />
                   </div>
                   <div>
