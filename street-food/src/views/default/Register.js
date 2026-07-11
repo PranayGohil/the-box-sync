@@ -10,13 +10,12 @@ import HtmlHead from 'components/html-head/HtmlHead';
 
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
+import ImageCropperModal from 'components/cropper/ImageCropperModal';
 
 const Register = () => {
   const history = useHistory();
-  const title = 'Register — The Box';
-  const description = 'Create your restaurant account on The Box.';
-
-
+  const title = 'Register — TheBoxSync';
+  const description = 'Create your restaurant account on TheBoxSync.';
 
   const forms = [createRef(null), createRef(null), createRef(null)];
   const [bottomNavHidden, setBottomNavHidden] = useState(false);
@@ -51,6 +50,11 @@ const Register = () => {
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [cropperState, setCropperState] = useState({
+    show: false,
+    imageSrc: '',
+    aspect: undefined,
+  });
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const countdownRef = useRef(null);
 
@@ -252,7 +256,7 @@ const Register = () => {
       <div className="login-login-form-header">
         <div className="login-login-form-eyebrow">Restaurant Registration</div>
         <h2 className="login-login-form-title">Create your account</h2>
-        <p className="login-login-form-subtitle">Set up your restaurant on The Box platform</p>
+        <p className="login-login-form-subtitle">Set up your restaurant on TheBoxSync platform</p>
       </div>
       <div className="wizard wizard-default">
         <Wizard>
@@ -275,7 +279,7 @@ const Register = () => {
           />
           <Steps>
             <Step id="step1" name="Restaurant" desc="Basic Info">
-              <Formik innerRef={forms[0]} initialValues={fields} validationSchema={validationSchemas[0]} validateOnMount onSubmit={() => { }}>
+              <Formik innerRef={forms[0]} initialValues={fields} validationSchema={validationSchemas[0]} validateOnMount onSubmit={() => {}}>
                 {({ errors, touched, setFieldValue, values, setFieldError, setFieldTouched }) => (
                   <Form>
                     <div className="login-auth-input-group">
@@ -309,12 +313,24 @@ const Register = () => {
                           onChange={(e) => {
                             const file = e.target.files[0];
                             if (file) {
-                              setUploadingLogo(true);
-                              setFieldValue('logo', file);
-                              setTimeout(() => {
-                                setPreviewLogo(URL.createObjectURL(file));
-                                setUploadingLogo(false);
-                              }, 500);
+                              if (!file.type.startsWith('image/')) {
+                                toast.error('Please select a valid image file');
+                                return;
+                              }
+                              if (file.size > 5 * 1024 * 1024) {
+                                toast.error('Image size should not exceed 5MB');
+                                return;
+                              }
+                              const reader = new FileReader();
+                              reader.addEventListener('load', () => {
+                                setCropperState({
+                                  show: true,
+                                  imageSrc: reader.result,
+                                  aspect: undefined,
+                                });
+                              });
+                              reader.readAsDataURL(file);
+                              e.target.value = '';
                             }
                           }}
                         />
@@ -326,6 +342,16 @@ const Register = () => {
                         </div>
                       )}
                       {previewLogo && <img src={previewLogo} alt="Logo" className="img-thumbnail mt-2" style={{ maxWidth: '80px' }} />}
+                      <ImageCropperModal
+                        show={cropperState.show}
+                        onHide={() => setCropperState({ ...cropperState, show: false })}
+                        imageSrc={cropperState.imageSrc}
+                        onCropComplete={(croppedFile) => {
+                          setFieldValue('logo', croppedFile);
+                          setPreviewLogo(URL.createObjectURL(croppedFile));
+                        }}
+                        initialAspect={cropperState.aspect}
+                      />
                     </div>
 
                     <div className="login-auth-input-group">
@@ -338,7 +364,7 @@ const Register = () => {
                           className="login-auth-input form-control"
                           name="email"
                           type="email"
-                          placeholder="you@restaurant.com"
+                          placeholder="Your Email ID"
                           onChange={(e) => {
                             const val = e.target.value;
                             setFieldValue('email', val);
@@ -372,7 +398,11 @@ const Register = () => {
                         )}
                       </button>
                     )}
-                    {isEmailVerified && <div className="text-success mb-4" style={{ fontSize: '13px', fontWeight: 'bold', marginTop: '-15px' }}>✓ Email verified</div>}
+                    {isEmailVerified && (
+                      <div className="text-success mb-4" style={{ fontSize: '13px', fontWeight: 'bold', marginTop: '-15px' }}>
+                        ✓ Email verified
+                      </div>
+                    )}
 
                     {verificationSent && !isEmailVerified && (
                       <>
@@ -433,7 +463,7 @@ const Register = () => {
               </Formik>
             </Step>
             <Step id="step2" name="Address" desc="Location">
-              <Formik innerRef={forms[1]} initialValues={fields} validationSchema={validationSchemas[1]} validateOnMount onSubmit={() => { }}>
+              <Formik innerRef={forms[1]} initialValues={fields} validationSchema={validationSchemas[1]} validateOnMount onSubmit={() => {}}>
                 {({ errors, touched, values, setFieldValue }) => (
                   <Form>
                     <div className="login-auth-input-group">
@@ -542,7 +572,7 @@ const Register = () => {
               </Formik>
             </Step>
             <Step id="step3" name="Security" desc="Setup">
-              <Formik innerRef={forms[2]} initialValues={fields} validationSchema={validationSchemas[2]} validateOnMount onSubmit={() => { }}>
+              <Formik innerRef={forms[2]} initialValues={fields} validationSchema={validationSchemas[2]} validateOnMount onSubmit={() => {}}>
                 {({ errors, touched }) => (
                   <Form>
                     <div className="login-auth-input-group">
@@ -606,7 +636,12 @@ const Register = () => {
                         <span className="login-auth-input-icon">
                           <CsLineIcons icon="lock-off" size="18" />
                         </span>
-                        <Field type={showConfirmPassword ? 'text' : 'password'} className="login-auth-input form-control" name="confirmPassword" placeholder="••••••••" />
+                        <Field
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          className="login-auth-input form-control"
+                          name="confirmPassword"
+                          placeholder="••••••••"
+                        />
                         <span
                           className="position-absolute"
                           style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer' }}
@@ -656,7 +691,12 @@ const Register = () => {
         Already have an account? <RouterLink to="/login">Sign in →</RouterLink>
       </div>
       <div className="login-auth-powered">
-        Powered by <strong>TheBoxSync</strong>
+        Powered by{' '}
+        <strong>
+          <a href="https://theboxsync.com" target="_blank" rel="noopener noreferrer">
+            TheBoxSync
+          </a>
+        </strong>
       </div>
     </div>
   );
@@ -673,7 +713,7 @@ const Register = () => {
           <br />
           <span>restaurant journey.</span>
         </h1>
-        <p className="login-login-hero-sub">Join hundreds of restaurants managing their operations smarter with The Box platform.</p>
+        <p className="login-login-hero-sub">Join hundreds of restaurants managing their operations smarter with TheBoxSync platform.</p>
         <div className="login-login-feature-pills">
           {['3-step quick setup', 'Email verification', 'Secure & encrypted', 'Instant access'].map((f) => (
             <div key={f} className="login-login-feature-pill">

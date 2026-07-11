@@ -136,7 +136,7 @@ const Login = () => {
         {/* Right Panel — Login Form */}
         <div className="login-login-right-panel">
           <div className="login-login-form-header">
-            <div className="login-login-form-eyebrow">Admin Portal</div>
+            <div className="login-login-form-eyebrow">Street Food portal</div>
             <h2 className="login-login-form-title">Welcome back</h2>
             <p className="login-login-form-subtitle">Sign in to your control panel</p>
           </div>
@@ -159,7 +159,7 @@ const Login = () => {
                 <input
                   type="email"
                   name="email"
-                  placeholder="you@restaurant.com"
+                  placeholder="Your Email ID"
                   value={values.email}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -217,11 +217,11 @@ const Login = () => {
           </form>
 
           <div className="login-auth-footer-link">
-            Don't have an account? <NavLink to="/register">Create one →</NavLink>
+            Don't have an account? <NavLink to="/register">Register →</NavLink>
           </div>
 
           <div className="login-auth-powered">
-            Powered by <strong>TheBoxSync</strong>
+            Powered by <strong><a href="https://theboxsync.com" target="_blank" rel="noopener noreferrer">TheBoxSync</a></strong>
           </div>
         </div>
       </div>

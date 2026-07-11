@@ -121,11 +121,11 @@ const OrderDetails = () => {
 
       const encodedMessage = encodeURIComponent(message);
       let phoneNumber = phoneVal ? String(phoneVal).replace(/\D/g, '') : '';
-      
+
       if (phoneNumber && phoneNumber.length === 10) {
         phoneNumber = `91${phoneNumber}`;
       }
-      
+
       const whatsappUrl = phoneNumber ? `https://wa.me/${phoneNumber}?text=${encodedMessage}` : `https://wa.me/?text=${encodedMessage}`;
       window.open(whatsappUrl, '_blank');
     } catch (err) {
@@ -421,152 +421,150 @@ const OrderDetails = () => {
                 Order Items
               </h4>
             </Card.Header>
-        <Card.Body>
-          <div className="table-responsive d-none d-md-block">
-            <Table className="align-middle" hover>
-              <thead className="table-light">
-                <tr>
-                  <th scope="col" className="text-muted text-small text-uppercase">No.</th>
-                  <th scope="col" className="text-muted text-small text-uppercase">Dish</th>
-                  <th scope="col" className="text-muted text-small text-uppercase text-center">Quantity</th>
-                  <th scope="col" className="text-muted text-small text-uppercase text-end">Price</th>
-                  <th scope="col" className="text-muted text-small text-uppercase text-end">Amount</th>
-                  <th scope="col" className="text-muted text-small text-uppercase text-center">Status</th>
-                  <th scope="col" className="text-muted text-small text-uppercase">Note</th>
-                </tr>
-              </thead>
-              <tbody>
-                {order.order_items?.map((item, index) => (
-                  <tr key={`${item.dish_name}-${index}`}>
-                    <td className="text-muted">{index + 1}</td>
-                    <td className="fw-medium">
-                      {item.dish_name}
-                      {((item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra)) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) && (
-                        <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', marginTop: '2px', lineHeight: 1.2 }}>
-                          {item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && (
-                            <>
-                              {item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}
-                              {item.selected_variant.extra && ` (${item.selected_variant.extra})`}
-                            </>
+            <Card.Body>
+              <div className="table-responsive d-none d-md-block">
+                <Table className="align-middle" hover>
+                  <thead className="table-light">
+                    <tr>
+                      <th scope="col" className="text-muted text-small text-uppercase">No.</th>
+                      <th scope="col" className="text-muted text-small text-uppercase">Dish</th>
+                      <th scope="col" className="text-muted text-small text-uppercase text-center">Quantity</th>
+                      <th scope="col" className="text-muted text-small text-uppercase text-end">Price</th>
+                      <th scope="col" className="text-muted text-small text-uppercase text-end">Amount</th>
+                      <th scope="col" className="text-muted text-small text-uppercase text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {order.order_items?.map((item, index) => (
+                      <tr key={`${item.dish_name}-${index}`}>
+                        <td className="text-muted">{index + 1}</td>
+                        <td className="fw-medium">
+                          {item.dish_name}
+                          {((item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra)) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) && (
+                            <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', marginTop: '2px', lineHeight: 1.2 }}>
+                              {item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && (
+                                <>
+                                  {item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}
+                                  {item.selected_variant.extra && ` (${item.selected_variant.extra})`}
+                                </>
+                              )}
+                              {item.selected_variant && item.selected_variant.size_name && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 && ' • '}
+                              {Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).map(addon => `${addon.addon_name} (+₹${addon.price})`).join(' • ')}
+                            </div>
                           )}
-                          {item.selected_variant && item.selected_variant.size_name && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 && ' • '}
-                          {Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).map(addon => `${addon.addon_name} (+₹${addon.price})`).join(' • ')}
+                        </td>
+                        <td className="text-center">{item.quantity}</td>
+                        <td className="text-end">₹ {parseFloat(item.dish_price).toFixed(2)}</td>
+                        <td className="text-end fw-medium text-primary">₹ {(parseFloat(item.dish_price) * parseFloat(item.quantity)).toFixed(2)}</td>
+                        <td className="text-center">
+                          <Badge bg={
+                            item.status === 'Served' || item.status === 'Completed' || item.status === 'Paid' ? 'success' :
+                              item.status === 'Preparing' || item.status === 'KOT' ? 'warning' :
+                                item.status === 'Cancelled' ? 'danger' : 'secondary'
+                          } className="rounded-pill px-3">
+                            {item.status || 'Pending'}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+
+              {/* Mobile View Items */}
+              <div className="d-md-none">
+                {order.order_items?.map((item, index) => (
+                  <div key={`${item.dish_name}-${index}`} className="border-bottom py-3 last-child-border-0">
+                    <div className="d-flex justify-content-between align-items-start mb-2">
+                      <div className="d-flex align-items-center">
+                        <div className="bg-light-primary text-primary sw-4 sh-4 rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold small">
+                          {index + 1}
                         </div>
-                      )}
-                    </td>
-                    <td className="text-center">{item.quantity}</td>
-                    <td className="text-end">₹ {parseFloat(item.dish_price).toFixed(2)}</td>
-                    <td className="text-end fw-medium text-primary">₹ {(parseFloat(item.dish_price) * parseFloat(item.quantity)).toFixed(2)}</td>
-                    <td className="text-center">
+                        <div>
+                          <div className="fw-bold text-dark">{item.dish_name}</div>
+                          {((item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra)) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) && (
+                            <div className="text-muted xsmall" style={{ fontWeight: 600, color: '#64748b', marginTop: '2px', lineHeight: 1.2 }}>
+                              {item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && (
+                                <>
+                                  {item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}
+                                  {item.selected_variant.extra && ` (${item.selected_variant.extra})`}
+                                </>
+                              )}
+                              {item.selected_variant && item.selected_variant.size_name && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 && ' • '}
+                              {Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).map(addon => `${addon.addon_name} (+₹${addon.price})`).join(' • ')}
+                            </div>
+                          )}
+                          <div className="text-muted xsmall">Qty: {item.quantity} × ₹{parseFloat(item.dish_price).toFixed(2)}</div>
+                        </div>
+                      </div>
                       <Badge bg={
                         item.status === 'Served' || item.status === 'Completed' || item.status === 'Paid' ? 'success' :
                           item.status === 'Preparing' || item.status === 'KOT' ? 'warning' :
                             item.status === 'Cancelled' ? 'danger' : 'secondary'
-                      } className="rounded-pill px-3">
+                      } className="rounded-pill px-2">
                         {item.status || 'Pending'}
                       </Badge>
-                    </td>
-                    <td className="text-muted text-small">{item.special_notes || '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          </div>
-
-          {/* Mobile View Items */}
-          <div className="d-md-none">
-            {order.order_items?.map((item, index) => (
-              <div key={`${item.dish_name}-${index}`} className="border-bottom py-3 last-child-border-0">
-                <div className="d-flex justify-content-between align-items-start mb-2">
-                  <div className="d-flex align-items-center">
-                    <div className="bg-light-primary text-primary sw-4 sh-4 rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold small">
-                      {index + 1}
                     </div>
-                    <div>
-                      <div className="fw-bold text-dark">{item.dish_name}</div>
-                      {((item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra)) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) && (
-                        <div className="text-muted xsmall" style={{ fontWeight: 600, color: '#64748b', marginTop: '2px', lineHeight: 1.2 }}>
-                          {item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && (
-                            <>
-                              {item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}
-                              {item.selected_variant.extra && ` (${item.selected_variant.extra})`}
-                            </>
-                          )}
-                          {item.selected_variant && item.selected_variant.size_name && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 && ' • '}
-                          {Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).map(addon => `${addon.addon_name} (+₹${addon.price})`).join(' • ')}
-                        </div>
-                      )}
-                      <div className="text-muted xsmall">Qty: {item.quantity} × ₹{parseFloat(item.dish_price).toFixed(2)}</div>
+                    <div className="d-flex justify-content-between align-items-center ps-7">
+                      <div className="text-muted xsmall italic">{item.special_notes ? `Note: ${item.special_notes}` : ''}</div>
+                      <div className="fw-bold text-primary">₹ {(parseFloat(item.dish_price) * parseFloat(item.quantity)).toFixed(2)}</div>
                     </div>
                   </div>
-                  <Badge bg={
-                    item.status === 'Served' || item.status === 'Completed' || item.status === 'Paid' ? 'success' :
-                      item.status === 'Preparing' || item.status === 'KOT' ? 'warning' :
-                        item.status === 'Cancelled' ? 'danger' : 'secondary'
-                  } className="rounded-pill px-2">
-                    {item.status || 'Pending'}
-                  </Badge>
-                </div>
-                <div className="d-flex justify-content-between align-items-center ps-7">
-                  <div className="text-muted xsmall italic">{item.special_notes ? `Note: ${item.special_notes}` : ''}</div>
-                  <div className="fw-bold text-primary">₹ {(parseFloat(item.dish_price) * parseFloat(item.quantity)).toFixed(2)}</div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-          
-          <Row className="mt-4 border-top pt-4">
-            <Col xs={12} md={6} className="d-none d-md-block" />
-            <Col xs={12} md={6}>
-              <div className="d-flex justify-content-between mb-2">
-                <span className="text-muted">Sub Total</span>
-                <span className="fw-medium">₹ {parseFloat(order.sub_total || 0).toFixed(2)}</span>
-              </div>
-              {order.cgst_amount > 0 && (
-                <div className="d-flex justify-content-between mb-2">
-                  <span className="text-muted">CGST ({order.cgst_percent || 0}%)</span>
-                  <span>₹ {parseFloat(order.cgst_amount || 0).toFixed(2)}</span>
-                </div>
-              )}
-              {order.sgst_amount > 0 && (
-                <div className="d-flex justify-content-between mb-2">
-                  <span className="text-muted">SGST ({order.sgst_percent || 0}%)</span>
-                  <span>₹ {parseFloat(order.sgst_amount || 0).toFixed(2)}</span>
-                </div>
-              )}
-              {order.vat_amount > 0 && (
-                <div className="d-flex justify-content-between mb-2">
-                  <span className="text-muted">VAT ({order.vat_percent || 0}%)</span>
-                  <span>₹ {parseFloat(order.vat_amount || 0).toFixed(2)}</span>
-                </div>
-              )}
-              {order.discount_amount > 0 && (
-                <div className="d-flex justify-content-between mb-2 text-danger">
-                  <span>Discount</span>
-                  <span>- ₹ {parseFloat(order.discount_amount || 0).toFixed(2)}</span>
-                </div>
-              )}
-              {order.waveoff_amount > 0 && (
-                <div className="d-flex justify-content-between mb-2 text-warning">
-                  <span>Waveoff Amount</span>
-                  <span>- ₹ {parseFloat(order.waveoff_amount || 0).toFixed(2)}</span>
-                </div>
-              )}
-              <hr className="my-2" />
-              <div className="d-flex justify-content-between mb-2 h5 fw-bold">
-                <span className="text-primary">Total Amount</span>
-                <span className="text-primary">₹ {parseFloat(order.total_amount || order.bill_amount || 0).toFixed(2)}</span>
-              </div>
-              <div className="d-flex justify-content-between mb-0 h6 fw-bold">
-                <span className="text-success">Paid Amount</span>
-                <span className="text-success">₹ {parseFloat(order.paid_amount || order.bill_amount || 0).toFixed(2)}</span>
-              </div>
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
-    </Col>
-  </Row>
+
+              <Row className="mt-4 border-top pt-4">
+                <Col xs={12} md={6} className="d-none d-md-block" />
+                <Col xs={12} md={6}>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span className="text-muted">Sub Total</span>
+                    <span className="fw-medium">₹ {parseFloat(order.sub_total || 0).toFixed(2)}</span>
+                  </div>
+                  {order.cgst_amount > 0 && (
+                    <div className="d-flex justify-content-between mb-2">
+                      <span className="text-muted">CGST ({order.cgst_percent || 0}%)</span>
+                      <span>₹ {parseFloat(order.cgst_amount || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {order.sgst_amount > 0 && (
+                    <div className="d-flex justify-content-between mb-2">
+                      <span className="text-muted">SGST ({order.sgst_percent || 0}%)</span>
+                      <span>₹ {parseFloat(order.sgst_amount || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {order.vat_amount > 0 && (
+                    <div className="d-flex justify-content-between mb-2">
+                      <span className="text-muted">VAT ({order.vat_percent || 0}%)</span>
+                      <span>₹ {parseFloat(order.vat_amount || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {order.discount_amount > 0 && (
+                    <div className="d-flex justify-content-between mb-2 text-danger">
+                      <span>Discount</span>
+                      <span>- ₹ {parseFloat(order.discount_amount || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {order.waveoff_amount > 0 && (
+                    <div className="d-flex justify-content-between mb-2 text-warning">
+                      <span>Waveoff Amount</span>
+                      <span>- ₹ {parseFloat(order.waveoff_amount || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <hr className="my-2" />
+                  <div className="d-flex justify-content-between mb-2 h5 fw-bold">
+                    <span className="text-primary">Total Amount</span>
+                    <span className="text-primary">₹ {parseFloat(order.total_amount || order.bill_amount || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="d-flex justify-content-between mb-0 h6 fw-bold">
+                    <span className="text-success">Paid Amount</span>
+                    <span className="text-success">₹ {parseFloat(order.paid_amount || order.bill_amount || 0).toFixed(2)}</span>
+                  </div>
+                </Col>
+              </Row>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
       <Modal show={showWhatsAppModal} onHide={() => setShowWhatsAppModal(false)} centered className="modal-custom-whatsapp">
         <style>{`
           .modal-custom-whatsapp .modal-content {
@@ -646,7 +644,7 @@ const OrderDetails = () => {
             Send WhatsApp Bill
           </Modal.Title>
         </Modal.Header>
-         <Modal.Body>
+        <Modal.Body>
           <Form.Group className="mb-3">
             <Form.Label className="small fw-bold text-secondary">Customer Name</Form.Label>
             <Form.Control

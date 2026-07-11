@@ -10,6 +10,7 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import { AuthContext } from 'contexts/AuthContext';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
+import ImageCropperModal from 'components/cropper/ImageCropperModal';
 
 const Register = () => {
   const history = useHistory();
@@ -51,6 +52,7 @@ const Register = () => {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [cropperState, setCropperState] = useState({ show: false, imageSrc: '', aspect: undefined });
   const countdownRef = useRef(null);
 
   const pinRegex = /^[1-9][0-9]{5}$/;
@@ -270,7 +272,7 @@ const Register = () => {
           />
           <Steps>
             <Step id="step1" name="Restaurant" desc="Basic Info">
-              <Formik innerRef={forms[0]} initialValues={fields} validationSchema={validationSchemas[0]} validateOnMount onSubmit={() => {}}>
+              <Formik innerRef={forms[0]} initialValues={fields} validationSchema={validationSchemas[0]} validateOnMount onSubmit={() => { }}>
                 {({ errors, touched, setFieldValue, values, setFieldError, setFieldTouched }) => (
                   <Form>
                     <div className="login-auth-input-group">
@@ -288,7 +290,7 @@ const Register = () => {
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="login-auth-input-group">
                       <label className="login-auth-input-label">LOGO</label>
                       <div style={{ position: 'relative' }}>
@@ -304,12 +306,20 @@ const Register = () => {
                           onChange={(e) => {
                             const file = e.target.files[0];
                             if (file) {
-                              setUploadingLogo(true);
-                              setFieldValue('logo', file);
-                              setTimeout(() => {
-                                setPreviewLogo(URL.createObjectURL(file));
-                                setUploadingLogo(false);
-                              }, 500);
+                              if (!file.type.startsWith('image/')) {
+                                toast.error('Please select a valid image file');
+                                return;
+                              }
+                              if (file.size > 5 * 1024 * 1024) {
+                                toast.error('Image size should not exceed 5MB');
+                                return;
+                              }
+                              const reader = new FileReader();
+                              reader.addEventListener('load', () => {
+                                setCropperState({ show: true, imageSrc: reader.result, aspect: undefined });
+                              });
+                              reader.readAsDataURL(file);
+                              e.target.value = '';
                             }
                           }}
                         />
@@ -321,6 +331,16 @@ const Register = () => {
                         </div>
                       )}
                       {previewLogo && <img src={previewLogo} alt="Logo" className="img-thumbnail mt-2" style={{ maxWidth: '80px' }} />}
+                      <ImageCropperModal
+                        show={cropperState.show}
+                        onHide={() => setCropperState({ ...cropperState, show: false })}
+                        imageSrc={cropperState.imageSrc}
+                        onCropComplete={(croppedFile) => {
+                          setFieldValue('logo', croppedFile);
+                          setPreviewLogo(URL.createObjectURL(croppedFile));
+                        }}
+                        initialAspect={cropperState.aspect}
+                      />
                     </div>
 
                     <div className="login-auth-input-group">
@@ -333,7 +353,7 @@ const Register = () => {
                           className="login-auth-input form-control"
                           name="email"
                           type="email"
-                          placeholder="you@restaurant.com"
+                          placeholder="Your Email ID"
                           onChange={(e) => {
                             const val = e.target.value;
                             setFieldValue('email', val);
@@ -373,29 +393,29 @@ const Register = () => {
                       <>
                         <div className="login-auth-input-group">
                           <label className="login-auth-input-label">VERIFICATION CODE</label>
-                        <div style={{ position: 'relative' }}>
-                          <span className="login-auth-input-icon">
-                            <CsLineIcons icon="check" size="18" />
-                          </span>
-                          <Field
-                            className="login-auth-input form-control"
-                            name="verificationCode"
-                            maxLength="6"
-                            placeholder="123456"
-                            value={verificationCodeInput}
-                            onChange={(e) => {
-                              setVerificationCodeInput(e.target.value);
-                              setFieldValue('verificationCode', e.target.value);
-                            }}
-                          />
-                        </div>
-                        {errors.verificationCode && touched.verificationCode && (
-                          <div className="login-auth-error-msg">
-                            <CsLineIcons icon="warning" size="13" />
-                            {errors.verificationCode}
+                          <div style={{ position: 'relative' }}>
+                            <span className="login-auth-input-icon">
+                              <CsLineIcons icon="check" size="18" />
+                            </span>
+                            <Field
+                              className="login-auth-input form-control"
+                              name="verificationCode"
+                              maxLength="6"
+                              placeholder="123456"
+                              value={verificationCodeInput}
+                              onChange={(e) => {
+                                setVerificationCodeInput(e.target.value);
+                                setFieldValue('verificationCode', e.target.value);
+                              }}
+                            />
                           </div>
-                        )}
-                      </div>
+                          {errors.verificationCode && touched.verificationCode && (
+                            <div className="login-auth-error-msg">
+                              <CsLineIcons icon="warning" size="13" />
+                              {errors.verificationCode}
+                            </div>
+                          )}
+                        </div>
                         <button
                           type="button"
                           className="login-btn-auth-primary mb-4"
@@ -428,7 +448,7 @@ const Register = () => {
               </Formik>
             </Step>
             <Step id="step2" name="Address" desc="Location">
-              <Formik innerRef={forms[1]} initialValues={fields} validationSchema={validationSchemas[1]} validateOnMount onSubmit={() => {}}>
+              <Formik innerRef={forms[1]} initialValues={fields} validationSchema={validationSchemas[1]} validateOnMount onSubmit={() => { }}>
                 {({ errors, touched, values, setFieldValue }) => (
                   <Form>
                     <div className="login-auth-input-group">
@@ -537,7 +557,7 @@ const Register = () => {
               </Formik>
             </Step>
             <Step id="step3" name="Security" desc="Setup">
-              <Formik innerRef={forms[2]} initialValues={fields} validationSchema={validationSchemas[2]} validateOnMount onSubmit={() => {}}>
+              <Formik innerRef={forms[2]} initialValues={fields} validationSchema={validationSchemas[2]} validateOnMount onSubmit={() => { }}>
                 {({ errors, touched }) => (
                   <Form>
                     <div className="login-auth-input-group">
@@ -579,8 +599,8 @@ const Register = () => {
                           <CsLineIcons icon="lock-off" size="18" />
                         </span>
                         <Field type={showPassword ? 'text' : 'password'} className="login-auth-input form-control" name="password" placeholder="••••••••" />
-                        <span 
-                          className="position-absolute" 
+                        <span
+                          className="position-absolute"
                           style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer' }}
                           onClick={() => setShowPassword(!showPassword)}
                         >
@@ -602,8 +622,8 @@ const Register = () => {
                           <CsLineIcons icon="lock-off" size="18" />
                         </span>
                         <Field type={showConfirmPassword ? 'text' : 'password'} className="login-auth-input form-control" name="confirmPassword" placeholder="••••••••" />
-                        <span 
-                          className="position-absolute" 
+                        <span
+                          className="position-absolute"
                           style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer' }}
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         >
@@ -633,11 +653,11 @@ const Register = () => {
                 >
                   Back
                 </button>
-                <button 
-                  type="button" 
-                  className="login-btn-auth-primary flex-grow-1" 
+                <button
+                  type="button"
+                  className="login-btn-auth-primary flex-grow-1"
                   style={{ borderRadius: '50px' }}
-                  onClick={() => onClickNext(next, steps, step)} 
+                  onClick={() => onClickNext(next, steps, step)}
                   disabled={loading}
                 >
                   {loading ? <Spinner animation="border" size="sm" /> : steps.indexOf(step) === steps.length - 1 ? 'Submit' : 'Continue'}
@@ -651,7 +671,7 @@ const Register = () => {
         Already have an account? <RouterLink to="/login">Sign in →</RouterLink>
       </div>
       <div className="login-auth-powered">
-        Powered by <strong>TheBoxSync</strong>
+        Powered by <strong><a href="https://theboxsync.com" target="_blank" rel="noopener noreferrer">TheBoxSync</a></strong>
       </div>
     </div>
   );

@@ -234,7 +234,7 @@ const ForgotPassword = () => {
         {/* FOOTER */}
         <div className="mt-auto text-center pt-4">
           <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
-            Powered by <strong>TheBoxSync</strong>
+            Powered by <strong><a href="https://theboxsync.com" target="_blank" rel="noopener noreferrer">TheBoxSync</a></strong>
           </p>
         </div>
       </div>

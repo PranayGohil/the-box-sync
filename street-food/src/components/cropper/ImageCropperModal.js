@@ -52,16 +52,14 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
     if (cropper) {
       setIsProcessing(true);
       try {
-        cropper
-          .getCroppedCanvas({ imageSmoothingQuality: 'high' })
-          .toBlob((blob) => {
-            if (blob) {
-              const file = new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' });
-              onCropComplete(file);
-              onHide();
-            }
-            setIsProcessing(false);
-          }, 'image/jpeg');
+        cropper.getCroppedCanvas({ imageSmoothingQuality: 'high' }).toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' });
+            onCropComplete(file);
+            onHide();
+          }
+          setIsProcessing(false);
+        }, 'image/jpeg');
       } catch (e) {
         console.error('Error generating cropped canvas:', e);
         setIsProcessing(false);
@@ -208,7 +206,9 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
         </div>
 
         <div className="d-flex align-items-center gap-2">
-          <span className="cropper-section-label mb-0" style={{ minWidth: '48px' }}>Rotate</span>
+          <span className="cropper-section-label mb-0" style={{ minWidth: '48px' }}>
+            Rotate
+          </span>
           <Form.Range value={rotation} min={0} max={360} step={1} onChange={handleRotationChange} style={{ accentColor: '#1ea8e7' }} />
         </div>
       </Modal.Body>

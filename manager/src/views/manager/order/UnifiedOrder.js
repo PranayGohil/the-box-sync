@@ -554,6 +554,7 @@ const UnifiedOrder = () => {
       }),
       order_status: status,
       customer_name: customerInfo.name,
+      customer_phone: customerInfo.phone || '',
       comment: customerInfo.comment,
       bill_amount: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount) || 0,
       sub_total: parseFloat(paymentData.subTotal) || 0,

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Card, Col, Row, Spinner, Alert, Modal, Badge } from 'react-bootstrap';
+import { Button, Form, Card, Col, Row, Spinner, Alert, Modal, Badge, Image } from 'react-bootstrap';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import ImageCropperModal from 'components/cropper/ImageCropperModal';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { Country, State, City } from 'country-state-city';
@@ -42,6 +43,12 @@ const Profile = () => {
 
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
+  const [cropperState, setCropperState] = useState({
+    show: false,
+    imageSrc: '',
+    aspect: undefined,
+  });
+  const [isWideLogo, setIsWideLogo] = useState(false);
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
@@ -188,13 +195,22 @@ const Profile = () => {
         toast.error('Image size should not exceed 5MB');
         return;
       }
-      setUploadingLogo(true);
-      setTimeout(() => {
-        setLogoFile(file);
-        setLogoPreview(URL.createObjectURL(file));
-        setUploadingLogo(false);
-      }, 500);
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        setCropperState({
+          show: true,
+          imageSrc: reader.result,
+          aspect: undefined,
+        });
+      });
+      reader.readAsDataURL(file);
+      e.target.value = '';
     }
+  };
+
+  const handleCropComplete = (croppedFile) => {
+    setLogoFile(croppedFile);
+    setLogoPreview(URL.createObjectURL(croppedFile));
   };
 
   const openComplianceModal = (type) => {
@@ -370,11 +386,21 @@ const Profile = () => {
 
                     <div className="mb-4 d-flex justify-content-center">
                       <div
-                        className="rounded-circle border border-4 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center"
-                        style={{ width: '180px', height: '180px' }}
+                        className={`border border-4 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center ${
+                          isWideLogo ? 'rounded-3' : 'rounded-circle'
+                        }`}
+                        style={isWideLogo ? { width: '220px', height: '110px' } : { width: '180px', height: '180px' }}
                       >
                         {getLogoSrc() ? (
-                          <img src={getLogoSrc()} alt="Logo" className="w-100 h-100 object-fit-cover" />
+                          <Image
+                            src={getLogoSrc()}
+                            alt="Logo"
+                            style={isWideLogo ? { width: '100%', height: '100%', objectFit: 'contain' } : { width: '100%', height: '100%', objectFit: 'cover' }}
+                            onLoad={(e) => {
+                              const { naturalWidth, naturalHeight } = e.target;
+                              setIsWideLogo(naturalWidth >= naturalHeight * 1.8);
+                            }}
+                          />
                         ) : (
                           <CsLineIcons icon="image" size="64" className="text-muted opacity-20" />
                         )}
@@ -831,6 +857,13 @@ const Profile = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+      <ImageCropperModal
+        show={cropperState.show}
+        onHide={() => setCropperState({ ...cropperState, show: false })}
+        imageSrc={cropperState.imageSrc}
+        onCropComplete={handleCropComplete}
+        initialAspect={cropperState.aspect}
+      />
     </div>
   );
 };

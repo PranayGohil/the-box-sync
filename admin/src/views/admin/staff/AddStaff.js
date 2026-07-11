@@ -698,7 +698,7 @@ const AddStaff = () => {
                         <Form.Control
                           type="email"
                           name="email"
-                          placeholder="email@restaurant.com"
+                          placeholder="Your Email ID"
                           value={values.email}
                           onChange={handleChange}
                           isInvalid={touched.email && errors.email}

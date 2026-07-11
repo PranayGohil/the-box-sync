@@ -422,6 +422,8 @@ const orderController = async (req, res) => {
       const customer = new Customer(customerInfo);
       const savedCustomer = await customer.save();
       orderInfo.customer_id = savedCustomer._id;
+      if (customerInfo.phone) orderInfo.customer_phone = customerInfo.phone;
+      if (customerInfo.name) orderInfo.customer_name = customerInfo.name;
     }
 
     // ✅ 2. Update item statuses based on order status
@@ -626,6 +628,8 @@ const dineInController = async (req, res) => {
         }
 
         orderInfo.customer_id = savedCustomer._id;
+        if (customerInfo.phone) orderInfo.customer_phone = customerInfo.phone;
+        if (customerInfo.name) orderInfo.customer_name = customerInfo.name;
       } catch (error) {
         console.error("Error handling customer:", error);
       }
@@ -890,6 +894,8 @@ const takeawayController = async (req, res) => {
         }
 
         orderInfo.customer_id = savedCustomer._id;
+        if (customerInfo.phone) orderInfo.customer_phone = customerInfo.phone;
+        if (customerInfo.name) orderInfo.customer_name = customerInfo.name;
       } catch (error) {
         console.error("Error handling customer:", error);
       }
@@ -1136,6 +1142,8 @@ const deliveryController = async (req, res) => {
       }
 
       orderInfo.customer_id = savedCustomer._id;
+      if (customerInfo.phone) orderInfo.customer_phone = customerInfo.phone;
+      if (customerInfo.name) orderInfo.customer_name = customerInfo.name;
     } catch (error) {
       console.error("Error handling customer:", error);
       return res
@@ -1523,6 +1531,8 @@ const deliveryFromSiteController = async (req, res) => {
       }
 
       orderInfo.customer_id = savedCustomer._id;
+      if (customerInfo.phone) orderInfo.customer_phone = customerInfo.phone;
+      if (customerInfo.name) orderInfo.customer_name = customerInfo.name;
     } catch (error) {
       console.error("Error handling customer:", error);
       return res

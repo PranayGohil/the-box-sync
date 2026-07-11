@@ -129,7 +129,7 @@ const Login = () => {
                 <input
                   type="email"
                   name="email"
-                  placeholder="you@company.com"
+                  placeholder="Your Email ID"
                   value={values.email}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -194,7 +194,7 @@ const Login = () => {
           </div>
 
           <div className="login-auth-powered">
-            Powered by <strong>TheBoxSync</strong>
+            Powered by <strong><a href="https://theboxsync.com" target="_blank" rel="noopener noreferrer">TheBoxSync</a></strong>
           </div>
         </div>
       </div>

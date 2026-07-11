@@ -5,6 +5,7 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import ImageCropperModal from 'components/cropper/ImageCropperModal';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { Country, State, City } from 'country-state-city';
@@ -41,6 +42,7 @@ const Profile = () => {
 
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
+  const [cropperState, setCropperState] = useState({ show: false, imageSrc: '', aspect: undefined });
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
@@ -173,13 +175,18 @@ const Profile = () => {
         toast.error('Image size should not exceed 5MB');
         return;
       }
-      setUploadingLogo(true);
-      setTimeout(() => {
-        setLogoFile(file);
-        setLogoPreview(URL.createObjectURL(file));
-        setUploadingLogo(false);
-      }, 500);
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        setCropperState({ show: true, imageSrc: reader.result, aspect: undefined });
+      });
+      reader.readAsDataURL(file);
+      e.target.value = '';
     }
+  };
+
+  const handleCropComplete = (croppedFile) => {
+    setLogoFile(croppedFile);
+    setLogoPreview(URL.createObjectURL(croppedFile));
   };
 
   const handleEditSubmit = async (values, { setSubmitting }) => {
@@ -547,6 +554,13 @@ const Profile = () => {
           </Card>
         </div>
       )}
+      <ImageCropperModal
+        show={cropperState.show}
+        onHide={() => setCropperState({ ...cropperState, show: false })}
+        imageSrc={cropperState.imageSrc}
+        onCropComplete={handleCropComplete}
+        initialAspect={cropperState.aspect}
+      />
     </div>
   );
 };
