@@ -79,6 +79,9 @@ const NavContent = ({ activePlans }) => {
 };
 
 const MobileNavbar = () => {
+  const { navClasses } = useSelector((state) => state.menu);
+  const isSidebarOpen = navClasses && navClasses['mobile-side-in'];
+
   const items = [
     { to: '/settings/profile', icon: 'user', title: 'Profile' },
     { to: '/settings/tax-charges', icon: 'dollar', title: 'Tax & Charges' },
@@ -100,7 +103,7 @@ const MobileNavbar = () => {
           border: '1px solid rgba(0, 0, 0, 0.06)',
           boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
           bottom: '20px',
-          zIndex: 1040,
+          zIndex: isSidebarOpen ? 999 : 1040,
           padding: '0 15px',
         }}
       >
