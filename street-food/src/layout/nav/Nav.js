@@ -143,27 +143,22 @@ const premiumNavStyles = `
     cursor: pointer !important;
   }
 
-  /* Custom positioning to fix the logout button at the bottom of mobile sidebar / vertical menu with a divider line */
-  html[data-dimension="mobile"] .nav-container .nav-content .menu-icons,
+  /* Custom positioning to fix the logout button at the bottom of mobile sidebar / vertical menu */
+  .nav-container.mobile-side-in .nav-content .menu-icons,
   html[data-placement="vertical"] .nav-container .nav-content .menu-icons {
     margin-top: auto !important;
     order: 10 !important;
     padding-top: 20px !important;
     padding-bottom: 15px !important;
     width: 80% !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-top: none !important;
   }
 
-  /* Reduce space and add horizontal lines before/after menu in mobile/vertical sidebar */
-  html[data-dimension="mobile"] .nav-container .nav-content .user-container,
-  html[data-placement="vertical"] .nav-container .nav-content .user-container {
-    min-height: auto !important;
-    margin-bottom: 0px !important;
-  }
-  html[data-dimension="mobile"] .nav-container .nav-content .menu-container,
+  /* Spacing and lines around menu in mobile/vertical sidebar */
+  .nav-container.mobile-side-in .nav-content .menu-container,
   html[data-placement="vertical"] .nav-container .nav-content .menu-container {
-    margin-top: 1.25rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
     padding-top: 1.25rem !important;
     padding-bottom: 1.25rem !important;
     border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
@@ -171,7 +166,7 @@ const premiumNavStyles = `
     width: 80% !important;
     align-self: center !important;
   }
-  html[data-dimension="mobile"] .nav-container .nav-content .menu-container .menu,
+  .nav-container.mobile-side-in .nav-content .menu-container .menu,
   html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu {
     padding-top: 0px !important;
     padding-bottom: 0px !important;
@@ -179,8 +174,15 @@ const premiumNavStyles = `
     padding-right: 0px !important;
   }
 
+  /* Reduce space between logo/user profile and menu in mobile/vertical sidebar */
+  .nav-container.mobile-side-in .nav-content .user-container,
+  html[data-placement="vertical"] .nav-container .nav-content .user-container {
+    min-height: auto !important;
+    margin-bottom: 0px !important;
+  }
+
   /* Premium interactive menu item styling in mobile/vertical sidebar */
-  html[data-dimension="mobile"] .nav-container .nav-content .menu-container .menu li a,
+  .nav-container.mobile-side-in .nav-content .menu-container .menu li a,
   html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a {
     display: flex !important;
     align-items: center !important;
@@ -192,19 +194,20 @@ const premiumNavStyles = `
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     text-decoration: none !important;
     border: 1px solid transparent !important;
+    background: transparent !important;
   }
-  html[data-dimension="mobile"] .nav-container .nav-content .menu-container .menu li a::before,
+  .nav-container.mobile-side-in .nav-content .menu-container .menu li a::before,
   html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a::before {
     display: none !important;
   }
-  html[data-dimension="mobile"] .nav-container .nav-content .menu-container .menu li a:hover,
+  .nav-container.mobile-side-in .nav-content .menu-container .menu li a:hover,
   html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a:hover {
     background: rgba(255, 255, 255, 0.08) !important;
     color: #ffffff !important;
     transform: translateX(4px);
     border-color: rgba(255, 255, 255, 0.1) !important;
   }
-  html[data-dimension="mobile"] .nav-container .nav-content .menu-container .menu li a.active,
+  .nav-container.mobile-side-in .nav-content .menu-container .menu li a.active,
   html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a.active {
     background: rgba(255, 255, 255, 0.18) !important;
     color: #ffffff !important;
@@ -212,11 +215,11 @@ const premiumNavStyles = `
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
     border-color: rgba(255, 255, 255, 0.15) !important;
   }
-  html[data-dimension="mobile"] .nav-container .nav-content .menu-container .menu li a .icon,
+  .nav-container.mobile-side-in .nav-content .menu-container .menu li a .icon,
   html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a .icon {
     transition: all 0.25s ease !important;
   }
-  html[data-dimension="mobile"] .nav-container .nav-content .menu-container .menu li a:hover .icon,
+  .nav-container.mobile-side-in .nav-content .menu-container .menu li a:hover .icon,
   html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a:hover .icon {
     transform: scale(1.15);
     color: #ffffff !important;
