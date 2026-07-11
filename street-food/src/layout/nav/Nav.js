@@ -143,111 +143,6 @@ const premiumNavStyles = `
     cursor: pointer !important;
   }
 
-  /* ── Mobile Sidebar & Vertical Navigation Premium Interactive Styles ── */
-  html[data-dimension="mobile"] .nav-container .menu-container .menu li,
-  html[data-placement="vertical"] .nav-container .menu-container .menu li {
-    margin-bottom: 10px !important;
-  }
-
-  html[data-dimension="mobile"] .nav-container .menu-container .menu li a,
-  html[data-placement="vertical"] .nav-container .menu-container .menu li a {
-    display: flex !important;
-    align-items: center !important;
-    padding: 0.75rem 1.25rem !important;
-    color: rgba(255, 255, 255, 0.85) !important;
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 12px !important;
-    font-weight: 600 !important;
-    font-size: 14px !important;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-    text-decoration: none !important;
-  }
-
-  /* Hover state */
-  html[data-dimension="mobile"] .nav-container .menu-container .menu li a:hover,
-  html[data-placement="vertical"] .nav-container .menu-container .menu li a:hover {
-    color: #ffffff !important;
-    background: rgba(255, 255, 255, 0.12) !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
-    transform: translateX(4px) !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
-  }
-
-  /* Active state */
-  html[data-dimension="mobile"] .nav-container .menu-container .menu li a.active,
-  html[data-placement="vertical"] .nav-container .menu-container .menu li a.active {
-    color: #ffffff !important;
-    background: rgba(255, 255, 255, 0.22) !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
-    font-weight: 700 !important;
-    transform: translateX(2px) !important;
-  }
-
-  /* Left accent bar for active item on vertical/mobile */
-  html[data-dimension="mobile"] .nav-container .menu-container .menu li a.active::before,
-  html[data-placement="vertical"] .nav-container .menu-container .menu li a.active::before {
-    content: '' !important;
-    position: absolute !important;
-    left: 8px !important;
-    top: 25% !important;
-    height: 50% !important;
-    width: 3px !important;
-    background: #ffffff !important;
-    border-radius: 4px !important;
-  }
-
-  /* Icon and label spacing and style adjustments */
-  html[data-dimension="mobile"] .nav-container .menu-container .menu li a .icon,
-  html[data-placement="vertical"] .nav-container .menu-container .menu li a .icon {
-    margin-right: 12px !important;
-    transition: transform 0.3s ease !important;
-    stroke: rgba(255, 255, 255, 0.9) !important;
-  }
-
-  html[data-dimension="mobile"] .nav-container .menu-container .menu li a:hover .icon,
-  html[data-placement="vertical"] .nav-container .menu-container .menu li a:hover .icon {
-    transform: scale(1.1) !important;
-  }
-
-  /* User profile card visual enhancement in sidebar */
-  html[data-dimension="mobile"] .nav-container .user-container,
-  html[data-placement="vertical"] .nav-container .user-container {
-    padding: 0 1.25rem !important;
-    margin-bottom: 1.5rem !important;
-    width: 100% !important;
-  }
-
-  html[data-dimension="mobile"] .nav-container .user-container .user,
-  html[data-placement="vertical"] .nav-container .user-container .user {
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 16px !important;
-    padding: 12px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    transition: all 0.3s ease !important;
-    text-decoration: none !important;
-  }
-
-  html[data-dimension="mobile"] .nav-container .user-container .user:hover,
-  html[data-placement="vertical"] .nav-container .user-container .user:hover {
-    background: rgba(255, 255, 255, 0.12) !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
-  }
-
-  html[data-dimension="mobile"] .nav-container .user-container .user .name,
-  html[data-placement="vertical"] .nav-container .user-container .user .name {
-    color: #ffffff !important;
-    font-weight: 700 !important;
-    margin-top: 8px !important;
-    font-size: 14px !important;
-    letter-spacing: 0.3px !important;
-  }
-
   /* Custom positioning to fix the logout button at the bottom of mobile sidebar / vertical menu with a divider line */
   html[data-dimension="mobile"] .nav-container .nav-content .menu-icons,
   html[data-placement="vertical"] .nav-container .nav-content .menu-icons {
@@ -259,32 +154,7 @@ const premiumNavStyles = `
     border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
   }
 
-  /* Logout button alignment & styling */
-  html[data-dimension="mobile"] .nav-container .nav-content .menu-icons .nav-logout-btn,
-  html[data-placement="vertical"] .nav-container .nav-content .menu-icons .nav-logout-btn {
-    width: 100% !important;
-    padding: 0.75rem 1.5rem !important;
-    height: auto !important;
-    background: rgba(255, 255, 255, 0.06) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 12px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    color: #ffffff !important;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-    font-size: 13.5px !important;
-  }
-
-  html[data-dimension="mobile"] .nav-container .nav-content .menu-icons .nav-logout-btn:hover,
-  html[data-placement="vertical"] .nav-container .nav-content .menu-icons .nav-logout-btn:hover {
-    background: rgba(239, 68, 68, 0.15) !important;
-    border-color: rgba(239, 68, 68, 0.3) !important;
-    color: #fca5a5 !important;
-    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1) !important;
-  }
-
-  /* Reduce space between logo/user profile and menu in mobile/vertical sidebar */
+  /* Reduce space and add horizontal lines before/after menu in mobile/vertical sidebar */
   html[data-dimension="mobile"] .nav-container .nav-content .user-container,
   html[data-placement="vertical"] .nav-container .nav-content .user-container {
     min-height: auto !important;
@@ -292,11 +162,64 @@ const premiumNavStyles = `
   }
   html[data-dimension="mobile"] .nav-container .nav-content .menu-container,
   html[data-placement="vertical"] .nav-container .nav-content .menu-container {
-    margin-top: 0.5rem !important;
+    margin-top: 1.25rem !important;
+    margin-bottom: 1rem !important;
+    padding-top: 1.25rem !important;
+    padding-bottom: 1.25rem !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+    width: 80% !important;
+    align-self: center !important;
   }
   html[data-dimension="mobile"] .nav-container .nav-content .menu-container .menu,
   html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu {
     padding-top: 0px !important;
+    padding-bottom: 0px !important;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+  }
+
+  /* Premium interactive menu item styling in mobile/vertical sidebar */
+  html[data-dimension="mobile"] .nav-container .nav-content .menu-container .menu li a,
+  html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a {
+    display: flex !important;
+    align-items: center !important;
+    padding: 0.65rem 1rem !important;
+    margin-bottom: 0.5rem !important;
+    border-radius: 10px !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-weight: 600 !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    text-decoration: none !important;
+    border: 1px solid transparent !important;
+  }
+  html[data-dimension="mobile"] .nav-container .nav-content .menu-container .menu li a::before,
+  html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a::before {
+    display: none !important;
+  }
+  html[data-dimension="mobile"] .nav-container .nav-content .menu-container .menu li a:hover,
+  html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+    transform: translateX(4px);
+    border-color: rgba(255, 255, 255, 0.1) !important;
+  }
+  html[data-dimension="mobile"] .nav-container .nav-content .menu-container .menu li a.active,
+  html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a.active {
+    background: rgba(255, 255, 255, 0.18) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+  }
+  html[data-dimension="mobile"] .nav-container .nav-content .menu-container .menu li a .icon,
+  html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a .icon {
+    transition: all 0.25s ease !important;
+  }
+  html[data-dimension="mobile"] .nav-container .nav-content .menu-container .menu li a:hover .icon,
+  html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a:hover .icon {
+    transform: scale(1.15);
+    color: #ffffff !important;
   }
 `;
 
