@@ -143,13 +143,30 @@ const premiumNavStyles = `
     cursor: pointer !important;
   }
 
-  /* Custom positioning to fix the logout button at the bottom of mobile sidebar / vertical menu */
+  /* Custom positioning to fix the logout button at the bottom of mobile sidebar / vertical menu with a divider line */
   html[data-dimension="mobile"] .nav-container .nav-content .menu-icons,
   html[data-placement="vertical"] .nav-container .nav-content .menu-icons {
     margin-top: auto !important;
     order: 10 !important;
-    padding-top: 15px !important;
-    padding-bottom: 10px !important;
+    padding-top: 20px !important;
+    padding-bottom: 15px !important;
+    width: 80% !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+
+  /* Reduce space between logo/user profile and menu in mobile/vertical sidebar */
+  html[data-dimension="mobile"] .nav-container .nav-content .user-container,
+  html[data-placement="vertical"] .nav-container .nav-content .user-container {
+    min-height: auto !important;
+    margin-bottom: 0px !important;
+  }
+  html[data-dimension="mobile"] .nav-container .nav-content .menu-container,
+  html[data-placement="vertical"] .nav-container .nav-content .menu-container {
+    margin-top: 0.5rem !important;
+  }
+  html[data-dimension="mobile"] .nav-container .nav-content .menu-container .menu,
+  html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu {
+    padding-top: 0px !important;
   }
 `;
 
