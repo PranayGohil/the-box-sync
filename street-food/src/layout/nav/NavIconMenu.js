@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Modal, Button } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import IconMenuNotifications from './notifications/Notifications';
@@ -26,6 +27,7 @@ const customStyles = `
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
+      gap: 8px !important;
     }
     .custom-btn-outline:hover {
       background: #23b3f4 !important;
@@ -44,11 +46,33 @@ const customStyles = `
       margin: 0 auto 1.5rem;
       color: #f43f5e;
     }
+    .logout-text-link {
+      color: rgba(255, 255, 255, 0.8) !important;
+      font-weight: 700 !important;
+      text-decoration: none !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 10px !important;
+      padding: 10px 24px !important;
+      border-radius: 12px !important;
+      transition: all 0.25s ease !important;
+      border: 1px solid transparent !important;
+      background: transparent !important;
+      width: 100% !important;
+    }
+    .logout-text-link:hover {
+      background: rgba(255, 255, 255, 0.08) !important;
+      color: #ffffff !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+    }
 `;
 
 const NavIconMenu = () => {
   const history = useHistory();
   const brandColor = '#23b3f4';
+  const { placementStatus, attrMobile } = useSelector((state) => state.menu);
+  const isVerticalOrMobile = placementStatus?.placementHtmlData === 'Vertical' || attrMobile === true;
 
   const [showSearchModal, setShowSearchModal] = useState(false);
 
@@ -68,19 +92,28 @@ const NavIconMenu = () => {
   return (
     <>
       <style>{customStyles}</style>
-      <ul className="list-unstyled list-inline text-center menu-icons mb-0">
-        <li className="list-inline-item" title="Search">
-          <a href="#/" onClick={onSearchIconClick}>
-            <CsLineIcons icon="search" size="18" />
-          </a>
-        </li>
-        <li className="list-inline-item" title="Logout">
-          <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
+      {isVerticalOrMobile ? (
+        <div className="menu-icons text-center mb-0" style={{ alignSelf: 'center' }}>
+          <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }} className="logout-text-link">
             <CsLineIcons icon="logout" size="18" />
+            <span style={{ fontSize: '15px', fontWeight: '700' }}>Logout</span>
           </a>
-        </li>
-        <IconMenuNotifications />
-      </ul>
+        </div>
+      ) : (
+        <ul className="list-unstyled list-inline text-center menu-icons mb-0">
+          <li className="list-inline-item" title="Search">
+            <a href="#/" onClick={onSearchIconClick}>
+              <CsLineIcons icon="search" size="18" />
+            </a>
+          </li>
+          <li className="list-inline-item" title="Logout">
+            <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
+              <CsLineIcons icon="logout" size="18" />
+            </a>
+          </li>
+          <IconMenuNotifications />
+        </ul>
+      )}
       <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 
       <Modal show={showLogoutModal} onHide={() => setShowLogoutModal(false)} centered contentClassName="interactive-card border-0 shadow-lg">
