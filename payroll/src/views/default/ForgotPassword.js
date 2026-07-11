@@ -21,6 +21,8 @@ const ForgotPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSendOtp = async (e) => {
     setIsLoading(true);
@@ -110,33 +112,20 @@ const ForgotPassword = () => {
   const rightSide = (
     <div className="sw-lg-70 min-h-100 bg-foreground d-flex justify-content-center align-items-center shadow-deep py-5 full-page-content-right-border">
       <div className="sw-lg-50 px-5 d-flex flex-column min-h-100 mx-auto">
-
         {/* CENTER CONTENT */}
         <div className="my-auto">
-
           {/* HEADER — CHANGES BASED ON STEP */}
           <div className="mb-4">
-            <h2 className="cta-1 mb-0 text-primary">
-              {stepHeader[step].title}
-            </h2>
-            <p className="h6 mt-2">
-              {stepHeader[step].subtitle}
-            </p>
+            <h2 className="cta-1 mb-0 text-primary">{stepHeader[step].title}</h2>
+            <p className="h6 mt-2">{stepHeader[step].subtitle}</p>
           </div>
-
 
           {/* STEP 1 */}
           {step === 1 && (
             <form onSubmit={handleSendOtp}>
               <div className="mb-3 filled form-group tooltip-end-top">
                 <CsLineIcons icon="email" />
-                <Form.Control
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  disabled={isLoading}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <Form.Control type="email" placeholder="Email" value={email} disabled={isLoading} onChange={(e) => setEmail(e.target.value)} />
               </div>
 
               {error && <div className="text-danger mb-2">{error}</div>}
@@ -153,7 +142,7 @@ const ForgotPassword = () => {
                     'Send OTP'
                   )}
                 </Button>
-                <NavLink to="/login" className="justify-content-left" >
+                <NavLink to="/login" className="justify-content-left">
                   <Button size="lg" type="submit" className="btn btn-primary">
                     Login
                   </Button>
@@ -168,13 +157,7 @@ const ForgotPassword = () => {
             <form onSubmit={handleVerifyOtp}>
               <div className="mb-3 filled form-group tooltip-end-top">
                 <CsLineIcons icon="key" />
-                <Form.Control
-                  type="text"
-                  placeholder="Enter OTP"
-                  value={otp}
-                  disabled={isLoading}
-                  onChange={(e) => setOtp(e.target.value)}
-                />
+                <Form.Control type="text" placeholder="Enter OTP" value={otp} disabled={isLoading} onChange={(e) => setOtp(e.target.value)} />
               </div>
 
               {error && <div className="text-danger mb-2">{error}</div>}
@@ -194,26 +177,42 @@ const ForgotPassword = () => {
           {/* STEP 3 */}
           {step === 3 && (
             <form onSubmit={handleResetPassword}>
-              <div className="mb-3 filled form-group tooltip-end-top">
+              <div className="mb-3 filled form-group tooltip-end-top position-relative">
                 <CsLineIcons icon="lock-off" />
                 <Form.Control
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="New Password"
                   value={newPassword}
                   disabled={isLoading}
                   onChange={(e) => setNewPassword(e.target.value)}
+                  style={{ paddingRight: '40px' }}
                 />
+                <span
+                  className="position-absolute"
+                  style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer', zIndex: 10 }}
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="15" />
+                </span>
               </div>
 
-              <div className="mb-3 filled form-group tooltip-end-top">
+              <div className="mb-3 filled form-group tooltip-end-top position-relative">
                 <CsLineIcons icon="lock-off" />
                 <Form.Control
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="Confirm Password"
                   value={confirmPassword}
                   disabled={isLoading}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  style={{ paddingRight: '40px' }}
                 />
+                <span
+                  className="position-absolute"
+                  style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer', zIndex: 10 }}
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  <CsLineIcons icon={showConfirmPassword ? 'eye-off' : 'eye'} size="15" />
+                </span>
               </div>
 
               {error && <div className="text-danger mb-2">{error}</div>}
@@ -234,7 +233,12 @@ const ForgotPassword = () => {
         {/* FOOTER */}
         <div className="mt-auto text-center pt-4">
           <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
-            Powered by <strong><a href="https://theboxsync.com" target="_blank" rel="noopener noreferrer">TheBoxSync</a></strong>
+            Powered by{' '}
+            <strong>
+              <a href="https://theboxsync.com" target="_blank" rel="noopener noreferrer">
+                TheBoxSync
+              </a>
+            </strong>
           </p>
         </div>
       </div>

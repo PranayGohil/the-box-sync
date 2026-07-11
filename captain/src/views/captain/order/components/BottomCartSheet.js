@@ -162,9 +162,9 @@ const BottomCartSheet = ({
               (orderStatus === 'KOT' || (orderStatus === 'Save' && orderItems.length > 0) || (isPaid && dueAmount > 0.01)) && (
                 <button
                   type="button"
-                  style={{ 
-                    width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700, 
-                    background: '#23b3f4', color: '#fff', border: 'none', boxShadow: '0 4px 12px rgba(35,179,244,0.3)', 
+                  style={{
+                    width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
+                    background: '#23b3f4', color: '#fff', border: 'none', boxShadow: '0 4px 12px rgba(35,179,244,0.3)',
                     cursor: 'pointer',
                     gridColumn: (isDirty || showKOTButtons) ? 'span 1' : 'span 2'
                   }}
@@ -179,10 +179,10 @@ const BottomCartSheet = ({
       </Offcanvas>
 
       {/* Order Print History Modal */}
-      <Modal 
-        show={showKotHistory} 
-        onHide={() => setShowKotHistory(false)} 
-        centered 
+      <Modal
+        show={showKotHistory}
+        onHide={() => setShowKotHistory(false)}
+        centered
         className="modal-custom-confirm"
         size="md"
       >
@@ -221,7 +221,7 @@ const BottomCartSheet = ({
                       {new Date(record.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
                     </span>
                   </div>
-                  <button 
+                  <button
                     type="button"
                     className="btn-qsr-blue py-1 px-3"
                     style={{ fontSize: '12px' }}
@@ -254,9 +254,9 @@ const BottomCartSheet = ({
       </Modal>
 
       {/* Payment History Modal */}
-      <Modal 
-        show={showPaymentHistory} 
-        onHide={() => setShowPaymentHistory(false)} 
+      <Modal
+        show={showPaymentHistory}
+        onHide={() => setShowPaymentHistory(false)}
         centered
         className="modal-custom-confirm"
       >
@@ -273,7 +273,7 @@ const BottomCartSheet = ({
             <div className="text-muted small fw-bold text-uppercase mb-1">Total Bill Amount</div>
             <div className="h3 mb-0 fw-bold text-success">₹{totalAmount.toFixed(2)}</div>
           </div>
-          
+
           {paymentHistory.length === 0 ? (
             <div className="text-center py-4 text-muted">
               <p className="fw-bold mb-0">No payments recorded yet</p>

@@ -6,11 +6,13 @@ import { AuthContext } from 'contexts/AuthContext';
 
 const BottomNav = () => {
   const { isLogin } = useSelector((state) => state.auth);
-  const { attrMobile } = useSelector((state) => state.menu);
+  const { attrMobile, navClasses } = useSelector((state) => state.menu);
   const { pathname } = useLocation();
   const { activePlans } = useContext(AuthContext);
 
   if (!isLogin || attrMobile) return null;
+
+  const isSidebarOpen = navClasses && navClasses['mobile-side-in'];
 
   const isSettings = pathname.startsWith('/settings');
   const isOperations = pathname.startsWith('/operations');
@@ -29,7 +31,7 @@ const BottomNav = () => {
     { to: '/operations/manage-menu', icon: 'book-open', label: 'Menu' },
     { to: '/operations/inventory-history', icon: 'boxes', label: 'Inventory' },
     { to: '/operations/feedback', icon: 'message', label: 'Feedback', hide: !activePlans.includes('Feedback') },
-  ].filter(item => !item.hide);
+  ].filter((item) => !item.hide);
 
   const defaultItems = [
     { to: '/dashboard', icon: 'grid-2', label: 'Dash' },
@@ -56,7 +58,7 @@ const BottomNav = () => {
           bottom: 20px;
           left: 50%;
           transform: translateX(-50%);
-          z-index: 1050;
+          z-index: ${isSidebarOpen ? '999' : '1050'};
           width: 95%;
           max-width: 500px;
           display: flex;
@@ -116,11 +118,22 @@ const BottomNav = () => {
               return pathname.startsWith('/operations/manage-table') || pathname.startsWith('/operations/add-table');
             }
             if (item.to === '/operations/manage-menu') {
-              return pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu');
+              return (
+                pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu')
+              );
             }
             if (item.to === '/operations/inventory-history') {
-              const inventoryPaths = ['/operations/inventory', '/operations/add-inventory', '/operations/edit-inventory', '/operations/complete-inventory', '/operations/stock-management', '/operations/daily-stock-logs', '/operations/wastage-log', '/operations/requested-inventory'];
-              return inventoryPaths.some(p => pathname.startsWith(p));
+              const inventoryPaths = [
+                '/operations/inventory',
+                '/operations/add-inventory',
+                '/operations/edit-inventory',
+                '/operations/complete-inventory',
+                '/operations/stock-management',
+                '/operations/daily-stock-logs',
+                '/operations/wastage-log',
+                '/operations/requested-inventory',
+              ];
+              return inventoryPaths.some((p) => pathname.startsWith(p));
             }
             if (item.to === '/operations/feedback') {
               return pathname.startsWith('/operations/feedback') || pathname.startsWith('/operations/qr-for-feedback');
@@ -131,11 +144,7 @@ const BottomNav = () => {
           const isActive = checkIsActive();
 
           return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={`bottom-nav-item ${isActive ? 'active' : ''}`}
-            >
+            <NavLink key={item.to} to={item.to} className={`bottom-nav-item ${isActive ? 'active' : ''}`}>
               <CsLineIcons icon={item.icon} size="20" />
             </NavLink>
           );

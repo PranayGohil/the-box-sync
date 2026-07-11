@@ -8,12 +8,12 @@ import SearchModal from './search/SearchModal';
 const NavIconMenu = () => {
   const history = useHistory();
   const [showSearchModal, setShowSearchModal] = useState(false);
-  
+
   const onSearchIconClick = (e) => {
     e.preventDefault();
     setShowSearchModal(true);
   };
-  
+
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = () => {
@@ -21,21 +21,21 @@ const NavIconMenu = () => {
     console.log('User logged out');
     setShowLogoutModal(false);
     history.push('/login');
-  }
+  };
   return (
     <>
       <ul className="list-unstyled list-inline text-center menu-icons">
-        {/* <li className="list-inline-item" title="Search">
+        <li className="list-inline-item" title="Search">
           <a href="#/" onClick={onSearchIconClick}>
             <CsLineIcons icon="search" size="18" />
           </a>
-        </li> */}
+        </li>
         <li className="list-inline-item" title="Logout">
-          <a onClick={() => setShowLogoutModal(true)}>
+          <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
             <CsLineIcons icon="logout" size="18" />
           </a>
         </li>
-        {/* <IconMenuNotifications /> */}
+        <IconMenuNotifications />
       </ul>
       <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 

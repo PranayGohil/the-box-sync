@@ -4,12 +4,11 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-
-
 const DeletePanelModal = ({ show, handleClose, planName, fetchData }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleCloseModal = () => {
     setPassword('');
@@ -58,20 +57,32 @@ const DeletePanelModal = ({ show, handleClose, planName, fetchData }) => {
           </div>
           <div>
             <p className="mb-0 fw-bold text-dark">Permanently delete panel credentials?</p>
-            <p className="mb-1 text-muted small">Are you sure you want to delete the credentials for <strong>{planName}</strong>? This removes access to this specific panel.</p>
+            <p className="mb-1 text-muted small">
+              Are you sure you want to delete the credentials for <strong>{planName}</strong>? This removes access to this specific panel.
+            </p>
             <p className="mb-0 text-success small fw-semibold">Your global subscription active state remains perfectly safe.</p>
           </div>
         </div>
         <div className="mb-3">
           <label className="form-label small fw-bold text-danger">Enter Admin Password to Confirm *</label>
-          <input 
-            type="password" 
-            className="form-control rounded-3" 
-            placeholder="Enter your admin password" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            disabled={isDeleting} 
-          />
+          <div className="position-relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              className="form-control rounded-3"
+              placeholder="Enter your admin password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isDeleting}
+              style={{ paddingRight: '40px' }}
+            />
+            <span
+              className="position-absolute"
+              style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer', zIndex: 10 }}
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="15" />
+            </span>
+          </div>
         </div>
         {error && (
           <Alert variant="danger" className="mt-3 border-0 shadow-sm small fw-bold d-flex align-items-center">
@@ -81,18 +92,10 @@ const DeletePanelModal = ({ show, handleClose, planName, fetchData }) => {
         )}
       </Modal.Body>
       <Modal.Footer className="border-0 pt-0">
-        <Button 
-          onClick={handleCloseModal} 
-          disabled={isDeleting}
-          className="rounded-pill px-4 fw-bold delete-panel-modal-btn-pill-outline"
-        >
+        <Button onClick={handleCloseModal} disabled={isDeleting} className="rounded-pill px-4 fw-bold delete-panel-modal-btn-pill-outline">
           Cancel
         </Button>
-        <Button
-          onClick={handleDelete}
-          disabled={isDeleting || !password}
-          className="rounded-pill px-4 fw-bold shadow-sm delete-panel-modal-btn-pill-danger"
-        >
+        <Button onClick={handleDelete} disabled={isDeleting || !password} className="rounded-pill px-4 fw-bold shadow-sm delete-panel-modal-btn-pill-danger">
           {isDeleting ? (
             <>
               <Spinner as="span" animation="border" size="sm" className="me-2" />
@@ -110,4 +113,4 @@ const DeletePanelModal = ({ show, handleClose, planName, fetchData }) => {
   );
 };
 
-export default DeletePanelModal;
+export default DeletePanelModal;

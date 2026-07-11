@@ -25,6 +25,7 @@ const Profile = () => {
   const [editMode, setEditMode] = useState(false);
   const [error, setError] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [profile, setProfile] = useState({
     restaurant_code: '',
@@ -501,17 +502,27 @@ const Profile = () => {
                         <Col md={12}>
                           <Form.Group className="mt-2 animate__animated animate__fadeIn">
                             <Form.Label className="small fw-bold text-danger">Current Password * (Required to change Phone Number)</Form.Label>
-                            <Form.Control
-                              type="password"
-                              name="password"
-                              placeholder="Enter your current password to authorize this change"
-                              value={values.password}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              disabled={saving}
-                              isInvalid={touched.password && !!errors.password}
-                            />
-                            <Form.Control.Feedback type="invalid">{errors.password}</Form.Control.Feedback>
+                            <div className="position-relative">
+                              <Form.Control
+                                type={showPassword ? 'text' : 'password'}
+                                name="password"
+                                placeholder="Enter your current password to authorize this change"
+                                value={values.password}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                disabled={saving}
+                                isInvalid={touched.password && !!errors.password}
+                                style={{ paddingRight: '40px' }}
+                              />
+                              <span
+                                className="position-absolute"
+                                style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer', zIndex: 10 }}
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="15" />
+                              </span>
+                            </div>
+                            <Form.Control.Feedback type="invalid" className={touched.password && errors.password ? "d-block" : ""}>{errors.password}</Form.Control.Feedback>
                           </Form.Group>
                         </Col>
                       )}

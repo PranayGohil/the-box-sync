@@ -80,18 +80,18 @@ const NavIconMenu = () => {
     <>
       <style>{customStyles}</style>
       <ul className="list-unstyled list-inline text-center menu-icons">
-        {/* <li className="list-inline-item" title="Search">
+        <li className="list-inline-item" title="Search">
           <a href="#/" onClick={onSearchIconClick}>
             <CsLineIcons icon="search" size="18" />
           </a>
-        </li> */}
+        </li>
         <li className="list-inline-item" title="Logout">
-          <a onClick={() => setShowLogoutModal(true)}>
+          <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
             <CsLineIcons icon="logout" size="18" />
           </a>
         </li>
 
-        {/* <IconMenuNotifications /> */}
+        <IconMenuNotifications />
       </ul>
       <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 

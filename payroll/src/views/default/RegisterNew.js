@@ -23,6 +23,8 @@ const RegisterNew = () => {
   const [bottomNavHidden, setBottomNavHidden] = useState(false);
   const [loading, setLoading] = useState(false);
   const [previewLogo, setPreviewLogo] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [fields, setFields] = useState({
     name: '',
     logo: '',
@@ -90,11 +92,11 @@ const RegisterNew = () => {
       for (const pair of formData.entries()) {
         console.log(pair[0], pair[1]);
       }
-      
+
       const res = await axios.post(`${process.env.REACT_APP_API}/user/register`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      if(res.data){
+      if (res.data) {
         login(res.data.token, res.data.user);
         history.push('/');
       } else {
@@ -125,7 +127,7 @@ const RegisterNew = () => {
     form.submitForm().then(async () => {
       // Validate all fields in this form
       const errors = await form.validateForm();
-      
+
       // Mark current step's fields as touched
       const touchedFields = {};
       stepFields[formIndex].forEach((field) => {
@@ -135,7 +137,7 @@ const RegisterNew = () => {
 
       // Only proceed if no errors in current step
       const stepHasErrors = stepFields[formIndex].some((field) => errors[field]);
-      
+
       if (!stepHasErrors && form.isValid) {
         const newFields = { ...fields, ...form.values };
         setFields(newFields);
@@ -221,18 +223,12 @@ const RegisterNew = () => {
               {/* Step 1 - Restaurant Info */}
               <Step id="step1" name="Restaurant" desc="Basic Information">
                 <div>
-                  <Formik 
-                    innerRef={forms[0]} 
-                    initialValues={fields} 
-                    validationSchema={validationSchemas[0]} 
-                    validateOnMount
-                    onSubmit={() => {}}
-                  >
+                  <Formik innerRef={forms[0]} initialValues={fields} validationSchema={validationSchemas[0]} validateOnMount onSubmit={() => {}}>
                     {({ errors, touched, setFieldValue }) => (
                       <Form>
                         <h5 className="card-title">Restaurant Information</h5>
                         <p className="card-text text-alternate mb-4">Please provide your restaurant's basic details and contact information.</p>
-                        
+
                         <div className="mb-3 top-label tooltip-end-top">
                           <Form.Label>RESTAURANT NAME</Form.Label>
                           <Field className="form-control" name="name" />
@@ -296,13 +292,7 @@ const RegisterNew = () => {
               {/* Step 2 - Address */}
               <Step id="step2" name="Address" desc="Location Details">
                 <div>
-                  <Formik 
-                    innerRef={forms[1]} 
-                    initialValues={fields} 
-                    validationSchema={validationSchemas[1]} 
-                    validateOnMount
-                    onSubmit={() => {}}
-                  >
+                  <Formik innerRef={forms[1]} initialValues={fields} validationSchema={validationSchemas[1]} validateOnMount onSubmit={() => {}}>
                     {({ errors, touched, values, setFieldValue }) => (
                       <Form>
                         <h5 className="card-title">Address Information</h5>
@@ -402,13 +392,7 @@ const RegisterNew = () => {
               {/* Step 3 - Security */}
               <Step id="step3" name="Security" desc="Account Setup">
                 <div>
-                  <Formik 
-                    innerRef={forms[2]} 
-                    initialValues={fields} 
-                    validationSchema={validationSchemas[2]} 
-                    validateOnMount
-                    onSubmit={() => {}}
-                  >
+                  <Formik innerRef={forms[2]} initialValues={fields} validationSchema={validationSchemas[2]} validateOnMount onSubmit={() => {}}>
                     {({ errors, touched }) => (
                       <Form>
                         <h5 className="card-title">Security & Business Details</h5>
@@ -424,9 +408,16 @@ const RegisterNew = () => {
                           )}
                         </div>
 
-                        <div className="mb-3 top-label tooltip-end-top">
+                        <div className="mb-3 top-label tooltip-end-top position-relative">
                           <Form.Label>PASSWORD</Form.Label>
-                          <Field type="password" className="form-control" name="password" />
+                          <Field type={showPassword ? 'text' : 'password'} className="form-control" name="password" style={{ paddingRight: '40px' }} />
+                          <span
+                            className="position-absolute"
+                            style={{ right: '15px', top: '35px', opacity: 0.6, cursor: 'pointer', zIndex: 10 }}
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="15" />
+                          </span>
                           {errors.password && touched.password && (
                             <Form.Control.Feedback type="invalid" tooltip className="d-block">
                               {errors.password}
@@ -434,9 +425,21 @@ const RegisterNew = () => {
                           )}
                         </div>
 
-                        <div className="mb-3 top-label tooltip-end-top">
+                        <div className="mb-3 top-label tooltip-end-top position-relative">
                           <Form.Label>CONFIRM PASSWORD</Form.Label>
-                          <Field type="password" className="form-control" name="confirmPassword" />
+                          <Field
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            className="form-control"
+                            name="confirmPassword"
+                            style={{ paddingRight: '40px' }}
+                          />
+                          <span
+                            className="position-absolute"
+                            style={{ right: '15px', top: '35px', opacity: 0.6, cursor: 'pointer', zIndex: 10 }}
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          >
+                            <CsLineIcons icon={showConfirmPassword ? 'eye-off' : 'eye'} size="15" />
+                          </span>
                           {errors.confirmPassword && touched.confirmPassword && (
                             <Form.Control.Feedback type="invalid" tooltip className="d-block">
                               {errors.confirmPassword}
@@ -481,12 +484,8 @@ const RegisterNew = () => {
                   >
                     <CsLineIcons icon="chevron-left" /> <span>Back</span>
                   </Button>
-                  <Button
-                    variant="outline-primary"
-                    className={`btn-icon btn-icon-end`}
-                    onClick={() => onClickNext(next, steps, step)}
-                  >
-                    <span>{steps.indexOf(step) === steps.length - 2 ? 'Submit' : 'Next'}</span> 
+                  <Button variant="outline-primary" className="btn-icon btn-icon-end" onClick={() => onClickNext(next, steps, step)}>
+                    <span>{steps.indexOf(step) === steps.length - 2 ? 'Submit' : 'Next'}</span>
                     <CsLineIcons icon="chevron-right" />
                   </Button>
                 </div>

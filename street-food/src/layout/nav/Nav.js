@@ -142,15 +142,6 @@ const premiumNavStyles = `
   select, select.form-control {
     cursor: pointer !important;
   }
-
-  /* Custom positioning to fix the logout button at the bottom of mobile sidebar / vertical menu */
-  html[data-dimension="mobile"] .nav-container .nav-content .menu-icons,
-  html[data-placement="vertical"] .nav-container .nav-content .menu-icons {
-    margin-top: auto !important;
-    order: 10 !important;
-    padding-top: 15px !important;
-    padding-bottom: 10px !important;
-  }
 `;
 
 const Nav = () => {

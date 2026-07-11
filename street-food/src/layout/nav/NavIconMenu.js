@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Modal, Button } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
+import IconMenuNotifications from './notifications/Notifications';
+import SearchModal from './search/SearchModal';
 
 const customStyles = `
     .interactive-card {
@@ -24,6 +27,7 @@ const customStyles = `
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
+      gap: 8px !important;
     }
     .custom-btn-outline:hover {
       background: #23b3f4 !important;
@@ -42,32 +46,41 @@ const customStyles = `
       margin: 0 auto 1.5rem;
       color: #f43f5e;
     }
-    .nav-logout-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 0.6rem !important;
-      height: 26px;
-      background: transparent !important;
-      color: #ffffff !important;
-      border: none !important;
-      font-size: 13px !important;
-      font-family: var(--font-heading), var(--font) !important;
+    .logout-text-link {
+      color: rgba(255, 255, 255, 0.8) !important;
       font-weight: 700 !important;
-      letter-spacing: 0.3px;
-      transition: all 0.2s ease-in-out;
-      cursor: pointer;
+      text-decoration: none !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 10px !important;
+      padding: 10px 24px !important;
+      border-radius: 12px !important;
+      transition: all 0.25s ease !important;
+      border: 1px solid transparent !important;
+      background: transparent !important;
+      width: 100% !important;
     }
-    .nav-logout-btn:hover {
+    .logout-text-link:hover {
       background: rgba(255, 255, 255, 0.08) !important;
       color: #ffffff !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
     }
 `;
 
 const NavIconMenu = () => {
   const history = useHistory();
   const brandColor = '#23b3f4';
-  
+  const { placementStatus, attrMobile } = useSelector((state) => state.menu);
+  const isVerticalOrMobile = placementStatus?.placementHtmlData === 'Vertical' || attrMobile === true;
+
+  const [showSearchModal, setShowSearchModal] = useState(false);
+
+  const onSearchIconClick = (e) => {
+    e.preventDefault();
+    setShowSearchModal(true);
+  };
+
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = () => {
@@ -75,27 +88,39 @@ const NavIconMenu = () => {
     console.log('User logged out');
     setShowLogoutModal(false);
     history.push('/login');
-  }
+  };
   return (
     <>
       <style>{customStyles}</style>
-      <ul className="list-unstyled list-inline text-center menu-icons mb-0">
-        <li className="list-inline-item" title="Logout" style={{ margin: 0 }}>
-          <a className="nav-logout-btn" onClick={() => setShowLogoutModal(true)}>
-            <CsLineIcons icon="logout" size="15" className="me-2" />
-            <span>Logout</span>
+      {isVerticalOrMobile ? (
+        <div className="menu-icons text-center mb-0" style={{ alignSelf: 'center' }}>
+          <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }} className="logout-text-link">
+            <CsLineIcons icon="logout" size="18" />
+            <span style={{ fontSize: '15px', fontWeight: '700' }}>Logout</span>
           </a>
-        </li>
-      </ul>
+        </div>
+      ) : (
+        <ul className="list-unstyled list-inline text-center menu-icons mb-0">
+          <li className="list-inline-item" title="Search">
+            <a href="#/" onClick={onSearchIconClick}>
+              <CsLineIcons icon="search" size="18" />
+            </a>
+          </li>
+          <li className="list-inline-item" title="Logout">
+            <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
+              <CsLineIcons icon="logout" size="18" />
+            </a>
+          </li>
+          <IconMenuNotifications />
+        </ul>
+      )}
+      <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 
-      <Modal 
-        show={showLogoutModal} 
-        onHide={() => setShowLogoutModal(false)} 
-        centered 
-        contentClassName="interactive-card border-0 shadow-lg"
-      >
+      <Modal show={showLogoutModal} onHide={() => setShowLogoutModal(false)} centered contentClassName="interactive-card border-0 shadow-lg">
         <Modal.Header className="border-0 p-4 pb-0" closeButton>
-          <Modal.Title className="fw-bold" style={{ color: brandColor }}>Session Management</Modal.Title>
+          <Modal.Title className="fw-bold" style={{ color: brandColor }}>
+            Session Management
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4 text-center">
           <div className="logout-icon-container">
@@ -105,18 +130,10 @@ const NavIconMenu = () => {
           <p className="text-muted smaller fw-bold mb-0">Are you sure you want to end your session? You will need to login again to access the dashboard.</p>
         </Modal.Body>
         <Modal.Footer className="border-0 p-4 pt-0 d-flex justify-content-center gap-3">
-          <Button 
-            variant="light" 
-            className="custom-btn-outline border-0 text-muted" 
-            onClick={() => setShowLogoutModal(false)}
-          >
+          <Button variant="light" className="custom-btn-outline border-0 text-muted" onClick={() => setShowLogoutModal(false)}>
             Stay Signed In
           </Button>
-          <Button 
-            variant="danger" 
-            className="custom-btn-outline border-danger text-danger px-5" 
-            onClick={handleLogout}
-          >
+          <Button variant="danger" className="custom-btn-outline border-danger text-danger px-5" onClick={handleLogout}>
             Yes, Logout
           </Button>
         </Modal.Footer>

@@ -27,6 +27,7 @@ const Profile = () => {
   const [error, setError] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [isWideLogo, setIsWideLogo] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [profile, setProfile] = useState({
     restaurant_code: '',
@@ -114,12 +115,12 @@ const Profile = () => {
 
         // Pre-load states and cities if data exists
         if (profileData.country) {
-          const countryObj = Country.getAllCountries().find(c => c.name === profileData.country);
+          const countryObj = Country.getAllCountries().find((c) => c.name === profileData.country);
           if (countryObj) {
             const countryStates = State.getStatesOfCountry(countryObj.isoCode);
             setStates(countryStates);
             if (profileData.state) {
-              const stateObj = countryStates.find(s => s.name === profileData.state);
+              const stateObj = countryStates.find((s) => s.name === profileData.state);
               if (stateObj) {
                 setCities(City.getCitiesOfState(countryObj.isoCode, stateObj.isoCode));
               }
@@ -148,7 +149,7 @@ const Profile = () => {
 
     if (countryName) {
       setLoadingStates((prev) => ({ ...prev, states: true }));
-      const countryObj = Country.getAllCountries().find(c => c.name === countryName);
+      const countryObj = Country.getAllCountries().find((c) => c.name === countryName);
       if (countryObj) {
         setStates(State.getStatesOfCountry(countryObj.isoCode));
       }
@@ -164,9 +165,9 @@ const Profile = () => {
 
     if (stateName && countryName) {
       setLoadingStates((prev) => ({ ...prev, cities: true }));
-      const countryObj = Country.getAllCountries().find(c => c.name === countryName);
+      const countryObj = Country.getAllCountries().find((c) => c.name === countryName);
       if (countryObj) {
-        const stateObj = State.getStatesOfCountry(countryObj.isoCode).find(s => s.name === stateName);
+        const stateObj = State.getStatesOfCountry(countryObj.isoCode).find((s) => s.name === stateName);
         if (stateObj) {
           setCities(City.getCitiesOfState(countryObj.isoCode, stateObj.isoCode));
         }
@@ -262,12 +263,9 @@ const Profile = () => {
     return '';
   };
 
-
-
   if (loading) {
     return (
       <div className="container-fluid py-5">
-
         <HtmlHead title={title} description={description} />
         <div className="d-flex flex-column align-items-center justify-content-center py-5 mt-5">
           <Spinner animation="border" style={{ color: '#1ea8e7' }} className="mb-3" />
@@ -279,12 +277,13 @@ const Profile = () => {
 
   return (
     <div className="container-fluid pb-5">
-
       <HtmlHead title={title} description={description} />
 
       <Row className="g-3 align-items-center mb-4">
         <Col md={7}>
-          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
+          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
+            {title}
+          </h1>
           <BreadcrumbList items={breadcrumbs} />
         </Col>
       </Row>
@@ -322,7 +321,9 @@ const Profile = () => {
 
                     <div className="mb-4 d-flex justify-content-center">
                       <div
-                        className={`border border-4 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center ${isWideLogo ? 'rounded-3' : 'rounded-circle'}`}
+                        className={`border border-4 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center ${
+                          isWideLogo ? 'rounded-3' : 'rounded-circle'
+                        }`}
                         style={isWideLogo ? { width: '220px', height: '110px' } : { width: '180px', height: '180px' }}
                       >
                         {getLogoSrc() ? (
@@ -343,7 +344,14 @@ const Profile = () => {
 
                     {editMode && (
                       <div className="w-100 mt-auto">
-                        <input type="file" id="logo-upload" className="d-none" accept="image/*" onChange={handleLogoChange} disabled={uploadingLogo || saving} />
+                        <input
+                          type="file"
+                          id="logo-upload"
+                          className="d-none"
+                          accept="image/*"
+                          onChange={handleLogoChange}
+                          disabled={uploadingLogo || saving}
+                        />
                         <Button as="label" htmlFor="logo-upload" className="profile-custom-btn-outline w-100 mb-2" disabled={uploadingLogo || saving}>
                           {uploadingLogo ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
                           {getLogoSrc() ? 'Change Logo' : 'Upload Logo'}
@@ -383,46 +391,94 @@ const Profile = () => {
                       <Col md={6}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">Restaurant Name *</Form.Label>
-                          <Form.Control type="text" name="name" value={values.name} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.name && errors.name} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} />
+                          <Form.Control
+                            type="text"
+                            name="name"
+                            value={values.name}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            disabled={!editMode || saving}
+                            isInvalid={touched.name && errors.name}
+                            className={!editMode ? 'bg-light border-0 px-3 py-2 fw-bold' : ''}
+                          />
                           <Form.Control.Feedback type="invalid">{errors.name}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
                       <Col md={6}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">Email Address *</Form.Label>
-                          <Form.Control type="email" name="email" value={values.email} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.email && errors.email} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} />
+                          <Form.Control
+                            type="email"
+                            name="email"
+                            value={values.email}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            disabled={!editMode || saving}
+                            isInvalid={touched.email && errors.email}
+                            className={!editMode ? 'bg-light border-0 px-3 py-2 fw-bold' : ''}
+                          />
                           <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
                       <Col md={6}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">Phone Number *</Form.Label>
-                          <Form.Control type="text" name="mobile" value={values.mobile} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.mobile && errors.mobile} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} />
+                          <Form.Control
+                            type="text"
+                            name="mobile"
+                            value={values.mobile}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            disabled={!editMode || saving}
+                            isInvalid={touched.mobile && errors.mobile}
+                            className={!editMode ? 'bg-light border-0 px-3 py-2 fw-bold' : ''}
+                          />
                           <Form.Control.Feedback type="invalid">{errors.mobile}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
                       <Col md={12}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">FSSAI Registration No. *</Form.Label>
-                          <Form.Control type="text" name="fssai_no" value={values.fssai_no} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.fssai_no && errors.fssai_no} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} />
+                          <Form.Control
+                            type="text"
+                            name="fssai_no"
+                            value={values.fssai_no}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            disabled={!editMode || saving}
+                            isInvalid={touched.fssai_no && errors.fssai_no}
+                            className={!editMode ? 'bg-light border-0 px-3 py-2 fw-bold' : ''}
+                          />
                           <Form.Control.Feedback type="invalid">{errors.fssai_no}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
-                      {(editMode && (values.email !== profile.email || values.mobile !== profile.mobile)) && (
+                      {editMode && (values.email !== profile.email || values.mobile !== profile.mobile) && (
                         <Col md={12}>
                           <Form.Group className="mt-2 animate__animated animate__fadeIn">
                             <Form.Label className="small fw-bold text-danger">Current Password * (Required to change Email or Phone Number)</Form.Label>
-                            <Form.Control
-                              type="password"
-                              name="password"
-                              placeholder="Enter your current password to authorize this change"
-                              value={values.password}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              disabled={saving}
-                              isInvalid={touched.password && !!errors.password}
-                            />
-                            <Form.Control.Feedback type="invalid">{errors.password}</Form.Control.Feedback>
+                            <div className="position-relative">
+                              <Form.Control
+                                type={showPassword ? 'text' : 'password'}
+                                name="password"
+                                placeholder="Enter your current password to authorize this change"
+                                value={values.password}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                disabled={saving}
+                                isInvalid={touched.password && !!errors.password}
+                                style={{ paddingRight: '40px' }}
+                              />
+                              <span
+                                className="position-absolute"
+                                style={{ right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, cursor: 'pointer', zIndex: 10 }}
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="15" />
+                              </span>
+                            </div>
+                            <Form.Control.Feedback type="invalid" className={touched.password && errors.password ? 'd-block' : ''}>
+                              {errors.password}
+                            </Form.Control.Feedback>
                           </Form.Group>
                         </Col>
                       )}
@@ -439,7 +495,18 @@ const Profile = () => {
                       <Col md={12}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">Full Address *</Form.Label>
-                          <Form.Control as="textarea" rows={3} name="address" value={values.address} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.address && errors.address} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} style={{ resize: 'none' }} />
+                          <Form.Control
+                            as="textarea"
+                            rows={3}
+                            name="address"
+                            value={values.address}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            disabled={!editMode || saving}
+                            isInvalid={touched.address && errors.address}
+                            className={!editMode ? 'bg-light border-0 px-3 py-2 fw-bold' : ''}
+                            style={{ resize: 'none' }}
+                          />
                           <Form.Control.Feedback type="invalid">{errors.address}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
@@ -506,13 +573,27 @@ const Profile = () => {
                       <Col md={4} xs={12}>
                         <Form.Group className="mb-3">
                           <Form.Label className="small fw-bold opacity-75">Pin Code *</Form.Label>
-                          <Form.Control type="text" name="pincode" value={values.pincode} onChange={handleChange} onBlur={handleBlur} disabled={!editMode || saving} isInvalid={touched.pincode && errors.pincode} className={!editMode ? "bg-light border-0 px-3 py-2 fw-bold" : ""} maxLength={6} />
+                          <Form.Control
+                            type="text"
+                            name="pincode"
+                            value={values.pincode}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            disabled={!editMode || saving}
+                            isInvalid={touched.pincode && errors.pincode}
+                            className={!editMode ? 'bg-light border-0 px-3 py-2 fw-bold' : ''}
+                            maxLength={6}
+                          />
                           <Form.Control.Feedback type="invalid">{errors.pincode}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
                     </Row>
 
-                    {error && <Alert variant="danger" className="mt-4 profile-glass-card border-0">{error}</Alert>}
+                    {error && (
+                      <Alert variant="danger" className="mt-4 profile-glass-card border-0">
+                        {error}
+                      </Alert>
+                    )}
                     {editMode && Object.keys(errors).length > 0 && (
                       <Alert variant="danger" className="mt-4 profile-glass-card border-0">
                         <div className="fw-bold mb-2">Please correct the following errors:</div>
@@ -526,7 +607,12 @@ const Profile = () => {
 
                     {editMode && (
                       <div className="d-flex profile-button-group-responsive gap-3 mt-5">
-                        <Button variant="none" className="profile-custom-btn-outline px-4" onClick={() => handleCancel(resetForm)} disabled={saving || isSubmitting}>
+                        <Button
+                          variant="none"
+                          className="profile-custom-btn-outline px-4"
+                          onClick={() => handleCancel(resetForm)}
+                          disabled={saving || isSubmitting}
+                        >
                           <CsLineIcons icon="close" size="18" />
                           Cancel
                         </Button>
@@ -554,7 +640,10 @@ const Profile = () => {
       </Formik>
 
       {saving && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}>
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}
+        >
           <Card className="profile-glass-card border-0 p-5 shadow-lg text-center">
             <Spinner animation="grow" variant="primary" className="mb-4" />
             <h4 className="fw-bold">Updating Data</h4>
