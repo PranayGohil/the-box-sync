@@ -6,11 +6,13 @@ import { AuthContext } from 'contexts/AuthContext';
 
 const BottomNav = () => {
   const { isLogin } = useSelector((state) => state.auth);
-  const { attrMobile } = useSelector((state) => state.menu);
+  const { attrMobile, navClasses } = useSelector((state) => state.menu);
   const { pathname } = useLocation();
   const { activePlans } = useContext(AuthContext);
 
   if (!isLogin || attrMobile) return null;
+
+  const isSidebarOpen = navClasses && navClasses['mobile-side-in'];
 
   const isSettings = pathname.startsWith('/settings') || pathname.startsWith('/pages/profile/settings');
   const isOperations = pathname.startsWith('/operations');
@@ -28,7 +30,7 @@ const BottomNav = () => {
       label: 'Orders',
       isActive: (match, location) => {
         return location.pathname.startsWith('/operations/order-history') || location.pathname.startsWith('/operations/order-details');
-      }
+      },
     },
     {
       to: '/operations/manage-reservations',
@@ -37,7 +39,7 @@ const BottomNav = () => {
       hide: !activePlans.includes('Reservation Manager'),
       isActive: (match, location) => {
         return location.pathname.startsWith('/operations/manage-reservations') || location.pathname.startsWith('/operations/qr-for-reservation');
-      }
+      },
     },
     {
       to: '/operations/manage-table',
@@ -45,15 +47,19 @@ const BottomNav = () => {
       label: 'Tables',
       isActive: (match, location) => {
         return location.pathname.startsWith('/operations/manage-table') || location.pathname.startsWith('/operations/add-table');
-      }
+      },
     },
     {
       to: '/operations/manage-menu',
       icon: 'list',
       label: 'Menu',
       isActive: (match, location) => {
-        return location.pathname.startsWith('/operations/manage-menu') || location.pathname.startsWith('/operations/add-dish') || location.pathname.startsWith('/operations/qr-for-menu');
-      }
+        return (
+          location.pathname.startsWith('/operations/manage-menu') ||
+          location.pathname.startsWith('/operations/add-dish') ||
+          location.pathname.startsWith('/operations/qr-for-menu')
+        );
+      },
     },
     {
       to: '/operations/inventory-history',
@@ -71,10 +77,10 @@ const BottomNav = () => {
           '/operations/wastage-log',
           '/operations/daily-opening-stock',
           '/operations/daily-closing-stock',
-          '/operations/inventory-report'
+          '/operations/inventory-report',
         ];
-        return inventoryPaths.some(p => location.pathname.startsWith(p));
-      }
+        return inventoryPaths.some((p) => location.pathname.startsWith(p));
+      },
     },
     {
       to: '/operations/feedback',
@@ -82,9 +88,9 @@ const BottomNav = () => {
       label: 'Feedback',
       isActive: (match, location) => {
         return location.pathname.startsWith('/operations/feedback') || location.pathname.startsWith('/operations/qr-for-feedback');
-      }
+      },
     },
-  ].filter(item => !item.hide);
+  ].filter((item) => !item.hide);
 
   let navItems = [];
   if (isOperations) {
@@ -103,7 +109,7 @@ const BottomNav = () => {
           bottom: 20px;
           left: 50%;
           transform: translateX(-50%);
-          z-index: 1050;
+          z-index: ${isSidebarOpen ? '999' : '1050'};
           width: 95%;
           max-width: 500px;
           display: flex;
@@ -155,13 +161,7 @@ const BottomNav = () => {
 
       <div className="bottom-nav-pill">
         {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className="bottom-nav-item"
-            activeClassName="active"
-            isActive={item.isActive}
-          >
+          <NavLink key={item.to} to={item.to} className="bottom-nav-item" activeClassName="active" isActive={item.isActive}>
             <CsLineIcons icon={item.icon} size="20" />
           </NavLink>
         ))}

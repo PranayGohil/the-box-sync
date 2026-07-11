@@ -69,9 +69,14 @@ const NavContent = () => {
             <span className="align-middle">Order</span>
           </div>
           <div className="sub-menu-container">
-            <Nav.Link as={NavLink} to="/operations/order-history" className="px-0" isActive={(match, location) => {
-              return location.pathname.startsWith('/operations/order-history') || location.pathname.startsWith('/operations/order-details');
-            }}>
+            <Nav.Link
+              as={NavLink}
+              to="/operations/order-history"
+              className="px-0"
+              isActive={(match, location) => {
+                return location.pathname.startsWith('/operations/order-history') || location.pathname.startsWith('/operations/order-details');
+              }}
+            >
               <i className="me-2 sw-3 d-inline-block" />
               <span className="align-middle">Order History</span>
             </Nav.Link>
@@ -107,6 +112,8 @@ const NavContent = () => {
 
 const MobileBottomNav = () => {
   const { pathname } = useLocation();
+  const { attrMobile, navClasses } = useSelector((state) => state.menu);
+  const isMenuOpen = attrMobile || (navClasses && navClasses['mobile-side-in']);
 
   const navItems = [
     { label: 'Order', icon: 'cart', to: '/operations/order-history' },
@@ -121,7 +128,7 @@ const MobileBottomNav = () => {
           bottom: 20px;
           left: 50%;
           transform: translateX(-50%);
-          z-index: 1050;
+          z-index: ${isMenuOpen ? '999' : '1050'};
           width: 95%;
           max-width: 500px;
           display: flex;
@@ -176,16 +183,13 @@ const MobileBottomNav = () => {
           if (item.label === 'Order') {
             isActive = pathname.startsWith('/operations/order-history') || pathname.startsWith('/operations/order-details');
           } else if (item.label === 'Menu') {
-            isActive = pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu');
+            isActive =
+              pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu');
           } else {
             isActive = pathname.startsWith(item.to);
           }
           return (
-            <NavLink
-              key={item.label}
-              to={item.to}
-              className={`bottom-nav-item ${isActive ? 'active' : ''}`}
-            >
+            <NavLink key={item.label} to={item.to} className={`bottom-nav-item ${isActive ? 'active' : ''}`}>
               <CsLineIcons icon={item.icon} size="20" />
             </NavLink>
           );
@@ -208,13 +212,15 @@ const Operations = () => {
     <div className="position-relative pb-7 pb-lg-0">
       {width && width < lgBreakpoint && <MobileBottomNav />}
       <Row>
-        {(width && width >= lgBreakpoint) ? (
+        {width && width >= lgBreakpoint ? (
           <Col xs="auto" className="d-none d-lg-flex">
             <div className="nav flex-column sw-25">
               <NavContent />
             </div>
           </Col>
-        ) : (<div className="pt-7" />)}
+        ) : (
+          <div className="pt-7" />
+        )}
         <Col>
           <Switch>
             <Route exact path="/operations" render={() => <Redirect to="/operations/order-history" />} />
