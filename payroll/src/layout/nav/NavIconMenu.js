@@ -3,6 +3,7 @@ import { useHistory } from 'react-router-dom';
 import { Modal, Button } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import IconMenuNotifications from './notifications/Notifications';
+import SearchModal from './search/SearchModal';
 
 const customStyles = `
     .interactive-card {
@@ -48,7 +49,14 @@ const customStyles = `
 const NavIconMenu = () => {
   const history = useHistory();
   const brandColor = '#23b3f4';
-  
+
+  const [showSearchModal, setShowSearchModal] = useState(false);
+
+  const onSearchIconClick = (e) => {
+    e.preventDefault();
+    setShowSearchModal(true);
+  };
+
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = () => {
@@ -57,11 +65,16 @@ const NavIconMenu = () => {
     console.log('User logged out');
     setShowLogoutModal(false);
     history.push('/login');
-  }
+  };
   return (
     <>
       <style>{customStyles}</style>
       <ul className="list-unstyled list-inline text-center menu-icons">
+        <li className="list-inline-item" title="Search">
+          <a href="#/" onClick={onSearchIconClick}>
+            <CsLineIcons icon="search" size="18" />
+          </a>
+        </li>
         <li className="list-inline-item" title="Logout">
           <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
             <CsLineIcons icon="logout" size="18" />
@@ -69,36 +82,28 @@ const NavIconMenu = () => {
         </li>
         <IconMenuNotifications />
       </ul>
+      <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 
-      <Modal 
-        show={showLogoutModal} 
-        onHide={() => setShowLogoutModal(false)} 
-        centered 
-        contentClassName="interactive-card border-0 shadow-lg"
-      >
+      <Modal show={showLogoutModal} onHide={() => setShowLogoutModal(false)} centered contentClassName="interactive-card border-0 shadow-lg">
         <Modal.Header className="border-0 p-4 pb-0" closeButton>
-          <Modal.Title className="fw-bold" style={{ color: brandColor }}>Session Management</Modal.Title>
+          <Modal.Title className="fw-bold" style={{ color: brandColor }}>
+            Session Management
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4 text-center">
           <div className="logout-icon-container">
             <CsLineIcons icon="logout" size="30" />
           </div>
           <h4 className="fw-bold text-dark mb-2">Confirm Logout</h4>
-          <p className="text-muted smaller fw-bold mb-0">Are you sure you want to end your administrative session? You will need to login again to access the dashboard.</p>
+          <p className="text-muted smaller fw-bold mb-0">
+            Are you sure you want to end your administrative session? You will need to login again to access the dashboard.
+          </p>
         </Modal.Body>
         <Modal.Footer className="border-0 p-4 pt-0 d-flex justify-content-center gap-3">
-          <Button 
-            variant="light" 
-            className="custom-btn-outline border-0 text-muted" 
-            onClick={() => setShowLogoutModal(false)}
-          >
+          <Button variant="light" className="custom-btn-outline border-0 text-muted" onClick={() => setShowLogoutModal(false)}>
             Stay Signed In
           </Button>
-          <Button 
-            variant="danger" 
-            className="custom-btn-outline border-danger text-danger px-5" 
-            onClick={handleLogout}
-          >
+          <Button variant="danger" className="custom-btn-outline border-danger text-danger px-5" onClick={handleLogout}>
             Yes, Logout
           </Button>
         </Modal.Footer>

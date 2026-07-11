@@ -64,22 +64,25 @@ const NavIconMenu = () => {
     <>
       <style>{customStyles}</style>
       <ul className="list-unstyled list-inline text-center menu-icons">
+        <li className="list-inline-item" title="Search">
+          <a href="#/" onClick={() => setShowSearchModal(true)}>
+            <CsLineIcons icon="search" size="18" />
+          </a>
+        </li>
         <li className="list-inline-item" title="Logout">
           <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
             <CsLineIcons icon="logout" size="18" />
           </a>
         </li>
+        <IconMenuNotifications />
       </ul>
       <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 
-      <Modal 
-        show={showLogoutModal} 
-        onHide={() => setShowLogoutModal(false)} 
-        centered 
-        contentClassName="interactive-card border-0 shadow-lg"
-      >
+      <Modal show={showLogoutModal} onHide={() => setShowLogoutModal(false)} centered contentClassName="interactive-card border-0 shadow-lg">
         <Modal.Header className="border-0 p-4 pb-0" closeButton>
-          <Modal.Title className="fw-bold" style={{ color: brandColor }}>Session Management</Modal.Title>
+          <Modal.Title className="fw-bold" style={{ color: brandColor }}>
+            Session Management
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4 text-center">
           <div className="logout-icon-container">
@@ -89,18 +92,10 @@ const NavIconMenu = () => {
           <p className="text-muted smaller fw-bold mb-0">Are you sure you want to end your session? You will need to login again to access the dashboard.</p>
         </Modal.Body>
         <Modal.Footer className="border-0 p-4 pt-0 d-flex justify-content-center gap-3">
-          <Button 
-            variant="light" 
-            className="custom-btn-outline border-0 text-muted" 
-            onClick={() => setShowLogoutModal(false)}
-          >
+          <Button variant="light" className="custom-btn-outline border-0 text-muted" onClick={() => setShowLogoutModal(false)}>
             Stay Signed In
           </Button>
-          <Button 
-            variant="danger" 
-            className="custom-btn-outline border-danger text-danger px-5" 
-            onClick={handleLogout}
-          >
+          <Button variant="danger" className="custom-btn-outline border-danger text-danger px-5" onClick={handleLogout}>
             Yes, Logout
           </Button>
         </Modal.Footer>
