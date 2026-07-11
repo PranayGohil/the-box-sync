@@ -148,21 +148,19 @@ const premiumNavStyles = `
   html[data-placement="vertical"] .nav-container .nav-content .menu-icons {
     margin-top: auto !important;
     order: 10 !important;
-    padding-top: 20px !important;
-    padding-bottom: 15px !important;
+    padding-top: 15px !important;
     width: 80% !important;
-    border-top: none !important;
+    border-top: 1px solid rgba(var(--bs-white-rgb, 255, 255, 255), 0.2) !important;
   }
 
   /* Spacing and lines around menu in mobile/vertical sidebar */
   .nav-container.mobile-side-in .nav-content .menu-container,
   html[data-placement="vertical"] .nav-container .nav-content .menu-container {
     margin-top: 1.5rem !important;
-    margin-bottom: 1.5rem !important;
+    margin-bottom: 0 !important;
     padding-top: 1.25rem !important;
     padding-bottom: 1.25rem !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-top: 1px solid rgba(var(--bs-white-rgb, 255, 255, 255), 0.2) !important;
     width: 80% !important;
     align-self: center !important;
   }
@@ -186,11 +184,11 @@ const premiumNavStyles = `
   html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a {
     display: flex !important;
     align-items: center !important;
-    padding: 0.65rem 1rem !important;
-    margin-bottom: 0.5rem !important;
-    border-radius: 10px !important;
-    color: rgba(255, 255, 255, 0.8) !important;
-    font-weight: 600 !important;
+    padding: calc(var(--bs-spacer, 1rem) * 0.65) var(--bs-spacer, 1rem) !important;
+    margin-bottom: calc(var(--bs-spacer, 1rem) * 0.5) !important;
+    border-radius: var(--bs-border-radius-lg, 0.5rem) !important;
+    color: rgba(var(--bs-white-rgb, 255, 255, 255), 0.8) !important;
+    font-weight: var(--bs-body-font-weight, 600) !important;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     text-decoration: none !important;
     border: 1px solid transparent !important;
@@ -202,18 +200,18 @@ const premiumNavStyles = `
   }
   .nav-container.mobile-side-in .nav-content .menu-container .menu li a:hover,
   html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a:hover {
-    background: rgba(255, 255, 255, 0.08) !important;
-    color: #ffffff !important;
+    background: rgba(var(--bs-white-rgb, 255, 255, 255), 0.08) !important;
+    color: var(--bs-white, #ffffff) !important;
     transform: translateX(4px);
-    border-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(var(--bs-white-rgb, 255, 255, 255), 0.1) !important;
   }
   .nav-container.mobile-side-in .nav-content .menu-container .menu li a.active,
   html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a.active {
-    background: rgba(255, 255, 255, 0.18) !important;
-    color: #ffffff !important;
+    background: rgba(var(--bs-white-rgb, 255, 255, 255), 0.18) !important;
+    color: var(--bs-white, #ffffff) !important;
     font-weight: 700 !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-    border-color: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(var(--bs-white-rgb, 255, 255, 255), 0.15) !important;
   }
   .nav-container.mobile-side-in .nav-content .menu-container .menu li a .icon,
   html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a .icon {
@@ -222,7 +220,7 @@ const premiumNavStyles = `
   .nav-container.mobile-side-in .nav-content .menu-container .menu li a:hover .icon,
   html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a:hover .icon {
     transform: scale(1.15);
-    color: #ffffff !important;
+    color: var(--bs-white, #ffffff) !important;
   }
 `;
 
