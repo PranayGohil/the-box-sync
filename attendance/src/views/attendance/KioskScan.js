@@ -526,16 +526,6 @@ const KioskScan = () => {
                   <p className="login-login-form-subtitle mt-1 px-1" style={{ fontSize: '0.8rem' }}>Position yourself in front of the camera to verify your face</p>
                 </div>
 
-                {error && (
-                  <Alert
-                    variant="danger"
-                    className="w-100 mb-2 text-center rounded-3 fw-bold border-0 small"
-                    style={{ background: '#fff1f2', color: '#e11d48' }}
-                  >
-                    <CsLineIcons icon="error-hexagon" className="me-2" size="14" />
-                    {error}
-                  </Alert>
-                )}
 
                 {/* STATUS MESSAGE AREA */}
                 <div style={{ minHeight: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '8px 0' }} className="w-100">
