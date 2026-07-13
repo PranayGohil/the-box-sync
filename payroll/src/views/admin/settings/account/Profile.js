@@ -403,6 +403,61 @@ const Profile = () => {
                     )}
                   </Card.Body>
                 </Card>
+
+                <Card className="glass-card border-0 mb-4 text-start mt-4">
+                  <Card.Body className="p-4">
+                    <div className="section-header text-start w-100 mb-3">
+                      <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                        <CsLineIcons icon="check-square" size="20" className="text-primary" />
+                        Attendance Terminals
+                      </h5>
+                    </div>
+                    
+                    <div className="d-flex flex-column gap-3">
+                      <div>
+                        <div className="fw-bold small mb-1 text-muted text-uppercase" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>Check-In Device Link</div>
+                        <a 
+                          href={`http://${window.location.hostname}:3000/${profile.restaurant_code}/in`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="d-flex align-items-center justify-content-between p-2.5 rounded bg-light text-decoration-none text-success hover-bg-light transition-all border border-dashed border-success"
+                          style={{ transition: 'all 0.2s ease-in-out' }}
+                        >
+                          <span className="text-truncate me-2 small fw-semibold">localhost:3000/{profile.restaurant_code}/in</span>
+                          <CsLineIcons icon="arrow-right" size="14" className="text-success" />
+                        </a>
+                      </div>
+
+                      <div>
+                        <div className="fw-bold small mb-1 text-muted text-uppercase" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>Check-Out Device Link</div>
+                        <a 
+                          href={`http://${window.location.hostname}:3000/${profile.restaurant_code}/out`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="d-flex align-items-center justify-content-between p-2.5 rounded bg-light text-decoration-none text-warning hover-bg-light transition-all border border-dashed border-warning"
+                          style={{ transition: 'all 0.2s ease-in-out' }}
+                        >
+                          <span className="text-truncate me-2 small fw-semibold text-warning">localhost:3000/{profile.restaurant_code}/out</span>
+                          <CsLineIcons icon="arrow-right" size="14" className="text-warning" />
+                        </a>
+                      </div>
+
+                      <div>
+                        <div className="fw-bold small mb-1 text-muted text-uppercase" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>Standard Terminal (Auto)</div>
+                        <a 
+                          href={`http://${window.location.hostname}:3000/${profile.restaurant_code}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="d-flex align-items-center justify-content-between p-2.5 rounded bg-light text-decoration-none text-muted hover-bg-light transition-all border border-dashed"
+                          style={{ transition: 'all 0.2s ease-in-out' }}
+                        >
+                          <span className="text-truncate me-2 small fw-semibold text-muted">localhost:3000/{profile.restaurant_code}</span>
+                          <CsLineIcons icon="arrow-right" size="14" className="text-muted" />
+                        </a>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
               </Col>
 
               <Col lg={8}>
