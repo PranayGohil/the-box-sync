@@ -552,7 +552,7 @@ export default function Dashboard() {
       }
     } catch (err) {
       console.error(err);
-      toast.error('Failed to send message.');
+      toast.error(err.response?.data?.message || 'Failed to send message.');
     }
   };
   const [resignationCategories, setResignationCategories] = useState([

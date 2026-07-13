@@ -4,9 +4,12 @@ import { useHistory, Link } from 'react-router-dom';
 import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import Glide from 'components/carousel/Glide';
+import HtmlHead from 'components/html-head/HtmlHead';
 import { toast } from 'react-toastify';
 
 const ViewStaff = () => {
+  const title = 'Manage Staff';
+  const description = 'Overview and management of your restaurant team.';
   const history = useHistory();
   const [loading, setLoading] = useState(true);
   const [staff, setStaff] = useState([]);
@@ -115,14 +118,15 @@ const ViewStaff = () => {
   }
 
   return (
-    <div className="view-staff-staff-container pb-5">
-      <div className="container-fluid ps-lg-4 pe-lg-5">
-        <div className="page-title-container mb-4 mt-5 mt-md-n3">
-          <Row className="g-3 align-items-center">
-            <Col xs="12" md="7">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
-                Manage Staff
-              </h1>
+    <div className="container-fluid px-lg-4 px-xl-5 pb-5">
+      <HtmlHead title={title} description={description} />
+
+      <div className="page-title-container mb-4 mt-3 mt-lg-0">
+        <Row className="g-3 align-items-center">
+          <Col xs="12" md="7">
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
+              Manage Staff
+            </h1>
               <div className="text-muted mt-1 small">Overview and management of your restaurant team</div>
             </Col>
             <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
@@ -456,7 +460,6 @@ const ViewStaff = () => {
             </Button>
           </div>
         )}
-      </div>
     </div>
   );
 };

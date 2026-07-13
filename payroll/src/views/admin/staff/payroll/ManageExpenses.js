@@ -7,112 +7,6 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useHistory } from 'react-router-dom';
 
-const customStyles = `
-  .glass-card {
-    background: #ffffff !important;
-    border: 1px solid #f0f0f0 !important;
-    border-radius: 1.5rem !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
-  }
-  .react-table-modern th {
-    background: #f8fafc !important;
-    color: #475569 !important;
-    font-weight: 600 !important;
-    text-transform: uppercase !important;
-    font-size: 0.75rem !important;
-    padding: 0.75rem 0.5rem !important;
-    border-bottom: 2px solid #e2e8f0 !important;
-    white-space: nowrap !important;
-  }
-  .react-table-modern td {
-    padding: 0.6rem 0.5rem !important;
-    vertical-align: middle !important;
-    border-bottom: 1px solid #edf2f7 !important;
-    font-size: 0.85rem !important;
-  }
-  .status-badge {
-    padding: 0.4rem 0.85rem !important;
-    border-radius: 50px !important;
-    font-weight: 700 !important;
-    font-size: 0.75rem !important;
-    text-transform: uppercase !important;
-  }
-  .filter-bar-bg {
-    background: #f8fafc;
-    border-radius: 1rem;
-    border: 1px solid #f1f5f9;
-  }
-  .filter-input-premium {
-    height: 40px !important;
-    border-radius: 0.75rem !important;
-    border: 1px solid #cbd5e1 !important;
-    font-size: 0.85rem !important;
-    padding: 0.375rem 0.75rem !important;
-    background-color: #fff !important;
-  }
-  .filter-input-premium:focus {
-    border-color: #1ea8e7 !important;
-    box-shadow: 0 0 0 2px rgba(30, 168, 231, 0.15) !important;
-  }
-  .filter-btn-premium {
-    height: 40px !important;
-    border-radius: 0.75rem !important;
-    font-size: 0.85rem !important;
-    font-weight: 600 !important;
-    padding: 0.375rem 1.25rem !important;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .mobile-expense-card {
-    background: #fff;
-    border-radius: 1.25rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-    border: 1px solid #f1f5f9;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-  }
-  .mobile-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
-    margin-bottom: 1rem;
-  }
-  .mobile-card-name {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 0.15rem;
-  }
-  .mobile-card-date {
-    font-size: 0.75rem;
-    color: #94a3b8;
-  }
-  .mobile-card-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-    font-size: 0.85rem;
-  }
-  .mobile-card-label {
-    color: #94a3b8;
-  }
-  .mobile-card-value {
-    color: #334155;
-    font-weight: 600;
-  }
-  .mobile-card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 0.75rem;
-    border-top: 1px dashed #e2e8f0;
-  }
-`;
 
 export default function ManageExpenses() {
   const history = useHistory();
@@ -288,10 +182,9 @@ export default function ManageExpenses() {
 
   return (
     <div className="container-fluid px-lg-4 px-xl-5 pb-5">
-      <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
       
-      <div className="page-title-container mb-4 mt-5 mt-lg-0">
+      <div className="page-title-container mb-4 mt-3 mt-lg-0">
         <Row className="g-3 align-items-center">
           <Col xs="12" md="6">
             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>

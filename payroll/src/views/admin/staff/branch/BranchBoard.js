@@ -461,13 +461,13 @@ const BranchBoard = () => {
   const globalDepts = departments.filter(d => d.is_global);
 
   return (
-    <div className="container-fluid pb-5">
+    <div className="container-fluid px-lg-4 px-xl-5 pb-5">
       <HtmlHead title="Organization Structure" description="Manage Organization Branches, Departments, and Global Roles" />
       
-      <div className="page-title-container mb-4 mt-5 mt-lg-0">
+      <div className="page-title-container mb-4 mt-3 mt-lg-0">
         <Row className="g-0 align-items-sm-center">
           <Col xs={12} lg="auto" className="me-auto mb-3 mb-lg-0">
-            <h1 className="mb-0 pb-0 display-6 display-lg-4 fw-bold" style={{ color: '#23b3f4' }}>Organization Structure</h1>
+            <h1 className="mb-0 pb-0 display-6 display-lg-4 fw-bold" style={{ color: '#1ea8e7' }}>Organization Structure</h1>
             <div className="text-muted mt-1 small">Manage branches, nested departments, and global oversight roles.</div>
           </Col>
           <Col xs={12} lg="auto" className="d-flex flex-column flex-sm-row justify-content-end gap-2 mt-2 mt-lg-0">

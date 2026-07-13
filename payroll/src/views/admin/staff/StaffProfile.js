@@ -15,105 +15,6 @@ import { enIN } from 'date-fns/locale';
 
 import DeleteStaffModal from './DeleteStaffModal';
 
-const customStyles = `
-  .glass-card {
-    background: #ffffff !important;
-    border: 1px solid #f0f0f0 !important;
-    border-radius: 1.5rem !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
-    transition: all 0.3s ease;
-  }
-  .profile-photo-wrapper {
-    width: 140px;
-    height: 140px;
-    border-radius: 50%;
-    padding: 5px;
-    background: linear-gradient(135deg, #1ea8e7 0%, #007bff 100%);
-    margin-bottom: 1.5rem;
-    box-shadow: 0 10px 25px rgba(30, 168, 231, 0.2);
-  }
-  .profile-photo-inner {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: #fff;
-    padding: 3px;
-    overflow: hidden;
-  }
-  .profile-photo-inner img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-  }
-  .custom-btn-outline {
-    border: 1px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
-  }
-  .custom-btn-danger-outline {
-    border: 1px solid #ef4444 !important;
-    color: #ef4444 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-danger-outline:hover {
-    background-color: #ef4444 !important;
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2) !important;
-  }
-  .nav-pills-premium .nav-link {
-    border-radius: 12px !important;
-    padding: 0.8rem 1.25rem !important;
-    color: #64748b !important;
-    font-weight: 600 !important;
-    margin-bottom: 0.5rem !important;
-    transition: all 0.2s ease !important;
-    border: 1px solid transparent !important;
-  }
-  .nav-pills-premium .nav-link.active {
-    background: #f0f9ff !important;
-    color: #1ea8e7 !important;
-    border: 1px solid #bae6fd !important;
-  }
-  .info-label {
-    color: #94a3b8;
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.25rem;
-  }
-  .info-value {
-    color: #1e293b;
-    font-weight: 600;
-    font-size: 1rem;
-  }
-  .doc-card {
-    border-radius: 1rem;
-    overflow: hidden;
-    border: 1px solid #eef2f6;
-    transition: all 0.3s ease;
-  }
-  .doc-card:hover {
-    border-color: #1ea8e7;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-  }
-`;
 
 const StaffProfile = () => {
   const { id } = useParams();
@@ -268,11 +169,10 @@ const StaffProfile = () => {
   }
 
   return (
-    <div className="container-fluid pb-5">
-      <style>{customStyles}</style>
+    <div className="container-fluid px-lg-4 px-xl-5 pb-5">
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-5">
+      <div className="page-title-container mb-4 mt-3 mt-lg-0">
         <Row className="g-3 align-items-center">
           <Col md={6}>
             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>

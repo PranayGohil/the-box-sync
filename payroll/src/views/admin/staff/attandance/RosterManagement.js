@@ -5,85 +5,7 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
-import axios from 'axios';
 
-const customStyles = `
-  .glass-card {
-    background: #ffffff !important;
-    border: 1px solid #f0f0f0 !important;
-    border-radius: 1.5rem !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
-    transition: all 0.3s ease;
-  }
-  .custom-btn-solid {
-    background-color: #1ea8e7 !important;
-    border: 1px solid #1ea8e7 !important;
-    color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-solid:hover {
-    background-color: #158dc4 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
-  }
-  .roster-table {
-    border-collapse: separate !important;
-    border-spacing: 0 !important;
-    width: 100%;
-  }
-  .roster-table th {
-    background: #f8fafc !important;
-    color: #475569 !important;
-    font-weight: 600 !important;
-    text-transform: uppercase !important;
-    font-size: 0.8rem !important;
-    padding: 1rem !important;
-    border-bottom: 2px solid #e2e8f0 !important;
-    border-top: none !important;
-    text-align: center;
-  }
-  .roster-table td {
-    padding: 0.75rem !important;
-    vertical-align: middle !important;
-    border-bottom: 1px solid #f1f5f9 !important;
-    text-align: center;
-    background-color: #ffffff !important;
-  }
-  .roster-cell {
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 500;
-    font-size: 0.85rem;
-  }
-  .roster-cell:hover {
-    border-color: #1ea8e7;
-    background-color: #f0f9ff;
-  }
-  .shift-morning { background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
-  .shift-evening { background-color: #ffedd5; color: #c2410c; border-color: #fed7aa; }
-  .shift-night { background-color: #ede9fe; color: #6d28d9; border-color: #ddd6fe; }
-  .shift-off { background-color: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
-  
-  .avatar-circle {
-    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
-    color: #0369a1 !important;
-    font-weight: 700 !important;
-    border: 2px solid #f0f9ff !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 50% !important;
-    font-size: 0.9rem !important;
-  }
-`;
 
 export default function RosterManagement() {
   const history = useHistory();
@@ -328,10 +250,9 @@ export default function RosterManagement() {
 
   return (
     <div className="container-fluid px-lg-4 px-xl-5 pb-5">
-      <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4 mt-5 mt-lg-0">
+      <div className="page-title-container mb-4 mt-3 mt-lg-0">
         <Row className="g-3 align-items-center mb-4">
           <Col xs="12" md="4">
             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>

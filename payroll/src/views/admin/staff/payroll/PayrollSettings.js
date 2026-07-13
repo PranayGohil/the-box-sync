@@ -656,25 +656,8 @@ const PayrollSettings = () => {
 
     if (loading) return <div className="text-center my-5"><Spinner animation="border" /></div>;
 
-    const customStyles = `
-      .custom-btn-primary-outline { border: 1px solid #1ea8e7 !important; color: #1ea8e7 !important; background-color: #ffffff !important; transition: all 0.2s ease-in-out !important; font-weight: 600 !important; }
-      .custom-btn-primary-outline:hover { background-color: #1ea8e7 !important; color: #ffffff !important; box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important; transform: translateY(-2px); }
-      .react-select-premium { font-weight: 600 !important; }
-      .react-select-premium .react-select__control { border-radius: 10px !important; border: 1px solid #dee2e6 !important; background-color: #ffffff !important; height: 40px !important; min-height: 40px !important; cursor: pointer !important; box-shadow: none !important; }
-      .react-select-premium .react-select__control--is-focused { border-color: #1ea8e7 !important; box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important; }
-      .custom-table-glass { border-collapse: separate !important; border-spacing: 0 0.5rem !important; }
-      .custom-table-glass thead th { border-bottom: none !important; background: transparent !important; font-size: 0.72rem !important; color: #64748b !important; letter-spacing: 0.05em; padding: 0.9rem 1.5rem; }
-      .custom-table-glass tbody tr { background: #ffffff !important; box-shadow: 0 4px 10px rgba(0,0,0,0.03) !important; transition: all 0.2s ease; }
-      .custom-table-glass tbody td { border-top: 1px solid #edf2f7 !important; border-bottom: 1px solid #edf2f7 !important; padding: 1rem 1.5rem !important; vertical-align: middle !important; background: transparent !important; }
-      .glass-card { background: #ffffff !important; border: 1px solid #edf2f7 !important; border-radius: 1.5rem !important; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02) !important; }
-      .form-control-premium { border-radius: 10px !important; border: 1px solid #dee2e6 !important; box-shadow: none !important; padding: 0.6rem 1rem !important; }
-      .form-control-premium:focus { border-color: #1ea8e7 !important; box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important; }
-      .settings-floating-bar { position: fixed !important; bottom: 24px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 1050 !important; width: 90% !important; max-width: 600px !important; background: rgba(255, 255, 255, 0.95) !important; backdrop-filter: blur(10px) !important; border-radius: 50px !important; border: 1px solid rgba(226, 232, 240, 0.8) !important; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important; }
-    `;
-
     return (
-        <div className="container-fluid pb-5">
-            <style>{customStyles}</style>
+        <div className="container-fluid px-lg-4 px-xl-5 pb-5">
             <HtmlHead title={title} description={description} />
             <div className="page-title-container mb-4 mt-3 mt-lg-0">
                 <Row className="g-3 align-items-center">
@@ -873,7 +856,6 @@ const PayrollSettings = () => {
                 </div>
             )}
         </div>
-
     );
 };
 

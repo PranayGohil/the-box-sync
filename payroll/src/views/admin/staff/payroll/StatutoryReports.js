@@ -6,64 +6,6 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
-const customStyles = `
-  .glass-card {
-    background: #ffffff !important;
-    border: 1px solid #f0f0f0 !important;
-    border-radius: 1.5rem !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
-  }
-  .report-btn {
-    height: 90px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border-radius: 1rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    border: 1px solid #e2e8f0;
-    background: #fff;
-  }
-  .report-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.06);
-    border-color: #1ea8e7;
-  }
-  .stat-card-premium {
-    border-radius: 1rem;
-    border: 1px solid #f1f5f9;
-    background: #f8fafc;
-    padding: 1.25rem;
-    transition: all 0.2s;
-  }
-  .stat-card-premium:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.03);
-  }
-  .table-premium th {
-    background: #f8fafc !important;
-    color: #475569 !important;
-    font-weight: 600 !important;
-    font-size: 0.8rem !important;
-    text-transform: uppercase !important;
-    border-bottom: 2px solid #e2e8f0 !important;
-    padding: 0.75rem 1rem !important;
-  }
-  .table-premium td {
-    padding: 0.75rem 1rem !important;
-    vertical-align: middle !important;
-    border-bottom: 1px solid #edf2f7 !important;
-  }
-  .status-badge {
-    padding: 0.35rem 0.7rem !important;
-    border-radius: 50px !important;
-    font-weight: 700 !important;
-    font-size: 0.7rem !important;
-    text-transform: uppercase !important;
-  }
-`;
-
 export default function StatutoryReports() {
   const title = 'Audit & Reports';
   const description = 'Generate and download company purchase, expense, and compliance reports';
@@ -197,10 +139,9 @@ export default function StatutoryReports() {
 
   return (
     <div className="container-fluid px-lg-4 px-xl-5 pb-5">
-      <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
       
-      <div className="page-title-container mb-4 mt-5 mt-lg-0">
+      <div className="page-title-container mb-4 mt-3 mt-lg-0">
         <Row className="g-3 align-items-center">
           <Col xs="12" md="6">
             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>

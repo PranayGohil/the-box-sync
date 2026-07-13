@@ -841,183 +841,9 @@ const AddStaff = () => {
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: false }));
   };
 
-  const customStyles = `
-    .glass-card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 1.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
-      transition: all 0.3s ease;
-    }
-    .date-input-container input[type="date"]::-webkit-calendar-picker-indicator {
-      position: absolute !important;
-      right: 12px !important;
-      top: 50% !important;
-      transform: translateY(-50%) !important;
-      width: 24px !important;
-      height: 24px !important;
-      cursor: pointer !important;
-      opacity: 0 !important;
-      z-index: 5 !important;
-    }
-    .custom-btn-outline {
-      border: 2px solid #23b3f4 !important;
-      color: #23b3f4 !important;
-      background-color: transparent !important;
-      transition: all 0.3s ease !important;
-      border-radius: 50px !important;
-      font-weight: 700 !important;
-      font-size: 0.85rem !important;
-      padding: 0.6rem 1.5rem !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 8px !important;
-    }
-    .custom-btn-outline:hover {
-      background-color: #23b3f4 !important;
-      color: #fff !important;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(35, 179, 244, 0.2) !important;
-    }
-    .custom-btn-outline i, .custom-btn-outline svg {
-      color: #23b3f4 !important;
-      transition: color 0.3s ease !important;
-    }
-    .custom-btn-outline:hover i, .custom-btn-outline:hover svg {
-      color: #ffffff !important;
-    }
-    .custom-btn-danger {
-      background: transparent !important;
-      border: 2px solid #cf2637 !important;
-      color: #cf2637 !important;
-      border-radius: 50px !important;
-      padding: 0.6rem 1.5rem !important;
-      font-weight: 700 !important;
-      transition: all 0.3s ease !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-    }
-    .custom-btn-danger i, .custom-btn-danger svg {
-      color: #cf2637 !important;
-      transition: color 0.3s ease !important;
-    }
-    .custom-btn-danger:hover {
-      background: #cf2637 !important;
-      color: #ffffff !important;
-      transform: translateY(-2px) !important;
-      box-shadow: 0 8px 20px rgba(207, 38, 55, 0.2) !important;
-    }
-    .custom-btn-danger:hover i, .custom-btn-danger:hover svg {
-      color: #ffffff !important;
-    }
-    .custom-btn-solid {
-      background-color: #23b3f4 !important;
-      border: 2px solid #23b3f4 !important;
-      color: #fff !important;
-      transition: all 0.3s ease !important;
-      border-radius: 50px !important;
-      font-weight: 700 !important;
-      font-size: 0.85rem !important;
-      padding: 0.6rem 1.5rem !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 8px !important;
-    }
-    .custom-btn-solid:hover {
-      background-color: #1ea8e7 !important;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(35, 179, 244, 0.3) !important;
-    }
-    .custom-btn-solid i, .custom-btn-solid svg {
-      color: #ffffff !important;
-    }
-    .form-label {
-      font-weight: 500 !important;
-      color: #64748b !important;
-      font-size: 0.85rem !important;
-      text-transform: none !important;
-      letter-spacing: normal !important;
-      margin-bottom: 0.4rem !important;
-      display: inline-block;
-    }
-    .form-control, .form-select {
-      border-radius: 10px !important;
-      padding: 0.5rem 0.75rem !important;
-      border: 1px solid #dee2e6 !important;
-      background-color: #ffffff !important;
-      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
-      font-size: 0.9rem !important;
-      height: 40px !important;
-    }
-    .form-control:focus, .form-select:focus {
-      background-color: white !important;
-      border-color: #23b3f4 !important;
-      box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
-    }
-    .section-header {
-      border-left: 4px solid #23b3f4;
-      padding-left: 1rem;
-      margin-bottom: 2rem;
-      color: #2d3748;
-    }
-    .preview-container {
-      width: 140px;
-      height: 140px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 4px solid #fff;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #f8fafc;
-      margin-top: 10px;
-    }
-    .preview-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .id-preview-container {
-      width: 100%;
-      height: 180px;
-      border-radius: 1.25rem;
-      overflow: hidden;
-      border: 2px dashed #e2e8f0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #f8fafc;
-      margin-bottom: 1rem;
-    }
-    @media (max-width: 768px) {
-      .add-staff-button-group-responsive {
-        flex-direction: column !important;
-        width: 100% !important;
-        gap: 12px !important;
-      }
-      .add-staff-button-group-responsive button, .add-staff-button-group-responsive label, .add-staff-button-group-responsive a {
-        width: 100% !important;
-        justify-content: center !important;
-        padding: 0.75rem 1rem !important;
-      }
-    }
-    @media (max-width: 576px) {
-      .glass-card {
-        border-radius: 1rem;
-        padding: 1.25rem !important;
-      }
-    }
-  `;
-
   if (loading.initial) {
     return (
-      <div className="container-fluid py-5">
-        <style>{customStyles}</style>
+      <div className="container-fluid px-lg-4 px-xl-5 pb-5">
         <HtmlHead title={title} description={description} />
         <div className="d-flex flex-column align-items-center justify-content-center py-5 mt-5">
           <Spinner animation="border" style={{ color: '#1ea8e7' }} className="mb-3" />
@@ -1028,19 +854,16 @@ const AddStaff = () => {
   }
 
   return (
-    <div className="add-staff-staff-container pb-5">
-      <style>{customStyles}</style>
-
+    <div className="container-fluid px-lg-4 px-xl-5 pb-5">
       <HtmlHead title={title} description={description} />
 
-      <div className="container-fluid px-lg-5">
-        <div className="add-staff-page-title-container mb-4 mt-5 mt-md-n3">
-          <Row className="g-3 align-items-center">
-            <Col md={7}>
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
-                {title}
-              </h1>
-              <BreadcrumbList items={breadcrumbs} />
+      <div className="page-title-container mb-4 mt-3 mt-lg-0">
+        <Row className="g-3 align-items-center">
+          <Col md={7}>
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
+              {title}
+            </h1>
+            <BreadcrumbList items={breadcrumbs} />
             </Col>
             <Col xs="12" md="5" className="d-flex add-staff-button-group-responsive justify-content-md-end gap-2 mt-3 mt-md-0">
               <Button className="custom-btn-outline" onClick={() => history.push('/staff/view')} disabled={loading.submitting}>
@@ -2467,7 +2290,6 @@ const AddStaff = () => {
             <Button variant="primary" className="rounded" size="sm" onClick={handleAddCustomDeduction}>Add Deduction</Button>
           </Modal.Footer>
         </Modal>
-      </div>
     </div>
   );
 };

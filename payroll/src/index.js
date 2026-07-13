@@ -32,6 +32,7 @@ import allRoutes from 'routes.js';
 // import toastify for notification
 import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import 'css/payroll.css';
 
 // mock server register for demo
 import '@mock-api';

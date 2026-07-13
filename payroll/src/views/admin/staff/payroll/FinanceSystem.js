@@ -48,7 +48,7 @@ const MobileBottomNav = () => {
     <div 
       className="position-fixed bottom-0 start-0 end-0 d-lg-none px-4" 
       style={{ 
-        zIndex: 1050, 
+        zIndex: 1000, 
         paddingBottom: 'calc(20px + env(safe-area-inset-bottom))',
       }}
     >

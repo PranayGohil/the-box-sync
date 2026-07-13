@@ -22,166 +22,9 @@ const MONTH_NAMES = [
     'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
-const customStyles = `
-  .glass-card {
-    background: #ffffff !important;
-    border: 1px solid #f0f0f0 !important;
-    border-radius: 1.5rem !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
-    transition: all 0.3s ease;
-  }
-  .glass-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.06) !important;
-  }
-  .custom-btn-outline {
-    border: 1.5px solid #1ea8e7 !important;
-    color: #1ea8e7 !important;
-    background-color: transparent !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-outline:hover {
-    background-color: #1ea8e7 !important;
-    color: #fff !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.15) !important;
-  }
-  .custom-btn-solid {
-    background-color: #1ea8e7 !important;
-    border: 1px solid #1ea8e7 !important;
-    color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-  }
-  .custom-btn-solid:hover {
-    background-color: #158dc4 !important;
-    border-color: #158dc4 !important;
-    color: #fff !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(30, 168, 231, 0.2) !important;
-  }
-  .status-badge {
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
-    font-weight: 700;
-    font-size: 0.75rem;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-  }
-  .react-table-modern th {
-    background: #f8fafc !important;
-    color: #64748b !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    font-size: 0.75rem !important;
-    letter-spacing: 0.05em !important;
-    padding: 1.25rem !important;
-    border: none !important;
-  }
-  .react-table-modern td {
-    padding: 1.25rem !important;
-    vertical-align: middle !important;
-    border-bottom: 1px solid #f1f5f9 !important;
-  }
-  .stat-icon-circle {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1rem;
-  }
-  .bg-soft-primary { background-color: rgba(30, 168, 231, 0.1) !important; }
-  .bg-soft-success { background-color: rgba(40, 199, 111, 0.1) !important; }
-  .bg-soft-info { background-color: rgba(0, 207, 221, 0.1) !important; }
-  .bg-soft-danger { background-color: rgba(234, 84, 85, 0.1) !important; }
-  .bg-soft-warning { background-color: rgba(255, 159, 67, 0.1) !important; }
-  .text-primary { color: #1ea8e7 !important; }
-  .text-success { color: #28c76f !important; }
-  .text-info { color: #00cfdd !important; }
-  .text-danger { color: #ea5455 !important; }
-  .text-warning { color: #ff9f43 !important; }
-  @media (min-width: 1200px) {
-    .hide-on-desktop {
-      display: none !important;
-    }
-  }
-  @media (max-width: 1199px) {
-    .hide-on-mobile {
-      display: none !important;
-    }
-  }
-  .react-select-premium {
-    font-weight: 600 !important;
-  }
-  .react-select-premium .react-select__control {
-    border-radius: 10px !important;
-    border: 1px solid #dee2e6 !important;
-    background-color: #ffffff !important;
-    height: 40px !important;
-    min-height: 40px !important;
-    cursor: pointer !important;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
-    box-shadow: none !important;
-  }
-  .react-select-premium .react-select__control:hover {
-    border-color: #cbd5e1 !important;
-  }
-  .react-select-premium .react-select__control--is-focused,
-  .react-select-premium .react-select__control--menu-is-open {
-    border-color: #1ea8e7 !important;
-    box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
-  }
-  .react-select-premium .react-select__single-value,
-  .react-select-premium .react-select__placeholder {
-    font-size: 0.9rem !important;
-    padding-left: 0.25rem !important;
-  }
-  .custom-btn-success-outline {
-    border: 1.5px solid #10b981 !important;
-    color: #10b981 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-    height: 40px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-  .custom-btn-success-outline:hover {
-    background-color: #10b981 !important;
-    color: #fff !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
-  }
-  .custom-btn-danger-outline {
-    border: 1.5px solid #ef4444 !important;
-    color: #ef4444 !important;
-    background-color: #fff !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 50px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-    height: 40px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-  .custom-btn-danger-outline:hover {
-    background-color: #ef4444 !important;
-    color: #fff !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
-  }
-`;
+
+
+
 
 export default function ViewStaffPayroll() {
     const { staffId } = useParams();
@@ -589,10 +432,9 @@ export default function ViewStaffPayroll() {
 
     return (
         <div className="container-fluid px-lg-4 px-xl-5 pb-5">
-            <style>{customStyles}</style>
             <HtmlHead title={main_title} description={description} />
 
-            <div className="page-title-container mb-4 mb-lg-5 mt-5 mt-lg-0">
+            <div className="page-title-container mb-4 mt-3 mt-lg-0">
                 <Row className="g-3 align-items-center">
                     <Col md={7}>
                         <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
