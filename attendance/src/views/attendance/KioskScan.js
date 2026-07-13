@@ -70,7 +70,13 @@ const calculateCompletedAndOvertime = (todayAtt, orgRules, currentTime) => {
 };
 
 const KioskScan = () => {
-  const { company_id } = useParams();
+  const { company_id, device_mode } = useParams();
+
+  const isCheckInOnly = device_mode === 'in';
+  const isCheckOutOnly = device_mode === 'out';
+  const badgeText = isCheckInOnly ? 'Check-In Terminal' : isCheckOutOnly ? 'Check-Out Terminal' : 'Attendance Terminal';
+  const badgeClass = isCheckInOnly ? 'bg-soft-success text-success' : isCheckOutOnly ? 'bg-soft-warning text-warning' : 'bg-soft-primary text-primary';
+  const headerTitle = isCheckInOnly ? 'Scan to Check-In' : isCheckOutOnly ? 'Scan to Check-Out' : 'Scan to Check-In/Out';
 
   // States
   const [loading, setLoading] = useState(false);
@@ -148,7 +154,6 @@ const KioskScan = () => {
     }
   }, [company_id]);
 
-  // --- Core API Submit ---
   const submitScan = useCallback(async (staff) => {
     setLoading(true);
     setError('');
@@ -161,12 +166,17 @@ const KioskScan = () => {
         scanned_id: staff.staff_id,
         date: getTodayDate(),
         time: currentTime,
+        device_mode,
       });
 
       if (res.data && res.data.success) {
         const todayAtt = staff.todayAttendance;
         let isCheckOut = false;
-        if (todayAtt) {
+        if (device_mode === 'in') {
+          isCheckOut = false;
+        } else if (device_mode === 'out') {
+          isCheckOut = true;
+        } else if (todayAtt) {
           const sessions = todayAtt.sessions || [];
           if (sessions.length > 0) {
             isCheckOut = sessions[sessions.length - 1].out_time === null;
@@ -246,7 +256,7 @@ const KioskScan = () => {
         setMessage(null);
       }, 3000);
     }
-  }, [company_id, companyConfig, fetchFaces]);
+  }, [company_id, device_mode, companyConfig, fetchFaces]);
 
   // --- Face Scan Initialization ---
   useEffect(() => {
@@ -412,18 +422,18 @@ const KioskScan = () => {
     <>
       <HtmlHead title={title} description={description} />
 
-      <div className="kiosk-page-wrapper">
+      <div className={`kiosk-page-wrapper ${isCheckInOnly ? 'kiosk-in-mode' : isCheckOutOnly ? 'kiosk-out-mode' : ''}`}>
         <Card className="shadow-lg border-0 kiosk-card animate__animated animate__fadeIn">
           <Card.Body className="kiosk-card-body p-4 w-100">
             {/* Mobile-only Header */}
             <div className="login-login-form-header mb-3 text-center d-md-none">
               <span
-                className="badge bg-soft-primary text-primary px-3 py-1.5 rounded-pill fw-bold text-uppercase mb-2"
+                className={`badge ${badgeClass} px-3 py-1.5 rounded-pill fw-bold text-uppercase mb-2`}
                 style={{ letterSpacing: '0.05em', fontSize: '0.7rem' }}
               >
-                Attendance Terminal
+                {badgeText}
               </span>
-              <h2 className="login-login-form-title mt-1" style={{ fontSize: '1.4rem' }}>Scan to Check-In/Out</h2>
+              <h2 className="login-login-form-title mt-1" style={{ fontSize: '1.4rem' }}>{headerTitle}</h2>
               <p className="login-login-form-subtitle mt-1 px-1" style={{ fontSize: '0.8rem' }}>Position yourself in front of the camera to verify your face</p>
             </div>
 
@@ -507,12 +517,12 @@ const KioskScan = () => {
                 {/* Desktop-only Header */}
                 <div className="login-login-form-header mb-2 text-center d-none d-md-block">
                   <span
-                    className="badge bg-soft-primary text-primary px-3 py-1.5 rounded-pill fw-bold text-uppercase mb-2 animate__animated animate__fadeIn"
+                    className={`badge ${badgeClass} px-3 py-1.5 rounded-pill fw-bold text-uppercase mb-2 animate__animated animate__fadeIn`}
                     style={{ letterSpacing: '0.05em', fontSize: '0.7rem' }}
                   >
-                    Attendance Terminal
+                    {badgeText}
                   </span>
-                  <h2 className="login-login-form-title mt-1" style={{ fontSize: '1.4rem' }}>Scan to Check-In/Out</h2>
+                  <h2 className="login-login-form-title mt-1" style={{ fontSize: '1.4rem' }}>{headerTitle}</h2>
                   <p className="login-login-form-subtitle mt-1 px-1" style={{ fontSize: '0.8rem' }}>Position yourself in front of the camera to verify your face</p>
                 </div>
 
@@ -696,6 +706,18 @@ const KioskScan = () => {
           border-radius: 1.5rem;
           overflow: hidden;
           box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.2);
+        }
+        .kiosk-in-mode .webcam-container {
+          box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2) !important;
+        }
+        .kiosk-in-mode .scanner-overlay {
+          background: linear-gradient(to bottom, rgba(16,185,129,0.15) 0%, rgba(16,185,129,0) 10%, rgba(16,185,129,0) 90%, rgba(16,185,129,0.15) 100%) !important;
+        }
+        .kiosk-out-mode .webcam-container {
+          box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2) !important;
+        }
+        .kiosk-out-mode .scanner-overlay {
+          background: linear-gradient(to bottom, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0) 10%, rgba(245,158,11,0) 90%, rgba(245,158,11,0.15) 100%) !important;
         }
 
         .scanner-overlay {

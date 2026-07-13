@@ -47,7 +47,7 @@ const Main = () => {
       <Router basename={process.env.REACT_APP_BASENAME}>
         <Suspense fallback={<Loading />}>
           <Switch>
-            <Route path="/:company_id" exact component={KioskScan} />
+            <Route path="/:company_id/:device_mode?" component={KioskScan} />
           </Switch>
         </Suspense>
       </Router>

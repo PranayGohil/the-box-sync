@@ -654,9 +654,8 @@ const uploadWfhCapture = async (req, res) => {
 };
 
 // ── POST /attendance/wfh-idle ─────────────────────────────────────────────────
-// ── POST /attendance/kiosk-scan (No Auth Required) ───────────────────────────
 const kioskScan = async (req, res) => {
-    const { company_id, scanned_id, date, time } = req.body;
+    const { company_id, scanned_id, date, time, device_mode } = req.body;
 
     if (!company_id || !scanned_id) {
         return res.status(400).json({ success: false, message: "Missing company_id or scanned_id." });
@@ -671,13 +670,35 @@ const kioskScan = async (req, res) => {
         let record = await StaffAttendance.findOne({ staff_id: staff._id, date });
         let action = "check-in";
 
+        // Determine if they are currently checked in (last session's out_time is null)
+        let isCurrentlyCheckedIn = false;
         if (record && record.sessions && record.sessions.length > 0) {
             const lastSession = record.sessions[record.sessions.length - 1];
             if (lastSession.out_time === null) {
-                action = "check-out";
+                isCurrentlyCheckedIn = true;
             }
         } else if (record && record.in_time && !record.out_time) {
-             action = "check-out";
+            isCurrentlyCheckedIn = true;
+        }
+
+        if (device_mode === "in") {
+            if (isCurrentlyCheckedIn) {
+                return res.status(400).json({ success: false, message: "Already Checked-In!" });
+            }
+            action = "check-in";
+        } else if (device_mode === "out") {
+            if (!isCurrentlyCheckedIn) {
+                const hasSessionToday = record && (record.in_time || (record.sessions && record.sessions.length > 0));
+                if (!hasSessionToday) {
+                    return res.status(400).json({ success: false, message: "Please Check-In first!" });
+                } else {
+                    return res.status(400).json({ success: false, message: "Already Checked-Out!" });
+                }
+            }
+            action = "check-out";
+        } else {
+            // Auto-toggle mode (default fallback)
+            action = isCurrentlyCheckedIn ? "check-out" : "check-in";
         }
 
         // Mock req so we can reuse checkIn / checkOut logic
