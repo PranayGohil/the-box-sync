@@ -399,8 +399,56 @@ const CompanyProfile = () => {
                       rel="noopener noreferrer"
                       className="d-block mb-3 p-2 bg-light text-primary fw-bold rounded border text-center text-decoration-none"
                     >
-                      Open Attendance Panel <CsLineIcons icon="external-link" size="15" className="ms-1" />
+                      Open Standard Panel (Auto-Toggle) <CsLineIcons icon="external-link" size="15" className="ms-1" />
                     </a>
+
+                    <div className="row g-2 mb-3">
+                      <div className="col-6">
+                        <a
+                          href={`${process.env.REACT_APP_ATTENDANCE_URL || 'http://localhost:3002'}/${formData._id}/in`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="d-block p-2 bg-light text-success fw-bold rounded border text-center text-decoration-none small mb-2"
+                        >
+                          Open Check-In <CsLineIcons icon="external-link" size="12" className="ms-1 text-success" />
+                        </a>
+                        <Button
+                          variant="outline-success"
+                          size="sm"
+                          className="w-100 py-1"
+                          style={{ fontSize: '0.75rem' }}
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${process.env.REACT_APP_ATTENDANCE_URL || 'http://localhost:3002'}/${formData._id}/in`);
+                            toast.success('Check-In link copied to clipboard!');
+                          }}
+                        >
+                          <CsLineIcons icon="copy" size="12" className="me-1" /> Copy Check-In
+                        </Button>
+                      </div>
+                      <div className="col-6">
+                        <a
+                          href={`${process.env.REACT_APP_ATTENDANCE_URL || 'http://localhost:3002'}/${formData._id}/out`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="d-block p-2 bg-light text-warning fw-bold rounded border text-center text-decoration-none small mb-2"
+                        >
+                          Open Check-Out <CsLineIcons icon="external-link" size="12" className="ms-1 text-warning" />
+                        </a>
+                        <Button
+                          variant="outline-warning"
+                          size="sm"
+                          className="w-100 py-1"
+                          style={{ fontSize: '0.75rem' }}
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${process.env.REACT_APP_ATTENDANCE_URL || 'http://localhost:3002'}/${formData._id}/out`);
+                            toast.success('Check-Out link copied to clipboard!');
+                          }}
+                        >
+                          <CsLineIcons icon="copy" size="12" className="me-1" /> Copy Check-Out
+                        </Button>
+                      </div>
+                    </div>
+
                     <Button
                       variant="outline-primary"
                       size="sm"
@@ -411,7 +459,7 @@ const CompanyProfile = () => {
                       }}
                     >
                       <CsLineIcons icon="copy" size="15" className="me-2" />
-                      Copy Link
+                      Copy Standard Link
                     </Button>
                   </>
                 ) : (
