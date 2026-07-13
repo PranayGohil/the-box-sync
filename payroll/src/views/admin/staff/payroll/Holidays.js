@@ -539,7 +539,7 @@ const Holidays = () => {
                         
                         let dateSubtitle = format(startDate, 'EEEE');
                         if (g.dates.length > 1) {
-                            dateSubtitle = `${format(startDate, 'dd MMM')} - ${format(endDate, 'dd MMM yyyy')} (${g.dates.length} Days)`;
+                            dateSubtitle = `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')} (${g.dates.length} Days)`;
                         }
                         
                         const theme = getHolidayTypeTheme(g.holiday_type);

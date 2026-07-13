@@ -89,13 +89,17 @@ export const fetchNotifications = () => async (dispatch, getState) => {
     const storedRegs = JSON.parse(localStorage.getItem('regularization_requests') || '[]');
     const myRegs = storedRegs; 
 
+    const companyLogo = currentUser?.logo 
+      ? `${process.env.REACT_APP_UPLOAD_DIR}${currentUser.logo}` 
+      : '/img/favicon/logo 310x310.png';
+
     const notifications = [];
 
     leaveRequests.forEach(req => {
       if (req.status === 'approved' || req.status === 'rejected') {
         notifications.push({
           id: `leave-${req._id}-${req.status}`,
-          img: '/img/profile/profile-3.webp',
+          img: companyLogo,
           detail: `Your leave request from ${formatDateSafely(req.from_date)} to ${formatDateSafely(req.to_date)} has been ${req.status.toUpperCase()}.`,
           link: '#/',
           date: formatDateSafely(req.approved_on || req.updatedAt),
@@ -106,7 +110,7 @@ export const fetchNotifications = () => async (dispatch, getState) => {
     if (profile?.resignation && (profile.resignation.status === 'approved' || profile.resignation.status === 'rejected')) {
       notifications.push({
         id: `resignation-${profile._id}-${profile.resignation.status}`,
-        img: '/img/profile/profile-1.webp',
+        img: companyLogo,
         detail: `Your resignation request has been ${profile.resignation.status.toUpperCase()}.${profile.resignation.last_working_day ? ` Last working day: ${formatDateSafely(profile.resignation.last_working_day)}` : ''}`,
         link: '#/',
         date: formatDateSafely(profile.resignation.last_working_day),
@@ -117,7 +121,7 @@ export const fetchNotifications = () => async (dispatch, getState) => {
       if (req.status === 'approved' || req.status === 'rejected') {
         notifications.push({
           id: `asset-${req._id}-${req.status}`,
-          img: '/img/profile/profile-2.webp',
+          img: companyLogo,
           detail: `Your asset request for "${req.asset_name}" has been ${req.status.toUpperCase()}.`,
           link: '#/',
           date: formatDateSafely(req.updatedAt),
@@ -129,7 +133,7 @@ export const fetchNotifications = () => async (dispatch, getState) => {
       if (req.status === 'Approved' || req.status === 'Rejected') {
         notifications.push({
           id: `reg-${req.id || req._id}-${req.status}`,
-          img: '/img/profile/profile-6.webp',
+          img: companyLogo,
           detail: `Your attendance regularization request for ${formatDateSafely(req.date)} has been ${req.status.toUpperCase()}.`,
           link: '#/',
           date: formatDateSafely(req.date),
@@ -141,7 +145,7 @@ export const fetchNotifications = () => async (dispatch, getState) => {
       if (req.hr_reply) {
         notifications.push({
           id: `feedback-reply-${req._id}-${req.replied_at || 'reply'}`,
-          img: '/img/profile/profile-5.webp',
+          img: companyLogo,
           detail: `HR replied to your ${req.type} "${req.title}": "${req.hr_reply.substring(0, 40)}${req.hr_reply.length > 40 ? '...' : ''}"`,
           link: '#/',
           date: formatDateSafely(req.replied_at || req.updatedAt),

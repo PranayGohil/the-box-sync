@@ -560,7 +560,7 @@ const Assets = () => {
                           <div>
                             <span className="fw-semibold">{asset.assigned_to.f_name} {asset.assigned_to.l_name}</span>
                             <span className="text-muted d-block small">
-                              Assigned on: {new Date(asset.assigned_date).toLocaleDateString()}
+                              Assigned on: {new Date(asset.assigned_date).toLocaleDateString('en-GB')}
                             </span>
                           </div>
                         ) : (
@@ -656,7 +656,7 @@ const Assets = () => {
                         <td className="fw-bold">{req.asset_name}</td>
                         <td>{req.asset_type}</td>
                         <td>{req.reason || '—'}</td>
-                        <td>{new Date(req.createdAt).toLocaleDateString()}</td>
+                        <td>{new Date(req.createdAt).toLocaleDateString('en-GB')}</td>
                         <td>{getStatusBadge(req.status)}</td>
                         <td className="text-end">
                           {req.status === 'pending' && (

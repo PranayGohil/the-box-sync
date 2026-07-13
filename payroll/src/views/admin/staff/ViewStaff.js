@@ -53,7 +53,7 @@ const ViewStaff = () => {
       setProcessingId(id);
       const res = await axios.post(
         `${process.env.REACT_APP_API}/staff/process-resignation/${id}`,
-        { status, admin_remarks: `Processed by HR on ${new Date().toLocaleDateString()}` },
+        { status, admin_remarks: `Processed by HR on ${new Date().toLocaleDateString('en-GB')}` },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       if (res.data.success) {

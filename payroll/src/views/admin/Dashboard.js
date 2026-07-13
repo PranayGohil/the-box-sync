@@ -403,7 +403,7 @@ const Dashboard = () => {
             <Card.Body className="p-4">
               <div className="card-title-container">
                 <h2 className="small-title mb-0 fw-bold text-dark">Recent Leave Requests</h2>
-                <Button variant="link" className="p-0 fw-bold" onClick={() => history.push('/payroll/leave-requests')} style={{ color: brandColor }}>
+                <Button variant="link" className="p-0 fw-bold" onClick={() => history.push('/staff/leave-requests')} style={{ color: brandColor }}>
                   All Leaves
                 </Button>
               </div>
@@ -460,7 +460,7 @@ const Dashboard = () => {
                             </td>
                             <td className="text-end">
                               {isPending ? (
-                                <Button size="sm" variant="success" className="rounded-pill px-3 py-1" onClick={() => history.push('/payroll/leave-requests')}>
+                                <Button size="sm" variant="success" className="rounded-pill px-3 py-1" onClick={() => history.push('/staff/leave-requests')}>
                                   Review
                                 </Button>
                               ) : (
@@ -529,7 +529,7 @@ const Dashboard = () => {
                           <div className="d-flex align-items-center justify-content-between">
                             <span className="smaller text-muted" style={{ fontSize: '12px' }}>Status:</span>
                             {isPending ? (
-                              <Button size="sm" variant="success" className="rounded-pill px-3 py-1 shadow-sm fw-bold" style={{ fontSize: '11px' }} onClick={() => history.push('/payroll/leave-requests')}>
+                              <Button size="sm" variant="success" className="rounded-pill px-3 py-1 shadow-sm fw-bold" style={{ fontSize: '11px' }} onClick={() => history.push('/staff/leave-requests')}>
                                 Review
                               </Button>
                             ) : (
@@ -599,17 +599,17 @@ const Dashboard = () => {
                 <CsLineIcons icon="gear" size="18" style={{ color: brandColor }} />
               </div>
               <div className="d-flex flex-column gap-2 mt-2">
-                <Button className="custom-btn-outline text-start w-100 py-2 d-flex align-items-center gap-2" onClick={() => history.push('/payroll-management/generate')}>
+                <Button className="custom-btn-outline text-start w-100 py-2 d-flex align-items-center gap-2" onClick={() => history.push('/staff/payroll/generate')}>
                   <CsLineIcons icon="wallet" size="16" /> Generate Payroll
                 </Button>
-                <Button className="custom-btn-outline text-start w-100 py-2 d-flex align-items-center gap-2" onClick={() => history.push('/payroll/leave-requests')}>
-                  <CsLineIcons icon="email" size="16" /> Leave Requests
+                <Button className="custom-btn-outline text-start w-100 py-2 d-flex align-items-center gap-2" onClick={() => history.push('/staff/payroll')}>
+                  <CsLineIcons icon="layout" size="16" /> Manage Payroll
                 </Button>
-                <Button className="custom-btn-outline text-start w-100 py-2 d-flex align-items-center gap-2" onClick={() => history.push('/payroll/advances')}>
+                <Button className="custom-btn-outline text-start w-100 py-2 d-flex align-items-center gap-2" onClick={() => history.push('/finance/advances')}>
                   <CsLineIcons icon="wallet" size="16" /> Salary Advances
                 </Button>
-                <Button className="custom-btn-outline text-start w-100 py-2 d-flex align-items-center gap-2" onClick={() => history.push('/payroll/settings')}>
-                  <CsLineIcons icon="gear" size="16" /> Settings Console
+                <Button className="custom-btn-outline text-start w-100 py-2 d-flex align-items-center gap-2" onClick={() => history.push('/feedbacks')}>
+                  <CsLineIcons icon="message" size="16" /> Feedback &amp; Complaints
                 </Button>
               </div>
             </Card.Body>

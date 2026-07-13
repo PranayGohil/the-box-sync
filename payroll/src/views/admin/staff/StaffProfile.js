@@ -143,7 +143,7 @@ const StaffProfile = () => {
   const formatDate = (dateString) => {
     if (!dateString) return '—';
     const d = new Date(dateString);
-    return format(d, 'dd MMMM, yyyy', { locale: enIN });
+    return format(d, 'dd/MM/yyyy', { locale: enIN });
   };
 
   const fetchStaff = async () => {

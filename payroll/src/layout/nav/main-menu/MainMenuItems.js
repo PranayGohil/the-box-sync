@@ -42,31 +42,7 @@ const MainMenuItem = memo(({ item, id, isSubItem = false, menuPlacement = DEFAUL
     isActive = item.subs.some(sub => pathname === sub.path || pathname.indexOf(`${sub.path}/`) > -1);
   }
 
-  if (pathname.includes('/staff/attendance')) {
-    if (item.path === '/staff') {
-      isActive = false;
-    } else if (item.path === '/attendance') {
-      isActive = true;
-    }
-  }
 
-  if (pathname.includes('/staff/payroll')) {
-    if (pathname.includes('/staff/payroll/settings')) {
-      if (item.path === '/staff') {
-        isActive = false;
-      } else if (item.path === '/payroll') {
-        isActive = true;
-      } else if (item.path === '/payroll-management') {
-        isActive = false;
-      }
-    } else if (item.path === '/staff') {
-      isActive = false;
-    } else if (item.path === '/payroll') {
-      isActive = false;
-    } else if (item.path === '/payroll-management') {
-      isActive = true;
-    }
-  }
 
   const { formatMessage: f } = useIntl();
   const [verticalMenuCollapseExpanded, setVerticalMenuCollapseExpanded] = useState(isActive);

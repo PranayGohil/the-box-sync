@@ -3,7 +3,7 @@ import { useHistory, useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import {
     Row, Col, Card, Button, Badge, Alert, Modal,
-    Form, Spinner, Table, InputGroup,
+    Form, Spinner, Table, InputGroup, Pagination,
 } from 'react-bootstrap';
 import Select from 'react-select';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -29,6 +29,21 @@ const customStyles = `
   .glass-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 15px 45px rgba(0, 0, 0, 0.06) !important;
+  }
+  .table-responsive::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+  .table-responsive::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 10px;
+  }
+  .table-responsive::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+  }
+  .table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
   }
   .custom-btn-primary-outline {
     border: 1px solid #1ea8e7 !important;
@@ -72,11 +87,12 @@ const customStyles = `
   .react-table-modern thead th {
     border-bottom: 2px solid #edf2f7 !important;
     background: transparent !important;
-    font-size: 0.85rem !important;
+    font-size: 0.75rem !important;
     color: #64748b !important;
     letter-spacing: 0.05em;
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 0.5rem !important;
     font-weight: 700 !important;
+    white-space: nowrap !important;
   }
   .react-table-modern tbody tr {
     background: transparent !important;
@@ -88,10 +104,10 @@ const customStyles = `
   .react-table-modern tbody td {
     border-top: none !important;
     border-bottom: 1px solid #edf2f7 !important;
-    padding: 1.25rem 1.5rem !important;
+    padding: 0.6rem 0.5rem !important;
     vertical-align: middle !important;
     background: transparent !important;
-    font-size: 0.95rem !important;
+    font-size: 0.85rem !important;
   }
   .react-table-modern tbody td:first-child {
     border-left: none !important;
@@ -146,6 +162,8 @@ export default function ManagePayroll() {
     const [selectedBranch, setSelectedBranch] = useState('all');
     const [totals, setTotals] = useState({});
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
     const [error, setError] = useState('');
     const [payrollConfig, setPayrollConfig] = useState(null);
 
@@ -208,6 +226,11 @@ export default function ManagePayroll() {
     useEffect(() => {
         fetchSummary();
     }, [month, year]);
+
+    useEffect(() => {
+        if (paramMonth) setMonth(Number(paramMonth));
+        if (paramYear) setYear(Number(paramYear));
+    }, [paramMonth, paramYear]);
 
     useEffect(() => {
         fetchConfig();
@@ -472,6 +495,16 @@ export default function ManagePayroll() {
     for (let y = currentDate.getFullYear(); y >= currentDate.getFullYear() - 5; y--) yearOptions.push(y);
 
     const filteredSummary = selectedBranch === 'all' ? summary : summary.filter(s => s.staff?.branch_id === selectedBranch);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedBranch, month, year, summary]);
+
+    const pageCount = Math.ceil(filteredSummary.length / pageSize);
+    const indexOfLastItem = currentPage * pageSize;
+    const indexOfFirstItem = indexOfLastItem - pageSize;
+    const currentItems = filteredSummary.slice(indexOfFirstItem, indexOfLastItem);
+
     const payrollRows = filteredSummary.filter((s) => s.payroll);
     const allSelected = payrollRows.length > 0 && selectedIds.size === payrollRows.length;
 
@@ -495,21 +528,14 @@ export default function ManagePayroll() {
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
                     <Col xs="12" md="6" className="d-flex flex-wrap justify-content-md-end align-items-center gap-3">
-                        <Button className="custom-btn-primary-outline px-4 rounded-pill shadow-sm d-flex align-items-center" style={{ height: '40px' }} onClick={() => history.push('/dashboard')}>
-                            <CsLineIcons icon="arrow-left" className="me-2" size="18" />
-                            <span>Back</span>
-                        </Button>
                         <Button className="custom-btn-primary-outline px-4 rounded-pill shadow-sm d-flex align-items-center" style={{ height: '40px' }} as={Link} to="/staff/payroll/generate">
                             <CsLineIcons icon="plus" className="me-2" size="18" />
                             <span>Generate New</span>
                         </Button>
-                        <Button className="custom-btn-primary-outline px-4 rounded-pill shadow-sm d-flex align-items-center" style={{ height: '40px' }} as={Link} to="/payroll/settings">
-                            <CsLineIcons icon="gear" className="me-2" size="18" />
-                            <span>Settings</span>
-                        </Button>
                     </Col>
                 </Row>
             </div>
+
 
             <Card className="glass-card border-0 mb-4">
                 <Card.Body className="p-4">
@@ -521,7 +547,10 @@ export default function ManagePayroll() {
                                 className="react-select-premium shadow-sm"
                                 options={MONTH_NAMES.slice(1).map((m, i) => ({ value: i + 1, label: m }))}
                                 value={{ value: month, label: MONTH_NAMES[month] }}
-                                onChange={(opt) => setMonth(opt.value)}
+                                onChange={(opt) => {
+                                    setMonth(opt.value);
+                                    history.push(`/staff/payroll/${opt.value}/${year}`);
+                                }}
                                 menuPortalTarget={document.body}
                                 styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                             />
@@ -533,7 +562,10 @@ export default function ManagePayroll() {
                                 className="react-select-premium shadow-sm"
                                 options={yearOptions.map(y => ({ value: y, label: y }))}
                                 value={{ value: year, label: year }}
-                                onChange={(opt) => setYear(opt.value)}
+                                onChange={(opt) => {
+                                    setYear(opt.value);
+                                    history.push(`/staff/payroll/${month}/${opt.value}`);
+                                }}
                                 menuPortalTarget={document.body}
                                 styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                             />
@@ -637,6 +669,7 @@ export default function ManagePayroll() {
                             </div>
                         </div>
                     ) : (
+                        <>
                         <div className="table-responsive">
                             <Table hover className="react-table-modern mb-0">
                                 <thead className="d-none d-lg-table-header-group">
@@ -661,7 +694,7 @@ export default function ManagePayroll() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredSummary.map(({ staff, payroll }) => (
+                                    {currentItems.map(({ staff, payroll }) => (
                                         <React.Fragment key={staff._id}>
                                         <tr className={`d-none d-lg-table-row ${selectedIds.has(payroll?._id) ? 'bg-soft-primary' : ''}`}>
                                             <td>
@@ -677,13 +710,13 @@ export default function ManagePayroll() {
                                                 )}
                                             </td>
                                             <td>
-                                                <div className="d-flex align-items-center gap-3">
-                                                    <div className="sw-5 sh-5 rounded-circle bg-soft-primary d-flex align-items-center justify-content-center text-primary fw-bold">
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <div className="rounded-circle bg-soft-primary d-flex align-items-center justify-content-center text-primary fw-bold" style={{ width: '36px', height: '36px', minWidth: '36px', fontSize: '0.85rem' }}>
                                                         {staff.f_name?.[0]}{staff.l_name?.[0]}
                                                     </div>
                                                     <div>
-                                                        <div className="fw-bold text-dark">{staff.f_name} {staff.l_name}</div>
-                                                        <small className="text-muted fw-medium">{staff.position} • #{staff.staff_id}</small>
+                                                        <div className="fw-bold text-dark" style={{ fontSize: '0.85rem', lineHeight: '1.2' }}>{staff.f_name} {staff.l_name}</div>
+                                                        <small className="text-muted fw-medium" style={{ fontSize: '0.75rem' }}>{staff.position} • #{staff.staff_id}</small>
                                                     </div>
                                                 </div>
                                             </td>
@@ -691,53 +724,53 @@ export default function ManagePayroll() {
                                             {payroll ? (
                                                 <>
                                                     <td className="text-center">
-                                                        <div className="d-flex align-items-center justify-content-center gap-2">
-                                                            <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill fs-6 fw-bold">{payroll.present_days}P</Badge>
-                                                            <Badge bg={payroll.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${payroll.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill fs-6 fw-bold`}>{payroll.absent_days}A</Badge>
+                                                        <div className="d-flex align-items-center justify-content-center gap-1">
+                                                            <Badge bg="soft-success" className="text-success px-2 py-1 rounded-pill fw-bold" style={{ fontSize: '0.75rem' }}>{payroll.present_days}P</Badge>
+                                                            <Badge bg={payroll.absent_days > 0 ? 'soft-danger' : 'soft-light'} className={`${payroll.absent_days > 0 ? 'text-danger' : 'text-muted'} px-2 py-1 rounded-pill fw-bold`} style={{ fontSize: '0.75rem' }}>{payroll.absent_days}A</Badge>
                                                         </div>
                                                     </td>
-                                                    <td className="text-end fw-medium text-dark">₹{(staff.salary || payroll.base_salary || 0).toLocaleString('en-IN')}</td>
-                                                    <td className="text-end text-success fw-bold">₹{(payroll.earned_breakdown?.total_gross || payroll.earned_salary || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</td>
+                                                    <td className="text-end fw-medium text-dark" style={{ fontSize: '0.85rem' }}>₹{(staff.salary || payroll.base_salary || 0).toLocaleString('en-IN')}</td>
+                                                    <td className="text-end text-success fw-bold" style={{ fontSize: '0.85rem' }}>₹{(payroll.earned_breakdown?.total_gross || payroll.earned_salary || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</td>
                                                     <td className="text-end">
-                                                        <div className="d-flex flex-column align-items-end" style={{ whiteSpace: 'nowrap' }}>
-                                                            <div className="small fw-bold">
-                                                                <span className="text-primary me-2" title={`OT: ${payroll.overtime_hours||0}h @ ₹${payroll.overtime_rate || staff.overtime_rate || Math.round(((staff.salary || payroll.base_salary || 0) / 30 / 8) * 2)}/h`}>OT: +₹{(payroll.overtime_pay || 0).toLocaleString('en-IN')} <span className="text-muted fw-medium" style={{ fontSize: '0.85rem' }}>({payroll.overtime_hours||0}h)</span></span>
+                                                        <div className="d-flex flex-column align-items-end" style={{ whiteSpace: 'nowrap', fontSize: '0.8rem' }}>
+                                                            <div className="fw-bold">
+                                                                <span className="text-primary me-2" title={`OT: ${payroll.overtime_hours||0}h @ ₹${payroll.overtime_rate || staff.overtime_rate || Math.round(((staff.salary || payroll.base_salary || 0) / 30 / 8) * 2)}/h`}>OT: +₹{(payroll.overtime_pay || 0).toLocaleString('en-IN')} <span className="text-muted fw-medium" style={{ fontSize: '0.75rem' }}>({payroll.overtime_hours||0}h)</span></span>
                                                                 <span className="text-danger">Ded: -₹{((payroll.deduction_breakdown?.total_statutory || 0) + (payroll.deductions || 0)).toLocaleString('en-IN')}</span>
                                                             </div>
                                                             {(payroll.bonus > 0 || payroll.expense_claims > 0) && (
-                                                                <div className="small fw-bold mt-1">
+                                                                <div className="fw-bold mt-1">
                                                                     {payroll.bonus > 0 && <span className="text-success me-2">Bon: +₹{payroll.bonus.toLocaleString('en-IN')}</span>}
                                                                     {payroll.expense_claims > 0 && <span className="text-success">Exp: +₹{payroll.expense_claims.toLocaleString('en-IN')}</span>}
                                                                 </div>
                                                             )}
                                                         </div>
                                                     </td>
-                                                    <td className="text-end fw-bold text-primary h5 mb-0">₹{payroll.net_salary.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</td>
+                                                    <td className="text-end fw-bold text-primary mb-0" style={{ fontSize: '0.9rem' }}>₹{payroll.net_salary.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</td>
                                                     <td className="text-center">
-                                                        <Badge bg={payroll.status === 'paid' ? 'success' : 'warning'} className="status-badge">
+                                                        <Badge bg={payroll.status === 'paid' ? 'success' : 'warning'} className="status-badge" style={{ padding: '0.35rem 0.75rem', fontSize: '0.7rem' }}>
                                                             <CsLineIcons icon={payroll.status === 'paid' ? 'check' : 'clock'} size="12" className="me-1" />
                                                             {payroll.status}
                                                         </Badge>
                                                     </td>
                                                     <td className="text-center">
-                                                        <div className="d-flex justify-content-center gap-2">
+                                                        <div className="d-flex justify-content-center gap-1">
                                                             {payroll.status === 'unpaid' ? (
-                                                                <Button variant="outline-success" className="btn-icon btn-icon-only rounded-circle" style={{ width: '38px', height: '38px' }} onClick={() => handleMarkPaid(new Set([payroll._id]))} disabled={isMarkingPaid}>
-                                                                    <CsLineIcons icon="check" size="18" />
+                                                                <Button variant="outline-success" className="btn-icon btn-icon-only rounded-circle d-inline-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }} onClick={() => handleMarkPaid(new Set([payroll._id]))} disabled={isMarkingPaid}>
+                                                                    <CsLineIcons icon="check" size="15" />
                                                                 </Button>
                                                             ) : (
-                                                                <Button variant="outline-warning" className="btn-icon btn-icon-only rounded-circle" style={{ width: '38px', height: '38px' }} onClick={() => handleMarkUnpaid(new Set([payroll._id]))} disabled={isMarkingPaid}>
-                                                                    <CsLineIcons icon="close" size="18" />
+                                                                <Button variant="outline-warning" className="btn-icon btn-icon-only rounded-circle d-inline-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }} onClick={() => handleMarkUnpaid(new Set([payroll._id]))} disabled={isMarkingPaid}>
+                                                                    <CsLineIcons icon="close" size="15" />
                                                                 </Button>
                                                             )}
-                                                            <Button variant="outline-primary" className="btn-icon btn-icon-only rounded-circle" style={{ width: '38px', height: '38px' }} onClick={() => openEditModal(payroll, staff)}>
-                                                                <CsLineIcons icon="edit" size="18" />
+                                                            <Button variant="outline-primary" className="btn-icon btn-icon-only rounded-circle d-inline-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }} onClick={() => openEditModal(payroll, staff)}>
+                                                                <CsLineIcons icon="edit" size="15" />
                                                             </Button>
-                                                            <Button variant="outline-dark" className="btn-icon btn-icon-only rounded-circle" style={{ width: '38px', height: '38px' }} onClick={() => history.push(`/staff/payroll/view/${staff._id}`)}>
-                                                                <CsLineIcons icon="eye" size="18" />
+                                                            <Button variant="outline-dark" className="btn-icon btn-icon-only rounded-circle d-inline-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }} onClick={() => history.push(`/staff/payroll/view/${staff._id}`)}>
+                                                                <CsLineIcons icon="eye" size="15" />
                                                             </Button>
-                                                            <Button variant="outline-danger" className="btn-icon btn-icon-only rounded-circle" style={{ width: '38px', height: '38px' }} onClick={() => { setDeletingPayroll(payroll); setShowDeleteModal(true); }}>
-                                                                <CsLineIcons icon="bin" size="18" />
+                                                            <Button variant="outline-danger" className="btn-icon btn-icon-only rounded-circle d-inline-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }} onClick={() => { setDeletingPayroll(payroll); setShowDeleteModal(true); }}>
+                                                                <CsLineIcons icon="bin" size="15" />
                                                             </Button>
                                                         </div>
                                                     </td>
@@ -876,6 +909,43 @@ export default function ManagePayroll() {
                                 </tbody>
                             </Table>
                         </div>
+                        {/* Pagination Controls */}
+                        {!loading && filteredSummary.length > 0 && (
+                            <div className="d-flex flex-column flex-md-row justify-content-between align-items-center p-4 border-top gap-3 bg-white">
+                                <div className="d-flex align-items-center gap-2">
+                                    <span className="text-muted small">Items per page:</span>
+                                    <Form.Select
+                                        size="sm"
+                                        className="w-auto rounded-pill border-light-subtle"
+                                        value={pageSize}
+                                        onChange={(e) => {
+                                            setPageSize(Number(e.target.value));
+                                            setCurrentPage(1);
+                                        }}
+                                        style={{ height: '32px', minWidth: '70px' }}
+                                    >
+                                        {[5, 10, 20, 50, 100].map(size => (
+                                            <option key={size} value={size}>{size}</option>
+                                        ))}
+                                    </Form.Select>
+                                    <span className="text-muted small ms-2">
+                                        Showing {filteredSummary.length > 0 ? indexOfFirstItem + 1 : 0} to {Math.min(indexOfLastItem, filteredSummary.length)} of {filteredSummary.length} staff
+                                    </span>
+                                </div>
+                                {pageCount > 1 && (
+                                    <Pagination className="mb-0">
+                                        <Pagination.Prev disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} />
+                                        {Array.from({ length: pageCount }, (_, i) => i + 1).map(pageNo => (
+                                            <Pagination.Item key={pageNo} active={pageNo === currentPage} onClick={() => setCurrentPage(pageNo)}>
+                                                {pageNo}
+                                            </Pagination.Item>
+                                        ))}
+                                        <Pagination.Next disabled={currentPage === pageCount} onClick={() => setCurrentPage(p => Math.min(p + 1, pageCount))} />
+                                    </Pagination>
+                                )}
+                            </div>
+                        )}
+                        </>
                     )}
                 </Card.Body>
 

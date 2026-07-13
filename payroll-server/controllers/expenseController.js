@@ -162,3 +162,60 @@ exports.updateExpenseStatus = async (req, res) => {
     res.status(500).json({ success: false, error: "Server error while updating expense status." });
   }
 };
+
+// @desc    Update/edit an existing expense claim (Staff edit pending claim)
+// @route   PUT /api/expenses/:id
+// @access  Private (Staff)
+exports.updateExpense = async (req, res) => {
+  try {
+    const expense = await Expense.findById(req.params.id);
+    if (!expense) {
+      return res.status(404).json({ success: false, error: "Expense claim not found." });
+    }
+
+    // Ensure it belongs to the staff and status is pending
+    if (expense.staff_id.toString() !== req.user.staff_id.toString()) {
+      return res.status(403).json({ success: false, error: "Not authorized to edit this expense claim." });
+    }
+
+    if (expense.status !== "pending") {
+      return res.status(400).json({ success: false, error: "Cannot edit an expense claim that has already been approved or rejected." });
+    }
+
+    const { category, amount, date, description, merchant, invoice_no, gst_no, payment_mode, expense_type, items } = req.body;
+
+    let receiptPath = expense.receipt;
+    if (req.files && req.files.receipt && req.files.receipt[0]) {
+      const webpFilename = await convertToWebp(req.files.receipt[0]);
+      receiptPath = `/expenses/${webpFilename}`;
+    }
+
+    let parsedItems = [];
+    if (items) {
+      try {
+        parsedItems = typeof items === "string" ? JSON.parse(items) : items;
+      } catch (e) {
+        console.error("Error parsing expense items:", e);
+      }
+    }
+
+    expense.category = category || expense.category;
+    expense.amount = amount !== undefined ? Number(amount) : expense.amount;
+    expense.date = date || expense.date;
+    expense.description = description !== undefined ? description : expense.description;
+    expense.receipt = receiptPath;
+    expense.merchant = merchant !== undefined ? merchant : expense.merchant;
+    expense.invoice_no = invoice_no !== undefined ? invoice_no : expense.invoice_no;
+    expense.gst_no = gst_no !== undefined ? gst_no : expense.gst_no;
+    expense.payment_mode = payment_mode || expense.payment_mode;
+    expense.expense_type = expense_type || expense.expense_type;
+    expense.items = parsedItems;
+
+    await expense.save();
+
+    res.status(200).json({ success: true, data: expense, message: "Expense claim updated successfully." });
+  } catch (error) {
+    console.error("Error updating expense:", error);
+    res.status(500).json({ success: false, error: "Server error while updating expense claim." });
+  }
+};

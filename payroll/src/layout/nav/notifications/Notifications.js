@@ -32,36 +32,61 @@ const NotificationsDropdownToggle = React.memo(
 );
 NotificationsDropdownToggle.displayName = 'NotificationsDropdownToggle';
 
-const NotificationItem = ({ img = '', link = '', detail = '', date = '', onDismiss }) => (
-  <li className="mb-3 pb-3 border-bottom border-separator-light d-flex justify-content-between align-items-center">
-    <div className="d-flex align-items-center me-2">
-      <img src={img} className="me-3 sw-4 sh-4 rounded-xl align-self-center" alt="notification" style={{ objectFit: 'cover' }} />
-      <div className="align-self-center">
-        <NavLink to={link} activeClassName="" className="text-dark small fw-semibold d-block">
-          {detail}
-        </NavLink>
-        {date && <span className="text-muted d-block mt-1 font-monospace" style={{ fontSize: '0.72rem' }}>{date}</span>}
+const NotificationItem = ({ img = '', link = '', detail = '', date = '', onDismiss }) => {
+  const isProfile = img.includes('profile') || img.includes('avatar') || img.includes('photo');
+  return (
+    <li className="mb-3 pb-3 border-bottom border-separator-light d-flex justify-content-between align-items-start position-relative">
+      <div className="d-flex align-items-start me-3" style={{ flex: 1 }}>
+        <div 
+          className="me-3 rounded-xl d-flex align-items-center justify-content-center bg-light"
+          style={{ 
+            width: '36px', 
+            height: '36px', 
+            minWidth: '36px',
+            minHeight: '36px',
+            overflow: 'hidden',
+            border: isProfile ? 'none' : '1px solid #e2e8f0',
+            background: isProfile ? 'transparent' : '#f8fafc',
+            padding: isProfile ? '0' : '2px'
+          }}
+        >
+          <img 
+            src={img} 
+            alt="notification" 
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              objectFit: isProfile ? 'cover' : 'contain' 
+            }} 
+          />
+        </div>
+        <div style={{ flex: 1 }} className="align-self-center">
+          <NavLink to={link} activeClassName="" className="text-dark fw-semibold d-block lh-sm" style={{ fontSize: '0.875rem' }}>
+            {detail}
+          </NavLink>
+          {date && <span className="text-muted d-block mt-1 font-monospace" style={{ fontSize: '0.78rem' }}>{date}</span>}
+        </div>
       </div>
-    </div>
-    <Button
-      variant="link"
-      className="p-1 text-muted text-decoration-none"
-      style={{ minWidth: 'auto', border: 0 }}
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onDismiss();
-      }}
-    >
-      <CsLineIcons icon="close" size="14" />
-    </Button>
-  </li>
-);
+      <Button
+        variant="link"
+        className="p-1 text-muted text-decoration-none"
+        style={{ minWidth: 'auto', border: 0, marginTop: '-2px' }}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onDismiss();
+        }}
+      >
+        <CsLineIcons icon="close" size="16" />
+      </Button>
+    </li>
+  );
+};
 
 const NotificationsDropdownMenu = React.memo(
   React.forwardRef(({ style, className, labeledBy, items, onDismissItem }, ref) => {
     return (
-      <div ref={ref} style={style} className={classNames('wide notification-dropdown scroll-out', className)} aria-labelledby={labeledBy}>
+      <div ref={ref} style={{ ...style, width: '380px' }} className={classNames('wide notification-dropdown scroll-out', className)} aria-labelledby={labeledBy}>
         <OverlayScrollbarsComponent
           options={{
             scrollbars: { autoHide: 'leave', autoHideDelay: 600 },

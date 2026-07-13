@@ -7,6 +7,8 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { enIN } from 'date-fns/locale';
+import useCustomLayout from 'hooks/useCustomLayout';
+import { LAYOUT } from 'constants.js';
 
 const customStyles = `
   .glass-card {
@@ -74,6 +76,7 @@ const customStyles = `
 `;
 
 export default function FeedbacksAndComplaints() {
+  useCustomLayout({ layout: LAYOUT.Boxed });
   const title = 'Feedback & Complaints';
   const description = 'Review suggestions, reports, or complaints submitted by staff';
   const breadcrumbs = [
@@ -171,9 +174,10 @@ export default function FeedbacksAndComplaints() {
         toast.success('Response submitted successfully!');
         // Update local items array
         setList(prev => prev.map(item => item._id === activeItem._id ? res.data.data : item));
-        // Reset inputs & close modal
+        // Update activeItem state
+        setActiveItem(res.data.data);
+        // Reset input
         setReplyText('');
-        setShowDetailModal(false);
       }
     } catch (err) {
       console.error(err);
@@ -186,7 +190,7 @@ export default function FeedbacksAndComplaints() {
   const formatDate = (dateString) => {
     if (!dateString) return '—';
     const d = new Date(dateString);
-    return format(d, 'dd MMMM, yyyy', { locale: enIN });
+    return format(d, 'dd/MM/yyyy', { locale: enIN });
   };
 
   const getStatusBadgeColor = (status) => {
@@ -201,7 +205,7 @@ export default function FeedbacksAndComplaints() {
     <div className="container-fluid px-lg-4 px-xl-5 pb-5">
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
-      
+
       <div className="page-title-container mb-4 mt-5 mt-lg-0">
         <Row className="g-3 align-items-center">
           <Col xs="12" md="6">
@@ -211,270 +215,388 @@ export default function FeedbacksAndComplaints() {
         </Row>
       </div>
 
-      {/* Interactive Filters Bar */}
-      <Card className="border-0 shadow-sm mb-4 filter-bar-bg">
-        <Card.Body className="p-3">
-          <Row className="g-3 align-items-end">
-            <Col xs={12} md={4} lg>
-              <Form.Group>
-                <Form.Label className="small text-muted fw-bold text-uppercase mb-1">Search</Form.Label>
-                <Form.Control 
-                  type="text" 
-                  className="filter-input-premium"
-                  placeholder="Employee name, title, description..." 
-                  value={filters.search} 
-                  onChange={e => setFilters({...filters, search: e.target.value})}
-                />
-              </Form.Group>
-            </Col>
-            <Col xs={6} md={4} lg>
-              <Form.Group>
-                <Form.Label className="small text-muted fw-bold text-uppercase mb-1">Type</Form.Label>
-                <Form.Select className="filter-input-premium text-capitalize" value={filters.type} onChange={e => setFilters({...filters, type: e.target.value})}>
-                  {['All', ...new Set(list.map(item => item.type))].map(t => (
-                    <option key={t} value={t}>
-                      {t === 'All' ? 'All Types' : t === 'feedback' ? 'Feedback / Suggestion' : t === 'complaint' ? 'Complaint' : t}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col xs={6} md={4} lg>
-              <Form.Group>
-                <Form.Label className="small text-muted fw-bold text-uppercase mb-1">Status</Form.Label>
-                <Form.Select className="filter-input-premium" value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})}>
-                  <option value="All">All Status</option>
-                  <option value="open">Open</option>
-                  <option value="reviewed">Reviewed</option>
-                  <option value="resolved">Resolved</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col xs={12} lg="auto" className="d-flex gap-2 justify-content-lg-end ms-lg-auto mt-3 mt-lg-0">
-              <Button variant="outline-secondary" className="filter-btn-premium w-100 text-nowrap" onClick={handleResetFilters}>
-                Clear Filters
-              </Button>
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
-
-      <Card className="glass-card border-0">
-        <Card.Body className="p-0">
-          {loading ? (
-            <div className="text-center py-5">
-              <Spinner animation="border" variant="primary" />
-              <p className="mt-2 text-muted small">Loading feedback submissions...</p>
-            </div>
-          ) : (
-            <>
-              {/* Desktop & Tablet Table View */}
-              <div className="table-responsive d-none d-md-block">
-                <Table hover className="react-table-modern mb-0">
-                  <thead>
-                    <tr>
-                      <th>Employee</th>
-                      <th>Type</th>
-                      <th>Subject / Title</th>
-                      <th>Submission Date</th>
-                      <th className="text-center">Status</th>
-                      <th className="text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredList.map(item => (
-                      <tr key={item._id}>
-                        <td className="fw-bold">
-                          <div className="d-flex align-items-center gap-2">
-                            <span>
-                              {item.is_anonymous ? 'Anonymous Employee' : `${item.staff_id?.f_name} ${item.staff_id?.l_name}`}
-                            </span>
-                            {item.is_anonymous && (
-                              <Badge bg="secondary" style={{ fontSize: '0.65rem' }}>Anon</Badge>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <Badge bg={item.type === 'complaint' ? 'danger' : 'info'} className="text-white text-uppercase" style={{ fontSize: '0.65rem' }}>
-                            {item.type}
-                          </Badge>
-                        </td>
-                        <td>{item.title}</td>
-                        <td>{formatDate(item.createdAt)}</td>
-                        <td className="text-center">
-                          <Badge bg={getStatusBadgeColor(item.status)} className="status-badge text-white">
-                            {item.status}
-                          </Badge>
-                        </td>
-                        <td className="text-center">
-                          <Button 
-                            variant="outline-primary" 
-                            size="sm" 
-                            className="rounded-pill px-3"
-                            onClick={() => {
-                              setActiveItem(item);
-                              setReplyText(item.hr_reply || '');
-                              setStatusVal(item.status === 'open' ? 'reviewed' : item.status);
-                              setShowDetailModal(true);
-                            }}
-                          >
-                            <CsLineIcons icon="message" size="14" className="me-1" /> View & Reply
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                    {filteredList.length === 0 && (
-                      <tr>
-                        <td colSpan="6" className="text-center py-5 text-muted">
-                          No feedbacks or complaints found matching the selected filters.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </Table>
-              </div>
-
-              {/* Mobile List Card View */}
-              <div className="d-md-none p-3 bg-light" style={{ borderRadius: '0 0 1.5rem 1.5rem' }}>
-                {filteredList.length === 0 ? (
-                  <div className="text-center py-5 text-muted">No entries found.</div>
-                ) : (
-                  filteredList.map(item => (
-                    <div key={item._id} className="mobile-card">
-                      <div className="d-flex justify-content-between align-items-start mb-2 pb-2 border-bottom border-light">
-                        <div>
-                          <div className="fw-bold text-dark d-flex align-items-center gap-1">
-                            <span>
-                              {item.is_anonymous ? 'Anonymous Employee' : `${item.staff_id?.f_name} ${item.staff_id?.l_name}`}
-                            </span>
-                            {item.is_anonymous && (
-                              <Badge bg="secondary" style={{ fontSize: '0.6rem' }}>Anon</Badge>
-                            )}
-                          </div>
-                          <span className="text-muted small">{formatDate(item.createdAt)}</span>
-                        </div>
-                        <Badge bg={getStatusBadgeColor(item.status)} className="status-badge text-white">
-                          {item.status}
-                        </Badge>
-                      </div>
-
-                      <div className="small text-dark mb-2">
-                        <span className="text-muted">Type: </span>
-                        <Badge bg={item.type === 'complaint' ? 'danger' : 'info'} className="text-white text-uppercase" style={{ fontSize: '0.65rem' }}>
-                          {item.type}
-                        </Badge>
-                      </div>
-
-                      <div className="small text-dark mb-3">
-                        <span className="text-muted">Subject: </span>
-                        <span className="fw-bold">{item.title}</span>
-                      </div>
-
-                      <div className="text-center">
-                        <Button 
-                          variant="outline-primary" 
-                          size="sm" 
-                          className="w-100 rounded-pill"
-                          onClick={() => {
-                            setActiveItem(item);
-                            setReplyText(item.hr_reply || '');
-                            setStatusVal(item.status === 'open' ? 'reviewed' : item.status);
-                            setShowDetailModal(true);
-                          }}
-                        >
-                          <CsLineIcons icon="message" size="14" className="me-1" /> View & Respond
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </>
-          )}
-        </Card.Body>
-      </Card>
-
-      {/* View & Reply Details Modal */}
-      <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} centered size="md">
-        <Modal.Header closeButton className="border-0 pb-0">
-          <Modal.Title className="fw-bold text-primary">Feedback & Complaint Response</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="p-4">
-          {activeItem ? (
-            <div>
-              {/* Employee profile details */}
-              <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
-                <div>
-                  <h6 className="fw-bold text-dark mb-0">
-                    {activeItem.is_anonymous ? 'Anonymous Employee' : `${activeItem.staff_id?.f_name} ${activeItem.staff_id?.l_name}`}
-                  </h6>
-                  <span className="text-muted small">
-                    {activeItem.is_anonymous ? `Position: ${activeItem.staff_id?.position || 'Staff'}` : activeItem.staff_id?.email}
-                  </span>
-                </div>
-                <div className="text-end">
-                  <Badge bg={activeItem.type === 'complaint' ? 'danger' : 'info'} className="text-white text-uppercase px-3 py-1">
-                    {activeItem.type}
-                  </Badge>
-                  <div className="text-muted small mt-1" style={{ fontSize: '0.75rem' }}>{formatDate(activeItem.createdAt)}</div>
-                </div>
-              </div>
-
-              {/* Title & Description */}
-              <div className="mb-4">
-                <div className="small text-muted text-uppercase fw-bold mb-1">Subject / Title</div>
-                <div className="fw-bold text-dark">{activeItem.title}</div>
-              </div>
-
-              <div className="mb-4">
-                <div className="small text-muted text-uppercase fw-bold mb-1">Detailed Explanation</div>
-                <div className="bg-light p-3 rounded-3 text-dark small" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
-                  {activeItem.description}
-                </div>
-              </div>
-
-              {/* Reply Form */}
-              <Form onSubmit={handleReplySubmit} className="border-top pt-4">
-                <h6 className="fw-bold text-dark mb-3">Submit HR Department Response</h6>
-                
-                <Form.Group className="mb-3">
-                  <Form.Label className="small text-muted fw-bold text-uppercase">Response Text</Form.Label>
+      {loading ? (
+        <div className="text-center py-5">
+          <Spinner animation="border" variant="primary" />
+          <p className="mt-2 text-muted small">Loading feedback submissions...</p>
+        </div>
+      ) : (
+        <Row className="g-3">
+          {/* LEFT COLUMN: Feedbacks List / Chats List (3/12 width) */}
+          <Col xs={12} md={4} lg={3}>
+            <Card className="glass-card border-0 h-100 d-flex flex-column" style={{ maxHeight: '78vh', minHeight: '500px' }}>
+              {/* Sidebar Header & Search */}
+              <div className="p-3 border-bottom bg-light" style={{ borderTopLeftRadius: '1.5rem', borderTopRightRadius: '1.5rem' }}>
+                <Form.Group className="mb-2">
                   <Form.Control
-                    as="textarea"
-                    rows={4}
-                    required
-                    placeholder="Type the official HR response or action plan here..."
-                    style={{ borderRadius: '8px', fontSize: '0.9rem' }}
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
+                    type="text"
+                    placeholder="Search chats..."
+                    style={{ borderRadius: '20px', fontSize: '0.85rem' }}
+                    value={filters.search}
+                    onChange={e => setFilters({ ...filters, search: e.target.value })}
                   />
                 </Form.Group>
 
-                <Form.Group className="mb-4">
-                  <Form.Label className="small text-muted fw-bold text-uppercase">Resolution Status</Form.Label>
-                  <Form.Select 
-                    value={statusVal} 
-                    style={{ height: '40px', borderRadius: '8px' }}
-                    onChange={(e) => setStatusVal(e.target.value)}
+                {/* Simple quick filters */}
+                <div className="d-flex gap-1 overflow-auto pb-1 mt-2">
+                  <Badge
+                    bg={filters.status === 'All' ? 'primary' : 'light'}
+                    className={`text-${filters.status === 'All' ? 'white' : 'dark'} rounded-pill px-2.5 py-1.5 cursor-pointer`}
+                    style={{ fontSize: '0.68rem', cursor: 'pointer' }}
+                    onClick={() => setFilters({ ...filters, status: 'All' })}
                   >
-                    <option value="reviewed">Reviewed (Action Pending)</option>
-                    <option value="resolved">Resolved (Complete)</option>
-                  </Form.Select>
-                </Form.Group>
-
-                <div className="d-flex justify-content-end gap-2">
-                  <Button variant="light" className="rounded-pill px-4" onClick={() => setShowDetailModal(false)}>Cancel</Button>
-                  <Button variant="primary" type="submit" className="rounded-pill px-4 shadow-sm" disabled={submitLoading}>
-                    {submitLoading ? 'Saving response...' : 'Submit Response'}
-                  </Button>
+                    All
+                  </Badge>
+                  <Badge
+                    bg={filters.status === 'open' ? 'warning' : 'light'}
+                    className={`text-${filters.status === 'open' ? 'white' : 'dark'} rounded-pill px-2.5 py-1.5 cursor-pointer`}
+                    style={{ fontSize: '0.68rem', cursor: 'pointer' }}
+                    onClick={() => setFilters({ ...filters, status: 'open' })}
+                  >
+                    Open
+                  </Badge>
+                  <Badge
+                    bg={filters.status === 'reviewed' ? 'info' : 'light'}
+                    className={`text-${filters.status === 'reviewed' ? 'white' : 'dark'} rounded-pill px-2.5 py-1.5 cursor-pointer`}
+                    style={{ fontSize: '0.68rem', cursor: 'pointer' }}
+                    onClick={() => setFilters({ ...filters, status: 'reviewed' })}
+                  >
+                    Reviewed
+                  </Badge>
+                  <Badge
+                    bg={filters.status === 'resolved' ? 'success' : 'light'}
+                    className={`text-${filters.status === 'resolved' ? 'white' : 'dark'} rounded-pill px-2.5 py-1.5 cursor-pointer`}
+                    style={{ fontSize: '0.68rem', cursor: 'pointer' }}
+                    onClick={() => setFilters({ ...filters, status: 'resolved' })}
+                  >
+                    Resolved
+                  </Badge>
                 </div>
-              </Form>
-            </div>
-          ) : (
-            <div className="text-center py-4 text-muted">No details loaded</div>
-          )}
-        </Modal.Body>
-      </Modal>
+              </div>
+
+              {/* Sidebar Scrollable Chats List */}
+              <div className="flex-grow-1 overflow-auto p-2" style={{ maxHeight: 'calc(78vh - 110px)' }}>
+                {filteredList.map(item => {
+                  const isActive = activeItem && activeItem._id === item._id;
+                  const displayName = item.is_anonymous ? 'Anonymous Employee' : `${item.staff_id?.f_name} ${item.staff_id?.l_name}`;
+                  const shortMsg = item.title;
+
+                  return (
+                    <div
+                      key={item._id}
+                      className={`d-flex align-items-center p-3 mb-2 rounded-3 cursor-pointer transition-all ${isActive ? 'bg-soft-primary border-primary' : 'bg-light hover-bg'}`}
+                      style={{
+                        cursor: 'pointer',
+                        borderLeft: `4px solid ${isActive ? '#1ea8e7' : item.type === 'complaint' ? '#ef4444' : '#1ea8e7'}`,
+                        backgroundColor: isActive ? '#f0f9ff' : ''
+                      }}
+                      onClick={() => {
+                        setActiveItem(item);
+                        setReplyText(item.hr_reply || '');
+                        setStatusVal(item.status === 'open' ? 'reviewed' : item.status);
+                      }}
+                    >
+                      {/* Avatar */}
+                      <div
+                        className="rounded-circle d-flex align-items-center justify-content-center me-3 text-white fw-bold"
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          minWidth: '40px',
+                          backgroundColor: item.type === 'complaint' ? '#ef4444' : '#1ea8e7',
+                          fontSize: '1rem'
+                        }}
+                      >
+                        {displayName.charAt(0)}
+                      </div>
+
+                      {/* Details preview */}
+                      <div className="flex-grow-1 min-w-0">
+                        <div className="d-flex justify-content-between align-items-baseline">
+                          <h6 className="fw-bold text-dark mb-0 text-truncate" style={{ fontSize: '0.85rem' }}>{displayName}</h6>
+                          <span className="text-muted" style={{ fontSize: '0.62rem' }}>
+                            {formatDate(item.createdAt)}
+                          </span>
+                        </div>
+                        <p className="text-muted mb-0 text-truncate small" style={{ fontSize: '0.78rem' }}>{shortMsg}</p>
+                        <div className="d-flex align-items-center justify-content-between mt-1">
+                          <Badge bg={item.type === 'complaint' ? 'danger' : 'info'} className="text-white text-uppercase" style={{ fontSize: '0.55rem' }}>
+                            {item.type}
+                          </Badge>
+                          <Badge bg={getStatusBadgeColor(item.status)} style={{ fontSize: '0.62rem' }} className="text-white">
+                            {item.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {filteredList.length === 0 && (
+                  <div className="text-center py-4 text-muted small">No conversations found.</div>
+                )}
+              </div>
+            </Card>
+          </Col>
+
+          {/* MIDDLE COLUMN: Chat Window (6/12 width) */}
+          <Col xs={12} md={8} lg={6}>
+            {activeItem ? (
+              <Card className="glass-card border-0 h-100 d-flex flex-column" style={{ maxHeight: '78vh', minHeight: '500px' }}>
+                {/* Active Chat Header */}
+                <div className="p-3 border-bottom d-flex align-items-center justify-content-between bg-white" style={{ borderTopLeftRadius: '1.5rem', borderTopRightRadius: '1.5rem' }}>
+                  <div className="d-flex align-items-center">
+                    <div
+                      className="rounded-circle d-flex align-items-center justify-content-center me-3 text-white fw-bold"
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        backgroundColor: activeItem.type === 'complaint' ? '#ef4444' : '#1ea8e7',
+                        fontSize: '1.1rem'
+                      }}
+                    >
+                      {activeItem.is_anonymous ? 'A' : activeItem.staff_id?.f_name?.charAt(0)}
+                    </div>
+                    <div>
+                      <h6 className="fw-bold text-dark mb-0">
+                        {activeItem.is_anonymous ? 'Anonymous Employee' : `${activeItem.staff_id?.f_name} ${activeItem.staff_id?.l_name}`}
+                      </h6>
+                      <span className="text-muted" style={{ fontSize: '0.72rem' }}>
+                        Subject: {activeItem.title}
+                      </span>
+                    </div>
+                  </div>
+                  <Badge bg={activeItem.type === 'complaint' ? 'danger' : 'info'} className="text-white text-uppercase px-3 py-1.5" style={{ fontSize: '0.7rem' }}>
+                    {activeItem.type}
+                  </Badge>
+                </div>
+
+                {/* Chat Body */}
+                <div
+                  className="p-3 d-flex flex-column gap-3 overflow-auto flex-grow-1"
+                  style={{
+                    backgroundColor: '#efeae2',
+                    backgroundImage: 'radial-gradient(rgba(0,0,0,0.03) 1px, transparent 0)',
+                    backgroundSize: '16px 16px',
+                    maxHeight: 'calc(78vh - 145px)',
+                    overflowY: 'auto'
+                  }}
+                >
+                  <div className="align-self-center my-1 bg-white shadow-sm rounded px-3 py-1 text-muted" style={{ fontSize: '0.7rem', fontWeight: '500' }}>
+                    {formatDate(activeItem.createdAt)}
+                  </div>
+
+                  {(() => {
+                    const messages = [
+                      {
+                        sender: 'employee',
+                        message: activeItem.description,
+                        timestamp: activeItem.createdAt,
+                        sender_name: activeItem.is_anonymous ? 'Anonymous Employee' : `${activeItem.staff_id?.f_name} ${activeItem.staff_id?.l_name}`
+                      }
+                    ];
+
+                    if (activeItem.hr_reply) {
+                      messages.push({
+                        sender: 'hr',
+                        message: activeItem.hr_reply,
+                        timestamp: activeItem.replied_at || activeItem.createdAt,
+                        sender_name: `HR (${activeItem.replied_by || 'HR Manager'})`
+                      });
+                    }
+
+                    if (activeItem.conversations && activeItem.conversations.length > 0) {
+                      activeItem.conversations.forEach(c => {
+                        messages.push({
+                          sender: c.sender,
+                          message: c.message,
+                          timestamp: c.timestamp,
+                          sender_name: c.sender === 'employee'
+                            ? (activeItem.is_anonymous ? 'Anonymous Employee' : `${activeItem.staff_id?.f_name} ${activeItem.staff_id?.l_name}`)
+                            : `HR (${c.sender_name || 'HR Reply'})`
+                        });
+                      });
+                    }
+
+                    messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+                    return messages.map((msg, msgIdx) => {
+                      const isOutgoing = msg.sender === 'hr';
+                      return (
+                        <div
+                          key={msgIdx}
+                          className={`shadow-sm position-relative d-flex flex-column ${isOutgoing ? 'align-self-end' : 'align-self-start'}`}
+                          style={{
+                            maxWidth: '85%',
+                            minWidth: '140px',
+                            width: 'fit-content',
+                            backgroundColor: isOutgoing ? '#d9fdd3' : '#ffffff',
+                            borderRadius: isOutgoing ? '12px 12px 0 12px' : '12px 12px 12px 0',
+                            color: '#111b21',
+                            fontSize: '0.85rem',
+                            padding: '8px 12px 6px 12px',
+                            boxShadow: '0 1px 0.5px rgba(11,20,26,0.13)'
+                          }}
+                        >
+                          <div className="fw-bold mb-1" style={{ fontSize: '0.72rem', color: isOutgoing ? '#0b3c1b' : '#0275d8' }}>
+                            {isOutgoing ? 'Me (HR)' : msg.sender_name}
+                          </div>
+                          <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4', wordBreak: 'break-word' }}>{msg.message}</div>
+                          <div
+                            className="d-flex align-items-center justify-content-end text-muted mt-1 align-self-end"
+                            style={{ fontSize: '0.68rem', gap: '3px' }}
+                          >
+                            <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            {isOutgoing && (
+                              <>
+                                {activeItem.status === 'reviewed' && (
+                                  <span style={{ fontSize: '0.9rem', lineHeight: 1, color: '#8696a0', fontWeight: 'bold' }}>✓✓</span>
+                                )}
+                                {activeItem.status === 'resolved' && (
+                                  <span style={{ fontSize: '0.9rem', lineHeight: 1, color: '#53bdeb', fontWeight: 'bold' }}>✓✓</span>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+
+                {/* Reply Footer Form */}
+                <div className="p-3 border-top bg-light" style={{ borderBottomLeftRadius: '1.5rem', borderBottomRightRadius: '1.5rem' }}>
+                  <Form onSubmit={handleReplySubmit}>
+                    <Row className="g-2 align-items-center">
+                      <Col xs={12} sm>
+                        <Form.Control
+                          type="text"
+                          placeholder="Type an official HR response..."
+                          style={{ borderRadius: '24px', fontSize: '0.85rem' }}
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                        />
+                      </Col>
+                      <Col xs="auto" style={{ width: '130px' }}>
+                        <Form.Select
+                          value={statusVal}
+                          style={{ borderRadius: '20px', fontSize: '0.8rem', height: '36px' }}
+                          onChange={(e) => setStatusVal(e.target.value)}
+                        >
+                          <option value="reviewed">Reviewed</option>
+                          <option value="resolved">Resolved</option>
+                        </Form.Select>
+                      </Col>
+                      <Col xs="auto">
+                        <Button
+                          variant="primary"
+                          type="submit"
+                          disabled={submitLoading}
+                          className="d-flex align-items-center justify-content-center p-0 rounded-circle"
+                          style={{ width: '36px', height: '36px', minWidth: '36px' }}
+                        >
+                          <CsLineIcons icon="chevron-right" size="18" className="text-white" />
+                        </Button>
+                      </Col>
+                    </Row>
+                  </Form>
+                </div>
+              </Card>
+            ) : (
+              <Card className="glass-card border-0 h-100 d-flex flex-column align-items-center justify-content-center text-center p-5" style={{ maxHeight: '78vh', minHeight: '500px' }}>
+                <div
+                  className="rounded-circle bg-light d-flex align-items-center justify-content-center mb-4"
+                  style={{ width: '80px', height: '80px' }}
+                >
+                  <CsLineIcons icon="message" size="36" className="text-primary" />
+                </div>
+                <h5 className="fw-bold text-dark">Support Center</h5>
+                <p className="text-muted small px-lg-5">
+                  Select a feedback or complaint thread from the list on the left to start viewing conversation logs and reply directly to staff members.
+                </p>
+              </Card>
+            )}
+          </Col>
+
+          {/* RIGHT COLUMN: Employee Profile Details (3/12 width) */}
+          <Col xs={12} md={12} lg={3} className="d-none d-lg-block">
+            <Card className="glass-card border-0 h-100 d-flex flex-column p-4" style={{ maxHeight: '78vh', minHeight: '500px' }}>
+              {activeItem ? (
+                <div className="text-center">
+                  <h6 className="small text-muted text-uppercase fw-bold mb-4 text-start">Employee Profile</h6>
+
+                  {/* Photo / Initial */}
+                  <div className="d-flex justify-content-center mb-3">
+                    {activeItem.is_anonymous ? (
+                      <div
+                        className="rounded-circle d-flex align-items-center justify-content-center bg-secondary text-white fw-bold"
+                        style={{ width: '80px', height: '80px', fontSize: '2rem' }}
+                      >
+                        ?
+                      </div>
+                    ) : (
+                      activeItem.staff_id?.photo ? (
+                        <img
+                          src={`${process.env.REACT_APP_API}/uploads/${activeItem.staff_id.photo}`}
+                          alt="Profile"
+                          className="rounded-circle object-cover border"
+                          style={{ width: '80px', height: '80px', objectFit: 'cover' }}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '';
+                            e.target.className = 'd-none';
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="rounded-circle d-flex align-items-center justify-content-center bg-primary text-white fw-bold"
+                          style={{ width: '80px', height: '80px', fontSize: '2rem' }}
+                        >
+                          {activeItem.staff_id?.f_name?.charAt(0)}
+                        </div>
+                      )
+                    )}
+                  </div>
+
+                  <h5 className="fw-bold text-dark mb-1">
+                    {activeItem.is_anonymous ? 'Anonymous Employee' : `${activeItem.staff_id?.f_name} ${activeItem.staff_id?.l_name}`}
+                  </h5>
+                  <p className="text-muted small mb-4">{activeItem.is_anonymous ? 'Position Hidden' : activeItem.staff_id?.position || 'Staff member'}</p>
+
+                  <hr className="my-3" />
+
+                  <div className="text-start space-y-3">
+                    <div className="mb-3">
+                      <span className="text-muted d-block small" style={{ fontSize: '0.72rem' }}>EMAIL ADDRESS</span>
+                      <span className="text-dark small fw-semibold">{activeItem.is_anonymous ? 'Hidden for privacy' : activeItem.staff_id?.email || '—'}</span>
+                    </div>
+
+                    <div className="mb-3">
+                      <span className="text-muted d-block small" style={{ fontSize: '0.72rem' }}>STAFF PORTAL ID</span>
+                      <span className="text-dark small fw-semibold">{activeItem.is_anonymous ? 'ANON' : activeItem.staff_id?.staff_id || '—'}</span>
+                    </div>
+
+                    <div className="mb-3">
+                      <span className="text-muted d-block small" style={{ fontSize: '0.72rem' }}>SUBMISSION DATE</span>
+                      <span className="text-dark small fw-semibold">{formatDate(activeItem.createdAt)}</span>
+                    </div>
+
+                    <div>
+                      <span className="text-muted d-block small" style={{ fontSize: '0.72rem' }}>THREAD STATUS</span>
+                      <Badge bg={getStatusBadgeColor(activeItem.status)} className="mt-1 text-white">
+                        {activeItem.status}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-100 d-flex align-items-center justify-content-center text-center text-muted small">
+                  No employee selected
+                </div>
+              )}
+            </Card>
+          </Col>
+        </Row>
+      )}
     </div>
   );
 }

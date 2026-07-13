@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Button, Form, Spinner, Badge, Table, Modal } from 'react-bootstrap';
+import { Row, Col, Card, Button, Form, Spinner, Badge, Table, Modal, Pagination } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -19,14 +19,16 @@ const customStyles = `
     color: #475569 !important;
     font-weight: 600 !important;
     text-transform: uppercase !important;
-    font-size: 0.8rem !important;
-    padding: 1rem 1.25rem !important;
+    font-size: 0.75rem !important;
+    padding: 0.75rem 0.5rem !important;
     border-bottom: 2px solid #e2e8f0 !important;
+    white-space: nowrap !important;
   }
   .react-table-modern td {
-    padding: 1rem 1.25rem !important;
+    padding: 0.6rem 0.5rem !important;
     vertical-align: middle !important;
     border-bottom: 1px solid #edf2f7 !important;
+    font-size: 0.85rem !important;
   }
   .status-badge {
     padding: 0.4rem 0.85rem !important;
@@ -130,11 +132,51 @@ export default function ManageExpenses() {
   const [loading, setLoading] = useState(false);
   const [expenses, setExpenses] = useState([]);
   const [filteredExpenses, setFilteredExpenses] = useState([]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [activeReceiptUrl, setActiveReceiptUrl] = useState('');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [activeExpense, setActiveExpense] = useState(null);
+
+  const [statusModal, setStatusModal] = useState({
+    show: false,
+    action: '', // 'approve' or 'reject'
+    expenseId: null,
+    staffName: '',
+    amount: 0,
+    category: ''
+  });
+
+  const formatDateDisplay = (dateString) => {
+    if (!dateString) return '';
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
+  const triggerApprove = (exp) => {
+    setStatusModal({
+      show: true,
+      action: 'approve',
+      expenseId: exp._id,
+      staffName: exp.staff_id ? `${exp.staff_id.f_name} ${exp.staff_id.l_name}` : 'Unknown Staff',
+      amount: exp.amount,
+      category: exp.category
+    });
+  };
+
+  const triggerReject = (exp) => {
+    setStatusModal({
+      show: true,
+      action: 'reject',
+      expenseId: exp._id,
+      staffName: exp.staff_id ? `${exp.staff_id.f_name} ${exp.staff_id.l_name}` : 'Unknown Staff',
+      amount: exp.amount,
+      category: exp.category
+    });
+  };
 
   // Filters state
   const [filters, setFilters] = useState({
@@ -145,6 +187,10 @@ export default function ManageExpenses() {
     status: 'All',
     search: '',
   });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [expenses, filters]);
 
   const fetchExpenses = async () => {
     try {
@@ -199,6 +245,11 @@ export default function ManageExpenses() {
     setFilteredExpenses(result);
   }, [expenses, filters]);
 
+  const pageCount = Math.ceil(filteredExpenses.length / pageSize);
+  const indexOfLastItem = currentPage * pageSize;
+  const indexOfFirstItem = indexOfLastItem - pageSize;
+  const currentExpenses = filteredExpenses.slice(indexOfFirstItem, indexOfLastItem);
+
   const handleStatusChange = async (id, newStatus) => {
     try {
       const res = await axios.put(`${process.env.REACT_APP_API}/expenses/${id}/status`, { status: newStatus }, {
@@ -207,6 +258,8 @@ export default function ManageExpenses() {
       if (res.data.success) {
         setExpenses(prev => prev.map(exp => exp._id === id ? res.data.data : exp));
         toast.success(`Expense ${newStatus} successfully!`);
+        setStatusModal(prev => ({ ...prev, show: false }));
+        setShowDetailModal(false);
       }
     } catch (err) {
       console.error(err);
@@ -332,24 +385,10 @@ export default function ManageExpenses() {
                 </tr>
               </thead>
               <tbody>
-                {filteredExpenses.map(exp => (
+                {currentExpenses.map(exp => (
                   <tr key={exp._id}>
                     <td className="fw-bold">
-                      <div className="d-flex align-items-center gap-2">
-                        <span>{exp.staff_id ? `${exp.staff_id.f_name} ${exp.staff_id.l_name}` : 'Unknown'}</span>
-                        <Button 
-                          variant="none" 
-                          className="p-0 border-0 text-muted" 
-                          style={{ background: 'transparent' }}
-                          onClick={() => {
-                            setActiveExpense(exp);
-                            setShowDetailModal(true);
-                          }}
-                          title="View Purchase Details"
-                        >
-                          <CsLineIcons icon="info-circle" size="16" className="text-primary" />
-                        </Button>
-                      </div>
+                      {exp.staff_id ? `${exp.staff_id.f_name} ${exp.staff_id.l_name}` : 'Unknown'}
                     </td>
                     <td>
                       <Badge bg={exp.expense_type === 'company_purchase' ? 'info' : 'secondary'} className="me-2 text-white" style={{ fontSize: '0.65rem' }}>
@@ -359,7 +398,7 @@ export default function ManageExpenses() {
                     </td>
                     <td>{exp.merchant || '-'}</td>
                     <td style={{ textTransform: 'capitalize' }}>{exp.payment_mode || 'Cash'}</td>
-                    <td>{exp.date}</td>
+                    <td>{formatDateDisplay(exp.date)}</td>
                     <td className="text-end fw-bold text-dark">₹{(exp.amount || 0).toLocaleString('en-IN')}</td>
                     <td className="text-center">
                       {exp.receipt ? (
@@ -382,16 +421,30 @@ export default function ManageExpenses() {
                       </Badge>
                     </td>
                     <td className="text-center">
-                      {exp.status === 'pending' && (
-                        <div className="d-flex justify-content-center gap-2">
-                          <Button variant="outline-success" size="sm" onClick={() => handleStatusChange(exp._id, 'approved')}>
-                            <CsLineIcons icon="check" size="14" />
-                          </Button>
-                          <Button variant="outline-danger" size="sm" onClick={() => handleStatusChange(exp._id, 'rejected')}>
-                            <CsLineIcons icon="close" size="14" />
-                          </Button>
-                        </div>
-                      )}
+                      <div className="d-flex justify-content-center gap-2">
+                        <Button 
+                          variant="outline-primary" 
+                          size="sm" 
+                          className="btn-icon btn-icon-only rounded-circle" 
+                          onClick={() => {
+                            setActiveExpense(exp);
+                            setShowDetailModal(true);
+                          }}
+                          title="View All Details"
+                        >
+                          <CsLineIcons icon="eye" size="14" />
+                        </Button>
+                        {exp.status === 'pending' && (
+                          <>
+                            <Button variant="outline-success" size="sm" className="btn-icon btn-icon-only rounded-circle" onClick={() => triggerApprove(exp)} title="Approve Claim">
+                              <CsLineIcons icon="check" size="14" />
+                            </Button>
+                            <Button variant="outline-danger" size="sm" className="btn-icon btn-icon-only rounded-circle" onClick={() => triggerReject(exp)} title="Reject Claim">
+                              <CsLineIcons icon="close" size="14" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -409,25 +462,15 @@ export default function ManageExpenses() {
             {filteredExpenses.length === 0 ? (
               <div className="text-center py-5 text-muted">No expenses found for the selected filters.</div>
             ) : (
-              filteredExpenses.map(exp => (
+              currentExpenses.map(exp => (
                 <div key={exp._id} className="mobile-expense-card">
                   {/* Bordered Header Section */}
                   <div className="mobile-card-header">
                     <div>
-                      <div className="mobile-card-name d-flex align-items-center gap-1">
-                        <span>{exp.staff_id ? `${exp.staff_id.f_name} ${exp.staff_id.l_name}` : 'Unknown'}</span>
-                        <Button 
-                          variant="none" 
-                          className="p-0 border-0"
-                          onClick={() => {
-                            setActiveExpense(exp);
-                            setShowDetailModal(true);
-                          }}
-                        >
-                          <CsLineIcons icon="info-circle" size="14" className="text-primary" />
-                        </Button>
+                      <div className="mobile-card-name fw-bold text-dark fs-6">
+                        {exp.staff_id ? `${exp.staff_id.f_name} ${exp.staff_id.l_name}` : 'Unknown'}
                       </div>
-                      <div className="mobile-card-date">{exp.date}</div>
+                      <div className="mobile-card-date">{formatDateDisplay(exp.date)}</div>
                     </div>
                     <Badge bg={exp.status === 'approved' ? 'success' : exp.status === 'rejected' ? 'danger' : 'warning'} className="status-badge">
                       {exp.status}
@@ -457,7 +500,7 @@ export default function ManageExpenses() {
                   </div>
 
                   {/* Footer with Amount & Receipt */}
-                  <div className="mobile-card-footer">
+                  <div className="mobile-card-footer text-muted mb-2">
                     <div>
                       <span className="mobile-card-label small">Amount: </span>
                       <span className="fw-bold text-dark fs-5 align-middle">₹{(exp.amount || 0).toLocaleString('en-IN')}</span>
@@ -480,20 +523,62 @@ export default function ManageExpenses() {
                   </div>
 
                   {/* Action Buttons */}
-                  {exp.status === 'pending' && (
-                    <div className="d-flex gap-2 pt-3 mt-3 border-top border-light">
-                      <Button variant="outline-success" className="w-100 rounded-pill" size="sm" onClick={() => handleStatusChange(exp._id, 'approved')}>
-                        <CsLineIcons icon="check" size="14" className="me-1" /> Approve
-                      </Button>
-                      <Button variant="outline-danger" className="w-100 rounded-pill" size="sm" onClick={() => handleStatusChange(exp._id, 'rejected')}>
-                        <CsLineIcons icon="close" size="14" className="me-1" /> Reject
-                      </Button>
-                    </div>
-                  )}
+                  <div className="d-flex flex-column gap-2 pt-3 mt-3 border-top border-light-subtle">
+                    <Button variant="outline-primary" className="w-100 rounded-pill" size="sm" onClick={() => { setActiveExpense(exp); setShowDetailModal(true); }}>
+                      <CsLineIcons icon="eye" size="14" className="me-1" /> View Details
+                    </Button>
+                    {exp.status === 'pending' && (
+                      <div className="d-flex gap-2">
+                        <Button variant="outline-success" className="w-100 rounded-pill" size="sm" onClick={() => triggerApprove(exp)}>
+                          <CsLineIcons icon="check" size="14" className="me-1" /> Approve
+                        </Button>
+                        <Button variant="outline-danger" className="w-100 rounded-pill" size="sm" onClick={() => triggerReject(exp)}>
+                          <CsLineIcons icon="close" size="14" className="me-1" /> Reject
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))
             )}
           </div>
+
+          {/* Expenses Pagination Controls */}
+          {!loading && filteredExpenses.length > 0 && (
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-center p-4 border-top gap-3 bg-white mt-4 rounded shadow-sm">
+              <div className="d-flex align-items-center gap-2">
+                <span className="text-muted small">Items per page:</span>
+                <Form.Select
+                  size="sm"
+                  className="w-auto rounded-pill border-light-subtle"
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  style={{ height: '32px', minWidth: '70px' }}
+                >
+                  {[5, 10, 20, 50, 100].map(size => (
+                    <option key={size} value={size}>{size}</option>
+                  ))}
+                </Form.Select>
+                <span className="text-muted small ms-2">
+                  Showing {filteredExpenses.length > 0 ? indexOfFirstItem + 1 : 0} to {Math.min(indexOfLastItem, filteredExpenses.length)} of {filteredExpenses.length} claims
+                </span>
+              </div>
+              {pageCount > 1 && (
+                <Pagination className="mb-0">
+                  <Pagination.Prev disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} />
+                  {Array.from({ length: pageCount }, (_, i) => i + 1).map(pageNo => (
+                    <Pagination.Item key={pageNo} active={pageNo === currentPage} onClick={() => setCurrentPage(pageNo)}>
+                      {pageNo}
+                    </Pagination.Item>
+                  ))}
+                  <Pagination.Next disabled={currentPage === pageCount} onClick={() => setCurrentPage(p => Math.min(p + 1, pageCount))} />
+                </Pagination>
+              )}
+            </div>
+          )}
         </Card.Body>
       </Card>
 
@@ -533,50 +618,51 @@ export default function ManageExpenses() {
                   </Badge>
                 </div>
               </div>
+              {/* Expense Classification */}
+              <div className="mb-4">
+                <h6 className="fw-bold text-muted small text-uppercase mb-3">Expense Information</h6>
+                <Row className="g-3">
+                  <Col xs={6}>
+                    <div className="small text-muted fw-bold">Expense Type</div>
+                    <div className="fw-medium text-dark mt-1" style={{ textTransform: 'capitalize' }}>
+                      {activeExpense.expense_type ? activeExpense.expense_type.replace(/_/g, ' ') : 'Employee Reimbursement'}
+                    </div>
+                  </Col>
+                  <Col xs={6}>
+                    <div className="small text-muted fw-bold">Category</div>
+                    <div className="fw-medium text-dark mt-1">{activeExpense.category}</div>
+                  </Col>
+                  <Col xs={12}>
+                    <div className="small text-muted fw-bold">Transaction Date</div>
+                    <div className="fw-medium text-dark mt-1">{formatDateDisplay(activeExpense.date)}</div>
+                  </Col>
+                </Row>
+              </div>
 
-              <Row className="g-3 mb-3">
-                <Col xs={6}>
-                  <div className="small text-muted text-uppercase fw-bold">Expense Type</div>
-                  <div className="fw-medium text-dark mt-1" style={{ textTransform: 'capitalize' }}>
-                    {activeExpense.expense_type ? activeExpense.expense_type.replace(/_/g, ' ') : 'Employee Reimbursement'}
-                  </div>
-                </Col>
-                <Col xs={6}>
-                  <div className="small text-muted text-uppercase fw-bold">Category</div>
-                  <div className="fw-medium text-dark mt-1">{activeExpense.category}</div>
-                </Col>
-              </Row>
-
-              <Row className="g-3 mb-3">
-                <Col xs={6}>
-                  <div className="small text-muted text-uppercase fw-bold">Transaction Date</div>
-                  <div className="fw-medium text-dark mt-1">{activeExpense.date}</div>
-                </Col>
-                <Col xs={6}>
-                  <div className="small text-muted text-uppercase fw-bold">Payment Mode</div>
-                  <div className="fw-medium text-dark mt-1" style={{ textTransform: 'capitalize' }}>
-                    {activeExpense.payment_mode || 'Cash'}
-                  </div>
-                </Col>
-              </Row>
-
-              <Row className="g-3 mb-4">
-                <Col xs={6}>
-                  <div className="small text-muted text-uppercase fw-bold">Merchant / Vendor</div>
-                  <div className="fw-medium text-dark mt-1">{activeExpense.merchant || '-'}</div>
-                </Col>
-                <Col xs={6}>
-                  <div className="small text-muted text-uppercase fw-bold">Invoice / Bill No.</div>
-                  <div className="fw-medium text-dark mt-1">{activeExpense.invoice_no || '-'}</div>
-                </Col>
-              </Row>
-
-              <Row className="g-3 mb-4">
-                <Col xs={12}>
-                  <div className="small text-muted text-uppercase fw-bold">GSTIN</div>
-                  <div className="fw-medium text-dark mt-1">{activeExpense.gst_no || '-'}</div>
-                </Col>
-              </Row>
+              {/* Vendor & Billing Details */}
+              <div className="mb-4 pt-3 border-top">
+                <h6 className="fw-bold text-primary mb-3">Vendor & Billing Details</h6>
+                <Row className="g-3">
+                  <Col xs={6}>
+                    <div className="small text-muted fw-bold">Merchant / Vendor</div>
+                    <div className="fw-medium text-dark mt-1">{activeExpense.merchant || '-'}</div>
+                  </Col>
+                  <Col xs={6}>
+                    <div className="small text-muted fw-bold">Invoice / Bill No.</div>
+                    <div className="fw-medium text-dark mt-1">{activeExpense.invoice_no || '-'}</div>
+                  </Col>
+                  <Col xs={6}>
+                    <div className="small text-muted fw-bold">GSTIN</div>
+                    <div className="fw-medium text-dark mt-1">{activeExpense.gst_no || '-'}</div>
+                  </Col>
+                  <Col xs={6}>
+                    <div className="small text-muted fw-bold">Payment Mode</div>
+                    <div className="fw-medium text-dark mt-1" style={{ textTransform: 'capitalize' }}>
+                      {activeExpense.payment_mode ? activeExpense.payment_mode.replace(/_/g, ' ') : 'Cash'}
+                    </div>
+                  </Col>
+                </Row>
+              </div>
 
               {/* Items Breakdown Table */}
               {activeExpense.items && activeExpense.items.length > 0 && (
@@ -628,10 +714,50 @@ export default function ManageExpenses() {
                   </Button>
                 </div>
               )}
+
+              {activeExpense.status === 'pending' && (
+                <div className="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+                  <Button variant="outline-danger" className="rounded-pill px-4" onClick={() => triggerReject(activeExpense)}>
+                    Reject Claim
+                  </Button>
+                  <Button variant="success" className="rounded-pill px-4 fw-bold text-white" onClick={() => triggerApprove(activeExpense)}>
+                    Approve Claim
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-4 text-muted">No details loaded</div>
           )}
+        </Modal.Body>
+      </Modal>
+
+      {/* Status Action Confirmation Modal */}
+      <Modal show={statusModal.show} onHide={() => setStatusModal(prev => ({ ...prev, show: false }))} centered size="sm">
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="fw-bold fs-5">
+            {statusModal.action === 'approve' ? 'Approve Expense' : 'Reject Expense'}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4 text-center">
+          <div className="mb-3">
+            <p className="text-muted small mb-2">Are you sure you want to {statusModal.action} the claim for:</p>
+            <h6 className="fw-bold text-dark mb-1">{statusModal.staffName}</h6>
+            <div className="badge bg-soft-primary text-primary px-3 py-1.5 rounded-pill fw-bold mb-2">{statusModal.category}</div>
+            <h4 className="fw-bold text-dark mt-1">₹{statusModal.amount?.toLocaleString('en-IN')}</h4>
+          </div>
+          <div className="d-flex gap-2 justify-content-center mt-4">
+            <Button variant="light" className="rounded-pill px-4" onClick={() => setStatusModal(prev => ({ ...prev, show: false }))}>
+              No
+            </Button>
+            <Button 
+              variant={statusModal.action === 'approve' ? 'success' : 'danger'} 
+              className="rounded-pill px-4 fw-bold text-white" 
+              onClick={() => handleStatusChange(statusModal.expenseId, statusModal.action === 'approve' ? 'approved' : 'rejected')}
+            >
+              Yes, {statusModal.action === 'approve' ? 'Approve' : 'Reject'}
+            </Button>
+          </div>
         </Modal.Body>
       </Modal>
     </div>

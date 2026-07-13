@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Button, Table, Badge, Modal, Form, Spinner } from 'react-bootstrap';
+import { Row, Col, Card, Button, Table, Badge, Modal, Form, Spinner, Pagination } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -14,8 +14,8 @@ const SalaryAdvances = () => {
     const description = 'Track staff advances and configure automated payroll recoveries.';
     const breadcrumbs = [
         { to: '', text: 'Home' },
-        { to: 'staff/view', text: 'Staff' },
-        { to: 'staff/salary-advances', title: 'Salary Advances' }
+        { to: 'finance/expenses', text: 'Finance' },
+        { to: 'finance/advances', text: 'Salary Advances' }
     ];
 
     const [loading, setLoading] = useState(true);
@@ -23,6 +23,13 @@ const SalaryAdvances = () => {
     const [advances, setAdvances] = useState([]);
     const [staffList, setStaffList] = useState([]);
     const [statusFilter, setStatusFilter] = useState('all');
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [statusFilter, advances]);
 
     const [showModal, setShowModal] = useState(false);
     
@@ -68,6 +75,11 @@ const SalaryAdvances = () => {
         fetchData();
         // eslint-disable-next-line
     }, [statusFilter]);
+
+    const pageCount = Math.ceil(advances.length / pageSize);
+    const indexOfLastItem = currentPage * pageSize;
+    const indexOfFirstItem = indexOfLastItem - pageSize;
+    const currentAdvances = advances.slice(indexOfFirstItem, indexOfLastItem);
 
     const handleShowModal = () => {
         setForm({
@@ -513,7 +525,7 @@ const SalaryAdvances = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {advances.map(adv => (
+                                {currentAdvances.map(adv => (
                                     <tr key={adv._id}>
                                         <td className="ps-4 align-middle">
                                             <div className="d-flex align-items-center gap-3">
@@ -528,7 +540,7 @@ const SalaryAdvances = () => {
                                             </div>
                                         </td>
                                         <td className="align-middle fw-medium">
-                                            {adv.given_date ? format(new Date(adv.given_date), 'dd MMM yyyy') : '—'}
+                                            {adv.given_date ? format(new Date(adv.given_date), 'dd/MM/yyyy') : '—'}
                                         </td>
                                         <td className="align-middle fw-bold text-danger">
                                             ₹{adv.amount}
@@ -566,7 +578,7 @@ const SalaryAdvances = () => {
                     {/* Mobile View (Premium Space-Saving Card Grid) */}
                     <div className="d-md-none">
                         <Row className="g-3">
-                            {advances.map(adv => (
+                            {currentAdvances.map(adv => (
                                 <Col key={adv._id} xs="12">
                                     <Card className="mobile-advance-card border-0 shadow-sm">
                                         <Card.Body className="p-3">
@@ -581,7 +593,7 @@ const SalaryAdvances = () => {
                                                             {adv.staff_id?.f_name} {adv.staff_id?.l_name}
                                                         </div>
                                                         <div className="small text-muted" style={{ fontSize: '0.7rem' }}>
-                                                            {adv.given_date ? format(new Date(adv.given_date), 'dd MMM yyyy') : '—'}
+                                                            {adv.given_date ? format(new Date(adv.given_date), 'dd/MM/yyyy') : '—'}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -628,6 +640,41 @@ const SalaryAdvances = () => {
                                 </Col>
                             ))}
                         </Row>
+                    </div>
+
+                    {/* Advances Pagination Controls */}
+                    <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 gap-3 bg-white p-4 rounded shadow-sm">
+                        <div className="d-flex align-items-center gap-2">
+                            <span className="text-muted small">Items per page:</span>
+                            <Form.Select
+                                size="sm"
+                                className="w-auto rounded-pill border-light-subtle"
+                                value={pageSize}
+                                onChange={(e) => {
+                                    setPageSize(Number(e.target.value));
+                                    setCurrentPage(1);
+                                }}
+                                style={{ height: '32px', minWidth: '70px' }}
+                            >
+                                {[5, 10, 20, 50, 100].map(size => (
+                                    <option key={size} value={size}>{size}</option>
+                                ))}
+                            </Form.Select>
+                            <span className="text-muted small ms-2">
+                                Showing {advances.length > 0 ? indexOfFirstItem + 1 : 0} to {Math.min(indexOfLastItem, advances.length)} of {advances.length} advances
+                            </span>
+                        </div>
+                        {pageCount > 1 && (
+                            <Pagination className="mb-0">
+                                <Pagination.Prev disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} />
+                                {Array.from({ length: pageCount }, (_, i) => i + 1).map(pageNo => (
+                                    <Pagination.Item key={pageNo} active={pageNo === currentPage} onClick={() => setCurrentPage(pageNo)}>
+                                        {pageNo}
+                                    </Pagination.Item>
+                                ))}
+                                <Pagination.Next disabled={currentPage === pageCount} onClick={() => setCurrentPage(p => Math.min(p + 1, pageCount))} />
+                            </Pagination>
+                        )}
                     </div>
                 </>
             )}

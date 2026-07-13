@@ -43,7 +43,15 @@ const feedbackSchema = new mongoose.Schema(
     replied_by: {
       type: String,
       default: "",
-    }
+    },
+    conversations: [
+      {
+        sender: { type: String, enum: ["employee", "hr"] },
+        message: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now },
+        sender_name: { type: String, default: "" }
+      }
+    ]
   },
   {
     timestamps: true,

@@ -142,10 +142,11 @@ export const fetchNotifications = () => async (dispatch) => {
 
     // 4. Regularization Requests
     pendingRegs.forEach(r => {
+      const match = staffList.find(s => s._id === r.staff_id || s.staff_id === r.staff_id);
       notifications.push({
         id: `reg-${r.id || r._id}`,
-        img: '/img/profile/profile-6.webp',
-        detail: `${r.staffName || 'Staff'} requested attendance regularization for ${formatDateSafely(r.date)}.`,
+        img: match?.photo ? `${process.env.REACT_APP_UPLOAD_DIR}${match.photo}` : '/img/profile/profile-6.webp',
+        detail: `${r.staffName || (match ? `${match.f_name} ${match.l_name}` : 'Staff')} requested attendance regularization for ${formatDateSafely(r.date)}.`,
         link: '/attendance',
         date: formatDateSafely(r.date),
       });

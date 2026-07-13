@@ -99,8 +99,14 @@ const StaffProfile = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return '—';
-    const d = new Date(dateString);
-    return format(d, 'dd MMMM, yyyy', { locale: enIN });
+    try {
+      const d = new Date(dateString);
+      if (Number.isNaN(d.getTime())) return '—';
+      return format(d, 'dd/MM/yyyy', { locale: enIN });
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return '—';
+    }
   };
 
   const fetchStaff = async () => {
@@ -108,9 +114,10 @@ const StaffProfile = () => {
       if (!currentUser?._id) return;
       setLoading(true);
       setError('');
+      const token = sessionStorage.getItem('token');
       const res = await axios.get(`${process.env.REACT_APP_API}/staff/get/${currentUser._id}`, {
         headers: {
-          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       setStaff(res.data.data);
@@ -118,22 +125,33 @@ const StaffProfile = () => {
       try {
         const [balRes, leavePolicyRes, expenseRes, configRes] = await Promise.all([
           axios.get(`${process.env.REACT_APP_API}/leave/balances?staff_id=${currentUser._id}`, {
-            headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
+            headers: { Authorization: `Bearer ${token}` }
           }),
-          axios.get(`${process.env.REACT_APP_API}/leave/policies`, {
-            headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
+          axios.get(`${process.env.REACT_APP_API}/leave-policy`, {
+            headers: { Authorization: `Bearer ${token}` }
           }),
           axios.get(`${process.env.REACT_APP_API}/expenses/staff/${currentUser._id}`, {
-            headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
+            headers: { Authorization: `Bearer ${token}` }
           }),
           axios.get(`${process.env.REACT_APP_API}/payroll-config`, {
-            headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
+            headers: { Authorization: `Bearer ${token}` }
           })
         ]);
-        setLeaveBalances(balRes.data.data || []);
-        setGlobalLeavePolicies(leavePolicyRes.data.data || []);
-        setExpenses(expenseRes.data.data || []);
-        setPayrollConfig(configRes.data.data || null);
+
+        if (balRes.data?.success && balRes.data.data?.length > 0) {
+          setLeaveBalances(balRes.data.data[0].balances || []);
+        } else {
+          setLeaveBalances([]);
+        }
+
+        if (leavePolicyRes.data?.success && leavePolicyRes.data.data?.leave_types) {
+          setGlobalLeavePolicies(leavePolicyRes.data.data.leave_types);
+        } else {
+          setGlobalLeavePolicies([]);
+        }
+
+        setExpenses(expenseRes.data?.data || []);
+        setPayrollConfig(configRes.data?.data || null);
       } catch (err) {
         console.error('Error fetching additional details:', err);
       }

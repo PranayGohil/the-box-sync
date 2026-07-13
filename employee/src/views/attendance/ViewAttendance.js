@@ -622,7 +622,7 @@ const ViewAttendance = () => {
 
   const formatDateDisplay = (dateString) => {
     const [year, month, day] = dateString.split('-');
-    return `${day}-${month}-${year}`;
+    return `${day}/${month}/${year}`;
   };
 
   const showSuccessToast = (message) => {
@@ -771,7 +771,7 @@ const ViewAttendance = () => {
           ['Staff ID:', staffData.staff_id],
           ['Name:', `${staffData.f_name} ${staffData.l_name}`],
           ['Position:', staffData.position],
-          ['Report Generated:', format(new Date(), 'dd MMM yyyy HH:mm')],
+          ['Report Generated:', format(new Date(), 'dd/MM/yyyy HH:mm')],
           [], ['KEY METRICS'], ['Metric', 'Value'],
           ['Total Days', stats.totalDays],
           ['Total Present', stats.totalPresent],
@@ -847,7 +847,7 @@ const ViewAttendance = () => {
         doc.setFontSize(11);
         doc.text(`Staff ID: ${staffData.staff_id}`, 20, yPosition); yPosition += 6;
         doc.text(`Position: ${staffData.position}`, 20, yPosition); yPosition += 6;
-        doc.text(`Report Generated: ${format(new Date(), 'dd MMM yyyy HH:mm')}`, 20, yPosition); yPosition += 15;
+        doc.text(`Report Generated: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 20, yPosition); yPosition += 15;
       }
 
       if (exportOptions.includeStatistics) {

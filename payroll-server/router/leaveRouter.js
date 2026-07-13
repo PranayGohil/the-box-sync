@@ -175,7 +175,7 @@ router.get('/requests', authMiddleware, async (req, res) => {
     if (status && status !== 'all') query.status = status;
 
     const requests = await LeaveRequest.find(query)
-      .populate('staff_id', 'f_name l_name staff_id position')
+      .populate('staff_id', 'f_name l_name staff_id position photo')
       .sort({ applied_on: -1 });
 
     res.json({ success: true, data: requests });

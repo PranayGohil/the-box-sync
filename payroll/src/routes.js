@@ -6,23 +6,13 @@ import { DEFAULT_PATHS } from 'config.js';
 const payroll = {
   dashboard: lazy(() => import('views/admin/Dashboard')),
   staff: lazy(() => import('views/admin/staff/Staff')),
-  viewStaff: lazy(() => import('views/admin/staff/ViewStaff')),
-  addStaff: lazy(() => import('views/admin/staff/AddStaff')),
-  editStaff: lazy(() => import('views/admin/staff/EditStaff')),
   organization: lazy(() => import('views/admin/staff/branch/BranchBoard')),
-  attendance: lazy(() => import('views/admin/staff/attandance/ViewAttendance')),
-  manageAttendance: lazy(() => import('views/admin/staff/attandance/ManageAttendance')),
-  roster: lazy(() => import('views/admin/staff/attandance/RosterManagement')),
-  essAttendance: lazy(() => import('views/ess/ESSAttendancePanel')),
-  payrollSystem: lazy(() => import('views/admin/staff/payroll/PayrollSystem')),
-  generatePayroll: lazy(() => import('views/admin/staff/payroll/GeneratePayroll')),
-  managePayroll: lazy(() => import('views/admin/staff/payroll/ManagePayroll')),
-  expenses: lazy(() => import('views/admin/staff/payroll/ManageExpenses')),
-  essExpense: lazy(() => import('views/ess/ESSExpensePanel')),
-  reports: lazy(() => import('views/admin/staff/payroll/StatutoryReports')),
   feedbacks: lazy(() => import('views/admin/staff/payroll/FeedbacksAndComplaints')),
+  essAttendance: lazy(() => import('views/ess/ESSAttendancePanel')),
+  essExpense: lazy(() => import('views/ess/ESSExpensePanel')),
   assets: lazy(() => import('views/admin/staff/assets/Assets')),
   companyProfile: lazy(() => import('views/admin/CompanyProfile')),
+  financeSystem: lazy(() => import('views/admin/staff/payroll/FinanceSystem')),
 };
 
 const appRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
@@ -44,26 +34,6 @@ const allRoutes = {
 
     // --- REAL ROUTES (HIDDEN FROM MENU) ---
     {
-      path: `${appRoot}/payroll-management`,
-      exact: true,
-      redirect: true,
-      to: `${appRoot}/payroll-management/generate`,
-      hideInMenu: true,
-    },
-    {
-      path: `${appRoot}/payroll-management`,
-      hideInMenu: true,
-      subs: [
-        { path: '/generate', component: payroll.generatePayroll },
-        { path: '/manage', component: payroll.managePayroll },
-      ],
-    },
-    {
-      path: `${appRoot}/staff`,
-      component: payroll.staff,
-      hideInMenu: true,
-    },
-    {
       path: `${appRoot}/organization`,
       component: payroll.organization,
       hideInMenu: true,
@@ -72,61 +42,43 @@ const allRoutes = {
       path: `${appRoot}/attendance`,
       exact: true,
       redirect: true,
-      to: `${appRoot}/attendance/manage`,
+      to: `${appRoot}/staff/attendance`,
       hideInMenu: true,
     },
-    {
-      path: `${appRoot}/attendance`,
-      hideInMenu: true,
-      subs: [
-        { path: '/view', component: payroll.attendance },
-        { path: '/manage', component: payroll.manageAttendance },
-        { path: '/ess', component: payroll.essAttendance },
-      ],
-    },
-
     {
       path: `${appRoot}/expenses`,
       exact: true,
       redirect: true,
-      to: `${appRoot}/expenses/manage`,
+      to: `${appRoot}/finance/expenses`,
       hideInMenu: true,
     },
     {
       path: `${appRoot}/expenses`,
       hideInMenu: true,
       subs: [
-        { path: '/manage', component: payroll.expenses },
         { path: '/ess', component: payroll.essExpense },
-        { path: '/reports', component: payroll.reports },
       ],
     },
+    {
+      path: `${appRoot}/attendance/ess`,
+      component: payroll.essAttendance,
+      hideInMenu: true,
+    },
 
-
-    // --- VISUAL MENU FOLDERS ---
     // --- VISUAL MENU ITEMS ---
     {
-      path: appRoot,
+      path: `${appRoot}/staff`,
       label: 'Payroll',
       icon: 'credit-card',
-      hideInRoute: true,
-      subs: [
-        { path: `/staff`, label: 'Manage Staff', icon: 'user' },
-        { path: `/attendance`, label: 'Manage Attendance', icon: 'check-square' },
-        { path: `/payroll-management`, label: 'Manage Payroll', icon: 'credit-card' },
-      ]
+      component: payroll.staff,
     },
     {
-      path: appRoot,
+      path: `${appRoot}/finance`,
       label: 'Finance',
       icon: 'money',
-      hideInRoute: true,
-      subs: [
-        { path: `/expenses/manage`, label: 'Manage Expenses', icon: 'wallet' },
-        { path: `/expenses/reports`, label: 'Audit & Reports', icon: 'file-text' },
-      ]
+      component: payroll.financeSystem,
     },
-    // --- MOVED TOP-LEVEL MENU ITEMS ---
+    // --- TOP-LEVEL MENU ITEMS ---
     {
       path: `${appRoot}/assets`,
       label: 'Assets',
@@ -140,18 +92,12 @@ const allRoutes = {
       component: payroll.feedbacks,
     },
     {
-      path: `${appRoot}/payroll`,
-      label: 'Setting',
-      icon: 'gear',
-      component: payroll.payrollSystem,
-    },
-    {
       path: `${appRoot}/settings`,
       label: 'Company Profile',
       icon: 'user',
       component: payroll.companyProfile,
       hideInMenu: true,
-    }
+    },
   ],
 
   sidebarItems: [

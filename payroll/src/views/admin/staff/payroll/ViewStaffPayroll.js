@@ -195,6 +195,7 @@ export default function ViewStaffPayroll() {
     const [careerStats, setCareerStats] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [companyData, setCompanyData] = useState(null);
 
     const [yearFilter, setYearFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
@@ -235,7 +236,16 @@ export default function ViewStaffPayroll() {
         }
     };
 
-    useEffect(() => { fetchPayroll(); }, [staffId]);
+    const fetchCompany = async () => {
+        try {
+            const res = await axios.get(`${process.env.REACT_APP_API}/user/get`, authHeader());
+            if (res.data && res.data !== 'Null') setCompanyData(res.data);
+        } catch (err) {
+            console.error('Error fetching company data:', err);
+        }
+    };
+
+    useEffect(() => { fetchPayroll(); fetchCompany(); }, [staffId]);
 
     const filteredPayroll = payroll.filter((p) => {
         if (yearFilter !== 'all' && p.year !== Number(yearFilter)) return false;
@@ -267,7 +277,7 @@ export default function ViewStaffPayroll() {
                 ['Position:', staffData.position],
                 ['Base Salary:', `₹${staffData.salary}`],
                 ['OT Rate/hr:', `₹${staffData.overtime_rate}`],
-                ['Generated:', format(new Date(), 'dd MMM yyyy hh:mm a')],
+                ['Generated:', format(new Date(), 'dd/MM/yyyy HH:mm')],
                 [],
                 ['CAREER SUMMARY'],
                 ['Metric', 'Value'],
@@ -329,7 +339,7 @@ export default function ViewStaffPayroll() {
             doc.setFontSize(10);
             doc.text(`Staff ID: ${staffData.staff_id}  |  Position: ${staffData.position}  |  Base Salary: ₹${staffData.salary}  |  OT Rate: ₹${staffData.overtime_rate}/hr`, 20, y);
             y += 6;
-            doc.text(`Generated: ${format(new Date(), 'dd MMM yyyy hh:mm a')}`, 20, y);
+            doc.text(`Generated: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 20, y);
             y += 14;
 
             setExportProgress(30);
@@ -393,50 +403,69 @@ export default function ViewStaffPayroll() {
     const downloadSalarySlip = (p) => {
         try {
             const doc = new jsPDF();
-            doc.setFontSize(16);
+            // Company Header – white background, black text
+            let headerY = 10;
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(14);
             doc.setFont(undefined, 'bold');
-            doc.text('SALARY SLIP', 105, 20, { align: 'center' });
-            doc.setFontSize(10);
-            doc.setFont(undefined, 'normal');
-            doc.text(`For the month of ${MONTH_NAMES[p.month]} ${p.year}`, 105, 26, { align: 'center' });
-            doc.rect(14, 32, 182, 30);
+            doc.text((companyData?.name || 'COMPANY NAME').toUpperCase(), 105, headerY, { align: 'center' });
+            headerY += 6;
+            const addrParts = [companyData?.address, companyData?.city, companyData?.state, companyData?.pincode].filter(Boolean);
+            if (addrParts.length > 0) {
+                doc.setFontSize(8);
+                doc.setFont(undefined, 'normal');
+                doc.text(addrParts.join(', '), 105, headerY, { align: 'center' });
+                headerY += 5;
+            }
+            doc.setDrawColor(0);
+            doc.line(14, headerY, 196, headerY);
+            headerY += 5;
+            doc.setFontSize(11);
             doc.setFont(undefined, 'bold');
-            doc.text('Employee Name:', 18, 40);
-            doc.setFont(undefined, 'normal');
-            doc.text(`${staffData.f_name} ${staffData.l_name}`, 55, 40);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`SALARY SLIP  |  ${MONTH_NAMES[p.month].toUpperCase()} ${p.year}`, 105, headerY, { align: 'center' });
+            headerY += 4;
+            doc.line(14, headerY, 196, headerY);
+            headerY += 5;
+            doc.rect(14, headerY, 182, 26);
             doc.setFont(undefined, 'bold');
-            doc.text('Employee ID:', 110, 40);
+            doc.text('Employee Name:', 18, headerY + 8);
             doc.setFont(undefined, 'normal');
-            doc.text(`${staffData.staff_id}`, 145, 40);
+            doc.text(`${staffData.f_name} ${staffData.l_name}`, 55, headerY + 8);
             doc.setFont(undefined, 'bold');
-            doc.text('Designation:', 18, 48);
+            doc.text('Employee ID:', 110, headerY + 8);
             doc.setFont(undefined, 'normal');
-            doc.text(`${staffData.position}`, 55, 48);
+            doc.text(`${staffData.staff_id}`, 145, headerY + 8);
             doc.setFont(undefined, 'bold');
-            doc.text('Date of Joining:', 110, 48);
+            doc.text('Designation:', 18, headerY + 15);
             doc.setFont(undefined, 'normal');
-            doc.text(`${staffData.joining_date ? format(new Date(staffData.joining_date), 'dd-MMM-yyyy') : '-'}`, 145, 48);
+            doc.text(`${staffData.position}`, 55, headerY + 15);
             doc.setFont(undefined, 'bold');
-            doc.text('UAN Number:', 18, 56);
+            doc.text('Date of Joining:', 110, headerY + 15);
             doc.setFont(undefined, 'normal');
-            doc.text(`${staffData.uan_number || '-'}`, 55, 56);
+            doc.text(`${staffData.joining_date ? format(new Date(staffData.joining_date), 'dd-MMM-yyyy') : '-'}`, 145, headerY + 15);
             doc.setFont(undefined, 'bold');
-            doc.text('Bank A/C No:', 110, 56);
+            doc.text('UAN Number:', 18, headerY + 22);
             doc.setFont(undefined, 'normal');
-            doc.text(`${staffData.bank_account?.account_number || '-'}`, 145, 56);
-            doc.rect(14, 66, 182, 12);
+            doc.text(`${staffData.uan_number || '-'}`, 55, headerY + 22);
+            doc.setFont(undefined, 'bold');
+            doc.text('Bank A/C No:', 110, headerY + 22);
+            doc.setFont(undefined, 'normal');
+            doc.text(`${staffData.bank_account?.account_number || '-'}`, 145, headerY + 22);
+            headerY += 32;
+            doc.rect(14, headerY, 182, 12);
             doc.setFontSize(9);
-            doc.text(`Total Days: ${p.working_days_in_month}   |   Paid Days: ${p.leave_summary?.total_paid_days || p.present_days}   |   LWP: ${p.leave_summary?.lwp_days || p.absent_days}`, 105, 74, { align: 'center' });
+            doc.text(`Total Days: ${p.working_days_in_month}   |   Paid Days: ${p.leave_summary?.total_paid_days || p.present_days}   |   LWP: ${p.leave_summary?.lwp_days || p.absent_days}`, 105, headerY + 8, { align: 'center' });
 
             const totalEarnings = (p.earned_breakdown?.total_gross || p.earned_salary || 0) + (p.overtime_pay || 0) + (p.bonus || 0) + (p.expense_claims || 0);
             const statDed = p.deduction_breakdown?.total_statutory || 0;
             const manDed = p.deductions || 0;
             const advDed = p.advance_deduction || 0;
             const lwpDed = p.lwp_deduction || 0;
-            const totalDeductions = statDed + manDed + advDed + lwpDed;
+            const totalDeductions = statDed + manDed + advDed + lwpDed + (p.tds || 0);
 
             autoTable(doc, {
-                startY: 85,
+                startY: headerY + 16,
                 head: [['Earnings', 'Amount (Rs.)', 'Deductions', 'Amount (Rs.)']],
                 body: [
                     ['Basic', (p.earned_breakdown?.basic || 0).toFixed(2), 'Provident Fund (PF)', (p.deduction_breakdown?.pf || 0).toFixed(2)],
@@ -444,13 +473,13 @@ export default function ViewStaffPayroll() {
                     ['Conveyance', (p.earned_breakdown?.conveyance || 0).toFixed(2), 'Professional Tax (PT)', (p.deduction_breakdown?.pt || 0).toFixed(2)],
                     ['Medical Allowance', (p.earned_breakdown?.medical || 0).toFixed(2), 'LWP Deduction', lwpDed.toFixed(2)],
                     ['Special Allowance', (p.earned_breakdown?.special || 0).toFixed(2), 'Advance / Loan EMI', advDed.toFixed(2)],
-                    ['Overtime Pay', (p.overtime_pay || 0).toFixed(2), 'Other Deductions', manDed.toFixed(2)],
-                    ['Bonus', (p.bonus || 0).toFixed(2), '', ''],
+                    ['Overtime Pay', (p.overtime_pay || 0).toFixed(2), 'TDS', (p.tds || 0).toFixed(2)],
+                    ['Bonus', (p.bonus || 0).toFixed(2), 'Other Deductions', manDed.toFixed(2)],
                     ['Expenses', (p.expense_claims || 0).toFixed(2), '', ''],
                     ['Other Earnings', (p.earned_breakdown?.other || 0).toFixed(2), '', '']
                 ],
                 theme: 'grid',
-                headStyles: { fillColor: [30, 168, 231], textColor: 255 },
+                headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
                 columnStyles: {
                     0: { cellWidth: 50 },
                     1: { cellWidth: 41, halign: 'right' },
@@ -460,7 +489,7 @@ export default function ViewStaffPayroll() {
             });
 
             const { finalY } = doc.lastAutoTable;
-            doc.setFillColor(240, 240, 240);
+            doc.setFillColor(255, 255, 255);
             doc.rect(14, finalY, 182, 10, 'F');
             doc.rect(14, finalY, 182, 10, 'S');
             doc.setFont(undefined, 'bold');
@@ -599,7 +628,7 @@ export default function ViewStaffPayroll() {
                                         <CsLineIcons icon="diploma" size="16" /> {staffData.position}
                                     </span>
                                     <span className="text-muted fw-medium fs-6 d-flex align-items-center gap-1">
-                                        <CsLineIcons icon="calendar" size="16" /> Joined: {staffData.joining_date ? format(new Date(staffData.joining_date), 'dd MMM yyyy') : '-'}
+                                        <CsLineIcons icon="calendar" size="16" /> Joined: {staffData.joining_date ? format(new Date(staffData.joining_date), 'dd/MM/yyyy') : '-'}
                                     </span>
                                 </div>
                                 <div className="d-flex align-items-center gap-3 flex-wrap small">
@@ -760,7 +789,7 @@ export default function ViewStaffPayroll() {
                                         <tr className="d-none d-lg-table-row">
                                             <td>
                                                 <div className="fw-bold text-dark">{MONTH_NAMES[p.month]} {p.year}</div>
-                                                {p.paid_date && <small className="text-success fw-bold">Paid: {format(new Date(p.paid_date), 'dd MMM yy')}</small>}
+                                                {p.paid_date && <small className="text-success fw-bold">Paid: {format(new Date(p.paid_date), 'dd/MM/yyyy')}</small>}
                                             </td>
                                             <td className="text-center fw-medium">{p.working_days_in_month} Days</td>
                                             <td className="text-center">
@@ -806,7 +835,7 @@ export default function ViewStaffPayroll() {
                                                     <div className="d-flex justify-content-between align-items-start mb-3">
                                                         <div>
                                                             <div className="fw-bold text-dark fs-6">{MONTH_NAMES[p.month]} {p.year}</div>
-                                                            {p.paid_date && <small className="text-success fw-bold">Paid: {format(new Date(p.paid_date), 'dd MMM yy')}</small>}
+                                                            {p.paid_date && <small className="text-success fw-bold">Paid: {format(new Date(p.paid_date), 'dd/MM/yyyy')}</small>}
                                                         </div>
                                                         <Badge bg={p.status === 'paid' ? 'success' : 'warning'} className="status-badge px-3 py-1">
                                                             {p.status === 'paid' ? 'Settled' : 'Pending'}
@@ -898,11 +927,28 @@ export default function ViewStaffPayroll() {
             </Modal>
 
             <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} centered size="lg" className="rounded-4">
-                <Modal.Header closeButton className="border-0 p-4 pb-0">
-                    <Modal.Title className="fw-bold d-flex align-items-center gap-2">
-                        <CsLineIcons icon="file-text" size="24" className="text-primary" />
-                        Payroll Insight: {selectedPayroll ? `${MONTH_NAMES[selectedPayroll.month]} ${selectedPayroll.year}` : ''}
-                    </Modal.Title>
+                <Modal.Header closeButton className="border-0 pb-0" style={{ borderBottom: '1px solid #e0e0e0' }}>
+                    <div className="w-100">
+                        {companyData && (
+                            <div className="text-center pb-2 mb-2" style={{ borderBottom: '1px solid #eee' }}>
+                                <div className="fw-bold text-dark" style={{ fontSize: '1rem', textTransform: 'uppercase' }}>{companyData.name}</div>
+                                {(companyData.address || companyData.city) && (
+                                    <div className="text-muted small">{[companyData.address, companyData.city, companyData.state].filter(Boolean).join(', ')}</div>
+                                )}
+                                {(companyData.mobile || companyData.email) && (
+                                    <div className="text-muted small">
+                                        {companyData.mobile ? `Ph: ${companyData.mobile}` : ''}
+                                        {companyData.mobile && companyData.email ? ' | ' : ''}
+                                        {companyData.email ? `Email: ${companyData.email}` : ''}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        <Modal.Title className="fw-bold d-flex align-items-center gap-2">
+                            <CsLineIcons icon="file-text" size="24" className="text-primary" />
+                            Payroll Insight: {selectedPayroll ? `${MONTH_NAMES[selectedPayroll.month]} ${selectedPayroll.year}` : ''}
+                        </Modal.Title>
+                    </div>
                 </Modal.Header>
                 <Modal.Body className="p-4">
                     {selectedPayroll && (

@@ -30,9 +30,8 @@ exports.sendOtp = async (req, res) => {
     }).select("+otp +otp_expires");
 
     if (!staff) {
-      // Security: don't reveal whether the email exists
-      return res.status(200).json({
-        message: "If that email is registered, an OTP has been sent.",
+      return res.status(404).json({
+        message: "Email ID not found.",
       });
     }
 
@@ -73,7 +72,7 @@ exports.sendOtp = async (req, res) => {
     });
 
     return res.status(200).json({
-      message: "If that email is registered, an OTP has been sent.",
+      message: "OTP sent successfully! Check your inbox.",
     });
   } catch (err) {
     console.error("Send OTP error:", err);

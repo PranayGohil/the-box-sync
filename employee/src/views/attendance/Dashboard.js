@@ -11,6 +11,7 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { format } from 'date-fns';
 import { enIN } from 'date-fns/locale';
 import CreatableSelect from 'react-select/creatable';
+import { toast } from 'react-toastify';
 import WfhTracker from './WfhTracker';
 
 const customStyles = `
@@ -534,7 +535,26 @@ export default function Dashboard() {
   const [resignationSignature, setResignationSignature] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
   const [feedbacksList, setFeedbacksList] = useState([]);
+  const [employeeReplies, setEmployeeReplies] = useState({});
   const [feedbackForm, setFeedbackForm] = useState({ type: 'feedback', title: '', description: '', is_anonymous: false });
+
+  const handleEmployeeReplySubmit = async (feedbackId) => {
+    const message = employeeReplies[feedbackId];
+    if (!message || !message.trim()) return;
+
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const res = await axios.post(`${process.env.REACT_APP_API}/feedback/${feedbackId}/employee-reply`, { message }, { headers });
+      if (res.data.success) {
+        setFeedbacksList(prev => prev.map(item => item._id === feedbackId ? res.data.data : item));
+        setEmployeeReplies(prev => ({ ...prev, [feedbackId]: '' }));
+        toast.success('Message sent!');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to send message.');
+    }
+  };
   const [resignationCategories, setResignationCategories] = useState([
     { label: 'Career Growth & Better Opportunity', value: 'Career Growth & Better Opportunity' },
     { label: 'Higher Education / Studies', value: 'Higher Education' },
@@ -1109,7 +1129,7 @@ export default function Dashboard() {
   const formatDate = (dateString) => {
     if (!dateString) return '—';
     const d = new Date(dateString);
-    return format(d, 'dd MMMM, yyyy', { locale: enIN });
+    return format(d, 'dd/MM/yyyy', { locale: enIN });
   };
 
   const getLeaveTypeLabel = (id) => {
@@ -1955,52 +1975,187 @@ export default function Dashboard() {
                             </div>
                           ) : (
                             <div className="feedback-scroll-container" style={{ maxHeight: '68vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
-                              {feedbacksList.map((item) => (
-                                <div 
-                                  key={item._id} 
-                                  className="p-3 mb-3 border rounded-3 bg-white"
-                                  style={{ borderLeft: `4px solid ${item.type === 'complaint' ? '#ef4444' : '#1ea8e7'} !important` }}
-                                >
-                                  <div className="d-flex justify-content-between align-items-start mb-2">
-                                    <div>
-                                      <span className="badge bg-light text-dark text-capitalize me-2 mb-1" style={{ fontSize: '0.7rem' }}>
-                                        {item.type}
-                                      </span>
+                              {feedbacksList.map((item) => {
+                                // Extract all messages chronologically
+                                const messages = [
+                                  {
+                                    sender: 'employee',
+                                    message: item.description,
+                                    timestamp: item.createdAt,
+                                    sender_name: item.is_anonymous ? 'Anonymous Employee' : 'Me'
+                                  }
+                                ];
+                                
+                                if (item.hr_reply) {
+                                  messages.push({
+                                    sender: 'hr',
+                                    message: item.hr_reply,
+                                    timestamp: item.replied_at || item.createdAt,
+                                    sender_name: `HR (${item.replied_by || 'HR Department'})`
+                                  });
+                                }
 
-                                      <h6 className="fw-bold text-dark mb-0 mt-1">{item.title}</h6>
-                                    </div>
-                                    <Badge 
-                                      bg={item.status === 'resolved' ? 'success' : item.status === 'reviewed' ? 'info' : 'warning'}
-                                      className="status-badge text-white"
-                                    >
-                                      {item.status}
-                                    </Badge>
-                                  </div>
-                                  <p className="text-muted small mb-2" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
-                                    {item.description}
-                                  </p>
-                                  <div className="text-muted small mb-3" style={{ fontSize: '0.75rem' }}>
-                                    Submitted on: {formatDate(item.createdAt)}
-                                  </div>
+                                if (item.conversations && item.conversations.length > 0) {
+                                  item.conversations.forEach(c => {
+                                    messages.push({
+                                      sender: c.sender,
+                                      message: c.message,
+                                      timestamp: c.timestamp,
+                                      sender_name: c.sender === 'employee' 
+                                        ? (item.is_anonymous ? 'Anonymous Employee' : 'Me')
+                                        : `HR (${c.sender_name || 'HR Department'})`
+                                    });
+                                  });
+                                }
 
-                                  {/* HR Reply Box */}
-                                  {item.hr_reply ? (
-                                    <div className="bg-light p-3 rounded-3 border-start border-primary border-3 mt-2">
-                                      <div className="d-flex justify-content-between align-items-center mb-1">
-                                        <span className="fw-bold text-primary small">Response from HR ({item.replied_by || 'HR Department'})</span>
-                                        <span className="text-muted small" style={{ fontSize: '0.7rem' }}>{formatDate(item.replied_at)}</span>
+                                // Sort messages chronologically
+                                messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+                                return (
+                                  <div 
+                                    key={item._id} 
+                                    className="mb-4 border-0 shadow-sm overflow-hidden" 
+                                    style={{ borderRadius: '16px', border: '1px solid #e2e8f0' }}
+                                  >
+                                    {/* WhatsApp Style Chat Header */}
+                                    <div className="d-flex align-items-center justify-content-between p-3 bg-white border-bottom">
+                                      <div className="d-flex align-items-center">
+                                        <div 
+                                          className="rounded-circle d-flex align-items-center justify-content-center me-3 text-white fw-bold"
+                                          style={{ 
+                                            width: '40px', 
+                                            height: '40px', 
+                                            backgroundColor: item.type === 'complaint' ? '#ef4444' : '#1ea8e7',
+                                            fontSize: '1rem'
+                                          }}
+                                        >
+                                          {item.type === 'complaint' ? 'C' : 'F'}
+                                        </div>
+                                        <div>
+                                          <h6 className="fw-bold text-dark mb-0">{item.title}</h6>
+                                          <span className="text-muted" style={{ fontSize: '0.72rem' }}>
+                                            {item.type === 'complaint' ? 'Formal Complaint' : 'General Feedback'} • ID: #{item._id.substring(item._id.length - 6)}
+                                          </span>
+                                        </div>
                                       </div>
-                                      <p className="mb-0 text-dark small" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
-                                        {item.hr_reply}
-                                      </p>
+                                      <Badge 
+                                        bg={item.status === 'resolved' ? 'success' : item.status === 'reviewed' ? 'info' : 'warning'}
+                                        className="status-badge text-white rounded-pill px-3 py-1.5"
+                                        style={{ fontSize: '0.75rem', fontWeight: '600' }}
+                                      >
+                                        {item.status}
+                                      </Badge>
                                     </div>
-                                  ) : (
-                                    <div className="text-muted small bg-light p-2 rounded-3 text-center" style={{ fontSize: '0.75rem' }}>
-                                      ⏳ Pending review and reply from HR department.
+
+                                    {/* WhatsApp Style Chat Body */}
+                                    <div 
+                                      className="p-3 d-flex flex-column gap-3" 
+                                      style={{ 
+                                        backgroundColor: '#efeae2', 
+                                        backgroundImage: 'radial-gradient(rgba(0,0,0,0.03) 1px, transparent 0)', 
+                                        backgroundSize: '16px 16px',
+                                        maxHeight: '320px',
+                                        overflowY: 'auto'
+                                      }}
+                                    >
+                                      {/* Systemic Date Divider */}
+                                      <div className="align-self-center my-1 bg-white shadow-sm rounded px-3 py-1 text-muted" style={{ fontSize: '0.7rem', fontWeight: '500' }}>
+                                        {formatDate(item.createdAt)}
+                                      </div>
+
+                                      {/* Render chat bubbles */}
+                                      {messages.map((msg, msgIdx) => {
+                                        const isOutgoing = msg.sender === 'employee';
+                                        return (
+                                          <div 
+                                            key={msgIdx}
+                                            className={`shadow-sm position-relative d-flex flex-column ${isOutgoing ? 'align-self-end' : 'align-self-start'}`} 
+                                            style={{ 
+                                              maxWidth: '85%', 
+                                              minWidth: '140px',
+                                              width: 'fit-content',
+                                              backgroundColor: isOutgoing ? '#d9fdd3' : '#ffffff', 
+                                              borderRadius: isOutgoing ? '12px 12px 0 12px' : '12px 12px 12px 0',
+                                              color: '#111b21',
+                                              fontSize: '0.85rem',
+                                              padding: '8px 12px 6px 12px',
+                                              boxShadow: '0 1px 0.5px rgba(11,20,26,0.13)'
+                                            }}
+                                          >
+                                            {!isOutgoing && (
+                                              <div className="fw-bold text-primary mb-1" style={{ fontSize: '0.72rem' }}>
+                                                {msg.sender_name}
+                                              </div>
+                                            )}
+                                            <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4', wordBreak: 'break-word' }}>{msg.message}</div>
+                                            <div 
+                                              className="d-flex align-items-center justify-content-end text-muted mt-1 align-self-end" 
+                                              style={{ fontSize: '0.68rem', gap: '3px' }}
+                                            >
+                                              <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                              
+                                              {/* Checkmarks only on outgoing messages */}
+                                              {isOutgoing && (
+                                                <>
+                                                  {item.status === 'pending' && (
+                                                    <span style={{ fontSize: '0.9rem', lineHeight: 1, color: '#8696a0', fontWeight: 'bold' }}>✓</span>
+                                                  )}
+                                                  {item.status === 'reviewed' && (
+                                                    <span style={{ fontSize: '0.9rem', lineHeight: 1, color: '#8696a0', fontWeight: 'bold' }}>✓✓</span>
+                                                  )}
+                                                  {item.status === 'resolved' && (
+                                                    <span style={{ fontSize: '0.9rem', lineHeight: 1, color: '#53bdeb', fontWeight: 'bold' }}>✓✓</span>
+                                                  )}
+                                                </>
+                                              )}
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+
+                                      {/* System Pending Message */}
+                                      {!item.hr_reply && (
+                                        <div 
+                                          className="align-self-center my-2 shadow-sm rounded-pill px-4 py-1.5 text-center text-dark"
+                                          style={{ 
+                                            fontSize: '0.75rem', 
+                                            backgroundColor: '#ffe0b2', 
+                                            border: '1px solid rgba(255, 152, 0, 0.2)',
+                                            fontWeight: '500'
+                                          }}
+                                        >
+                                          ⏳ Pending review and reply from HR department.
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                </div>
-                              ))}
+
+                                    {/* Chat Footer (Text Bar) */}
+                                    <div className="p-2 border-top bg-light d-flex align-items-center gap-2">
+                                      <Form.Control
+                                        type="text"
+                                        placeholder="Type a message to HR..."
+                                        style={{ borderRadius: '24px', fontSize: '0.85rem' }}
+                                        value={employeeReplies[item._id] || ''}
+                                        onChange={(e) => setEmployeeReplies(prev => ({ ...prev, [item._id]: e.target.value }))}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleEmployeeReplySubmit(item._id);
+                                          }
+                                        }}
+                                      />
+                                      <Button 
+                                        variant="primary" 
+                                        className="d-flex align-items-center justify-content-center p-0 rounded-circle"
+                                        style={{ width: '36px', height: '36px', minWidth: '36px' }}
+                                        onClick={() => handleEmployeeReplySubmit(item._id)}
+                                      >
+                                        <CsLineIcons icon="chevron-right" size="18" className="text-white" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
                         </Card.Body>

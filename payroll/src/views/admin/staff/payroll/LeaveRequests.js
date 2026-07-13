@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Button, Badge, Modal, Form, Spinner } from 'react-bootstrap';
+import { Row, Col, Card, Button, Badge, Modal, Form, Spinner, Pagination } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -49,6 +49,13 @@ const LeaveRequests = () => {
     const [statusFilter, setStatusFilter] = useState('all');
     const [monthFilter, setMonthFilter] = useState(new Date().getMonth().toString());
     const [searchQuery, setSearchQuery] = useState('');
+    
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab, statusFilter, monthFilter, searchQuery]);
 
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [rejectingId, setRejectingId] = useState(null);
@@ -69,10 +76,10 @@ const LeaveRequests = () => {
                 getLeaveBalances(currentYear),
                 getLeavePolicy()
             ]);
-            
+
             if (reqRes.success) setRequests(reqRes.data || []);
             if (balRes.success) setBalances(balRes.data || []);
-            
+
             if (polRes.success && polRes.data) {
                 const map = {};
                 polRes.data.leave_types.forEach(lt => {
@@ -101,7 +108,7 @@ const LeaveRequests = () => {
         try {
             const res = await updateLeaveStatus(approvingId, 'approved');
             if (res.success) {
-                toast.success('Leave approved successfully and balance deducted.');
+                toast.success('Leave approved successfully.');
                 setShowApproveModal(false);
                 fetchData();
             }
@@ -153,9 +160,9 @@ const LeaveRequests = () => {
     const filteredRequests = requests.filter(req => {
         const matchesStatus = statusFilter === 'all' || req.status === statusFilter;
         const staffName = `${req.staff_id?.f_name || ''} ${req.staff_id?.l_name || ''}`.toLowerCase();
-        const matchesSearch = staffName.includes(searchQuery.toLowerCase()) || 
-                              (req.staff_id?.position || '').toLowerCase().includes(searchQuery.toLowerCase());
-        
+        const matchesSearch = staffName.includes(searchQuery.toLowerCase()) ||
+            (req.staff_id?.position || '').toLowerCase().includes(searchQuery.toLowerCase());
+
         let matchesMonth = true;
         if (monthFilter !== 'all') {
             const reqDate = new Date(req.from_date);
@@ -167,9 +174,19 @@ const LeaveRequests = () => {
 
     const filteredBalances = balances.filter(b => {
         const staffName = `${b.staff_id?.f_name || ''} ${b.staff_id?.l_name || ''}`.toLowerCase();
-        return staffName.includes(searchQuery.toLowerCase()) || 
-               (b.staff_id?.position || '').toLowerCase().includes(searchQuery.toLowerCase());
+        return staffName.includes(searchQuery.toLowerCase()) ||
+            (b.staff_id?.position || '').toLowerCase().includes(searchQuery.toLowerCase());
     });
+
+    const pageCountReq = Math.ceil(filteredRequests.length / pageSize);
+    const indexOfLastReq = currentPage * pageSize;
+    const indexOfFirstReq = indexOfLastReq - pageSize;
+    const currentRequests = filteredRequests.slice(indexOfFirstReq, indexOfLastReq);
+
+    const pageCountBal = Math.ceil(filteredBalances.length / pageSize);
+    const indexOfLastBal = currentPage * pageSize;
+    const indexOfFirstBal = indexOfLastBal - pageSize;
+    const currentBalances = filteredBalances.slice(indexOfFirstBal, indexOfLastBal);
 
     // Staff History Filter
     const staffHistoryRequests = historyStaff ? requests.filter(req => req.staff_id?._id === historyStaff.staff_id?._id) : [];
@@ -549,9 +566,9 @@ const LeaveRequests = () => {
                         </h1>
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
-                    
+
                     <Col xs="12" md="7" className="d-flex flex-wrap justify-content-md-end align-items-center gap-3">
-                        <Form.Control 
+                        <Form.Control
                             type="text"
                             placeholder="Search staff..."
                             value={searchQuery}
@@ -587,13 +604,13 @@ const LeaveRequests = () => {
             {/* Sub-navigation Tabs */}
             <div className="d-flex justify-content-start mb-4">
                 <div className="leave-tab-container shadow-sm">
-                    <Button 
+                    <Button
                         className={`leave-tab-button ${activeTab === 'requests' ? 'active' : ''}`}
                         onClick={() => setActiveTab('requests')}
                     >
                         Requests
                     </Button>
-                    <Button 
+                    <Button
                         className={`leave-tab-button ${activeTab === 'balances' ? 'active' : ''}`}
                         onClick={() => setActiveTab('balances')}
                     >
@@ -624,76 +641,78 @@ const LeaveRequests = () => {
                                     <Card.Body className="p-0">
                                         <div className="table-responsive">
                                             <table className="table table-hover align-middle mb-0 leave-table">
-                                                <thead className="table-light text-uppercase fs-7 fw-bold text-muted border-bottom">
+                                                <thead className="table-light text-uppercase fw-bold text-muted border-bottom" style={{ fontSize: '0.82rem', letterSpacing: '0.05em' }}>
                                                     <tr>
-                                                        <th className="ps-4 py-3">Staff Member</th>
-                                                        <th className="py-3">Leave Type</th>
-                                                        <th className="py-3">Duration</th>
-                                                        <th className="py-3">Dates</th>
-                                                        <th className="py-3">Reason</th>
-                                                        <th className="py-3">Status</th>
-                                                        <th className="pe-4 py-3 text-end">Actions</th>
+                                                        <th className="ps-4 py-3.5">Staff Member</th>
+                                                        <th className="py-3.5">Leave Type</th>
+                                                        <th className="py-3.5">Duration</th>
+                                                        <th className="py-3.5">Dates</th>
+                                                        <th className="py-3.5">Reason</th>
+                                                        <th className="py-3.5">Status</th>
+                                                        <th className="pe-4 py-3.5 text-end">Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {filteredRequests.map((req, idx) => {
+                                                    {currentRequests.map((req, idx) => {
                                                         const statusTheme = getStatusTheme(req.status);
                                                         const policyItem = leavePolicy[req.leave_type_id];
-                                                        
+ 
                                                         return (
                                                             <tr key={req._id || idx}>
                                                                 <td className="ps-4 py-3.5">
                                                                     <div className="d-flex align-items-center">
-                                                                        <div className="avatar-char bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold me-3" style={{ width: '40px', height: '40px', backgroundColor: '#e0f2fe' }}>
+                                                                        <div className="avatar-char bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold me-3" style={{ width: '42px', height: '42px', backgroundColor: '#e0f2fe', fontSize: '1rem' }}>
                                                                             {(req.staff_id?.f_name?.[0] || '').toUpperCase()}
                                                                         </div>
                                                                         <div>
-                                                                            <span className="fw-bold text-dark d-block">{req.staff_id?.f_name} {req.staff_id?.l_name}</span>
-                                                                            <span className="text-muted small d-block">{req.staff_id?.position || 'Staff Member'}</span>
+                                                                            <span className="fw-bold text-dark d-block" style={{ fontSize: '0.95rem' }}>{req.staff_id?.f_name} {req.staff_id?.l_name}</span>
+                                                                            <span className="text-muted d-block" style={{ fontSize: '0.8rem' }}>{req.staff_id?.position || 'Staff Member'}</span>
                                                                         </div>
                                                                     </div>
                                                                 </td>
                                                                 <td className="py-3.5">
-                                                                    <Badge 
+                                                                    <Badge
                                                                         bg="none"
-                                                                        style={{ 
-                                                                            backgroundColor: `${policyItem?.color || '#23b3f4'}15`, 
+                                                                        style={{
+                                                                            backgroundColor: `${policyItem?.color || '#23b3f4'}15`,
                                                                             color: policyItem?.color || '#23b3f4',
                                                                             border: `1px solid ${policyItem?.color || '#23b3f4'}30`,
                                                                             borderRadius: '50px',
-                                                                            padding: '0.35rem 0.75rem',
-                                                                            fontWeight: '700'
+                                                                            padding: '0.4rem 0.8rem',
+                                                                            fontWeight: '700',
+                                                                            fontSize: '0.8rem'
                                                                         }}
                                                                     >
                                                                         {policyItem?.name || req.leave_type_id}
                                                                     </Badge>
-                                                                    {req.is_half_day && <Badge bg="secondary" className="ms-2 rounded-pill">Half Day</Badge>}
+                                                                    {req.is_half_day && <Badge bg="secondary" className="ms-2 rounded-pill" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>Half Day</Badge>}
                                                                 </td>
-                                                                <td className="py-3.5 fw-bold text-dark">
+                                                                <td className="py-3.5 fw-bold text-dark" style={{ fontSize: '0.95rem' }}>
                                                                     {req.days} {req.days === 1 ? 'Day' : 'Days'}
                                                                 </td>
-                                                                <td className="py-3.5 text-muted fw-semibold small">
-                                                                    {format(new Date(req.from_date), 'dd MMM yyyy')}
-                                                                    {req.from_date !== req.to_date && ` - ${format(new Date(req.to_date), 'dd MMM yyyy')}`}
+                                                                <td className="py-3.5 text-muted fw-semibold" style={{ fontSize: '0.9rem' }}>
+                                                                    {format(new Date(req.from_date), 'dd/MM/yyyy')}
+                                                                    {req.from_date !== req.to_date && ` - ${format(new Date(req.to_date), 'dd/MM/yyyy')}`}
                                                                 </td>
-                                                                <td className="py-3.5 text-muted small" style={{ maxWidth: '220px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={req.reason}>
-                                                                    <span className="d-block text-truncate" style={{ maxWidth: '200px' }}>{req.reason}</span>
+                                                                <td className="py-3.5 text-muted" style={{ maxWidth: '240px', fontSize: '0.9rem' }} title={req.reason}>
+                                                                    <span className="d-block text-truncate" style={{ maxWidth: '220px' }}>{req.reason}</span>
                                                                     {req.status === 'rejected' && req.rejection_reason && (
-                                                                        <div className="text-danger small mt-1 text-truncate" style={{ maxWidth: '200px' }} title={req.rejection_reason}>
+                                                                        <div className="text-danger mt-1 text-truncate" style={{ maxWidth: '220px', fontSize: '0.8rem' }} title={req.rejection_reason}>
                                                                             <strong>Reason:</strong> {req.rejection_reason}
                                                                         </div>
                                                                     )}
                                                                 </td>
                                                                 <td className="py-3.5">
-                                                                    <Badge 
+                                                                    <Badge
                                                                         bg="none"
-                                                                        style={{ 
-                                                                            backgroundColor: statusTheme.bg, 
+                                                                        style={{
+                                                                            backgroundColor: statusTheme.bg,
                                                                             color: statusTheme.color,
                                                                             border: `1px solid ${statusTheme.border}`,
                                                                             borderRadius: '50px',
-                                                                            padding: '0.35rem 0.75rem',
-                                                                            fontWeight: '700'
+                                                                            padding: '0.4rem 0.8rem',
+                                                                            fontWeight: '700',
+                                                                            fontSize: '0.82rem'
                                                                         }}
                                                                     >
                                                                         {statusTheme.label}
@@ -702,15 +721,15 @@ const LeaveRequests = () => {
                                                                 <td className="pe-4 py-3.5 text-end">
                                                                     {req.status === 'pending' ? (
                                                                         <div className="d-inline-flex gap-2">
-                                                                            <Button 
-                                                                                variant="none" 
+                                                                            <Button
+                                                                                variant="none"
                                                                                 className="leave-btn-outline btn-approve px-3 py-1.5"
                                                                                 onClick={() => handleShowApprove(req._id)}
                                                                             >
                                                                                 <CsLineIcons icon="check" size="14" /> Approve
                                                                             </Button>
-                                                                            <Button 
-                                                                                variant="none" 
+                                                                            <Button
+                                                                                variant="none"
                                                                                 className="leave-btn-outline btn-reject px-3 py-1.5"
                                                                                 onClick={() => handleShowReject(req._id)}
                                                                             >
@@ -718,7 +737,7 @@ const LeaveRequests = () => {
                                                                             </Button>
                                                                         </div>
                                                                     ) : (
-                                                                        <span className="text-muted small fw-medium">Processed</span>
+                                                                        <span className="text-muted fw-medium" style={{ fontSize: '0.85rem' }}>Processed</span>
                                                                     )}
                                                                 </td>
                                                             </tr>
@@ -734,7 +753,7 @@ const LeaveRequests = () => {
                             {/* Card View for Mobile */}
                             <div className="d-md-none">
                                 <Row className="g-4">
-                                    {filteredRequests.map((req, idx) => {
+                                    {currentRequests.map((req, idx) => {
                                         const fromDateObj = new Date(req.from_date);
                                         const day = format(fromDateObj, 'dd');
                                         const month = format(fromDateObj, 'MMM');
@@ -770,10 +789,10 @@ const LeaveRequests = () => {
                                                         <div className="leave-data-row">
                                                             <span className="text-muted fw-bold small">Leave Type:</span>
                                                             <span>
-                                                                <Badge 
+                                                                <Badge
                                                                     bg="none"
-                                                                    style={{ 
-                                                                        backgroundColor: `${policyItem?.color || '#23b3f4'}15`, 
+                                                                    style={{
+                                                                        backgroundColor: `${policyItem?.color || '#23b3f4'}15`,
                                                                         color: policyItem?.color || '#23b3f4',
                                                                         border: `1px solid ${policyItem?.color || '#23b3f4'}30`,
                                                                         borderRadius: '50px',
@@ -795,17 +814,17 @@ const LeaveRequests = () => {
                                                         <div className="leave-data-row">
                                                             <span className="text-muted fw-bold small">Dates:</span>
                                                             <span className="fw-semibold text-muted small">
-                                                                {format(new Date(req.from_date), 'dd MMM yyyy')}
-                                                                {req.from_date !== req.to_date && ` - ${format(new Date(req.to_date), 'dd MMM yyyy')}`}
+                                                                {format(new Date(req.from_date), 'dd/MM/yyyy')}
+                                                                {req.from_date !== req.to_date && ` - ${format(new Date(req.to_date), 'dd/MM/yyyy')}`}
                                                             </span>
                                                         </div>
 
                                                         <div className="leave-data-row">
                                                             <span className="text-muted fw-bold small">Status:</span>
-                                                            <Badge 
+                                                            <Badge
                                                                 bg="none"
-                                                                style={{ 
-                                                                    backgroundColor: statusTheme.bg, 
+                                                                style={{
+                                                                    backgroundColor: statusTheme.bg,
                                                                     color: statusTheme.color,
                                                                     border: `1px solid ${statusTheme.border}`,
                                                                     borderRadius: '50px',
@@ -835,15 +854,15 @@ const LeaveRequests = () => {
 
                                                         {req.status === 'pending' && (
                                                             <div className="d-flex gap-2 mt-4 pt-2 border-top border-faint">
-                                                                <Button 
-                                                                    variant="none" 
+                                                                <Button
+                                                                    variant="none"
                                                                     className="leave-btn-outline btn-approve flex-grow-1"
                                                                     onClick={() => handleShowApprove(req._id)}
                                                                 >
                                                                     <CsLineIcons icon="check" size="14" /> Approve
                                                                 </Button>
-                                                                <Button 
-                                                                    variant="none" 
+                                                                <Button
+                                                                    variant="none"
                                                                     className="leave-btn-outline btn-reject flex-grow-1"
                                                                     onClick={() => handleShowReject(req._id)}
                                                                 >
@@ -857,6 +876,41 @@ const LeaveRequests = () => {
                                         );
                                     })}
                                 </Row>
+                            </div>
+
+                            {/* Requests Pagination Controls */}
+                            <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 gap-3 bg-white p-4 rounded shadow-sm">
+                                <div className="d-flex align-items-center gap-2">
+                                    <span className="text-muted small">Items per page:</span>
+                                    <Form.Select
+                                        size="sm"
+                                        className="w-auto rounded-pill border-light-subtle"
+                                        value={pageSize}
+                                        onChange={(e) => {
+                                            setPageSize(Number(e.target.value));
+                                            setCurrentPage(1);
+                                        }}
+                                        style={{ height: '32px', minWidth: '70px' }}
+                                    >
+                                        {[5, 10, 20, 50, 100].map(size => (
+                                            <option key={size} value={size}>{size}</option>
+                                        ))}
+                                    </Form.Select>
+                                    <span className="text-muted small ms-2">
+                                        Showing {filteredRequests.length > 0 ? indexOfFirstReq + 1 : 0} to {Math.min(indexOfLastReq, filteredRequests.length)} of {filteredRequests.length} requests
+                                    </span>
+                                </div>
+                                {pageCountReq > 1 && (
+                                    <Pagination className="mb-0">
+                                        <Pagination.Prev disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} />
+                                        {Array.from({ length: pageCountReq }, (_, i) => i + 1).map(pageNo => (
+                                            <Pagination.Item key={pageNo} active={pageNo === currentPage} onClick={() => setCurrentPage(pageNo)}>
+                                                {pageNo}
+                                            </Pagination.Item>
+                                        ))}
+                                        <Pagination.Next disabled={currentPage === pageCountReq} onClick={() => setCurrentPage(p => Math.min(p + 1, pageCountReq))} />
+                                    </Pagination>
+                                )}
                             </div>
                         </>
                     )}
@@ -879,19 +933,19 @@ const LeaveRequests = () => {
                                     <Card.Body className="p-0">
                                         <div className="table-responsive">
                                             <table className="table table-hover align-middle mb-0 leave-table">
-                                                <thead className="table-light text-uppercase fs-7 fw-bold text-muted border-bottom">
+                                                <thead className="table-light text-uppercase fw-bold text-muted border-bottom" style={{ fontSize: '0.82rem', letterSpacing: '0.05em' }}>
                                                     <tr>
-                                                        <th className="ps-4 py-2.5">Staff Member</th>
-                                                        <th className="py-2.5">Entitled</th>
-                                                        <th className="py-2.5">Taken</th>
-                                                        <th className="py-2.5">Pending</th>
-                                                        <th className="py-2.5">Remaining</th>
-                                                        <th className="py-2.5">Breakdown</th>
-                                                        <th className="pe-4 py-2.5 text-end">History</th>
+                                                        <th className="ps-4 py-3">Staff Member</th>
+                                                        <th className="py-3">Entitled</th>
+                                                        <th className="py-3">Taken</th>
+                                                        <th className="py-3">Pending</th>
+                                                        <th className="py-3">Remaining</th>
+                                                        <th className="py-3">Breakdown</th>
+                                                        <th className="pe-4 py-3 text-end">History</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {filteredBalances.map((b, idx) => {
+                                                    {currentBalances.map((b, idx) => {
                                                         const totalEntitled = b.balances.reduce((acc, curr) => acc + curr.entitled + curr.carried_forward, 0);
                                                         const totalTaken = b.balances.reduce((acc, curr) => acc + curr.taken, 0);
                                                         const totalPending = b.balances.reduce((acc, curr) => acc + curr.pending, 0);
@@ -899,22 +953,22 @@ const LeaveRequests = () => {
 
                                                         return (
                                                             <tr key={b._id || idx}>
-                                                                <td className="ps-4 py-2">
+                                                                <td className="ps-4 py-3">
                                                                     <div className="d-flex align-items-center">
-                                                                        <div className="avatar-char bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold me-2.5" style={{ width: '32px', height: '32px', backgroundColor: '#e0f2fe', fontSize: '0.85rem' }}>
+                                                                        <div className="avatar-char bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold me-2.5" style={{ width: '36px', height: '36px', backgroundColor: '#e0f2fe', fontSize: '0.9rem' }}>
                                                                             {(b.staff_id?.f_name?.[0] || '').toUpperCase()}
                                                                         </div>
                                                                         <div>
-                                                                            <span className="fw-bold text-dark d-block" style={{ fontSize: '0.88rem' }}>{b.staff_id?.f_name} {b.staff_id?.l_name}</span>
-                                                                            <span className="text-muted small d-block" style={{ fontSize: '0.75rem' }}>{b.staff_id?.position || 'Staff Member'}</span>
+                                                                            <span className="fw-bold text-dark d-block" style={{ fontSize: '0.95rem' }}>{b.staff_id?.f_name} {b.staff_id?.l_name}</span>
+                                                                            <span className="text-muted d-block" style={{ fontSize: '0.8rem' }}>{b.staff_id?.position || 'Staff Member'}</span>
                                                                         </div>
                                                                     </div>
                                                                 </td>
-                                                                <td className="py-2 fw-semibold text-primary" style={{ fontSize: '0.88rem' }}>{totalEntitled}d</td>
-                                                                <td className="py-2 fw-semibold text-success" style={{ fontSize: '0.88rem' }}>{totalTaken}d</td>
-                                                                <td className="py-2 fw-semibold text-warning" style={{ fontSize: '0.88rem' }}>{totalPending}d</td>
-                                                                <td className="py-2 fw-bold text-dark" style={{ fontSize: '0.88rem' }}>{totalRemaining}d</td>
-                                                                <td className="py-2">
+                                                                <td className="py-3 fw-semibold text-primary" style={{ fontSize: '0.95rem' }}>{totalEntitled}d</td>
+                                                                <td className="py-3 fw-semibold text-success" style={{ fontSize: '0.95rem' }}>{totalTaken}d</td>
+                                                                <td className="py-3 fw-semibold text-warning" style={{ fontSize: '0.95rem' }}>{totalPending}d</td>
+                                                                <td className="py-3 fw-bold text-dark" style={{ fontSize: '0.95rem' }}>{totalRemaining}d</td>
+                                                                <td className="py-3">
                                                                     <div className="d-flex flex-wrap gap-1">
                                                                         {b.balances.map((lt, ltIdx) => {
                                                                             const policyItem = leavePolicy[lt.leave_type_id];
@@ -925,17 +979,17 @@ const LeaveRequests = () => {
                                                                             const initials = typeName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 3);
 
                                                                             return (
-                                                                                <Badge 
+                                                                                <Badge
                                                                                     key={ltIdx}
                                                                                     bg="none"
-                                                                                    style={{ 
-                                                                                        backgroundColor: `${color}10`, 
+                                                                                    style={{
+                                                                                        backgroundColor: `${color}10`,
                                                                                         color,
                                                                                         border: `1px solid ${color}20`,
                                                                                         borderRadius: '6px',
-                                                                                        padding: '0.2rem 0.4rem',
+                                                                                        padding: '0.25rem 0.5rem',
                                                                                         fontWeight: '700',
-                                                                                        fontSize: '0.7rem'
+                                                                                        fontSize: '0.78rem'
                                                                                     }}
                                                                                     title={`${typeName}: ${remaining} remaining of ${entitled} days`}
                                                                                 >
@@ -946,7 +1000,7 @@ const LeaveRequests = () => {
                                                                     </div>
                                                                 </td>
                                                                 <td className="pe-4 py-2 text-end">
-                                                                    <Button 
+                                                                    <Button
                                                                         variant="none"
                                                                         className="leave-card-icon-btn"
                                                                         onClick={() => handleShowHistory(b)}
@@ -968,7 +1022,7 @@ const LeaveRequests = () => {
                             {/* Card View for Mobile */}
                             <div className="d-md-none">
                                 <Row className="g-4">
-                                    {filteredBalances.map((b, idx) => {
+                                    {currentBalances.map((b, idx) => {
                                         const totalEntitled = b.balances.reduce((acc, curr) => acc + curr.entitled + curr.carried_forward, 0);
                                         const totalTaken = b.balances.reduce((acc, curr) => acc + curr.taken, 0);
                                         const totalPending = b.balances.reduce((acc, curr) => acc + curr.pending, 0);
@@ -987,7 +1041,7 @@ const LeaveRequests = () => {
                                                                     {b.staff_id?.position || 'Staff Member'}
                                                                 </span>
                                                             </div>
-                                                            <Button 
+                                                            <Button
                                                                 variant="none"
                                                                 className="leave-btn-outline btn-history"
                                                                 onClick={() => handleShowHistory(b)}
@@ -1031,9 +1085,9 @@ const LeaveRequests = () => {
                                                                     <Col md="12" key={ltIdx} className="mb-2">
                                                                         <div className="d-flex justify-content-between align-items-center mb-1">
                                                                             <div className="d-flex align-items-center">
-                                                                                <span 
-                                                                                    className="d-inline-block rounded-circle me-2" 
-                                                                                    style={{ width: '8px', height: '8px', backgroundColor: color }} 
+                                                                                <span
+                                                                                    className="d-inline-block rounded-circle me-2"
+                                                                                    style={{ width: '8px', height: '8px', backgroundColor: color }}
                                                                                 />
                                                                                 <span className="fw-bold text-muted small">{policyItem?.name || lt.leave_type_id}</span>
                                                                             </div>
@@ -1042,9 +1096,9 @@ const LeaveRequests = () => {
                                                                             </span>
                                                                         </div>
                                                                         <div className="leave-progress mb-1">
-                                                                            <div 
-                                                                                className="leave-progress-bar" 
-                                                                                style={{ width: `${percentTaken}%`, backgroundColor: color }} 
+                                                                            <div
+                                                                                className="leave-progress-bar"
+                                                                                style={{ width: `${percentTaken}%`, backgroundColor: color }}
                                                                             />
                                                                         </div>
                                                                         <div className="d-flex justify-content-between text-muted" style={{ fontSize: '0.72rem' }}>
@@ -1062,6 +1116,41 @@ const LeaveRequests = () => {
                                     })}
                                 </Row>
                             </div>
+
+                            {/* Balances Pagination Controls */}
+                            <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 gap-3 bg-white p-4 rounded shadow-sm">
+                                <div className="d-flex align-items-center gap-2">
+                                    <span className="text-muted small">Items per page:</span>
+                                    <Form.Select
+                                        size="sm"
+                                        className="w-auto rounded-pill border-light-subtle"
+                                        value={pageSize}
+                                        onChange={(e) => {
+                                            setPageSize(Number(e.target.value));
+                                            setCurrentPage(1);
+                                        }}
+                                        style={{ height: '32px', minWidth: '70px' }}
+                                    >
+                                        {[5, 10, 20, 50, 100].map(size => (
+                                            <option key={size} value={size}>{size}</option>
+                                        ))}
+                                    </Form.Select>
+                                    <span className="text-muted small ms-2">
+                                        Showing {filteredBalances.length > 0 ? indexOfFirstBal + 1 : 0} to {Math.min(indexOfLastBal, filteredBalances.length)} of {filteredBalances.length} staff
+                                    </span>
+                                </div>
+                                {pageCountBal > 1 && (
+                                    <Pagination className="mb-0">
+                                        <Pagination.Prev disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} />
+                                        {Array.from({ length: pageCountBal }, (_, i) => i + 1).map(pageNo => (
+                                            <Pagination.Item key={pageNo} active={pageNo === currentPage} onClick={() => setCurrentPage(pageNo)}>
+                                                {pageNo}
+                                            </Pagination.Item>
+                                        ))}
+                                        <Pagination.Next disabled={currentPage === pageCountBal} onClick={() => setCurrentPage(p => Math.min(p + 1, pageCountBal))} />
+                                    </Pagination>
+                                )}
+                            </div>
                         </>
                     )}
                 </>
@@ -1070,8 +1159,8 @@ const LeaveRequests = () => {
             {/* Rejection Reason Modal */}
             <Modal show={showRejectModal} onHide={() => setShowRejectModal(false)} centered className="leave-modal">
                 <Modal.Header closeButton>
-                    <Modal.Title className="text-danger fw-bold d-flex align-items-center gap-2">
-                        <CsLineIcons icon="close" size="20" className="text-danger" /> Reject Leave Request
+                    <Modal.Title className="text-danger fw-bold">
+                        Reject Leave Request
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -1086,18 +1175,17 @@ const LeaveRequests = () => {
                     </div>
                     <Form.Group className="mt-3">
                         <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Reason for Rejection <span className="text-danger">*</span></Form.Label>
-                        <Form.Control 
-                            as="textarea" 
-                            rows={3} 
-                            placeholder="Enter rejection reason for staff..." 
+                        <Form.Control
+                            as="textarea"
+                            rows={3}
+                            placeholder="Enter rejection reason for staff..."
                             value={rejectReason}
                             onChange={(e) => setRejectReason(e.target.value)}
                             className="leave-input"
                         />
                     </Form.Group>
                 </Modal.Body>
-                <Modal.Footer className="justify-content-center gap-2 border-top-0 pt-0">
-                    <Button variant="none" className="leave-btn-outline" onClick={() => setShowRejectModal(false)}>Cancel</Button>
+                <Modal.Footer className="border-top-0 pt-0" style={{ display: 'flex', justifyContent: 'center' }}>
                     <Button variant="none" className="leave-btn-outline btn-reject px-4" onClick={submitReject}>Reject Leave</Button>
                 </Modal.Footer>
             </Modal>
@@ -1105,8 +1193,8 @@ const LeaveRequests = () => {
             {/* Approval Confirmation Modal */}
             <Modal show={showApproveModal} onHide={() => setShowApproveModal(false)} centered className="leave-modal">
                 <Modal.Header closeButton>
-                    <Modal.Title className="text-success fw-bold d-flex align-items-center gap-2">
-                        <CsLineIcons icon="check" size="20" className="text-success" /> Approve Leave Request
+                    <Modal.Title className="text-success fw-bold">
+                        Approve Leave Request
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -1120,8 +1208,7 @@ const LeaveRequests = () => {
                         </p>
                     </div>
                 </Modal.Body>
-                <Modal.Footer className="justify-content-center gap-2 border-top-0 pt-0">
-                    <Button variant="none" className="leave-btn-outline" onClick={() => setShowApproveModal(false)}>Cancel</Button>
+                <Modal.Footer className="border-top-0 pt-0" style={{ display: 'flex', justifyContent: 'center' }}>
                     <Button variant="none" className="leave-btn-outline btn-approve px-4" onClick={submitApprove}>Approve Leave</Button>
                 </Modal.Footer>
             </Modal>
@@ -1167,10 +1254,10 @@ const LeaveRequests = () => {
                                                 <div className="bg-light p-3 rounded-lg border border-faint shadow-sm">
                                                     <div className="d-flex justify-content-between align-items-start mb-2">
                                                         <div>
-                                                            <Badge 
+                                                            <Badge
                                                                 bg="none"
-                                                                style={{ 
-                                                                    backgroundColor: `${policyItem?.color || '#23b3f4'}15`, 
+                                                                style={{
+                                                                    backgroundColor: `${policyItem?.color || '#23b3f4'}15`,
                                                                     color: policyItem?.color || '#23b3f4',
                                                                     border: `1px solid ${policyItem?.color || '#23b3f4'}30`,
                                                                     borderRadius: '50px',
@@ -1182,10 +1269,10 @@ const LeaveRequests = () => {
                                                             </Badge>
                                                             <span className="ms-2 fw-bold text-dark small">{req.days} {req.days === 1 ? 'Day' : 'Days'}</span>
                                                         </div>
-                                                        <Badge 
+                                                        <Badge
                                                             bg="none"
-                                                            style={{ 
-                                                                backgroundColor: theme.bg, 
+                                                            style={{
+                                                                backgroundColor: theme.bg,
                                                                 color: theme.color,
                                                                 border: `1px solid ${theme.border}`,
                                                                 borderRadius: '50px',
@@ -1198,8 +1285,8 @@ const LeaveRequests = () => {
                                                     </div>
                                                     <div className="text-muted small fw-semibold mb-2">
                                                         <CsLineIcons icon="calendar" size="12" className="me-1" />
-                                                        {format(new Date(req.from_date), 'dd MMM yyyy')}
-                                                        {req.from_date !== req.to_date && ` - ${format(new Date(req.to_date), 'dd MMM yyyy')}`}
+                                                        {format(new Date(req.from_date), 'dd/MM/yyyy')}
+                                                        {req.from_date !== req.to_date && ` - ${format(new Date(req.to_date), 'dd/MM/yyyy')}`}
                                                     </div>
                                                     <p className="text-muted small mb-0 fw-medium">
                                                         <strong>Reason:</strong> {req.reason}

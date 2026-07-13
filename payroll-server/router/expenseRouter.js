@@ -5,6 +5,7 @@ const {
   getStaffExpensesByAdmin,
   getAllExpenses,
   updateExpenseStatus,
+  updateExpense,
 } = require("../controllers/expenseController");
 const authMiddleware = require("../middlewares/auth-middlewares");
 const upload = require("../middlewares/upload");
@@ -32,5 +33,12 @@ router.get("/staff/:id", getStaffExpensesByAdmin);
 
 // PUT update expense claim status (for Admin approving/rejecting)
 router.put("/:id/status", updateExpenseStatus);
+
+// PUT update/edit expense claim details (for Staff before approval/rejection)
+router.put(
+  "/:id",
+  upload.fields([{ name: "receipt", maxCount: 1 }]),
+  updateExpense
+);
 
 module.exports = router;

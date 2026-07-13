@@ -1935,7 +1935,7 @@ const EditStaff = () => {
                               Projected New {baseLabel}: <strong className="text-primary fs-6">₹{newBaseAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                             </div>
                             <div className="mt-2 text-uppercase text-muted" style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}>
-                              Scheduled execution date: <strong>{new Date(values.increment_plan.scheduled_date).toLocaleDateString()}</strong>
+                              Scheduled execution date: <strong>{new Date(values.increment_plan.scheduled_date).toLocaleDateString('en-GB')}</strong>
                             </div>
                           </div>
                         );

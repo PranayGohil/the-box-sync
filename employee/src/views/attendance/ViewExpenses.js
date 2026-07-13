@@ -54,11 +54,18 @@ export default function ViewExpenses() {
   
   // Expense Claim state
   const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  
+  const [monthFilter, setMonthFilter] = useState((new Date().getMonth() + 1).toString().padStart(2, '0'));
+  const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString());
+
   const [expenseForm, setExpenseForm] = useState({
     category: '',
     amount: '',
     description: '',
     receipt: null,
+    existingReceipt: null,
     merchant: '',
     invoice_no: '',
     gst_no: '',
@@ -117,6 +124,46 @@ export default function ViewExpenses() {
     fetchExpenses();
   }, []);
 
+  const handleCloseModal = () => {
+    setShowExpenseModal(false);
+    setIsEditing(false);
+    setEditingId(null);
+    setExpenseForm({
+      category: '',
+      amount: '',
+      description: '',
+      receipt: null,
+      existingReceipt: null,
+      merchant: '',
+      invoice_no: '',
+      gst_no: '',
+      payment_mode: 'cash',
+      expense_type: 'reimbursement',
+      date: new Date().toISOString().split('T')[0],
+      items: []
+    });
+  };
+
+  const handleEditClick = (record) => {
+    setIsEditing(true);
+    setEditingId(record._id);
+    setExpenseForm({
+      category: record.category || '',
+      amount: record.amount ? record.amount.toString() : '',
+      description: record.description || '',
+      receipt: null,
+      existingReceipt: record.receipt || null,
+      merchant: record.merchant || '',
+      invoice_no: record.invoice_no || '',
+      gst_no: record.gst_no || '',
+      payment_mode: record.payment_mode || 'cash',
+      expense_type: record.expense_type || 'reimbursement',
+      date: record.date || new Date().toISOString().split('T')[0],
+      items: record.items || []
+    });
+    setShowExpenseModal(true);
+  };
+
   const handleExpenseSubmit = async (e) => {
     e.preventDefault();
     
@@ -143,38 +190,55 @@ export default function ViewExpenses() {
         formData.append('receipt', expenseForm.receipt);
       }
 
-      const res = await axios.post(`${process.env.REACT_APP_API}/expenses/requests`, formData, {
-        headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
-      });
+      let res;
+      if (isEditing) {
+        res = await axios.put(`${process.env.REACT_APP_API}/expenses/${editingId}`, formData, {
+          headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
+        });
+      } else {
+        res = await axios.post(`${process.env.REACT_APP_API}/expenses/requests`, formData, {
+          headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
+        });
+      }
       
       if (res.data.success) {
-        toast.success('Expense claim submitted successfully!');
-        setExpenseForm({
-          category: '',
-          amount: '',
-          description: '',
-          receipt: null,
-          merchant: '',
-          invoice_no: '',
-          gst_no: '',
-          payment_mode: 'cash',
-          expense_type: 'reimbursement',
-          date: new Date().toISOString().split('T')[0]
-        });
-        setShowExpenseModal(false);
+        toast.success(isEditing ? 'Expense claim updated successfully!' : 'Expense claim submitted successfully!');
+        handleCloseModal();
         fetchExpenses(); // Refresh the list
       }
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.error || 'Failed to submit expense claim');
+      toast.error(err.response?.data?.error || `Failed to ${isEditing ? 'update' : 'submit'} expense claim`);
     } finally {
       setExpenseLoading(false);
     }
   };
 
-  const pendingAmount = history.filter(h => h.status === 'pending').reduce((acc, curr) => acc + Number(curr.amount), 0);
-  const approvedAmount = history.filter(h => h.status === 'approved').reduce((acc, curr) => acc + Number(curr.amount), 0);
-  const rejectedAmount = history.filter(h => h.status === 'rejected').reduce((acc, curr) => acc + Number(curr.amount), 0);
+  const formatDateDisplay = (dateString) => {
+    if (!dateString) return '';
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
+  const filteredHistory = React.useMemo(() => {
+    return history.filter(item => {
+      if (!item.date) return false;
+      const [itemYear, itemMonth] = item.date.split('-');
+      const matchesYear = yearFilter === 'all' || itemYear === yearFilter;
+      const matchesMonth = monthFilter === 'all' || itemMonth === monthFilter;
+      return matchesYear && matchesMonth;
+    });
+  }, [history, monthFilter, yearFilter]);
+
+  const availableYears = React.useMemo(() => {
+    const yrSet = new Set(history.map(item => item.date ? item.date.split('-')[0] : null).filter(Boolean));
+    yrSet.add(new Date().getFullYear().toString());
+    return ['all', ...Array.from(yrSet)].sort((a, b) => b.localeCompare(a));
+  }, [history]);
+
+  const pendingAmount = filteredHistory.filter(h => h.status === 'pending').reduce((acc, curr) => acc + Number(curr.amount), 0);
+  const approvedAmount = filteredHistory.filter(h => h.status === 'approved').reduce((acc, curr) => acc + Number(curr.amount), 0);
+  const rejectedAmount = filteredHistory.filter(h => h.status === 'rejected').reduce((acc, curr) => acc + Number(curr.amount), 0);
 
   return (
     <div className="container-fluid px-lg-4 px-xl-5 pb-5 pt-4">
@@ -186,7 +250,7 @@ export default function ViewExpenses() {
           <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
           <p className="text-muted mb-0">{description}</p>
         </div>
-        <Button variant="primary" className="btn-icon btn-icon-start px-4 py-2 rounded-pill shadow-sm" onClick={() => setShowExpenseModal(true)}>
+        <Button variant="primary" className="btn-icon btn-icon-start px-4 py-2 rounded-pill shadow-sm" onClick={() => { handleCloseModal(); setShowExpenseModal(true); }}>
           <CsLineIcons icon="plus" size="18" /> <span>Submit New Claim</span>
         </Button>
       </div>
@@ -214,7 +278,44 @@ export default function ViewExpenses() {
 
       <Card className="glass-card border-0">
         <Card.Body className="p-4">
-          <h5 className="fw-bold mb-4">Recent Claims</h5>
+          <div className="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between mb-4 gap-3">
+            <h5 className="fw-bold mb-0">Recent Claims</h5>
+            <div className="d-flex align-items-center gap-2">
+              <div className="small text-muted me-1 fw-bold text-uppercase" style={{ fontSize: '0.7rem' }}>Filter Date:</div>
+              <Form.Select 
+                size="sm" 
+                style={{ width: '140px', borderRadius: '10px', fontSize: '0.8rem', padding: '0.35rem 1.5rem 0.35rem 0.75rem' }} 
+                value={monthFilter} 
+                onChange={e => setMonthFilter(e.target.value)}
+              >
+                <option value="all">All Months</option>
+                <option value="01">January</option>
+                <option value="02">February</option>
+                <option value="03">March</option>
+                <option value="04">April</option>
+                <option value="05">May</option>
+                <option value="06">June</option>
+                <option value="07">July</option>
+                <option value="08">August</option>
+                <option value="09">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </Form.Select>
+              <Form.Select 
+                size="sm" 
+                style={{ width: '110px', borderRadius: '10px', fontSize: '0.8rem', padding: '0.35rem 1.5rem 0.35rem 0.75rem' }} 
+                value={yearFilter} 
+                onChange={e => setYearFilter(e.target.value)}
+              >
+                <option value="all">All Years</option>
+                {availableYears.filter(y => y !== 'all').map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </Form.Select>
+            </div>
+          </div>
+
           {/* Desktop Table View */}
           <div className="table-responsive d-none d-lg-block">
             <Table className="table-custom" hover>
@@ -223,15 +324,26 @@ export default function ViewExpenses() {
                   <th>Date</th>
                   <th>Category</th>
                   <th className="text-end">Amount</th>
+                  <th className="text-center">Receipt</th>
                   <th className="text-center">Status</th>
+                  <th className="text-end">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {history.map(record => (
+                {filteredHistory.map(record => (
                   <tr key={record._id}>
-                    <td className="fw-medium text-muted">{record.date}</td>
+                    <td className="fw-medium text-muted">{formatDateDisplay(record.date)}</td>
                     <td className="fw-bold">{record.category}</td>
                     <td className="text-end fw-bold text-dark">₹{record.amount}</td>
+                    <td className="text-center">
+                      {record.receipt ? (
+                        <a href={`${process.env.REACT_APP_UPLOAD_DIR}${record.receipt}`} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
+                          <CsLineIcons icon="file-text" size="16" className="text-primary" />
+                        </a>
+                      ) : (
+                        <span className="text-muted">—</span>
+                      )}
+                    </td>
                     <td className="text-center">
                       <Badge bg={
                         record.status === 'approved' ? 'success' : 
@@ -240,11 +352,20 @@ export default function ViewExpenses() {
                         {record.status}
                       </Badge>
                     </td>
+                    <td className="text-end">
+                      {record.status === 'pending' ? (
+                        <Button variant="outline-primary" size="sm" className="btn-icon btn-icon-only rounded-circle" onClick={() => handleEditClick(record)}>
+                          <CsLineIcons icon="edit" size="14" />
+                        </Button>
+                      ) : (
+                        <span className="text-muted small">—</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
-                {history.length === 0 && (
+                {filteredHistory.length === 0 && (
                   <tr>
-                    <td colSpan="4" className="text-center py-4 text-muted">No expense claims found.</td>
+                    <td colSpan="6" className="text-center py-4 text-muted">No expense claims found for the selected period.</td>
                   </tr>
                 )}
               </tbody>
@@ -253,10 +374,10 @@ export default function ViewExpenses() {
 
           {/* Mobile Card View */}
           <div className="d-lg-none mt-3">
-            {history.length === 0 ? (
-              <div className="text-center py-4 text-muted rounded bg-light border-0">No expenses found.</div>
+            {filteredHistory.length === 0 ? (
+              <div className="text-center py-4 text-muted rounded bg-light border-0">No expenses found for the selected period.</div>
             ) : (
-              history.map(record => (
+              filteredHistory.map(record => (
                 <Card key={record._id} className="border-0 shadow-sm mb-3 bg-light" style={{ borderRadius: '1rem' }}>
                   <Card.Body className="p-3">
                     <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-white">
@@ -268,10 +389,24 @@ export default function ViewExpenses() {
                         {record.status}
                       </Badge>
                     </div>
-                    <div className="d-flex justify-content-between align-items-center pt-1">
-                      <span className="text-muted small"><CsLineIcons icon="calendar" size="14" className="me-1" />{record.date}</span>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <span className="text-muted small"><CsLineIcons icon="calendar" size="14" className="me-1" />{formatDateDisplay(record.date)}</span>
                       <span className="fw-bold text-dark fs-5">₹{record.amount}</span>
                     </div>
+                    {(record.receipt || record.status === 'pending') && (
+                      <div className="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-white">
+                        {record.receipt ? (
+                          <a href={`${process.env.REACT_APP_UPLOAD_DIR}${record.receipt}`} target="_blank" rel="noopener noreferrer" className="text-decoration-none small fw-bold d-inline-flex align-items-center gap-1">
+                            <CsLineIcons icon="file-text" size="14" /> Receipt
+                          </a>
+                        ) : <div />}
+                        {record.status === 'pending' && (
+                          <Button variant="outline-primary" size="sm" className="rounded-pill px-3 py-1" style={{ fontSize: '0.75rem' }} onClick={() => handleEditClick(record)}>
+                            <CsLineIcons icon="edit" size="12" className="me-1" /> Edit
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </Card.Body>
                 </Card>
               ))
@@ -281,10 +416,10 @@ export default function ViewExpenses() {
       </Card>
 
       {/* Submit Expense Claim Modal */}
-      <Modal show={showExpenseModal} onHide={() => setShowExpenseModal(false)} centered size="lg">
+      <Modal show={showExpenseModal} onHide={handleCloseModal} centered size="lg">
         <Form onSubmit={handleExpenseSubmit}>
           <Modal.Header closeButton>
-            <Modal.Title className="fw-bold">Submit Expense Claim</Modal.Title>
+            <Modal.Title className="fw-bold">{isEditing ? 'Edit Expense Claim' : 'Submit Expense Claim'}</Modal.Title>
           </Modal.Header>
           <Modal.Body className="px-4 py-3">
             {/* Expense Type Selector */}
@@ -492,15 +627,29 @@ export default function ViewExpenses() {
               />
             </Form.Group>
 
-            <Form.Group className="mb-2">
+            <Form.Group className="mb-3">
               <Form.Label className="fw-bold text-muted small text-uppercase">Upload Receipt / Bill Image</Form.Label>
               <Form.Control type="file" accept="image/*" onChange={(e) => setExpenseForm({...expenseForm, receipt: e.target.files[0]})} />
             </Form.Group>
+
+            {isEditing && expenseForm.existingReceipt && (
+              <div className="mb-2">
+                <span className="small text-muted d-block mb-1">Current Receipt:</span>
+                <a 
+                  href={`${process.env.REACT_APP_UPLOAD_DIR}${expenseForm.existingReceipt}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-decoration-none d-inline-flex align-items-center gap-1 bg-soft-primary px-3 py-1.5 rounded-pill small fw-bold"
+                >
+                  <CsLineIcons icon="file-text" size="14" /> View Receipt
+                </a>
+              </div>
+            )}
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" className="rounded-pill px-4" onClick={() => setShowExpenseModal(false)}>Cancel</Button>
+            <Button variant="secondary" className="rounded-pill px-4" onClick={handleCloseModal}>Cancel</Button>
             <Button variant="primary" className="rounded-pill px-4 fw-bold" type="submit" disabled={expenseLoading}>
-              {expenseLoading ? <Spinner animation="border" size="sm" /> : 'Submit Claim'}
+              {expenseLoading ? <Spinner animation="border" size="sm" /> : (isEditing ? 'Save Changes' : 'Submit Claim')}
             </Button>
           </Modal.Footer>
         </Form>

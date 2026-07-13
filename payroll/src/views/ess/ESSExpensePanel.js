@@ -127,7 +127,7 @@ export default function ESSExpensePanel() {
             <Button 
               variant="outline-primary" 
               className="rounded-pill px-4 shadow-sm btn-icon btn-icon-start" 
-              onClick={() => history.push('/expenses/manage')}
+              onClick={() => history.push('/finance/expenses')}
             >
               <CsLineIcons icon="arrow-left" size="18" /> <span>Back to Expenses</span>
             </Button>

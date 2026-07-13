@@ -306,30 +306,34 @@ const Login = () => {
         .emp-otp-grid {
           display: grid;
           grid-template-columns: repeat(6, 1fr);
-          gap: 10px;
-          margin-bottom: 8px;
+          gap: 12px;
+          margin-bottom: 20px;
+          width: 100%;
         }
         .emp-otp-box {
+          width: 100%;
+          box-sizing: border-box;
           aspect-ratio: 1;
           text-align: center;
-          font-size: 1.4rem;
+          font-size: 1.5rem;
           font-weight: 700;
           color: #0f172a;
           border: 2px solid #e2e8f0;
-          border-radius: 12px;
+          border-radius: 10px;
           outline: none;
           background: #f8fafc;
-          transition: border-color 0.2s, box-shadow 0.2s;
+          transition: all 0.2s ease-in-out;
           padding: 0;
         }
         .emp-otp-box:focus {
           border-color: #23b3f4;
-          box-shadow: 0 0 0 3px rgba(35,179,244,0.12);
+          box-shadow: 0 0 0 4px rgba(35,179,244,0.18);
           background: #fff;
+          transform: scale(1.05);
         }
         .emp-otp-box.filled {
-          border-color: #10b981;
-          background: #f0fdf4;
+          border-color: #0284c7;
+          background: #f0f9ff;
         }
 
         /* Primary Button */

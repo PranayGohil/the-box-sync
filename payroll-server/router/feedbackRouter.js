@@ -107,11 +107,23 @@ router.post("/:id/reply", adminAuth, async (req, res) => {
       return res.status(404).json({ success: false, message: "Feedback/complaint not found." });
     }
 
-    feedback.hr_reply = hr_reply;
-    feedback.status = status || "reviewed";
-    feedback.replied_at = new Date();
-    feedback.replied_by = req.user.username || req.user.email || "HR Manager";
+    const senderName = req.user.f_name || req.user.username || req.user.email || "HR Manager";
 
+    // If first reply, save in hr_reply. Otherwise push to conversations array
+    if (!feedback.hr_reply) {
+      feedback.hr_reply = hr_reply;
+      feedback.replied_at = new Date();
+      feedback.replied_by = senderName;
+    } else {
+      feedback.conversations.push({
+        sender: "hr",
+        message: hr_reply,
+        timestamp: new Date(),
+        sender_name: senderName
+      });
+    }
+
+    feedback.status = status || "reviewed";
     await feedback.save();
 
     // Populate staff details if not anonymous before returning
@@ -133,6 +145,47 @@ router.post("/:id/reply", adminAuth, async (req, res) => {
   } catch (error) {
     console.error("Error in replyFeedback:", error);
     return res.status(500).json({ success: false, message: "Server error while submitting reply." });
+  }
+});
+
+// POST reply to a feedback/complaint (Employee)
+router.post("/:id/employee-reply", async (req, res) => {
+  try {
+    const { message } = req.body;
+    const { id } = req.params;
+
+    if (!message) {
+      return res.status(400).json({ success: false, message: "Reply message is required." });
+    }
+
+    const feedback = await Feedback.findById(id);
+    if (!feedback) {
+      return res.status(404).json({ success: false, message: "Feedback/complaint not found." });
+    }
+
+    // Verify staff belongs to this feedback
+    if (feedback.staff_id.toString() !== req.user.staff_id.toString()) {
+      return res.status(403).json({ success: false, message: "Unauthorized to reply to this feedback." });
+    }
+
+    const senderName = `${req.user.f_name || ""} ${req.user.l_name || ""}`.trim() || "Employee";
+
+    feedback.conversations.push({
+      sender: "employee",
+      message: message,
+      timestamp: new Date(),
+      sender_name: senderName
+    });
+
+    // Reset status to open/reviewed so HR knows there's a new reply
+    feedback.status = "open";
+
+    await feedback.save();
+
+    return res.status(200).json({ success: true, data: feedback, message: "Reply sent successfully." });
+  } catch (error) {
+    console.error("Error in employeeReply:", error);
+    return res.status(500).json({ success: false, message: "Server error while sending reply." });
   }
 });
 
