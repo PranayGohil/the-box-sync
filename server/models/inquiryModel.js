@@ -23,6 +23,9 @@ const inquirySchema = new Schema({
   message: {
     type: String,
   },
+  reply: {
+    type: String,
+  },
   date: {
     type: Date,
     default: Date.now,

@@ -13,6 +13,7 @@ const {
   renewSubscription,
   buyCompletePlan,
   getAllSubscriptions,
+  manualSubscribe
 } = require("../controllers/subscriptionController");
 const adminAuth = require("../middlewares/adminAuth");
 const validate = require("../middlewares/validate");
@@ -72,5 +73,8 @@ subscriptionRouter
   .route("/get-all-subs")
   .get(authMiddleware,  getAllSubscriptions);
 
-module.exports = subscriptionRouter;
+subscriptionRouter
+  .route("/manual-subscribe")
+  .post(authMiddleware, adminAuth, manualSubscribe);
 
+module.exports = subscriptionRouter;

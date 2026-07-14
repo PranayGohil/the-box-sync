@@ -101,6 +101,13 @@ const userSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  approvalDetails: {
+    price: { type: Number },
+    discount: { type: Number },
+    paymentMode: { type: String }, // e.g., Cash, Bank Transfer, UPI
+    paymentDetails: { type: String }, // e.g., Transaction ID
+    approvedAt: { type: Date }
+  },
   is_street_food: {
     type: Boolean,
     default: false,
