@@ -71,8 +71,7 @@ const customStyles = `
 const NavIconMenu = () => {
   const history = useHistory();
   const brandColor = '#23b3f4';
-  const { placementStatus, attrMobile } = useSelector((state) => state.menu);
-  const isVerticalOrMobile = placementStatus?.placementHtmlData === 'Vertical' || attrMobile === true;
+  const { attrMobile } = useSelector((state) => state.menu);
 
   const [showSearchModal, setShowSearchModal] = useState(false);
 
@@ -99,6 +98,13 @@ const NavIconMenu = () => {
           <span style={{ fontSize: '15px', fontWeight: '700' }}>Logout</span>
         </a>
       </div>
+
+      {/* THE BOX logo — pinned at very bottom of mobile sidebar drawer only */}
+      {attrMobile === true && (
+        <div className="sidebar-brand-footer">
+          <img src="/img/logo/logo-light.png" alt="The Box" style={{ maxHeight: '20px', width: 'auto', objectFit: 'contain', opacity: 0.9 }} />
+        </div>
+      )}
 
       <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 

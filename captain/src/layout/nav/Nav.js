@@ -176,7 +176,8 @@ const Nav = () => {
         className="nav-content d-flex"
         style={placementStatus.placementHtmlData === MENU_PLACEMENT.Horizontal && menuPadding ? { paddingRight: menuPadding } : {}}
       >
-        <NavLogo />
+        {/* Logo: visible on desktop, hidden on mobile (logo moves to bottom of drawer on mobile) */}
+        {!attrMobile && <NavLogo />}
         <NavUserMenu />
         <NavIconMenu />
         <MainMenu />

@@ -51,6 +51,7 @@ const NavIconMenu = () => {
   const history = useHistory();
   const dispatch = useDispatch();
   const brandColor = '#23b3f4';
+  const { attrMobile } = useSelector((state) => state.menu);
   
   const [showSearchModal, setShowSearchModal] = useState(false);
   
@@ -84,6 +85,14 @@ const NavIconMenu = () => {
         </li>
         <IconMenuNotifications />
       </ul>
+
+      {/* THE BOX logo — pinned at very bottom of mobile sidebar drawer only */}
+      {attrMobile === true && (
+        <div className="sidebar-brand-footer">
+          <img src="/img/logo/logo-light.png" alt="The Box" style={{ maxHeight: '20px', width: 'auto', objectFit: 'contain', opacity: 0.9 }} />
+        </div>
+      )}
+
       <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 
       <Modal 

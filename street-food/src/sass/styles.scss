@@ -2043,7 +2043,19 @@ html[data-placement="vertical"] .nav-container .nav-content .menu-container .men
 .nav-container.mobile-side-in .nav-content .user-container,
 html[data-placement="vertical"] .nav-container .nav-content .user-container {
   min-height: auto !important;
-  margin-bottom: 0px !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+.nav-container.mobile-side-in .nav-content .user-container .user,
+html[data-placement="vertical"] .nav-container .nav-content .user-container .user {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+.nav-container.mobile-side-in .nav-content .user-container .user .profile,
+html[data-placement="vertical"] .nav-container .nav-content .user-container .user .profile {
+  width: 75px !important;
+  height: 75px !important;
+  margin-bottom: 12px !important;
 }
 
 /* Premium interactive menu item styling in mobile/vertical sidebar */
@@ -2089,3 +2101,17 @@ html[data-placement="vertical"] .nav-container .nav-content .menu-container .men
   transform: scale(1.15);
   color: var(--bs-white, #ffffff) !important;
 }
+
+/* Sidebar brand logo — pinned at the very bottom of vertical/mobile sidebar */
+.nav-container.mobile-side-in .nav-content .sidebar-brand-footer,
+html[data-placement="vertical"] .nav-container .nav-content .sidebar-brand-footer {
+  order: 12 !important;
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 10px 0 10px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+  margin-top: 6px !important;
+  margin-bottom: 0 !important;
+}

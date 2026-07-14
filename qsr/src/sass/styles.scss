@@ -1945,3 +1945,113 @@ h1.display-4,
     font-size: 1.4rem !important;
   }
 }
+
+/* ==========================================================================
+   Vertical / Mobile Sidebar Enhancements
+   ========================================================================== */
+/* Custom positioning to fix the logout button at the bottom of mobile sidebar / vertical menu */
+.nav-container.mobile-side-in .nav-content .menu-icons,
+html[data-placement="vertical"] .nav-container .nav-content .menu-icons {
+  margin-top: auto !important;
+  order: 10 !important;
+  padding-top: 15px !important;
+  width: 80% !important;
+  border-top: 1px solid rgba(var(--bs-white-rgb, 255, 255, 255), 0.2) !important;
+}
+
+/* Spacing and lines around menu in mobile/vertical sidebar */
+.nav-container.mobile-side-in .nav-content .menu-container,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container {
+  margin-top: 1.5rem !important;
+  margin-bottom: 0 !important;
+  padding-top: 1.25rem !important;
+  padding-bottom: 1.25rem !important;
+  border-top: 1px solid rgba(var(--bs-white-rgb, 255, 255, 255), 0.2) !important;
+  width: 80% !important;
+  align-self: center !important;
+}
+.nav-container.mobile-side-in .nav-content .menu-container .menu,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu {
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+}
+
+/* Reduce space between logo/user profile and menu in mobile/vertical sidebar */
+.nav-container.mobile-side-in .nav-content .user-container,
+html[data-placement="vertical"] .nav-container .nav-content .user-container {
+  min-height: auto !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+.nav-container.mobile-side-in .nav-content .user-container .user,
+html[data-placement="vertical"] .nav-container .nav-content .user-container .user {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+.nav-container.mobile-side-in .nav-content .user-container .user .profile,
+html[data-placement="vertical"] .nav-container .nav-content .user-container .user .profile {
+  width: 75px !important;
+  height: 75px !important;
+  margin-bottom: 12px !important;
+}
+
+/* Premium interactive menu item styling in mobile/vertical sidebar */
+.nav-container.mobile-side-in .nav-content .menu-container .menu li a,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a {
+  display: flex !important;
+  align-items: center !important;
+  padding: calc(var(--bs-spacer, 1rem) * 0.65) var(--bs-spacer, 1rem) !important;
+  margin-bottom: calc(var(--bs-spacer, 1rem) * 0.5) !important;
+  border-radius: var(--bs-border-radius-lg, 0.5rem) !important;
+  color: rgba(var(--bs-white-rgb, 255, 255, 255), 0.8) !important;
+  font-weight: var(--bs-body-font-weight, 600) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-decoration: none !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+}
+.nav-container.mobile-side-in .nav-content .menu-container .menu li a::before,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a::before {
+  display: none !important;
+}
+.nav-container.mobile-side-in .nav-content .menu-container .menu li a:hover,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a:hover {
+  background: rgba(var(--bs-white-rgb, 255, 255, 255), 0.08) !important;
+  color: var(--bs-white, #ffffff) !important;
+  transform: translateX(4px);
+  border-color: rgba(var(--bs-white-rgb, 255, 255, 255), 0.1) !important;
+}
+.nav-container.mobile-side-in .nav-content .menu-container .menu li a.active,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a.active {
+  background: rgba(var(--bs-white-rgb, 255, 255, 255), 0.18) !important;
+  color: var(--bs-white, #ffffff) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(var(--bs-white-rgb, 255, 255, 255), 0.15) !important;
+}
+.nav-container.mobile-side-in .nav-content .menu-container .menu li a .icon,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a .icon {
+  transition: all 0.25s ease !important;
+}
+.nav-container.mobile-side-in .nav-content .menu-container .menu li a:hover .icon,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a:hover .icon {
+  transform: scale(1.15);
+  color: var(--bs-white, #ffffff) !important;
+}
+
+/* Sidebar brand logo — pinned at the very bottom of vertical/mobile sidebar */
+.nav-container.mobile-side-in .nav-content .sidebar-brand-footer,
+html[data-placement="vertical"] .nav-container .nav-content .sidebar-brand-footer {
+  order: 12 !important;
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 10px 0 10px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+  margin-top: 6px !important;
+  margin-bottom: 0 !important;
+}
+
