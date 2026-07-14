@@ -173,6 +173,18 @@ const TaxAndCharges = () => {
 
   return (
     <div className="container-fluid qsr-page-container">
+      <style>{`
+        @media (max-width: 768px) {
+          .profile-edit-btn-desktop {
+            display: none !important;
+          }
+        }
+        @media (min-width: 769px) {
+          .profile-edit-btn-mobile {
+            display: none !important;
+          }
+        }
+      `}</style>
       <HtmlHead title={title} description={description} />
 
       <div className="qsr-page-title-container">
@@ -184,14 +196,14 @@ const TaxAndCharges = () => {
         </Row>
       </div>
 
-      <Row className="g-4">
+      <Row className="g-3 g-lg-4">
         {/* GST SECTION */}
         {gstProfile.gst_no && (
           <Col lg={12}>
             <Formik initialValues={gstProfile} validationSchema={gstValidationSchema} onSubmit={handleGstSubmit} enableReinitialize>
               {({ values, errors, touched, handleChange, handleBlur, handleSubmit, resetForm }) => (
                 <Form onSubmit={handleSubmit}>
-                  <Card className="profile-glass-card border-0 mb-4">
+                  <Card className="profile-glass-card border-0 mb-0 mb-lg-4">
                     <Card.Body className="p-4 p-md-5">
                       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
                         <div className="profile-section-header mb-0">
@@ -201,7 +213,7 @@ const TaxAndCharges = () => {
                           </h5>
                         </div>
                         {!gstEditMode && (
-                          <Button variant="none" className="profile-custom-btn-outline px-3" onClick={() => setGstEditMode(true)}>
+                          <Button variant="none" className="profile-custom-btn-outline px-3 profile-edit-btn-desktop" onClick={() => setGstEditMode(true)}>
                             <CsLineIcons icon="edit" size="18" /> Edit Tax
                           </Button>
                         )}
@@ -273,6 +285,19 @@ const TaxAndCharges = () => {
                           </Button>
                         </div>
                       )}
+
+                      {!gstEditMode && (
+                        <div className="d-flex profile-button-group-responsive mt-4 d-md-none">
+                          <Button
+                            variant="none"
+                            className="profile-custom-btn-outline w-100 py-2 d-flex align-items-center justify-content-center gap-2 profile-edit-btn-mobile"
+                            onClick={() => setGstEditMode(true)}
+                          >
+                            <CsLineIcons icon="edit" size="18" />
+                            Edit Tax
+                          </Button>
+                        </div>
+                      )}
                     </Card.Body>
                   </Card>
                 </Form>
@@ -294,7 +319,7 @@ const TaxAndCharges = () => {
                     </h5>
                   </div>
                   {!containerEditMode && (
-                    <Button variant="none" className="profile-custom-btn-outline px-3" onClick={() => setContainerEditMode(true)}>
+                    <Button variant="none" className="profile-custom-btn-outline px-3 profile-edit-btn-desktop" onClick={() => setContainerEditMode(true)}>
                       <CsLineIcons icon="edit" size="18" /> Modify Charges
                     </Button>
                   )}
@@ -393,6 +418,19 @@ const TaxAndCharges = () => {
                         {containerSaving ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="save" size="18" />} Save Matrix
                       </Button>
                     </div>
+                  </div>
+                )}
+
+                {!containerEditMode && (
+                  <div className="d-flex profile-button-group-responsive mt-4 d-md-none">
+                    <Button
+                      variant="none"
+                      className="profile-custom-btn-outline w-100 py-2 d-flex align-items-center justify-content-center gap-2 profile-edit-btn-mobile"
+                      onClick={() => setContainerEditMode(true)}
+                    >
+                      <CsLineIcons icon="edit" size="18" />
+                      Modify Charges
+                    </Button>
                   </div>
                 )}
               </Form>

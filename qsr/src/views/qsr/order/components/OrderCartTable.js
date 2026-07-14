@@ -33,7 +33,7 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              padding: '3px 10px',
+              padding: '8px 10px',
               borderBottom: '1px solid rgba(226,232,240,0.6)',
               background: index % 2 === 0 ? '#ffffff' : '#f8fafc',
               transition: 'background 0.15s',
@@ -138,8 +138,13 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
                 </button>
               </div>
 
-              <div style={{ minWidth: '35px', textAlign: 'right', fontWeight: 800, fontSize: '11.5px', color: '#23b3f4' }}>
-                ₹{(item.dish_price * item.quantity).toFixed(0)}
+              <div style={{ minWidth: '50px', textAlign: 'right', display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
+                <span style={{ fontWeight: 800, fontSize: '11.5px', color: '#23b3f4' }}>
+                  ₹{(item.dish_price * item.quantity).toFixed(0)}
+                </span>
+                <span style={{ fontSize: '9.5px', fontWeight: 600, color: '#94a3b8', textDecoration: 'underline' }}>
+                  ₹{Number(item.dish_price).toFixed(0)}
+                </span>
               </div>
 
               <button

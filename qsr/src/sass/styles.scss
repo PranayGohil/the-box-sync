@@ -239,7 +239,7 @@ body {
 /* Dashboard Header Styling */
 .dashboard-title-container {
   margin-top: 1.75rem !important;
-  
+
   @media (min-width: 992px) {
     margin-top: 0 !important;
   }
@@ -314,6 +314,7 @@ body {
 .fw-800 {
   font-weight: 800 !important;
 }
+
 .fw-900 {
   font-weight: 900 !important;
 }
@@ -495,9 +496,11 @@ body {
 .bg-light-success {
   background-color: rgba(5, 150, 105, 0.1) !important;
 }
+
 .bg-light-danger {
   background-color: rgba(220, 38, 38, 0.1) !important;
 }
+
 .bg-light-primary {
   background-color: rgba(35, 179, 244, 0.1) !important;
 }
@@ -529,6 +532,7 @@ body {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -563,19 +567,23 @@ body {
   align-items: center !important;
   justify-content: center !important;
 }
+
 .manage-menu-custom-btn-outline:hover {
   background-color: #23b3f4 !important;
   color: #fff !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
 }
+
 .manage-menu-custom-btn-outline svg {
   color: #23b3f4 !important;
   transition: all 0.2s ease-in-out !important;
 }
+
 .manage-menu-custom-btn-outline:hover svg {
   color: #fff !important;
 }
+
 .manage-menu-glass-card {
   background: #ffffff !important;
   border: 1px solid #f0f0f0 !important;
@@ -583,10 +591,12 @@ body {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
   transition: all 0.3s ease !important;
 }
+
 .manage-menu-glass-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 15px 45px rgba(0, 0, 0, 0.06) !important;
 }
+
 .manage-menu-search-container {
   border: 1px solid #eee !important;
   border-radius: 10px !important;
@@ -594,10 +604,12 @@ body {
   background: #fff !important;
   position: relative !important;
 }
+
 .manage-menu-search-container:focus-within {
   box-shadow: 0 0 0 2px rgba(35, 179, 244, 0.1) !important;
   border-color: #23b3f4 !important;
 }
+
 .manage-menu-search-icon-wrapper {
   position: absolute;
   left: 1rem;
@@ -609,9 +621,11 @@ body {
   display: flex;
   align-items: center;
 }
+
 .manage-menu-pill-input {
   padding-left: 3rem !important;
 }
+
 .manage-menu-badge-meal {
   padding: 0.4rem 0.8rem !important;
   border-radius: 50px !important;
@@ -621,18 +635,22 @@ body {
   letter-spacing: 0.05em !important;
   border: none !important;
 }
+
 .manage-menu-badge-veg {
   background-color: #d1fae5 !important;
   color: #065f46 !important;
 }
+
 .manage-menu-badge-non-veg {
   background-color: #fee2e2 !important;
   color: #991b1b !important;
 }
+
 .manage-menu-badge-egg {
   background-color: #fef3c7 !important;
   color: #92400e !important;
 }
+
 .manage-menu-dropdown-toggle {
   border: 1.5px solid #23b3f4 !important;
   color: #23b3f4 !important;
@@ -642,13 +660,16 @@ body {
   font-weight: 600 !important;
   font-size: 0.85rem !important;
 }
+
 .manage-menu-dropdown-toggle:after {
   color: #23b3f4 !important;
 }
+
 .manage-menu-dropdown-toggle:hover {
   background: #23b3f4 !important;
   color: #fff !important;
 }
+
 .manage-menu-dropdown-toggle:hover:after {
   color: #fff !important;
 }
@@ -664,18 +685,22 @@ body {
   font-weight: 600 !important;
   color: #334155 !important;
 }
+
 input.add-dishes-pill-input {
   height: 48px !important;
 }
+
 textarea.add-dishes-pill-input {
   min-height: 60px !important;
   height: auto !important;
 }
+
 .add-dishes-pill-input:focus {
   border-color: #1ea8e7 !important;
   box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
   outline: none !important;
 }
+
 .add-dishes-glass-card {
   background: #fff !important;
   border: 1px solid #f0f0f0 !important;
@@ -683,6 +708,7 @@ textarea.add-dishes-pill-input {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
   transition: all 0.3s ease;
 }
+
 .add-dishes-custom-btn-outline {
   border: 1px solid #1ea8e7 !important;
   color: #1ea8e7 !important;
@@ -691,15 +717,18 @@ textarea.add-dishes-pill-input {
   border-radius: 50px !important;
   font-weight: 600 !important;
 }
+
 .add-dishes-custom-btn-outline:hover {
   background-color: #1ea8e7 !important;
   color: #fff !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
 }
+
 .add-dishes-custom-btn-outline:hover svg {
   stroke: #fff !important;
 }
+
 .add-dishes-meal-type-radio {
   cursor: pointer;
   padding: 8px 16px;
@@ -711,24 +740,29 @@ textarea.add-dishes-pill-input {
   gap: 8px;
   font-weight: 600;
 }
+
 .add-dishes-meal-type-radio:hover {
   background: #f9fafb;
 }
+
 .add-dishes-meal-type-radio.active.veg {
   background: #ecfdf5;
   border-color: #10b981;
   color: #047857;
 }
+
 .add-dishes-meal-type-radio.active.egg {
   background: #fffbeb;
   border-color: #f59e0b;
   color: #b45309;
 }
+
 .add-dishes-meal-type-radio.active.non-veg {
   background: #fef2f2;
   border-color: #ef4444;
   color: #b91c1c;
 }
+
 .add-dishes-custom-check {
   width: 20px;
   height: 20px;
@@ -739,10 +773,12 @@ textarea.add-dishes-pill-input {
   justify-content: center;
   transition: all 0.2s ease;
 }
+
 .add-dishes-custom-check.active {
   background: #1ea8e7 !important;
   border-color: #1ea8e7 !important;
 }
+
 .add-dishes-delete-btn-table {
   border: 1px solid #ef4444 !important;
   color: #ef4444 !important;
@@ -757,6 +793,7 @@ textarea.add-dishes-pill-input {
   padding: 0 !important;
   z-index: 10 !important;
 }
+
 .add-dishes-delete-btn-table:hover {
   background-color: #cf2637 !important;
   color: #fff !important;
@@ -770,24 +807,28 @@ textarea.add-dishes-pill-input {
   background-color: #fff !important;
   transition: all 0.2s ease-in-out !important;
 }
+
 .delete-dish-modal-custom-btn-outline:hover {
   background-color: #1ea8e7 !important;
   color: #fff !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
 }
+
 .delete-dish-modal-custom-btn-delete {
   border: 1px solid #cf2637 !important;
   color: #cf2637 !important;
   background-color: #fff !important;
   transition: all 0.2s ease-in-out !important;
 }
+
 .delete-dish-modal-custom-btn-delete:hover {
   background-color: #cf2637 !important;
   color: #fff !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(207, 38, 55, 0.25) !important;
 }
+
 /* Edit Dish Modal Specific Styles */
 .edit-dish-modal-pill-input {
   border-radius: 12px !important;
@@ -796,11 +837,13 @@ textarea.add-dishes-pill-input {
   background: #ffffff !important;
   transition: all 0.2s ease !important;
 }
+
 .edit-dish-modal-pill-input:focus {
   border-color: #1ea8e7 !important;
   box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
   outline: none !important;
 }
+
 .edit-dish-modal-custom-btn-outline {
   border: 1px solid #1ea8e7 !important;
   color: #1ea8e7 !important;
@@ -809,15 +852,18 @@ textarea.add-dishes-pill-input {
   border-radius: 50px !important;
   font-weight: 600 !important;
 }
+
 .edit-dish-modal-custom-btn-outline:hover {
   background-color: #1ea8e7 !important;
   color: #fff !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
 }
+
 .edit-dish-modal-custom-btn-outline:hover svg {
   stroke: #fff !important;
 }
+
 .edit-dish-modal-modal-footer {
   display: flex !important;
   flex-direction: row !important;
@@ -826,6 +872,7 @@ textarea.add-dishes-pill-input {
   border-top: none !important;
   padding: 1.5rem !important;
 }
+
 .edit-dish-modal-custom-check {
   width: 20px;
   height: 20px;
@@ -836,6 +883,7 @@ textarea.add-dishes-pill-input {
   justify-content: center;
   transition: all 0.2s ease;
 }
+
 .edit-dish-modal-custom-check.active {
   background: #1ea8e7 !important;
   border-color: #1ea8e7 !important;
@@ -849,11 +897,13 @@ textarea.add-dishes-pill-input {
   background: #ffffff !important;
   transition: all 0.2s ease !important;
 }
+
 .edit-dish-category-modal-pill-input:focus {
   border-color: #1ea8e7 !important;
   box-shadow: 0 0 0 4px rgba(30, 168, 231, 0.1) !important;
   outline: none !important;
 }
+
 .edit-dish-category-modal-custom-btn-outline {
   border: 1px solid #1ea8e7 !important;
   color: #1ea8e7 !important;
@@ -862,15 +912,18 @@ textarea.add-dishes-pill-input {
   border-radius: 50px !important;
   font-weight: 600 !important;
 }
+
 .edit-dish-category-modal-custom-btn-outline:hover {
   background-color: #1ea8e7 !important;
   color: #fff !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
 }
+
 .edit-dish-category-modal-custom-btn-outline:hover svg {
   stroke: #fff !important;
 }
+
 .edit-dish-category-modal-modal-footer {
   display: flex !important;
   flex-direction: row !important;
@@ -879,6 +932,7 @@ textarea.add-dishes-pill-input {
   border-top: none !important;
   padding: 1.5rem !important;
 }
+
 .edit-dish-category-modal-custom-check {
   width: 20px;
   height: 20px;
@@ -889,10 +943,12 @@ textarea.add-dishes-pill-input {
   justify-content: center;
   transition: all 0.2s ease;
 }
+
 .edit-dish-category-modal-custom-check.active {
   background: #1ea8e7 !important;
   border-color: #1ea8e7 !important;
 }
+
 .edit-dish-category-modal-radio-pill {
   padding: 0.5rem 1.2rem;
   border-radius: 50px;
@@ -903,12 +959,14 @@ textarea.add-dishes-pill-input {
   font-size: 0.85rem;
   color: #6b7280;
 }
+
 .edit-dish-category-modal-radio-pill.active {
   background: #1ea8e7;
   color: #fff;
   border-color: #1ea8e7;
   box-shadow: 0 4px 12px rgba(30, 168, 231, 0.2);
 }
+
 /* QR for Menu Specific Styles */
 .qrfor-menu-glass-card {
   background: #ffffff !important;
@@ -917,6 +975,7 @@ textarea.add-dishes-pill-input {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
   transition: all 0.3s ease;
 }
+
 .qrfor-menu-qr-container-box {
   background: #f8fafc;
   border-radius: 1.5rem;
@@ -927,6 +986,7 @@ textarea.add-dishes-pill-input {
   justify-content: center;
   border: 1px solid #eef2f6;
 }
+
 .qrfor-menu-qr-frame {
   background: #ffffff;
   padding: 1.5rem;
@@ -935,9 +995,11 @@ textarea.add-dishes-pill-input {
   border: 1px solid #eef2f6;
   transition: transform 0.3s ease;
 }
+
 .qrfor-menu-qr-frame:hover {
   transform: scale(1.02);
 }
+
 .qrfor-menu-url-pill {
   background: #ffffff;
   border-radius: 50px;
@@ -952,6 +1014,7 @@ textarea.add-dishes-pill-input {
   white-space: nowrap;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
 }
+
 .qrfor-menu-custom-btn-outline {
   border: 1px solid #1ea8e7 !important;
   color: #1ea8e7 !important;
@@ -960,15 +1023,18 @@ textarea.add-dishes-pill-input {
   border-radius: 50px !important;
   font-weight: 600 !important;
 }
+
 .qrfor-menu-custom-btn-outline:hover {
   background-color: #1ea8e7 !important;
   color: #fff !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(30, 168, 231, 0.25) !important;
 }
+
 .qrfor-menu-custom-btn-outline:hover svg {
   stroke: #fff !important;
 }
+
 .qrfor-menu-custom-btn-solid {
   background-color: #1ea8e7 !important;
   border: 1px solid #1ea8e7 !important;
@@ -977,11 +1043,13 @@ textarea.add-dishes-pill-input {
   border-radius: 50px !important;
   font-weight: 600 !important;
 }
+
 .qrfor-menu-custom-btn-solid:hover {
   background-color: #158dc4 !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(30, 168, 231, 0.3) !important;
 }
+
 /* Manage Menu Specific Styles */
 .manage-menu-search-container {
   border: 1px solid #eee !important;
@@ -990,10 +1058,12 @@ textarea.add-dishes-pill-input {
   background: #fff !important;
   position: relative !important;
 }
+
 .manage-menu-search-container:focus-within {
   box-shadow: 0 0 0 2px rgba(35, 179, 244, 0.1) !important;
   border-color: #23b3f4 !important;
 }
+
 .manage-menu-search-icon-wrapper {
   position: absolute;
   left: 1rem;
@@ -1005,9 +1075,11 @@ textarea.add-dishes-pill-input {
   display: flex;
   align-items: center;
 }
+
 .manage-menu-pill-input {
   padding-left: 3rem !important;
 }
+
 .manage-menu-badge-meal {
   padding: 0.4rem 0.8rem !important;
   border-radius: 50px !important;
@@ -1017,18 +1089,22 @@ textarea.add-dishes-pill-input {
   letter-spacing: 0.05em !important;
   border: none !important;
 }
+
 .manage-menu-badge-veg {
   background-color: #d1fae5 !important;
   color: #065f46 !important;
 }
+
 .manage-menu-badge-non-veg {
   background-color: #fee2e2 !important;
   color: #991b1b !important;
 }
+
 .manage-menu-badge-egg {
   background-color: #fef3c7 !important;
   color: #92400e !important;
 }
+
 .manage-menu-dropdown-toggle {
   border: 1.5px solid #23b3f4 !important;
   color: #23b3f4 !important;
@@ -1038,6 +1114,7 @@ textarea.add-dishes-pill-input {
   font-weight: 600 !important;
   font-size: 0.85rem !important;
 }
+
 .manage-menu-dropdown-toggle:after {
   content: ' \203A' !important;
   border: none !important;
@@ -1046,30 +1123,38 @@ textarea.add-dishes-pill-input {
   vertical-align: middle !important;
   color: #23b3f4 !important;
 }
+
 .manage-menu-dropdown-toggle:hover {
   background: #23b3f4 !important;
   color: #fff !important;
 }
+
 .manage-menu-dropdown-toggle:hover:after {
   color: #fff !important;
 }
+
 .manage-menu-text-primary {
   color: #23b3f4 !important;
 }
+
 .manage-menu-text-black {
   color: #000000 !important;
 }
+
 .manage-menu-bg-primary {
   background-color: #23b3f4 !important;
 }
+
 .manage-menu-custom-icon-btn {
   border-radius: 8px !important;
   transition: all 0.2s ease !important;
 }
+
 .manage-menu-custom-icon-btn:hover {
   background-color: rgba(35, 179, 244, 0.08) !important;
   transform: scale(1.1);
 }
+
 .manage-menu-custom-icon-btn.text-danger:hover {
   background-color: rgba(239, 68, 68, 0.08) !important;
 }
@@ -1080,23 +1165,29 @@ textarea.add-dishes-pill-input {
     margin-bottom: 0.75rem !important;
     justify-content: center !important;
   }
+
   .page-title-container {
     margin-top: -0.5rem !important;
   }
+
   .page-title-container h1 {
     font-size: 1.75rem !important;
     margin-bottom: 0.5rem !important;
   }
+
   .page-title-container.dashboard-title-container h1 {
     margin-top: 2.5rem;
   }
+
   .manage-menu-search-container {
     margin-bottom: 1rem !important;
   }
+
   .manage-menu-glass-card {
     margin-bottom: 1.5rem !important;
     padding: 1rem !important;
   }
+
   .manage-menu-controls-row .col-12 {
     margin-bottom: 0.5rem !important;
   }
@@ -1106,9 +1197,11 @@ textarea.add-dishes-pill-input {
     border: none !important;
     background: transparent !important;
   }
+
   .manage-menu-responsive-table thead {
     display: none !important;
   }
+
   .manage-menu-responsive-table tbody tr {
     display: block !important;
     background: #ffffff !important;
@@ -1118,6 +1211,7 @@ textarea.add-dishes-pill-input {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03) !important;
     padding: 1.25rem 1.5rem !important;
   }
+
   .manage-menu-responsive-table tbody td {
     display: flex !important;
     justify-content: space-between !important;
@@ -1128,10 +1222,12 @@ textarea.add-dishes-pill-input {
     text-align: right !important;
     width: 100% !important;
   }
+
   .manage-menu-responsive-table tbody td:last-child {
     border-bottom: none !important;
     padding-bottom: 0 !important;
   }
+
   .manage-menu-responsive-table tbody td::before {
     content: attr(data-title) !important;
     font-weight: 700 !important;
@@ -1142,7 +1238,8 @@ textarea.add-dishes-pill-input {
     text-align: left !important;
     flex: 1 !important;
   }
-  .manage-menu-responsive-table tbody td > * {
+
+  .manage-menu-responsive-table tbody td>* {
     flex: 2;
     display: flex;
     justify-content: flex-end;
@@ -1183,10 +1280,12 @@ textarea.add-dishes-pill-input {
   0% {
     box-shadow: 0 4px 20px rgba(239, 68, 68, 0.02);
   }
+
   50% {
     box-shadow: 0 4px 25px rgba(239, 68, 68, 0.15), 0 0 0 2px rgba(239, 68, 68, 0.05);
     border-color: rgba(239, 68, 68, 0.5) !important;
   }
+
   100% {
     box-shadow: 0 4px 20px rgba(239, 68, 68, 0.02);
   }
@@ -1294,6 +1393,7 @@ textarea.add-dishes-pill-input {
   background: #f9f9fb;
   min-height: 100vh;
 }
+
 .inventory-history-interactive-card {
   background: #ffffff !important;
   border-radius: 1.5rem !important;
@@ -1302,6 +1402,7 @@ textarea.add-dishes-pill-input {
   overflow: hidden;
   margin-bottom: 3rem;
 }
+
 .inventory-history-custom-btn-outline {
   background: #ffffff !important;
   border: 1.5px solid #23b3f4 !important;
@@ -1315,16 +1416,19 @@ textarea.add-dishes-pill-input {
   align-items: center !important;
   justify-content: center !important;
 }
+
 .inventory-history-custom-btn-outline.small {
   padding: 0.35rem 1rem !important;
   font-size: 0.75rem !important;
 }
+
 .inventory-history-custom-btn-outline:hover {
   background: #23b3f4 !important;
   color: #ffffff !important;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(35, 179, 244, 0.2) !important;
 }
+
 .inventory-history-custom-btn-solid {
   background: #23b3f4 !important;
   border: 1.5px solid #23b3f4 !important;
@@ -1338,22 +1442,26 @@ textarea.add-dishes-pill-input {
   align-items: center !important;
   justify-content: center !important;
 }
+
 .inventory-history-custom-btn-solid.small {
   padding: 0.35rem 1rem !important;
   font-size: 0.75rem !important;
 }
+
 .inventory-history-custom-btn-solid:hover {
   background: #1ea8e7 !important;
   border-color: #1ea8e7 !important;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(35, 179, 244, 0.25) !important;
 }
+
 .inventory-history-section-title-wrapper {
   display: flex;
   align-items: center;
   gap: 1.25rem;
   margin-bottom: 2rem;
 }
+
 .inventory-history-table-header-row {
   display: flex;
   padding: 0 1.5rem;
@@ -1362,6 +1470,7 @@ textarea.add-dishes-pill-input {
   border-radius: 10px;
   padding: 1rem 1.5rem;
 }
+
 .inventory-history-table-header-col {
   color: #64748b;
   font-size: 0.7rem;
@@ -1369,6 +1478,7 @@ textarea.add-dishes-pill-input {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
 .inventory-history-inventory-row-card {
   background: #ffffff !important;
   border-radius: 1rem !important;
@@ -1380,16 +1490,19 @@ textarea.add-dishes-pill-input {
   align-items: center;
   padding: 1.25rem 1.5rem !important;
 }
+
 .inventory-history-inventory-row-card:hover {
   transform: translateX(5px);
   border-color: #23b3f4 !important;
   box-shadow: 0 8px 20px rgba(35, 179, 244, 0.08) !important;
 }
+
 .inventory-history-col-val {
   font-weight: 600;
   color: #334155;
   font-size: 0.875rem;
 }
+
 .inventory-history-status-badge {
   font-size: 0.65rem !important;
   font-weight: 800 !important;
@@ -1397,6 +1510,7 @@ textarea.add-dishes-pill-input {
   padding: 0.45rem 1rem !important;
   border-radius: 50px !important;
 }
+
 .inventory-history-search-filter-hub {
   background: #ffffff;
   border-radius: 1rem;
@@ -1405,6 +1519,7 @@ textarea.add-dishes-pill-input {
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
 }
+
 .inventory-history-search-input-container {
   border-radius: 50px !important;
   border: 1.5px solid #e2e8f0 !important;
@@ -1415,10 +1530,12 @@ textarea.add-dishes-pill-input {
   align-items: center;
   transition: all 0.3s ease;
 }
+
 .inventory-history-search-input-container:focus-within {
   border-color: #23b3f4 !important;
   box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.1) !important;
 }
+
 .inventory-history-filter-panel {
   background: #ffffff;
   border-radius: 1rem;
@@ -1426,14 +1543,37 @@ textarea.add-dishes-pill-input {
   border: 1px solid #f1f5f9;
   margin-top: 1rem;
 }
+
 @media (max-width: 991px) {
-  .inventory-history-table-header-row { display: none !important; }
-  .inventory-history-inventory-row-card { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
-  .inventory-history-inventory-row-card > div { width: 100% !important; margin-bottom: 0.25rem; }
-  .inventory-history-inventory-row-card .inventory-history-mobile-label { display: block !important; font-size: 0.65rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin-bottom: 0.15rem; }
+  .inventory-history-table-header-row {
+    display: none !important;
+  }
+
+  .inventory-history-inventory-row-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .inventory-history-inventory-row-card>div {
+    width: 100% !important;
+    margin-bottom: 0.25rem;
+  }
+
+  .inventory-history-inventory-row-card .inventory-history-mobile-label {
+    display: block !important;
+    font-size: 0.65rem;
+    color: #94a3b8;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 0.15rem;
+  }
 }
+
 @media (min-width: 992px) {
-  .inventory-history-inventory-row-card .inventory-history-mobile-label { display: none !important; }
+  .inventory-history-inventory-row-card .inventory-history-mobile-label {
+    display: none !important;
+  }
 }
 
 /* Scoped styles from Login */
@@ -1778,14 +1918,17 @@ textarea.add-dishes-pill-input {
   .login-login-page-wrapper {
     flex-direction: column;
   }
+
   .login-login-left-panel {
     display: none;
   }
+
   .login-login-right-panel {
     width: 100%;
     padding: 2.5rem 1.75rem;
     box-shadow: none;
   }
+
   .login-login-hero-title {
     font-size: 2rem;
   }
@@ -1795,6 +1938,7 @@ textarea.add-dishes-pill-input {
   .login-login-right-panel {
     padding: 2rem 1.25rem;
   }
+
   .login-login-form-title {
     font-size: 1.6rem;
   }
@@ -1826,6 +1970,7 @@ html[data-placement="vertical"] .nav-container .nav-content .menu-container {
   width: 80% !important;
   align-self: center !important;
 }
+
 .nav-container.mobile-side-in .nav-content .menu-container .menu,
 html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu {
   padding-top: 0px !important;
@@ -1856,10 +2001,12 @@ html[data-placement="vertical"] .nav-container .nav-content .menu-container .men
   border: 1px solid transparent !important;
   background: transparent !important;
 }
+
 .nav-container.mobile-side-in .nav-content .menu-container .menu li a::before,
 html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a::before {
   display: none !important;
 }
+
 .nav-container.mobile-side-in .nav-content .menu-container .menu li a:hover,
 html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a:hover {
   background: rgba(var(--bs-white-rgb, 255, 255, 255), 0.08) !important;
@@ -1867,6 +2014,7 @@ html[data-placement="vertical"] .nav-container .nav-content .menu-container .men
   transform: translateX(4px);
   border-color: rgba(var(--bs-white-rgb, 255, 255, 255), 0.1) !important;
 }
+
 .nav-container.mobile-side-in .nav-content .menu-container .menu li a.active,
 html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a.active {
   background: rgba(var(--bs-white-rgb, 255, 255, 255), 0.18) !important;
@@ -1875,10 +2023,12 @@ html[data-placement="vertical"] .nav-container .nav-content .menu-container .men
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
   border-color: rgba(var(--bs-white-rgb, 255, 255, 255), 0.15) !important;
 }
+
 .nav-container.mobile-side-in .nav-content .menu-container .menu li a .icon,
 html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a .icon {
   transition: all 0.25s ease !important;
 }
+
 .nav-container.mobile-side-in .nav-content .menu-container .menu li a:hover .icon,
 html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a:hover .icon {
   transform: scale(1.15);
@@ -1899,7 +2049,8 @@ html[data-placement="vertical"] .nav-container .nav-content .menu-container .men
   .qsr-page-container {
     padding-left: 1rem !important;
     padding-right: 1rem !important;
-    padding-bottom: 6rem !important; /* Space for mobile navigation */
+    padding-bottom: 6rem !important;
+    /* Space for mobile navigation */
     margin-top: 1rem !important;
   }
 }
@@ -1944,4 +2095,121 @@ h1.display-4,
   @media (max-width: 768px) {
     font-size: 1.4rem !important;
   }
+}
+
+/* ==========================================================================
+   Vertical / Mobile Sidebar Enhancements
+   ========================================================================== */
+/* Custom positioning to fix the logout button at the bottom of mobile sidebar / vertical menu */
+.nav-container.mobile-side-in .nav-content .menu-icons,
+html[data-placement="vertical"] .nav-container .nav-content .menu-icons {
+  margin-top: auto !important;
+  order: 10 !important;
+  padding-top: 5px !important;
+  width: 80% !important;
+  border-top: 1px solid rgba(var(--bs-white-rgb, 255, 255, 255), 0.2) !important;
+}
+
+/* Spacing and lines around menu in mobile/vertical sidebar */
+.nav-container.mobile-side-in .nav-content .menu-container,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container {
+  margin-top: 1.5rem !important;
+  margin-bottom: 0 !important;
+  padding-top: 1.25rem !important;
+  padding-bottom: 1.25rem !important;
+  border-top: 1px solid rgba(var(--bs-white-rgb, 255, 255, 255), 0.2) !important;
+  width: 80% !important;
+  align-self: center !important;
+}
+
+.nav-container.mobile-side-in .nav-content .menu-container .menu,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu {
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+}
+
+/* Reduce space between logo/user profile and menu in mobile/vertical sidebar */
+.nav-container.mobile-side-in .nav-content .user-container,
+html[data-placement="vertical"] .nav-container .nav-content .user-container {
+  min-height: auto !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.nav-container.mobile-side-in .nav-content .user-container .user,
+html[data-placement="vertical"] .nav-container .nav-content .user-container .user {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.nav-container.mobile-side-in .nav-content .user-container .user .profile,
+html[data-placement="vertical"] .nav-container .nav-content .user-container .user .profile {
+  width: 75px !important;
+  height: 75px !important;
+  margin-bottom: 12px !important;
+}
+
+/* Premium interactive menu item styling in mobile/vertical sidebar */
+.nav-container.mobile-side-in .nav-content .menu-container .menu li a,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a {
+  display: flex !important;
+  align-items: center !important;
+  padding: calc(var(--bs-spacer, 1rem) * 0.65) var(--bs-spacer, 1rem) !important;
+  margin-bottom: calc(var(--bs-spacer, 1rem) * 0.5) !important;
+  border-radius: var(--bs-border-radius-lg, 0.5rem) !important;
+  color: rgba(var(--bs-white-rgb, 255, 255, 255), 0.8) !important;
+  font-weight: var(--bs-body-font-weight, 600) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-decoration: none !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+}
+
+.nav-container.mobile-side-in .nav-content .menu-container .menu li a::before,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a::before {
+  display: none !important;
+}
+
+.nav-container.mobile-side-in .nav-content .menu-container .menu li a:hover,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a:hover {
+  background: rgba(var(--bs-white-rgb, 255, 255, 255), 0.08) !important;
+  color: var(--bs-white, #ffffff) !important;
+  transform: translateX(4px);
+  border-color: rgba(var(--bs-white-rgb, 255, 255, 255), 0.1) !important;
+}
+
+.nav-container.mobile-side-in .nav-content .menu-container .menu li a.active,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a.active {
+  background: rgba(var(--bs-white-rgb, 255, 255, 255), 0.18) !important;
+  color: var(--bs-white, #ffffff) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(var(--bs-white-rgb, 255, 255, 255), 0.15) !important;
+}
+
+.nav-container.mobile-side-in .nav-content .menu-container .menu li a .icon,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a .icon {
+  transition: all 0.25s ease !important;
+}
+
+.nav-container.mobile-side-in .nav-content .menu-container .menu li a:hover .icon,
+html[data-placement="vertical"] .nav-container .nav-content .menu-container .menu li a:hover .icon {
+  transform: scale(1.15);
+  color: var(--bs-white, #ffffff) !important;
+}
+
+/* Sidebar brand logo — pinned at the very bottom of vertical/mobile sidebar */
+.nav-container.mobile-side-in .nav-content .sidebar-brand-footer,
+html[data-placement="vertical"] .nav-container .nav-content .sidebar-brand-footer {
+  order: 12 !important;
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 10px 0 10px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+  margin-top: 6px !important;
+  margin-bottom: 0 !important;
 }

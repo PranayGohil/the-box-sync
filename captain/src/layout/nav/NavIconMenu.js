@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Modal, Button } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import IconMenuNotifications from './notifications/Notifications';
@@ -7,6 +8,7 @@ import SearchModal from './search/SearchModal';
 
 const NavIconMenu = () => {
   const history = useHistory();
+  const { attrMobile } = useSelector((state) => state.menu);
   const [showSearchModal, setShowSearchModal] = useState(false);
 
   const onSearchIconClick = (e) => {
@@ -37,6 +39,14 @@ const NavIconMenu = () => {
         </li>
         <IconMenuNotifications />
       </ul>
+
+      {/* THE BOX logo — pinned at very bottom of mobile sidebar drawer only */}
+      {attrMobile === true && (
+        <div className="sidebar-brand-footer">
+          <img src="/img/logo/logo-light.png" alt="The Box" style={{ maxHeight: '20px', width: 'auto', objectFit: 'contain', opacity: 0.9 }} />
+        </div>
+      )}
+
       <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 
       <Modal className="modal-close-out" show={showLogoutModal} onHide={() => setShowLogoutModal(false)} centered>

@@ -70,7 +70,7 @@ const BottomCartSheet = ({
             }}
           >
             <div className="d-flex align-items-baseline gap-2">
-              <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>
                 Total:
               </span>
               <span style={{ fontSize: '20px', fontWeight: 900, color: '#1e293b' }}>
@@ -78,7 +78,7 @@ const BottomCartSheet = ({
               </span>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>{orderItems.reduce((sum, item) => sum + item.quantity, 0)} items</div>
+              <div style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 700 }}>{orderItems.reduce((sum, item) => sum + item.quantity, 0)} items</div>
               {dueAmount > 0.01 && totalPaid > 0 && (
                 <div style={{ fontSize: '11px', fontWeight: 800, color: '#ef4444' }}>
                   Due: ₹{dueAmount.toFixed(0)}
