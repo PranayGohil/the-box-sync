@@ -5,7 +5,7 @@ import { DEFAULT_PATHS } from 'config.js';
 
 const manager = {
   dashboard: lazy(() => import('views/manager/Dashboard')),
-  orderHistory: lazy(() => import('views/manager/operation/order/OrderHistory')),
+  operation: lazy(() => import('views/manager/operation/Operations')),
 };
 
 const qsr = {
@@ -39,10 +39,10 @@ const allRoutes = {
       component: manager.dashboard,
     },
     {
-      path: `${appRoot}/order-history`,
+      path: `${appRoot}/operations`,
       label: 'Order History',
       icon: 'cart',
-      component: manager.orderHistory,
+      component: manager.operation,
     },
     {
       path: `${appRoot}/order`,
